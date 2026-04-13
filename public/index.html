@@ -82,6 +82,13 @@
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 450px; text-align: center; }
         .error-msg { color: red; margin-top: 10px; display: none; }
         
+        .toast-message {
+            position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; 
+            padding: 10px 20px; border-radius: 8px; z-index: 10001; 
+            animation: fadeOut 2s ease forwards;
+        }
+        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+        
         @media print {
             .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch { display: none !important; }
             @page { size: landscape; margin: 1cm; }
@@ -97,6 +104,8 @@
         <input type="password" id="password" placeholder="كلمة المرور">
         <button class="btn btn-blue" onclick="doLogin()">دخول</button>
         <div id="loginError" class="error-msg"></div>
+        <hr style="margin:15px 0">
+        <p style="font-size:12px;color:#666">admin / 1234 | editor / 1234 | viewer / 1234</p>
     </div>
 </div>
 
@@ -152,6 +161,7 @@
             <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
             <label>الإقليم:</label><select id="fRegMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
             <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
+            <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         <table><thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
         <tbody id="mainBody"></tbody>
@@ -165,6 +175,7 @@
             <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
             <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
             <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
+            <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <table><thead><tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th></tr></thead>
         <tbody id="maintBody"></tbody>
@@ -182,6 +193,7 @@
                 <option value="الوسط">الوسط</option>
                 <option value="الجنوب">الجنوب</option>
             </select>
+            <button class="btn-sm btn-green" onclick="refreshEff()">🔄 تحديث</button>
         </div>
         
         <div id="generalEffTableContainer"></div>
@@ -205,6 +217,7 @@
             <input type="text" id="ticketSubject" placeholder="العنوان" style="width:100%; padding:10px; margin:10px 0">
             <textarea id="ticketMessage" rows="5" style="width:100%; padding:10px"></textarea>
             <button class="btn btn-blue" onclick="sendTicket()">إرسال</button>
+            <button class="btn-sm btn-green" onclick="refreshTickets()">🔄 تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
             <hr>
             <h4>📋 طلباتي السابقة</h4>
@@ -217,6 +230,7 @@
             <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
             <label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()">
             <button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button>
+            <button class="btn-sm btn-green" onclick="refreshTrack()">🔄 تحديث</button>
         </div>
         <div id="trackContent"></div>
     </div>
@@ -227,6 +241,7 @@
             <input type="password" id="up" placeholder="كلمة السر">
             <select id="ur"><option value="مسؤول">مسؤول</option><option value="محرر">محرر</option><option value="مشاهد">مشاهد</option></select>
             <button class="btn btn-blue" onclick="addUser()">➕ إضافة</button>
+            <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <table><thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
         <tbody id="usersBody"></tbody>
@@ -265,7 +280,7 @@
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
 
-    // Helper functions
+    // ==================== Helper Functions ====================
     function formatDate(d) { 
         if(!d) return '-'; 
         try { 
@@ -287,15 +302,27 @@
     function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
     function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
     function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
-
-    // API Functions
-    async function loadVesselsFromServer() {
-        const res = await fetch('/api/vessels');
-        allVessels = await res.json();
-        return allVessels;
+    
+    function showMessage(msg, isError = false) {
+        const div = document.createElement('div');
+        div.textContent = msg;
+        div.style.cssText = `position:fixed; bottom:20px; right:20px; background:${isError ? '#d9534f' : '#2e7d32'}; color:white; padding:10px 20px; border-radius:8px; z-index:10001; animation:fadeOut 2s ease forwards;`;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 2500);
     }
 
-    async function saveVesselToServer(vessel) {
+    // ==================== API Functions ====================
+    async function loadVessels() {
+        try {
+            const res = await fetch('/api/vessels');
+            allVessels = await res.json();
+            renderMain();
+            renderMaint();
+            renderEff();
+        } catch(e) { showMessage("خطأ في تحميل المراكب", true); }
+    }
+
+    async function addVessel(vessel) {
         const res = await fetch('/api/vessels', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -304,36 +331,33 @@
         return res.json();
     }
 
-    async function deleteVesselFromServer(id) {
+    async function deleteVessel(id) {
         const res = await fetch(`/api/vessels/${id}`, { method: 'DELETE' });
         return res.json();
     }
 
-    async function loadUsersFromServer() {
-        const res = await fetch('/api/users');
-        allUsers = await res.json();
-        return allUsers;
+    async function loadUsers() {
+        try {
+            const res = await fetch('/api/users');
+            allUsers = await res.json();
+            renderUsers();
+        } catch(e) { showMessage("خطأ في تحميل المستخدمين", true); }
     }
 
-    async function loadLogsFromServer() {
-        const res = await fetch('/api/logs');
-        allLogs = await res.json();
-        return allLogs;
+    async function loadLogs() {
+        try {
+            const res = await fetch('/api/logs');
+            allLogs = await res.json();
+            renderTrack();
+        } catch(e) { showMessage("خطأ في تحميل سجل النشاطات", true); }
     }
 
-    async function loadTicketsFromServer() {
-        const res = await fetch('/api/tickets');
-        allTickets = await res.json();
-        return allTickets;
-    }
-
-    async function sendTicketToServer(subject, message) {
-        const res = await fetch('/api/tickets', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ subject, message })
-        });
-        return res.json();
+    async function loadTickets() {
+        try {
+            const res = await fetch('/api/tickets');
+            allTickets = await res.json();
+            renderTickets();
+        } catch(e) { showMessage("خطأ في تحميل التذاكر", true); }
     }
 
     async function addUserToServer(username, password, role) {
@@ -368,7 +392,57 @@
         return res.json();
     }
 
-    // Login/Logout
+    async function sendTicketToServer(subject, message) {
+        const res = await fetch('/api/tickets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subject, message })
+        });
+        return res.json();
+    }
+
+    // ==================== Refresh Functions ====================
+    async function refreshMain() {
+        showMessage("جاري تحديث السجل العام...");
+        await loadVessels();
+        showMessage("✅ تم تحديث السجل العام");
+    }
+    
+    async function refreshMaint() {
+        showMessage("جاري تحديث سجل الصيانة...");
+        await loadVessels();
+        renderMaint();
+        showMessage("✅ تم تحديث سجل الصيانة");
+    }
+    
+    async function refreshEff() {
+        showMessage("جاري تحديث الإحصائيات...");
+        await loadVessels();
+        renderEff();
+        showMessage("✅ تم تحديث الإحصائيات");
+    }
+    
+    async function refreshUsers() {
+        if(!canManageUsers()) return;
+        showMessage("جاري تحديث المستخدمين...");
+        await loadUsers();
+        showMessage("✅ تم تحديث قائمة المستخدمين");
+    }
+    
+    async function refreshTrack() {
+        if(!canManageUsers()) return;
+        showMessage("جاري تحديث سجل النشاطات...");
+        await loadLogs();
+        showMessage("✅ تم تحديث سجل التتبع");
+    }
+    
+    async function refreshTickets() {
+        showMessage("جاري تحديث التذاكر...");
+        await loadTickets();
+        showMessage("✅ تم تحديث قائمة التذاكر");
+    }
+
+    // ==================== Login/Logout ====================
     async function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -411,15 +485,13 @@
                 fill('fRegMain', Object.keys(ZONES_DATA));
                 fill('fRegMaint', Object.keys(ZONES_DATA));
                 
-                await refreshAllData();
-                renderMain();
-                renderMaint();
-                renderEff();
-                renderTickets();
+                await loadVessels();
+                await loadTickets();
                 if(isAdmin) {
-                    renderUsers();
-                    renderTrack();
+                    await loadUsers();
+                    await loadLogs();
                 }
+                showMessage("تم تسجيل الدخول بنجاح");
             } else {
                 errorDiv.innerHTML = data.error || "اسم المستخدم أو كلمة المرور غير صحيحة!";
                 errorDiv.style.display = "block";
@@ -430,15 +502,6 @@
         }
     }
     
-    async function refreshAllData() {
-        await loadVesselsFromServer();
-        if(canManageUsers()) {
-            await loadUsersFromServer();
-            await loadLogsFromServer();
-        }
-        await loadTicketsFromServer();
-    }
-    
     function logout() {
         currentUser = null;
         document.getElementById('loginOverlay').style.display = 'flex';
@@ -446,9 +509,10 @@
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
         document.getElementById('loginError').style.display = 'none';
+        showMessage("تم تسجيل الخروج");
     }
 
-    // Vessel Management
+    // ==================== Vessel Management ====================
     async function addItem() {
         if(!canEdit()) { alert("ليس لديك صلاحية للإضافة!"); return; }
         const name = document.getElementById('iName').value.trim();
@@ -478,14 +542,11 @@
             category: getCat(document.getElementById('iLen').value)
         };
         
-        const result = await saveVesselToServer(vessel);
+        const result = await addVessel(vessel);
         if(result.success) {
-            await refreshAllData();
             clearForm();
-            renderMain();
-            renderMaint();
-            renderEff();
-            alert("تم حفظ المركب بنجاح");
+            await loadVessels();
+            showMessage("تم حفظ المركب بنجاح");
         } else {
             alert("خطأ: " + (result.error || "لم يتم الحفظ"));
         }
@@ -519,19 +580,17 @@
             document.getElementById('iEnd').value = item.end_date || '';
             document.getElementById('iRef').value = item.reference || '';
             window.scrollTo(0,0);
+            showMessage("يمكنك الآن تعديل البيانات ثم حفظ");
         }
     }
     
     async function delItem(id) {
         if(!canDelete()) { alert("ليس لديك صلاحية للحذف!"); return; }
         if(confirm("هل أنت متأكد من حذف هذا المركب؟")) {
-            const result = await deleteVesselFromServer(id);
+            const result = await deleteVessel(id);
             if(result.success) {
-                await refreshAllData();
-                renderMain();
-                renderMaint();
-                renderEff();
-                alert("تم حذف المركب بنجاح");
+                await loadVessels();
+                showMessage("تم حذف المركب بنجاح");
             } else {
                 alert("خطأ في الحذف");
             }
@@ -636,7 +695,7 @@
                 <td>${x.reference || '-'}</td>
             </tr>`;
         });
-        document.getElementById('maintBody').innerHTML = html || '<tr><td colspan="8">لا توجد مراكب معطوبة ou تحت الصيانة</td></tr>';
+        document.getElementById('maintBody').innerHTML = html || '<tr><td colspan="8">لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
     }
     
     function resetMaintFilters() {
@@ -647,7 +706,7 @@
         renderMaint();
     }
     
-    // Statistics and Charts
+    // ==================== Statistics and Charts ====================
     function renderGeneralEfficiencyTable() {
         let data = allVessels;
         let totalOk = data.filter(x => x.status === 'صالح').length;
@@ -795,7 +854,7 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </tr>`;
+                <tr>`;
             });
             
             html += `</tbody></table></div>`;
@@ -813,11 +872,12 @@
     
     function switchChartType(type) {
         currentChartType = type;
+        document.querySelectorAll('.chart-switch button').forEach(btn => btn.classList.remove('active'));
         event.target.classList.add('active');
         renderCharts();
     }
     
-    // Support Tickets
+    // ==================== Support Tickets ====================
     async function sendTicket() {
         const subject = document.getElementById('ticketSubject').value.trim();
         const message = document.getElementById('ticketMessage').value.trim();
@@ -827,10 +887,8 @@
         if(result.success) {
             document.getElementById('ticketSubject').value = "";
             document.getElementById('ticketMessage').value = "";
-            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
-            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
-            await loadTicketsFromServer();
-            renderTickets();
+            showMessage("✅ تم إرسال طلبك بنجاح");
+            await loadTickets();
         } else {
             alert("خطأ في الإرسال");
         }
@@ -847,13 +905,12 @@
             </tr>`;
         });
         html += `</tbody></table>`;
-        document.getElementById('ticketsList').innerHTML = tickets.length ? html : '<p>لا توجد طلبات سابقة</p>';
+        document.getElementById('ticketsList').innerHTML = tickets.length ? html : '<p style="text-align:center">لا توجد طلبات سابقة</p>';
     }
     
-    // User Management
-    async function renderUsers() {
+    // ==================== User Management ====================
+    function renderUsers() {
         if(!canManageUsers()) return;
-        await loadUsersFromServer();
         document.getElementById('usersBody').innerHTML = allUsers.map(u => `
             <tr>
                 <td>${u.username}</td>
@@ -877,8 +934,8 @@
         if(result.success) {
             document.getElementById('un').value = "";
             document.getElementById('up').value = "";
-            await renderUsers();
-            alert("✅ تم إضافة المستخدم");
+            await loadUsers();
+            showMessage("✅ تم إضافة المستخدم");
         } else {
             alert("خطأ: " + (result.error || "لم تتم الإضافة"));
         }
@@ -907,8 +964,8 @@
         const result = await updateUserPassword(selectedUserId, np);
         if(result.success) {
             closePasswordModal();
-            await renderUsers();
-            alert("✅ تم تغيير كلمة المرور");
+            await loadUsers();
+            showMessage("✅ تم تغيير كلمة المرور");
         } else {
             alert("خطأ: " + (result.error || "لم يتم التغيير"));
         }
@@ -917,8 +974,8 @@
     async function toggleUser(userId, enable) {
         const result = await toggleUserStatus(userId, enable);
         if(result.success) {
-            await renderUsers();
-            alert(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
+            await loadUsers();
+            showMessage(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
         } else {
             alert("خطأ: " + (result.error || "لم يتم التغيير"));
         }
@@ -928,18 +985,17 @@
         if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
             const result = await deleteUserFromServer(userId);
             if(result.success) {
-                await renderUsers();
-                alert("✅ تم حذف المستخدم");
+                await loadUsers();
+                showMessage("✅ تم حذف المستخدم");
             } else {
                 alert("خطأ: " + (result.error || "لم يتم الحذف"));
             }
         }
     }
     
-    // Activity Tracking
-    async function renderTrack() {
+    // ==================== Activity Tracking ====================
+    function renderTrack() {
         if(!canManageUsers()) return;
-        await loadLogsFromServer();
         const start = document.getElementById('trackDateStart').value;
         const end = document.getElementById('trackDateEnd').value;
         let filtered = [...allLogs];
@@ -982,7 +1038,7 @@
         renderTrack();
     }
     
-    // Page Navigation
+    // ==================== Page Navigation ====================
     function showPage(page) {
         const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
@@ -1001,7 +1057,7 @@
         }
     }
     
-    // Global functions binding
+    // ==================== Window Load ====================
     window.doLogin = doLogin;
     window.logout = logout;
     window.showPage = showPage;
@@ -1024,6 +1080,12 @@
     window.saveNewPassword = saveNewPassword;
     window.toggleUser = toggleUser;
     window.deleteUser = deleteUser;
+    window.refreshMain = refreshMain;
+    window.refreshMaint = refreshMaint;
+    window.refreshEff = refreshEff;
+    window.refreshUsers = refreshUsers;
+    window.refreshTrack = refreshTrack;
+    window.refreshTickets = refreshTickets;
 </script>
 </body>
 </html>
