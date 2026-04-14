@@ -9,7 +9,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_KEY = process.env.SECRET_KEY || 'marine_secret_key_2024';
+const SECRET_KEY = process.env.SECRET_KEY || 'marine_super_secret_key_2024';
 
 // Middleware
 app.use(cors());
@@ -29,7 +29,6 @@ if (!fs.existsSync(path.join(__dirname, 'data'))) {
 function readDB() {
     try {
         if (!fs.existsSync(DB_PATH)) {
-            // إنشاء بيانات افتراضية
             const defaultDB = {
                 vessels: [
                     { id: uuidv4(), name: "البروق 1", number: "B001", length: 11, region: "الشمال", zone: "تونس", port: "تونس", support_location: "قاعدة الشمال", status: "صالح", breakdown_type: "", breakdown_date: "", end_date: "", reference: "", category: "البروق", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -92,7 +91,7 @@ function getCategory(length) {
     return "زوارق مزدوجة";
 }
 
-// ==================== Middleware للتحقق ====================
+// ==================== Middleware ====================
 
 function verifyToken(req, res, next) {
     const token = req.headers['authorization'];
@@ -301,7 +300,6 @@ app.put('/api/users/:id/password', verifyToken, verifyAdmin, (req, res) => {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
     }
     
-    // ✅ منع تغيير كلمة مرور admin
     if (user.username === 'admin' && req.user.username !== 'admin') {
         return res.status(403).json({ error: 'لا يمكن تغيير كلمة مرور المدير الرئيسي' });
     }
@@ -325,7 +323,6 @@ app.put('/api/users/:id/toggle', verifyToken, verifyAdmin, (req, res) => {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
     }
     
-    // ✅ منع تعطيل admin
     if (user.username === 'admin') {
         return res.status(403).json({ error: 'لا يمكن تعطيل المدير الرئيسي' });
     }
@@ -348,7 +345,6 @@ app.delete('/api/users/:id', verifyToken, verifyAdmin, (req, res) => {
         return res.status(404).json({ error: 'المستخدم غير موجود' });
     }
     
-    // ✅ منع حذف admin
     if (user.username === 'admin') {
         return res.status(403).json({ error: 'لا يمكن حذف المدير الرئيسي' });
     }
@@ -409,5 +405,5 @@ app.post('/api/tickets', verifyToken, (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 الخادم يعمل على http://localhost:${PORT}`);
     console.log(`📁 قاعدة البيانات: ${DB_PATH}`);
-    console.log(`🔐 admin / 1234 | editor / 1234 | viewer / 1234`);
+    console.log(`🔐 بيانات الدخول: admin / 1234 | editor / 1234 | viewer / 1234`);
 });
