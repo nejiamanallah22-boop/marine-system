@@ -1,351 +1,413 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY || 'marine_secret_key_2024';
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const db = new sqlite3.Database('./database.sqlite');
+// ملف قاعدة البيانات
+const DB_PATH = path.join(__dirname, 'data', 'database.json');
 
-// ==================== إنشاء الجداول ====================
-db.serialize(() => {
-    // حذف الجدول القديم وإعادة إنشائه (للتأكد من وجود كل الأعمدة)
-    db.run("DROP TABLE IF EXISTS vessels");
-    console.log("✅ تم حذف الجدول القديم");
-    
-    // جدول المستخدمين
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        role TEXT,
-        enabled INTEGER DEFAULT 1,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    console.log("✅ تم إنشاء جدول المستخدمين");
-    
-    // جدول المراكب - مع كل الأعمدة
-    db.run(`CREATE TABLE vessels (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        number TEXT,
-        length REAL,
-        region TEXT,
-        zone TEXT,
-        port TEXT,
-        support_location TEXT,
-        status TEXT,
-        breakdown_type TEXT,
-        breakdown_date TEXT,
-        end_date TEXT,
-        reference TEXT,
-        category TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    console.log("✅ تم إنشاء جدول المراكب");
-    
-    // جدول سجل النشاطات (Logs) - مهم لتتبع المستخدمين
-    db.run(`CREATE TABLE IF NOT EXISTS logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        username TEXT,
-        role TEXT,
-        action TEXT,
-        details TEXT,
-        date TEXT,
-        time TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    console.log("✅ تم إنشاء جدول سجل النشاطات");
-    
-    // جدول تذاكر الدعم
-    db.run(`CREATE TABLE IF NOT EXISTS tickets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        username TEXT,
-        subject TEXT,
-        message TEXT,
-        status TEXT DEFAULT 'قيد المعالجة',
-        date TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-    console.log("✅ تم إنشاء جدول التذاكر");
-    
-    // ==================== إضافة المستخدمين الافتراضيين ====================
-    db.get("SELECT * FROM users WHERE username = 'admin'", async (err, row) => {
-        if (!row) {
-            const hash = await bcrypt.hash('1234', 10);
-            db.run("INSERT INTO users (username, password, role, enabled) VALUES (?, ?, ?, ?)", 
-                ['admin', hash, 'مسؤول', 1]);
-            db.run("INSERT INTO users (username, password, role, enabled) VALUES (?, ?, ?, ?)", 
-                ['editor', hash, 'محرر', 1]);
-            db.run("INSERT INTO users (username, password, role, enabled) VALUES (?, ?, ?, ?)", 
-                ['viewer', hash, 'مشاهد', 1]);
-            console.log('✅ تم إنشاء المستخدمين (admin, editor, viewer)');
-        }
-    });
-    
-    // ==================== إضافة بيانات تجريبية ====================
-    db.get("SELECT * FROM vessels LIMIT 1", (err, row) => {
-        if (!row) {
-            db.run(`INSERT INTO vessels (name, number, length, region, zone, port, status, category) VALUES 
-                ('البروق 1', 'B001', 11, 'الشمال', 'تونس', 'تونس', 'صالح', 'البروق')`);
-            db.run(`INSERT INTO vessels (name, number, length, region, zone, port, status, category) VALUES 
-                ('صقر 1', 'S001', 10, 'الساحل', 'سوسة', 'سوسة', 'صالح', 'صقور')`);
-            db.run(`INSERT INTO vessels (name, number, length, region, zone, port, status, breakdown_type, breakdown_date, end_date, category) VALUES 
-                ('خافرة 1', 'K001', 20, 'الوسط', 'صفاقس', 'صفاقس', 'معطب', 'عطل محرك', '2024-03-01', '2024-04-01', 'خوافر')`);
-            db.run(`INSERT INTO vessels (name, number, length, region, zone, port, status, breakdown_type, breakdown_date, end_date, category) VALUES 
-                ('زورق 1', 'Z001', 15, 'الجنوب', 'جربة', 'جربة', 'صيانة', 'صيانة كهرباء', '2024-02-15', '2024-03-15', 'زوارق مزدوجة')`);
-            db.run(`INSERT INTO vessels (name, number, length, region, zone, port, status, category) VALUES 
-                ('طوافة 1', 'T001', 35, 'الشمال', 'بنزرت', 'بنزرت', 'صالح', 'طوافات')`);
-            console.log('✅ تم إضافة مراكب تجريبية');
-        }
-    });
-});
-
-// ==================== دوال مساعدة ====================
-function getCurrentDate() {
-    const now = new Date();
-    return {
-        date: `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`,
-        time: `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`
-    };
+// التأكد من وجود مجلد data
+if (!fs.existsSync(path.join(__dirname, 'data'))) {
+    fs.mkdirSync(path.join(__dirname, 'data'));
 }
 
-function logActivity(userId, username, role, action, details) {
-    const { date, time } = getCurrentDate();
-    db.run(`INSERT INTO logs (user_id, username, role, action, details, date, time) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [userId, username, role, action, details, date, time],
-        (err) => {
-            if (err) console.error("خطأ في تسجيل النشاط:", err.message);
-        });
+// ==================== دوال قاعدة البيانات ====================
+
+function readDB() {
+    try {
+        if (!fs.existsSync(DB_PATH)) {
+            // إنشاء بيانات افتراضية
+            const defaultDB = {
+                vessels: [
+                    { id: uuidv4(), name: "البروق 1", number: "B001", length: 11, region: "الشمال", zone: "تونس", port: "تونس", support_location: "قاعدة الشمال", status: "صالح", breakdown_type: "", breakdown_date: "", end_date: "", reference: "", category: "البروق", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+                    { id: uuidv4(), name: "صقر 1", number: "S001", length: 10, region: "الساحل", zone: "سوسة", port: "سوسة", support_location: "قاعدة الساحل", status: "صالح", breakdown_type: "", breakdown_date: "", end_date: "", reference: "", category: "صقور", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+                    { id: uuidv4(), name: "خافرة 1", number: "K001", length: 20, region: "الوسط", zone: "صفاقس", port: "صفاقس", support_location: "قاعدة الوسط", status: "معطب", breakdown_type: "عطل في المحرك", breakdown_date: "2025-03-10", end_date: "2025-04-10", reference: "REF001", category: "خوافر", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+                    { id: uuidv4(), name: "زورق 1", number: "Z001", length: 15, region: "الجنوب", zone: "جربة", port: "جربة", support_location: "قاعدة الجنوب", status: "صيانة", breakdown_type: "صيانة دورية", breakdown_date: "2025-03-15", end_date: "2025-04-05", reference: "REF002", category: "زوارق مزدوجة", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+                    { id: uuidv4(), name: "طوافة 1", number: "T001", length: 35, region: "الشمال", zone: "بنزرت", port: "بنزرت", support_location: "قاعدة الشمال", status: "صالح", breakdown_type: "", breakdown_date: "", end_date: "", reference: "", category: "طوافات", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+                ],
+                users: [
+                    { id: uuidv4(), username: "admin", password: bcrypt.hashSync("1234", 10), role: "مسؤول", enabled: true, createdAt: new Date().toISOString() },
+                    { id: uuidv4(), username: "editor", password: bcrypt.hashSync("1234", 10), role: "محرر", enabled: true, createdAt: new Date().toISOString() },
+                    { id: uuidv4(), username: "viewer", password: bcrypt.hashSync("1234", 10), role: "مشاهد", enabled: true, createdAt: new Date().toISOString() }
+                ],
+                logs: [],
+                tickets: []
+            };
+            fs.writeFileSync(DB_PATH, JSON.stringify(defaultDB, null, 2));
+            return defaultDB;
+        }
+        return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
+    } catch (error) {
+        console.error('خطأ في قراءة قاعدة البيانات:', error);
+        return { vessels: [], users: [], logs: [], tickets: [] };
+    }
+}
+
+function writeDB(data) {
+    try {
+        fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+        return true;
+    } catch (error) {
+        console.error('خطأ في كتابة قاعدة البيانات:', error);
+        return false;
+    }
+}
+
+// ==================== دوال مساعدة ====================
+
+function addLog(username, role, action, details) {
+    const db = readDB();
+    db.logs.unshift({
+        id: uuidv4(),
+        userName: username,
+        userRole: role,
+        action: action,
+        details: details,
+        date: new Date().toISOString(),
+        timestamp: Date.now()
+    });
+    if (db.logs.length > 1000) db.logs = db.logs.slice(0, 1000);
+    writeDB(db);
+}
+
+function getCategory(length) {
+    const n = parseFloat(length);
+    if (n === 11) return "البروق";
+    if (n >= 8 && n <= 12) return "صقور";
+    if (n > 12 && n <= 25) return "خوافر";
+    if (n >= 30) return "طوافات";
+    return "زوارق مزدوجة";
+}
+
+// ==================== Middleware للتحقق ====================
+
+function verifyToken(req, res, next) {
+    const token = req.headers['authorization'];
+    if (!token) {
+        return res.status(401).json({ error: 'غير مصرح به - يرجى تسجيل الدخول' });
+    }
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'جلسة غير صالحة - يرجى إعادة تسجيل الدخول' });
+    }
+}
+
+function verifyAdmin(req, res, next) {
+    if (req.user.role !== 'مسؤول') {
+        return res.status(403).json({ error: 'ليس لديك صلاحية - هذه الخاصية للمسؤول فقط' });
+    }
+    next();
 }
 
 // ==================== API Routes ====================
 
 // تسجيل الدخول
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
+    const db = readDB();
     
-    db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
-        if (err || !user) {
-            return res.status(401).json({ error: 'خطأ في البيانات' });
-        }
-        
-        const valid = await bcrypt.compare(password, user.password);
-        if (!valid || !user.enabled) {
-            return res.status(401).json({ error: 'خطأ في البيانات' });
-        }
-        
-        // تسجيل نشاط تسجيل الدخول
-        logActivity(user.id, user.username, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول إلى النظام');
-        
-        res.json({ 
-            success: true, 
-            user: { id: user.id, username: user.username, role: user.role } 
-        });
-    });
-});
-
-// جلب جميع المراكب
-app.get('/api/vessels', (req, res) => {
-    db.all("SELECT * FROM vessels ORDER BY id DESC", (err, vessels) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(vessels || []);
-        }
-    });
-});
-
-// إضافة مركب جديد
-app.post('/api/vessels', (req, res) => {
-    const { name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference, category } = req.body;
+    const user = db.users.find(u => u.username === username);
     
-    if (!name) {
-        return res.status(400).json({ error: 'اسم المركب مطلوب' });
+    if (!user) {
+        return res.status(401).json({ error: 'اسم المستخدم غير موجود' });
     }
     
-    db.run(`INSERT INTO vessels (name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference, category) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, number || '', length || 0, region || '', zone || '', port || '', support_location || '', status || 'صالح', breakdown_type || '', breakdown_date || '', end_date || '', reference || '', category || ''],
-        function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                // تسجيل النشاط (سنضيف user_id لاحقاً من التوكن)
-                res.json({ success: true, id: this.lastID, message: 'تمت الإضافة بنجاح' });
-            }
-        });
-});
-
-// حذف مركب
-app.delete('/api/vessels/:id', (req, res) => {
-    const id = req.params.id;
+    if (!user.enabled) {
+        return res.status(401).json({ error: 'هذا الحساب معطل' });
+    }
     
-    db.run("DELETE FROM vessels WHERE id = ?", [id], function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ success: true, message: 'تم الحذف بنجاح' });
+    const isValidPassword = bcrypt.compareSync(password, user.password);
+    
+    if (!isValidPassword) {
+        return res.status(401).json({ error: 'كلمة المرور غير صحيحة' });
+    }
+    
+    const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        SECRET_KEY,
+        { expiresIn: '24h' }
+    );
+    
+    addLog(user.username, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول إلى النظام');
+    
+    res.json({
+        success: true,
+        token: token,
+        user: {
+            id: user.id,
+            username: user.username,
+            role: user.role
         }
     });
 });
 
-// ==================== إدارة المستخدمين ====================
+// ==================== المراكب ====================
 
-// جلب جميع المستخدمين
-app.get('/api/users', (req, res) => {
-    db.all("SELECT id, username, role, enabled, created_at FROM users", (err, users) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(users || []);
-        }
-    });
+app.get('/api/vessels', verifyToken, (req, res) => {
+    const db = readDB();
+    res.json(db.vessels);
 });
 
-// إضافة مستخدم جديد
-app.post('/api/users', async (req, res) => {
+app.post('/api/vessels', verifyToken, (req, res) => {
+    const { name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference } = req.body;
+    
+    if (!name) {
+        return res.status(400).json({ error: 'الاسم مطلوب' });
+    }
+    
+    const db = readDB();
+    const newVessel = {
+        id: uuidv4(),
+        name: name,
+        number: number || '',
+        length: length || 0,
+        region: region || '',
+        zone: zone || '',
+        port: port || '',
+        support_location: support_location || '',
+        status: status || 'صالح',
+        breakdown_type: breakdown_type || '',
+        breakdown_date: breakdown_date || '',
+        end_date: end_date || '',
+        reference: reference || '',
+        category: getCategory(length),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    
+    db.vessels.push(newVessel);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'إضافة مركب', `قام بإضافة مركب: ${name}`);
+    
+    res.json({ success: true, vessel: newVessel });
+});
+
+app.put('/api/vessels/:id', verifyToken, (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    const db = readDB();
+    const vesselIndex = db.vessels.findIndex(v => v.id === id);
+    
+    if (vesselIndex === -1) {
+        return res.status(404).json({ error: 'المركب غير موجود' });
+    }
+    
+    db.vessels[vesselIndex] = {
+        ...db.vessels[vesselIndex],
+        ...updates,
+        category: updates.length ? getCategory(updates.length) : db.vessels[vesselIndex].category,
+        updatedAt: new Date().toISOString()
+    };
+    
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'تعديل مركب', `قام بتعديل مركب: ${db.vessels[vesselIndex].name}`);
+    
+    res.json({ success: true, vessel: db.vessels[vesselIndex] });
+});
+
+app.delete('/api/vessels/:id', verifyToken, verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    const db = readDB();
+    const vessel = db.vessels.find(v => v.id === id);
+    
+    if (!vessel) {
+        return res.status(404).json({ error: 'المركب غير موجود' });
+    }
+    
+    db.vessels = db.vessels.filter(v => v.id !== id);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'حذف مركب', `قام بحذف مركب: ${vessel.name}`);
+    
+    res.json({ success: true });
+});
+
+// ==================== المستخدمين ====================
+
+app.get('/api/users', verifyToken, verifyAdmin, (req, res) => {
+    const db = readDB();
+    const safeUsers = db.users.map(u => ({
+        id: u.id,
+        username: u.username,
+        role: u.role,
+        enabled: u.enabled,
+        createdAt: u.createdAt
+    }));
+    res.json(safeUsers);
+});
+
+app.post('/api/users', verifyToken, verifyAdmin, (req, res) => {
     const { username, password, role } = req.body;
     
     if (!username || !password) {
-        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبة' });
     }
     
-    // التحقق من عدم وجود المستخدم
-    db.get("SELECT id FROM users WHERE username = ?", [username], async (err, existing) => {
-        if (existing) {
-            return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً' });
-        }
-        
-        const hash = await bcrypt.hash(password, 10);
-        db.run("INSERT INTO users (username, password, role, enabled) VALUES (?, ?, ?, ?)",
-            [username, hash, role || 'مشاهد', 1],
-            function(err) {
-                if (err) {
-                    res.status(500).json({ error: err.message });
-                } else {
-                    res.json({ success: true, id: this.lastID, message: 'تمت إضافة المستخدم' });
-                }
-            });
-    });
+    const db = readDB();
+    
+    if (db.users.find(u => u.username === username)) {
+        return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+    }
+    
+    const newUser = {
+        id: uuidv4(),
+        username: username,
+        password: bcrypt.hashSync(password, 10),
+        role: role || 'مشاهد',
+        enabled: true,
+        createdAt: new Date().toISOString()
+    };
+    
+    db.users.push(newUser);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'إضافة مستخدم', `قام بإضافة مستخدم: ${username}`);
+    
+    res.json({ success: true, user: { id: newUser.id, username: newUser.username, role: newUser.role } });
 });
 
-// تغيير كلمة مرور المستخدم
-app.put('/api/users/:id/password', async (req, res) => {
+app.put('/api/users/:id/password', verifyToken, verifyAdmin, (req, res) => {
+    const { id } = req.params;
     const { password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
     
-    db.run("UPDATE users SET password = ? WHERE id = ?", [hash, req.params.id], function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ success: true, message: 'تم تغيير كلمة المرور' });
-        }
-    });
+    if (!password) {
+        return res.status(400).json({ error: 'كلمة المرور الجديدة مطلوبة' });
+    }
+    
+    const db = readDB();
+    const user = db.users.find(u => u.id === id);
+    
+    if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+    }
+    
+    // ✅ منع تغيير كلمة مرور admin
+    if (user.username === 'admin' && req.user.username !== 'admin') {
+        return res.status(403).json({ error: 'لا يمكن تغيير كلمة مرور المدير الرئيسي' });
+    }
+    
+    user.password = bcrypt.hashSync(password, 10);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'تغيير كلمة مرور', `قام بتغيير كلمة مرور المستخدم: ${user.username}`);
+    
+    res.json({ success: true });
 });
 
-// تفعيل/تعطيل مستخدم
-app.put('/api/users/:id/toggle', (req, res) => {
+app.put('/api/users/:id/toggle', verifyToken, verifyAdmin, (req, res) => {
+    const { id } = req.params;
     const { enabled } = req.body;
-    const newStatus = enabled ? 1 : 0;
     
-    db.run("UPDATE users SET enabled = ? WHERE id = ?", [newStatus, req.params.id], function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ success: true, message: enabled ? 'تم تفعيل المستخدم' : 'تم تعطيل المستخدم' });
-        }
-    });
+    const db = readDB();
+    const user = db.users.find(u => u.id === id);
+    
+    if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+    }
+    
+    // ✅ منع تعطيل admin
+    if (user.username === 'admin') {
+        return res.status(403).json({ error: 'لا يمكن تعطيل المدير الرئيسي' });
+    }
+    
+    user.enabled = enabled;
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, enabled ? 'تفعيل مستخدم' : 'تعطيل مستخدم', `قام ${enabled ? 'بتفعيل' : 'بتعطيل'} المستخدم: ${user.username}`);
+    
+    res.json({ success: true });
 });
 
-// حذف مستخدم
-app.delete('/api/users/:id', (req, res) => {
-    db.run("DELETE FROM users WHERE id = ?", [req.params.id], function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json({ success: true, message: 'تم حذف المستخدم' });
-        }
-    });
+app.delete('/api/users/:id', verifyToken, verifyAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    const db = readDB();
+    const user = db.users.find(u => u.id === id);
+    
+    if (!user) {
+        return res.status(404).json({ error: 'المستخدم غير موجود' });
+    }
+    
+    // ✅ منع حذف admin
+    if (user.username === 'admin') {
+        return res.status(403).json({ error: 'لا يمكن حذف المدير الرئيسي' });
+    }
+    
+    db.users = db.users.filter(u => u.id !== id);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'حذف مستخدم', `قام بحذف المستخدم: ${user.username}`);
+    
+    res.json({ success: true });
 });
 
-// ==================== سجل النشاطات (تتبع المستخدمين) ====================
-app.get('/api/logs', (req, res) => {
-    db.all("SELECT * FROM logs ORDER BY created_at DESC LIMIT 500", (err, logs) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(logs || []);
-        }
-    });
+// ==================== سجل النشاطات ====================
+
+app.get('/api/logs', verifyToken, verifyAdmin, (req, res) => {
+    const db = readDB();
+    res.json(db.logs);
 });
 
 // ==================== تذاكر الدعم ====================
-app.get('/api/tickets', (req, res) => {
-    db.all("SELECT * FROM tickets ORDER BY created_at DESC LIMIT 50", (err, tickets) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(tickets || []);
-        }
-    });
+
+app.get('/api/tickets', verifyToken, (req, res) => {
+    const db = readDB();
+    if (req.user.role !== 'مسؤول') {
+        const userTickets = db.tickets.filter(t => t.userName === req.user.username);
+        return res.json(userTickets);
+    }
+    res.json(db.tickets);
 });
 
-app.post('/api/tickets', (req, res) => {
+app.post('/api/tickets', verifyToken, (req, res) => {
     const { subject, message } = req.body;
-    const { date } = getCurrentDate();
     
     if (!subject || !message) {
-        return res.status(400).json({ error: 'العنوان والرسالة مطلوبان' });
+        return res.status(400).json({ error: 'العنوان والرسالة مطلوبة' });
     }
     
-    db.run(`INSERT INTO tickets (subject, message, date, status) VALUES (?, ?, ?, ?)`,
-        [subject, message, date, 'قيد المعالجة'],
-        function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                res.json({ success: true, id: this.lastID, message: 'تم إرسال التذكرة' });
-            }
-        });
-});
-
-// ==================== إحصائيات سريعة ====================
-app.get('/api/stats', (req, res) => {
-    db.all("SELECT * FROM vessels", (err, vessels) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            const total = vessels.length;
-            const salih = vessels.filter(v => v.status === 'صالح').length;
-            const mo3atab = vessels.filter(v => v.status === 'معطب').length;
-            const siyana = vessels.filter(v => v.status === 'صيانة').length;
-            const efficiency = total > 0 ? ((salih / total) * 100).toFixed(1) : 0;
-            
-            res.json({ total, salih, mo3atab, siyana, efficiency });
-        }
-    });
+    const db = readDB();
+    const newTicket = {
+        id: uuidv4(),
+        userName: req.user.username,
+        subject: subject,
+        message: message,
+        status: 'قيد المعالجة',
+        createdAt: new Date().toISOString()
+    };
+    
+    db.tickets.unshift(newTicket);
+    writeDB(db);
+    
+    addLog(req.user.username, req.user.role, 'إرسال تذكرة دعم', `قام بإرسال تذكرة: ${subject}`);
+    
+    res.json({ success: true, ticket: newTicket });
 });
 
 // ==================== تشغيل الخادم ====================
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
-    ═══════════════════════════════════════════════════
-    🌊 منظومة الوسائل البحرية - الخادم يعمل بنجاح!
-    📍 http://localhost:${PORT}
-    ───────────────────────────────────────────────────
-    👤 حسابات الدخول:
-       مسؤول: admin / 1234
-       محرر: editor / 1234
-       مشاهد: viewer / 1234
-    ═══════════════════════════════════════════════════
-    `);
+
+app.listen(PORT, () => {
+    console.log(`🚀 الخادم يعمل على http://localhost:${PORT}`);
+    console.log(`📁 قاعدة البيانات: ${DB_PATH}`);
+    console.log(`🔐 admin / 1234 | editor / 1234 | viewer / 1234`);
 });
