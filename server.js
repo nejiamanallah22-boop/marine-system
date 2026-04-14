@@ -400,6 +400,91 @@ app.post('/api/tickets', verifyToken, (req, res) => {
     res.json({ success: true, ticket: newTicket });
 });
 
+// ==================== تصدير واستيراد البيانات ====================
+
+// تصدير جميع البيانات
+app.get('/api/export', verifyToken, verifyAdmin, (req, res) => {
+    const db = readDB();
+    const exportData = {
+        exportDate: new Date().toISOString(),
+        version: "1.0",
+        vessels: db.vessels,
+        users: db.users.map(u => ({
+            id: u.id,
+            username: u.username,
+            role: u.role,
+            enabled: u.enabled,
+            createdAt: u.createdAt
+        })),
+        tickets: db.tickets,
+        logs: db.logs.slice(0, 500)
+    };
+    
+    addLog(req.user.username, req.user.role, 'تصدير بيانات', 'قام بتصدير جميع البيانات');
+    res.json(exportData);
+});
+
+// استيراد البيانات
+app.post('/api/import', verifyToken, verifyAdmin, (req, res) => {
+    const { vessels, users, tickets, mergeMode } = req.body;
+    const db = readDB();
+    
+    try {
+        if (vessels && Array.isArray(vessels)) {
+            if (mergeMode === 'replace') {
+                db.vessels = vessels;
+            } else {
+                const existingIds = new Set(db.vessels.map(v => v.id));
+                const newVessels = vessels.filter(v => !existingIds.has(v.id));
+                db.vessels.push(...newVessels);
+            }
+        }
+        
+        if (users && Array.isArray(users) && mergeMode === 'replace') {
+            const adminExists = users.find(u => u.username === 'admin');
+            if (!adminExists) {
+                const currentAdmin = db.users.find(u => u.username === 'admin');
+                if (currentAdmin) users.push(currentAdmin);
+            }
+            db.users = users.map(u => ({
+                ...u,
+                password: u.password || bcrypt.hashSync("1234", 10)
+            }));
+        }
+        
+        if (tickets && Array.isArray(tickets)) {
+            if (mergeMode === 'replace') {
+                db.tickets = tickets;
+            } else {
+                const existingIds = new Set(db.tickets.map(t => t.id));
+                const newTickets = tickets.filter(t => !existingIds.has(t.id));
+                db.tickets.unshift(...newTickets);
+            }
+        }
+        
+        writeDB(db);
+        addLog(req.user.username, req.user.role, 'استيراد بيانات', `قام باستيراد البيانات (وضع: ${mergeMode === 'replace' ? 'استبدال' : 'دمج'})`);
+        res.json({ success: true, message: 'تم استيراد البيانات بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: 'خطأ في استيراد البيانات: ' + error.message });
+    }
+});
+
+// إحصائيات النظام
+app.get('/api/stats', verifyToken, (req, res) => {
+    const db = readDB();
+    const stats = {
+        totalVessels: db.vessels.length,
+        operationalVessels: db.vessels.filter(v => v.status === 'صالح').length,
+        maintenanceVessels: db.vessels.filter(v => v.status === 'صيانة').length,
+        brokenVessels: db.vessels.filter(v => v.status === 'معطب').length,
+        totalUsers: db.users.length,
+        totalTickets: db.tickets.length,
+        recentLogs: db.logs.slice(0, 10)
+    };
+    res.json(stats);
+});
+
 // ==================== تشغيل الخادم ====================
 
 app.listen(PORT, () => {
