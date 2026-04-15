@@ -1,27 +1,11 @@
 {
   "name": "marine-fleet-system",
   "version": "3.3.0",
-  "description": "منظومة متابعة الوسائل البحرية - نظام متكامل آمن",
+  "description": "منظومة متابعة الوسائل البحرية",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "backup": "node scripts/backup.js"
-  },
-  "keywords": [
-    "marine",
-    "fleet",
-    "management",
-    "maritime",
-    "vessels",
-    "supabase",
-    "jwt",
-    "security"
-  ],
-  "author": "أمان الله ناجي",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18.0.0"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
