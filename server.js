@@ -1,94 +1,89 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const cors = require('cors');
-const path = require('path');
+const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const { body, validationResult } = require('express-validator');
+const cron = require('node-cron');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_KEY = process.env.SECRET_KEY || 'marine_super_secret_key_2024';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ==================== التحقق من المتغيرات ====================
+const requiredEnv = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SECRET_KEY'];
+const missingEnv = requiredEnv.filter(env => !process.env[env]);
+
+if (missingEnv.length > 0) {
+    console.error(`❌ خطأ: المتغيرات التالية غير معرفة: ${missingEnv.join(', ')}`);
+    console.log('⚠️ سيتم استخدام القيم الافتراضية للتجربة المحلية');
+}
+
+app.set('trust proxy', 1);
+
+function getClientIp(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+           req.ip || 
+           req.connection?.remoteAddress || 
+           'unknown';
+}
+
+// ==================== الأمان ====================
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "https://cdn-icons-png.flaticon.com"],
+        },
+    },
+    hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+    }
+}));
+
+app.use(cors({
+    origin: function(origin, callback) {
+        const allowedOrigins = [
+            'https://marine-system-71eo.onrender.com',
+            'http://localhost:3000',
+            'http://localhost:5500'
+        ];
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(null, false);
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
+
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
-// ==================== قاعدة البيانات SQLite ====================
-const db = new sqlite3.Database('./data/marine_system.db', (err) => {
-    if (err) {
-        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-    } else {
-        console.log('✅ تم الاتصال بقاعدة بيانات SQLite بنجاح');
-    }
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: { error: 'عدد كبير من المحاولات، حاول بعد 15 دقيقة' },
+    keyGenerator: (req) => getClientIp(req)
 });
 
-// إنشاء الجداول
-db.serialize(() => {
-    // جدول المستخدمين
-    db.run(`CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT DEFAULT 'مشاهد',
-        enabled INTEGER DEFAULT 1,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    // جدول المراكب
-    db.run(`CREATE TABLE IF NOT EXISTS vessels (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        number TEXT,
-        length REAL,
-        region TEXT,
-        zone TEXT,
-        port TEXT,
-        support_location TEXT,
-        status TEXT DEFAULT 'صالح',
-        breakdown_type TEXT,
-        breakdown_date TEXT,
-        end_date TEXT,
-        reference TEXT,
-        category TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    // جدول سجل النشاطات
-    db.run(`CREATE TABLE IF NOT EXISTS logs (
-        id TEXT PRIMARY KEY,
-        user_id TEXT,
-        username TEXT,
-        user_role TEXT,
-        action TEXT,
-        details TEXT,
-        date TEXT,
-        time TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    // جدول تذاكر الدعم
-    db.run(`CREATE TABLE IF NOT EXISTS tickets (
-        id TEXT PRIMARY KEY,
-        user_id TEXT,
-        username TEXT,
-        subject TEXT,
-        message TEXT,
-        status TEXT DEFAULT 'قيد المعالجة',
-        date TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )`);
-    
-    // إنشاء الفهارس (Indexes) لتحسين الأداء
-    db.run(`CREATE INDEX IF NOT EXISTS idx_vessels_region ON vessels(region)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_vessels_status ON vessels(status)`);
-    db.run(`CREATE INDEX IF NOT EXISTS idx_logs_created_at ON logs(created_at)`);
-    
-    console.log('✅ تم إنشاء جميع الجداول والفهارس');
-});
+app.use('/api/login', loginLimiter);
+
+// ==================== Supabase ====================
+const supabaseUrl = process.env.SUPABASE_URL || 'https://rzcwngkpknilfesxdrkk.supabase.co';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Y3duZ2twa25pbGZlc3hkcmtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE2MjY0OCwiZXhwIjoyMDkxNzM4NjQ4fQ.dummy';
+const SECRET_KEY = process.env.SECRET_KEY || 'marine_super_secret_key_2024';
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+console.log('✅ Supabase متصل');
 
 // ==================== دوال مساعدة ====================
 function getCurrentDateTime() {
@@ -108,23 +103,35 @@ function getCategory(length) {
     return "زوارق مزدوجة";
 }
 
-function logActivity(userId, username, userRole, action, details) {
+async function logActivity(userId, username, userRole, action, details, req = null) {
     const { date, time } = getCurrentDateTime();
-    const id = uuidv4();
-    db.run(`INSERT INTO logs (id, user_id, username, user_role, action, details, date, time) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, userId || null, username, userRole, action, details, date, time]);
+    const ip = req ? getClientIp(req) : null;
+    try {
+        await supabase.from('logs').insert([{
+            user_id: userId,
+            username: username,
+            user_role: userRole,
+            action: action,
+            details: details,
+            date: date,
+            time: time,
+            ip_address: ip
+        }]);
+    } catch(e) { console.error('خطأ في تسجيل النشاط:', e.message); }
 }
 
 // ==================== Middleware ====================
-function verifyToken(req, res, next) {
-    const token = req.headers['authorization'];
-    if (!token) {
+async function verifyToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
         return res.status(401).json({ error: 'غير مصرح به - يرجى تسجيل الدخول' });
     }
+    
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+    
     try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        req.user = decoded;
+        const verified = jwt.verify(token, SECRET_KEY);
+        req.user = verified;
         next();
     } catch (error) {
         return res.status(401).json({ error: 'جلسة غير صالحة - يرجى إعادة تسجيل الدخول' });
@@ -138,14 +145,33 @@ function verifyAdmin(req, res, next) {
     next();
 }
 
-// ==================== API Routes ====================
+function verifyEditor(req, res, next) {
+    if (req.user.role === 'مسؤول' || req.user.role === 'محرر') {
+        return next();
+    }
+    return res.status(403).json({ error: 'ليس لديك صلاحية - هذه الخاصية للمحرر أو المسؤول فقط' });
+}
 
-// تسجيل الدخول
-app.post('/api/login', async (req, res) => {
+// ==================== تسجيل الدخول ====================
+app.post('/api/login', [
+    body('username').isLength({ min: 3 }).trim().escape(),
+    body('password').isLength({ min: 4 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'بيانات غير صالحة' });
+    }
+    
     const { username, password } = req.body;
     
-    db.get("SELECT * FROM users WHERE username = ?", [username], async (err, user) => {
-        if (err || !user) {
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .single();
+        
+        if (error || !user) {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
         
@@ -161,319 +187,319 @@ app.post('/api/login', async (req, res) => {
         const token = jwt.sign(
             { id: user.id, username: user.username, role: user.role },
             SECRET_KEY,
-            { expiresIn: '24h' }
+            { expiresIn: '8h' }
         );
         
-        logActivity(user.id, user.username, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول');
+        await logActivity(user.id, user.username, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول بنجاح', req);
         
         res.json({ 
-            success: true, 
+            success: true,
             token: token,
             user: { id: user.id, username: user.username, role: user.role } 
         });
-    });
+    } catch(err) {
+        res.status(500).json({ error: 'خطأ في الخادم' });
+    }
 });
 
 // ==================== المراكب ====================
-
-// جلب جميع المراكب
-app.get('/api/vessels', verifyToken, (req, res) => {
-    db.all("SELECT * FROM vessels ORDER BY created_at DESC", [], (err, vessels) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(vessels || []);
-        }
-    });
+app.get('/api/vessels', verifyToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('vessels')
+            .select('*')
+            .order('id', { ascending: false });
+        
+        if (error) throw error;
+        res.json(data || []);
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// إضافة مركب جديد
-app.post('/api/vessels', verifyToken, (req, res) => {
-    const { name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference } = req.body;
-    
-    if (!name) {
-        return res.status(400).json({ error: 'اسم المركب مطلوب' });
+app.post('/api/vessels', verifyToken, verifyEditor, [
+    body('name').isLength({ min: 2 }).trim().escape()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'اسم المركب غير صالح' });
     }
     
-    const id = uuidv4();
+    const { name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference } = req.body;
     const category = getCategory(length);
-    const now = new Date().toISOString();
     
-    db.run(`INSERT INTO vessels (id, name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference, category, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, name, number || '', length || 0, region || '', zone || '', port || '', support_location || '', status || 'صالح', breakdown_type || '', breakdown_date || '', end_date || '', reference || '', category, now, now],
-        function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, 'إضافة مركب', `قام بإضافة مركب: ${name}`);
-                res.json({ success: true, id: id, message: 'تمت الإضافة بنجاح' });
-            }
-        });
+    try {
+        const { data, error } = await supabase
+            .from('vessels')
+            .insert([{
+                name: name.trim(),
+                number, length, region, zone, port, support_location,
+                status, breakdown_type, breakdown_date, end_date, reference, category
+            }])
+            .select();
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'إضافة مركب', `قام بإضافة مركب: ${name}`, req);
+        res.json({ success: true, vessel: data[0] });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// تحديث مركب
-app.put('/api/vessels/:id', verifyToken, (req, res) => {
+app.put('/api/vessels/:id', verifyToken, verifyEditor, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     
-    const fields = [];
-    const values = [];
-    
-    Object.keys(updates).forEach(key => {
-        if (key !== 'id' && key !== 'created_at') {
-            fields.push(`${key} = ?`);
-            values.push(updates[key]);
-        }
-    });
-    fields.push(`updated_at = ?`);
-    values.push(new Date().toISOString());
-    values.push(id);
-    
-    if (fields.length === 0) {
-        return res.status(400).json({ error: 'لا توجد بيانات للتحديث' });
+    try {
+        const { error } = await supabase
+            .from('vessels')
+            .update({ ...updates, updated_at: new Date() })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'تعديل مركب', `قام بتعديل مركب ID: ${id}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
     }
-    
-    db.run(`UPDATE vessels SET ${fields.join(', ')} WHERE id = ?`, values, function(err) {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else if (this.changes === 0) {
-            res.status(404).json({ error: 'المركب غير موجود' });
-        } else {
-            logActivity(req.user.id, req.user.username, req.user.role, 'تعديل مركب', `قام بتعديل مركب ID: ${id}`);
-            res.json({ success: true, message: 'تم التحديث بنجاح' });
-        }
-    });
 });
 
-// حذف مركب
-app.delete('/api/vessels/:id', verifyToken, verifyAdmin, (req, res) => {
+app.delete('/api/vessels/:id', verifyToken, verifyAdmin, async (req, res) => {
     const { id } = req.params;
     
-    db.get("SELECT name FROM vessels WHERE id = ?", [id], (err, vessel) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
+    try {
+        const { data: vessel } = await supabase
+            .from('vessels')
+            .select('name')
+            .eq('id', id)
+            .single();
         
-        db.run("DELETE FROM vessels WHERE id = ?", [id], function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else if (this.changes === 0) {
-                res.status(404).json({ error: 'المركب غير موجود' });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, 'حذف مركب', `قام بحذف مركب: ${vessel?.name || 'غير معروف'}`);
-                res.json({ success: true, message: 'تم الحذف بنجاح' });
-            }
-        });
-    });
+        const { error } = await supabase
+            .from('vessels')
+            .delete()
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'حذف مركب', `قام بحذف مركب: ${vessel?.name || 'غير معروف'}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // ==================== المستخدمين ====================
-
-// جلب جميع المستخدمين (للمسؤول فقط)
-app.get('/api/users', verifyToken, verifyAdmin, (req, res) => {
-    db.all("SELECT id, username, role, enabled, created_at FROM users ORDER BY created_at", [], (err, users) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(users || []);
-        }
-    });
+app.get('/api/users', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, username, role, enabled, created_at')
+            .order('id');
+        
+        if (error) throw error;
+        res.json(data || []);
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// إضافة مستخدم جديد
-app.post('/api/users', verifyToken, verifyAdmin, async (req, res) => {
-    const { username, password, role } = req.body;
-    
-    if (!username || !password) {
-        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+app.post('/api/users', verifyToken, verifyAdmin, [
+    body('username').isLength({ min: 3 }).trim().escape(),
+    body('password').isLength({ min: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل وكلمة المرور 6 أحرف' });
     }
     
-    db.get("SELECT id FROM users WHERE username = ?", [username], async (err, existing) => {
+    const { username, password, role } = req.body;
+    
+    try {
+        const { data: existing } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', username)
+            .single();
+        
         if (existing) {
             return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً' });
         }
         
-        const id = uuidv4();
         const hash = await bcrypt.hash(password, 10);
-        db.run("INSERT INTO users (id, username, password, role, enabled) VALUES (?, ?, ?, ?, ?)",
-            [id, username, hash, role || 'مشاهد', 1],
-            function(err) {
-                if (err) {
-                    res.status(500).json({ error: err.message });
-                } else {
-                    logActivity(req.user.id, req.user.username, req.user.role, 'إضافة مستخدم', `قام بإضافة مستخدم: ${username}`);
-                    res.json({ success: true, id: id, message: 'تمت إضافة المستخدم' });
-                }
-            });
-    });
+        const { error } = await supabase
+            .from('users')
+            .insert([{ username, password: hash, role: role || 'مشاهد', enabled: true }]);
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'إضافة مستخدم', `تم إضافة مستخدم جديد: ${username}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// تغيير كلمة مرور المستخدم
 app.put('/api/users/:id/password', verifyToken, verifyAdmin, async (req, res) => {
     const { id } = req.params;
     const { password } = req.body;
     
-    if (!password) {
-        return res.status(400).json({ error: 'كلمة المرور الجديدة مطلوبة' });
+    if (!password || password.length < 6) {
+        return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
     }
     
-    // منع تغيير كلمة مرور admin إذا لم يكن admin الحالي هو admin
-    db.get("SELECT username FROM users WHERE id = ?", [id], async (err, user) => {
-        if (user && user.username === 'admin' && req.user.username !== 'admin') {
-            return res.status(403).json({ error: 'لا يمكن تغيير كلمة مرور المدير الرئيسي' });
-        }
-        
+    try {
         const hash = await bcrypt.hash(password, 10);
-        db.run("UPDATE users SET password = ? WHERE id = ?", [hash, id], function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else if (this.changes === 0) {
-                res.status(404).json({ error: 'المستخدم غير موجود' });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, 'تغيير كلمة مرور', `قام بتغيير كلمة مرور المستخدم ID: ${id}`);
-                res.json({ success: true, message: 'تم تغيير كلمة المرور' });
-            }
-        });
-    });
+        const { error } = await supabase
+            .from('users')
+            .update({ password: hash })
+            .eq('id', id);
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'تغيير كلمة مرور', `تم تغيير كلمة مرور المستخدم ID: ${id}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// تفعيل/تعطيل مستخدم
-app.put('/api/users/:id/toggle', verifyToken, verifyAdmin, (req, res) => {
+app.put('/api/users/:id/toggle', verifyToken, verifyAdmin, async (req, res) => {
     const { id } = req.params;
     const { enabled } = req.body;
-    const newStatus = enabled ? 1 : 0;
     
-    db.get("SELECT username FROM users WHERE id = ?", [id], (err, user) => {
-        if (user && user.username === 'admin') {
-            return res.status(403).json({ error: 'لا يمكن تعطيل المدير الرئيسي' });
-        }
+    try {
+        const { error } = await supabase
+            .from('users')
+            .update({ enabled })
+            .eq('id', id);
         
-        db.run("UPDATE users SET enabled = ? WHERE id = ?", [newStatus, id], function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else if (this.changes === 0) {
-                res.status(404).json({ error: 'المستخدم غير موجود' });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, enabled ? 'تفعيل مستخدم' : 'تعطيل مستخدم', `قام ${enabled ? 'بتفعيل' : 'بتعطيل'} المستخدم ID: ${id}`);
-                res.json({ success: true, message: enabled ? 'تم تفعيل المستخدم' : 'تم تعطيل المستخدم' });
-            }
-        });
-    });
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, enabled ? 'تفعيل مستخدم' : 'تعطيل مستخدم', `تم ${enabled ? 'تفعيل' : 'تعطيل'} المستخدم ID: ${id}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// حذف مستخدم
-app.delete('/api/users/:id', verifyToken, verifyAdmin, (req, res) => {
+app.delete('/api/users/:id', verifyToken, verifyAdmin, async (req, res) => {
     const { id } = req.params;
     
-    db.get("SELECT username FROM users WHERE id = ?", [id], (err, user) => {
-        if (user && user.username === 'admin') {
-            return res.status(403).json({ error: 'لا يمكن حذف المدير الرئيسي' });
-        }
+    try {
+        const { error } = await supabase
+            .from('users')
+            .delete()
+            .eq('id', id);
         
-        db.run("DELETE FROM users WHERE id = ?", [id], function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else if (this.changes === 0) {
-                res.status(404).json({ error: 'المستخدم غير موجود' });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, 'حذف مستخدم', `قام بحذف المستخدم: ${user?.username || 'غير معروف'}`);
-                res.json({ success: true, message: 'تم حذف المستخدم' });
-            }
-        });
-    });
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'حذف مستخدم', `تم حذف المستخدم ID: ${id}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // ==================== سجل النشاطات ====================
-app.get('/api/logs', verifyToken, verifyAdmin, (req, res) => {
-    db.all("SELECT * FROM logs ORDER BY created_at DESC LIMIT 500", [], (err, logs) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            res.json(logs || []);
-        }
-    });
+app.get('/api/logs', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(500);
+        
+        if (error) throw error;
+        res.json(data || []);
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // ==================== تذاكر الدعم ====================
-app.get('/api/tickets', verifyToken, (req, res) => {
-    if (req.user.role !== 'مسؤول') {
-        db.all("SELECT * FROM tickets WHERE username = ? ORDER BY created_at DESC", [req.user.username], (err, tickets) => {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                res.json(tickets || []);
-            }
-        });
-    } else {
-        db.all("SELECT * FROM tickets ORDER BY created_at DESC LIMIT 50", [], (err, tickets) => {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                res.json(tickets || []);
-            }
-        });
-    }
-});
-
-app.post('/api/tickets', verifyToken, (req, res) => {
-    const { subject, message } = req.body;
-    const { date } = getCurrentDateTime();
-    const id = uuidv4();
-    
-    if (!subject || !message) {
-        return res.status(400).json({ error: 'العنوان والرسالة مطلوبان' });
-    }
-    
-    db.run(`INSERT INTO tickets (id, user_id, username, subject, message, date, status) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [id, req.user.id, req.user.username, subject, message, date, 'قيد المعالجة'],
-        function(err) {
-            if (err) {
-                res.status(500).json({ error: err.message });
-            } else {
-                logActivity(req.user.id, req.user.username, req.user.role, 'إرسال تذكرة', `قام بإرسال تذكرة: ${subject}`);
-                res.json({ success: true, id: id, message: 'تم إرسال التذكرة' });
-            }
-        });
-});
-
-// ==================== إحصائيات سريعة ====================
-app.get('/api/stats', verifyToken, (req, res) => {
-    db.all("SELECT status, COUNT(*) as count FROM vessels GROUP BY status", [], (err, statusCounts) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
+app.get('/api/tickets', verifyToken, async (req, res) => {
+    try {
+        let query = supabase.from('tickets').select('*').order('created_at', { ascending: false }).limit(50);
+        
+        if (req.user.role !== 'مسؤول') {
+            query = query.eq('username', req.user.username);
         }
         
-        db.get("SELECT COUNT(*) as total FROM vessels", [], (err, totalResult) => {
-            const total = totalResult?.total || 0;
-            const salih = statusCounts.find(s => s.status === 'صالح')?.count || 0;
-            const mo3atab = statusCounts.find(s => s.status === 'معطب')?.count || 0;
-            const siyana = statusCounts.find(s => s.status === 'صيانة')?.count || 0;
-            const efficiency = total > 0 ? ((salih / total) * 100).toFixed(1) : 0;
-            
-            res.json({ total, salih, mo3atab, siyana, efficiency });
-        });
-    });
+        const { data, error } = await query;
+        if (error) throw error;
+        res.json(data || []);
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// ==================== تصدير واستيراد البيانات ====================
-app.get('/api/export', verifyToken, verifyAdmin, (req, res) => {
-    db.all("SELECT * FROM vessels ORDER BY created_at DESC", [], (err, vessels) => {
-        if (err) {
-            res.status(500).json({ error: err.message });
-        } else {
-            const exportData = {
-                exportDate: new Date().toISOString(),
-                version: "2.0",
-                vessels: vessels
-            };
-            logActivity(req.user.id, req.user.username, req.user.role, 'تصدير بيانات', 'قام بتصدير جميع البيانات');
-            res.json(exportData);
-        }
-    });
+app.post('/api/tickets', verifyToken, [
+    body('subject').isLength({ min: 3 }).trim().escape(),
+    body('message').isLength({ min: 5 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'العنوان والرسالة غير صالحين' });
+    }
+    
+    const { subject, message } = req.body;
+    const { date } = getCurrentDateTime();
+    
+    try {
+        const { error } = await supabase
+            .from('tickets')
+            .insert([{
+                user_id: req.user.id,
+                username: req.user.username,
+                subject, message, date,
+                status: 'قيد المعالجة'
+            }]);
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'إرسال تذكرة', `قام بإرسال تذكرة: ${subject}`, req);
+        res.json({ success: true });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-app.post('/api/import', verifyToken, verifyAdmin, (req, res) => {
+// ==================== إحصائيات ====================
+app.get('/api/stats', verifyToken, async (req, res) => {
+    try {
+        const { data: vessels, error } = await supabase.from('vessels').select('*');
+        
+        if (error) throw error;
+        
+        const total = vessels.length;
+        const salih = vessels.filter(v => v.status === 'صالح').length;
+        const mo3atab = vessels.filter(v => v.status === 'معطب').length;
+        const siyana = vessels.filter(v => v.status === 'صيانة').length;
+        const efficiency = total > 0 ? ((salih / total) * 100).toFixed(1) : 0;
+        
+        res.json({ total, salih, mo3atab, siyana, efficiency });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== تصدير واستيراد ====================
+app.get('/api/export', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { data: vessels, error } = await supabase.from('vessels').select('*').order('id', { ascending: false });
+        
+        if (error) throw error;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'تصدير بيانات', 'قام بتصدير البيانات', req);
+        res.json({ vessels: vessels || [] });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/import', verifyToken, verifyAdmin, async (req, res) => {
     const { vessels } = req.body;
     
     if (!vessels || !Array.isArray(vessels)) {
@@ -481,51 +507,58 @@ app.post('/api/import', verifyToken, verifyAdmin, (req, res) => {
     }
     
     let imported = 0;
-    let errors = 0;
-    let completed = 0;
     
-    if (vessels.length === 0) {
-        return res.json({ success: true, imported: 0, errors: 0, message: 'لا توجد بيانات للاستيراد' });
-    }
+    const vesselsToInsert = vessels.map(v => ({
+        name: v.name,
+        number: v.number || '',
+        length: v.length || 0,
+        region: v.region || '',
+        zone: v.zone || '',
+        port: v.port || '',
+        support_location: v.support_location || '',
+        status: v.status || 'صالح',
+        breakdown_type: v.breakdown_type || '',
+        breakdown_date: v.breakdown_date || '',
+        end_date: v.end_date || '',
+        reference: v.reference || '',
+        category: getCategory(v.length)
+    }));
     
-    vessels.forEach(v => {
-        const id = uuidv4();
-        const now = new Date().toISOString();
-        const category = getCategory(v.length);
+    try {
+        const { error } = await supabase.from('vessels').insert(vesselsToInsert);
         
-        db.run(`INSERT INTO vessels (id, name, number, length, region, zone, port, support_location, status, breakdown_type, breakdown_date, end_date, reference, category, created_at, updated_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, v.name, v.number || '', v.length || 0, v.region || '', v.zone || '', v.port || '', v.support_location || '', v.status || 'صالح', v.breakdown_type || '', v.breakdown_date || '', v.end_date || '', v.reference || '', category, now, now],
-            function(err) {
-                if (err) errors++;
-                else imported++;
-                completed++;
-                
-                if (completed === vessels.length) {
-                    logActivity(req.user.id, req.user.username, req.user.role, 'استيراد بيانات', `قام باستيراد ${imported} مركب`);
-                    res.json({ success: true, imported, errors, message: `تم استيراد ${imported} مركب بنجاح` });
-                }
-            });
-    });
+        if (error) throw error;
+        imported = vesselsToInsert.length;
+        
+        await logActivity(req.user.id, req.user.username, req.user.role, 'استيراد بيانات', `تم استيراد ${imported} مركب`, req);
+        res.json({ success: true, imported });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// ==================== تهيئة المستخدمين الافتراضيين ====================
+// ==================== تهيئة المستخدمين ====================
 async function initializeDefaultUsers() {
-    const defaultUsers = [
-        { id: uuidv4(), username: 'admin', password: '1234', role: 'مسؤول' },
-        { id: uuidv4(), username: 'editor', password: '1234', role: 'محرر' },
-        { id: uuidv4(), username: 'viewer', password: '1234', role: 'مشاهد' }
-    ];
-    
-    for (const user of defaultUsers) {
-        db.get("SELECT id FROM users WHERE username = ?", [user.username], async (err, existing) => {
-            if (!existing) {
-                const hash = await bcrypt.hash(user.password, 10);
-                db.run("INSERT INTO users (id, username, password, role, enabled) VALUES (?, ?, ?, ?, ?)",
-                    [user.id, user.username, hash, user.role, 1]);
-                console.log(`✅ تم إنشاء المستخدم: ${user.username}`);
-            }
-        });
+    try {
+        const { data: existingAdmin } = await supabase
+            .from('users')
+            .select('id')
+            .eq('username', 'admin')
+            .single();
+        
+        if (!existingAdmin) {
+            const hash = await bcrypt.hash('1234', 10);
+            
+            await supabase.from('users').insert([
+                { username: 'admin', password: hash, role: 'مسؤول', enabled: true },
+                { username: 'editor', password: hash, role: 'محرر', enabled: true },
+                { username: 'viewer', password: hash, role: 'مشاهد', enabled: true }
+            ]);
+            
+            console.log('✅ تم إنشاء المستخدمين الافتراضيين (admin/1234, editor/1234, viewer/1234)');
+        }
+    } catch(err) {
+        console.log('⚠️ خطأ في تهيئة المستخدمين:', err.message);
     }
 }
 
@@ -535,15 +568,13 @@ initializeDefaultUsers();
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`
     ═══════════════════════════════════════════════════════════════
-    🌊 منظومة الوسائل البحرية - الإصدار 2.0.0
-    📍 الخادم يعمل على: http://localhost:${PORT}
+    🌊 منظومة الوسائل البحرية - الخادم يعمل بنجاح!
+    📍 http://localhost:${PORT}
     ───────────────────────────────────────────────────────────────
     👤 حسابات الدخول:
        🔐 مسؤول (admin): admin / 1234
        ✏️ محرر (editor): editor / 1234
        👁️ مشاهد (viewer): viewer / 1234
-    ───────────────────────────────────────────────────────────────
-    💾 قاعدة البيانات: SQLite (./data/marine_system.db)
     ═══════════════════════════════════════════════════════════════
     `);
 });
