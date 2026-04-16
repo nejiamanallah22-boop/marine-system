@@ -126,57 +126,128 @@
 
 <div id="mainApp" class="container" style="display: none;">
     <div class="professional-header">
-        <div class="header-main-title"><h1><i class="fas fa-anchor"></i> منظومة متابعة الوسائل البحرية <i class="fas fa-ship"></i></h1><p style="text-align: center; margin-top: 5px;">نظام احترافي لإدارة الأسطول ومتابعة الجاهزية</p></div>
-        <div class="developer-badge"><div class="developer-info"><i class="fas fa-code"></i> Développeur: أمان الله ناجي <i class="fas fa-rocket"></i></div><div class="user-control"><span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span><span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span><button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button><button class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button></div></div>
+        <div class="header-main-title">
+            <h1><i class="fas fa-anchor"></i> منظومة متابعة الوسائل البحرية <i class="fas fa-ship"></i></h1>
+            <p style="text-align: center; margin-top: 5px;">نظام احترافي لإدارة الأسطول ومتابعة الجاهزية</p>
+        </div>
+        <div class="developer-badge">
+            <div class="developer-info"><i class="fas fa-code"></i> Développeur: أمان الله ناجي <i class="fas fa-rocket"></i></div>
+            <div class="user-control">
+                <span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span>
+                <span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span>
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button>
+                <button class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
+        </div>
     </div>
 
-    <div class="data-toolbar"><div><i class="fas fa-database"></i> <strong>إدارة البيانات</strong></div><div class="toolbar-buttons"><button class="btn-sm btn-cyan" onclick="exportToExcel()" id="exportExcelBtn"><i class="fas fa-file-excel"></i> تصدير Excel</button><button class="btn-sm btn-cyan" onclick="exportToPDF()" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> تصدير PDF</button><button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn"><i class="fas fa-download"></i> تصدير JSON</button><label class="file-input-label" id="importLabelBtn"><i class="fas fa-upload"></i> استيراد بيانات<input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label><button class="btn-sm btn-blue" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i> تحديث الكل</button></div></div>
+    <div class="data-toolbar">
+        <div><i class="fas fa-database"></i> <strong>إدارة البيانات</strong></div>
+        <div class="toolbar-buttons">
+            <button class="btn-sm btn-cyan" onclick="exportToExcel()" id="exportExcelBtn"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+            <button class="btn-sm btn-cyan" onclick="exportToPDF()" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+            <button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn"><i class="fas fa-download"></i> تصدير JSON</button>
+            <label class="file-input-label" id="importLabelBtn"><i class="fas fa-upload"></i> استيراد بيانات<input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label>
+            <button class="btn-sm btn-blue" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i> تحديث الكل</button>
+        </div>
+    </div>
 
-    <div class="nav"><button class="nav-btn primary" onclick="showPage('main')"><i class="fas fa-home"></i> السجل العام</button><button class="nav-btn warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> سجل الصيانة</button><button class="nav-btn success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> جاهزية الأسطول</button><button class="nav-btn" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم الفني</button><button id="trackBtn" class="nav-btn purple" onclick="showPage('track')"><i class="fas fa-history"></i> تتبع المستخدمين</button><button id="admBtn" class="nav-btn danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> إدارة المستخدمين</button><button class="nav-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button></div>
+    <div class="nav">
+        <button class="nav-btn primary" onclick="showPage('main')"><i class="fas fa-home"></i> السجل العام</button>
+        <button class="nav-btn warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> سجل الصيانة</button>
+        <button class="nav-btn success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> جاهزية الأسطول</button>
+        <button class="nav-btn" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم الفني</button>
+        <button id="trackBtn" class="nav-btn purple" onclick="showPage('track')"><i class="fas fa-history"></i> تتبع المستخدمين</button>
+        <button id="admBtn" class="nav-btn danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> إدارة المستخدمين</button>
+        <button class="nav-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+    </div>
 
-    <div id="inputArea" class="input-grid"><input type="text" id="iName" placeholder="اسم المركب"><input type="text" id="iNum" placeholder="الرقم"><input type="number" id="iLen" placeholder="الطول (م)"><select id="iReg" onchange="updateZones()"><option value="">الإقليم</option><option value="الشمال">الشمال</option><option value="الساحل">الساحل</option><option value="الوسط">الوسط</option><option value="الجنوب">الجنوب</option></select><select id="iZone"><option value="">المنطقة</option></select><input type="text" id="iPort" placeholder="الميناء"><input type="text" id="iSupp" placeholder="مكان التعزيز"><select id="iStat"><option value="صالح">صالح</option><option value="معطب">معطب</option><option value="صيانة">صيانة</option></select><input type="text" id="iBreak" placeholder="نوع العطب"><input type="date" id="iDate"><input type="date" id="iEnd"><input type="text" id="iRef" placeholder="المرجع"><button class="btn btn-green" onclick="addItem()"><i class="fas fa-save"></i> حفظ</button><button class="btn-sm btn-blue" onclick="clearForm()"><i class="fas fa-undo-alt"></i> إلغاء / جديد</button></div>
+    <div id="inputArea" class="input-grid">
+        <input type="text" id="iName" placeholder="اسم المركب">
+        <input type="text" id="iNum" placeholder="الرقم">
+        <input type="number" id="iLen" placeholder="الطول (م)">
+        <select id="iReg" onchange="updateZones()"><option value="">الإقليم</option><option value="الشمال">الشمال</option><option value="الساحل">الساحل</option><option value="الوسط">الوسط</option><option value="الجنوب">الجنوب</option></select>
+        <select id="iZone"><option value="">المنطقة</option></select>
+        <input type="text" id="iPort" placeholder="الميناء">
+        <input type="text" id="iSupp" placeholder="مكان التعزيز">
+        <select id="iStat"><option value="صالح">صالح</option><option value="معطب">معطب</option><option value="صيانة">صيانة</option></select>
+        <input type="text" id="iBreak" placeholder="نوع العطب">
+        <input type="date" id="iDate"><input type="date" id="iEnd">
+        <input type="text" id="iRef" placeholder="المرجع">
+        <button class="btn btn-green" onclick="addItem()"><i class="fas fa-save"></i> حفظ</button>
+        <button class="btn-sm btn-blue" onclick="clearForm()"><i class="fas fa-undo-alt"></i> إلغاء / جديد</button>
+    </div>
 
-    <div id="pageMain"><div class="filter-bar"><div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث" onkeyup="renderMain()"></div><select id="fCatMain" onchange="renderMain()"><option value="الكل">كل الفئات</option></select><select id="fRegMain" onchange="renderMain()"><option value="الكل">كل الأقاليم</option></select><button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button><button class="btn-sm btn-green" onclick="refreshMain()"><i class="fas fa-sync-alt"></i> تحديث</button></div><div class="scrollable-table"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead><tbody id="mainBody"></tbody></table></div></div>
+    <div id="pageMain">
+        <div class="filter-bar">
+            <div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث" onkeyup="renderMain()"></div>
+            <select id="fCatMain" onchange="renderMain()"><option value="الكل">كل الفئات</option></select>
+            <select id="fRegMain" onchange="renderMain()"><option value="الكل">كل الأقاليم</option></select>
+            <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
+            <button class="btn-sm btn-green" onclick="refreshMain()"><i class="fas fa-sync-alt"></i> تحديث</button>
+        </div>
+        <div class="scrollable-table"><tr><thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead><tbody id="mainBody"></tbody></div>
+    </div>
 
-    <div id="pageMaint" class="hidden"><div class="filter-bar"><input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()"><select id="fRegMaint" onchange="renderMaint()"><option value="الكل">كل الأقاليم</option></select><label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()"><label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()"><button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button><button class="btn-sm btn-green" onclick="refreshMaint()"><i class="fas fa-sync-alt"></i> تحديث</button></div><div class="scrollable-table"><table><thead><tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th></tr></thead><tbody id="maintBody"></tbody></table></div></div>
+    <div id="pageMaint" class="hidden">
+        <div class="filter-bar">
+            <input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()">
+            <select id="fRegMaint" onchange="renderMaint()"><option value="الكل">كل الأقاليم</option></select>
+            <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
+            <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
+            <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
+            <button class="btn-sm btn-green" onclick="refreshMaint()"><i class="fas fa-sync-alt"></i> تحديث</button>
+        </div>
+        <div class="scrollable-table"><table><thead><tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th></tr></thead><tbody id="maintBody"></tbody></div>
+    </div>
 
-    <div id="pageEff" class="hidden"><div class="filter-bar"><select id="fRegEff" onchange="renderEff()"><option value="الكل">الكل</option><option value="نجاعة عامة">نجاعة عامة</option><option value="الشمال">الشمال</option><option value="الساحل">الساحل</option><option value="الوسط">الوسط</option><option value="الجنوب">الجنوب</option></select><button class="btn-sm btn-green" onclick="refreshEff()"><i class="fas fa-sync-alt"></i> تحديث</button></div><div id="generalEffTableContainer"></div><div class="dashboard-stats" id="statsCards"></div><div class="chart-switch"><button class="active" onclick="switchChartType('doughnut')">🥧 دائري</button><button onclick="switchChartType('bar')">📊 شريطي</button><button onclick="switchChartType('line')">📈 خطي</button></div><div id="chartsArea"></div><div id="regionTables"></div></div>
+    <div id="pageEff" class="hidden">
+        <div class="filter-bar"><select id="fRegEff" onchange="renderEff()"><option value="الكل">الكل</option><option value="نجاعة عامة">نجاعة عامة</option><option value="الشمال">الشمال</option><option value="الساحل">الساحل</option><option value="الوسط">الوسط</option><option value="الجنوب">الجنوب</option></select><button class="btn-sm btn-green" onclick="refreshEff()"><i class="fas fa-sync-alt"></i> تحديث</button></div>
+        <div id="generalEffTableContainer"></div>
+        <div class="dashboard-stats" id="statsCards"></div>
+        <div class="chart-switch"><button class="active" onclick="switchChartType('doughnut')">🥧 دائري</button><button onclick="switchChartType('bar')">📊 شريطي</button><button onclick="switchChartType('line')">📈 خطي</button></div>
+        <div id="chartsArea"></div><div id="regionTables"></div>
+    </div>
 
     <div id="pageSupport" class="hidden"><div class="region-table-card" style="padding:20px"><h3><i class="fas fa-headset"></i> الدعم الفني</h3><p><i class="fas fa-envelope"></i> support@marine.gov.tn</p><p><i class="fas fa-phone"></i> 29659945</p><hr><h4><i class="fas fa-paper-plane"></i> أرسل طلب دعم</h4><input type="text" id="ticketSubject" placeholder="العنوان" style="width:100%; padding:10px; margin:10px 0"><textarea id="ticketMessage" rows="5" style="width:100%; padding:10px"></textarea><button class="btn btn-blue" onclick="sendTicket()">إرسال</button><button class="btn-sm btn-green" onclick="refreshTickets()"><i class="fas fa-sync-alt"></i> تحديث</button><div id="ticketResponse" style="margin-top:10px; color:green"></div><hr><h4><i class="fas fa-list"></i> طلباتي السابقة</h4><div id="ticketsList"></div></div></div>
 
     <div id="pageTrack" class="hidden"><div class="filter-bar"><label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()"><label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()"><button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button><button class="btn-sm btn-green" onclick="refreshTrack()"><i class="fas fa-sync-alt"></i> تحديث</button></div><div id="trackContent"></div></div>
 
-    <div id="pageUsers" class="hidden"><div class="input-grid"><input type="text" id="un" placeholder="اسم المستخدم الجديد"><input type="password" id="up" placeholder="كلمة المرور"><select id="ur"><option value="مشاهد">مشاهد</option><option value="محرر">محرر</option><option value="مسؤول">مسؤول</option></select><button class="btn btn-blue" onclick="addUser()">➕ إضافة مستخدم</button><button class="btn-sm btn-green" onclick="refreshUsers()"><i class="fas fa-sync-alt"></i> تحديث</button></div><div class="scrollable-table"><table><thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead><tbody id="usersBody"></tbody></table></div></div>
+    <div id="pageUsers" class="hidden">
+        <div class="input-grid">
+            <input type="text" id="un" placeholder="اسم المستخدم الجديد">
+            <input type="password" id="up" placeholder="كلمة المرور">
+            <select id="ur"><option value="مشاهد">مشاهد</option><option value="محرر">محرر</option><option value="مسؤول">مسؤول</option></select>
+            <button class="btn btn-blue" onclick="addUser()">➕ إضافة مستخدم</button>
+            <button class="btn-sm btn-green" onclick="refreshUsers()"><i class="fas fa-sync-alt"></i> تحديث</button>
+        </div>
+        <div class="scrollable-table">
+            <table><thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
+            <tbody id="usersBody"></tbody>
+        </div>
+    </div>
 </div>
 
 <div class="scroll-buttons"><button class="scroll-btn" id="scrollToTopBtn" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button><button class="scroll-btn" id="scrollToBottomBtn" onclick="scrollToBottom()"><i class="fas fa-arrow-down"></i></button></div>
+
 <div id="passwordModal" class="modal"><div class="modal-content"><h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3><p id="modalUserName"></p><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button class="btn btn-green" onclick="saveNewPassword()">حفظ</button><button class="btn btn-red" onclick="closePasswordModal()">إلغاء</button></div></div>
 
 <script>
-// ==================== البيانات والتخزين ====================
-let vessels = JSON.parse(localStorage.getItem('vessels')) || [
-    { id: 1, name: 'البروق 1', number: 'B001', length: 11, region: 'الشمال', zone: 'تونس', port: 'تونس', support_location: 'قاعدة الشمال', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'البروق' },
-    { id: 2, name: 'صقر 1', number: 'S001', length: 10, region: 'الساحل', zone: 'سوسة', port: 'سوسة', support_location: 'قاعدة الساحل', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'صقور' },
-    { id: 3, name: 'خافرة 1', number: 'K001', length: 20, region: 'الوسط', zone: 'صفاقس', port: 'صفاقس', support_location: 'قاعدة الوسط', status: 'معطب', breakdown_type: 'عطل في المحرك', breakdown_date: '2025-03-10', end_date: '2025-04-10', reference: 'REF001', category: 'خوافر' }
-];
-let users = JSON.parse(localStorage.getItem('users')) || [
-    { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true },
-    { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
-    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
-];
-let logs = JSON.parse(localStorage.getItem('logs')) || [];
-let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
+// ==================== البيانات ====================
 let currentUser = null;
-let editingVesselId = null;
+let allVessels = [];
+let allUsers = [];
+let allLogs = [];
+let allTickets = [];
 let selectedUserId = null;
-let nextId = vessels.length ? Math.max(...vessels.map(v => v.id)) + 1 : 4;
+let editingVesselId = null;
 let fleetChart = null, categoriesChart = null, comparisonChart = null;
 let currentChartType = 'doughnut';
 
 const ZONES_DATA = {"الشمال":["تونس","بنزرت","طبرقة"],"الساحل":["سوسة","المنستير","نابل"],"الوسط":["صفاقس","المهدية","قرقنة"],"الجنوب":["جرجيس","جربة","قابس"]};
 const CATS_LIST = ["البروق","صقور","خوافر","زوارق مزدوجة","طوافات"];
 
-function saveAll() { localStorage.setItem('vessels', JSON.stringify(vessels)); localStorage.setItem('users', JSON.stringify(users)); localStorage.setItem('logs', JSON.stringify(logs)); localStorage.setItem('tickets', JSON.stringify(tickets)); }
+// ==================== دوال مساعدة ====================
 function showToast(msg, isError = false) { let toast = document.createElement('div'); toast.className = 'toast'; toast.style.background = isError ? '#e74c3c' : '#27ae60'; toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
 function formatDate(d) { if (!d) return '-'; try { let date = new Date(d); return `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`; } catch(e) { return d; } }
 function getCategory(len) { let n = parseFloat(len); if (n === 11) return "البروق"; if (n >= 8 && n <= 12) return "صقور"; if (n > 12 && n <= 25) return "خوافر"; if (n >= 30) return "طوافات"; return "زوارق مزدوجة"; }
@@ -190,73 +261,304 @@ function updateEditModeDisplay() { const badge = document.getElementById('editMo
 window.addEventListener('scroll', function() { let topBtn = document.getElementById('scrollToTopBtn'); let bottomBtn = document.getElementById('scrollToBottomBtn'); if (window.scrollY > 300) topBtn.classList.remove('hidden'); else topBtn.classList.add('hidden'); if ((window.innerHeight + window.scrollY) < document.body.scrollHeight - 300) bottomBtn.classList.remove('hidden'); else bottomBtn.classList.add('hidden'); });
 if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
 
-function logActivity(action, details) { if (!currentUser) return; logs.unshift({ id: Date.now(), userName: currentUser.username, userRole: currentUser.role, action, details, date: new Date().toLocaleDateString('ar-EG'), time: new Date().toLocaleTimeString() }); if (logs.length > 500) logs = logs.slice(0, 500); saveAll(); }
+// ==================== API Calls ====================
+async function apiCall(endpoint, method = 'GET', body = null) {
+    const options = { method: method, headers: { 'Content-Type': 'application/json' } };
+    if (body) options.body = JSON.stringify(body);
+    const response = await fetch(`/api${endpoint}`, options);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'حدث خطأ');
+    return data;
+}
 
-function doLogin() { const username = document.getElementById('username').value.trim(); const password = document.getElementById('password').value.trim(); const errorDiv = document.getElementById('loginError'); if (!username || !password) { errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور"; errorDiv.style.display = "block"; return; } const user = users.find(u => u.username === username && u.password === password && u.enabled); if (user) { currentUser = user; document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainApp').style.display = 'block'; document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-user-shield"></i> ${currentUser.username} | ${currentUser.role}`; const isAdmin = currentUser.role === "مسؤول"; const isViewer = currentUser.role === "مشاهد"; document.getElementById('trackBtn').style.display = isAdmin ? 'inline-flex' : 'none'; document.getElementById('admBtn').style.display = isAdmin ? 'inline-flex' : 'none'; document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid'; document.getElementById('exportBtn').style.display = isAdmin ? 'inline-flex' : 'none'; document.getElementById('exportExcelBtn').style.display = isAdmin ? 'inline-flex' : 'none'; document.getElementById('exportPdfBtn').style.display = isAdmin ? 'inline-flex' : 'none'; document.getElementById('importLabelBtn').style.display = isAdmin ? 'inline-flex' : 'none'; const fill = (id, list) => { const sel = document.getElementById(id); if (sel) { sel.innerHTML = '<option value="الكل">الكل</option>'; list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`); } }; fill('fCatMain', CATS_LIST); fill('fRegMain', Object.keys(ZONES_DATA)); fill('fRegMaint', Object.keys(ZONES_DATA)); renderMain(); renderMaint(); renderEff(); renderTickets(); if (isAdmin) { renderUsers(); renderTrack(); } logActivity('تسجيل دخول', 'قام بتسجيل الدخول'); showToast(`مرحباً ${username}`); } else { errorDiv.innerHTML = "اسم المستخدم أو كلمة المرور غير صحيحة!"; errorDiv.style.display = "block"; } }
+async function loadVessels() { try { allVessels = await apiCall('/vessels'); renderMain(); renderMaint(); renderEff(); } catch(e) { showToast("خطأ في تحميل المراكب", true); } }
+async function loadUsers() { if (!canManageUsers()) return; try { allUsers = await apiCall('/users'); renderUsers(); } catch(e) { showToast("خطأ في تحميل المستخدمين", true); } }
+async function loadLogs() { if (!canManageUsers()) return; try { allLogs = await apiCall('/logs'); renderTrack(); } catch(e) { showToast("خطأ في تحميل السجلات", true); } }
+async function loadTickets() { try { allTickets = await apiCall('/tickets'); renderTickets(); } catch(e) { showToast("خطأ في تحميل التذاكر", true); } }
 
-function logout() { if (currentUser) logActivity('تسجيل خروج', 'قام بتسجيل الخروج'); currentUser = null; editingVesselId = null; document.getElementById('loginOverlay').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none'; document.getElementById('username').value = ''; document.getElementById('password').value = ''; document.getElementById('loginError').style.display = 'none'; updateEditModeDisplay(); showToast("تم تسجيل الخروج"); }
+// ==================== Login/Logout ====================
+async function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errorDiv = document.getElementById('loginError');
+    if (!username || !password) { errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور"; errorDiv.style.display = "block"; return; }
+    try {
+        const response = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+        const data = await response.json();
+        if (data.success) {
+            currentUser = data.user;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-user-shield"></i> ${currentUser.username} | ${currentUser.role}`;
+            const isAdmin = currentUser.role === "مسؤول";
+            const isViewer = currentUser.role === "مشاهد";
+            document.getElementById('trackBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('admBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
+            document.getElementById('exportBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('exportExcelBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('exportPdfBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('importLabelBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            const fill = (id, list) => { const sel = document.getElementById(id); if (sel) { sel.innerHTML = '<option value="الكل">الكل</option>'; list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`); } };
+            fill('fCatMain', CATS_LIST); fill('fRegMain', Object.keys(ZONES_DATA)); fill('fRegMaint', Object.keys(ZONES_DATA));
+            await loadVessels(); await loadTickets(); if (isAdmin) { await loadUsers(); await loadLogs(); }
+            renderMain(); renderMaint(); renderEff(); renderTickets(); if (isAdmin) { renderUsers(); renderTrack(); }
+            showToast(`مرحباً ${username}`);
+        } else { errorDiv.innerHTML = data.error || "بيانات الدخول غير صحيحة"; errorDiv.style.display = "block"; }
+    } catch(err) { errorDiv.innerHTML = "خطأ في الاتصال بالخادم"; errorDiv.style.display = "block"; }
+}
 
-function addItem() { if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; } const name = document.getElementById('iName').value.trim(); if (!name) return showToast("الاسم مطلوب", true); if (!editingVesselId) { if (vessels.find(v => v.name === name)) { showToast("⚠️ هذا الاسم موجود بالفعل!", true); return; } } const stat = document.getElementById('iStat').value; const fDate = document.getElementById('iDate').value; if ((stat === 'معطب' || stat === 'صيانة') && !fDate) { showToast("تاريخ العطب إلزامي!", true); return; } const vessel = { id: editingVesselId || nextId++, name, number: document.getElementById('iNum').value, length: parseFloat(document.getElementById('iLen').value) || 0, region: document.getElementById('iReg').value, zone: document.getElementById('iZone').value, port: document.getElementById('iPort').value, support_location: document.getElementById('iSupp').value, status: stat, breakdown_type: document.getElementById('iBreak').value, breakdown_date: fDate, end_date: document.getElementById('iEnd').value, reference: document.getElementById('iRef').value, category: getCategory(document.getElementById('iLen').value) }; if (editingVesselId) { const index = vessels.findIndex(v => v.id === editingVesselId); if (index !== -1) vessels[index] = vessel; editingVesselId = null; updateEditModeDisplay(); showToast(`✅ تم تحديث المركب "${name}"`); } else { vessels.push(vessel); showToast(`✅ تم إضافة المركب "${name}"`); } saveAll(); clearForm(); renderMain(); renderMaint(); renderEff(); }
+function logout() { currentUser = null; editingVesselId = null; document.getElementById('loginOverlay').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none'; document.getElementById('username').value = ''; document.getElementById('password').value = ''; document.getElementById('loginError').style.display = 'none'; updateEditModeDisplay(); showToast("تم تسجيل الخروج"); }
 
-function editItem(id) { if (!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; } let item = vessels.find(v => v.id === id); if (item) { editingVesselId = id; updateEditModeDisplay(); document.getElementById('iName').value = item.name; document.getElementById('iNum').value = item.number; document.getElementById('iLen').value = item.length; document.getElementById('iReg').value = item.region; updateZones(); setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50); document.getElementById('iPort').value = item.port; document.getElementById('iSupp').value = item.support_location; document.getElementById('iStat').value = item.status; document.getElementById('iBreak').value = item.breakdown_type; document.getElementById('iDate').value = item.breakdown_date; document.getElementById('iEnd').value = item.end_date; document.getElementById('iRef').value = item.reference; window.scrollTo(0, 0); showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ"); } }
+// ==================== Vessels CRUD ====================
+async function addItem() {
+    if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
+    const name = document.getElementById('iName').value.trim();
+    if (!name) return showToast("الاسم مطلوب", true);
+    const stat = document.getElementById('iStat').value;
+    const fDate = document.getElementById('iDate').value;
+    if ((stat === 'معطب' || stat === 'صيانة') && !fDate) { showToast("تاريخ العطب إلزامي!", true); return; }
+    const vessel = { name, number: document.getElementById('iNum').value, length: parseFloat(document.getElementById('iLen').value) || 0, region: document.getElementById('iReg').value, zone: document.getElementById('iZone').value, port: document.getElementById('iPort').value, support_location: document.getElementById('iSupp').value, status: stat, breakdown_type: document.getElementById('iBreak').value, breakdown_date: fDate, end_date: document.getElementById('iEnd').value, reference: document.getElementById('iRef').value, category: getCategory(document.getElementById('iLen').value) };
+    try {
+        if (editingVesselId) { await apiCall(`/vessels/${editingVesselId}`, 'PUT', vessel); showToast(`✅ تم تحديث المركب "${name}"`); editingVesselId = null; updateEditModeDisplay(); }
+        else { await apiCall('/vessels', 'POST', vessel); showToast(`✅ تم إضافة المركب "${name}"`); }
+        await loadVessels(); clearForm();
+    } catch(e) { showToast(e.message, true); }
+}
 
-function delItem(id) { if (!canDelete()) { showToast("ليس لديك صلاحية للحذف!", true); return; } if (confirm("⚠️ هل أنت متأكد من حذف هذا المركب؟")) { vessels = vessels.filter(v => v.id !== id); saveAll(); renderMain(); renderMaint(); renderEff(); showToast("✅ تم الحذف"); } }
+function editItem(id) {
+    if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
+    let item = allVessels.find(v => v.id == id);
+    if (item) {
+        editingVesselId = id; updateEditModeDisplay();
+        document.getElementById('iName').value = item.name; document.getElementById('iNum').value = item.number; document.getElementById('iLen').value = item.length;
+        document.getElementById('iReg').value = item.region; updateZones(); setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
+        document.getElementById('iPort').value = item.port; document.getElementById('iSupp').value = item.support_location; document.getElementById('iStat').value = item.status;
+        document.getElementById('iBreak').value = item.breakdown_type; document.getElementById('iDate').value = item.breakdown_date; document.getElementById('iEnd').value = item.end_date; document.getElementById('iRef').value = item.reference;
+        window.scrollTo(0, 0); showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
+    }
+}
 
-function clearForm() { editingVesselId = null; updateEditModeDisplay(); ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; }); document.getElementById('iReg').value = ""; document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>'; document.getElementById('iStat').value = "صالح"; showToast("🗑️ تم مسح النموذج"); }
+async function delItem(id) {
+    if (!canDelete()) { showToast("ليس لديك صلاحية!", true); return; }
+    if (confirm("⚠️ هل أنت متأكد من حذف هذا المركب؟")) {
+        try { await apiCall(`/vessels/${id}`, 'DELETE'); await loadVessels(); showToast("✅ تم الحذف"); } catch(e) { showToast(e.message, true); }
+    }
+}
+
+function clearForm() {
+    editingVesselId = null; updateEditModeDisplay();
+    ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    document.getElementById('iReg').value = ""; document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>'; document.getElementById('iStat').value = "صالح";
+    showToast("🗑️ تم مسح النموذج");
+}
 
 function updateZones() { const reg = document.getElementById('iReg').value; const zoneSel = document.getElementById('iZone'); zoneSel.innerHTML = '<option value="">المنطقة</option>'; if (ZONES_DATA[reg]) { ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`); } }
 
-function renderMain() { const fCat = document.getElementById('fCatMain').value; const fReg = document.getElementById('fRegMain').value; const searchText = document.getElementById('searchMain').value.toLowerCase(); let filtered = vessels.filter(v => (fCat === "الكل" || v.category === fCat) && (fReg === "الكل" || v.region === fReg)); if (searchText) filtered = filtered.filter(v => v.name.toLowerCase().includes(searchText) || (v.number && v.number.toLowerCase().includes(searchText))); let html = ""; filtered.forEach(v => { html += `<tr><td><b>${v.name}${editingVesselId === v.id ? ' <span style="color:#f39c12">(جاري التعديل)</span>' : ''}</b></td><td>${v.number || '-'}</td><td>${v.length || '-'}</td><td>${v.category || '-'}</td><td>${v.region || '-'}</td><td>${v.zone || '-'}</td><td>${v.port || '-'}</td><td>${v.support_location || '-'}</td><td class="status-${v.status}">${v.status}</td><td>${v.breakdown_type || '-'}</td><td>${formatDate(v.breakdown_date)}</td><td>${formatDate(v.end_date)}</td><td>${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${v.id})"><i class="fas fa-edit"></i></button>` : ''} ${canDelete() ? `<button class="btn-sm btn-red" onclick="delItem(${v.id})"><i class="fas fa-trash"></i></button>` : ''}</td>`; }); document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>'; }
+// ==================== Render Functions ====================
+function renderMain() {
+    const fCat = document.getElementById('fCatMain').value; const fReg = document.getElementById('fRegMain').value; const searchText = document.getElementById('searchMain').value.toLowerCase();
+    let filtered = allVessels.filter(v => (fCat === "الكل" || v.category === fCat) && (fReg === "الكل" || v.region === fReg));
+    if (searchText) filtered = filtered.filter(v => v.name.toLowerCase().includes(searchText) || (v.number && v.number.toLowerCase().includes(searchText)));
+    let html = "";
+    filtered.forEach(v => { html += `<tr><td><b>${v.name}${editingVesselId === v.id ? ' <span style="color:#f39c12">(جاري التعديل)</span>' : ''}</b></td><td>${v.number || '-'}</td><td>${v.length || '-'}</td><td>${v.category || '-'}</td><td>${v.region || '-'}</td><td>${v.zone || '-'}</td><td>${v.port || '-'}</td><td>${v.support_location || '-'}</td><td class="status-${v.status}">${v.status}</td><td>${v.breakdown_type || '-'}</td><td>${formatDate(v.breakdown_date)}</td><td>${formatDate(v.end_date)}</td><td>${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${v.id})"><i class="fas fa-edit"></i></button>` : ''} ${canDelete() ? `<button class="btn-sm btn-red" onclick="delItem(${v.id})"><i class="fas fa-trash"></i></button>` : ''}</td>`; });
+    document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</tr>';
+}
 
 function clearMainSearch() { document.getElementById('searchMain').value = ''; renderMain(); }
-function refreshMain() { renderMain(); showToast("✅ تم تحديث السجل العام"); }
+function refreshMain() { loadVessels(); showToast("✅ تم تحديث السجل العام"); }
 
-function renderMaint() { const fReg = document.getElementById('fRegMaint').value; const dStart = document.getElementById('fDateStart').value; const dEnd = document.getElementById('fDateEnd').value; const searchText = document.getElementById('searchMaint').value.toLowerCase(); let filtered = vessels.filter(v => v.status === 'معطب' || v.status === 'صيانة'); if (fReg !== "الكل") filtered = filtered.filter(v => v.region === fReg); if (dStart) filtered = filtered.filter(v => v.breakdown_date && v.breakdown_date >= dStart); if (dEnd) filtered = filtered.filter(v => v.breakdown_date && v.breakdown_date <= dEnd); if (searchText) filtered = filtered.filter(v => v.name.toLowerCase().includes(searchText) || (v.breakdown_type && v.breakdown_type.toLowerCase().includes(searchText))); filtered.sort((a,b) => new Date(b.breakdown_date) - new Date(a.breakdown_date)); let html = ""; if (filtered.length === 0) html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>'; else filtered.forEach(v => { html += `<tr><td><b>${v.name}</b></td><td>${v.region || '-'}</td><td>${v.zone || '-'}</td><td class="status-${v.status}">${v.status}</td><td>${v.breakdown_type || '-'}</td><td>${formatDate(v.breakdown_date)}</td><td>${formatDate(v.end_date)}</td><td>${v.reference || '-'}</td>`; }); document.getElementById('maintBody').innerHTML = html; }
+function renderMaint() {
+    const fReg = document.getElementById('fRegMaint').value; const dStart = document.getElementById('fDateStart').value; const dEnd = document.getElementById('fDateEnd').value; const searchText = document.getElementById('searchMaint').value.toLowerCase();
+    let filtered = allVessels.filter(v => v.status === 'معطب' || v.status === 'صيانة');
+    if (fReg !== "الكل") filtered = filtered.filter(v => v.region === fReg);
+    if (dStart) filtered = filtered.filter(v => v.breakdown_date && v.breakdown_date >= dStart);
+    if (dEnd) filtered = filtered.filter(v => v.breakdown_date && v.breakdown_date <= dEnd);
+    if (searchText) filtered = filtered.filter(v => v.name.toLowerCase().includes(searchText) || (v.breakdown_type && v.breakdown_type.toLowerCase().includes(searchText)));
+    filtered.sort((a,b) => new Date(b.breakdown_date) - new Date(a.breakdown_date));
+    let html = "";
+    if (filtered.length === 0) html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</tr>';
+    else filtered.forEach(v => { html += `<tr><td><b>${v.name}</b></td><td>${v.region || '-'}</td><td>${v.zone || '-'}</td><td class="status-${v.status}">${v.status}</td><td>${v.breakdown_type || '-'}</td><td>${formatDate(v.breakdown_date)}</td><td>${formatDate(v.end_date)}</td><td>${v.reference || '-'}</td>`; });
+    document.getElementById('maintBody').innerHTML = html;
+}
 
 function resetMaintFilters() { document.getElementById('fRegMaint').value = "الكل"; document.getElementById('fDateStart').value = ""; document.getElementById('fDateEnd').value = ""; document.getElementById('searchMaint').value = ""; renderMaint(); showToast("✅ تم إعادة ضبط الفلاتر"); }
-function refreshMaint() { renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
+function refreshMaint() { loadVessels(); showToast("✅ تم تحديث سجل الصيانة"); }
 
-function renderGeneralEfficiencyTable() { let totalOk = vessels.filter(v => v.status === 'صالح').length; let totalAll = vessels.length; let generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0; let html = `<div class="region-table-card"><div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`; CATS_LIST.forEach(cat => { let catData = vessels.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green; font-weight:bold;">${ok}</td><td style="color:red; font-weight:bold;">${broken}</td><td><strong>${percent}%</strong></td>`; }); html += `</tbody>}</div></div>`; document.getElementById('generalEffTableContainer').innerHTML = html; }
+function renderGeneralEfficiencyTable() {
+    let totalOk = allVessels.filter(v => v.status === 'صالح').length; let totalAll = allVessels.length; let generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0;
+    let html = `<div class="region-table-card"><div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+    CATS_LIST.forEach(cat => { let catData = allVessels.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green; font-weight:bold;">${ok}</td><td style="color:red; font-weight:bold;">${broken}</td><td><strong>${percent}%</strong></td>`; });
+    html += `</tbody></table></div></div>`;
+    document.getElementById('generalEffTableContainer').innerHTML = html;
+}
 
-function renderStatsCards() { let total = vessels.length; let ok = vessels.filter(v => v.status === 'صالح').length; let maint = vessels.filter(v => v.status === 'صيانة').length; let broken = vessels.filter(v => v.status === 'معطب').length; let eff = total ? ((ok / total) * 100).toFixed(1) : 0; document.getElementById('statsCards').innerHTML = `<div class="stat-card" onclick="scrollToTop()"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${broken}</div><div class="label">⚠️ المعطوب</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${eff}%</div><div class="label">📈 نسبة النجاعة</div></div>`; }
+function renderStatsCards() {
+    let total = allVessels.length; let ok = allVessels.filter(v => v.status === 'صالح').length; let maint = allVessels.filter(v => v.status === 'صيانة').length; let broken = allVessels.filter(v => v.status === 'معطب').length; let eff = total ? ((ok / total) * 100).toFixed(1) : 0;
+    document.getElementById('statsCards').innerHTML = `<div class="stat-card" onclick="scrollToTop()"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${broken}</div><div class="label">⚠️ المعطوب</div></div><div class="stat-card" onclick="scrollToTop()"><div class="number">${eff}%</div><div class="label">📈 نسبة النجاعة</div></div>`;
+}
 
-function renderCharts() { let ok = vessels.filter(v => v.status === 'صالح').length; let maint = vessels.filter(v => v.status === 'صيانة').length; let broken = vessels.filter(v => v.status === 'معطب').length; let catCount = {}; CATS_LIST.forEach(cat => { catCount[cat] = vessels.filter(v => v.category === cat).length; }); let regions = [], regionsEff = []; Object.keys(ZONES_DATA).forEach(reg => { let regData = vessels.filter(v => v.region === reg); let regOk = regData.filter(v => v.status === 'صالح').length; regions.push(reg); regionsEff.push(regData.length ? (regOk / regData.length * 100) : 0); }); document.getElementById('chartsArea').innerHTML = `<div class="charts-grid"><div class="chart-container"><h4><i class="fas fa-chart-pie"></i> حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div><div class="chart-container"><h4><i class="fas fa-chart-bar"></i> توزيع المراكب</h4><canvas id="categoriesChartCanvas"></canvas></div><div class="chart-container"><h4><i class="fas fa-chart-line"></i> مقارنة النجاعة</h4><canvas id="comparisonChartCanvas"></canvas></div></div>`; if (fleetChart) fleetChart.destroy(); if (categoriesChart) categoriesChart.destroy(); if (comparisonChart) comparisonChart.destroy(); const fleetCtx = document.getElementById('fleetChartCanvas').getContext('2d'); if (currentChartType === 'doughnut') fleetChart = new Chart(fleetCtx, { type: 'doughnut', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ data: [ok, maint, broken], backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'] }] }, options: { responsive: true } }); else if (currentChartType === 'bar') fleetChart = new Chart(fleetCtx, { type: 'bar', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'] }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); else fleetChart = new Chart(fleetCtx, { type: 'line', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], borderColor: '#0f3460', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); categoriesChart = new Chart(document.getElementById('categoriesChartCanvas').getContext('2d'), { type: 'bar', data: { labels: CATS_LIST, datasets: [{ label: 'عدد المراكب', data: CATS_LIST.map(c => catCount[c] || 0), backgroundColor: '#0f3460' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } }); comparisonChart = new Chart(document.getElementById('comparisonChartCanvas').getContext('2d'), { type: 'line', data: { labels: regions, datasets: [{ label: 'نسبة النجاعة (%)', data: regionsEff, borderColor: '#f39c12', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } } }); }
+function renderCharts() {
+    let ok = allVessels.filter(v => v.status === 'صالح').length; let maint = allVessels.filter(v => v.status === 'صيانة').length; let broken = allVessels.filter(v => v.status === 'معطب').length;
+    let catCount = {}; CATS_LIST.forEach(cat => { catCount[cat] = allVessels.filter(v => v.category === cat).length; });
+    let regions = [], regionsEff = [];
+    Object.keys(ZONES_DATA).forEach(reg => { let regData = allVessels.filter(v => v.region === reg); let regOk = regData.filter(v => v.status === 'صالح').length; regions.push(reg); regionsEff.push(regData.length ? (regOk / regData.length * 100) : 0); });
+    document.getElementById('chartsArea').innerHTML = `<div class="charts-grid"><div class="chart-container"><h4><i class="fas fa-chart-pie"></i> حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div><div class="chart-container"><h4><i class="fas fa-chart-bar"></i> توزيع المراكب</h4><canvas id="categoriesChartCanvas"></canvas></div><div class="chart-container"><h4><i class="fas fa-chart-line"></i> مقارنة النجاعة</h4><canvas id="comparisonChartCanvas"></canvas></div></div>`;
+    if (fleetChart) fleetChart.destroy(); if (categoriesChart) categoriesChart.destroy(); if (comparisonChart) comparisonChart.destroy();
+    const fleetCtx = document.getElementById('fleetChartCanvas').getContext('2d');
+    if (currentChartType === 'doughnut') fleetChart = new Chart(fleetCtx, { type: 'doughnut', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ data: [ok, maint, broken], backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'] }] }, options: { responsive: true } });
+    else if (currentChartType === 'bar') fleetChart = new Chart(fleetCtx, { type: 'bar', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'] }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+    else fleetChart = new Chart(fleetCtx, { type: 'line', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], borderColor: '#0f3460', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+    categoriesChart = new Chart(document.getElementById('categoriesChartCanvas').getContext('2d'), { type: 'bar', data: { labels: CATS_LIST, datasets: [{ label: 'عدد المراكب', data: CATS_LIST.map(c => catCount[c] || 0), backgroundColor: '#0f3460' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
+    comparisonChart = new Chart(document.getElementById('comparisonChartCanvas').getContext('2d'), { type: 'line', data: { labels: regions, datasets: [{ label: 'نسبة النجاعة (%)', data: regionsEff, borderColor: '#f39c12', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } } });
+}
 
-function renderRegionTables() { let selectedRegion = document.getElementById('fRegEff').value; let html = ""; if (selectedRegion === "نجاعة عامة") { document.getElementById('regionTables').innerHTML = ""; return; } if (selectedRegion === "الكل") { ["الشمال","الساحل","الوسط","الجنوب"].forEach(region => { let regData = vessels.filter(v => v.region === region); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0; html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${region} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`; CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td>`; }); html += `</tbody>}</div></div>`; }); } else { let regData = vessels.filter(v => v.region === selectedRegion); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0; html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`; CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td>`; }); html += `</tbody>}</div></div>`; } document.getElementById('regionTables').innerHTML = html; }
+function renderRegionTables() {
+    let selectedRegion = document.getElementById('fRegEff').value; let html = "";
+    if (selectedRegion === "نجاعة عامة") { document.getElementById('regionTables').innerHTML = ""; return; }
+    if (selectedRegion === "الكل") {
+        ["الشمال","الساحل","الوسط","الجنوب"].forEach(region => {
+            let regData = allVessels.filter(v => v.region === region); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
+            html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${region} <span style="background:#ffd966; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+            CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td>`; });
+            html += `</tbody></table></div></div>`;
+        });
+    } else {
+        let regData = allVessels.filter(v => v.region === selectedRegion); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
+        html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+        CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td>`; });
+        html += `</tbody></table></div></div>`;
+    }
+    document.getElementById('regionTables').innerHTML = html;
+}
 
 function renderEff() { renderGeneralEfficiencyTable(); renderStatsCards(); renderCharts(); renderRegionTables(); }
-function refreshEff() { renderEff(); showToast("✅ تم تحديث جاهزية الأسطول"); }
+function refreshEff() { loadVessels(); showToast("✅ تم تحديث الإحصائيات"); }
 function switchChartType(type) { currentChartType = type; document.querySelectorAll('.chart-switch button').forEach(btn => btn.classList.remove('active')); event.target.classList.add('active'); renderCharts(); }
 
-function renderTickets() { let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>'; if (tickets.length === 0) html += '<td><td colspan="4">لا توجد طلبات سابقة</td></tr>'; else tickets.slice(0,10).forEach(t => { html += `<td><td>${t.date || '-'}</td><td>${t.userName || '-'}</td><td>${t.subject}</td><td><span style="color:#f39c12">${t.status}</span></td>`; }); html += `</tbody>}</div>`; document.getElementById('ticketsList').innerHTML = html; }
+function renderTickets() {
+    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
+    if (allTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة</tr>';
+    else allTickets.slice(0,10).forEach(t => { html += `<tr><td>${t.date || '-'}</td><td>${t.username || '-'}</td><td>${t.subject}</td><td><span style="color:#f39c12">${t.status}</span></td>`; });
+    html += `</tbody></table></div>`;
+    document.getElementById('ticketsList').innerHTML = html;
+}
 
-function sendTicket() { const subject = document.getElementById('ticketSubject').value.trim(); const message = document.getElementById('ticketMessage').value.trim(); if (!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; } tickets.unshift({ id: Date.now(), userName: currentUser.username, subject, message, date: new Date().toLocaleDateString('ar-EG'), status: "قيد المعالجة" }); saveAll(); renderTickets(); logActivity('إرسال طلب دعم', `قام بإرسال طلب دعم: ${subject}`); document.getElementById('ticketSubject').value = ""; document.getElementById('ticketMessage').value = ""; document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!"; setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000); showToast("✅ تم إرسال طلبك بنجاح"); }
-function refreshTickets() { renderTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
+async function sendTicket() {
+    const subject = document.getElementById('ticketSubject').value.trim(); const message = document.getElementById('ticketMessage').value.trim();
+    if (!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; }
+    try { await apiCall('/tickets', 'POST', { username: currentUser.username, subject, message }); document.getElementById('ticketSubject').value = ""; document.getElementById('ticketMessage').value = ""; document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!"; setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000); await loadTickets(); showToast("✅ تم إرسال طلبك بنجاح"); } catch(e) { showToast(e.message, true); }
+}
+function refreshTickets() { loadTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
 
-function renderTrack() { if (!canManageUsers()) return; const start = document.getElementById('trackDateStart').value; const end = document.getElementById('trackDateEnd').value; let filtered = [...logs]; if (start) filtered = filtered.filter(l => l.date >= start); if (end) filtered = filtered.filter(l => l.date <= end); let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>'; if (filtered.length === 0) html += '<td><td colspan="6">لا توجد نشاطات</td></tr>'; else filtered.forEach(l => { html += `<td><td>${l.date}</td><td>${l.time}</td><td>${l.userName}</td><td>${l.userRole}</td><td>${l.action}</td><td>${l.details}</td>`; }); html += `</tbody>}</div>`; document.getElementById('trackContent').innerHTML = html; }
+function renderTrack() {
+    if (!canManageUsers()) return;
+    const start = document.getElementById('trackDateStart').value; const end = document.getElementById('trackDateEnd').value;
+    let filtered = [...allLogs];
+    if (start) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') >= start);
+    if (end) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') <= end);
+    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th><th>IP</th><th>المتصفح</th></tr></thead><tbody>';
+    if (filtered.length === 0) html += '<tr><td colspan="8">لا توجد نشاطات</tr>';
+    else filtered.forEach(l => { html += `<tr><td>${l.date || '-'}</td><td>${l.time || '-'}</td><td>${l.username || '-'}</td><td>${l.user_role || '-'}</td><td>${l.action || '-'}</td><td>${l.details || '-'}</td><td>${l.ip_address || '-'}</td><td>${l.user_agent ? l.user_agent.substring(0,50) + '...' : '-'}</td>`; });
+    html += `</tbody></table></div>`;
+    document.getElementById('trackContent').innerHTML = html;
+}
 function resetTrackFilters() { document.getElementById('trackDateStart').value = ""; document.getElementById('trackDateEnd').value = ""; renderTrack(); showToast("✅ تم إعادة ضبط فلاتر التتبع"); }
-function refreshTrack() { renderTrack(); showToast("✅ تم تحديث سجل التتبع"); }
+function refreshTrack() { loadLogs(); showToast("✅ تم تحديث سجل التتبع"); }
 
-function renderUsers() { if (!canManageUsers()) return; let html = ""; users.forEach(u => { html += `<tr><td><i class="fas fa-user"></i> ${u.username}</td><td>${u.role === 'مسؤول' ? '<span style="color:#e74c3c">مسؤول</span>' : (u.role === 'محرر' ? '<span style="color:#f39c12">محرر</span>' : '<span style="color:#27ae60">مشاهد</span>')}</td><td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td><td><button class="btn-sm btn-warning" onclick="openPasswordModal(${u.id}, '${u.username}')"><i class="fas fa-key"></i> تغيير</button></td><td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser(${u.id}, false)"><i class="fas fa-ban"></i> تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser(${u.id}, true)"><i class="fas fa-check"></i> تفعيل</button>`}</td><td><button class="btn-sm btn-red" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i> حذف</button></td>`; }); document.getElementById('usersBody').innerHTML = html; }
+// ==================== Users Management (FIXED) ====================
+function renderUsers() {
+    if (!canManageUsers()) return;
+    let html = "";
+    allUsers.forEach(u => {
+        html += `<tr><td><i class="fas fa-user"></i> ${u.username}</td><td>${u.role === 'مسؤول' ? '<span style="color:#e74c3c">مسؤول</span>' : (u.role === 'محرر' ? '<span style="color:#f39c12">محرر</span>' : '<span style="color:#27ae60">مشاهد</span>')}</td><td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td><td><button class="btn-sm btn-warning" onclick="openPasswordModal(${u.id}, '${u.username}')"><i class="fas fa-key"></i> تغيير</button></td><td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser(${u.id}, false)"><i class="fas fa-ban"></i> تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser(${u.id}, true)"><i class="fas fa-check"></i> تفعيل</button>`}</td><td><button class="btn-sm btn-red" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i> حذف</button></td>`; });
+    document.getElementById('usersBody').innerHTML = html;
+}
 
-function addUser() { if (!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; } let u = document.getElementById('un').value.trim(); let p = document.getElementById('up').value.trim(); let r = document.getElementById('ur').value; if (!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true); if (users.find(x => x.username === u)) { showToast("اسم المستخدم موجود!", true); return; } users.push({ id: Date.now(), username: u, password: p, role: r, enabled: true }); saveAll(); renderUsers(); showToast("✅ تم إضافة المستخدم"); }
-function refreshUsers() { renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
+async function addUser() {
+    if (!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
+    let u = document.getElementById('un').value.trim();
+    let p = document.getElementById('up').value.trim();
+    let r = document.getElementById('ur').value;
+    if (!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
+    try {
+        const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p, role: r })
+        });
+        const data = await response.json();
+        if (data.success) {
+            await loadUsers();
+            document.getElementById('un').value = "";
+            document.getElementById('up').value = "";
+            showToast("✅ تم إضافة المستخدم");
+        } else {
+            showToast(data.error || "خطأ في الإضافة", true);
+        }
+    } catch(e) { showToast(e.message, true); }
+}
 
 function openPasswordModal(userId, userName) { selectedUserId = userId; document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: <strong>${userName}</strong>`; document.getElementById('newPassword').value = ''; document.getElementById('confirmPassword').value = ''; document.getElementById('passwordModal').style.display = 'flex'; }
 function closePasswordModal() { document.getElementById('passwordModal').style.display = 'none'; selectedUserId = null; }
-function saveNewPassword() { if (!canManageUsers()) return; const np = document.getElementById('newPassword').value.trim(); const cp = document.getElementById('confirmPassword').value.trim(); if (!np) { showToast("كلمة المرور الجديدة مطلوبة", true); return; } if (np !== cp) { showToast("كلمة المرور غير متطابقة", true); return; } if (np.length < 6) { showToast("كلمة المرور يجب أن تكون 6 أحرف على الأقل", true); return; } let user = users.find(u => u.id === selectedUserId); if (user) { user.password = np; saveAll(); renderUsers(); closePasswordModal(); showToast("✅ تم تغيير كلمة المرور بنجاح"); } }
 
-function toggleUser(userId, enable) { let user = users.find(u => u.id === userId); if (user) { user.enabled = enable; saveAll(); renderUsers(); showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم"); } }
-function deleteUser(userId) { if (confirm("هل أنت متأكد من حذف هذا المستخدم؟")) { users = users.filter(u => u.id !== userId); saveAll(); renderUsers(); showToast("✅ تم حذف المستخدم"); } }
+async function saveNewPassword() {
+    if (!canManageUsers()) return;
+    const np = document.getElementById('newPassword').value.trim();
+    const cp = document.getElementById('confirmPassword').value.trim();
+    if (!np) { showToast("كلمة المرور الجديدة مطلوبة", true); return; }
+    if (np !== cp) { showToast("كلمة المرور غير متطابقة", true); return; }
+    if (np.length < 4) { showToast("كلمة المرور يجب أن تكون 4 أحرف على الأقل", true); return; }
+    try {
+        const response = await fetch(`/api/users/${selectedUserId}/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: np })
+        });
+        const data = await response.json();
+        if (data.success) {
+            closePasswordModal();
+            await loadUsers();
+            showToast("✅ تم تغيير كلمة المرور بنجاح");
+        } else {
+            showToast(data.error || "خطأ في التغيير", true);
+        }
+    } catch(e) { showToast(e.message, true); }
+}
 
-function exportAllData() { if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; } const exportData = { vessels, users, tickets, logs, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `marine_data_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); showToast("✅ تم تصدير البيانات بنجاح!"); }
-function importAllData(input) { if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; } if (!input.files || !input.files[0]) return; const file = input.files[0]; const reader = new FileReader(); reader.onload = function(e) { try { const importedData = JSON.parse(e.target.result); if (importedData.vessels) { vessels = importedData.vessels; nextId = (vessels.reduce((max, v) => Math.max(max, v.id), 0) + 1); } if (importedData.users) users = importedData.users; if (importedData.tickets) tickets = importedData.tickets; if (importedData.logs) logs = importedData.logs; saveAll(); refreshAllPages(); showToast("✅ تم استيراد البيانات بنجاح!"); } catch(err) { showToast("❌ خطأ في قراءة الملف", true); } }; reader.readAsText(file); input.value = ""; }
-function exportToExcel() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const ws = XLSX.utils.json_to_sheet(vessels); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vessels"); XLSX.writeFile(wb, `vessels_${new Date().toISOString().split('T')[0]}.xlsx`); showToast("✅ تم تصدير البيانات إلى Excel"); }
+async function toggleUser(userId, enable) {
+    try { await apiCall(`/users/${userId}/toggle`, 'PUT', { enabled: enable }); await loadUsers(); showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم"); } catch(e) { showToast(e.message, true); }
+}
+async function deleteUser(userId) { if (confirm("هل أنت متأكد من حذف هذا المستخدم؟")) { try { await apiCall(`/users/${userId}`, 'DELETE'); await loadUsers(); showToast("✅ تم حذف المستخدم"); } catch(e) { showToast(e.message, true); } } }
+function refreshUsers() { loadUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
+
+// ==================== Export/Import ====================
+async function exportAllData() {
+    if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
+    try { const data = await apiCall('/export'); const dataStr = JSON.stringify(data, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `marine_data_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); showToast("✅ تم تصدير البيانات بنجاح!"); } catch(e) { showToast(e.message, true); }
+}
+async function importAllData(input) {
+    if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0]; const reader = new FileReader();
+    reader.onload = async function(e) { try { const importedData = JSON.parse(e.target.result); if (importedData.vessels) { await apiCall('/import', 'POST', { vessels: importedData.vessels }); } await loadVessels(); showToast("✅ تم استيراد البيانات بنجاح!"); } catch(err) { showToast("❌ خطأ في قراءة الملف: " + err.message, true); } };
+    reader.readAsText(file); input.value = "";
+}
+function exportToExcel() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const ws = XLSX.utils.json_to_sheet(allVessels); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vessels"); XLSX.writeFile(wb, `vessels_${new Date().toISOString().split('T')[0]}.xlsx`); showToast("✅ تم تصدير البيانات إلى Excel"); }
 function exportToPDF() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const element = document.getElementById('pageMain'); const opt = { margin: [0.5,0.5,0.5,0.5], filename: `vessels_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }; html2pdf().set(opt).from(element).save(); showToast("✅ جاري تحضير ملف PDF..."); }
 
-function refreshAllPages() { renderMain(); renderMaint(); renderEff(); renderTickets(); if (canManageUsers()) { renderUsers(); renderTrack(); } showToast("✅ تم تحديث جميع الصفحات"); }
+function refreshAllPages() { loadVessels(); loadTickets(); if (canManageUsers()) { loadUsers(); loadLogs(); } showToast("✅ تم تحديث جميع الصفحات"); }
 
-function showPage(page) { const pages = ['pageMain','pageMaint','pageEff','pageSupport','pageTrack','pageUsers']; pages.forEach(p => document.getElementById(p).classList.add('hidden')); if (page === 'main') document.getElementById('pageMain').classList.remove('hidden'); else if (page === 'maint') { document.getElementById('pageMaint').classList.remove('hidden'); renderMaint(); } else if (page === 'eff') { document.getElementById('pageEff').classList.remove('hidden'); renderEff(); } else if (page === 'support') { document.getElementById('pageSupport').classList.remove('hidden'); renderTickets(); } else if (page === 'track') { if (canManageUsers()) { document.getElementById('pageTrack').classList.remove('hidden'); renderTrack(); } else showToast("غير مسموح", true); } else if (page === 'users') { if (canManageUsers()) { document.getElementById('pageUsers').classList.remove('hidden'); renderUsers(); } else showToast("غير مسموح", true); } }
+function showPage(page) {
+    const pages = ['pageMain','pageMaint','pageEff','pageSupport','pageTrack','pageUsers'];
+    pages.forEach(p => document.getElementById(p).classList.add('hidden'));
+    if (page === 'main') document.getElementById('pageMain').classList.remove('hidden');
+    else if (page === 'maint') { document.getElementById('pageMaint').classList.remove('hidden'); renderMaint(); }
+    else if (page === 'eff') { document.getElementById('pageEff').classList.remove('hidden'); renderEff(); }
+    else if (page === 'support') { document.getElementById('pageSupport').classList.remove('hidden'); renderTickets(); }
+    else if (page === 'track') { if (canManageUsers()) { document.getElementById('pageTrack').classList.remove('hidden'); renderTrack(); } else showToast("غير مسموح", true); }
+    else if (page === 'users') { if (canManageUsers()) { document.getElementById('pageUsers').classList.remove('hidden'); renderUsers(); } else showToast("غير مسموح", true); }
+}
 
 window.doLogin = doLogin; window.logout = logout; window.showPage = showPage; window.updateZones = updateZones; window.addItem = addItem; window.editItem = editItem; window.delItem = delItem; window.clearForm = clearForm; window.renderMain = renderMain; window.renderMaint = renderMaint; window.renderEff = renderEff; window.renderTrack = renderTrack; window.resetMaintFilters = resetMaintFilters; window.resetTrackFilters = resetTrackFilters; window.clearMainSearch = clearMainSearch; window.switchChartType = switchChartType; window.sendTicket = sendTicket; window.addUser = addUser; window.openPasswordModal = openPasswordModal; window.closePasswordModal = closePasswordModal; window.saveNewPassword = saveNewPassword; window.toggleUser = toggleUser; window.deleteUser = deleteUser; window.exportAllData = exportAllData; window.importAllData = importAllData; window.exportToExcel = exportToExcel; window.exportToPDF = exportToPDF; window.refreshMain = refreshMain; window.refreshMaint = refreshMaint; window.refreshEff = refreshEff; window.refreshTickets = refreshTickets; window.refreshTrack = refreshTrack; window.refreshUsers = refreshUsers; window.refreshAllPages = refreshAllPages; window.scrollToTop = scrollToTop; window.scrollToBottom = scrollToBottom; window.toggleDarkMode = toggleDarkMode;
 </script>
