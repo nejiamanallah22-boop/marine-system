@@ -1,52 +1,79 @@
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const supabaseUrl = 'https://rzcwngkpknilfesxdrkk.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Y3duZ2twa25pbGZlc3hkcmtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE2MjY0OCwiZXhwIjoyMDkxNzM4NjQ4fQ.M6awEIDFWG2LGoxKFhqcP1bBGmKApMjqt7sIb_ek-L0';
+// قاعدة بيانات بسيطة (ملف JSON)
+const DB_FILE = './data.json';
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// التأكد من وجود ملف البيانات
+if (!fs.existsSync(DB_FILE)) {
+    const defaultData = {
+        users: [
+            { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true }
+        ],
+        vessels: []
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(defaultData, null, 2));
+}
+
+// قراءة البيانات
+function readDB() {
+    return JSON.parse(fs.readFileSync(DB_FILE));
+}
+
+// كتابة البيانات
+function writeDB(data) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-app.post('/api/login', async (req, res) => {
+// تسجيل الدخول
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    console.log('Login attempt:', username);
+    const db = readDB();
+    const user = db.users.find(u => u.username === username && u.password === password && u.enabled);
     
-    const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-    
-    if (error || !user) {
-        console.log('User not found:', error);
-        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
-    }
-    
-    if (user.password === password) {
-        console.log('Login success for:', username);
+    if (user) {
         res.json({ 
             success: true, 
             user: { id: user.id, username: user.username, role: user.role } 
         });
     } else {
-        console.log('Wrong password for:', username);
         res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
 });
 
-app.get('/api/vessels', async (req, res) => {
-    const { data } = await supabase.from('vessels').select('*');
-    res.json(data || []);
+// جلب المراكب
+app.get('/api/vessels', (req, res) => {
+    const db = readDB();
+    res.json(db.vessels || []);
+});
+
+// إضافة مركب
+app.post('/api/vessels', (req, res) => {
+    const db = readDB();
+    const newVessel = { id: Date.now(), ...req.body };
+    db.vessels.push(newVessel);
+    writeDB(db);
+    res.json({ success: true, vessel: newVessel });
+});
+
+// حذف مركب
+app.delete('/api/vessels/:id', (req, res) => {
+    const db = readDB();
+    db.vessels = db.vessels.filter(v => v.id != req.params.id);
+    writeDB(db);
+    res.json({ success: true });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🔗 Supabase connected`);
+    console.log(`📁 Database: ${DB_FILE}`);
+    console.log(`🔐 admin / 1234`);
 });
