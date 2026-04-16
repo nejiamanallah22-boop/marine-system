@@ -13,11 +13,7 @@ if (!fs.existsSync(DB_FILE)) {
             { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
             { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
         ],
-        vessels: [
-            { id: 1, name: 'البروق 1', number: 'B001', length: 11, region: 'الشمال', zone: 'تونس', port: 'تونس', support_location: 'قاعدة الشمال', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'البروق' },
-            { id: 2, name: 'صقر 1', number: 'S001', length: 10, region: 'الساحل', zone: 'سوسة', port: 'سوسة', support_location: 'قاعدة الساحل', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'صقور' },
-            { id: 3, name: 'خافرة 1', number: 'K001', length: 20, region: 'الوسط', zone: 'صفاقس', port: 'صفاقس', support_location: 'قاعدة الوسط', status: 'معطب', breakdown_type: 'عطل في المحرك', breakdown_date: '2025-03-10', end_date: '2025-04-10', reference: 'REF001', category: 'خوافر' }
-        ],
+        vessels: [],
         logs: [],
         tickets: []
     };
@@ -25,7 +21,8 @@ if (!fs.existsSync(DB_FILE)) {
 }
 
 function readDB() {
-    return JSON.parse(fs.readFileSync(DB_FILE));
+    const data = fs.readFileSync(DB_FILE, 'utf8');
+    return JSON.parse(data);
 }
 
 function writeDB(data) {
@@ -49,12 +46,12 @@ app.post('/api/login', (req, res) => {
 
 app.get('/api/vessels', (req, res) => {
     const db = readDB();
+    console.log('GET vessels:', db.vessels.length);
     res.json(db.vessels || []);
 });
 
 app.post('/api/vessels', (req, res) => {
-    console.log('=== ADDING VESSEL ===');
-    console.log('Request body:', req.body);
+    console.log('POST vessels - body:', req.body);
     const db = readDB();
     const newVessel = { id: Date.now(), ...req.body };
     db.vessels.push(newVessel);
@@ -77,10 +74,12 @@ app.put('/api/vessels/:id', (req, res) => {
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
+    console.log('DELETE vessel:', req.params.id);
     const db = readDB();
     const id = parseInt(req.params.id);
     db.vessels = db.vessels.filter(v => v.id !== id);
     writeDB(db);
+    console.log('Vessel deleted, remaining:', db.vessels.length);
     res.json({ success: true });
 });
 
