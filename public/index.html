@@ -200,8 +200,10 @@
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table><thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
-            <tbody id="mainBody"></tbody>
+            <table>
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
+                <tbody id="mainBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -215,8 +217,10 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <tr><thead><tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th></tr></thead>
-            <tbody id="maintBody"></tbody>
+            </table>
+                <thead><tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th></tr></thead>
+                <tbody id="maintBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -233,6 +237,7 @@
             </select>
             <button class="btn-sm btn-green" onclick="refreshEff()">🔄 تحديث</button>
         </div>
+        
         <div id="generalEffTableContainer"></div>
         <div class="stats-cards" id="statsCards"></div>
         <div class="chart-switch">
@@ -281,8 +286,10 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table><thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
-            <tbody id="usersBody"></tbody>
+            <table>
+                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
+                <tbody id="usersBody"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -299,25 +306,26 @@
 </div>
 
 <script>
-    // ==================== بيانات التخزين المحلي ====================
-    let vessels = JSON.parse(localStorage.getItem('marine_vessels')) || [
-        { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: 'قاعدة الشمال', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
-        { id: 2, name: 'صقر 1', num: 'S001', len: 10, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'قاعدة الساحل', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'صقور' },
-        { id: 3, name: 'خافرة 1', num: 'K001', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'قاعدة الوسط', stat: 'معطب', break: 'عطل في المحرك', fDate: '2025-03-10', eDate: '2025-04-10', ref: 'REF001', cat: 'خوافر' }
+    // بيانات أولية - نفس البيانات التي كانت في تطبيقك الأصلي
+    let vessels = [
+        {id: 101, name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق"},
+        {id: 102, name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور"},
+        {id: 103, name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر"},
+        {id: 104, name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة"},
+        {id: 105, name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات"}
     ];
     
-    let users = JSON.parse(localStorage.getItem('marine_users')) || [
-        { id: 1, name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
-        { id: 2, name: 'editor', pass: '1234', role: 'محرر', enabled: true },
-        { id: 3, name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
+    let users = [
+        {id: 1, name: "admin", pass: "1234", role: "مسؤول", enabled: true},
+        {id: 2, name: "editor", pass: "1234", role: "محرر", enabled: true},
+        {id: 3, name: "viewer", pass: "1234", role: "مشاهد", enabled: true}
     ];
     
-    let logs = JSON.parse(localStorage.getItem('marine_logs')) || [];
-    let tickets = JSON.parse(localStorage.getItem('marine_tickets')) || [];
+    let logs = [];
+    let tickets = [];
     
     let currentUser = null;
     let selectedUserId = null;
-    let editingVesselId = null;
     let fleetChart = null, categoriesChart = null, comparisonChart = null;
     let currentChartType = 'doughnut';
     
@@ -328,13 +336,6 @@
         "الجنوب": ["جرجيس", "جربة", "قابس"]
     };
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-    
-    function saveAll() {
-        localStorage.setItem('marine_vessels', JSON.stringify(vessels));
-        localStorage.setItem('marine_users', JSON.stringify(users));
-        localStorage.setItem('marine_logs', JSON.stringify(logs));
-        localStorage.setItem('marine_tickets', JSON.stringify(tickets));
-    }
     
     function formatDate(d) { 
         if(!d) return '-'; 
@@ -354,22 +355,6 @@
         return "زوارق مزدوجة"; 
     }
     
-    function logActivity(action, details) { 
-        if(!currentUser) return; 
-        const now = new Date(); 
-        logs.unshift({
-            id: Date.now(),
-            userName: currentUser.name,
-            userRole: currentUser.role,
-            action: action,
-            details: details,
-            date: `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`,
-            time: `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`
-        }); 
-        if(logs.length > 500) logs = logs.slice(0,500); 
-        saveAll(); 
-    }
-    
     function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
     function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
     function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
@@ -383,7 +368,6 @@
         setTimeout(() => toast.remove(), 3000);
     }
 
-    // ==================== دوال الدخول والخروج ====================
     function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -395,9 +379,14 @@
             return;
         }
         
-        const user = users.find(u => u.name === username && u.pass === password && u.enabled);
+        const user = users.find(u => u.name === username && u.pass === password);
         
         if(user) {
+            if(user.enabled === false) {
+                errorDiv.innerHTML = "هذا المستخدم معطل!";
+                errorDiv.style.display = "block";
+                return;
+            }
             currentUser = user;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -427,7 +416,6 @@
             renderEff();
             renderTickets();
             if(isAdmin) { renderUsers(); renderTrack(); }
-            logActivity("تسجيل دخول", "قام بتسجيل الدخول");
             showToast(`مرحباً ${username}`);
         } else {
             errorDiv.innerHTML = "اسم المستخدم أو كلمة المرور غير صحيحة!";
@@ -436,9 +424,7 @@
     }
     
     function logout() {
-        if(currentUser) logActivity("تسجيل خروج", "قام بتسجيل الخروج");
         currentUser = null;
-        editingVesselId = null;
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
         document.getElementById('username').value = '';
@@ -447,7 +433,6 @@
         showToast("تم تسجيل الخروج");
     }
 
-    // ==================== دوال إدارة المراكب ====================
     function addItem() {
         if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
         const name = document.getElementById('iName').value.trim();
@@ -461,15 +446,7 @@
             return;
         }
         
-        if (!editingVesselId) {
-            const existing = vessels.find(x => x.name === name);
-            if (existing) {
-                showToast("⚠️ هذا الاسم موجود بالفعل! يرجى استخدام اسم آخر.", true);
-                return;
-            }
-        }
-        
-        const newId = editingVesselId || (vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 1);
+        const newId = vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 101;
         
         const newItem = {
             id: newId,
@@ -487,29 +464,19 @@
             ref: document.getElementById('iRef').value,
             cat: getCat(document.getElementById('iLen').value)
         };
+        vessels.push(newItem);
         
-        if (editingVesselId) {
-            const index = vessels.findIndex(v => v.id === editingVesselId);
-            if (index !== -1) vessels[index] = newItem;
-            editingVesselId = null;
-            showToast(`✅ تم تحديث المركب "${name}" بنجاح`);
-        } else {
-            vessels.push(newItem);
-            showToast(`✅ تم إضافة المركب "${name}" بنجاح`);
-        }
-        
-        saveAll();
         clearForm();
         renderMain();
         renderMaint();
         renderEff();
+        showToast(`✅ تم حفظ المركب بنجاح`);
     }
     
     function editItem(name) {
         if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
         let item = vessels.find(x => x.name === name);
         if(item) {
-            editingVesselId = item.id;
             document.getElementById('iName').value = item.name;
             document.getElementById('iNum').value = item.num;
             document.getElementById('iLen').value = item.len;
@@ -532,7 +499,6 @@
         if(!canDelete()) { showToast("ليس لديك صلاحية للحذف!", true); return; }
         if(confirm("هل أنت متأكد من حذف هذا المركب؟")) {
             vessels = vessels.filter(x => x.id !== id);
-            saveAll();
             renderMain();
             renderMaint();
             renderEff();
@@ -541,7 +507,6 @@
     }
     
     function clearForm() {
-        editingVesselId = null;
         ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.value = "";
@@ -582,7 +547,7 @@
         let html = "";
         filtered.forEach(x => {
             html += `<tr>
-                <td><b>${x.name}</b>${editingVesselId === x.id ? ' <span style="color:#f39c12">(جاري التعديل)</span>' : ''}</td>
+                <td><b>${x.name}</b></td>
                 <td>${x.num || '-'}</td>
                 <td>${x.len || '-'}</td>
                 <td>${x.cat || '-'}</td>
@@ -598,13 +563,17 @@
                     ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.name}')">تعديل</button>` : ''}
                     ${canDelete() ? `<button class="btn-sm btn-red" onclick="delItem(${x.id})">حذف</button>` : ''}
                 </td>
-            <tr>`;
+            </tr>`;
         });
         document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>';
     }
     
+    function clearMainSearch() {
+        document.getElementById('searchMain').value = '';
+        renderMain();
+    }
+    
     function refreshMain() { renderMain(); showToast("✅ تم تحديث السجل العام"); }
-    function clearMainSearch() { document.getElementById('searchMain').value = ''; renderMain(); }
     
     function renderMaint() {
         let data = vessels.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
@@ -614,14 +583,35 @@
         const searchText = document.getElementById('searchMaint').value.toLowerCase();
         
         if(fReg !== "الكل") data = data.filter(x => x.reg === fReg);
-        if(dStart) data = data.filter(x => x.fDate && x.fDate >= dStart);
-        if(dEnd) data = data.filter(x => x.fDate && x.fDate <= dEnd);
-        if(searchText) data = data.filter(x => x.name.toLowerCase().includes(searchText) || (x.break && x.break.toLowerCase().includes(searchText)));
-        data.sort((a,b) => new Date(b.fDate) - new Date(a.fDate));
+        if(dStart || dEnd) {
+            const start = dStart ? new Date(dStart) : null;
+            const end = dEnd ? new Date(dEnd) : null;
+            data = data.filter(x => {
+                if(!x.fDate) return false;
+                const itemDate = new Date(x.fDate);
+                if(start && itemDate < start) return false;
+                if(end && itemDate > end) return false;
+                return true;
+            });
+        }
+        
+        if(searchText) {
+            data = data.filter(x => 
+                x.name.toLowerCase().includes(searchText) ||
+                (x.break && x.break.toLowerCase().includes(searchText)) ||
+                (x.ref && x.ref.toLowerCase().includes(searchText))
+            );
+        }
+        
+        data.sort((a, b) => {
+            if(!a.fDate) return 1;
+            if(!b.fDate) return -1;
+            return new Date(b.fDate) - new Date(a.fDate);
+        });
         
         let html = "";
         if(data.length === 0) {
-            html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td>';
+            html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
         } else {
             data.forEach(x => {
                 html += `<tr>
@@ -640,6 +630,7 @@
     }
     
     function refreshMaint() { renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
+    
     function resetMaintFilters() {
         document.getElementById('fRegMaint').value = "الكل";
         document.getElementById('fDateStart').value = "";
@@ -649,7 +640,6 @@
         showToast("✅ تم إعادة ضبط الفلاتر");
     }
     
-    // ==================== الإحصائيات والرسوم البيانية ====================
     function renderGeneralEfficiencyTable() {
         let totalOk = vessels.filter(x => x.stat === 'صالح').length;
         let totalAll = vessels.length;
@@ -659,7 +649,7 @@
             <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
             <div class="scrollable-table">
             <table class="region-table">
-                <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></td></thead>
+                <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                 <tbody>`;
         
         CATS_LIST.forEach(cat => {
@@ -673,7 +663,7 @@
                 <td style="color:green; font-weight:bold;">${ok}</td>
                 <td style="color:red; font-weight:bold;">${broken}</td>
                 <td><strong>${percent}%</strong></td>
-            </tr>`;
+            </td>`;
         });
         
         html += `</tbody>
@@ -761,7 +751,7 @@
                     <div class="region-table-header">📍 إقليم ${region} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></table></thead>
+                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 CATS_LIST.forEach(cat => {
@@ -807,7 +797,7 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </tr>`;
+                <tr>`;
             });
             
             html += `</tbody>
@@ -835,57 +825,12 @@
         renderCharts();
     }
     
-    // ==================== التذاكر والدعم ====================
-    function renderTickets() {
-        let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
-        if(tickets.length === 0) {
-            html += '<tr><td colspan="4">لا توجد طلبات سابقة</td>';
-        } else {
-            tickets.slice(0, 10).forEach(t => {
-                html += `<tr>
-                    <td>${t.date}</td>
-                    <td>${t.userName}</td>
-                    <td>${t.subject}</td>
-                    <td><span style="color:orange">${t.status}</span></td>
-                </tr>`;
-            });
-        }
-        html += `</tbody>}</div>`;
-        document.getElementById('ticketsList').innerHTML = html;
-    }
-    
-    function sendTicket() {
-        const subject = document.getElementById('ticketSubject').value.trim();
-        const message = document.getElementById('ticketMessage').value.trim();
-        if(!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; }
-        
-        const now = new Date();
-        tickets.unshift({
-            id: Date.now(),
-            userName: currentUser.name,
-            subject: subject,
-            message: message,
-            date: `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`,
-            status: "قيد المعالجة"
-        });
-        saveAll();
-        document.getElementById('ticketSubject').value = "";
-        document.getElementById('ticketMessage').value = "";
-        document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
-        setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
-        renderTickets();
-        logActivity("إرسال طلب دعم", `قام بإرسال طلب دعم: ${subject}`);
-        showToast("✅ تم إرسال طلبك بنجاح");
-    }
-    
-    function refreshTickets() { renderTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
-    
-    // ==================== تتبع المستخدمين ====================
     function renderTrack() {
         if(!canManageUsers()) return;
+        let logsData = logs;
         const start = document.getElementById('trackDateStart').value;
         const end = document.getElementById('trackDateEnd').value;
-        let filtered = [...logs];
+        let filtered = [...logsData];
         
         if(start) {
             const s = new Date(start);
@@ -904,7 +849,7 @@
         
         let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>';
         if(filtered.length === 0) {
-            html += '<tr><td colspan="6">لا توجد نشاطات</td>';
+            html += '<tr><td colspan="6">لا توجد نشاطات</td></tr>';
         } else {
             filtered.forEach(l => {
                 html += `<tr>
@@ -922,6 +867,7 @@
     }
     
     function refreshTrack() { renderTrack(); showToast("✅ تم تحديث سجل التتبع"); }
+    
     function resetTrackFilters() {
         document.getElementById('trackDateStart').value = "";
         document.getElementById('trackDateEnd').value = "";
@@ -929,7 +875,48 @@
         showToast("✅ تم إعادة ضبط فلاتر التتبع");
     }
     
-    // ==================== إدارة المستخدمين (مع حفظ التغييرات) ====================
+    function sendTicket() {
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        if(!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; }
+        
+        const now = new Date();
+        tickets.unshift({
+            id: Date.now(),
+            userName: currentUser.name,
+            subject: subject,
+            message: message,
+            date: `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`,
+            status: "قيد المعالجة"
+        });
+        document.getElementById('ticketSubject').value = "";
+        document.getElementById('ticketMessage').value = "";
+        document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
+        setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
+        renderTickets();
+        showToast("✅ تم إرسال طلبك بنجاح");
+    }
+    
+    function renderTickets() {
+        let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
+        if(tickets.length === 0) {
+            html += '<tr><td colspan="4">لا توجد طلبات سابقة</tr>';
+        } else {
+            tickets.slice(0, 10).forEach(t => {
+                html += `<tr>
+                    <td>${t.date}</td>
+                    <td>${t.userName}</td>
+                    <td>${t.subject}</td>
+                    <td><span style="color:orange">${t.status}</span></td>
+                </tr>`;
+            });
+        }
+        html += `</tbody>}</div>`;
+        document.getElementById('ticketsList').innerHTML = html;
+    }
+    
+    function refreshTickets() { renderTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
+    
     function renderUsers() {
         if(!canManageUsers()) return;
         document.getElementById('usersBody').innerHTML = users.map(u => `
@@ -944,6 +931,8 @@
         `).join('');
     }
     
+    function refreshUsers() { renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
+    
     function addUser() {
         if(!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
         let u = document.getElementById('un').value.trim();
@@ -952,14 +941,11 @@
         if(!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
         if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود!", true); return; }
         users.push({id: Date.now(), name: u, pass: p, role: r, enabled: true});
-        saveAll();
         document.getElementById('un').value = "";
         document.getElementById('up').value = "";
         renderUsers();
         showToast("✅ تم إضافة المستخدم");
     }
-    
-    function refreshUsers() { renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
     
     function openPasswordModal(userId, userName) {
         selectedUserId = userId;
@@ -983,7 +969,6 @@
         let user = users.find(u => u.id === selectedUserId);
         if(user) {
             user.pass = np;
-            saveAll();
             closePasswordModal();
             renderUsers();
             showToast("✅ تم تغيير كلمة المرور");
@@ -994,7 +979,6 @@
         let user = users.find(u => u.id === userId);
         if(user) {
             user.enabled = enable;
-            saveAll();
             renderUsers();
             showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
         }
@@ -1003,13 +987,11 @@
     function deleteUser(userId) {
         if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
             users = users.filter(u => u.id !== userId);
-            saveAll();
             renderUsers();
             showToast("✅ تم حذف المستخدم");
         }
     }
     
-    // ==================== تصدير واستيراد البيانات ====================
     function exportAllData() {
         if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
         const exportData = {
@@ -1030,7 +1012,6 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        logActivity("تصدير بيانات", "قام بتصدير جميع البيانات إلى ملف JSON");
         showToast("✅ تم تصدير البيانات بنجاح!");
     }
     
@@ -1042,13 +1023,19 @@
         reader.onload = function(e) {
             try {
                 const importedData = JSON.parse(e.target.result);
-                if(importedData.vessels) vessels = importedData.vessels;
-                if(importedData.users) users = importedData.users;
-                if(importedData.tickets) tickets = importedData.tickets;
-                if(importedData.logs) logs = importedData.logs;
-                saveAll();
+                if(importedData.vessels) {
+                    vessels = importedData.vessels;
+                }
+                if(importedData.users) {
+                    users = importedData.users;
+                }
+                if(importedData.tickets) {
+                    tickets = importedData.tickets;
+                }
+                if(importedData.logs) {
+                    logs = importedData.logs;
+                }
                 refreshAllPages();
-                logActivity("استيراد بيانات", "قام باستيراد البيانات من ملف JSON");
                 showToast("✅ تم استيراد البيانات بنجاح!");
             } catch(err) {
                 showToast("❌ خطأ في قراءة الملف: " + err.message, true);
@@ -1067,7 +1054,6 @@
         showToast("✅ تم تحديث جميع الصفحات");
     }
     
-    // ==================== التنقل بين الصفحات ====================
     function showPage(page) {
         const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
@@ -1086,7 +1072,6 @@
         }
     }
     
-    // ربط الدوال
     window.doLogin = doLogin;
     window.logout = logout;
     window.showPage = showPage;
@@ -1094,7 +1079,6 @@
     window.addItem = addItem;
     window.editItem = editItem;
     window.delItem = delItem;
-    window.clearForm = clearForm;
     window.renderMain = renderMain;
     window.renderMaint = renderMaint;
     window.renderEff = renderEff;
