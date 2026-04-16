@@ -1,224 +1,704 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة الوسائل البحرية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            min-height: 100vh;
+            direction: rtl;
+            padding: 20px;
+        }
 
-const DB_FILE = './data.json';
+        /* شاشة الدخول */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
 
-// إنشاء ملف البيانات إذا لم يكن موجوداً
-if (!fs.existsSync(DB_FILE)) {
-    const defaultData = {
-        users: [
-            { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true },
-            { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
-            { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
-        ],
-        vessels: [
-            { id: 1, name: 'البروق 1', number: 'B001', length: 11, region: 'الشمال', zone: 'تونس', port: 'تونس', support_location: 'قاعدة الشمال', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'البروق' },
-            { id: 2, name: 'صقر 1', number: 'S001', length: 10, region: 'الساحل', zone: 'سوسة', port: 'سوسة', support_location: 'قاعدة الساحل', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '', category: 'صقور' },
-            { id: 3, name: 'خافرة 1', number: 'K001', length: 20, region: 'الوسط', zone: 'صفاقس', port: 'صفاقس', support_location: 'قاعدة الوسط', status: 'معطب', breakdown_type: 'عطل في المحرك', breakdown_date: '2025-03-10', end_date: '2025-04-10', reference: 'REF001', category: 'خوافر' }
-        ],
-        logs: [],
-        tickets: []
-    };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultData, null, 2));
-}
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
 
-function readDB() {
-    const data = fs.readFileSync(DB_FILE);
-    return JSON.parse(data);
-}
+        .login-box h2 {
+            color: #0f3460;
+            margin-bottom: 20px;
+        }
 
-function writeDB(data) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #0f3460;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+        }
 
-// تسجيل الدخول
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    const db = readDB();
-    const user = db.users.find(u => u.username === username && u.password === password && u.enabled);
-    
-    if (user) {
-        res.json({ success: true, user: { id: user.id, username: user.username, role: user.role } });
-    } else {
-        res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
-    }
-});
+        .error-msg {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
 
-// جلب جميع المراكب
-app.get('/api/vessels', (req, res) => {
-    const db = readDB();
-    res.json(db.vessels || []);
-});
+        /* التطبيق الرئيسي */
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+        }
 
-// إضافة مركب جديد
-app.post('/api/vessels', (req, res) => {
-    console.log('📝 Adding new vessel:', req.body);
-    const db = readDB();
-    const newVessel = { 
-        id: Date.now(), 
-        ...req.body,
-        category: getCategory(req.body.length)
-    };
-    db.vessels.push(newVessel);
-    writeDB(db);
-    console.log('✅ Vessel added, total:', db.vessels.length);
-    res.json({ success: true, vessel: newVessel });
-});
+        .hidden {
+            display: none !important;
+        }
 
-// تحديث مركب
-app.put('/api/vessels/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const index = db.vessels.findIndex(v => v.id === id);
-    if (index !== -1) {
-        db.vessels[index] = { ...db.vessels[index], ...req.body, id: id };
-        writeDB(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'المركب غير موجود' });
-    }
-});
+        /* الهيدر */
+        .header {
+            background: #0f3460;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-// حذف مركب
-app.delete('/api/vessels/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    db.vessels = db.vessels.filter(v => v.id !== id);
-    writeDB(db);
-    res.json({ success: true });
-});
+        .role-badge {
+            background: #ffd700;
+            color: #0f3460;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
 
-// جلب المستخدمين
-app.get('/api/users', (req, res) => {
-    const db = readDB();
-    const safeUsers = db.users.map(u => ({ id: u.id, username: u.username, role: u.role, enabled: u.enabled }));
-    res.json(safeUsers);
-});
+        /* أزرار التنقل */
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-// إضافة مستخدم
-app.post('/api/users', (req, res) => {
-    const db = readDB();
-    const { username, password, role } = req.body;
-    const newUser = { id: Date.now(), username, password, role: role || 'مشاهد', enabled: true };
-    db.users.push(newUser);
-    writeDB(db);
-    res.json({ success: true, user: newUser });
-});
+        .nav-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #e9ecef;
+            font-weight: bold;
+        }
 
-// تغيير كلمة المرور
-app.put('/api/users/:id/password', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const user = db.users.find(u => u.id === id);
-    if (user) {
-        user.password = req.body.password;
-        writeDB(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'المستخدم غير موجود' });
-    }
-});
+        .nav-btn.active {
+            background: #0f3460;
+            color: white;
+        }
 
-// تفعيل/تعطيل مستخدم
-app.put('/api/users/:id/toggle', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    const user = db.users.find(u => u.id === id);
-    if (user) {
-        user.enabled = req.body.enabled;
-        writeDB(db);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'المستخدم غير موجود' });
-    }
-});
+        /* نموذج الإضافة */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
 
-// حذف مستخدم
-app.delete('/api/users/:id', (req, res) => {
-    const db = readDB();
-    const id = parseInt(req.params.id);
-    db.users = db.users.filter(u => u.id !== id);
-    writeDB(db);
-    res.json({ success: true });
-});
+        .input-grid input, .input-grid select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
 
-// الإحصائيات
-app.get('/api/stats', (req, res) => {
-    const db = readDB();
-    const vessels = db.vessels;
-    const total = vessels.length;
-    const salih = vessels.filter(v => v.status === 'صالح').length;
-    const mo3atab = vessels.filter(v => v.status === 'معطب').length;
-    const siyana = vessels.filter(v => v.status === 'صيانة').length;
-    const efficiency = total > 0 ? ((salih / total) * 100).toFixed(1) : 0;
-    res.json({ total, salih, mo3atab, siyana, efficiency });
-});
+        /* الجداول */
+        .scrollable-table {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
 
-// التذاكر
-app.get('/api/tickets', (req, res) => {
-    const db = readDB();
-    res.json(db.tickets || []);
-});
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
 
-app.post('/api/tickets', (req, res) => {
-    const db = readDB();
-    const newTicket = { 
-        id: Date.now(), 
-        ...req.body, 
-        date: new Date().toLocaleDateString('ar-EG'), 
-        status: 'قيد المعالجة' 
-    };
-    db.tickets.push(newTicket);
-    writeDB(db);
-    res.json({ success: true });
-});
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
 
-// السجلات
-app.get('/api/logs', (req, res) => {
-    const db = readDB();
-    res.json(db.logs || []);
-});
+        th {
+            background: #0f3460;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
 
-// تصدير البيانات
-app.get('/api/export', (req, res) => {
-    const db = readDB();
-    res.json({ vessels: db.vessels });
-});
+        /* أزرار */
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
 
-// استيراد البيانات
-app.post('/api/import', (req, res) => {
-    const db = readDB();
-    const { vessels } = req.body;
-    if (vessels && Array.isArray(vessels)) {
-        db.vessels = vessels;
-        writeDB(db);
-        res.json({ success: true, imported: vessels.length });
-    } else {
-        res.status(400).json({ error: 'بيانات غير صالحة' });
-    }
-});
+        .btn-green { background: #28a745; color: white; }
+        .btn-orange { background: #fd7e14; color: white; }
+        .btn-red { background: #dc3545; color: white; }
+        .btn-blue { background: #0f3460; color: white; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-// دالة تحديد الفئة
-function getCategory(length) {
-    const n = parseFloat(length);
-    if (n === 11) return "البروق";
-    if (n >= 8 && n <= 12) return "صقور";
-    if (n > 12 && n <= 25) return "خوافر";
-    if (n >= 30) return "طوافات";
-    return "زوارق مزدوجة";
-}
+        /* حالة المراكب */
+        .status-صالح { color: green; font-weight: bold; }
+        .status-معطب { color: red; font-weight: bold; }
+        .status-صيانة { color: orange; font-weight: bold; }
 
-// تشغيل الخادم
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`📁 Database: ${DB_FILE}`);
-    console.log(`🔐 admin / 1234`);
-});
+        /* الإشعارات */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            animation: fadeOut 3s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة الدخول -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <i class="fas fa-ship" style="font-size: 50px; color: #0f3460;"></i>
+            <h2>⚓ منظومة الوسائل البحرية</h2>
+            <input type="text" id="username" placeholder="اسم المستخدم">
+            <input type="password" id="password" placeholder="كلمة المرور">
+            <button onclick="doLogin()">دخول</button>
+            <div id="loginError" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي -->
+    <div id="mainApp" class="container" style="display: none;">
+        
+        <!-- الهيدر -->
+        <div class="header">
+            <div>
+                <i class="fas fa-anchor"></i> منظومة متابعة الوسائل البحرية
+                <div style="font-size: 12px;">Développeur: أمان الله ناجي</div>
+            </div>
+            <div>
+                <span id="userRoleDisplay" class="role-badge"></span>
+                <button class="btn btn-red" onclick="logout()" style="margin-right: 10px;">خروج</button>
+            </div>
+        </div>
+
+        <!-- أزرار التنقل -->
+        <div class="nav">
+            <button class="nav-btn active" onclick="showPage('main')">السجل العام</button>
+            <button class="nav-btn" onclick="showPage('maint')">سجل الصيانة</button>
+            <button class="nav-btn" onclick="showPage('users')">المستخدمين</button>
+        </div>
+
+        <!-- نموذج إضافة مركب -->
+        <div id="inputArea" class="input-grid">
+            <input type="text" id="iName" placeholder="اسم المركب">
+            <input type="text" id="iNum" placeholder="الرقم">
+            <input type="number" id="iLen" placeholder="الطول (م)">
+            <select id="iReg">
+                <option value="">الإقليم</option>
+                <option value="الشمال">الشمال</option>
+                <option value="الساحل">الساحل</option>
+                <option value="الوسط">الوسط</option>
+                <option value="الجنوب">الجنوب</option>
+            </select>
+            <select id="iZone"><option value="">المنطقة</option></select>
+            <input type="text" id="iPort" placeholder="الميناء">
+            <input type="text" id="iSupp" placeholder="مكان التعزيز">
+            <select id="iStat">
+                <option value="صالح">صالح</option>
+                <option value="معطب">معطب</option>
+                <option value="صيانة">صيانة</option>
+            </select>
+            <input type="text" id="iBreak" placeholder="نوع العطب">
+            <input type="date" id="iDate">
+            <input type="date" id="iEnd">
+            <input type="text" id="iRef" placeholder="المرجع">
+            <button class="btn btn-green" onclick="addItem()">حفظ</button>
+            <button class="btn btn-blue" onclick="clearForm()">جديد</button>
+        </div>
+
+        <!-- صفحة السجل العام -->
+        <div id="pageMain">
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th>
+                            <th>المنطقة</th><th>الميناء</th><th>الحالة</th><th>العطب</th><th>إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mainBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- صفحة سجل الصيانة -->
+        <div id="pageMaint" class="hidden">
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr><th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th></tr>
+                    </thead>
+                    <tbody id="maintBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- صفحة المستخدمين -->
+        <div id="pageUsers" class="hidden">
+            <div class="input-grid">
+                <input type="text" id="un" placeholder="اسم المستخدم">
+                <input type="password" id="up" placeholder="كلمة المرور">
+                <select id="ur"><option value="مشاهد">مشاهد</option><option value="محرر">محرر</option><option value="مسؤول">مسؤول</option></select>
+                <button class="btn btn-green" onclick="addUser()">إضافة مستخدم</button>
+            </div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة تغيير كلمة المرور -->
+    <div id="passwordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 10000;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center;">
+            <h3>تغيير كلمة المرور</h3>
+            <p id="modalUserName"></p>
+            <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <button class="btn btn-green" onclick="saveNewPassword()">حفظ</button>
+            <button class="btn btn-red" onclick="closePasswordModal()">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let currentUser = null;
+        let allVessels = [];
+        let allUsers = [];
+        let editingVesselId = null;
+
+        // دوال مساعدة
+        function showToast(msg, isError = false) {
+            let toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.background = isError ? '#dc3545' : '#28a745';
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function formatDate(d) {
+            if (!d) return '-';
+            try {
+                let date = new Date(d);
+                return `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
+            } catch(e) { return d; }
+        }
+
+        function getCategory(len) {
+            let n = parseFloat(len);
+            if (n === 11) return "البروق";
+            if (n >= 8 && n <= 12) return "صقور";
+            if (n > 12 && n <= 25) return "خوافر";
+            if (n >= 30) return "طوافات";
+            return "زوارق مزدوجة";
+        }
+
+        function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
+        function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
+        function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
+
+        // دوال API
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = { method: method, headers: { 'Content-Type': 'application/json' } };
+            if (body) options.body = JSON.stringify(body);
+            const response = await fetch(`${API_URL}${endpoint}`, options);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'حدث خطأ');
+            return data;
+        }
+
+        // تحميل البيانات
+        async function loadVessels() {
+            try {
+                allVessels = await apiCall('/vessels');
+                renderMain();
+                renderMaint();
+            } catch(e) { showToast("خطأ في تحميل المراكب", true); }
+        }
+
+        async function loadUsers() {
+            if (!canManageUsers()) return;
+            try {
+                allUsers = await apiCall('/users');
+                renderUsers();
+            } catch(e) { showToast("خطأ في تحميل المستخدمين", true); }
+        }
+
+        // تسجيل الدخول
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const errorDiv = document.getElementById('loginError');
+
+            if (!username || !password) {
+                errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور";
+                errorDiv.style.display = "block";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    document.getElementById('userRoleDisplay').innerHTML = `${currentUser.username} | ${currentUser.role}`;
+
+                    const isAdmin = currentUser.role === "مسؤول";
+                    const isViewer = currentUser.role === "مشاهد";
+                    document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
+
+                    await loadVessels();
+                    if (isAdmin) await loadUsers();
+
+                    renderMain();
+                    renderMaint();
+                    if (isAdmin) renderUsers();
+
+                    showToast(`مرحباً ${username}`);
+                } else {
+                    errorDiv.innerHTML = data.error || "بيانات الدخول غير صحيحة";
+                    errorDiv.style.display = "block";
+                }
+            } catch(err) {
+                errorDiv.innerHTML = "خطأ في الاتصال بالخادم";
+                errorDiv.style.display = "block";
+            }
+        }
+
+        // تسجيل الخروج
+        function logout() {
+            if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+                currentUser = null;
+                editingVesselId = null;
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('loginError').style.display = 'none';
+                showToast("تم تسجيل الخروج");
+            }
+        }
+
+        // إدارة المراكب
+        async function addItem() {
+            if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
+            const name = document.getElementById('iName').value.trim();
+            if (!name) return showToast("الاسم مطلوب", true);
+
+            const stat = document.getElementById('iStat').value;
+            const fDate = document.getElementById('iDate').value;
+
+            if ((stat === 'معطب' || stat === 'صيانة') && !fDate) {
+                showToast("تاريخ العطب إلزامي!", true);
+                return;
+            }
+
+            const vessel = {
+                name: name,
+                number: document.getElementById('iNum').value,
+                length: parseFloat(document.getElementById('iLen').value) || 0,
+                region: document.getElementById('iReg').value,
+                zone: document.getElementById('iZone').value,
+                port: document.getElementById('iPort').value,
+                support_location: document.getElementById('iSupp').value,
+                status: stat,
+                breakdown_type: document.getElementById('iBreak').value,
+                breakdown_date: fDate,
+                end_date: document.getElementById('iEnd').value,
+                reference: document.getElementById('iRef').value,
+                category: getCategory(document.getElementById('iLen').value)
+            };
+
+            try {
+                if (editingVesselId) {
+                    await apiCall(`/vessels/${editingVesselId}`, 'PUT', vessel);
+                    showToast(`✅ تم تحديث المركب "${name}"`);
+                    editingVesselId = null;
+                } else {
+                    await apiCall('/vessels', 'POST', vessel);
+                    showToast(`✅ تم إضافة المركب "${name}"`);
+                }
+                await loadVessels();
+                clearForm();
+            } catch(e) { showToast(e.message, true); }
+        }
+
+        function editItem(id) {
+            if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
+            let item = allVessels.find(x => x.id == id);
+            if (item) {
+                editingVesselId = id;
+                document.getElementById('iName').value = item.name;
+                document.getElementById('iNum').value = item.number || '';
+                document.getElementById('iLen').value = item.length || '';
+                document.getElementById('iReg').value = item.region || '';
+                document.getElementById('iZone').value = item.zone || '';
+                document.getElementById('iPort').value = item.port || '';
+                document.getElementById('iSupp').value = item.support_location || '';
+                document.getElementById('iStat').value = item.status || 'صالح';
+                document.getElementById('iBreak').value = item.breakdown_type || '';
+                document.getElementById('iDate').value = item.breakdown_date || '';
+                document.getElementById('iEnd').value = item.end_date || '';
+                document.getElementById('iRef').value = item.reference || '';
+                window.scrollTo(0, 0);
+                showToast("✏️ قم بتعديل البيانات ثم حفظ");
+            }
+        }
+
+        async function delItem(id) {
+            if (!canDelete()) { showToast("ليس لديك صلاحية!", true); return; }
+            if (confirm("هل أنت متأكد من الحذف؟")) {
+                try {
+                    await apiCall(`/vessels/${id}`, 'DELETE');
+                    await loadVessels();
+                    showToast("✅ تم الحذف");
+                } catch(e) { showToast(e.message, true); }
+            }
+        }
+
+        function clearForm() {
+            editingVesselId = null;
+            ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) el.value = "";
+            });
+            document.getElementById('iReg').value = "";
+            document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
+            document.getElementById('iStat').value = "صالح";
+            showToast("تم مسح النموذج");
+        }
+
+        // عرض البيانات
+        function renderMain() {
+            let html = "";
+            allVessels.forEach(x => {
+                html += `<tr>
+                    <td><b>${x.name}</b>${editingVesselId == x.id ? ' <span style="color:orange">(جاري التعديل)</span>' : ''}</td>
+                    <td>${x.number || '-'}</td>
+                    <td>${x.length || '-'}</td>
+                    <td>${x.category || '-'}</td>
+                    <td>${x.region || '-'}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td>${x.port || '-'}</td>
+                    <td class="status-${x.status}">${x.status}</td>
+                    <td>${x.breakdown_type || '-'}</td>
+                    <td>
+                        ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${x.id})">تعديل</button>` : ''}
+                        ${canDelete() ? `<button class="btn-sm btn-red" onclick="delItem(${x.id})">حذف</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('mainBody').innerHTML = html || '<td><td colspan="10">لا توجد بيانات</td></tr>';
+        }
+
+        function renderMaint() {
+            let filtered = allVessels.filter(x => x.status === 'معطب' || x.status === 'صيانة');
+            let html = "";
+            filtered.forEach(x => {
+                html += `<tr>
+                    <td><b>${x.name}</b></td>
+                    <td>${x.region || '-'}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td class="status-${x.status}">${x.status}</td>
+                    <td>${x.breakdown_type || '-'}</td>
+                    <td>${formatDate(x.breakdown_date)}</td>
+                    <td>${formatDate(x.end_date)}</td>
+                </tr>`;
+            });
+            document.getElementById('maintBody').innerHTML = html || '<td><td colspan="7">لا توجد مراكب معطوبة</td></tr>';
+        }
+
+        // إدارة المستخدمين
+        function renderUsers() {
+            if (!canManageUsers()) return;
+            let html = "";
+            allUsers.forEach(u => {
+                html += `<tr>
+                    <td>${u.username}</td>
+                    <td>${u.role}</td>
+                    <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal(${u.id}, '${u.username}')">تغيير</button></td>
+                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser(${u.id}, false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser(${u.id}, true)">تفعيل</button>`}</td>
+                    <td><button class="btn-sm btn-red" onclick="deleteUser(${u.id})">حذف</button></td>
+                </tr>`;
+            });
+            document.getElementById('usersBody').innerHTML = html;
+        }
+
+        async function addUser() {
+            if (!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
+            let u = document.getElementById('un').value.trim();
+            let p = document.getElementById('up').value.trim();
+            let r = document.getElementById('ur').value;
+            if (!u || !p) return showToast("يرجى إدخال البيانات", true);
+            try {
+                await apiCall('/users', 'POST', { username: u, password: p, role: r });
+                await loadUsers();
+                document.getElementById('un').value = "";
+                document.getElementById('up').value = "";
+                showToast("✅ تم إضافة المستخدم");
+            } catch(e) { showToast(e.message, true); }
+        }
+
+        function openPasswordModal(userId, userName) {
+            selectedUserId = userId;
+            document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: ${userName}`;
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordModal').style.display = 'flex';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            selectedUserId = null;
+        }
+
+        async function saveNewPassword() {
+            if (!canManageUsers()) return;
+            const np = document.getElementById('newPassword').value.trim();
+            const cp = document.getElementById('confirmPassword').value.trim();
+            if (!np) { showToast("كلمة المرور مطلوبة", true); return; }
+            if (np !== cp) { showToast("كلمة المرور غير متطابقة", true); return; }
+            try {
+                await apiCall(`/users/${selectedUserId}/password`, 'PUT', { password: np });
+                closePasswordModal();
+                await loadUsers();
+                showToast("✅ تم تغيير كلمة المرور");
+            } catch(e) { showToast(e.message, true); }
+        }
+
+        async function toggleUser(userId, enable) {
+            try {
+                await apiCall(`/users/${userId}/toggle`, 'PUT', { enabled: enable });
+                await loadUsers();
+                showToast(enable ? "✅ تم التفعيل" : "⚠️ تم التعطيل");
+            } catch(e) { showToast(e.message, true); }
+        }
+
+        async function deleteUser(userId) {
+            if (confirm("هل أنت متأكد من الحذف؟")) {
+                try {
+                    await apiCall(`/users/${userId}`, 'DELETE');
+                    await loadUsers();
+                    showToast("✅ تم الحذف");
+                } catch(e) { showToast(e.message, true); }
+            }
+        }
+
+        // التنقل بين الصفحات
+        function showPage(page) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('pageMain').classList.add('hidden');
+            document.getElementById('pageMaint').classList.add('hidden');
+            document.getElementById('pageUsers').classList.add('hidden');
+            if (page === 'main') document.getElementById('pageMain').classList.remove('hidden');
+            else if (page === 'maint') document.getElementById('pageMaint').classList.remove('hidden');
+            else if (page === 'users') {
+                if (canManageUsers()) {
+                    document.getElementById('pageUsers').classList.remove('hidden');
+                    renderUsers();
+                } else showToast("غير مسموح", true);
+            }
+        }
+
+        // ربط الدوال
+        window.doLogin = doLogin;
+        window.logout = logout;
+        window.showPage = showPage;
+        window.addItem = addItem;
+        window.editItem = editItem;
+        window.delItem = delItem;
+        window.clearForm = clearForm;
+        window.addUser = addUser;
+        window.openPasswordModal = openPasswordModal;
+        window.closePasswordModal = closePasswordModal;
+        window.saveNewPassword = saveNewPassword;
+        window.toggleUser = toggleUser;
+        window.deleteUser = deleteUser;
+    </script>
+</body>
+</html>
