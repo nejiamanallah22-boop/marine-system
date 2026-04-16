@@ -1,161 +1,96 @@
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const supabaseUrl = 'https://rzcwngkpknilfesxdrkk.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6Y3duZ2twa25pbGZlc3hkcmtrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjE2MjY0OCwiZXhwIjoyMDkxNzM4NjQ4fQ.M6awEIDFWG2LGoxKFhqcP1bBGmKApMjqt7sIb_ek-L0';
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+// قاعدة بيانات بسيطة في الذاكرة
+let vessels = [];
+let nextId = 1;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// LOGIN
-app.post('/api/login', async (req, res) => {
+// تسجيل الدخول
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-    
-    if (error || !user) {
-        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
-    }
-    if (user.password === password) {
-        res.json({ success: true, user: { id: user.id, username: user.username, role: user.role } });
+    if (username === 'admin' && password === '1234') {
+        res.json({ success: true, user: { id: 1, username: 'admin', role: 'مسؤول' } });
     } else {
-        res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+        res.status(401).json({ error: 'بيانات غير صحيحة' });
     }
 });
 
-// GET all vessels
-app.get('/api/vessels', async (req, res) => {
-    const { data, error } = await supabase.from('vessels').select('*').order('id', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data || []);
+// جلب جميع المراكب
+app.get('/api/vessels', (req, res) => {
+    res.json(vessels);
 });
 
-// ADD vessel
-app.post('/api/vessels', async (req, res) => {
-    console.log('Adding vessel:', req.body);
-    const { data, error } = await supabase.from('vessels').insert([req.body]).select();
-    if (error) {
-        console.error('Error adding vessel:', error);
-        return res.status(500).json({ error: error.message });
+// إضافة مركب جديد
+app.post('/api/vessels', (req, res) => {
+    const newVessel = { id: nextId++, ...req.body };
+    vessels.push(newVessel);
+    console.log('Vessel added:', newVessel);
+    res.json({ success: true, vessel: newVessel });
+});
+
+// تحديث مركب
+app.put('/api/vessels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index !== -1) {
+        vessels[index] = { ...vessels[index], ...req.body, id: id };
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'غير موجود' });
     }
-    res.json({ success: true, vessel: data[0] });
 });
 
-// UPDATE vessel
-app.put('/api/vessels/:id', async (req, res) => {
+// حذف مركب
+app.delete('/api/vessels/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const { error } = await supabase.from('vessels').update(req.body).eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
+    vessels = vessels.filter(v => v.id !== id);
     res.json({ success: true });
 });
 
-// DELETE vessel
-app.delete('/api/vessels/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const { error } = await supabase.from('vessels').delete().eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
+// المستخدمين
+app.get('/api/users', (req, res) => {
+    res.json([{ id: 1, username: 'admin', role: 'مسؤول', enabled: true }]);
 });
 
-// GET users
-app.get('/api/users', async (req, res) => {
-    const { data, error } = await supabase.from('users').select('id, username, role, enabled');
-    if (error) return res.status(500).json({ error: error.message });
-    res.json(data || []);
-});
-
-// ADD user
-app.post('/api/users', async (req, res) => {
-    const { username, password, role } = req.body;
-    const { data, error } = await supabase.from('users').insert([{ username, password, role: role || 'مشاهد', enabled: true }]).select();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true, user: data[0] });
-});
-
-// UPDATE user password
-app.put('/api/users/:id/password', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const { error } = await supabase.from('users').update({ password: req.body.password }).eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-});
-
-// TOGGLE user
-app.put('/api/users/:id/toggle', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const { error } = await supabase.from('users').update({ enabled: req.body.enabled }).eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-});
-
-// DELETE user
-app.delete('/api/users/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const { error } = await supabase.from('users').delete().eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-});
-
-// STATS
-app.get('/api/stats', async (req, res) => {
-    const { data, error } = await supabase.from('vessels').select('*');
-    if (error) return res.status(500).json({ error: error.message });
-    const total = data.length;
-    const salih = data.filter(v => v.status === 'صالح').length;
-    const mo3atab = data.filter(v => v.status === 'معطب').length;
-    const siyana = data.filter(v => v.status === 'صيانة').length;
+// إحصائيات
+app.get('/api/stats', (req, res) => {
+    const total = vessels.length;
+    const salih = vessels.filter(v => v.status === 'صالح').length;
+    const mo3atab = vessels.filter(v => v.status === 'معطب').length;
+    const siyana = vessels.filter(v => v.status === 'صيانة').length;
     const efficiency = total > 0 ? ((salih / total) * 100).toFixed(1) : 0;
     res.json({ total, salih, mo3atab, siyana, efficiency });
 });
 
-// TICKETS
-app.get('/api/tickets', async (req, res) => {
-    const { data, error } = await supabase.from('tickets').select('*');
-    res.json(data || []);
-});
+// تذاكر
+app.get('/api/tickets', (req, res) => { res.json([]); });
+app.post('/api/tickets', (req, res) => { res.json({ success: true }); });
 
-app.post('/api/tickets', async (req, res) => {
-    const { data, error } = await supabase.from('tickets').insert([req.body]).select();
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ success: true });
-});
+// سجلات
+app.get('/api/logs', (req, res) => { res.json([]); });
 
-// LOGS
-app.get('/api/logs', async (req, res) => {
-    const { data, error } = await supabase.from('logs').select('*');
-    res.json(data || []);
-});
+// تصدير
+app.get('/api/export', (req, res) => { res.json({ vessels }); });
 
-// EXPORT
-app.get('/api/export', async (req, res) => {
-    const { data, error } = await supabase.from('vessels').select('*');
-    if (error) return res.status(500).json({ error: error.message });
-    res.json({ vessels: data });
-});
-
-// IMPORT
-app.post('/api/import', async (req, res) => {
-    const { vessels } = req.body;
-    let imported = 0;
-    for (const v of vessels) {
-        const { error } = await supabase.from('vessels').insert([v]);
-        if (!error) imported++;
+// استيراد
+app.post('/api/import', (req, res) => {
+    if (req.body.vessels) {
+        vessels = req.body.vessels;
+        nextId = (vessels.reduce((max, v) => Math.max(max, v.id), 0) + 1);
+        res.json({ success: true, imported: vessels.length });
+    } else {
+        res.status(400).json({ error: 'بيانات غير صالحة' });
     }
-    res.json({ success: true, imported });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🔗 Supabase connected`);
     console.log(`🔐 admin / 1234`);
 });
