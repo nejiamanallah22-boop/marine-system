@@ -137,7 +137,7 @@
                 <span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span>
                 <span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span>
                 <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button>
-                <button class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button id="logoutBtn" class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </div>
     </div>
@@ -388,22 +388,36 @@ async function doLogin() {
             await loadVessels(); await loadTickets(); if (isAdmin) { await loadUsers(); await loadLogs(); }
             renderMain(); renderMaint(); renderEff(); renderTickets(); if (isAdmin) { renderUsers(); renderTrack(); }
             
-            addLog("تسجيل دخول", `قام المستخدم ${username} بتسجيل الدخول`);
+            await addLog("تسجيل دخول", `قام المستخدم ${username} بتسجيل الدخول إلى النظام`);
             showToast(`مرحباً ${username}`);
         } else { errorDiv.innerHTML = data.error || "بيانات الدخول غير صحيحة"; errorDiv.style.display = "block"; }
     } catch(err) { errorDiv.innerHTML = "خطأ في الاتصال بالخادم"; errorDiv.style.display = "block"; }
 }
 
+// ==================== دالة تسجيل النشاطات (مفصلة) ====================
 async function addLog(action, details) {
     if (!currentUser) return;
     const now = new Date();
-    const log = { id: Date.now(), date: now.toLocaleDateString('ar-TN'), time: now.toLocaleTimeString('ar-TN'), username: currentUser.username, user_role: currentUser.role, action: action, details: details, ip_address: "client", user_agent: navigator.userAgent };
+    const log = { 
+        id: Date.now(), 
+        date: now.toLocaleDateString('ar-TN'), 
+        time: now.toLocaleTimeString('ar-TN'), 
+        username: currentUser.username, 
+        user_role: currentUser.role, 
+        action: action, 
+        details: details, 
+        ip_address: "client", 
+        user_agent: navigator.userAgent 
+    };
     try { await apiCall('/logs', 'POST', log); } catch(e) { console.log(e); }
 }
 
-function logout() { 
+// ==================== زر الخروج (تم تصليحه) ====================
+async function logout() { 
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        addLog("تسجيل خروج", `قام المستخدم ${currentUser.username} بتسجيل الخروج`);
+        if (currentUser) {
+            await addLog("تسجيل خروج", `قام المستخدم ${currentUser.username} بتسجيل الخروج من النظام`);
+        }
         currentUser = null; 
         editingVesselId = null; 
         document.getElementById('loginOverlay').style.display = 'flex'; 
@@ -416,7 +430,7 @@ function logout() {
     } 
 }
 
-// ==================== إدارة المراكب ====================
+// ==================== إدارة المراكب مع تسجيل مفصل ====================
 async function addItem() {
     if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
     const name = document.getElementById('iName').value.trim();
@@ -426,18 +440,49 @@ async function addItem() {
     if ((stat === 'معطب' || stat === 'صيانة') && !fDate) { showToast("تاريخ العطب إلزامي!", true); return; }
     
     const vessel = { 
-        name: name, number: document.getElementById('iNum').value, length: parseFloat(document.getElementById('iLen').value) || 0,
-        category: getCategory(document.getElementById('iLen').value), region: document.getElementById('iReg').value,
-        zone: document.getElementById('iZone').value, port: document.getElementById('iPort').value,
-        support_location: document.getElementById('iSupp').value, status: stat,
-        breakdown_type: document.getElementById('iBreak').value, breakdown_date: fDate,
-        end_date: document.getElementById('iEnd').value, reference: document.getElementById('iRef').value
+        name: name, 
+        number: document.getElementById('iNum').value, 
+        length: parseFloat(document.getElementById('iLen').value) || 0,
+        category: getCategory(document.getElementById('iLen').value), 
+        region: document.getElementById('iReg').value,
+        zone: document.getElementById('iZone').value, 
+        port: document.getElementById('iPort').value,
+        support_location: document.getElementById('iSupp').value, 
+        status: stat,
+        breakdown_type: document.getElementById('iBreak').value, 
+        breakdown_date: fDate,
+        end_date: document.getElementById('iEnd').value, 
+        reference: document.getElementById('iRef').value
     };
     
     try {
-        if (editingVesselId) { await apiCall(`/vessels/${editingVesselId}`, 'PUT', vessel); showToast(`✅ تم تحديث المركب "${name}"`); addLog("تعديل مركب", `تم تعديل المركب "${name}"`); editingVesselId = null; updateEditModeDisplay(); }
-        else { await apiCall('/vessels', 'POST', vessel); showToast(`✅ تم إضافة المركب "${name}"`); addLog("إضافة مركب", `تم إضافة المركب "${name}"`); }
-        await loadVessels(); clearForm();
+        if (editingVesselId) { 
+            // جلب البيانات القديمة للتسجيل
+            const oldVessel = allVessels.find(v => v.id === editingVesselId);
+            const changes = [];
+            if (oldVessel.name !== vessel.name) changes.push(`الاسم: "${oldVessel.name}" → "${vessel.name}"`);
+            if (oldVessel.number !== vessel.number) changes.push(`الرقم: "${oldVessel.number}" → "${vessel.number}"`);
+            if (oldVessel.length !== vessel.length) changes.push(`الطول: ${oldVessel.length} → ${vessel.length}`);
+            if (oldVessel.region !== vessel.region) changes.push(`الإقليم: "${oldVessel.region}" → "${vessel.region}"`);
+            if (oldVessel.zone !== vessel.zone) changes.push(`المنطقة: "${oldVessel.zone}" → "${vessel.zone}"`);
+            if (oldVessel.port !== vessel.port) changes.push(`الميناء: "${oldVessel.port}" → "${vessel.port}"`);
+            if (oldVessel.status !== vessel.status) changes.push(`الحالة: "${oldVessel.status}" → "${vessel.status}"`);
+            if (oldVessel.breakdown_type !== vessel.breakdown_type) changes.push(`العطب: "${oldVessel.breakdown_type}" → "${vessel.breakdown_type}"`);
+            
+            await apiCall(`/vessels/${editingVesselId}`, 'PUT', vessel);
+            const details = changes.length > 0 ? changes.join('، ') : "تعديل بيانات المركب";
+            await addLog("تعديل مركب", `تم تعديل المركب "${name}" | التغييرات: ${details}`);
+            showToast(`✅ تم تحديث المركب "${name}"`);
+            editingVesselId = null; 
+            updateEditModeDisplay();
+        } else { 
+            await apiCall('/vessels', 'POST', vessel);
+            const vesselDetails = `الاسم: ${vessel.name}, الرقم: ${vessel.number || 'غير محدد'}, الطول: ${vessel.length}م, الفئة: ${vessel.category}, الإقليم: ${vessel.region}, الحالة: ${vessel.status}`;
+            await addLog("إضافة مركب", `تم إضافة مركب جديد: ${vesselDetails}`);
+            showToast(`✅ تم إضافة المركب "${name}"`);
+        }
+        await loadVessels(); 
+        clearForm();
     } catch(e) { showToast(e.message, true); }
 }
 
@@ -445,32 +490,52 @@ function editItem(id) {
     if (!canEdit()) { showToast("ليس لديك صلاحية!", true); return; }
     let item = allVessels.find(v => v.id == id);
     if (item) {
-        editingVesselId = id; updateEditModeDisplay();
-        document.getElementById('iName').value = item.name; document.getElementById('iNum').value = item.number; document.getElementById('iLen').value = item.length;
-        document.getElementById('iReg').value = item.region; updateZones(); setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
-        document.getElementById('iPort').value = item.port; document.getElementById('iSupp').value = item.support_location; document.getElementById('iStat').value = item.status;
-        document.getElementById('iBreak').value = item.breakdown_type; document.getElementById('iDate').value = item.breakdown_date; document.getElementById('iEnd').value = item.end_date; document.getElementById('iRef').value = item.reference;
-        window.scrollTo(0, 0); showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
+        editingVesselId = id; 
+        updateEditModeDisplay();
+        document.getElementById('iName').value = item.name; 
+        document.getElementById('iNum').value = item.number; 
+        document.getElementById('iLen').value = item.length;
+        document.getElementById('iReg').value = item.region; 
+        updateZones(); 
+        setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
+        document.getElementById('iPort').value = item.port; 
+        document.getElementById('iSupp').value = item.support_location; 
+        document.getElementById('iStat').value = item.status;
+        document.getElementById('iBreak').value = item.breakdown_type; 
+        document.getElementById('iDate').value = item.breakdown_date; 
+        document.getElementById('iEnd').value = item.end_date; 
+        document.getElementById('iRef').value = item.reference;
+        window.scrollTo(0, 0); 
+        showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
     }
 }
 
 async function delItem(id) {
     if (!canDelete()) { showToast("ليس لديك صلاحية!", true); return; }
-    if (confirm("⚠️ هل أنت متأكد من حذف هذا المركب؟")) {
-        try { await apiCall(`/vessels/${id}`, 'DELETE'); await loadVessels(); addLog("حذف مركب", `تم حذف مركب`); showToast("✅ تم الحذف"); } catch(e) { showToast(e.message, true); }
+    const vesselToDelete = allVessels.find(v => v.id === id);
+    if (confirm(`⚠️ هل أنت متأكد من حذف المركب "${vesselToDelete?.name}"؟`)) {
+        try { 
+            await apiCall(`/vessels/${id}`, 'DELETE'); 
+            await loadVessels(); 
+            await addLog("حذف مركب", `تم حذف المركب "${vesselToDelete?.name}" (الرقم: ${vesselToDelete?.number || 'غير محدد'})`);
+            showToast("✅ تم الحذف"); 
+        } catch(e) { showToast(e.message, true); }
     }
 }
 
 function clearForm() {
-    editingVesselId = null; updateEditModeDisplay();
+    editingVesselId = null; 
+    updateEditModeDisplay();
     ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-    document.getElementById('iReg').value = ""; document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>'; document.getElementById('iStat').value = "صالح";
+    document.getElementById('iReg').value = ""; 
+    document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>'; 
+    document.getElementById('iStat').value = "صالح";
     showToast("🗑️ تم مسح النموذج");
 }
 
 function updateZones() { const reg = document.getElementById('iReg').value; const zoneSel = document.getElementById('iZone'); zoneSel.innerHTML = '<option value="">المنطقة</option>'; if (ZONES_DATA[reg]) { ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`); } }
 
-// ==================== دوال العرض ====================
+// ==================== دوال العرض (بدون تغيير) ====================
 function renderMain() {
     const fCat = document.getElementById('fCatMain').value; const fReg = document.getElementById('fRegMain').value; const searchText = document.getElementById('searchMain').value.toLowerCase();
     let filtered = allVessels.filter(v => (fCat === "الكل" || v.category === fCat) && (fReg === "الكل" || v.region === fReg));
@@ -581,7 +646,8 @@ function renderTickets() {
     let userTickets = allTickets.filter(t => t.username === currentUser.username);
     let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
     if (userTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة<\/td></tr>';
-    else userTickets.slice(0,10).forEach(t => { html += `<tr><td>${t.date || '-'}<\/td><td>${t.time || '-'}<\/td><td>${t.subject}<\/td><td style="color:#f39c12">${t.status}<\/td><\/tr>`; });
+    else userTickets.slice(0,10).forEach(t => { html += `<tr>
+        <td>${t.date || '-'}<\/td><td>${t.time || '-'}<\/td><td>${t.subject}<\/td><td style="color:#f39c12">${t.status}<\/td><\/tr>`; });
     html += `</tbody>}</div>`;
     document.getElementById('ticketsList').innerHTML = html;
 }
@@ -589,9 +655,16 @@ function renderTickets() {
 async function sendTicket() {
     const subject = document.getElementById('ticketSubject').value.trim(); const message = document.getElementById('ticketMessage').value.trim();
     if (!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; }
-    try { await apiCall('/tickets', 'POST', { username: currentUser.username, subject, message }); document.getElementById('ticketSubject').value = ""; document.getElementById('ticketMessage').value = ""; document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!"; setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000); await loadTickets(); addLog("إرسال تذكرة", `تم إرسال تذكرة: ${subject}`); showToast("✅ تم إرسال طلبك بنجاح"); } catch(e) { showToast(e.message, true); } }
+    try { await apiCall('/tickets', 'POST', { username: currentUser.username, subject, message }); 
+    document.getElementById('ticketSubject').value = ""; document.getElementById('ticketMessage').value = ""; 
+    document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!"; 
+    setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000); 
+    await loadTickets(); 
+    await addLog("إرسال تذكرة", `تم إرسال تذكرة دعم: "${subject}"`);
+    showToast("✅ تم إرسال طلبك بنجاح"); } catch(e) { showToast(e.message, true); } }
 function refreshTickets() { loadTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
 
+// ==================== صفحة تتبع المستخدمين (مفصلة) ====================
 function renderTrack() {
     if (!canManageUsers()) return;
     const start = document.getElementById('trackDateStart').value; const end = document.getElementById('trackDateEnd').value;
@@ -600,14 +673,27 @@ function renderTrack() {
     if (end) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') <= end);
     let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>';
     if (filtered.length === 0) html += '<tr><td colspan="6">لا توجد نشاطات<\/td></tr>';
-    else filtered.forEach(l => { html += `<tr><td>${l.date || '-'}<\/td><td>${l.time || '-'}<\/td><td>${l.username || '-'}<\/td><td>${l.user_role || '-'}<\/td><td>${l.action || '-'}<\/td><td>${l.details || '-'}<\/td><\/tr>`; });
+    else filtered.forEach(l => { 
+        let actionClass = '';
+        if (l.action === 'إضافة مركب') actionClass = 'style="color:#27ae60; font-weight:bold;"';
+        else if (l.action === 'تعديل مركب') actionClass = 'style="color:#f39c12; font-weight:bold;"';
+        else if (l.action === 'حذف مركب') actionClass = 'style="color:#e74c3c; font-weight:bold;"';
+        html += `<tr>
+            <td>${l.date || '-'}</td>
+            <td>${l.time || '-'}</td>
+            <td><b>${l.username || '-'}</b></td>
+            <td>${l.user_role || '-'}</td>
+            <td ${actionClass}>${l.action || '-'}</td>
+            <td style="text-align:right; max-width:400px;">${l.details || '-'}</td>
+        </tr>`; 
+    });
     html += `</tbody>}</div>`;
     document.getElementById('trackContent').innerHTML = html;
 }
 function resetTrackFilters() { document.getElementById('trackDateStart').value = ""; document.getElementById('trackDateEnd').value = ""; renderTrack(); showToast("✅ تم إعادة ضبط فلاتر التتبع"); }
 function refreshTrack() { loadLogs(); showToast("✅ تم تحديث سجل التتبع"); }
 
-// ==================== إدارة المستخدمين ====================
+// ==================== إدارة المستخدمين مع تسجيل مفصل ====================
 function renderUsers() {
     if (!canManageUsers()) return;
     let html = "";
@@ -630,7 +716,13 @@ async function addUser() {
     if (!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
     try {
         const result = await apiCall('/users', 'POST', { username: u, password: p, role: r });
-        if (result.success) { await loadUsers(); document.getElementById('un').value = ""; document.getElementById('up').value = ""; addLog("إضافة مستخدم", `تم إضافة المستخدم "${u}"`); showToast("✅ تم إضافة المستخدم"); }
+        if (result.success) { 
+            await loadUsers(); 
+            document.getElementById('un').value = ""; 
+            document.getElementById('up').value = ""; 
+            await addLog("إدارة مستخدمين", `تم إضافة مستخدم جديد: "${u}" بالصلاحية: ${r}`);
+            showToast("✅ تم إضافة المستخدم"); 
+        }
         else { showToast(result.error || "خطأ في الإضافة", true); }
     } catch(e) { showToast(e.message, true); }
 }
@@ -646,28 +738,53 @@ async function saveNewPassword() {
     if (np.length < 4) { showToast("كلمة المرور يجب أن تكون 4 أحرف على الأقل", true); return; }
     try {
         const result = await apiCall(`/users/${selectedUserId}/password`, 'PUT', { password: np });
-        if (result.success) { closePasswordModal(); await loadUsers(); addLog("تغيير كلمة مرور", `تم تغيير كلمة مرور المستخدم`); showToast("✅ تم تغيير كلمة المرور بنجاح"); }
+        if (result.success) { 
+            closePasswordModal(); 
+            await loadUsers(); 
+            const userName = allUsers.find(u => u.id === selectedUserId)?.username;
+            await addLog("إدارة مستخدمين", `تم تغيير كلمة مرور المستخدم: "${userName}"`);
+            showToast("✅ تم تغيير كلمة المرور بنجاح"); 
+        }
         else { showToast(result.error || "خطأ في التغيير", true); }
     } catch(e) { showToast(e.message, true); }
 }
 
-async function toggleUser(userId, enable) { try { await apiCall(`/users/${userId}/toggle`, 'PUT', { enabled: enable }); await loadUsers(); addLog(enable ? "تفعيل مستخدم" : "تعطيل مستخدم", `تم ${enable ? 'تفعيل' : 'تعطيل'} المستخدم`); showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم"); } catch(e) { showToast(e.message, true); } }
-async function deleteUser(userId) { if (confirm("هل أنت متأكد من حذف هذا المستخدم؟")) { try { await apiCall(`/users/${userId}`, 'DELETE'); await loadUsers(); addLog("حذف مستخدم", `تم حذف المستخدم`); showToast("✅ تم حذف المستخدم"); } catch(e) { showToast(e.message, true); } } }
+async function toggleUser(userId, enable) { 
+    try { 
+        await apiCall(`/users/${userId}/toggle`, 'PUT', { enabled: enable }); 
+        await loadUsers(); 
+        const userName = allUsers.find(u => u.id === userId)?.username;
+        await addLog("إدارة مستخدمين", `تم ${enable ? 'تفعيل' : 'تعطيل'} المستخدم: "${userName}"`);
+        showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم"); 
+    } catch(e) { showToast(e.message, true); } 
+}
+
+async function deleteUser(userId) { 
+    if (confirm("هل أنت متأكد من حذف هذا المستخدم؟")) { 
+        try { 
+            const userName = allUsers.find(u => u.id === userId)?.username;
+            await apiCall(`/users/${userId}`, 'DELETE'); 
+            await loadUsers(); 
+            await addLog("إدارة مستخدمين", `تم حذف المستخدم: "${userName}"`);
+            showToast("✅ تم حذف المستخدم"); 
+        } catch(e) { showToast(e.message, true); } 
+    } 
+}
 function refreshUsers() { loadUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
 
 // ==================== تصدير واستيراد ====================
 async function exportAllData() {
     if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
-    try { const data = await apiCall('/export'); const dataStr = JSON.stringify(data, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `marine_data_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); addLog("تصدير بيانات", "تم تصدير جميع البيانات"); showToast("✅ تم تصدير البيانات بنجاح!"); } catch(e) { showToast(e.message, true); } }
+    try { const data = await apiCall('/export'); const dataStr = JSON.stringify(data, null, 2); const blob = new Blob([dataStr], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `marine_data_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); await addLog("تصدير بيانات", "تم تصدير جميع البيانات إلى ملف JSON"); showToast("✅ تم تصدير البيانات بنجاح!"); } catch(e) { showToast(e.message, true); } }
 async function importAllData(input) {
     if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
     if (!input.files || !input.files[0]) return;
     const file = input.files[0]; const reader = new FileReader();
-    reader.onload = async function(e) { try { const importedData = JSON.parse(e.target.result); if (importedData.vessels) { await apiCall('/import', 'POST', { vessels: importedData.vessels }); } await loadVessels(); addLog("استيراد بيانات", "تم استيراد البيانات"); showToast("✅ تم استيراد البيانات بنجاح!"); } catch(err) { showToast("❌ خطأ في قراءة الملف: " + err.message, true); } };
+    reader.onload = async function(e) { try { const importedData = JSON.parse(e.target.result); if (importedData.vessels) { await apiCall('/import', 'POST', { vessels: importedData.vessels }); } await loadVessels(); await addLog("استيراد بيانات", "تم استيراد البيانات من ملف JSON"); showToast("✅ تم استيراد البيانات بنجاح!"); } catch(err) { showToast("❌ خطأ في قراءة الملف: " + err.message, true); } };
     reader.readAsText(file); input.value = "";
 }
-function exportToExcel() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const ws = XLSX.utils.json_to_sheet(allVessels); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vessels"); XLSX.writeFile(wb, `vessels_${new Date().toISOString().split('T')[0]}.xlsx`); addLog("تصدير Excel", "تم تصدير البيانات إلى Excel"); showToast("✅ تم تصدير البيانات إلى Excel"); }
-function exportToPDF() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const element = document.getElementById('pageMain'); const opt = { margin: [0.5,0.5,0.5,0.5], filename: `vessels_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }; html2pdf().set(opt).from(element).save(); addLog("تصدير PDF", "تم تصدير البيانات إلى PDF"); showToast("✅ جاري تحضير ملف PDF..."); }
+function exportToExcel() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const ws = XLSX.utils.json_to_sheet(allVessels); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Vessels"); XLSX.writeFile(wb, `vessels_${new Date().toISOString().split('T')[0]}.xlsx`); addLog("تصدير Excel", "تم تصدير بيانات المراكب إلى ملف Excel"); showToast("✅ تم تصدير البيانات إلى Excel"); }
+function exportToPDF() { if (!canManageUsers()) { showToast("غير مسموح", true); return; } const element = document.getElementById('pageMain'); const opt = { margin: [0.5,0.5,0.5,0.5], filename: `vessels_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }; html2pdf().set(opt).from(element).save(); addLog("تصدير PDF", "تم تصدير بيانات المراكب إلى ملف PDF"); showToast("✅ جاري تحضير ملف PDF..."); }
 
 function refreshAllPages() { loadVessels(); loadTickets(); if (canManageUsers()) { loadUsers(); loadLogs(); } showToast("✅ تم تحديث جميع الصفحات"); }
 
@@ -693,6 +810,8 @@ const fRegMaint = document.getElementById('fRegMaint');
 if (fRegMaint) { fRegMaint.innerHTML = '<option value="الكل">كل الأقاليم</option>'; Object.keys(ZONES_DATA).forEach(reg => { fRegMaint.innerHTML += `<option value="${reg}">${reg}</option>`; }); }
 
 console.log("✅ النظام جاهز للعمل مع السيرفر الخارجي!");
+console.log("✅ زر الخروج يعمل بشكل صحيح!");
+console.log("✅ صفحة تتبع المستخدمين تعرض التفاصيل الكاملة!");
 </script>
 </body>
 </html>
