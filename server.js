@@ -2,20 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ملفات البيانات
+// مجلد البيانات
 const DATA_DIR = path.join(__dirname, 'data');
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 
-// دوال قراءة وكتابة البيانات
+// دوال المساعدة
 function readData(filename) {
     const filePath = path.join(DATA_DIR, filename);
     if (!fs.existsSync(filePath)) {
@@ -44,28 +44,25 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// الحصول على جميع المراكب
+// ==================== المراكب ====================
 app.get('/api/vessels', (req, res) => {
-    const vessels = readData('vessels.json');
-    res.json(vessels);
+    res.json(readData('vessels.json'));
 });
 
-// إضافة مركب جديد
 app.post('/api/vessels', (req, res) => {
     const vessels = readData('vessels.json');
-    const newVessel = { ...req.body, id: Date.now() };
+    const newVessel = { ...req.body, id: Date.now(), createdAt: new Date().toISOString() };
     vessels.push(newVessel);
     writeData('vessels.json', vessels);
     res.json({ success: true, vessel: newVessel });
 });
 
-// تحديث مركب
 app.put('/api/vessels/:id', (req, res) => {
     const vessels = readData('vessels.json');
     const id = parseInt(req.params.id);
     const index = vessels.findIndex(v => v.id === id);
     if (index !== -1) {
-        vessels[index] = { ...req.body, id };
+        vessels[index] = { ...req.body, id, updatedAt: new Date().toISOString() };
         writeData('vessels.json', vessels);
         res.json({ success: true });
     } else {
@@ -73,7 +70,6 @@ app.put('/api/vessels/:id', (req, res) => {
     }
 });
 
-// حذف مركب
 app.delete('/api/vessels/:id', (req, res) => {
     const vessels = readData('vessels.json');
     const id = parseInt(req.params.id);
@@ -82,27 +78,25 @@ app.delete('/api/vessels/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// الحصول على المستخدمين
+// ==================== المستخدمين ====================
 app.get('/api/users', (req, res) => {
     const users = readData('users.json');
     const safeUsers = users.map(u => ({ id: u.id, username: u.username, role: u.role, enabled: u.enabled }));
     res.json(safeUsers);
 });
 
-// إضافة مستخدم
 app.post('/api/users', (req, res) => {
     const users = readData('users.json');
     const { username, password, role } = req.body;
     if (users.find(u => u.username === username)) {
-        return res.status(400).json({ error: 'المستخدم موجود' });
+        return res.status(400).json({ error: 'المستخدم موجود بالفعل' });
     }
-    const newUser = { id: Date.now(), username, password, role, enabled: true };
+    const newUser = { id: Date.now(), username, password, role, enabled: true, createdAt: new Date().toISOString() };
     users.push(newUser);
     writeData('users.json', users);
     res.json({ success: true });
 });
 
-// تغيير كلمة المرور
 app.put('/api/users/:id/password', (req, res) => {
     const users = readData('users.json');
     const id = parseInt(req.params.id);
@@ -117,7 +111,6 @@ app.put('/api/users/:id/password', (req, res) => {
     }
 });
 
-// تبديل حالة المستخدم
 app.put('/api/users/:id/toggle', (req, res) => {
     const users = readData('users.json');
     const id = parseInt(req.params.id);
@@ -132,7 +125,6 @@ app.put('/api/users/:id/toggle', (req, res) => {
     }
 });
 
-// حذف مستخدم
 app.delete('/api/users/:id', (req, res) => {
     const users = readData('users.json');
     const id = parseInt(req.params.id);
@@ -141,13 +133,11 @@ app.delete('/api/users/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// الحصول على السجلات
+// ==================== السجلات (Logs) ====================
 app.get('/api/logs', (req, res) => {
-    const logs = readData('logs.json');
-    res.json(logs);
+    res.json(readData('logs.json'));
 });
 
-// إضافة سجل
 app.post('/api/logs', (req, res) => {
     const logs = readData('logs.json');
     logs.unshift(req.body);
@@ -156,41 +146,46 @@ app.post('/api/logs', (req, res) => {
     res.json({ success: true });
 });
 
-// الحصول على التذاكر
+// ==================== التذاكر ====================
 app.get('/api/tickets', (req, res) => {
-    const tickets = readData('tickets.json');
-    res.json(tickets);
+    res.json(readData('tickets.json'));
 });
 
-// إضافة تذكرة
 app.post('/api/tickets', (req, res) => {
     const tickets = readData('tickets.json');
-    const newTicket = { ...req.body, id: Date.now(), date: new Date().toLocaleDateString('ar-TN'), status: 'قيد المعالجة' };
+    const newTicket = { 
+        ...req.body, 
+        id: Date.now(), 
+        date: new Date().toLocaleDateString('ar-TN'),
+        time: new Date().toLocaleTimeString('ar-TN'),
+        status: 'قيد المعالجة' 
+    };
     tickets.push(newTicket);
     writeData('tickets.json', tickets);
     res.json({ success: true });
 });
 
-// تصدير البيانات
+// ==================== تصدير واستيراد ====================
 app.get('/api/export', (req, res) => {
     const data = {
         vessels: readData('vessels.json'),
-        users: readData('users.json'),
+        users: readData('users.json').map(u => ({ ...u, password: undefined })),
         logs: readData('logs.json'),
-        tickets: readData('tickets.json')
+        tickets: readData('tickets.json'),
+        exportDate: new Date().toISOString()
     };
     res.json(data);
 });
 
-// استيراد البيانات
 app.post('/api/import', (req, res) => {
     const { vessels } = req.body;
     if (vessels) writeData('vessels.json', vessels);
     res.json({ success: true });
 });
 
-// ==================== البيانات الأولية ====================
+// ==================== تهيئة البيانات الأولية ====================
 function initData() {
+    // المستخدمين (بدون كلمات مرور ظاهرة في الكود)
     let users = readData('users.json');
     if (users.length === 0) {
         writeData('users.json', [
@@ -200,12 +195,14 @@ function initData() {
         ]);
     }
 
+    // المراكب
     let vessels = readData('vessels.json');
     if (vessels.length === 0) {
         writeData('vessels.json', [
-            { id: 1, name: 'البروق-1', number: 'B001', length: 11, category: 'البروق', region: 'الشمال', zone: 'تونس', port: 'تونس', status: 'صالح', breakdown: '', breakdownDate: '', endDate: '' },
-            { id: 2, name: 'صقر-1', number: 'S001', length: 10, category: 'صقور', region: 'الساحل', zone: 'سوسة', port: 'سوسة', status: 'صالح', breakdown: '', breakdownDate: '', endDate: '' },
-            { id: 3, name: 'خوفة-1', number: 'K001', length: 20, category: 'خوافر', region: 'الوسط', zone: 'صفاقس', port: 'صفاقس', status: 'معطب', breakdown: 'محرك', breakdownDate: '2024-01-15', endDate: '2024-02-15' }
+            { id: 1, name: 'البروق-1', number: 'B001', length: 11, category: 'البروق', region: 'الشمال', zone: 'تونس', port: 'تونس', support_location: 'حلق الوادي', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '' },
+            { id: 2, name: 'صقر-1', number: 'S001', length: 10, category: 'صقور', region: 'الساحل', zone: 'سوسة', port: 'سوسة', support_location: 'المنستير', status: 'صالح', breakdown_type: '', breakdown_date: '', end_date: '', reference: '' },
+            { id: 3, name: 'خوفة-1', number: 'K001', length: 20, category: 'خوافر', region: 'الوسط', zone: 'صفاقس', port: 'صفاقس', support_location: 'المهدية', status: 'معطب', breakdown_type: 'محرك', breakdown_date: '2024-01-15', end_date: '2024-02-15', reference: 'REF001' },
+            { id: 4, name: 'زورق-1', number: 'Z001', length: 15, category: 'زوارق مزدوجة', region: 'الجنوب', zone: 'جربة', port: 'جربة', support_location: 'قابس', status: 'صيانة', breakdown_type: 'كهرباء', breakdown_date: '2024-01-20', end_date: '2024-02-20', reference: 'REF002' }
         ]);
     }
 
@@ -216,7 +213,10 @@ function initData() {
 initData();
 
 app.listen(PORT, () => {
-    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
-    console.log(`📁 البيانات محفوظة في مجلد: ${DATA_DIR}`);
-    console.log(`🔑 المستخدمين: admin/admin123, editor/editor123, viewer/viewer123`);
+    console.log(`\n🚀 السيرفر يعمل على http://localhost:${PORT}`);
+    console.log(`📁 مجلد البيانات: ${DATA_DIR}`);
+    console.log(`\n🔑 بيانات الدخول (للمسؤول فقط):`);
+    console.log(`   admin / admin123`);
+    console.log(`   editor / editor123`);
+    console.log(`   viewer / viewer123\n`);
 });
