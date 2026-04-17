@@ -394,7 +394,7 @@ function addLog(action, details) {
     saveAll();
 }
 
-// ==================== تسجيل الدخول (يعمل) ====================
+// ==================== تسجيل الدخول ====================
 document.getElementById('loginBtn').onclick = function() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -439,7 +439,7 @@ document.getElementById('loginBtn').onclick = function() {
     }
 };
 
-// ==================== زر الخروج (يعمل 100%) ====================
+// ==================== زر الخروج ====================
 document.getElementById('logoutBtn').onclick = function() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         if (currentUser) {
@@ -620,7 +620,7 @@ function renderRegionTables() {
     if (selectedRegion === "الكل") {
         ["الشمال","الساحل","الوسط","الجنوب"].forEach(region => {
             let regData = allVessels.filter(v => v.region === region); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-            html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${region} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th><tr></thead><tbody>`;
+            html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${region} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
             CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}<\/td><td><strong>${percent}%</strong><\/td></tr>`; });
             html += `</tbody>}</div></div>`;
         });
@@ -639,10 +639,14 @@ function switchChartType(type, btn) { currentChartType = type; document.querySel
 
 function renderTickets() {
     let userTickets = allTickets.filter(t => t.username === currentUser.username);
-    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
-    if (userTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة<\/td></tr>';
+    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>العنوان</th><th>الحالة</th></td></thead><tbody>';
+    if (userTickets.length === 0) html += '<td><td colspan="4">لا توجد طلبات سابقة<\/td></tr>';
     else userTickets.slice(0,10).forEach(t => { html += `<tr>
-        <td>${t.date || '-'}<\/td><td>${t.time || '-'}<\/td><td>${t.subject}<\/td><td style="color:#f39c12">${t.status}<\/td><\/tr>`; });
+        <td>${t.date || '-'}</td>
+        <td>${t.time || '-'}</td>
+        <td>${t.subject}</td>
+        <td style="color:#f39c12">${t.status}</td>
+    </tr>`; });
     html += `</tbody>}</div>`;
     document.getElementById('ticketsList').innerHTML = html;
 }
@@ -740,6 +744,7 @@ function deleteUser(userId) {
 }
 function refreshUsers() { initData(); renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); }
 
+// ==================== تصدير واستيراد ====================
 function exportAllData() {
     if (!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
     const data = { vessels: allVessels, users: allUsers.map(u => ({ ...u, password: undefined })), logs: allLogs, tickets: allTickets, exportDate: new Date().toISOString() };
@@ -784,6 +789,7 @@ if (fRegMaint) { fRegMaint.innerHTML = '<option value="الكل">كل الأقا
 
 console.log("✅ النظام جاهز للعمل!");
 console.log("✅ زر الخروج يعمل بشكل صحيح!");
+console.log("✅ أسماء المستخدمين غير ظاهرة في شاشة الدخول!");
 </script>
 </body>
 </html>
