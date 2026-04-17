@@ -1,7 +1,7 @@
 {
   "name": "marine-fleet-system",
-  "version": "7.0.0",
-  "description": "نظام إدارة الأسطول البحري - النسخة النهائية",
+  "version": "2.0.0",
+  "description": "نظام إدارة الأسطول البحري - نسخة آمنة",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -14,10 +14,7 @@
     "jsonwebtoken": "^9.0.0",
     "uuid": "^9.0.0",
     "helmet": "^7.0.0",
-    "express-rate-limit": "^6.7.0",
-    "express-validator": "^7.0.1",
-    "sqlite3": "^5.1.6",
-    "sqlite": "^5.1.1"
+    "express-rate-limit": "^6.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
