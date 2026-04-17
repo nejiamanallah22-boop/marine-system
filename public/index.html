@@ -137,7 +137,7 @@
                 <span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span>
                 <span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span>
                 <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button>
-                <button id="logoutBtn" class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button id="logoutButton" class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </div>
     </div>
@@ -349,6 +349,24 @@ async function loadUsers() { if (!canManageUsers()) return; try { allUsers = awa
 async function loadLogs() { if (!canManageUsers()) return; try { allLogs = await apiCall('/logs'); renderTrack(); } catch(e) { showToast("خطأ في تحميل السجلات", true); } }
 async function loadTickets() { try { allTickets = await apiCall('/tickets'); renderTickets(); } catch(e) { showToast("خطأ في تحميل التذاكر", true); } }
 
+// ==================== تسجيل النشاطات (مفصل) ====================
+async function addLog(action, details) {
+    if (!currentUser) return;
+    const now = new Date();
+    const log = { 
+        id: Date.now(), 
+        date: now.toLocaleDateString('ar-TN'), 
+        time: now.toLocaleTimeString('ar-TN'), 
+        username: currentUser.username, 
+        user_role: currentUser.role, 
+        action: action, 
+        details: details, 
+        ip_address: "client", 
+        user_agent: navigator.userAgent 
+    };
+    try { await apiCall('/logs', 'POST', log); } catch(e) { console.log(e); }
+}
+
 // ==================== تسجيل الدخول ====================
 async function doLogin() {
     const username = document.getElementById('username').value.trim();
@@ -394,25 +412,7 @@ async function doLogin() {
     } catch(err) { errorDiv.innerHTML = "خطأ في الاتصال بالخادم"; errorDiv.style.display = "block"; }
 }
 
-// ==================== دالة تسجيل النشاطات (مفصلة) ====================
-async function addLog(action, details) {
-    if (!currentUser) return;
-    const now = new Date();
-    const log = { 
-        id: Date.now(), 
-        date: now.toLocaleDateString('ar-TN'), 
-        time: now.toLocaleTimeString('ar-TN'), 
-        username: currentUser.username, 
-        user_role: currentUser.role, 
-        action: action, 
-        details: details, 
-        ip_address: "client", 
-        user_agent: navigator.userAgent 
-    };
-    try { await apiCall('/logs', 'POST', log); } catch(e) { console.log(e); }
-}
-
-// ==================== زر الخروج (تم تصليحه) ====================
+// ==================== زر الخروج (تم التصليح) ====================
 async function logout() { 
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         if (currentUser) {
@@ -457,7 +457,6 @@ async function addItem() {
     
     try {
         if (editingVesselId) { 
-            // جلب البيانات القديمة للتسجيل
             const oldVessel = allVessels.find(v => v.id === editingVesselId);
             const changes = [];
             if (oldVessel.name !== vessel.name) changes.push(`الاسم: "${oldVessel.name}" → "${vessel.name}"`);
@@ -535,7 +534,7 @@ function clearForm() {
 
 function updateZones() { const reg = document.getElementById('iReg').value; const zoneSel = document.getElementById('iZone'); zoneSel.innerHTML = '<option value="">المنطقة</option>'; if (ZONES_DATA[reg]) { ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`); } }
 
-// ==================== دوال العرض (بدون تغيير) ====================
+// ==================== دوال العرض ====================
 function renderMain() {
     const fCat = document.getElementById('fCatMain').value; const fReg = document.getElementById('fRegMain').value; const searchText = document.getElementById('searchMain').value.toLowerCase();
     let filtered = allVessels.filter(v => (fCat === "الكل" || v.category === fCat) && (fReg === "الكل" || v.region === fReg));
@@ -631,7 +630,7 @@ function renderRegionTables() {
         });
     } else {
         let regData = allVessels.filter(v => v.region === selectedRegion); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-        html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+        html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th><tr></thead><tbody>`;
         CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}<\/td><td><strong>${percent}%</strong><\/td></tr>`; });
         html += `</tbody>}</div></div>`;
     }
@@ -664,7 +663,7 @@ async function sendTicket() {
     showToast("✅ تم إرسال طلبك بنجاح"); } catch(e) { showToast(e.message, true); } }
 function refreshTickets() { loadTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
 
-// ==================== صفحة تتبع المستخدمين (مفصلة) ====================
+// ==================== صفحة تتبع المستخدمين (تعرض التفاصيل الكاملة) ====================
 function renderTrack() {
     if (!canManageUsers()) return;
     const start = document.getElementById('trackDateStart').value; const end = document.getElementById('trackDateEnd').value;
@@ -675,16 +674,21 @@ function renderTrack() {
     if (filtered.length === 0) html += '<tr><td colspan="6">لا توجد نشاطات<\/td></tr>';
     else filtered.forEach(l => { 
         let actionClass = '';
-        if (l.action === 'إضافة مركب') actionClass = 'style="color:#27ae60; font-weight:bold;"';
-        else if (l.action === 'تعديل مركب') actionClass = 'style="color:#f39c12; font-weight:bold;"';
-        else if (l.action === 'حذف مركب') actionClass = 'style="color:#e74c3c; font-weight:bold;"';
+        let actionIcon = '';
+        if (l.action === 'إضافة مركب') { actionClass = 'style="color:#27ae60; font-weight:bold;"'; actionIcon = '➕'; }
+        else if (l.action === 'تعديل مركب') { actionClass = 'style="color:#f39c12; font-weight:bold;"'; actionIcon = '✏️'; }
+        else if (l.action === 'حذف مركب') { actionClass = 'style="color:#e74c3c; font-weight:bold;"'; actionIcon = '🗑️'; }
+        else if (l.action === 'تسجيل دخول') { actionClass = 'style="color:#3498db; font-weight:bold;"'; actionIcon = '🔓'; }
+        else if (l.action === 'تسجيل خروج') { actionClass = 'style="color:#95a5a6; font-weight:bold;"'; actionIcon = '🔒'; }
+        else if (l.action === 'إدارة مستخدمين') { actionClass = 'style="color:#9b59b6; font-weight:bold;"'; actionIcon = '👥'; }
+        else if (l.action === 'إرسال تذكرة') { actionClass = 'style="color:#1abc9c; font-weight:bold;"'; actionIcon = '🎫'; }
         html += `<tr>
             <td>${l.date || '-'}</td>
             <td>${l.time || '-'}</td>
             <td><b>${l.username || '-'}</b></td>
             <td>${l.user_role || '-'}</td>
-            <td ${actionClass}>${l.action || '-'}</td>
-            <td style="text-align:right; max-width:400px;">${l.details || '-'}</td>
+            <td ${actionClass}>${actionIcon} ${l.action || '-'}</td>
+            <td style="text-align:right; max-width:450px; word-break:break-word;">${l.details || '-'}</td>
         </tr>`; 
     });
     html += `</tbody>}</div>`;
@@ -693,7 +697,7 @@ function renderTrack() {
 function resetTrackFilters() { document.getElementById('trackDateStart').value = ""; document.getElementById('trackDateEnd').value = ""; renderTrack(); showToast("✅ تم إعادة ضبط فلاتر التتبع"); }
 function refreshTrack() { loadLogs(); showToast("✅ تم تحديث سجل التتبع"); }
 
-// ==================== إدارة المستخدمين مع تسجيل مفصل ====================
+// ==================== إدارة المستخدمين ====================
 function renderUsers() {
     if (!canManageUsers()) return;
     let html = "";
@@ -811,7 +815,7 @@ if (fRegMaint) { fRegMaint.innerHTML = '<option value="الكل">كل الأقا
 
 console.log("✅ النظام جاهز للعمل مع السيرفر الخارجي!");
 console.log("✅ زر الخروج يعمل بشكل صحيح!");
-console.log("✅ صفحة تتبع المستخدمين تعرض التفاصيل الكاملة!");
+console.log("✅ صفحة تتبع المستخدمين تعرض التفاصيل الكاملة (ماذا أضاف/ماذا عدل/ماذا حذف)!");
 </script>
 </body>
 </html>
