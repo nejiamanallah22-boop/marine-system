@@ -211,7 +211,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <tr>
                 <thead>
                     <tr>
                         <th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th>
@@ -283,7 +283,7 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <tr>
                 <thead>
                     <tr>
                         <th>الاسم</th><th>الصلاحية</th><th>الحالة</th>
@@ -651,7 +651,7 @@ function renderRegionTables() {
         let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
         
         html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>`;
-        html += `<div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th><tr></thead><tbody>`;
+        html += `<div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
         
         CATS_LIST.forEach(cat => { 
             let catData = regData.filter(v => v.category === cat); 
@@ -679,7 +679,7 @@ function renderTickets() {
     let userTickets = allTickets.filter(t => t.username === currentUser.username);
     let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
     if (userTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة<\/td></tr>';
-    else userTickets.slice(0,10).forEach(t => { html += `<td>
+    else userTickets.slice(0,10).forEach(t => { html += `<tr>
         <td>${t.date || '-'}</td>
         <td>${t.time || '-'}</td>
         <td>${t.subject}</td>
