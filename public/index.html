@@ -137,7 +137,7 @@
                 <span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span>
                 <span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span>
                 <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button>
-                <button id="logoutButton" class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </div>
     </div>
@@ -211,7 +211,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
-            <tr>
+            <table>
                 <thead>
                     <tr>
                         <th>الاسم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th>
@@ -413,33 +413,46 @@ async function doLogin() {
 }
 
 // ==================== زر الخروج (يعمل 100%) ====================
-window.logout = async function() {
+function logout() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        try {
-            if (currentUser) {
-                try {
-                    await addLog("تسجيل خروج", `قام المستخدم ${currentUser.username} بتسجيل الخروج من النظام`);
-                } catch (logError) {
-                    console.warn("تعذر تسجيل نشاط الخروج:", logError);
-                }
-            }
-        } finally {
-            currentUser = null;
-            editingVesselId = null;
-            selectedUserId = null;
-
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('loginError').style.display = 'none';
-
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-
-            updateEditModeDisplay();
-            showToast("تم تسجيل الخروج بنجاح");
+        // تسجيل الخروج في السيرفر (بدون await حتى لا ننتظر)
+        if (currentUser) {
+            const now = new Date();
+            const log = { 
+                id: Date.now(), 
+                date: now.toLocaleDateString('ar-TN'), 
+                time: now.toLocaleTimeString('ar-TN'), 
+                username: currentUser.username, 
+                user_role: currentUser.role, 
+                action: "تسجيل خروج", 
+                details: `قام المستخدم ${currentUser.username} بتسجيل الخروج من النظام`,
+                ip_address: "client", 
+                user_agent: navigator.userAgent 
+            };
+            fetch('/api/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(log) }).catch(e => console.log(e));
         }
+        
+        // مسح بيانات المستخدم
+        currentUser = null;
+        editingVesselId = null;
+        selectedUserId = null;
+        
+        // إعادة تعيين الحقول
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginError').style.display = 'none';
+        
+        // تبديل الشاشات
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        
+        // تحديث واجهة التعديل
+        updateEditModeDisplay();
+        
+        // رسالة تأكيد
+        showToast("تم تسجيل الخروج بنجاح");
     }
-};
+}
 
 // ==================== إدارة المراكب ====================
 async function addItem() {
@@ -641,7 +654,7 @@ function renderRegionTables() {
         });
     } else {
         let regData = allVessels.filter(v => v.region === selectedRegion); let totalReg = regData.length; let okReg = regData.filter(v => v.status === 'صالح').length; let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-        html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+        html += `<div class="region-table-card"><div class="region-table-header">📍 إقليم ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th><tr></thead><tbody>`;
         CATS_LIST.forEach(cat => { let catData = regData.filter(v => v.category === cat); let ok = catData.filter(v => v.status === 'صالح').length; let broken = catData.filter(v => v.status !== 'صالح').length; let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}<\/td><td><strong>${percent}%</strong><\/td></tr>`; });
         html += `</tbody>}</div></div>`;
     }
@@ -823,7 +836,6 @@ if (fRegMaint) { fRegMaint.innerHTML = '<option value="الكل">كل الأقا
 
 console.log("✅ النظام جاهز للعمل مع السيرفر الخارجي!");
 console.log("✅ زر الخروج يعمل بشكل صحيح!");
-console.log("✅ صفحة تتبع المستخدمين تعرض التفاصيل الكاملة!");
 </script>
 </body>
 </html>
