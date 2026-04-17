@@ -417,24 +417,27 @@ async function logout() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         try {
             if (currentUser) {
-                await addLog("تسجيل خروج", `قام المستخدم ${currentUser.username} بتسجيل الخروج من النظام`);
+                try {
+                    await addLog("تسجيل خروج", `قام المستخدم ${currentUser.username} بتسجيل الخروج من النظام`);
+                } catch (logError) {
+                    console.warn("تعذر تسجيل نشاط الخروج:", logError);
+                }
             }
-        } catch(e) {
-            console.log("خطأ في تسجيل الخروج:", e);
+        } finally {
+            currentUser = null;
+            editingVesselId = null;
+            selectedUserId = null;
+
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+
+            updateEditModeDisplay();
+            showToast("تم تسجيل الخروج بنجاح");
         }
-        
-        currentUser = null;
-        editingVesselId = null;
-        
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('loginOverlay').style.display = 'flex';
-        
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        document.getElementById('loginError').style.display = 'none';
-        
-        updateEditModeDisplay();
-        showToast("تم تسجيل الخروج بنجاح");
     }
 }
 
@@ -678,7 +681,7 @@ function renderTrack() {
     let filtered = [...allLogs];
     if (start) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') >= start);
     if (end) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') <= end);
-    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>';
+    let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th><tr></thead><tbody>';
     if (filtered.length === 0) html += '<tr><td colspan="6">لا توجد نشاطات<\/td></tr>';
     else filtered.forEach(l => { 
         let actionClass = '';
