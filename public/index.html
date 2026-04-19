@@ -21,15 +21,16 @@
         body.dark-mode .mid-eff { background-color: #4a3a1a; }
         body.dark-mode .low-eff { background-color: #4a1a1a; }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #0f3460, #16213e); display: flex; justify-content: center; align-items: center; z-index: 9999; transition: 0.5s; }
-        .login-box { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 40px; border-radius: 30px; width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+        .login-box { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 40px; border-radius: 30px; width: 400px; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.3); animation: fadeInUp 0.6s ease; }
         body.dark-mode .login-box { background: rgba(30,30,46,0.95); color: #eee; }
         .login-box h2 { color: #0f3460; margin-bottom: 10px; }
         body.dark-mode .login-box h2 { color: #ffd700; }
-        .login-box input { width: 100%; padding: 14px; margin-bottom: 18px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; }
+        .login-box input { width: 100%; padding: 14px; margin-bottom: 18px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; transition: 0.3s; }
         body.dark-mode .login-box input { background: #2d2d44; border-color: #444; color: #eee; }
         .login-box input:focus { border-color: #0f3460; outline: none; }
-        .login-box button { width: 100%; padding: 14px; background: linear-gradient(135deg, #0f3460, #16213e); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: bold; }
+        .login-box button { width: 100%; padding: 14px; background: linear-gradient(135deg, #0f3460, #16213e); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.3s; }
         .login-box button:hover { transform: translateY(-2px); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .container { max-width: 1550px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); transition: all 0.3s; }
         .hidden { display: none !important; }
         .professional-header { background: linear-gradient(135deg, #0f3460, #1a4a7a); color: white; padding: 20px 30px; border-radius: 20px; margin-bottom: 25px; position: relative; overflow: hidden; }
@@ -41,7 +42,7 @@
         .user-control { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .role-badge { background: rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 40px; }
         .edit-mode-badge { background: #f39c12; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
-        .dark-mode-toggle { background: rgba(255,255,255,0.2); border: none; padding: 8px 18px; border-radius: 40px; color: white; cursor: pointer; }
+        .dark-mode-toggle { background: rgba(255,255,255,0.2); border: none; padding: 8px 18px; border-radius: 40px; color: white; cursor: pointer; transition: 0.3s; }
         .dark-mode-toggle:hover { background: #ffd700; color: #0f3460; }
         .nav { display: flex; gap: 12px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
         .nav-btn { padding: 12px 25px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; background: white; color: #333; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
@@ -86,15 +87,15 @@
         .mid-eff { background-color: #fff3cd; }
         .low-eff { background-color: #f8d7da; }
         .scroll-buttons { position: fixed; left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .scroll-btn { background: #0f3460; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .scroll-btn { background: #0f3460; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: 0.3s; }
         .scroll-btn:hover { transform: scale(1.1); background: #1a4a7a; }
         .scroll-btn.hidden { display: none; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; border-radius: 20px; width: 400px; text-align: center; }
         .modal-content input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #27ae60; color: white; padding: 12px 24px; border-radius: 10px; z-index: 10001; animation: fadeOut 3s ease forwards; }
-        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(20px); visibility: hidden; } }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-blue { background: #0f3460; color: white; }
         .btn-green { background: #27ae60; color: white; }
         .btn-orange { background: #f39c12; color: white; }
@@ -119,7 +120,7 @@
         <p style="color: #666; margin-bottom: 20px;">نظام متكامل لإدارة الأسطول</p>
         <input type="text" id="username" placeholder="اسم المستخدم">
         <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
+        <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> دخول</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 </div>
@@ -136,7 +137,7 @@
                 <span id="userRoleDisplay" class="role-badge"><i class="fas fa-user-shield"></i> مستخدم</span>
                 <span id="editModeBadge" class="edit-mode-badge hidden">✏️ وضع التعديل</span>
                 <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> الوضع الداكن</button>
-                <button class="btn-sm btn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+                <button id="logoutBtn" class="btn-sm btn-red"><i class="fas fa-sign-out-alt"></i> خروج</button>
             </div>
         </div>
     </div>
@@ -144,21 +145,21 @@
     <div class="data-toolbar">
         <div><i class="fas fa-database"></i> <strong>إدارة البيانات</strong></div>
         <div class="toolbar-buttons">
-            <button class="btn-sm btn-cyan" onclick="exportToExcel()" id="exportExcelBtn"><i class="fas fa-file-excel"></i> تصدير Excel</button>
-            <button class="btn-sm btn-cyan" onclick="exportToPDF()" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
-            <button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn"><i class="fas fa-download"></i> تصدير JSON</button>
-            <label class="file-input-label" id="importLabelBtn"><i class="fas fa-upload"></i> استيراد بيانات<input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label>
-            <button class="btn-sm btn-blue" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i> تحديث الكل</button>
+            <button class="btn-sm btn-cyan" id="exportExcelBtn"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+            <button class="btn-sm btn-cyan" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
+            <button class="btn-sm btn-cyan" id="exportJsonBtn"><i class="fas fa-download"></i> تصدير JSON</button>
+            <label class="file-input-label" id="importLabelBtn"><i class="fas fa-upload"></i> استيراد بيانات<input type="file" id="fileInput" accept=".json"></label>
+            <button class="btn-sm btn-blue" id="refreshAllBtn"><i class="fas fa-sync-alt"></i> تحديث الكل</button>
         </div>
     </div>
 
     <div class="nav">
-        <button class="nav-btn primary" onclick="showPage('main')"><i class="fas fa-home"></i> السجل العام</button>
-        <button class="nav-btn warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> سجل الصيانة</button>
-        <button class="nav-btn success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> جاهزية الأسطول</button>
-        <button class="nav-btn" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم الفني</button>
-        <button id="trackBtn" class="nav-btn purple" onclick="showPage('track')"><i class="fas fa-history"></i> تتبع المستخدمين</button>
-        <button id="admBtn" class="nav-btn danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> إدارة المستخدمين</button>
+        <button class="nav-btn primary" data-page="main"><i class="fas fa-home"></i> السجل العام</button>
+        <button class="nav-btn warning" data-page="maint"><i class="fas fa-tools"></i> سجل الصيانة</button>
+        <button class="nav-btn success" data-page="eff"><i class="fas fa-chart-line"></i> جاهزية الأسطول</button>
+        <button class="nav-btn" data-page="support"><i class="fas fa-headset"></i> الدعم الفني</button>
+        <button id="trackBtn" class="nav-btn purple" data-page="track"><i class="fas fa-history"></i> تتبع المستخدمين</button>
+        <button id="admBtn" class="nav-btn danger" data-page="users"><i class="fas fa-users-cog"></i> إدارة المستخدمين</button>
         <button class="nav-btn" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
     </div>
 
@@ -174,17 +175,17 @@
         <input type="text" id="iBreak" placeholder="نوع العطب">
         <input type="date" id="iDate"><input type="date" id="iEnd">
         <input type="text" id="iRef" placeholder="المرجع">
-        <button class="btn btn-green" onclick="addItem()"><i class="fas fa-save"></i> حفظ</button>
-        <button class="btn-sm btn-blue" onclick="clearForm()"><i class="fas fa-undo-alt"></i> إلغاء / جديد</button>
+        <button class="btn btn-green" id="saveBtn"><i class="fas fa-save"></i> حفظ</button>
+        <button class="btn-sm btn-blue" id="clearBtn"><i class="fas fa-undo-alt"></i> إلغاء / جديد</button>
     </div>
 
     <div id="pageMain">
         <div class="filter-bar">
-            <div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث" onkeyup="renderMain()"></div>
-            <select id="fCatMain" onchange="renderMain()"><option value="الكل">كل الفئات</option></select>
-            <select id="fRegMain" onchange="renderMain()"><option value="الكل">كل الأقاليم</option></select>
-            <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
-            <button class="btn-sm btn-green" onclick="refreshMain()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث"></div>
+            <select id="fCatMain"><option value="الكل">كل الفئات</option></select>
+            <select id="fRegMain"><option value="الكل">كل الأقاليم</option></select>
+            <button class="btn-sm btn-blue" id="clearMainSearchBtn">مسح</button>
+            <button class="btn-sm btn-green" id="refreshMainBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
             <table id="mainTable">
@@ -202,12 +203,12 @@
 
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()">
-            <select id="fRegMaint" onchange="renderMaint()"><option value="الكل">كل الأقاليم</option></select>
-            <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
-            <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
-            <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
-            <button class="btn-sm btn-green" onclick="refreshMaint()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <input type="text" id="searchMaint" placeholder="بحث">
+            <select id="fRegMaint"><option value="الكل">كل الأقاليم</option></select>
+            <label>من تاريخ:</label><input type="date" id="fDateStart">
+            <label>إلى تاريخ:</label><input type="date" id="fDateEnd">
+            <button class="btn-sm btn-blue" id="resetMaintBtn">إعادة ضبط</button>
+            <button class="btn-sm btn-green" id="refreshMaintBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
             <table id="maintTable">
@@ -224,7 +225,7 @@
 
     <div id="pageEff" class="hidden">
         <div class="filter-bar">
-            <select id="fRegEff" onchange="renderEff()">
+            <select id="fRegEff">
                 <option value="الكل">الكل</option>
                 <option value="نجاعة عامة">نجاعة عامة</option>
                 <option value="الشمال">الشمال</option>
@@ -232,14 +233,14 @@
                 <option value="الوسط">الوسط</option>
                 <option value="الجنوب">الجنوب</option>
             </select>
-            <button class="btn-sm btn-green" onclick="refreshEff()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-sm btn-green" id="refreshEffBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div id="generalEffTableContainer"></div>
         <div class="dashboard-stats" id="statsCards"></div>
         <div class="chart-switch">
-            <button class="active" onclick="switchChartType('doughnut', this)">🥧 دائري</button>
-            <button onclick="switchChartType('bar', this)">📊 شريطي</button>
-            <button onclick="switchChartType('line', this)">📈 خطي</button>
+            <button class="active" data-chart="doughnut">🥧 دائري</button>
+            <button data-chart="bar">📊 شريطي</button>
+            <button data-chart="line">📈 خطي</button>
         </div>
         <div id="chartsArea"></div>
         <div id="regionTables"></div>
@@ -254,8 +255,8 @@
             <h4><i class="fas fa-paper-plane"></i> أرسل طلب دعم</h4>
             <input type="text" id="ticketSubject" placeholder="العنوان" style="width:100%; padding:10px; margin:10px 0">
             <textarea id="ticketMessage" rows="5" style="width:100%; padding:10px"></textarea>
-            <button class="btn btn-blue" onclick="sendTicket()">إرسال</button>
-            <button class="btn-sm btn-green" onclick="refreshTickets()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn btn-blue" id="sendTicketBtn">إرسال</button>
+            <button class="btn-sm btn-green" id="refreshTicketsBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
             <hr>
             <h4><i class="fas fa-list"></i> طلباتي السابقة</h4>
@@ -265,10 +266,10 @@
 
     <div id="pageTrack" class="hidden">
         <div class="filter-bar">
-            <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
-            <label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()">
-            <button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button>
-            <button class="btn-sm btn-green" onclick="refreshTrack()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <label>من تاريخ:</label><input type="date" id="trackDateStart">
+            <label>إلى تاريخ:</label><input type="date" id="trackDateEnd">
+            <button class="btn-sm btn-blue" id="resetTrackBtn">إعادة ضبط</button>
+            <button class="btn-sm btn-green" id="refreshTrackBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div id="trackContent"></div>
     </div>
@@ -278,8 +279,8 @@
             <input type="text" id="un" placeholder="اسم المستخدم الجديد">
             <input type="password" id="up" placeholder="كلمة المرور">
             <select id="ur"><option value="مشاهد">مشاهد</option><option value="محرر">محرر</option><option value="مسؤول">مسؤول</option></select>
-            <button class="btn btn-blue" onclick="addUser()">➕ إضافة مستخدم</button>
-            <button class="btn-sm btn-green" onclick="refreshUsers()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn btn-blue" id="addUserBtn">➕ إضافة مستخدم</button>
+            <button class="btn-sm btn-green" id="refreshUsersBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
         <div class="scrollable-table">
             <table id="usersTable">
@@ -295,9 +296,9 @@
     </div>
 </div>
 
-<div class="scroll-buttons"><button class="scroll-btn" id="scrollToTopBtn" onclick="scrollToTop()"><i class="fas fa-arrow-up"></i></button><button class="scroll-btn" id="scrollToBottomBtn" onclick="scrollToBottom()"><i class="fas fa-arrow-down"></i></button></div>
+<div class="scroll-buttons"><button class="scroll-btn" id="scrollToTopBtn"><i class="fas fa-arrow-up"></i></button><button class="scroll-btn" id="scrollToBottomBtn"><i class="fas fa-arrow-down"></i></button></div>
 
-<div id="passwordModal" class="modal"><div class="modal-content"><h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3><p id="modalUserName"></p><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button class="btn btn-green" onclick="saveNewPassword()">حفظ</button><button class="btn btn-red" onclick="closePasswordModal()">إلغاء</button></div></div>
+<div id="passwordModal" class="modal"><div class="modal-content"><h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3><p id="modalUserName"></p><input type="password" id="newPassword" placeholder="كلمة المرور الجديدة"><input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور"><button class="btn btn-green" id="savePassBtn">حفظ</button><button class="btn btn-red" id="closeModalBtn">إلغاء</button></div></div>
 
 <script>
 // ==================== البيانات والمتغيرات ====================
@@ -372,18 +373,6 @@ function updateZones() {
     } 
 }
 
-// استعادة الجلسة
-const savedToken = localStorage.getItem('authToken');
-const savedRefreshToken = localStorage.getItem('refreshToken');
-if (savedToken && savedRefreshToken) {
-    authToken = savedToken;
-    refreshToken = savedRefreshToken;
-    try {
-        const payload = JSON.parse(atob(savedToken.split('.')[1]));
-        currentUser = { id: payload.id, username: payload.username, role: payload.role };
-    } catch(e) {}
-}
-
 // ==================== API Calls ====================
 async function apiCall(endpoint, method = 'GET', body = null) {
     const options = { 
@@ -399,22 +388,21 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         const response = await fetch(`/api${endpoint}`, options);
         const data = await response.json();
         
-        if (response.status === 401 && data.expired && refreshToken) {
+        if (response.status === 401 && data.expired) {
             // محاولة تجديد التوكن
-            const refreshResponse = await fetch('/api/refresh', {
+            const refreshResult = await fetch('/api/refresh', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken })
             });
-            const refreshData = await refreshResponse.json();
+            const refreshData = await refreshResult.json();
             if (refreshData.accessToken) {
                 authToken = refreshData.accessToken;
                 refreshToken = refreshData.refreshToken;
                 localStorage.setItem('authToken', authToken);
                 localStorage.setItem('refreshToken', refreshToken);
-                options.headers['Authorization'] = `Bearer ${authToken}`;
-                const retryResponse = await fetch(`/api${endpoint}`, options);
-                return await retryResponse.json();
+                // إعادة المحاولة
+                return apiCall(endpoint, method, body);
             } else {
                 logout();
                 throw new Error('انتهت الجلسة');
@@ -454,8 +442,9 @@ async function doLogin() {
             localStorage.setItem('authToken', authToken);
             localStorage.setItem('refreshToken', refreshToken);
             
-            const payload = JSON.parse(atob(authToken.split('.')[1]));
-            currentUser = { id: payload.id, username: payload.username, role: payload.role };
+            // جلب معلومات المستخدم
+            const decoded = JSON.parse(atob(authToken.split('.')[1]));
+            currentUser = { id: decoded.id, username: decoded.username, role: decoded.role };
             
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -541,7 +530,8 @@ async function logout() {
 // ==================== تحميل البيانات ====================
 async function loadVessels() { 
     try { 
-        allVessels = await apiCall('/vessels'); 
+        const data = await apiCall('/vessels'); 
+        allVessels = data; 
         renderMain(); 
         renderMaint(); 
         renderEff(); 
@@ -698,17 +688,7 @@ function renderMain() {
             </td>
         </tr>`; 
     });
-    document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات<\/td></tr>';
-}
-
-function clearMainSearch() { 
-    document.getElementById('searchMain').value = ''; 
-    renderMain(); 
-}
-
-function refreshMain() { 
-    loadVessels(); 
-    showToast("✅ تم تحديث السجل العام"); 
+    document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>';
 }
 
 function renderMaint() {
@@ -725,7 +705,7 @@ function renderMaint() {
     filtered.sort((a,b) => new Date(b.breakdown_date) - new Date(a.breakdown_date));
     
     let html = "";
-    if (filtered.length === 0) html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
+    if (filtered.length === 0) html = '<tr><td colspan="8">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
     else filtered.forEach(v => { 
         html += `<tr>
             <td><b>${v.name}</b></td>
@@ -739,20 +719,6 @@ function renderMaint() {
         </tr>`; 
     });
     document.getElementById('maintBody').innerHTML = html;
-}
-
-function resetMaintFilters() { 
-    document.getElementById('fRegMaint').value = "الكل"; 
-    document.getElementById('fDateStart').value = ""; 
-    document.getElementById('fDateEnd').value = ""; 
-    document.getElementById('searchMaint').value = ""; 
-    renderMaint(); 
-    showToast("✅ تم إعادة ضبط الفلاتر"); 
-}
-
-function refreshMaint() { 
-    loadVessels(); 
-    showToast("✅ تم تحديث سجل الصيانة"); 
 }
 
 function renderGeneralEfficiencyTable() {
@@ -769,9 +735,9 @@ function renderGeneralEfficiencyTable() {
         let broken = catData.filter(v => v.status !== 'صالح').length; 
         let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; 
         let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); 
-        html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green; font-weight:bold;">${ok}</td><td style="color:red; font-weight:bold;">${broken}</td><td><strong>${percent}%</strong><\/td></tr>`; 
+        html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green; font-weight:bold;">${ok}</td><td style="color:red; font-weight:bold;">${broken}</td><td><strong>${percent}%</strong></td></tr>`; 
     });
-    html += `</tbody>}</div></div>`;
+    html += `</tbody></table></div></div>`;
     document.getElementById('generalEffTableContainer').innerHTML = html;
 }
 
@@ -783,11 +749,11 @@ function renderStatsCards() {
     let eff = total ? ((ok / total) * 100).toFixed(1) : 0;
     
     document.getElementById('statsCards').innerHTML = `
-        <div class="stat-card" onclick="scrollToTop()"><div class="number">${total}</div><div>🚢 إجمالي المراكب</div></div>
-        <div class="stat-card" onclick="scrollToTop()"><div class="number">${ok}</div><div>✅ الصالح</div></div>
-        <div class="stat-card" onclick="scrollToTop()"><div class="number">${maint}</div><div>🔧 تحت الصيانة</div></div>
-        <div class="stat-card" onclick="scrollToTop()"><div class="number">${broken}</div><div>⚠️ المعطوب</div></div>
-        <div class="stat-card" onclick="scrollToTop()"><div class="number">${eff}%</div><div>📈 نسبة النجاعة</div></div>
+        <div class="stat-card" onclick="scrollToTop()"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div>
+        <div class="stat-card" onclick="scrollToTop()"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div>
+        <div class="stat-card" onclick="scrollToTop()"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div>
+        <div class="stat-card" onclick="scrollToTop()"><div class="number">${broken}</div><div class="label">⚠️ المعطوب</div></div>
+        <div class="stat-card" onclick="scrollToTop()"><div class="number">${eff}%</div><div class="label">📈 نسبة النجاعة</div></div>
     `;
 }
 
@@ -864,9 +830,9 @@ function renderRegionTables() {
                 let broken = catData.filter(v => v.status !== 'صالح').length; 
                 let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; 
                 let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); 
-                html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}<\/td><td><strong>${percent}%</strong><\/td></tr>`; 
+                html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`; 
             });
-            html += `</tbody>}</div></div>`;
+            html += `</tbody></table></div></div>`;
         });
     } else {
         let regData = allVessels.filter(v => v.region === selectedRegion); 
@@ -883,9 +849,9 @@ function renderRegionTables() {
             let broken = catData.filter(v => v.status !== 'صالح').length; 
             let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0; 
             let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff'); 
-            html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}<\/td><td><strong>${percent}%</strong><\/td></tr>`; 
+            html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`; 
         });
-        html += `</tbody>}</div></div>`;
+        html += `</tbody></table></div></div>`;
     }
     document.getElementById('regionTables').innerHTML = html;
 }
@@ -897,22 +863,10 @@ function renderEff() {
     renderRegionTables(); 
 }
 
-function refreshEff() { 
-    loadVessels(); 
-    showToast("✅ تم تحديث الإحصائيات"); 
-}
-
-function switchChartType(type, btn) { 
-    currentChartType = type; 
-    document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active')); 
-    btn.classList.add('active'); 
-    renderCharts(); 
-}
-
 function renderTickets() {
     let userTickets = allTickets.filter(t => t.username === currentUser.username);
     let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
-    if (userTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة<\/td></tr>';
+    if (userTickets.length === 0) html += '<tr><td colspan="4">لا توجد طلبات سابقة</td></tr>';
     else userTickets.slice(0,10).forEach(t => { 
         html += `<tr>
             <td>${t.date || '-'}</td>
@@ -921,7 +875,7 @@ function renderTickets() {
             <td style="color:#f39c12">${t.status}</td>
         </tr>`; 
     });
-    html += `</tbody>}</div>`;
+    html += `</tbody></table></div>`;
     document.getElementById('ticketsList').innerHTML = html;
 }
 
@@ -940,11 +894,6 @@ async function sendTicket() {
     } catch(e) { showToast(e.message, true); } 
 }
 
-function refreshTickets() { 
-    loadTickets(); 
-    showToast("✅ تم تحديث قائمة التذاكر"); 
-}
-
 function renderTrack() {
     if (!canManageUsers()) return;
     const start = document.getElementById('trackDateStart').value; 
@@ -954,31 +903,20 @@ function renderTrack() {
     if (end) filtered = filtered.filter(l => l.date && l.date.split('/').reverse().join('-') <= end);
     
     let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>';
-    if (filtered.length === 0) html += '<tr><td colspan="6">لا توجد نشاطات<\/td></tr>';
+    if (filtered.length === 0) html += '<tr><td colspan="6">لا توجد نشاطات</td></tr>';
     else filtered.forEach(l => { 
+        let actionColor = l.action === 'إضافة مركب' ? 'color:green' : (l.action === 'حذف مركب' ? 'color:red' : 'color:#0f3460');
         html += `<tr>
             <td>${l.date || '-'}</td>
             <td>${l.time || '-'}</td>
             <td><b>${l.username || '-'}</b></td>
             <td>${l.user_role || '-'}</td>
-            <td>${l.action || '-'}</td>
+            <td style="${actionColor}">${l.action || '-'}</td>
             <td style="text-align:right;">${l.details || '-'}</td>
         </tr>`; 
     });
-    html += `</tbody>}</div>`;
+    html += `</tbody></table></div>`;
     document.getElementById('trackContent').innerHTML = html;
-}
-
-function resetTrackFilters() { 
-    document.getElementById('trackDateStart').value = ""; 
-    document.getElementById('trackDateEnd').value = ""; 
-    renderTrack(); 
-    showToast("✅ تم إعادة ضبط فلاتر التتبع"); 
-}
-
-function refreshTrack() { 
-    loadLogs(); 
-    showToast("✅ تم تحديث سجل التتبع"); 
 }
 
 function renderUsers() {
@@ -1057,11 +995,6 @@ async function deleteUser(userId) {
             showToast("✅ تم حذف المستخدم"); 
         } catch(e) { showToast(e.message, true); } 
     } 
-}
-
-function refreshUsers() { 
-    loadUsers(); 
-    showToast("✅ تم تحديث قائمة المستخدمين"); 
 }
 
 // ==================== تصدير واستيراد ====================
@@ -1166,41 +1099,145 @@ function showPage(page) {
     if (page === 'users' && canManageUsers()) renderUsers();
 }
 
-// استعادة الجلسة عند تحميل الصفحة
-if (currentUser) {
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-user-shield"></i> ${currentUser.username} | ${currentUser.role}`;
+// ==================== تهيئة الصفحة والأحداث ====================
+function initEventListeners() {
+    // أزرار التنقل
+    document.querySelectorAll('.nav-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => showPage(btn.getAttribute('data-page')));
+    });
     
-    const isAdmin = currentUser.role === "مسؤول";
-    const isViewer = currentUser.role === "مشاهد";
+    // تسجيل الدخول
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
     
-    document.getElementById('trackBtn').style.display = isAdmin ? 'inline-flex' : 'none';
-    document.getElementById('admBtn').style.display = isAdmin ? 'inline-flex' : 'none';
-    document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
+    // تسجيل الخروج
+    document.getElementById('logoutBtn').addEventListener('click', logout);
     
-    const fCatMain = document.getElementById('fCatMain');
-    fCatMain.innerHTML = '<option value="الكل">كل الفئات</option>';
-    CATS_LIST.forEach(cat => fCatMain.innerHTML += `<option value="${cat}">${cat}</option>`);
+    // أزرار التحديث
+    document.getElementById('refreshMainBtn').addEventListener('click', () => loadVessels());
+    document.getElementById('refreshMaintBtn').addEventListener('click', () => loadVessels());
+    document.getElementById('refreshEffBtn').addEventListener('click', () => loadVessels());
+    document.getElementById('refreshTicketsBtn').addEventListener('click', () => loadTickets());
+    document.getElementById('refreshTrackBtn').addEventListener('click', () => loadLogs());
+    document.getElementById('refreshUsersBtn').addEventListener('click', () => loadUsers());
+    document.getElementById('refreshAllBtn').addEventListener('click', refreshAllPages);
     
-    const fRegMain = document.getElementById('fRegMain');
-    fRegMain.innerHTML = '<option value="الكل">كل الأقاليم</option>';
-    Object.keys(ZONES_DATA).forEach(reg => fRegMain.innerHTML += `<option value="${reg}">${reg}</option>`);
+    // أزرار الفلتر
+    document.getElementById('clearMainSearchBtn').addEventListener('click', () => {
+        document.getElementById('searchMain').value = '';
+        renderMain();
+    });
+    document.getElementById('resetMaintBtn').addEventListener('click', () => {
+        document.getElementById('searchMaint').value = '';
+        document.getElementById('fRegMaint').value = 'الكل';
+        document.getElementById('fDateStart').value = '';
+        document.getElementById('fDateEnd').value = '';
+        renderMaint();
+    });
+    document.getElementById('resetTrackBtn').addEventListener('click', () => {
+        document.getElementById('trackDateStart').value = '';
+        document.getElementById('trackDateEnd').value = '';
+        renderTrack();
+    });
     
-    const fRegMaint = document.getElementById('fRegMaint');
-    fRegMaint.innerHTML = '<option value="الكل">كل الأقاليم</option>';
-    Object.keys(ZONES_DATA).forEach(reg => fRegMaint.innerHTML += `<option value="${reg}">${reg}</option>`);
+    // البحث المباشر
+    document.getElementById('searchMain').addEventListener('keyup', renderMain);
+    document.getElementById('searchMaint').addEventListener('keyup', renderMaint);
+    document.getElementById('fCatMain').addEventListener('change', renderMain);
+    document.getElementById('fRegMain').addEventListener('change', renderMain);
+    document.getElementById('fRegMaint').addEventListener('change', renderMaint);
+    document.getElementById('fDateStart').addEventListener('change', renderMaint);
+    document.getElementById('fDateEnd').addEventListener('change', renderMaint);
+    document.getElementById('fRegEff').addEventListener('change', renderEff);
+    document.getElementById('trackDateStart').addEventListener('change', renderTrack);
+    document.getElementById('trackDateEnd').addEventListener('change', renderTrack);
     
-    loadVessels();
-    loadTickets();
-    if (isAdmin) {
-        loadUsers();
-        loadLogs();
+    // أزرار الرسم البياني
+    document.querySelectorAll('.chart-switch button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentChartType = btn.getAttribute('data-chart');
+            renderCharts();
+        });
+    });
+    
+    // أزرار التصدير والاستيراد
+    document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+    document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+    document.getElementById('exportJsonBtn').addEventListener('click', exportAllData);
+    document.getElementById('fileInput').addEventListener('change', (e) => importAllData(e.target));
+    document.getElementById('importLabelBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+    
+    // أزرار إدارة المراكب
+    document.getElementById('saveBtn').addEventListener('click', addItem);
+    document.getElementById('clearBtn').addEventListener('click', clearForm);
+    document.getElementById('iReg').addEventListener('change', updateZones);
+    
+    // أزرار إدارة المستخدمين
+    document.getElementById('addUserBtn').addEventListener('click', addUser);
+    document.getElementById('savePassBtn').addEventListener('click', saveNewPassword);
+    document.getElementById('closeModalBtn').addEventListener('click', closePasswordModal);
+    
+    // أزرار التذاكر
+    document.getElementById('sendTicketBtn').addEventListener('click', sendTicket);
+    
+    // أزرار التمرير
+    document.getElementById('scrollToTopBtn').addEventListener('click', scrollToTop);
+    document.getElementById('scrollToBottomBtn').addEventListener('click', scrollToBottom);
+    
+    // الوضع الداكن
+    if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+}
+
+// استعادة الجلسة
+function restoreSession() {
+    const savedToken = localStorage.getItem('authToken');
+    const savedRefreshToken = localStorage.getItem('refreshToken');
+    if (savedToken && savedRefreshToken) {
+        authToken = savedToken;
+        refreshToken = savedRefreshToken;
+        try {
+            const decoded = JSON.parse(atob(savedToken.split('.')[1]));
+            currentUser = { id: decoded.id, username: decoded.username, role: decoded.role };
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userRoleDisplay').innerHTML = `<i class="fas fa-user-shield"></i> ${currentUser.username} | ${currentUser.role}`;
+            
+            const isAdmin = currentUser.role === "مسؤول";
+            const isViewer = currentUser.role === "مشاهد";
+            
+            document.getElementById('trackBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('admBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+            document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
+            
+            const fCatMain = document.getElementById('fCatMain');
+            fCatMain.innerHTML = '<option value="الكل">كل الفئات</option>';
+            CATS_LIST.forEach(cat => fCatMain.innerHTML += `<option value="${cat}">${cat}</option>`);
+            
+            const fRegMain = document.getElementById('fRegMain');
+            fRegMain.innerHTML = '<option value="الكل">كل الأقاليم</option>';
+            Object.keys(ZONES_DATA).forEach(reg => fRegMain.innerHTML += `<option value="${reg}">${reg}</option>`);
+            
+            const fRegMaint = document.getElementById('fRegMaint');
+            fRegMaint.innerHTML = '<option value="الكل">كل الأقاليم</option>';
+            Object.keys(ZONES_DATA).forEach(reg => fRegMaint.innerHTML += `<option value="${reg}">${reg}</option>`);
+            
+            loadVessels();
+            loadTickets();
+            if (isAdmin) {
+                loadUsers();
+                loadLogs();
+            }
+        } catch(e) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('refreshToken');
+        }
     }
 }
 
-// تهيئة الوضع الداكن
-if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+// بدء التطبيق
+initEventListeners();
+restoreSession();
 </script>
 </body>
 </html>
