@@ -8,13 +8,12 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS مفتوح للاختبار
+// CORS مفتوح للاختبار (يمكن تضييقه لاحقًا)
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
 app.use(express.json());
 app.use(express.static('public'));
 app.set('trust proxy', 1);
 
-// التحقق من المتغيرات البيئية
 if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
     console.error('❌ MONGO_URI or JWT_SECRET missing');
     process.exit(1);
@@ -23,48 +22,34 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET) {
 // ======================== نماذج البيانات ========================
 const vesselSchema = new mongoose.Schema({
     name: { type: String, required: true, index: true },
-    num: String,
-    len: Number,
-    reg: String,
-    zone: String,
-    port: String,
-    supp: String,
-    stat: { type: String, default: 'صالح' },
-    break: String,
-    fDate: String,
-    eDate: String,
-    ref: String,
-    cat: String
+    num: String, len: Number, reg: String, zone: String, port: String,
+    supp: String, stat: { type: String, default: 'صالح' }, break: String,
+    fDate: String, eDate: String, ref: String, cat: String
 }, { timestamps: true });
 const Vessel = mongoose.model('Vessel', vesselSchema);
 
 const userSchema = new mongoose.Schema({
     name: { type: String, unique: true, required: true },
-    pass: { type: String, required: true },
+    pass: String,
     role: { type: String, default: 'مشاهد', enum: ['مدير', 'محرر', 'مشاهد'] },
     enabled: { type: Boolean, default: true }
 });
 const User = mongoose.model('User', userSchema);
 
 const ticketSchema = new mongoose.Schema({
-    userName: String,
-    subject: String,
-    message: String,
+    userName: String, subject: String, message: String,
     status: { type: String, default: 'قيد المعالجة' },
     date: { type: Date, default: Date.now }
 });
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
 const logSchema = new mongoose.Schema({
-    userName: String,
-    userRole: String,
-    action: String,
-    details: String,
-    date: { type: Date, default: Date.now }
+    userName: String, userRole: String, action: String,
+    details: String, date: { type: Date, default: Date.now }
 });
 const Log = mongoose.model('Log', logSchema);
 
-// ======================== دوال مساعدة ========================
+// دوال مساعدة
 function getCategory(len) {
     const n = parseFloat(len);
     if (isNaN(n)) return 'غير محدد';
@@ -76,9 +61,7 @@ function getCategory(len) {
 }
 
 async function addLog(userName, userRole, action, details) {
-    try {
-        await Log.create({ userName, userRole, action, details });
-    } catch (err) { console.error('Log error:', err); }
+    try { await Log.create({ userName, userRole, action, details }); } catch(e) { console.error(e); }
 }
 
 // ======================== المصادقة ========================
@@ -90,9 +73,7 @@ function auth(req, res, next) {
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
         next();
-    } catch (err) {
-        res.status(401).json({ error: 'رمز غير صالح' });
-    }
+    } catch (err) { res.status(401).json({ error: 'رمز غير صالح' }); }
 }
 
 function checkRole(roles) {
@@ -123,7 +104,7 @@ app.post('/api/login', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------- المراكب ----------
+// المراكب
 app.get('/api/vessels', auth, async (req, res) => {
     try {
         const vessels = await Vessel.find().lean().sort({ _id: -1 }).limit(500);
@@ -137,12 +118,7 @@ app.post('/api/vessels', auth, async (req, res) => {
         if (!name || !name.trim()) return res.status(400).json({ error: 'الاسم مطلوب' });
         const lenNum = parseFloat(len);
         if (isNaN(lenNum) || lenNum < 0) return res.status(400).json({ error: 'طول غير صالح' });
-        const vessel = await Vessel.create({
-            name: name.trim(),
-            len: lenNum,
-            cat: getCategory(lenNum),
-            ...rest
-        });
+        const vessel = await Vessel.create({ name: name.trim(), len: lenNum, cat: getCategory(lenNum), ...rest });
         await addLog(req.user.name, req.user.role, 'إضافة مركب', vessel.name);
         res.status(201).json(vessel);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -175,15 +151,12 @@ app.delete('/api/vessels/:id', auth, checkRole(['مدير']), async (req, res) =
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------- التذاكر ----------
+// التذاكر
 app.get('/api/tickets', auth, async (req, res) => {
     try {
         let tickets;
-        if (req.user.role === 'مدير') {
-            tickets = await Ticket.find().sort({ date: -1 });
-        } else {
-            tickets = await Ticket.find({ userName: req.user.name }).sort({ date: -1 });
-        }
+        if (req.user.role === 'مدير') tickets = await Ticket.find().sort({ date: -1 });
+        else tickets = await Ticket.find({ userName: req.user.name }).sort({ date: -1 });
         res.json(tickets);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -192,12 +165,7 @@ app.post('/api/tickets', auth, async (req, res) => {
     try {
         const { subject, message } = req.body;
         if (!subject || !message) return res.status(400).json({ error: 'العنوان والرسالة مطلوبان' });
-        const ticket = await Ticket.create({
-            userName: req.user.name,
-            subject,
-            message,
-            status: 'قيد المعالجة'
-        });
+        const ticket = await Ticket.create({ userName: req.user.name, subject, message, status: 'قيد المعالجة' });
         await addLog(req.user.name, req.user.role, 'إرسال تذكرة', subject);
         res.status(201).json(ticket);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -214,7 +182,7 @@ app.put('/api/tickets/:id', auth, checkRole(['مدير']), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------- سجل الأنشطة (للمدير فقط) ----------
+// سجل الأنشطة (للمدير فقط)
 app.get('/api/logs', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const logs = await Log.find().sort({ date: -1 }).limit(500);
@@ -222,7 +190,7 @@ app.get('/api/logs', auth, checkRole(['مدير']), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ---------- إدارة المستخدمين (للمدير فقط) ----------
+// إدارة المستخدمين (للمدير فقط)
 app.get('/api/users', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const users = await User.find().select('-pass');
@@ -237,12 +205,7 @@ app.post('/api/users', auth, checkRole(['مدير']), async (req, res) => {
         const existing = await User.findOne({ name: name.trim() });
         if (existing) return res.status(400).json({ error: 'الاسم موجود' });
         const hashed = bcrypt.hashSync(password, 10);
-        const user = await User.create({
-            name: name.trim(),
-            pass: hashed,
-            role: role || 'مشاهد',
-            enabled: enabled !== undefined ? enabled : true
-        });
+        const user = await User.create({ name: name.trim(), pass: hashed, role: role || 'مشاهد', enabled: enabled !== undefined ? enabled : true });
         await addLog(req.user.name, req.user.role, 'إضافة مستخدم', user.name);
         res.status(201).json({ id: user._id, name: user.name, role: user.role, enabled: user.enabled });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -281,7 +244,7 @@ app.delete('/api/users/:id', auth, checkRole(['مدير']), async (req, res) => 
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// تصدير البيانات (للمدير)
+// تصدير واستيراد البيانات (للمدير)
 app.get('/api/export', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const vessels = await Vessel.find().lean();
@@ -292,20 +255,18 @@ app.get('/api/export', auth, checkRole(['مدير']), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// استيراد البيانات (للمدير)
 app.post('/api/import', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const { vessels, users, tickets, logs } = req.body;
-        if (vessels) await Vessel.deleteMany({}); await Vessel.insertMany(vessels);
-        if (users) await User.deleteMany({}); await User.insertMany(users);
-        if (tickets) await Ticket.deleteMany({}); await Ticket.insertMany(tickets);
-        if (logs) await Log.deleteMany({}); await Log.insertMany(logs);
+        if (vessels) { await Vessel.deleteMany({}); await Vessel.insertMany(vessels); }
+        if (users) { await User.deleteMany({}); await User.insertMany(users); }
+        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
+        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
         await addLog(req.user.name, req.user.role, 'استيراد بيانات', 'من ملف JSON');
         res.json({ message: 'تم الاستيراد بنجاح' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// نقطة نهاية للصحة
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // تقديم الواجهة الأمامية
@@ -321,7 +282,6 @@ async function createDefaultUser() {
     }
 }
 
-// بدء الخادم
 const PORT = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 15000 })
     .then(async () => {
