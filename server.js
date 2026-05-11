@@ -7,8 +7,6 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-
-// CORS مفتوح للاختبار (يمكن تضييقه لاحقًا)
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
 app.use(express.json());
 app.use(express.static('public'));
@@ -182,7 +180,7 @@ app.put('/api/tickets/:id', auth, checkRole(['مدير']), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// سجل الأنشطة (للمدير فقط)
+// سجل الأنشطة
 app.get('/api/logs', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const logs = await Log.find().sort({ date: -1 }).limit(500);
@@ -190,7 +188,7 @@ app.get('/api/logs', auth, checkRole(['مدير']), async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// إدارة المستخدمين (للمدير فقط)
+// إدارة المستخدمين
 app.get('/api/users', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const users = await User.find().select('-pass');
@@ -244,7 +242,7 @@ app.delete('/api/users/:id', auth, checkRole(['مدير']), async (req, res) => 
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// تصدير واستيراد البيانات (للمدير)
+// تصدير واستيراد
 app.get('/api/export', auth, checkRole(['مدير']), async (req, res) => {
     try {
         const vessels = await Vessel.find().lean();
@@ -268,25 +266,39 @@ app.post('/api/import', auth, checkRole(['مدير']), async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
-// تقديم الواجهة الأمامية
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
-// إنشاء مستخدم افتراضي (admin)
-async function createDefaultUser() {
-    const existing = await User.findOne({ name: 'admin' });
-    if (!existing) {
+// ======================== بيانات أولية افتراضية ========================
+async function seedInitialData() {
+    // إضافة مستخدم admin إذا لم يوجد
+    const adminExists = await User.findOne({ name: 'admin' });
+    if (!adminExists) {
         const hashed = bcrypt.hashSync('admin123', 10);
         await User.create({ name: 'admin', pass: hashed, role: 'مدير', enabled: true });
-        console.log('✅ تم إنشاء admin/admin123');
+        console.log('✅ تم إنشاء المستخدم admin/admin123');
+    }
+
+    // إضافة مراكب افتراضية إذا كانت المجموعة فارغة
+    const vesselsCount = await Vessel.countDocuments();
+    if (vesselsCount === 0) {
+        const defaultVessels = [
+            { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
+            { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
+            { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر" },
+            { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة" },
+            { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" }
+        ];
+        await Vessel.insertMany(defaultVessels);
+        console.log('✅ تم إضافة 5 مراكب افتراضية');
     }
 }
 
+// ======================== بدء الخادم ========================
 const PORT = process.env.PORT || 3000;
 mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 15000 })
     .then(async () => {
         console.log('✅ MongoDB متصل');
-        await createDefaultUser();
+        await seedInitialData();
         app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
     })
     .catch(err => console.error('❌ فشل الاتصال:', err));
