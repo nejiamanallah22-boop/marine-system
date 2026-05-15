@@ -15,9 +15,9 @@ app.use(express.static('public'));
 
 // ========== نماذج MongoDB ==========
 
-// نموذج المستخدم
+// نموذج المستخدم (تم إصلاحه لمنع تكرار null)
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
+    name: { type: String, required: true, unique: true, trim: true },
     pass: { type: String, required: true },
     role: { type: String, default: 'مشاهد' },
     enabled: { type: Boolean, default: true }
@@ -82,27 +82,52 @@ mongoose.connect(process.env.MONGO_URI)
         console.error('❌ خطأ في الاتصال بـ MongoDB:', err.message);
     });
 
-// تهيئة قاعدة البيانات (إنشاء بيانات افتراضية)
+// ========== تنظيف قاعدة البيانات من المستخدم الفارغ ==========
+async function cleanupDatabase() {
+    try {
+        // حذف أي مستخدم name يساوي null أو فارغ
+        const result = await User.deleteMany({ 
+            $or: [
+                { name: null },
+                { name: "" },
+                { name: { $exists: false } }
+            ]
+        });
+        if (result.deletedCount > 0) {
+            console.log(`🧹 تم حذف ${result.deletedCount} مستخدم فارغ`);
+        }
+    } catch (error) {
+        console.error('خطأ في التنظيف:', error);
+    }
+}
+
+// ========== تهيئة قاعدة البيانات (إنشاء بيانات افتراضية) ==========
 async function initializeDatabase() {
     try {
-        // إنشاء مستخدمين افتراضيين
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (!adminExists) {
-            await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: admin / admin123 (مسؤول)');
-        }
+        // أولاً: تنظيف قاعدة البيانات من المستخدمين الفارغين
+        await cleanupDatabase();
+        
+        // إنشاء مستخدمين افتراضيين (باستخدام updateOne مع upsert لتجنب تكرار الأخطاء)
+        await User.updateOne(
+            { name: 'admin' },
+            { name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true },
+            { upsert: true }
+        );
+        console.log('✅ تم التأكد من وجود المستخدم: admin');
 
-        const editorExists = await User.findOne({ name: 'editor' });
-        if (!editorExists) {
-            await User.create({ name: 'editor', pass: 'editor123', role: 'محرر', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: editor / editor123 (محرر)');
-        }
+        await User.updateOne(
+            { name: 'editor' },
+            { name: 'editor', pass: 'editor123', role: 'محرر', enabled: true },
+            { upsert: true }
+        );
+        console.log('✅ تم التأكد من وجود المستخدم: editor');
 
-        const viewerExists = await User.findOne({ name: 'viewer' });
-        if (!viewerExists) {
-            await User.create({ name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: viewer / viewer123 (مشاهد)');
-        }
+        await User.updateOne(
+            { name: 'viewer' },
+            { name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true },
+            { upsert: true }
+        );
+        console.log('✅ تم التأكد من وجود المستخدم: viewer');
 
         // إنشاء مراكب افتراضية إذا لم توجد
         const vesselsCount = await Vessel.countDocuments();
@@ -118,7 +143,7 @@ async function initializeDatabase() {
             console.log('✅ تم إنشاء 5 مراكب افتراضية');
         }
     } catch (error) {
-        console.error('خطأ في تهيئة قاعدة البيانات:', error);
+        console.error('❌ خطأ في تهيئة قاعدة البيانات:', error.message);
     }
 }
 
@@ -149,8 +174,12 @@ app.get('/api/check-users', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { name, pass } = req.body;
     
+    if (!name || !pass) {
+        return res.status(400).json({ error: 'الرجاء إدخال اسم المستخدم وكلمة المرور' });
+    }
+    
     try {
-        const user = await User.findOne({ name, pass, enabled: true });
+        const user = await User.findOne({ name: name, pass: pass, enabled: true });
         
         if (user) {
             res.json({ 
