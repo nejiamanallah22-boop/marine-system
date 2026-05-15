@@ -1,21 +1,29 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const session = require('express-session');
-const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// ✅ الاتصال بـ MongoDB Atlas
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://hamza:hamza123@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
+// Middleware
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.static('public'));
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ تم الاتصال بـ MongoDB Atlas'))
-    .catch(err => console.error('❌ خطأ في الاتصال:', err.message));
+// ========== نماذج MongoDB ==========
 
-// ✅ نموذج المركب (Vessel) فقط - بدون نموذج Users
+// نموذج المستخدم
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, default: 'user' }
+});
+const User = mongoose.model('User', userSchema);
+
+// نموذج المركب
 const vesselSchema = new mongoose.Schema({
     name: { type: String, required: true },
     number: { type: String, required: true, unique: true },
@@ -27,129 +35,123 @@ const vesselSchema = new mongoose.Schema({
     reinforcement: { type: String, default: '' },
     status: { type: String, default: 'نشط' },
     damage: { type: String, default: '' },
-    damageDate: { type: Date },
-    endDate: { type: Date },
-    reference: { type: String, default: '' }
-}, { timestamps: true });
-
+    damageDate: { type: Date, default: null },
+    endDate: { type: Date, default: null },
+    reference: { type: String, default: '' },
+    createdAt: { type: Date, default: Date.now }
+});
 const Vessel = mongoose.model('Vessel', vesselSchema);
 
-// ✅ Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+// ========== الاتصال بـ MongoDB Atlas ==========
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => {
+        console.log('✅ تم الاتصال بـ MongoDB Atlas بنجاح');
+        initializeDatabase();
+    })
+    .catch(err => {
+        console.error('❌ خطأ في الاتصال بـ MongoDB:', err.message);
+    });
 
-// ✅ إعداد الجلسات
-app.use(session({
-    secret: 'marine_system_secret_key_2025',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { maxAge: 3600000 }
-}));
+// تهيئة قاعدة البيانات (إنشاء مستخدمين افتراضيين)
+async function initializeDatabase() {
+    try {
+        // إنشاء مستخدم admin
+        const adminExists = await User.findOne({ username: 'admin' });
+        if (!adminExists) {
+            await User.create({ username: 'admin', password: 'admin123', role: 'admin' });
+            console.log('✅ تم إنشاء المستخدم: admin / admin123');
+        }
 
-// ✅ API: التحقق من الجلسة
-app.get('/api/check-session', (req, res) => {
-    if (req.session.loggedIn) {
-        res.json({ loggedIn: true });
-    } else {
-        res.json({ loggedIn: false });
+        // إنشاء مستخدم user
+        const userExists = await User.findOne({ username: 'user' });
+        if (!userExists) {
+            await User.create({ username: 'user', password: 'user123', role: 'user' });
+            console.log('✅ تم إنشاء المستخدم: user / user123');
+        }
+    } catch (error) {
+        console.error('خطأ في تهيئة قاعدة البيانات:', error);
     }
-});
+}
 
-// ✅ API: تسجيل الدخول
-app.post('/api/login', (req, res) => {
+// ========== API Routes ==========
+
+// تسجيل الدخول
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     
-    if (username === 'admin' && password === '1234') {
-        req.session.loggedIn = true;
-        res.json({ success: true, message: 'تم تسجيل الدخول بنجاح' });
-    } else {
-        res.status(401).json({ success: false, message: 'بيانات الدخول غير صحيحة' });
+    try {
+        const user = await User.findOne({ username, password });
+        
+        if (user) {
+            res.json({ 
+                success: true, 
+                username: user.username,
+                role: user.role 
+            });
+        } else {
+            res.status(401).json({ 
+                success: false, 
+                message: 'اسم المستخدم أو كلمة المرور غير صحيحة' 
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'خطأ في الخادم' 
+        });
     }
 });
 
-// ✅ API: تسجيل الخروج
-app.post('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ success: true });
-});
-
-// ✅ API: جلب جميع المراكب
+// جلب جميع المراكب
 app.get('/api/vessels', async (req, res) => {
-    if (!req.session.loggedIn) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
         res.json(vessels);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            message: 'خطأ في جلب البيانات' 
+        });
     }
 });
 
-// ✅ API: إضافة مركب جديد
+// إضافة مركب جديد
 app.post('/api/vessels', async (req, res) => {
-    if (!req.session.loggedIn) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
     try {
+        // التحقق من عدم وجود مركب بنفس الرقم
         const existingVessel = await Vessel.findOne({ number: req.body.number });
         if (existingVessel) {
-            return res.status(400).json({ error: 'مركب بنفس الرقم موجود بالفعل' });
+            return res.status(400).json({ 
+                message: 'مركب بنفس الرقم موجود بالفعل' 
+            });
         }
         
         const vessel = new Vessel(req.body);
         await vessel.save();
-        console.log('✅ تم حفظ المركب:', vessel.name);
         res.status(201).json(vessel);
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ 
+            message: 'خطأ في حفظ البيانات: ' + error.message 
+        });
     }
 });
 
-// ✅ API: حذف مركب
+// حذف مركب
 app.delete('/api/vessels/:number', async (req, res) => {
-    if (!req.session.loggedIn) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
     try {
-        const deleted = await Vessel.findOneAndDelete({ number: req.params.number });
-        if (!deleted) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
+        const result = await Vessel.findOneAndDelete({ number: req.params.number });
+        if (result) {
+            res.json({ message: 'تم الحذف بنجاح' });
+        } else {
+            res.status(404).json({ message: 'المركب غير موجود' });
         }
-        res.json({ message: 'تم الحذف' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ message: 'خطأ في الحذف' });
     }
 });
 
-// ✅ API: تحديث مركب
-app.put('/api/vessels/:number', async (req, res) => {
-    if (!req.session.loggedIn) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
-    try {
-        const updated = await Vessel.findOneAndUpdate(
-            { number: req.params.number },
-            req.body,
-            { new: true, runValidators: true }
-        );
-        if (!updated) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
-        }
-        res.json(updated);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ✅ تشغيل الخادم
+// ========== تشغيل السيرفر ==========
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 السيرفر يعمل على port ${PORT}`);
-    console.log(`🔐 تسجيل الدخول: admin / 1234`);
+    console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`);
+    console.log(`📡 http://localhost:${PORT}`);
 });
