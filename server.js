@@ -1,19 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ========== Middleware ==========
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// ========== تعريف نماذج MongoDB (Models) ==========
-
-// نموذج المراكب
+// ========== تعريف نماذج MongoDB ==========
 const VesselSchema = new mongoose.Schema({
     id: { type: Number, unique: true },
     name: { type: String, required: true },
@@ -31,7 +30,6 @@ const VesselSchema = new mongoose.Schema({
     cat: { type: String, default: '' }
 });
 
-// نموذج المستخدمين
 const UserSchema = new mongoose.Schema({
     id: { type: Number, unique: true },
     name: { type: String, required: true, unique: true },
@@ -40,7 +38,6 @@ const UserSchema = new mongoose.Schema({
     enabled: { type: Boolean, default: true }
 });
 
-// نموذج التذاكر (الدعم الفني)
 const TicketSchema = new mongoose.Schema({
     id: { type: Number, unique: true },
     userName: { type: String, required: true },
@@ -50,7 +47,6 @@ const TicketSchema = new mongoose.Schema({
     status: { type: String, default: 'قيد المعالجة' }
 });
 
-// نموذج سجل التتبع (اللوجات)
 const LogSchema = new mongoose.Schema({
     id: { type: Number, unique: true },
     userName: { type: String, required: true },
@@ -61,7 +57,6 @@ const LogSchema = new mongoose.Schema({
     time: { type: String, default: '' }
 });
 
-// إنشاء النماذج
 const Vessel = mongoose.model('Vessel', VesselSchema);
 const User = mongoose.model('User', UserSchema);
 const Ticket = mongoose.model('Ticket', TicketSchema);
@@ -87,17 +82,15 @@ const DEFAULT_USERS = [
     { id: 3, name: "viewer", pass: "1234", role: "مشاهد", enabled: true }
 ];
 
-// ========== دالة تهيئة قاعدة البيانات ==========
+// ========== تهيئة قاعدة البيانات ==========
 async function initializeDatabase() {
     try {
-        // تهيئة المستخدمين
         const userCount = await User.countDocuments();
         if (userCount === 0) {
             await User.insertMany(DEFAULT_USERS);
             console.log('✅ تم إضافة المستخدمين الافتراضيين');
         }
 
-        // تهيئة المراكب
         const vesselCount = await Vessel.countDocuments();
         if (vesselCount === 0) {
             await Vessel.insertMany(DEFAULT_VESSELS);
@@ -108,7 +101,6 @@ async function initializeDatabase() {
     }
 }
 
-// ========== دوال مساعدة ==========
 function getCurrentDate() {
     const now = new Date();
     return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
@@ -130,12 +122,9 @@ async function logActivity(userName, userRole, action, details) {
         time: getCurrentTime()
     });
     await log.save();
-    console.log(`📝 [${getCurrentDate()} ${getCurrentTime()}] ${userName}: ${action}`);
 }
 
 // ========== API Routes ==========
-
-// 🔹 المراكب (Vessels)
 app.get('/api/vessels', async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ id: 1 });
@@ -147,10 +136,7 @@ app.get('/api/vessels', async (req, res) => {
 
 app.post('/api/vessels', async (req, res) => {
     try {
-        const vessel = new Vessel({
-            ...req.body,
-            id: Date.now()
-        });
+        const vessel = new Vessel({ ...req.body, id: Date.now() });
         await vessel.save();
         res.json(vessel);
     } catch (error) {
@@ -180,7 +166,6 @@ app.delete('/api/vessels/:id', async (req, res) => {
     }
 });
 
-// 🔹 المستخدمين (Users)
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find().sort({ id: 1 });
@@ -192,10 +177,7 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     try {
-        const user = new User({
-            ...req.body,
-            id: Date.now()
-        });
+        const user = new User({ ...req.body, id: Date.now() });
         await user.save();
         res.json(user);
     } catch (error) {
@@ -225,23 +207,21 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// 🔹 تسجيل الدخول
 app.post('/api/login', async (req, res) => {
     try {
         const { name, pass } = req.body;
         const user = await User.findOne({ name, pass, enabled: true });
         if (user) {
-            await logActivity(user.name, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول إلى النظام');
+            await logActivity(user.name, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول');
             res.json(user);
         } else {
-            res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+            res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🔹 التذاكر (Tickets)
 app.get('/api/tickets', async (req, res) => {
     try {
         const tickets = await Ticket.find().sort({ id: -1 });
@@ -253,11 +233,7 @@ app.get('/api/tickets', async (req, res) => {
 
 app.post('/api/tickets', async (req, res) => {
     try {
-        const ticket = new Ticket({
-            ...req.body,
-            id: Date.now(),
-            date: getCurrentDate()
-        });
+        const ticket = new Ticket({ ...req.body, id: Date.now(), date: getCurrentDate() });
         await ticket.save();
         res.json(ticket);
     } catch (error) {
@@ -265,7 +241,6 @@ app.post('/api/tickets', async (req, res) => {
     }
 });
 
-// 🔹 سجل التتبع (Logs)
 app.get('/api/logs', async (req, res) => {
     try {
         const logs = await Log.find().sort({ id: -1 });
@@ -277,10 +252,7 @@ app.get('/api/logs', async (req, res) => {
 
 app.post('/api/logs', async (req, res) => {
     try {
-        const log = new Log({
-            ...req.body,
-            id: Date.now()
-        });
+        const log = new Log({ ...req.body, id: Date.now() });
         await log.save();
         res.json(log);
     } catch (error) {
@@ -288,76 +260,51 @@ app.post('/api/logs', async (req, res) => {
     }
 });
 
-// 🔹 تصدير جميع البيانات
 app.get('/api/export-all', async (req, res) => {
     try {
         const vessels = await Vessel.find();
         const users = await User.find();
         const tickets = await Ticket.find();
         const logs = await Log.find();
-        
-        res.json({
-            exportDate: new Date().toISOString(),
-            vessels,
-            users,
-            tickets,
-            logs
-        });
+        res.json({ vessels, users, tickets, logs });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🔹 استيراد بيانات (للمسؤول فقط)
 app.post('/api/import-all', async (req, res) => {
     try {
         const { vessels, users, tickets, logs } = req.body;
-        
-        if (vessels) await Vessel.deleteMany({});
-        if (users) await User.deleteMany({});
-        if (tickets) await Ticket.deleteMany({});
-        if (logs) await Log.deleteMany({});
-        
-        if (vessels) await Vessel.insertMany(vessels);
-        if (users) await User.insertMany(users);
-        if (tickets) await Ticket.insertMany(tickets);
-        if (logs) await Log.insertMany(logs);
-        
+        if (vessels) { await Vessel.deleteMany({}); await Vessel.insertMany(vessels); }
+        if (users) { await User.deleteMany({}); await User.insertMany(users); }
+        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
+        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🔹 الاتصال بـ MongoDB Atlas وبدء السيرفر
+// ========== تشغيل السيرفر ==========
 async function startServer() {
     try {
-        // التحقق من وجود MONGO_URI
         if (!process.env.MONGO_URI) {
-            console.error('❌ خطأ: MONGO_URI غير موجود في ملف .env');
+            console.error('❌ MONGO_URI غير موجود في متغيرات البيئة');
             process.exit(1);
         }
 
-        // الاتصال بـ MongoDB Atlas
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        console.log('✅ تم الاتصال بـ MongoDB Atlas بنجاح');
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('✅ تم الاتصال بـ MongoDB Atlas');
 
-        // تهيئة البيانات الافتراضية
         await initializeDatabase();
 
-        // بدء السيرفر
-        app.listen(PORT, () => {
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 السيرفر يعمل على المنفذ: ${PORT}`);
-            console.log(`📍 http://localhost:${PORT}`);
         });
     } catch (error) {
-        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', error);
+        console.error('❌ خطأ:', error);
         process.exit(1);
     }
 }
 
-// تشغيل السيرفر
 startServer();
