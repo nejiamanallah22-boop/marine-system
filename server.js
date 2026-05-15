@@ -122,6 +122,27 @@ async function initializeDatabase() {
     }
 }
 
+// ========== نقاط الاختبار ==========
+
+// نقطة اختبار بسيطة للتحقق من أن السيرفر يعمل
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        status: 'success', 
+        message: 'السيرفر يعمل بنجاح ✅',
+        time: new Date().toISOString()
+    });
+});
+
+// نقطة للتحقق من المستخدمين في قاعدة البيانات
+app.get('/api/check-users', async (req, res) => {
+    try {
+        const users = await User.find({}, { name: 1, role: 1, enabled: 1 });
+        res.json({ count: users.length, users });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ========== API Routes ==========
 
 // تسجيل الدخول
