@@ -234,9 +234,9 @@
         <div id="generalEffTableContainer"></div>
         <div id="regionTables"></div>
         <div class="chart-switch">
-            <button class="active" onclick="switchChartType('doughnut')">🥧 دائري</button>
-            <button onclick="switchChartType('bar')">📊 شريطي</button>
-            <button onclick="switchChartType('line')">📈 خطي</button>
+            <button class="active" onclick="switchChartType('doughnut', this)">🥧 دائري</button>
+            <button onclick="switchChartType('bar', this)">📊 شريطي</button>
+            <button onclick="switchChartType('line', this)">📈 خطي</button>
         </div>
         <div id="chartsArea"></div>
     </div>
@@ -246,14 +246,12 @@
             <h3>📞 نظام التذاكر - الدعم الفني</h3>
             <p>📧 support@marine.gov.tn | 📞 29659945</p>
             <hr>
-            
             <h4>📨 إرسال طلب دعم جديد</h4>
             <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
             <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة بالتفصيل..." style="width:100%; padding:10px"></textarea>
             <button class="btn btn-blue" onclick="sendTicket()">📤 إرسال الطلب</button>
             <button class="btn-sm btn-green" onclick="refreshTickets()">🔄 تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
-            
             <hr>
             <h4>📋 قائمة التذاكر</h4>
             <div id="ticketsList"></div>
@@ -640,10 +638,10 @@
         const searchText = document.getElementById('searchMain').value.toLowerCase();
         
         let filtered = data.filter(x => {
-            let matchCat = (fCat === "الكل" || x.cat === fCat);
-            let matchReg = (fReg === "الكل" || x.reg === fReg);
+            let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
+            let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
             let matchSearch = !searchText || 
-                x.name.toLowerCase().includes(searchText) ||
+                (x.name && x.name.toLowerCase().includes(searchText)) ||
                 (x.num && x.num.toLowerCase().includes(searchText)) ||
                 (x.reg && x.reg.toLowerCase().includes(searchText)) ||
                 (x.zone && x.zone.toLowerCase().includes(searchText)) ||
@@ -674,7 +672,7 @@
                  </td>
             </tr>`;
         });
-        document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>';
+        document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات<\/td></tr>';
     }
     
     function clearMainSearch() {
@@ -723,7 +721,7 @@
         const isAdmin = currentUser?.role === "مسؤول";
         
         if(filtered.length === 0) {
-            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
         } else {
             filtered.forEach(x => {
                 html += `<tr>
@@ -782,7 +780,7 @@
             </tr>`;
         });
         
-        html += `</tbody></table></div></div>`;
+        html += `</tbody>点心</div></div>`;
         document.getElementById('generalEffTableContainer').innerHTML = html;
     }
     
@@ -890,7 +888,7 @@
                     </tr>`;
                 }
                 
-                html += `</tbody></table></div></div>`;
+                html += `</tbody>点心</div></div>`;
             }
         } else {
             let regData = data.filter(x => x.reg === selectedRegion);
@@ -919,7 +917,7 @@
                 </tr>`;
             }
             
-            html += `</tbody></table></div></div>`;
+            html += `</tbody>点心</div></div>`;
         }
         
         document.getElementById('regionTables').innerHTML = html;
@@ -932,10 +930,10 @@
         await renderCharts();
     }
     
-    function switchChartType(type) {
+    function switchChartType(type, btn) {
         currentChartType = type;
-        document.querySelectorAll('.chart-switch button').forEach(btn => btn.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.chart-switch button').forEach(button => button.classList.remove('active'));
+        if(btn) btn.classList.add('active');
         renderCharts();
     }
     
@@ -1033,13 +1031,13 @@
     
     async function renderTickets() {
         let tickets = await loadTickets();
-        let html = '<div class="scrollable-table"><table class="region-table"><thead><tr>';
+        let html = '<div class="scrollable-table"><table class="region-table"><thead>';
         html += '<th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
         html += '</thead><tbody>';
         
         if(tickets.length === 0) {
-            html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
+            html += '<tr><td colspan="9">📭 لا توجد تذاكر<\/td></tr>';
         } else {
             tickets.forEach((t, index) => {
                 let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
@@ -1072,7 +1070,7 @@
                     html += `<td>
                         <button class="btn-sm btn-cyan" onclick="replyToTicket(${t.id})" style="margin:2px;">💬 رد</button>
                         <button class="btn-sm btn-red" onclick="closeTicket(${t.id})" style="margin:2px;">🔒 إغلاق</button>
-                    </td>`;
+                      </td>`;
                 } else if(canManageUsers() && t.status === 'مغلقة') {
                     html += `<td><span style="color:green;">✅ مغلقة</span></td>`;
                 } else {
@@ -1127,7 +1125,7 @@
         `;
         
         if(filtered.length === 0) {
-            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة<\/td></tr>';
         } else {
             filtered.forEach((l, index) => {
                 let actionIcon = '';
@@ -1150,7 +1148,7 @@
             });
         }
         
-        html += `</tbody></table></div>`;
+        html += `</tbody>点心</div>`;
         document.getElementById('trackContent').innerHTML = html;
     }
     
