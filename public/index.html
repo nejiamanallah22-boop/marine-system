@@ -65,40 +65,13 @@
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
-        
-        .scroll-buttons {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        .scroll-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .scroll-btn:hover {
-            transform: scale(1.1);
-            background: #1e5a22;
-        }
-        
-        .damage-column {
-            min-width: 200px;
-            max-width: 300px;
-            word-break: break-word;
-            white-space: normal;
-        }
-        
+        .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
+        .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
+        .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        .ticket-reply small { color: #666; font-size: 11px; }
+        .ticket-reply p { margin: 5px 0 0 0; }
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -177,9 +150,7 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead>
-                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
-                </thead>
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
                 <tbody id="mainBody"></tbody>
             </table>
         </div>
@@ -196,9 +167,7 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead>
-                    <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
-                </thead>
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead>
                 <tbody id="maintBody"></tbody>
             </table>
         </div>
@@ -235,18 +204,17 @@
 
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px">
-            <h3>📞 الدعم الفني</h3>
-            <p>📧 support@marine.gov.tn</p>
-            <p>📞 29659945</p>
+            <h3>📞 نظام التذاكر - الدعم الفني</h3>
+            <p>📧 support@marine.gov.tn | 📞 29659945</p>
             <hr>
-            <h4>📨 أرسل طلب دعم</h4>
-            <input type="text" id="ticketSubject" placeholder="العنوان" style="width:100%; padding:10px; margin:10px 0">
-            <textarea id="ticketMessage" rows="5" style="width:100%; padding:10px"></textarea>
-            <button class="btn btn-blue" onclick="sendTicket()">إرسال</button>
+            <h4>📨 إرسال طلب دعم جديد</h4>
+            <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
+            <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة بالتفصيل..." style="width:100%; padding:10px"></textarea>
+            <button class="btn btn-blue" onclick="sendTicket()">📤 إرسال الطلب</button>
             <button class="btn-sm btn-green" onclick="refreshTickets()">🔄 تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
             <hr>
-            <h4>📋 طلباتي السابقة</h4>
+            <h4>📋 قائمة التذاكر</h4>
             <div id="ticketsList"></div>
         </div>
     </div>
@@ -378,6 +346,7 @@
     async function deleteUserAPI(id) { return apiCall(`/api/users/${id}`, 'DELETE'); }
     async function loadTickets() { return apiCall('/api/tickets'); }
     async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
+    async function updateTicket(id, ticket) { return apiCall(`/api/tickets/${id}`, 'PUT', ticket); }
     async function loadLogs() { return apiCall('/api/logs'); }
     async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
     async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { name, pass }); }
@@ -621,17 +590,17 @@
         const fReg = document.getElementById('fRegMain').value;
         const searchText = document.getElementById('searchMain').value.toLowerCase();
         
-        let filtered = data.filter(x => (fCat === "الكل" || x.cat === fCat) && (fReg === "الكل" || x.reg === fReg));
-        
-        if(searchText) {
-            filtered = filtered.filter(x => 
+        let filtered = data.filter(x => {
+            let matchCat = (fCat === "الكل" || x.cat === fCat);
+            let matchReg = (fReg === "الكل" || x.reg === fReg);
+            let matchSearch = !searchText || 
                 x.name.toLowerCase().includes(searchText) ||
                 (x.num && x.num.toLowerCase().includes(searchText)) ||
                 (x.reg && x.reg.toLowerCase().includes(searchText)) ||
                 (x.zone && x.zone.toLowerCase().includes(searchText)) ||
-                (x.port && x.port.toLowerCase().includes(searchText))
-            );
-        }
+                (x.port && x.port.toLowerCase().includes(searchText));
+            return matchCat && matchReg && matchSearch;
+        });
         
         let html = "";
         const isAdmin = currentUser?.role === "مسؤول";
@@ -921,6 +890,156 @@
         renderCharts();
     }
     
+    // ==================== دوال التذاكر والدعم الفني ====================
+    
+    async function sendTicket() {
+        if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
+        
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        
+        if(!subject || !message) { 
+            showToast("يرجى إدخال عنوان ورسالة الطلب", true); 
+            return; 
+        }
+        
+        try {
+            const newTicket = {
+                id: Date.now(),
+                userName: currentUser.name,
+                userRole: currentUser.role,
+                subject: subject,
+                message: message,
+                date: getCurrentDate(),
+                time: getCurrentTime(),
+                status: 'قيد المعالجة',
+                replies: []
+            };
+            
+            await saveTicket(newTicket);
+            
+            document.getElementById('ticketSubject').value = "";
+            document.getElementById('ticketMessage').value = "";
+            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح! سيتم الرد عليك قريباً.";
+            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
+            
+            await renderTickets();
+            await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
+            showToast("✅ تم إرسال طلبك بنجاح");
+        } catch(error) {
+            showToast("خطأ في الإرسال: " + error.message, true);
+        }
+    }
+    
+    async function replyToTicket(ticketId) {
+        if(!canManageUsers()) { showToast("غير مسموح - فقط للمسؤول", true); return; }
+        
+        const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
+        if(!replyText) return;
+        
+        try {
+            let tickets = await loadTickets();
+            let ticket = tickets.find(t => t.id == ticketId);
+            
+            if(ticket) {
+                if(!ticket.replies) ticket.replies = [];
+                ticket.replies.push({
+                    adminName: currentUser.name,
+                    reply: replyText,
+                    date: getCurrentDate(),
+                    time: getCurrentTime()
+                });
+                ticket.status = 'تم الرد';
+                
+                await updateTicket(ticketId, ticket);
+                await renderTickets();
+                await logActivity("رد على تذكرة", `قام بالرد على تذكرة: ${ticket.subject}`);
+                showToast("✅ تم إرسال الرد بنجاح");
+            }
+        } catch(error) {
+            showToast("خطأ في الرد: " + error.message, true);
+        }
+    }
+    
+    async function closeTicket(ticketId) {
+        if(!canManageUsers()) { showToast("غير مسموح - فقط للمسؤول", true); return; }
+        
+        if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
+        
+        try {
+            let tickets = await loadTickets();
+            let ticket = tickets.find(t => t.id == ticketId);
+            
+            if(ticket) {
+                ticket.status = 'مغلقة';
+                await updateTicket(ticketId, ticket);
+                await renderTickets();
+                await logActivity("إغلاق تذكرة", `قام بإغلاق تذكرة: ${ticket.subject}`);
+                showToast("✅ تم إغلاق التذكرة");
+            }
+        } catch(error) {
+            showToast("خطأ في الإغلاق: " + error.message, true);
+        }
+    }
+    
+    async function renderTickets() {
+        let tickets = await loadTickets();
+        let html = '<div class="scrollable-table"><table class="region-table" style="min-width:1000px;"><thead><tr>';
+        html += '<th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
+        if(canManageUsers()) html += '<th>إجراءات</th>';
+        html += '</thead><tbody>';
+        
+        if(tickets.length === 0) {
+            html += '<tr><td colspan="9" style="text-align:center;">📭 لا توجد تذاكر</td></tr>';
+        } else {
+            tickets.forEach((t, index) => {
+                let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
+                let statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${t.date || '-'}</td>
+                    <td>${t.time || '-'}</td>
+                    <td><b>${t.userName}</b><br><small style="font-size:10px;">${t.userRole || ''}</small></td>
+                    <td><strong>${t.subject}</strong></td>
+                    <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
+                    <td style="max-width:250px; text-align:right; word-break:break-word;">${t.message || '-'}</td>
+                    <td style="max-width:250px; text-align:right;">`;
+                
+                if(t.replies && t.replies.length > 0) {
+                    t.replies.forEach(reply => {
+                        html += `<div class="ticket-reply">
+                            <small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small>
+                            <p style="margin:5px 0 0 0;">📝 ${reply.reply}</p>
+                        </div>`;
+                    });
+                } else {
+                    html += '<span style="color:#999;">لا توجد ردود</span>';
+                }
+                
+                html += `</td>`;
+                
+                if(canManageUsers() && t.status !== 'مغلقة') {
+                    html += `<td>
+                        <button class="btn-sm btn-cyan" onclick="replyToTicket(${t.id})" style="margin:2px;">💬 رد</button>
+                        <button class="btn-sm btn-red" onclick="closeTicket(${t.id})" style="margin:2px;">🔒 إغلاق</button>
+                    </td>`;
+                } else if(canManageUsers() && t.status === 'مغلقة') {
+                    html += `<td><span style="color:green;">✅ مغلقة</span></td>`;
+                } else {
+                    html += `<td>-</td>`;
+                }
+                
+                html += `</tr>`;
+            });
+        }
+        
+        html += `</tbody>点心</div>`;
+        document.getElementById('ticketsList').innerHTML = html;
+    }
+    
+    // ==================== دوال تتبع المستخدمين ====================
+    
     async function renderTrack() {
         if(!canManageUsers()) return;
         let logs = await loadLogs();
@@ -969,6 +1088,8 @@
                 else if (l.action === 'حذف مركب') actionIcon = '🗑️';
                 else if (l.action === 'تسجيل دخول') actionIcon = '🔐';
                 else if (l.action === 'تسجيل خروج') actionIcon = '🚪';
+                else if (l.action === 'إرسال تذكرة') actionIcon = '📧';
+                else if (l.action === 'رد على تذكرة') actionIcon = '💬';
                 else actionIcon = '📝';
                 
                 html += `<tr>
@@ -978,7 +1099,7 @@
                     <td><b>${l.userName}</b></td>
                     <td><span class="role-badge" style="background:#e9ecef;">${l.userRole}</span></td>
                     <td><span style="color:var(--primary); font-weight:bold;">${actionIcon} ${l.action}</span></td>
-                    <td style="text-align:right;">${l.details}</td>
+                    <td style="text-align:right; word-break:break-word;">${l.details}</td>
                 </tr>`;
             });
         }
@@ -994,48 +1115,7 @@
         showToast("✅ تم إعادة ضبط فلاتر التتبع");
     }
     
-    async function sendTicket() {
-        const subject = document.getElementById('ticketSubject').value.trim();
-        const message = document.getElementById('ticketMessage').value.trim();
-        if(!subject || !message) { showToast("يرجى إدخال عنوان ورسالة", true); return; }
-        
-        try {
-            await saveTicket({
-                userName: currentUser.name,
-                subject: subject,
-                message: message,
-                status: "قيد المعالجة"
-            });
-            document.getElementById('ticketSubject').value = "";
-            document.getElementById('ticketMessage').value = "";
-            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
-            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
-            await renderTickets();
-            await logActivity("إرسال طلب دعم", `قام بإرسال طلب دعم: ${subject}`);
-            showToast("✅ تم إرسال طلبك بنجاح");
-        } catch(error) {
-            showToast("خطأ في الإرسال: " + error.message, true);
-        }
-    }
-    
-    async function renderTickets() {
-        let tickets = await loadTickets();
-        let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th></tr></thead><tbody>';
-        if(tickets.length === 0) {
-            html += '<tr><td colspan="4">لا توجد طلبات سابقة</td></tr>';
-        } else {
-            tickets.slice(0, 10).forEach(t => {
-                html += `<tr>
-                    <td>${t.date || '-'}</td>
-                    <td>${t.userName}</td>
-                    <td>${t.subject}</td>
-                    <td><span style="color:orange">${t.status}</span></td>
-                </tr>`;
-            });
-        }
-        html += `</tbody></table></div>`;
-        document.getElementById('ticketsList').innerHTML = html;
-    }
+    // ==================== دوال إدارة المستخدمين ====================
     
     async function renderUsers() {
         if(!canManageUsers()) return;
@@ -1140,6 +1220,8 @@
         }
     }
     
+    // ==================== دوال تصدير واستيراد البيانات ====================
+    
     async function exportAllData() {
         if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
         try {
@@ -1181,6 +1263,8 @@
         input.value = "";
     }
     
+    // ==================== دوال التنقل بين الصفحات ====================
+    
     function showPage(page) {
         const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
@@ -1220,6 +1304,7 @@
         }
     }
     
+    // ==================== ربط الدوال العامة ====================
     window.doLogin = doLogin;
     window.logout = logout;
     window.showPage = showPage;
@@ -1236,6 +1321,8 @@
     window.clearMainSearch = clearMainSearch;
     window.switchChartType = switchChartType;
     window.sendTicket = sendTicket;
+    window.replyToTicket = replyToTicket;
+    window.closeTicket = closeTicket;
     window.addUser = addUser;
     window.openPasswordModal = openPasswordModal;
     window.closePasswordModal = closePasswordModal;
