@@ -65,13 +65,48 @@
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
-        .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
-        .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
-        .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
-        .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
-        .ticket-reply small { color: #666; font-size: 11px; }
-        .ticket-reply p { margin: 5px 0 0 0; }
+        
+        .scroll-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+        }
+        .scroll-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .scroll-btn:hover {
+            transform: scale(1.1);
+            background: #1e5a22;
+        }
+        
+        .damage-column {
+            min-width: 200px;
+            max-width: 300px;
+            word-break: break-word;
+            white-space: normal;
+        }
+        
+        .ticket-reply {
+            background: #e9ecef;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: right;
+        }
+        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -150,7 +185,9 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
+                <thead>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
+                </thead>
                 <tbody id="mainBody"></tbody>
             </table>
         </div>
@@ -167,7 +204,9 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead>
+                <thead>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
+                </thead>
                 <tbody id="maintBody"></tbody>
             </table>
         </div>
@@ -207,12 +246,14 @@
             <h3>📞 نظام التذاكر - الدعم الفني</h3>
             <p>📧 support@marine.gov.tn | 📞 29659945</p>
             <hr>
+            
             <h4>📨 إرسال طلب دعم جديد</h4>
             <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
             <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة بالتفصيل..." style="width:100%; padding:10px"></textarea>
             <button class="btn btn-blue" onclick="sendTicket()">📤 إرسال الطلب</button>
             <button class="btn-sm btn-green" onclick="refreshTickets()">🔄 تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
+            
             <hr>
             <h4>📋 قائمة التذاكر</h4>
             <div id="ticketsList"></div>
@@ -328,6 +369,7 @@
         return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
 
+    // ==================== دوال الاتصال بالسيرفر ====================
     async function apiCall(url, method = 'GET', body = null) {
         const options = { method, headers: { 'Content-Type': 'application/json' } };
         if (body) options.body = JSON.stringify(body);
@@ -340,15 +382,19 @@
     async function saveVessel(vessel) { return apiCall('/api/vessels', 'POST', vessel); }
     async function updateVessel(id, vessel) { return apiCall(`/api/vessels/${id}`, 'PUT', vessel); }
     async function deleteVessel(id) { return apiCall(`/api/vessels/${id}`, 'DELETE'); }
+    
     async function loadUsers() { return apiCall('/api/users'); }
     async function saveUser(user) { return apiCall('/api/users', 'POST', user); }
     async function updateUser(id, user) { return apiCall(`/api/users/${id}`, 'PUT', user); }
     async function deleteUserAPI(id) { return apiCall(`/api/users/${id}`, 'DELETE'); }
+    
     async function loadTickets() { return apiCall('/api/tickets'); }
     async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
     async function updateTicket(id, ticket) { return apiCall(`/api/tickets/${id}`, 'PUT', ticket); }
+    
     async function loadLogs() { return apiCall('/api/logs'); }
     async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
+    
     async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { name, pass }); }
     async function exportAllDataAPI() { return apiCall('/api/export-all'); }
     async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
@@ -367,6 +413,7 @@
         } catch(e) { console.error('Log error:', e); }
     }
 
+    // ==================== دوال التحديث (Refresh) ====================
     async function refreshMain() { await renderMain(); showToast("✅ تم تحديث السجل العام"); }
     async function refreshMaint() { await renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
     async function refreshEff() { await renderEff(); showToast("✅ تم تحديث جاهزية الأسطول"); }
@@ -380,6 +427,7 @@
         showToast("✅ تم تحديث جميع الصفحات");
     }
 
+    // ==================== دوال الدخول والخروج ====================
     async function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -448,6 +496,7 @@
         document.getElementById('loginError').style.display = 'none';
     }
 
+    // ==================== دوال إدارة المراكب ====================
     async function addItem() {
         if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
         const name = document.getElementById('iName').value.trim();
@@ -690,7 +739,7 @@
                     <td>
                         ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
                         ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                    </td>
+                     </td>
                 </tr>`;
             });
         }
@@ -984,13 +1033,13 @@
     
     async function renderTickets() {
         let tickets = await loadTickets();
-        let html = '<div class="scrollable-table"><table class="region-table" style="min-width:1000px;"><thead><tr>';
+        let html = '<div class="scrollable-table"><table class="region-table"><thead><tr>';
         html += '<th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
         html += '</thead><tbody>';
         
         if(tickets.length === 0) {
-            html += '<tr><td colspan="9" style="text-align:center;">📭 لا توجد تذاكر</td></tr>';
+            html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
         } else {
             tickets.forEach((t, index) => {
                 let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
@@ -1003,8 +1052,8 @@
                     <td><b>${t.userName}</b><br><small style="font-size:10px;">${t.userRole || ''}</small></td>
                     <td><strong>${t.subject}</strong></td>
                     <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
-                    <td style="max-width:250px; text-align:right; word-break:break-word;">${t.message || '-'}</td>
-                    <td style="max-width:250px; text-align:right;">`;
+                    <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
+                    <td style="max-width:300px; text-align:right;">`;
                 
                 if(t.replies && t.replies.length > 0) {
                     t.replies.forEach(reply => {
@@ -1038,8 +1087,7 @@
         document.getElementById('ticketsList').innerHTML = html;
     }
     
-    // ==================== دوال تتبع المستخدمين ====================
-    
+    // ==================== دوال التتبع ====================
     async function renderTrack() {
         if(!canManageUsers()) return;
         let logs = await loadLogs();
@@ -1088,8 +1136,6 @@
                 else if (l.action === 'حذف مركب') actionIcon = '🗑️';
                 else if (l.action === 'تسجيل دخول') actionIcon = '🔐';
                 else if (l.action === 'تسجيل خروج') actionIcon = '🚪';
-                else if (l.action === 'إرسال تذكرة') actionIcon = '📧';
-                else if (l.action === 'رد على تذكرة') actionIcon = '💬';
                 else actionIcon = '📝';
                 
                 html += `<tr>
@@ -1099,7 +1145,7 @@
                     <td><b>${l.userName}</b></td>
                     <td><span class="role-badge" style="background:#e9ecef;">${l.userRole}</span></td>
                     <td><span style="color:var(--primary); font-weight:bold;">${actionIcon} ${l.action}</span></td>
-                    <td style="text-align:right; word-break:break-word;">${l.details}</td>
+                    <td style="text-align:right;">${l.details}</td>
                 </tr>`;
             });
         }
@@ -1116,7 +1162,6 @@
     }
     
     // ==================== دوال إدارة المستخدمين ====================
-    
     async function renderUsers() {
         if(!canManageUsers()) return;
         let users = await loadUsers();
@@ -1221,7 +1266,6 @@
     }
     
     // ==================== دوال تصدير واستيراد البيانات ====================
-    
     async function exportAllData() {
         if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
         try {
@@ -1264,7 +1308,6 @@
     }
     
     // ==================== دوال التنقل بين الصفحات ====================
-    
     function showPage(page) {
         const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
