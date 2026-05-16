@@ -107,13 +107,6 @@
             text-align: right;
         }
         
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -394,7 +387,6 @@
     
     async function loadTickets() { return apiCall('/api/tickets'); }
     async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
-    async function updateTicket(id, ticket) { return apiCall(`/api/tickets/${id}`, 'PUT', ticket); }
     
     async function loadLogs() { return apiCall('/api/logs'); }
     async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
@@ -743,7 +735,7 @@
                     <td>
                         ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
                         ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                    </td>
+                     </td>
                 </tr>`;
             });
         }
@@ -769,7 +761,7 @@
             <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
             <div class="scrollable-table">
             <table class="region-table">
-                <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th><tr></thead>
                 <tbody>`;
         
         CATS_LIST.forEach(cat => {
@@ -898,7 +890,7 @@
                 }
                 
                 html += `</tbody>
-                    </table>
+                    <tr>
                     </div>
                     </div>`;
             }
@@ -930,7 +922,7 @@
             }
             
             html += `</tbody>
-                <tr>
+                </table>
                 </div>
                 </div>`;
         }
@@ -999,12 +991,18 @@
             return; 
         }
         
+        const id = Number(ticketId);
+        if (isNaN(id)) {
+            showToast("خطأ: معرف التذكرة غير صالح", true);
+            return;
+        }
+        
         const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
         if(!replyText) return;
         
         try {
             let tickets = await loadTickets();
-            let ticket = tickets.find(t => t.id == ticketId);
+            let ticket = tickets.find(t => Number(t.id) === id);
             
             if(ticket) {
                 if(!ticket.replies) ticket.replies = [];
@@ -1016,7 +1014,17 @@
                 });
                 ticket.status = 'تم الرد';
                 
-                await updateTicket(ticketId, ticket);
+                const response = await fetch(`/api/tickets/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ticket)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'فشل في حفظ الرد');
+                }
+                
                 await renderTickets();
                 await logActivity("رد على تذكرة", `قام بالرد على تذكرة: ${ticket.subject}`);
                 showToast("✅ تم إرسال الرد بنجاح");
@@ -1024,6 +1032,7 @@
                 showToast("❌ لم يتم العثور على التذكرة", true);
             }
         } catch(error) {
+            console.error('خطأ في الرد:', error);
             showToast("خطأ في الرد: " + error.message, true);
         }
     }
@@ -1034,15 +1043,32 @@
             return; 
         }
         
+        const id = Number(ticketId);
+        if (isNaN(id)) {
+            showToast("خطأ: معرف التذكرة غير صالح", true);
+            return;
+        }
+        
         if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
         
         try {
             let tickets = await loadTickets();
-            let ticket = tickets.find(t => t.id == ticketId);
+            let ticket = tickets.find(t => Number(t.id) === id);
             
             if(ticket) {
                 ticket.status = 'مغلقة';
-                await updateTicket(ticketId, ticket);
+                
+                const response = await fetch(`/api/tickets/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ticket)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'فشل في إغلاق التذكرة');
+                }
+                
                 await renderTickets();
                 await logActivity("إغلاق تذكرة", `قام بإغلاق تذكرة: ${ticket.subject}`);
                 showToast("✅ تم إغلاق التذكرة");
@@ -1183,7 +1209,7 @@
             });
         }
         
-        html += `</tbody></table></div>`;
+        html += `</tbody><tr></div>`;
         document.getElementById('trackContent').innerHTML = html;
     }
     
