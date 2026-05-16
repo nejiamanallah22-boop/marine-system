@@ -124,8 +124,6 @@ async function initializeDatabase() {
 }
 
 // ========== نقاط الاختبار ==========
-
-// نقطة اختبار بسيطة للتحقق من أن السيرفر يعمل
 app.get('/api/test', (req, res) => {
     res.json({ 
         status: 'success', 
@@ -134,7 +132,6 @@ app.get('/api/test', (req, res) => {
     });
 });
 
-// نقطة للتحقق من المستخدمين في قاعدة البيانات
 app.get('/api/check-users', async (req, res) => {
     try {
         const users = await User.find({}, { name: 1, role: 1, enabled: 1 });
@@ -265,7 +262,12 @@ app.post('/api/tickets', async (req, res) => {
 
 app.put('/api/tickets/:id', async (req, res) => {
     try {
-        const ticketId = parseInt(req.params.id);
+        const ticketId = Number(req.params.id);
+        
+        if (isNaN(ticketId)) {
+            return res.status(400).json({ error: 'معرف التذكرة غير صالح' });
+        }
+        
         const ticket = await Ticket.findOneAndUpdate(
             { id: ticketId },
             req.body,
@@ -284,7 +286,13 @@ app.put('/api/tickets/:id', async (req, res) => {
 
 app.delete('/api/tickets/:id', async (req, res) => {
     try {
-        await Ticket.findOneAndDelete({ id: parseInt(req.params.id) });
+        const ticketId = Number(req.params.id);
+        
+        if (isNaN(ticketId)) {
+            return res.status(400).json({ error: 'معرف التذكرة غير صالح' });
+        }
+        
+        await Ticket.findOneAndDelete({ id: ticketId });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
