@@ -228,12 +228,12 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            </table>
+            <tr>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="maintBody"></tbody>
-            </table>
+            <table>
         </div>
     </div>
 
@@ -302,7 +302,7 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            </table>
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -688,7 +688,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td><tr>';
+                html = '</table><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -816,7 +816,7 @@
                 <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <thead></table><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             CATS_LIST.forEach(cat => {
@@ -834,9 +834,9 @@
             });
             
             html += `</tbody>
-                </table>
-                </div>
-                </div>`;
+            </table>
+            </div>
+            </div>`;
             document.getElementById('generalEffTableContainer').innerHTML = html;
         } catch(error) {
             console.error('خطأ:', error);
@@ -942,7 +942,7 @@
                         <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                         <div class="scrollable-table">
                         <table class="region-table">
-                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                            <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                             <tbody>`;
                     
                     for(const cat of CATS_LIST) {
@@ -960,7 +960,7 @@
                     }
                     
                     html += `</tbody>
-                        </table>
+                    </table>
                         </div>
                         </div>`;
                 }
@@ -975,7 +975,7 @@
                     <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 for(const cat of CATS_LIST) {
@@ -1019,10 +1019,13 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر (تم إصلاح الرد نهائياً) ====================
+    // ==================== دوال التذاكر (المُصلحة) ====================
     
     async function sendTicket() {
-        if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
+        if(!currentUser) { 
+            showToast("الرجاء تسجيل الدخول أولاً", true); 
+            return; 
+        }
         
         const subject = document.getElementById('ticketSubject').value.trim();
         const message = document.getElementById('ticketMessage').value.trim();
@@ -1044,22 +1047,31 @@
                 replies: []
             };
             
-            await saveTicket(newTicket);
+            const response = await fetch('/api/tickets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTicket)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'فشل في الإرسال');
+            }
             
             document.getElementById('ticketSubject').value = "";
             document.getElementById('ticketMessage').value = "";
-            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح! سيتم الرد عليك قريباً.";
-            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
+            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
+            setTimeout(() => document.getElementById('ticketResponse').innerHTML = "", 3000);
             
             await renderTickets();
-            await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
-            showToast("✅ تم إرسال طلبك بنجاح");
+            await logActivity("إرسال تذكرة", `أرسل: ${subject}`);
+            showToast("✅ تم الإرسال");
         } catch(error) {
-            showToast("خطأ في الإرسال: " + error.message, true);
+            console.error(error);
+            showToast("خطأ: " + error.message, true);
         }
     }
     
-    // 🔧 الدالة المصححة للرد على التذاكر
     async function replyToTicket(ticketId) {
         if(!canManageUsers()) { 
             showToast("غير مسموح - فقط للمسؤول", true); 
@@ -1071,11 +1083,10 @@
             return;
         }
         
-        const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
+        const replyText = prompt("✏️ أدخل ردك:");
         if(!replyText) return;
         
         try {
-            // استخدام route مخصص للرد
             const response = await fetch(`/api/tickets/${ticketId}/reply`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1091,35 +1102,32 @@
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'فشل في حفظ الرد');
+                throw new Error(error.error || 'فشل الرد');
             }
             
             await renderTickets();
-            await logActivity("رد على تذكرة", `قام بالرد على التذكرة`);
-            showToast("✅ تم إرسال الرد بنجاح");
-            
+            await logActivity("رد على تذكرة", `رد على التذكرة`);
+            showToast("✅ تم الرد");
         } catch(error) {
-            console.error('خطأ في الرد:', error);
-            showToast("خطأ في الرد: " + error.message, true);
+            console.error(error);
+            showToast("خطأ: " + error.message, true);
         }
     }
     
-    // 🔧 الدالة المصححة لإغلاق التذكرة
     async function closeTicket(ticketId) {
         if(!canManageUsers()) { 
-            showToast("غير مسموح - فقط للمسؤول", true); 
+            showToast("غير مسموح", true); 
             return; 
         }
         
         if (!ticketId) {
-            showToast("خطأ: معرف التذكرة غير صالح", true);
+            showToast("خطأ: معرف غير صالح", true);
             return;
         }
         
-        if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
+        if(!confirm("إغلاق التذكرة؟")) return;
         
         try {
-            // استخدام route مخصص للإغلاق
             const response = await fetch(`/api/tickets/${ticketId}/close`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
@@ -1127,19 +1135,17 @@
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'فشل في إغلاق التذكرة');
+                throw new Error(error.error || 'فشل الإغلاق');
             }
             
             await renderTickets();
-            await logActivity("إغلاق تذكرة", `قام بإغلاق التذكرة`);
-            showToast("✅ تم إغلاق التذكرة");
-            
+            await logActivity("إغلاق تذكرة", `أغلق التذكرة`);
+            showToast("✅ تم الإغلاق");
         } catch(error) {
-            showToast("خطأ في الإغلاق: " + error.message, true);
+            showToast("خطأ: " + error.message, true);
         }
     }
     
-    // 🔧 دالة عرض التذاكر (باستخدام _id)
     async function renderTickets() {
         try {
             let tickets = await loadTickets();
@@ -1162,7 +1168,6 @@
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                     const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
-                    // استخدام _id من MongoDB
                     const ticketId = t._id;
                     
                     html += `<tr>
@@ -1171,19 +1176,19 @@
                         <td>${t.time || '-'}</td>
                         <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
                         <td><strong>${t.subject}</strong></td>
-                        <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
-                        <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
-                        <td style="max-width:300px; text-align:right;">`;
+                        <td style="color:${statusColor}">${statusText}</td>
+                        <td style="max-width:250px">${t.message || '-'}</td>
+                        <td style="max-width:300px">`;
                     
                     if(t.replies && t.replies.length > 0) {
                         t.replies.forEach(reply => {
                             html += `<div class="ticket-reply">
                                 <small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small>
-                                <p style="margin:5px 0 0 0;">📝 ${reply.reply}</p>
+                                <p>📝 ${reply.reply}</p>
                             </div>`;
                         });
                     } else {
-                        html += '<span style="color:#999;">لا توجد ردود</span>';
+                        html += '<span style="color:#999;">لا ردود</span>';
                     }
                     
                     html += `</td>`;
@@ -1191,8 +1196,8 @@
                     if(canManageUsers()) {
                         if(t.status !== 'مغلقة') {
                             html += `<td style="text-align:center;">
-                                <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
-                                <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
+                                <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')">💬 رد</button>
+                                <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')">🔒 إغلاق</button>
                             </td>`;
                         } else {
                             html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
@@ -1201,14 +1206,14 @@
                         html += `<td>-</td>`;
                     }
                     
-                    html += `</tr>`;
+                    html += `<tr>`;
                 });
             }
             
             html += `</tbody></table></div>`;
             document.getElementById('ticketsList').innerHTML = html;
         } catch(error) {
-            console.error('خطأ في renderTickets:', error);
+            console.error(error);
             document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>';
         }
     }
@@ -1277,7 +1282,7 @@
                 });
             }
             
-            html += `</tbody></td></div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
