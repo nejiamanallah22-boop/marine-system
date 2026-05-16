@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -80,6 +80,7 @@ mongoose.connect(process.env.MONGO_URI)
 // ========== تهيئة البيانات ==========
 async function initializeDatabase() {
     try {
+        // 1. إنشاء مستخدمين
         const adminExists = await User.findOne({ name: 'admin' });
         if (!adminExists) {
             await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
@@ -88,34 +89,39 @@ async function initializeDatabase() {
             console.log('✅ تم إنشاء المستخدمين');
         }
 
+        // 2. إنشاء مراكب (بينها معطوبة لسجل الصيانة)
         const vesselsCount = await Vessel.countDocuments();
         if (vesselsCount === 0) {
-            await Vessel.insertMany([
+            const defaultVessels = [
                 { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", cat: "البروق" },
                 { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", cat: "صقور" },
+                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", cat: "طوافات" },
                 { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر" },
                 { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة" },
-                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", cat: "طوافات" }
-            ]);
-            console.log('✅ تم إنشاء مراكب افتراضية');
+                { name: "البروق 2", num: "B002", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "قاعدة الساحل", stat: "معطب", break: "عطل في الكهرباء", fDate: "2025-03-20", eDate: "2025-04-15", ref: "REF003", cat: "البروق" },
+                { name: "صقر 2", num: "S002", len: 9, reg: "الوسط", zone: "المهدية", port: "المهدية", supp: "قاعدة الوسط", stat: "صيانة", break: "تغيير زيوت", fDate: "2025-03-25", eDate: "2025-04-08", ref: "REF004", cat: "صقور" }
+            ];
+            await Vessel.insertMany(defaultVessels);
+            console.log('✅ تم إنشاء 7 مراكب (3 صالح + 2 معطب + 2 صيانة)');
         }
 
+        // 3. إنشاء تذاكر
         const ticketsCount = await Ticket.countDocuments();
         if (ticketsCount === 0) {
             await Ticket.create({
                 userName: "viewer",
                 userRole: "مشاهد",
                 subject: "مشكلة في العرض",
-                message: "البيانات لا تظهر بشكل صحيح",
+                message: "البيانات لا تظهر",
                 date: "15/03/2025",
                 time: "10:30",
                 status: "قيد المعالجة",
                 replies: []
             });
-            console.log('✅ تم إنشاء تذكرة افتراضية');
+            console.log('✅ تم إنشاء تذكرة');
         }
 
-        console.log('🎉 تم تهيئة قاعدة البيانات بنجاح');
+        console.log('🎉 تم تهيئة قاعدة البيانات');
     } catch (error) {
         console.error('خطأ في التهيئة:', error);
     }
@@ -126,7 +132,11 @@ async function initializeDatabase() {
 app.post('/api/login', async (req, res) => {
     try {
         const user = await User.findOne({ name: req.body.name, pass: req.body.pass, enabled: true });
-        user ? res.json({ name: user.name, role: user.role }) : res.status(401).json({ error: 'بيانات غير صحيحة' });
+        if (user) {
+            res.json({ name: user.name, role: user.role });
+        } else {
+            res.status(401).json({ error: 'بيانات غير صحيحة' });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -134,7 +144,8 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/api/vessels', async (req, res) => {
     try {
-        res.json(await Vessel.find());
+        const vessels = await Vessel.find();
+        res.json(vessels);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -142,7 +153,9 @@ app.get('/api/vessels', async (req, res) => {
 
 app.post('/api/vessels', async (req, res) => {
     try {
-        res.status(201).json(await Vessel.create(req.body));
+        const vessel = new Vessel(req.body);
+        await vessel.save();
+        res.status(201).json(vessel);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -150,7 +163,8 @@ app.post('/api/vessels', async (req, res) => {
 
 app.put('/api/vessels/:id', async (req, res) => {
     try {
-        res.json(await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(vessel);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -167,7 +181,8 @@ app.delete('/api/vessels/:id', async (req, res) => {
 
 app.get('/api/users', async (req, res) => {
     try {
-        res.json(await User.find());
+        const users = await User.find();
+        res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -175,7 +190,9 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
     try {
-        res.status(201).json(await User.create(req.body));
+        const user = new User(req.body);
+        await user.save();
+        res.status(201).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -183,7 +200,8 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:id', async (req, res) => {
     try {
-        res.json(await User.findByIdAndUpdate(req.params.id, req.body, { new: true }));
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -198,35 +216,30 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// ========== إدارة التذاكر (مع Routes مخصصة) ==========
+// ========== إدارة التذاكر ==========
 
-// جلب جميع التذاكر
 app.get('/api/tickets', async (req, res) => {
     try {
-        res.json(await Ticket.find().sort({ createdAt: -1 }));
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
+        res.json(tickets);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// إضافة تذكرة جديدة
 app.post('/api/tickets', async (req, res) => {
     try {
-        res.status(201).json(await Ticket.create(req.body));
+        const ticket = new Ticket(req.body);
+        await ticket.save();
+        res.status(201).json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🔧 الـ Route المخصص للرد على التذاكر (الحل الاحترافي)
 app.put('/api/tickets/:id/reply', async (req, res) => {
     try {
         const { reply } = req.body;
-        
-        if (!reply || !reply.adminName || !reply.reply) {
-            return res.status(400).json({ error: 'بيانات الرد غير مكتملة' });
-        }
-
         const ticket = await Ticket.findByIdAndUpdate(
             req.params.id,
             {
@@ -235,18 +248,13 @@ app.put('/api/tickets/:id/reply', async (req, res) => {
             },
             { new: true }
         );
-
-        if (!ticket) {
-            return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        }
-
+        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
         res.json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Route مخصص لإغلاق التذكرة
 app.put('/api/tickets/:id/close', async (req, res) => {
     try {
         const ticket = await Ticket.findByIdAndUpdate(
@@ -254,22 +262,16 @@ app.put('/api/tickets/:id/close', async (req, res) => {
             { $set: { status: 'مغلقة' } },
             { new: true }
         );
-
-        if (!ticket) {
-            return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        }
-
+        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
         res.json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Route عام للتحديث (للتطابق مع الكود القديم)
 app.put('/api/tickets/:id', async (req, res) => {
     try {
         const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
         res.json(ticket);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -287,7 +289,8 @@ app.delete('/api/tickets/:id', async (req, res) => {
 
 app.get('/api/logs', async (req, res) => {
     try {
-        res.json(await Log.find().sort({ _id: -1 }));
+        const logs = await Log.find().sort({ _id: -1 });
+        res.json(logs);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -295,7 +298,9 @@ app.get('/api/logs', async (req, res) => {
 
 app.post('/api/logs', async (req, res) => {
     try {
-        res.status(201).json(await Log.create(req.body));
+        const log = new Log(req.body);
+        await log.save();
+        res.status(201).json(log);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -329,4 +334,7 @@ app.post('/api/import-all', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 السيرفر على http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`);
+    console.log(`📡 http://localhost:${PORT}`);
+});
