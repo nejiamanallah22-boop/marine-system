@@ -107,7 +107,6 @@
             text-align: right;
         }
 
-        /* صورة الخلفية الشفافة - كامل الصفحة */
         .watermark {
             position: fixed;
             top: 50%;
@@ -134,7 +133,6 @@
 </head>
 <body>
 
-<!-- صورة شفافة لمركب حرس بحري تونسي - خلفية كاملة -->
 <div class="watermark">
     <img src="https://cdn-icons-png.flaticon.com/512/10428/10428984.png" alt="مركب حرس بحري تونسي">
 </div>
@@ -230,7 +228,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            </table>
+            <table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -305,7 +303,7 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
+                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th><tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
         </div>
@@ -324,8 +322,8 @@
 </div>
 
 <div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()" title="انتقل إلى الأعلى">⬆️</button>
-    <button class="scroll-btn" onclick="scrollToBottom()" title="انتقل إلى الأسفل">⬇️</button>
+    <button class="scroll-btn" onclick="scrollToTop()">⬆️</button>
+    <button class="scroll-btn" onclick="scrollToBottom()">⬇️</button>
 </div>
 
 <script>
@@ -349,7 +347,6 @@
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
 
-    // أسماء الأقاليم المعروضة
     const REGION_NAMES = {
         "الشمال": "🗺️ الحرس البحري بالشمال",
         "الساحل": "🗺️ الحرس البحري بالساحل",
@@ -449,7 +446,7 @@
         } catch(e) { console.error('Log error:', e); }
     }
 
-    // ==================== دوال التحديث (Refresh) ====================
+    // ==================== دوال التحديث ====================
     async function refreshMain() { await renderMain(); showToast("✅ تم تحديث الأسطول البحري"); }
     async function refreshMaint() { await renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
     async function refreshEff() { await renderEff(); showToast("✅ تم تحديث جاهزية الأسطول"); }
@@ -727,6 +724,7 @@
         const searchText = document.getElementById('searchMaint').value.toLowerCase();
         
         let filtered = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
+        
         if(fReg !== "الكل") filtered = filtered.filter(x => x.reg === fReg);
         
         if(dStart || dEnd) {
@@ -760,7 +758,7 @@
         const isAdmin = currentUser?.role === "مسؤول";
         
         if(filtered.length === 0) {
-            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
+            html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>ملاحظة: المراكب الافتراضية حالتها "صالح"، قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
         } else {
             filtered.forEach(x => {
                 let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -793,6 +791,7 @@
         showToast("✅ تم إعادة ضبط الفلاتر");
     }
     
+    // ==================== دوال الجاهزية ====================
     async function renderGeneralEfficiencyTable() {
         let data = await loadVessels();
         let totalOk = data.filter(x => x.stat === 'صالح').length;
@@ -933,7 +932,7 @@
                 }
                 
                 html += `</tbody>
-                    </table>
+                    <tr>
                     </div>
                     </div>`;
             }
@@ -948,7 +947,7 @@
                 <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></td></thead>
+                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             for(const cat of CATS_LIST) {
@@ -962,11 +961,11 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </td>`;
+                </tr>`;
             }
             
             html += `</tbody>
-                </tr>
+                </table>
                 </div>
                 </div>`;
         }
@@ -988,8 +987,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر والدعم الفني (المُصلحة) ====================
-    
+    // ==================== دوال التذاكر ====================
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
@@ -1035,9 +1033,7 @@
             return; 
         }
         
-        // استخدام المعرف كما هو (قد يكون _id من MongoDB أو id من التذكرة الجديدة)
-        const id = ticketId;
-        if (!id) {
+        if (!ticketId) {
             showToast("خطأ: معرف التذكرة غير صالح", true);
             return;
         }
@@ -1047,8 +1043,7 @@
         
         try {
             let tickets = await loadTickets();
-            // البحث باستخدام _id أو id
-            let ticket = tickets.find(t => (t._id || t.id) == id);
+            let ticket = tickets.find(t => (t._id || t.id).toString() === ticketId.toString());
             
             if(ticket) {
                 if(!ticket.replies) ticket.replies = [];
@@ -1060,7 +1055,7 @@
                 });
                 ticket.status = 'تم الرد';
                 
-                const response = await fetch(`/api/tickets/${id}`, {
+                const response = await fetch(`/api/tickets/${ticketId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(ticket)
@@ -1089,8 +1084,7 @@
             return; 
         }
         
-        const id = ticketId;
-        if (!id) {
+        if (!ticketId) {
             showToast("خطأ: معرف التذكرة غير صالح", true);
             return;
         }
@@ -1099,12 +1093,12 @@
         
         try {
             let tickets = await loadTickets();
-            let ticket = tickets.find(t => (t._id || t.id) == id);
+            let ticket = tickets.find(t => (t._id || t.id).toString() === ticketId.toString());
             
             if(ticket) {
                 ticket.status = 'مغلقة';
                 
-                const response = await fetch(`/api/tickets/${id}`, {
+                const response = await fetch(`/api/tickets/${ticketId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(ticket)
@@ -1139,7 +1133,7 @@
         html += '<th>الرسالة</th>';
         html += '<th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
-        html += '<tr></thead><tbody>';
+        html += '</tr></thead><tbody>';
         
         if(tickets.length === 0) {
             html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
@@ -1147,7 +1141,6 @@
             tickets.forEach((t, index) => {
                 let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                 let statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
-                // استخدام _id أو id للتعريف
                 const ticketIdentifier = t._id || t.id;
                 
                 html += `<tr>
@@ -1234,7 +1227,7 @@
         `;
         
         if(filtered.length === 0) {
-            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+            html += '<td><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
         } else {
             filtered.forEach((l, index) => {
                 let actionIcon = '';
@@ -1268,7 +1261,7 @@
         showToast("✅ تم إعادة ضبط فلاتر التتبع");
     }
     
-    // ==================== دوال إدارة المستخدمين ====================
+    // ==================== دوال المستخدمين ====================
     async function renderUsers() {
         if(!canManageUsers()) return;
         let users = await loadUsers();
@@ -1372,7 +1365,7 @@
         }
     }
     
-    // ==================== دوال تصدير واستيراد البيانات ====================
+    // ==================== دوال تصدير واستيراد ====================
     async function exportAllData() {
         if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
         try {
@@ -1414,7 +1407,7 @@
         input.value = "";
     }
     
-    // ==================== دوال التنقل بين الصفحات ====================
+    // ==================== دوال التنقل ====================
     function showPage(page) {
         const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
@@ -1454,7 +1447,7 @@
         }
     }
     
-    // ==================== ربط الدوال العامة ====================
+    // ==================== ربط الدوال ====================
     window.doLogin = doLogin;
     window.logout = logout;
     window.showPage = showPage;
