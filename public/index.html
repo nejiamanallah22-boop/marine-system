@@ -211,7 +211,7 @@
         <div class="scrollable-table">
             <table>
                 <thead>
-                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></td>
                 </thead>
                 <tbody id="mainBody"></tbody>
             </table>
@@ -228,7 +228,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            </table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -460,7 +460,7 @@
         showToast("✅ تم تحديث جميع الصفحات");
     }
 
-    // ==================== دوال الدخول والخروج ====================
+    // ==================== دوال الدخول والخروج (مصلحة) ====================
     async function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -486,13 +486,17 @@
             document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
             
             const isAdmin = currentUser.role === "مسؤول";
+            const isEditor = currentUser.role === "محرر";
             const isViewer = currentUser.role === "مشاهد";
             
+            // إخفاء أزرار المستخدمين للمحرر والمشاهد
             document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
             document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
             document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
+            
+            // المحرر يرى نموذج الإضافة، المشاهد لا يراه
             document.getElementById('inputArea').classList.toggle('hidden', isViewer);
             
             const fill = (id, list) => {
@@ -582,7 +586,7 @@
     async function editItem(id, name) {
         if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
         let data = await loadVessels();
-        let item = data.find(x => x._id == id || x.id == id);
+        let item = data.find(x => (x._id || x.id).toString() === id.toString());
         if(item) {
             document.getElementById('iName').value = item.name;
             document.getElementById('iNum').value = item.num || '';
@@ -715,7 +719,7 @@
             document.getElementById('mainBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMain:', error);
-            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td><tr>';
+            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -834,7 +838,7 @@
             });
             
             html += `</tbody>
-                <tr>
+                </table>
                 </div>
                 </div>`;
             document.getElementById('generalEffTableContainer').innerHTML = html;
@@ -975,7 +979,7 @@
                     <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></td></thead>
+                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 for(const cat of CATS_LIST) {
@@ -1019,7 +1023,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر ====================
+    // ==================== دوال التذاكر (مصلحة بالكامل) ====================
     
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
@@ -1167,7 +1171,7 @@
             html += '<th>الرسالة</th>';
             html += '<th>الردود</th>';
             if(canManageUsers()) html += '<th>إجراءات</th>';
-            html += '</tr></thead><tbody>';
+            html += '</td></thead><tbody>';
             
             if(tickets.length === 0) {
                 html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
@@ -1289,7 +1293,7 @@
                 });
             }
             
-            html += `</tbody></table></div>`;
+            html += `</tbody>点心</div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
