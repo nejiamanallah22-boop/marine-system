@@ -107,18 +107,26 @@
             text-align: right;
         }
 
-        /* صورة الخلفية الشفافة */
+        /* صورة الخلفية الشفافة - كامل الصفحة */
         .watermark {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            opacity: 0.15;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
             z-index: 0;
             pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .watermark img {
-            width: 200px;
+            width: 80%;
+            max-width: 700px;
             height: auto;
+            object-fit: contain;
         }
         
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark { display: none !important; } @page { size: landscape; margin: 1cm; } }
@@ -126,9 +134,9 @@
 </head>
 <body>
 
-<!-- صورة شفافة لمركب حرس بحري تونسي -->
+<!-- صورة شفافة لمركب حرس بحري تونسي - خلفية كاملة -->
 <div class="watermark">
-    <img src="https://cdn-icons-png.flaticon.com/512/3095/3095110.png" alt="مركب حرس بحري">
+    <img src="https://cdn-icons-png.flaticon.com/512/10428/10428984.png" alt="مركب حرس بحري تونسي">
 </div>
 
 <div id="loginOverlay">
@@ -222,7 +230,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            </table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -752,7 +760,7 @@
         const isAdmin = currentUser?.role === "مسؤول";
         
         if(filtered.length === 0) {
-            html = '｜｜DSML｜｜<td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
+            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
         } else {
             filtered.forEach(x => {
                 let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -954,11 +962,11 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </tr>`;
+                </td>`;
             }
             
             html += `</tbody>
-                </table>
+                </tr>
                 </div>
                 </div>`;
         }
@@ -980,7 +988,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر والدعم الفني ====================
+    // ==================== دوال التذاكر والدعم الفني (المُصلحة) ====================
     
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
@@ -1027,8 +1035,9 @@
             return; 
         }
         
-        const id = Number(ticketId);
-        if (isNaN(id)) {
+        // استخدام المعرف كما هو (قد يكون _id من MongoDB أو id من التذكرة الجديدة)
+        const id = ticketId;
+        if (!id) {
             showToast("خطأ: معرف التذكرة غير صالح", true);
             return;
         }
@@ -1038,7 +1047,8 @@
         
         try {
             let tickets = await loadTickets();
-            let ticket = tickets.find(t => Number(t.id) === id);
+            // البحث باستخدام _id أو id
+            let ticket = tickets.find(t => (t._id || t.id) == id);
             
             if(ticket) {
                 if(!ticket.replies) ticket.replies = [];
@@ -1079,8 +1089,8 @@
             return; 
         }
         
-        const id = Number(ticketId);
-        if (isNaN(id)) {
+        const id = ticketId;
+        if (!id) {
             showToast("خطأ: معرف التذكرة غير صالح", true);
             return;
         }
@@ -1089,7 +1099,7 @@
         
         try {
             let tickets = await loadTickets();
-            let ticket = tickets.find(t => Number(t.id) === id);
+            let ticket = tickets.find(t => (t._id || t.id) == id);
             
             if(ticket) {
                 ticket.status = 'مغلقة';
@@ -1129,7 +1139,7 @@
         html += '<th>الرسالة</th>';
         html += '<th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
-        html += '</tr></thead><tbody>';
+        html += '<tr></thead><tbody>';
         
         if(tickets.length === 0) {
             html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
@@ -1137,6 +1147,8 @@
             tickets.forEach((t, index) => {
                 let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                 let statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                // استخدام _id أو id للتعريف
+                const ticketIdentifier = t._id || t.id;
                 
                 html += `<tr>
                     <td>${index + 1}</td>
@@ -1164,8 +1176,8 @@
                 if(canManageUsers()) {
                     if(t.status !== 'مغلقة') {
                         html += `<td style="text-align:center;">
-                            <button class="btn-sm btn-cyan" onclick="replyToTicket(${t.id})" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
-                            <button class="btn-sm btn-red" onclick="closeTicket(${t.id})" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
+                            <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketIdentifier}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
+                            <button class="btn-sm btn-red" onclick="closeTicket('${ticketIdentifier}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
                         </td>`;
                     } else {
                         html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
@@ -1222,7 +1234,7 @@
         `;
         
         if(filtered.length === 0) {
-            html += '<td><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
         } else {
             filtered.forEach((l, index) => {
                 let actionIcon = '';
