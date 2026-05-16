@@ -303,7 +303,7 @@
         </div>
         <div class="scrollable-table">
             <table>
-                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th><tr></thead>
+                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
         </div>
@@ -961,7 +961,7 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </tr>`;
+                </td>`;
             }
             
             html += `</tbody>
@@ -1227,7 +1227,7 @@
         `;
         
         if(filtered.length === 0) {
-            html += '<td><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
         } else {
             filtered.forEach((l, index) => {
                 let actionIcon = '';
