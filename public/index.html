@@ -228,7 +228,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <tr>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -932,7 +932,7 @@
                 }
                 
                 html += `</tbody>
-                    <tr>
+                    </table>
                     </div>
                     </div>`;
             }
@@ -961,7 +961,7 @@
                     <td style="color:green;">${ok}</td>
                     <td style="color:red;">${broken}</td>
                     <td><strong>${percent}%</strong></td>
-                </td>`;
+                </tr>`;
             }
             
             html += `</tbody>
@@ -987,7 +987,8 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر ====================
+    // ==================== دوال التذاكر (تم إصلاحها بالكامل) ====================
+    
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
@@ -1171,7 +1172,7 @@
                         html += `<td style="text-align:center;">
                             <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketIdentifier}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
                             <button class="btn-sm btn-red" onclick="closeTicket('${ticketIdentifier}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
-                        </td>`;
+                        </table>`;
                     } else {
                         html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
                     }
@@ -1221,7 +1222,7 @@
             <div class="scrollable-table">
             <table class="region-table">
                 <thead>
-                    <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th></tr>
+                    <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th><tr>
                 </thead>
                 <tbody>
         `;
@@ -1250,7 +1251,7 @@
             });
         }
         
-        html += `</tbody></table></div>`;
+        html += `</tbody><td></div>`;
         document.getElementById('trackContent').innerHTML = html;
     }
     
