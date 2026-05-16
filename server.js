@@ -1,340 +1,201 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+// ==================== دوال التذاكر (تم إصلاحها بالكامل) ====================
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// ========== نماذج MongoDB ==========
-
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    pass: { type: String, required: true },
-    role: { type: String, default: 'مشاهد' },
-    enabled: { type: Boolean, default: true }
-});
-const User = mongoose.model('User', userSchema);
-
-const vesselSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    num: { type: String, default: '' },
-    len: { type: Number, default: 0 },
-    reg: { type: String, default: '' },
-    zone: { type: String, default: '' },
-    port: { type: String, default: '' },
-    supp: { type: String, default: '' },
-    stat: { type: String, default: 'صالح' },
-    break: { type: String, default: '' },
-    fDate: { type: String, default: '' },
-    eDate: { type: String, default: '' },
-    ref: { type: String, default: '' },
-    cat: { type: String, default: '' }
-});
-const Vessel = mongoose.model('Vessel', vesselSchema);
-
-const ticketSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true },
-    status: { type: String, default: 'قيد المعالجة' },
-    replies: [{
-        adminName: String,
-        reply: String,
-        date: String,
-        time: String
-    }]
-}, { timestamps: true });
-const Ticket = mongoose.model('Ticket', ticketSchema);
-
-const logSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    action: { type: String, required: true },
-    details: { type: String, default: '' },
-    date: { type: String, default: () => {
-        const now = new Date();
-        return `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
-    }},
-    time: { type: String, default: () => {
-        const now = new Date();
-        return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    }}
-});
-const Log = mongoose.model('Log', logSchema);
-
-// ========== الاتصال بقاعدة البيانات ==========
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log('✅ تم الاتصال بـ MongoDB Atlas');
-        initializeDatabase();
-    })
-    .catch(err => console.error('❌ خطأ في الاتصال:', err.message));
-
-// ========== تهيئة البيانات ==========
-async function initializeDatabase() {
+async function sendTicket() {
+    if(!currentUser) { 
+        showToast("الرجاء تسجيل الدخول أولاً", true); 
+        return; 
+    }
+    
+    const subject = document.getElementById('ticketSubject').value.trim();
+    const message = document.getElementById('ticketMessage').value.trim();
+    
+    if(!subject || !message) { 
+        showToast("يرجى إدخال عنوان ورسالة الطلب", true); 
+        return; 
+    }
+    
     try {
-        // 1. إنشاء مستخدمين
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (!adminExists) {
-            await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
-            await User.create({ name: 'editor', pass: 'editor123', role: 'محرر', enabled: true });
-            await User.create({ name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true });
-            console.log('✅ تم إنشاء المستخدمين');
+        const newTicket = {
+            userName: currentUser.name,
+            userRole: currentUser.role,
+            subject: subject,
+            message: message,
+            date: getCurrentDate(),
+            time: getCurrentTime(),
+            status: 'قيد المعالجة',
+            replies: []
+        };
+        
+        const response = await fetch('/api/tickets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newTicket)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في إرسال التذكرة');
         }
-
-        // 2. إنشاء مراكب (بينها معطوبة لسجل الصيانة)
-        const vesselsCount = await Vessel.countDocuments();
-        if (vesselsCount === 0) {
-            const defaultVessels = [
-                { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", cat: "البروق" },
-                { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", cat: "صقور" },
-                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", cat: "طوافات" },
-                { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر" },
-                { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة" },
-                { name: "البروق 2", num: "B002", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "قاعدة الساحل", stat: "معطب", break: "عطل في الكهرباء", fDate: "2025-03-20", eDate: "2025-04-15", ref: "REF003", cat: "البروق" },
-                { name: "صقر 2", num: "S002", len: 9, reg: "الوسط", zone: "المهدية", port: "المهدية", supp: "قاعدة الوسط", stat: "صيانة", break: "تغيير زيوت", fDate: "2025-03-25", eDate: "2025-04-08", ref: "REF004", cat: "صقور" }
-            ];
-            await Vessel.insertMany(defaultVessels);
-            console.log('✅ تم إنشاء 7 مراكب (3 صالح + 2 معطب + 2 صيانة)');
-        }
-
-        // 3. إنشاء تذاكر
-        const ticketsCount = await Ticket.countDocuments();
-        if (ticketsCount === 0) {
-            await Ticket.create({
-                userName: "viewer",
-                userRole: "مشاهد",
-                subject: "مشكلة في العرض",
-                message: "البيانات لا تظهر",
-                date: "15/03/2025",
-                time: "10:30",
-                status: "قيد المعالجة",
-                replies: []
-            });
-            console.log('✅ تم إنشاء تذكرة');
-        }
-
-        console.log('🎉 تم تهيئة قاعدة البيانات');
-    } catch (error) {
-        console.error('خطأ في التهيئة:', error);
+        
+        document.getElementById('ticketSubject').value = "";
+        document.getElementById('ticketMessage').value = "";
+        document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح! سيتم الرد عليك قريباً.";
+        setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
+        
+        await renderTickets();
+        await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
+        showToast("✅ تم إرسال طلبك بنجاح");
+        
+    } catch(error) {
+        console.error('خطأ في الإرسال:', error);
+        showToast("خطأ في الإرسال: " + error.message, true);
     }
 }
 
-// ========== API Routes ==========
-
-app.post('/api/login', async (req, res) => {
-    try {
-        const user = await User.findOne({ name: req.body.name, pass: req.body.pass, enabled: true });
-        if (user) {
-            res.json({ name: user.name, role: user.role });
-        } else {
-            res.status(401).json({ error: 'بيانات غير صحيحة' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+async function replyToTicket(ticketId) {
+    if(!canManageUsers()) { 
+        showToast("غير مسموح - فقط للمسؤول", true); 
+        return; 
     }
-});
-
-app.get('/api/vessels', async (req, res) => {
-    try {
-        const vessels = await Vessel.find();
-        res.json(vessels);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    
+    if (!ticketId) {
+        showToast("خطأ: معرف التذكرة غير صالح", true);
+        return;
     }
-});
-
-app.post('/api/vessels', async (req, res) => {
+    
+    const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
+    if(!replyText) return;
+    
     try {
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        res.status(201).json(vessel);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/vessels/:id', async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(vessel);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/vessels/:id', async (req, res) => {
-    try {
-        await Vessel.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/users', async (req, res) => {
-    try {
-        const users = await User.find();
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/users', async (req, res) => {
-    try {
-        const user = new User(req.body);
-        await user.save();
-        res.status(201).json(user);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/users/:id', async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(user);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/users/:id', async (req, res) => {
-    try {
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ========== إدارة التذاكر ==========
-
-app.get('/api/tickets', async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json(tickets);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/tickets', async (req, res) => {
-    try {
-        const ticket = new Ticket(req.body);
-        await ticket.save();
-        res.status(201).json(ticket);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/reply', async (req, res) => {
-    try {
-        const { reply } = req.body;
-        const ticket = await Ticket.findByIdAndUpdate(
-            req.params.id,
-            {
-                $push: { replies: reply },
-                $set: { status: 'تم الرد' }
-            },
-            { new: true }
-        );
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        res.json(ticket);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/close', async (req, res) => {
-    try {
-        const ticket = await Ticket.findByIdAndUpdate(
-            req.params.id,
-            { $set: { status: 'مغلقة' } },
-            { new: true }
-        );
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        res.json(ticket);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id', async (req, res) => {
-    try {
-        const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(ticket);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/tickets/:id', async (req, res) => {
-    try {
-        await Ticket.findByIdAndDelete(req.params.id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/logs', async (req, res) => {
-    try {
-        const logs = await Log.find().sort({ _id: -1 });
-        res.json(logs);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/logs', async (req, res) => {
-    try {
-        const log = new Log(req.body);
-        await log.save();
-        res.status(201).json(log);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/export-all', async (req, res) => {
-    try {
-        res.json({
-            vessels: await Vessel.find(),
-            users: await User.find(),
-            tickets: await Ticket.find(),
-            logs: await Log.find(),
-            exportDate: new Date().toISOString()
+        const response = await fetch(`/api/tickets/${ticketId}/reply`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reply: {
+                    adminName: currentUser.name,
+                    reply: replyText,
+                    date: getCurrentDate(),
+                    time: getCurrentTime()
+                }
+            })
         });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في حفظ الرد');
+        }
+        
+        await renderTickets();
+        await logActivity("رد على تذكرة", `قام بالرد على التذكرة`);
+        showToast("✅ تم إرسال الرد بنجاح");
+        
+    } catch(error) {
+        console.error('خطأ في الرد:', error);
+        showToast("خطأ في الرد: " + error.message, true);
     }
-});
+}
 
-app.post('/api/import-all', async (req, res) => {
+async function closeTicket(ticketId) {
+    if(!canManageUsers()) { 
+        showToast("غير مسموح - فقط للمسؤول", true); 
+        return; 
+    }
+    
+    if (!ticketId) {
+        showToast("خطأ: معرف التذكرة غير صالح", true);
+        return;
+    }
+    
+    if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
+    
     try {
-        const { vessels, users, tickets, logs } = req.body;
-        if (vessels) { await Vessel.deleteMany({}); await Vessel.insertMany(vessels); }
-        if (users) { await User.deleteMany({}); await User.insertMany(users); }
-        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
-        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        const response = await fetch(`/api/tickets/${ticketId}/close`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في إغلاق التذكرة');
+        }
+        
+        await renderTickets();
+        await logActivity("إغلاق تذكرة", `قام بإغلاق التذكرة`);
+        showToast("✅ تم إغلاق التذكرة");
+        
+    } catch(error) {
+        showToast("خطأ في الإغلاق: " + error.message, true);
     }
-});
+}
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`);
-    console.log(`📡 http://localhost:${PORT}`);
-});
+async function renderTickets() {
+    try {
+        let tickets = await loadTickets();
+        let html = '<div class="scrollable-table"><table class="region-table"><thead>';
+        html += '<tr>';
+        html += '<th>#</th>';
+        html += '<th>التاريخ</th>';
+        html += '<th>الوقت</th>';
+        html += '<th>المستخدم</th>';
+        html += '<th>العنوان</th>';
+        html += '<th>الحالة</th>';
+        html += '<th>الرسالة</th>';
+        html += '<th>الردود</th>';
+        if(canManageUsers()) html += '<th>إجراءات</th>';
+        html += '<tr></thead><tbody>';
+        
+        if(tickets.length === 0) {
+            html += ' hilab <td colspan="9">📭 لا توجد تذاكر</td> </tr>';
+        } else {
+            tickets.forEach((t, index) => {
+                const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
+                const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                const ticketId = t._id;
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${t.date || '-'}</td>
+                    <td>${t.time || '-'}</td>
+                    <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
+                    <td><strong>${t.subject}</strong></td>
+                    <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
+                    <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
+                    <td style="max-width:300px; text-align:right;">`;
+                
+                if(t.replies && t.replies.length > 0) {
+                    t.replies.forEach(reply => {
+                        html += `<div class="ticket-reply">
+                            <small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small>
+                            <p style="margin:5px 0 0 0;">📝 ${reply.reply}</p>
+                        </div>`;
+                    });
+                } else {
+                    html += '<span style="color:#999;">لا توجد ردود</span>';
+                }
+                
+                html += `</td>`;
+                
+                if(canManageUsers()) {
+                    if(t.status !== 'مغلقة') {
+                        html += `<td style="text-align:center;">
+                            <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
+                            <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
+                        </td>`;
+                    } else {
+                        html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
+                    }
+                } else {
+                    html += `<td>-</td>`;
+                }
+                
+                html += `</tr>`;
+            });
+        }
+        
+        html += `</tbody>点心</div>`;
+        document.getElementById('ticketsList').innerHTML = html;
+    } catch(error) {
+        console.error('خطأ في renderTickets:', error);
+        document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>';
+    }
+}
