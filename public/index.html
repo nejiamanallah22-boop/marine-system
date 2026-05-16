@@ -1,3 +1,4 @@
+ 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -228,12 +229,12 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <tr>
+            </table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="maintBody"></tbody>
-            <table>
+            <tr>
         </div>
     </div>
 
@@ -302,8 +303,8 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            </table>
-                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
+            <table>
+                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></td></thead>
                 <tbody id="usersBody"></tbody>
             </table>
         </div>
@@ -688,7 +689,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '</table><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة<\/td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -715,7 +716,7 @@
             document.getElementById('mainBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMain:', error);
-            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
+            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات<\/td></table>';
         }
     }
     
@@ -767,7 +768,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small><\/td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -791,7 +792,7 @@
             document.getElementById('maintBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMaint:', error);
-            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
+            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات<\/td></tr>';
         }
     }
     
@@ -816,7 +817,7 @@
                 <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead></table><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             CATS_LIST.forEach(cat => {
@@ -834,7 +835,7 @@
             });
             
             html += `</tbody>
-            </table>
+            <tr>
             </div>
             </div>`;
             document.getElementById('generalEffTableContainer').innerHTML = html;
@@ -961,8 +962,8 @@
                     
                     html += `</tbody>
                     </table>
-                        </div>
-                        </div>`;
+                    </div>
+                    </div>`;
                 }
             } else {
                 let regData = data.filter(x => x.reg === selectedRegion);
@@ -1019,13 +1020,10 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر (المُصلحة) ====================
+    // ==================== دوال التذاكر (تم إصلاحها نهائياً) ====================
     
     async function sendTicket() {
-        if(!currentUser) { 
-            showToast("الرجاء تسجيل الدخول أولاً", true); 
-            return; 
-        }
+        if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
         const subject = document.getElementById('ticketSubject').value.trim();
         const message = document.getElementById('ticketMessage').value.trim();
@@ -1036,6 +1034,7 @@
         }
         
         try {
+            // تم إزالة id: Date.now() لأن MongoDB ينشئ _id تلقائياً
             const newTicket = {
                 userName: currentUser.name,
                 userRole: currentUser.role,
@@ -1047,28 +1046,18 @@
                 replies: []
             };
             
-            const response = await fetch('/api/tickets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newTicket)
-            });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل في الإرسال');
-            }
+            await saveTicket(newTicket);
             
             document.getElementById('ticketSubject').value = "";
             document.getElementById('ticketMessage').value = "";
-            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح!";
-            setTimeout(() => document.getElementById('ticketResponse').innerHTML = "", 3000);
+            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح! سيتم الرد عليك قريباً.";
+            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
             
             await renderTickets();
-            await logActivity("إرسال تذكرة", `أرسل: ${subject}`);
-            showToast("✅ تم الإرسال");
+            await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
+            showToast("✅ تم إرسال طلبك بنجاح");
         } catch(error) {
-            console.error(error);
-            showToast("خطأ: " + error.message, true);
+            showToast("خطأ في الإرسال: " + error.message, true);
         }
     }
     
@@ -1083,10 +1072,11 @@
             return;
         }
         
-        const replyText = prompt("✏️ أدخل ردك:");
+        const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
         if(!replyText) return;
         
         try {
+            // استخدام route مخصص للرد مع المعرف الصحيح
             const response = await fetch(`/api/tickets/${ticketId}/reply`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1102,32 +1092,34 @@
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'فشل الرد');
+                throw new Error(error.error || 'فشل في حفظ الرد');
             }
             
             await renderTickets();
-            await logActivity("رد على تذكرة", `رد على التذكرة`);
-            showToast("✅ تم الرد");
+            await logActivity("رد على تذكرة", `قام بالرد على التذكرة`);
+            showToast("✅ تم إرسال الرد بنجاح");
+            
         } catch(error) {
-            console.error(error);
-            showToast("خطأ: " + error.message, true);
+            console.error('خطأ في الرد:', error);
+            showToast("خطأ في الرد: " + error.message, true);
         }
     }
     
     async function closeTicket(ticketId) {
         if(!canManageUsers()) { 
-            showToast("غير مسموح", true); 
+            showToast("غير مسموح - فقط للمسؤول", true); 
             return; 
         }
         
         if (!ticketId) {
-            showToast("خطأ: معرف غير صالح", true);
+            showToast("خطأ: معرف التذكرة غير صالح", true);
             return;
         }
         
-        if(!confirm("إغلاق التذكرة؟")) return;
+        if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
         
         try {
+            // استخدام route مخصص للإغلاق
             const response = await fetch(`/api/tickets/${ticketId}/close`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
@@ -1135,14 +1127,15 @@
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'فشل الإغلاق');
+                throw new Error(error.error || 'فشل في إغلاق التذكرة');
             }
             
             await renderTickets();
-            await logActivity("إغلاق تذكرة", `أغلق التذكرة`);
-            showToast("✅ تم الإغلاق");
+            await logActivity("إغلاق تذكرة", `قام بإغلاق التذكرة`);
+            showToast("✅ تم إغلاق التذكرة");
+            
         } catch(error) {
-            showToast("خطأ: " + error.message, true);
+            showToast("خطأ في الإغلاق: " + error.message, true);
         }
     }
     
@@ -1163,11 +1156,12 @@
             html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر<\/td></tr>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                     const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                    // استخدام _id من MongoDB
                     const ticketId = t._id;
                     
                     html += `<tr>
@@ -1176,19 +1170,19 @@
                         <td>${t.time || '-'}</td>
                         <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
                         <td><strong>${t.subject}</strong></td>
-                        <td style="color:${statusColor}">${statusText}</td>
-                        <td style="max-width:250px">${t.message || '-'}</td>
-                        <td style="max-width:300px">`;
+                        <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
+                        <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
+                        <td style="max-width:300px; text-align:right;">`;
                     
                     if(t.replies && t.replies.length > 0) {
                         t.replies.forEach(reply => {
                             html += `<div class="ticket-reply">
                                 <small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small>
-                                <p>📝 ${reply.reply}</p>
+                                <p style="margin:5px 0 0 0;">📝 ${reply.reply}</p>
                             </div>`;
                         });
                     } else {
-                        html += '<span style="color:#999;">لا ردود</span>';
+                        html += '<span style="color:#999;">لا توجد ردود</span>';
                     }
                     
                     html += `</td>`;
@@ -1196,8 +1190,8 @@
                     if(canManageUsers()) {
                         if(t.status !== 'مغلقة') {
                             html += `<td style="text-align:center;">
-                                <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')">💬 رد</button>
-                                <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')">🔒 إغلاق</button>
+                                <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
+                                <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
                             </td>`;
                         } else {
                             html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
@@ -1206,14 +1200,14 @@
                         html += `<td>-</td>`;
                     }
                     
-                    html += `<tr>`;
+                    html += `</tr>`;
                 });
             }
             
-            html += `</tbody></table></div>`;
+            html += `</tbody></td></div>`;
             document.getElementById('ticketsList').innerHTML = html;
         } catch(error) {
-            console.error(error);
+            console.error('خطأ في renderTickets:', error);
             document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>';
         }
     }
@@ -1259,7 +1253,7 @@
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة<\/td></tr>';
             } else {
                 filtered.forEach((l, index) => {
                     let actionIcon = '';
@@ -1282,7 +1276,7 @@
                 });
             }
             
-            html += `</tbody></table></div>`;
+            html += `</tbody></tr></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
