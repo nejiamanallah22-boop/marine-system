@@ -107,6 +107,13 @@
             text-align: right;
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -671,7 +678,7 @@
                  </td>
             </tr>`;
         });
-        document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>';
+        document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات<\/td></tr>';
     }
     
     function clearMainSearch() {
@@ -720,7 +727,7 @@
         const isAdmin = currentUser?.role === "مسؤول";
         
         if(filtered.length === 0) {
-            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+            html = '<tr><td colspan="10">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<\/td></tr>';
         } else {
             filtered.forEach(x => {
                 html += `<tr>
@@ -923,7 +930,7 @@
             }
             
             html += `</tbody>
-                </table>
+                <tr>
                 </div>
                 </div>`;
         }
@@ -1050,9 +1057,17 @@
     async function renderTickets() {
         let tickets = await loadTickets();
         let html = '<div class="scrollable-table"><table class="region-table"><thead>';
-        html += '<th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
+        html += '<tr>';
+        html += '<th>#</th>';
+        html += '<th>التاريخ</th>';
+        html += '<th>الوقت</th>';
+        html += '<th>المستخدم</th>';
+        html += '<th>العنوان</th>';
+        html += '<th>الحالة</th>';
+        html += '<th>الرسالة</th>';
+        html += '<th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
-        html += '</thead><tbody>';
+        html += '</tr></thead><tbody>';
         
         if(tickets.length === 0) {
             html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
@@ -1065,7 +1080,7 @@
                     <td>${index + 1}</td>
                     <td>${t.date || '-'}</td>
                     <td>${t.time || '-'}</td>
-                    <td><b>${t.userName}</b><br><small style="font-size:10px;">${t.userRole || ''}</small></td>
+                    <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
                     <td><strong>${t.subject}</strong></td>
                     <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
                     <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
@@ -1084,13 +1099,15 @@
                 
                 html += `</td>`;
                 
-                if(canManageUsers() && t.status !== 'مغلقة') {
-                    html += `<td>
-                        <button class="btn-sm btn-cyan" onclick="replyToTicket(${t.id})" style="margin:2px;">💬 رد</button>
-                        <button class="btn-sm btn-red" onclick="closeTicket(${t.id})" style="margin:2px;">🔒 إغلاق</button>
-                    </td>`;
-                } else if(canManageUsers() && t.status === 'مغلقة') {
-                    html += `<td><span style="color:green;">✅ مغلقة</span></td>`;
+                if(canManageUsers()) {
+                    if(t.status !== 'مغلقة') {
+                        html += `<td style="text-align:center;">
+                            <button class="btn-sm btn-cyan" onclick="replyToTicket(${t.id})" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
+                            <button class="btn-sm btn-red" onclick="closeTicket(${t.id})" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
+                        </td>`;
+                    } else {
+                        html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
+                    }
                 } else {
                     html += `<td>-</td>`;
                 }
