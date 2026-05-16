@@ -230,7 +230,7 @@
         <div class="scrollable-table">
             </table>
                 <thead>
-                    <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th><tr>
                 </thead>
                 <tbody id="maintBody"></tbody>
             </table>
@@ -460,7 +460,7 @@
         showToast("✅ تم تحديث جميع الصفحات");
     }
 
-    // ==================== دوال الدخول والخروج (مصلحة) ====================
+    // ==================== دوال الدخول والخروج ====================
     async function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -486,17 +486,13 @@
             document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
             
             const isAdmin = currentUser.role === "مسؤول";
-            const isEditor = currentUser.role === "محرر";
             const isViewer = currentUser.role === "مشاهد";
             
-            // إخفاء أزرار المستخدمين للمحرر والمشاهد
             document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
             document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
             document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
-            
-            // المحرر يرى نموذج الإضافة، المشاهد لا يراه
             document.getElementById('inputArea').classList.toggle('hidden', isViewer);
             
             const fill = (id, list) => {
@@ -795,7 +791,7 @@
             document.getElementById('maintBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMaint:', error);
-            document.getElementById('maintBody').innerHTML = '<td><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
+            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -820,7 +816,7 @@
                 <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             CATS_LIST.forEach(cat => {
@@ -946,7 +942,7 @@
                         <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                         <div class="scrollable-table">
                         <table class="region-table">
-                            <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                             <tbody>`;
                     
                     for(const cat of CATS_LIST) {
@@ -979,7 +975,7 @@
                     <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 for(const cat of CATS_LIST) {
@@ -1023,7 +1019,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر (مصلحة بالكامل) ====================
+    // ==================== دوال التذاكر (تم إصلاح الرد) ====================
     
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
@@ -1171,7 +1167,7 @@
             html += '<th>الرسالة</th>';
             html += '<th>الردود</th>';
             if(canManageUsers()) html += '<th>إجراءات</th>';
-            html += '</td></thead><tbody>';
+            html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
                 html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
@@ -1264,7 +1260,7 @@
                 <div class="scrollable-table">
                 <table class="region-table">
                     <thead>
-                        <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th></tr>
+                        <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th></td>
                     </thead>
                     <tbody>
             `;
@@ -1293,7 +1289,7 @@
                 });
             }
             
-            html += `</tbody>点心</div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
