@@ -209,7 +209,7 @@
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <tr>
+            <table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
                 </thead>
@@ -220,21 +220,15 @@
 
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="🔍 بحث" onkeyup="renderMaint()" style="flex:1;">
-            <label>الإقليم:</label><select id="fRegMaint" onchange="renderMaint()">
-                <option value="الكل">الكل</option>
-                <option value="الشمال">الشمال</option>
-                <option value="الساحل">الساحل</option>
-                <option value="الوسط">الوسط</option>
-                <option value="الجنوب">الجنوب</option>
-            </select>
+            <input type="text" id="searchMaint" placeholder="🔍 بحث" onkeyup="renderMaint()">
+            <label>الإقليم:</label><select id="fRegMaint" onchange="renderMaint()"><option value="الكل">الكل</option></select>
             <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
             <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
             <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <tr>
+            </table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -311,7 +305,7 @@
             <table>
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
-            </tr>
+            </table>
         </div>
     </div>
 </div>
@@ -694,7 +688,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة<\/td></tr>';
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td><tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -721,7 +715,7 @@
             document.getElementById('mainBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMain:', error);
-            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات<\/td></tr>';
+            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -738,7 +732,6 @@
             const dEnd = document.getElementById('fDateEnd').value;
             const searchText = document.getElementById('searchMaint').value.toLowerCase();
             
-            // تصفية المراكب المعطوبة والتي تحت الصيانة
             let filtered = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
             
             if(fReg !== "الكل") filtered = filtered.filter(x => x.reg === fReg);
@@ -774,7 +767,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small><\/td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -798,7 +791,7 @@
             document.getElementById('maintBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMaint:', error);
-            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات<\/td></tr>';
+            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -823,7 +816,7 @@
                 <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             CATS_LIST.forEach(cat => {
@@ -836,14 +829,14 @@
                     <td>${cat}</td>
                     <td style="color:green; font-weight:bold;">${ok}</td>
                     <td style="color:red; font-weight:bold;">${broken}</td>
-                    <td><strong>${percent}%</strong><td>
+                    <td><strong>${percent}%</strong></td>
                 </tr>`;
             });
             
             html += `</tbody>
-            </td>
-            </div>
-            </div>`;
+                </table>
+                </div>
+                </div>`;
             document.getElementById('generalEffTableContainer').innerHTML = html;
         } catch(error) {
             console.error('خطأ:', error);
@@ -949,7 +942,7 @@
                         <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                         <div class="scrollable-table">
                         <table class="region-table">
-                            <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                             <tbody>`;
                     
                     for(const cat of CATS_LIST) {
@@ -967,9 +960,9 @@
                     }
                     
                     html += `</tbody>
-                    </table>
-                    </div>
-                    </div>`;
+                        </table>
+                        </div>
+                        </div>`;
                 }
             } else {
                 let regData = data.filter(x => x.reg === selectedRegion);
@@ -982,7 +975,7 @@
                     <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 for(const cat of CATS_LIST) {
@@ -1026,7 +1019,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر ====================
+    // ==================== دوال التذاكر (تم إصلاح الرد نهائياً) ====================
     
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
@@ -1066,6 +1059,7 @@
         }
     }
     
+    // 🔧 الدالة المصححة للرد على التذاكر
     async function replyToTicket(ticketId) {
         if(!canManageUsers()) { 
             showToast("غير مسموح - فقط للمسؤول", true); 
@@ -1081,6 +1075,7 @@
         if(!replyText) return;
         
         try {
+            // استخدام route مخصص للرد
             const response = await fetch(`/api/tickets/${ticketId}/reply`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1109,6 +1104,7 @@
         }
     }
     
+    // 🔧 الدالة المصححة لإغلاق التذكرة
     async function closeTicket(ticketId) {
         if(!canManageUsers()) { 
             showToast("غير مسموح - فقط للمسؤول", true); 
@@ -1123,6 +1119,7 @@
         if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
         
         try {
+            // استخدام route مخصص للإغلاق
             const response = await fetch(`/api/tickets/${ticketId}/close`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
@@ -1142,6 +1139,7 @@
         }
     }
     
+    // 🔧 دالة عرض التذاكر (باستخدام _id)
     async function renderTickets() {
         try {
             let tickets = await loadTickets();
@@ -1159,11 +1157,12 @@
             html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<tr><td colspan="9">📭 لا توجد تذاكر<\/td></tr>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                     const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                    // استخدام _id من MongoDB
                     const ticketId = t._id;
                     
                     html += `<tr>
@@ -1194,7 +1193,7 @@
                             html += `<td style="text-align:center;">
                                 <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
                                 <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
-                            </table>`;
+                            </td>`;
                         } else {
                             html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
                         }
@@ -1255,7 +1254,7 @@
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة<\/td></tr>';
+                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
             } else {
                 filtered.forEach((l, index) => {
                     let actionIcon = '';
@@ -1278,7 +1277,7 @@
                 });
             }
             
-            html += `</tbody></tr></div>`;
+            html += `</tbody></td></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
