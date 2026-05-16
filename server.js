@@ -15,9 +15,9 @@ app.use(express.static('public'));
 
 // ========== نماذج MongoDB ==========
 
-// نموذج المستخدم (تم إصلاحه لمنع تكرار null)
+// نموذج المستخدم
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
     role: { type: String, default: 'مشاهد' },
     enabled: { type: Boolean, default: true }
@@ -42,16 +42,17 @@ const vesselSchema = new mongoose.Schema({
 });
 const Vessel = mongoose.model('Vessel', vesselSchema);
 
-// نموذج التذاكر
+// نموذج التذاكر (الدعم الفني)
 const ticketSchema = new mongoose.Schema({
+    id: { type: Number, required: true, unique: true },
     userName: { type: String, required: true },
+    userRole: { type: String, required: true },
     subject: { type: String, required: true },
     message: { type: String, required: true },
-    date: { type: String, default: () => {
-        const now = new Date();
-        return `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
-    }},
-    status: { type: String, default: 'قيد المعالجة' }
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    status: { type: String, default: 'قيد المعالجة' },
+    replies: { type: Array, default: [] }
 });
 const Ticket = mongoose.model('Ticket', ticketSchema);
 
@@ -82,52 +83,27 @@ mongoose.connect(process.env.MONGO_URI)
         console.error('❌ خطأ في الاتصال بـ MongoDB:', err.message);
     });
 
-// ========== تنظيف قاعدة البيانات من المستخدم الفارغ ==========
-async function cleanupDatabase() {
-    try {
-        // حذف أي مستخدم name يساوي null أو فارغ
-        const result = await User.deleteMany({ 
-            $or: [
-                { name: null },
-                { name: "" },
-                { name: { $exists: false } }
-            ]
-        });
-        if (result.deletedCount > 0) {
-            console.log(`🧹 تم حذف ${result.deletedCount} مستخدم فارغ`);
-        }
-    } catch (error) {
-        console.error('خطأ في التنظيف:', error);
-    }
-}
-
-// ========== تهيئة قاعدة البيانات (إنشاء بيانات افتراضية) ==========
+// تهيئة قاعدة البيانات (إنشاء بيانات افتراضية)
 async function initializeDatabase() {
     try {
-        // أولاً: تنظيف قاعدة البيانات من المستخدمين الفارغين
-        await cleanupDatabase();
-        
-        // إنشاء مستخدمين افتراضيين (باستخدام updateOne مع upsert لتجنب تكرار الأخطاء)
-        await User.updateOne(
-            { name: 'admin' },
-            { name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true },
-            { upsert: true }
-        );
-        console.log('✅ تم التأكد من وجود المستخدم: admin');
+        // إنشاء مستخدمين افتراضيين
+        const adminExists = await User.findOne({ name: 'admin' });
+        if (!adminExists) {
+            await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
+            console.log('✅ تم إنشاء المستخدم: admin / admin123 (مسؤول)');
+        }
 
-        await User.updateOne(
-            { name: 'editor' },
-            { name: 'editor', pass: 'editor123', role: 'محرر', enabled: true },
-            { upsert: true }
-        );
-        console.log('✅ تم التأكد من وجود المستخدم: editor');
+        const editorExists = await User.findOne({ name: 'editor' });
+        if (!editorExists) {
+            await User.create({ name: 'editor', pass: 'editor123', role: 'محرر', enabled: true });
+            console.log('✅ تم إنشاء المستخدم: editor / editor123 (محرر)');
+        }
 
-        await User.updateOne(
-            { name: 'viewer' },
-            { name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true },
-            { upsert: true }
-        );
-        console.log('✅ تم التأكد من وجود المستخدم: viewer');
+        const viewerExists = await User.findOne({ name: 'viewer' });
+        if (!viewerExists) {
+            await User.create({ name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true });
+            console.log('✅ تم إنشاء المستخدم: viewer / viewer123 (مشاهد)');
+        }
 
         // إنشاء مراكب افتراضية إذا لم توجد
         const vesselsCount = await Vessel.countDocuments();
@@ -143,7 +119,7 @@ async function initializeDatabase() {
             console.log('✅ تم إنشاء 5 مراكب افتراضية');
         }
     } catch (error) {
-        console.error('❌ خطأ في تهيئة قاعدة البيانات:', error.message);
+        console.error('خطأ في تهيئة قاعدة البيانات:', error);
     }
 }
 
@@ -174,12 +150,8 @@ app.get('/api/check-users', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { name, pass } = req.body;
     
-    if (!name || !pass) {
-        return res.status(400).json({ error: 'الرجاء إدخال اسم المستخدم وكلمة المرور' });
-    }
-    
     try {
-        const user = await User.findOne({ name: name, pass: pass, enabled: true });
+        const user = await User.findOne({ name, pass, enabled: true });
         
         if (user) {
             res.json({ 
@@ -271,10 +243,10 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// ========== إدارة التذاكر ==========
+// ========== إدارة التذاكر (الدعم الفني) ==========
 app.get('/api/tickets', async (req, res) => {
     try {
-        const tickets = await Ticket.find().sort({ _id: -1 });
+        const tickets = await Ticket.find().sort({ id: -1 });
         res.json(tickets);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -286,6 +258,34 @@ app.post('/api/tickets', async (req, res) => {
         const ticket = new Ticket(req.body);
         await ticket.save();
         res.status(201).json(ticket);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/tickets/:id', async (req, res) => {
+    try {
+        const ticketId = parseInt(req.params.id);
+        const ticket = await Ticket.findOneAndUpdate(
+            { id: ticketId },
+            req.body,
+            { new: true }
+        );
+        
+        if (!ticket) {
+            return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        }
+        
+        res.json(ticket);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/tickets/:id', async (req, res) => {
+    try {
+        await Ticket.findOneAndDelete({ id: parseInt(req.params.id) });
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
