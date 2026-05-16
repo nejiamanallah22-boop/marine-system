@@ -668,7 +668,7 @@
                 <td>
                     ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
                     ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                </td>
+                 </td>
             </tr>`;
         });
         document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13">لا توجد بيانات</td></tr>';
@@ -873,7 +873,7 @@
                     <div class="region-table-header">📍 ${region} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                     <div class="scrollable-table">
                     <table class="region-table">
-                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                        <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
                 for(const cat of CATS_LIST) {
@@ -905,7 +905,7 @@
                 <div class="region-table-header">📍 ${selectedRegion} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <thead>汽<th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             for(const cat of CATS_LIST) {
@@ -987,7 +987,10 @@
     }
     
     async function replyToTicket(ticketId) {
-        if(!canManageUsers()) { showToast("غير مسموح - فقط للمسؤول", true); return; }
+        if(!canManageUsers()) { 
+            showToast("غير مسموح - فقط للمسؤول", true); 
+            return; 
+        }
         
         const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
         if(!replyText) return;
@@ -1010,6 +1013,8 @@
                 await renderTickets();
                 await logActivity("رد على تذكرة", `قام بالرد على تذكرة: ${ticket.subject}`);
                 showToast("✅ تم إرسال الرد بنجاح");
+            } else {
+                showToast("❌ لم يتم العثور على التذكرة", true);
             }
         } catch(error) {
             showToast("خطأ في الرد: " + error.message, true);
@@ -1017,7 +1022,10 @@
     }
     
     async function closeTicket(ticketId) {
-        if(!canManageUsers()) { showToast("غير مسموح - فقط للمسؤول", true); return; }
+        if(!canManageUsers()) { 
+            showToast("غير مسموح - فقط للمسؤول", true); 
+            return; 
+        }
         
         if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
         
@@ -1031,6 +1039,8 @@
                 await renderTickets();
                 await logActivity("إغلاق تذكرة", `قام بإغلاق تذكرة: ${ticket.subject}`);
                 showToast("✅ تم إغلاق التذكرة");
+            } else {
+                showToast("❌ لم يتم العثور على التذكرة", true);
             }
         } catch(error) {
             showToast("خطأ في الإغلاق: " + error.message, true);
@@ -1040,9 +1050,9 @@
     async function renderTickets() {
         let tickets = await loadTickets();
         let html = '<div class="scrollable-table"><table class="region-table"><thead>';
-        html += '<tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
+        html += '<th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th>';
         if(canManageUsers()) html += '<th>إجراءات</th>';
-        html += '</tr></thead><tbody>';
+        html += '</thead><tbody>';
         
         if(tickets.length === 0) {
             html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
