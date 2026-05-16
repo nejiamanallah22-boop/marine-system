@@ -42,7 +42,7 @@ const vesselSchema = new mongoose.Schema({
 });
 const Vessel = mongoose.model('Vessel', vesselSchema);
 
-// نموذج التذاكر (الدعم الفني)
+// نموذج التذاكر
 const ticketSchema = new mongoose.Schema({
     id: { type: Number, required: true, unique: true },
     userName: { type: String, required: true },
@@ -83,43 +83,107 @@ mongoose.connect(process.env.MONGO_URI)
         console.error('❌ خطأ في الاتصال بـ MongoDB:', err.message);
     });
 
-// تهيئة قاعدة البيانات (إنشاء بيانات افتراضية)
+// ========== تهيئة قاعدة البيانات (بيانات افتراضية كاملة) ==========
 async function initializeDatabase() {
     try {
-        // إنشاء مستخدمين افتراضيين
+        // 1. إنشاء مستخدمين افتراضيين
         const adminExists = await User.findOne({ name: 'admin' });
         if (!adminExists) {
             await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: admin / admin123 (مسؤول)');
+            console.log('✅ تم إنشاء المستخدم: admin / admin123');
         }
 
         const editorExists = await User.findOne({ name: 'editor' });
         if (!editorExists) {
             await User.create({ name: 'editor', pass: 'editor123', role: 'محرر', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: editor / editor123 (محرر)');
+            console.log('✅ تم إنشاء المستخدم: editor / editor123');
         }
 
         const viewerExists = await User.findOne({ name: 'viewer' });
         if (!viewerExists) {
             await User.create({ name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true });
-            console.log('✅ تم إنشاء المستخدم: viewer / viewer123 (مشاهد)');
+            console.log('✅ تم إنشاء المستخدم: viewer / viewer123');
         }
 
-        // إنشاء مراكب افتراضية إذا لم توجد
+        // 2. إنشاء مراكب افتراضية (بينها معطوبة لسجل الصيانة)
         const vesselsCount = await Vessel.countDocuments();
         if (vesselsCount === 0) {
             const defaultVessels = [
                 { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
                 { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
+                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" },
                 { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر" },
                 { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة" },
-                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" }
+                { name: "البروق 2", num: "B002", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "قاعدة الساحل", stat: "معطب", break: "عطل في الكهرباء", fDate: "2025-03-20", eDate: "2025-04-15", ref: "REF003", cat: "البروق" },
+                { name: "صقر 2", num: "S002", len: 9, reg: "الوسط", zone: "المهدية", port: "المهدية", supp: "قاعدة الوسط", stat: "صيانة", break: "تغيير زيوت", fDate: "2025-03-25", eDate: "2025-04-08", ref: "REF004", cat: "صقور" },
+                { name: "زورق 2", num: "Z002", len: 8, reg: "الشمال", zone: "طبرقة", port: "طبرقة", supp: "قاعدة الشمال", stat: "معطب", break: "عطل في المضخة", fDate: "2025-03-05", eDate: "2025-04-20", ref: "REF005", cat: "زوارق مزدوجة" },
+                { name: "طوافة 2", num: "T002", len: 40, reg: "الساحل", zone: "نابل", port: "نابل", supp: "قاعدة الساحل", stat: "صيانة", break: "صيانة شاملة", fDate: "2025-03-01", eDate: "2025-04-25", ref: "REF006", cat: "طوافات" },
+                { name: "خافرة 2", num: "K002", len: 22, reg: "الجنوب", zone: "قابس", port: "قابس", supp: "قاعدة الجنوب", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "خوافر" }
             ];
             await Vessel.insertMany(defaultVessels);
-            console.log('✅ تم إنشاء 5 مراكب افتراضية');
+            console.log('✅ تم إنشاء 10 مراكب (5 صالح + 3 معطب + 2 صيانة)');
         }
+
+        // 3. إنشاء تذاكر افتراضية
+        const ticketsCount = await Ticket.countDocuments();
+        if (ticketsCount === 0) {
+            const defaultTickets = [
+                {
+                    id: 1001,
+                    userName: "viewer",
+                    userRole: "مشاهد",
+                    subject: "مشكلة في عرض البيانات",
+                    message: "لا تظهر البيانات في جدول الأسطول البحري",
+                    date: "15/03/2025",
+                    time: "10:30",
+                    status: "مغلقة",
+                    replies: [{ adminName: "admin", reply: "تم تحديث الصفحة، يرجى إعادة التحميل", date: "16/03/2025", time: "09:00" }]
+                },
+                {
+                    id: 1002,
+                    userName: "editor",
+                    userRole: "محرر",
+                    subject: "طلب إضافة صلاحية",
+                    message: "أحتاج إلى صلاحية الحذف لإدارة المراكب",
+                    date: "18/03/2025",
+                    time: "14:20",
+                    status: "تم الرد",
+                    replies: [{ adminName: "admin", reply: "صلاحية الحذف مخصصة فقط للمسؤول", date: "19/03/2025", time: "11:30" }]
+                },
+                {
+                    id: 1003,
+                    userName: "admin",
+                    userRole: "مسؤول",
+                    subject: "اختبار نظام التذاكر",
+                    message: "هذا اختبار للتأكد من عمل نظام التذاكر بشكل صحيح",
+                    date: "20/03/2025",
+                    time: "09:45",
+                    status: "قيد المعالجة",
+                    replies: []
+                }
+            ];
+            await Ticket.insertMany(defaultTickets);
+            console.log('✅ تم إنشاء 3 تذاكر افتراضية');
+        }
+
+        // 4. إنشاء سجل نشاطات افتراضي
+        const logsCount = await Log.countDocuments();
+        if (logsCount === 0) {
+            const defaultLogs = [
+                { userName: "admin", userRole: "مسؤول", action: "تسجيل دخول", details: "سجل الدخول إلى النظام", date: "15/03/2025", time: "08:00" },
+                { userName: "admin", userRole: "مسؤول", action: "إضافة مركب", details: "أضاف مركب البروق 1", date: "15/03/2025", time: "08:30" },
+                { userName: "editor", userRole: "محرر", action: "تسجيل دخول", details: "سجل الدخول إلى النظام", date: "15/03/2025", time: "09:00" },
+                { userName: "editor", userRole: "محرر", action: "تعديل مركب", details: "عدل مركب صقر 1", date: "15/03/2025", time: "09:45" },
+                { userName: "viewer", userRole: "مشاهد", action: "تسجيل دخول", details: "سجل الدخول إلى النظام", date: "15/03/2025", time: "10:15" },
+                { userName: "admin", userRole: "مسؤول", action: "رد على تذكرة", details: "رد على تذكرة المستخدم viewer", date: "16/03/2025", time: "09:00" }
+            ];
+            await Log.insertMany(defaultLogs);
+            console.log('✅ تم إنشاء سجل نشاطات افتراضي');
+        }
+
+        console.log('🎉 تم تهيئة قاعدة البيانات بنجاح!');
     } catch (error) {
-        console.error('خطأ في تهيئة قاعدة البيانات:', error);
+        console.error('❌ خطأ في تهيئة قاعدة البيانات:', error);
     }
 }
 
@@ -127,7 +191,7 @@ async function initializeDatabase() {
 app.get('/api/test', (req, res) => {
     res.json({ 
         status: 'success', 
-        message: 'السيرفر يعمل بنجاح ✅',
+        message: 'السيرفر يعمل بنجاح',
         time: new Date().toISOString()
     });
 });
@@ -164,7 +228,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ========== إدارة المراكب ==========
+// إدارة المراكب
 app.get('/api/vessels', async (req, res) => {
     try {
         const vessels = await Vessel.find();
@@ -202,7 +266,7 @@ app.delete('/api/vessels/:id', async (req, res) => {
     }
 });
 
-// ========== إدارة المستخدمين ==========
+// إدارة المستخدمين
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find();
@@ -240,7 +304,7 @@ app.delete('/api/users/:id', async (req, res) => {
     }
 });
 
-// ========== إدارة التذاكر (الدعم الفني) ==========
+// إدارة التذاكر
 app.get('/api/tickets', async (req, res) => {
     try {
         const tickets = await Ticket.find().sort({ id: -1 });
@@ -262,7 +326,7 @@ app.post('/api/tickets', async (req, res) => {
 
 app.put('/api/tickets/:id', async (req, res) => {
     try {
-        const ticketId = Number(req.params.id);
+        const ticketId = parseInt(req.params.id);
         
         if (isNaN(ticketId)) {
             return res.status(400).json({ error: 'معرف التذكرة غير صالح' });
@@ -286,7 +350,7 @@ app.put('/api/tickets/:id', async (req, res) => {
 
 app.delete('/api/tickets/:id', async (req, res) => {
     try {
-        const ticketId = Number(req.params.id);
+        const ticketId = parseInt(req.params.id);
         
         if (isNaN(ticketId)) {
             return res.status(400).json({ error: 'معرف التذكرة غير صالح' });
@@ -299,7 +363,7 @@ app.delete('/api/tickets/:id', async (req, res) => {
     }
 });
 
-// ========== إدارة سجل النشاطات ==========
+// إدارة سجل النشاطات
 app.get('/api/logs', async (req, res) => {
     try {
         const logs = await Log.find().sort({ _id: -1 });
@@ -319,7 +383,7 @@ app.post('/api/logs', async (req, res) => {
     }
 });
 
-// ========== تصدير واستيراد جميع البيانات ==========
+// تصدير واستيراد البيانات
 app.get('/api/export-all', async (req, res) => {
     try {
         const vessels = await Vessel.find();
@@ -366,7 +430,7 @@ app.post('/api/import-all', async (req, res) => {
     }
 });
 
-// ========== تشغيل السيرفر ==========
+// تشغيل السيرفر
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`);
