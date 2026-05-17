@@ -1,312 +1,355 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const { MongoClient } = require('mongodb');
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-const SECRET = process.env.SECRET || 'marine_secret_key';
 
+// ================= MIDDLEWARE =================
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
 
-// ================= MongoDB Connection =================
-const MONGODB_URI = process.env.MONGODB_URI;
-if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI is required in environment variables');
+// ================= CHECK ENVIRONMENT =================
+if (!process.env.MONGO_URI) {
+    console.error('❌ FATAL: MONGO_URI is not defined');
+    process.exit(1);
+}
+if (!process.env.JWT_SECRET) {
+    console.error('❌ FATAL: JWT_SECRET is not defined');
     process.exit(1);
 }
 
-let db;
-let usersCollection;
-let vesselsCollection;
-let logsCollection;
-let ticketsCollection;
+console.log('✅ Environment variables loaded');
 
-async function connectDB() {
-    try {
-        const client = new MongoClient(MONGODB_URI);
-        await client.connect();
-        console.log('✅ Connected to MongoDB Atlas');
-        
-        db = client.db('marine_fleet');
-        usersCollection = db.collection('users');
-        vesselsCollection = db.collection('vessels');
-        logsCollection = db.collection('logs');
-        ticketsCollection = db.collection('tickets');
-        
-        // Create indexes
-        await usersCollection.createIndex({ name: 1 }, { unique: true });
-        await vesselsCollection.createIndex({ id: 1 });
-        
-        // Initialize default data if empty
-        await initDefaultData();
-        
-        return true;
-    } catch (error) {
-        console.error('❌ MongoDB connection failed:', error.message);
-        return false;
-    }
+// ================= MODELS =================
+
+// Vessel Schema
+const vesselSchema = new mongoose.Schema({
+    name: { type: String, required: true, index: true },
+    num: String,
+    len: Number,
+    reg: { type: String, index: true },
+    zone: String,
+    port: String,
+    supp: String,
+    stat: { type: String, default: "صالح", index: true },
+    break: String,
+    fDate: String,
+    eDate: String,
+    ref: String,
+    cat: { type: String, index: true }
+}, { timestamps: true });
+
+vesselSchema.index({ reg: 1, stat: 1 });
+vesselSchema.index({ cat: 1, stat: 1 });
+
+const Vessel = mongoose.model('Vessel', vesselSchema);
+
+// User Schema with bcrypt hashing
+const userSchema = new mongoose.Schema({
+    name: { type: String, unique: true, required: true, index: true },
+    pass: { type: String, required: true },
+    role: { type: String, default: "مشاهد", index: true },
+    enabled: { type: Boolean, default: true }
+}, { timestamps: true });
+
+// Hash password before saving
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('pass')) return next();
+    this.pass = await bcrypt.hash(this.pass, 10);
+    next();
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Ticket Schema
+const ticketSchema = new mongoose.Schema({
+    userName: { type: String, index: true },
+    subject: String,
+    message: String,
+    status: { type: String, default: "قيد المعالجة" },
+    date: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+ticketSchema.index({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
+
+const Ticket = mongoose.model('Ticket', ticketSchema);
+
+// Log Schema
+const logSchema = new mongoose.Schema({
+    userName: String,
+    action: String,
+    details: String,
+    date: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+logSchema.index({ createdAt: 1 }, { expireAfterSeconds: 14 * 24 * 60 * 60 });
+
+const Log = mongoose.model('Log', logSchema);
+
+// ================= HELPERS =================
+function getCategory(len) {
+    const n = parseFloat(len);
+    if (n === 11) return "البروق";
+    if (n >= 8 && n <= 12) return "صقور";
+    if (n > 12 && n <= 25) return "خوافر";
+    if (n >= 30) return "طوافات";
+    return "زوارق مزدوجة";
 }
 
+// ================= INIT DEFAULT DATA =================
 async function initDefaultData() {
-    // Check if users exist
-    const userCount = await usersCollection.countDocuments();
-    if (userCount === 0) {
-        const adminPass = await bcrypt.hash('1234', 10);
-        const editorPass = await bcrypt.hash('1234', 10);
-        const viewerPass = await bcrypt.hash('1234', 10);
-        
-        await usersCollection.insertMany([
-            { id: 1, name: "admin", pass: adminPass, role: "مسؤول", enabled: 1 },
-            { id: 2, name: "editor", pass: editorPass, role: "محرر", enabled: 1 },
-            { id: 3, name: "viewer", pass: viewerPass, role: "مشاهد", enabled: 1 }
-        ]);
-        console.log('✅ Default users created');
-    }
-    
-    // Check if vessels exist
-    const vesselCount = await vesselsCollection.countDocuments();
-    if (vesselCount === 0) {
-        const defaultVessels = [
-            { id: 101, name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", breakType: "", fDate: null, eDate: null, ref: "", cat: "البروق" },
-            { id: 102, name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", breakType: "", fDate: null, eDate: null, ref: "", cat: "صقور" },
-            { id: 103, name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", breakType: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", ref: "REF001", cat: "خوافر" },
-            { id: 104, name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", breakType: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", ref: "REF002", cat: "زوارق مزدوجة" },
-            { id: 105, name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", breakType: "", fDate: null, eDate: null, ref: "", cat: "طوافات" }
-        ];
-        await vesselsCollection.insertMany(defaultVessels);
-        console.log('✅ Default vessels created');
+    try {
+        const userCount = await User.countDocuments();
+        if (userCount === 0) {
+            console.log('📝 Creating default users...');
+            // Passwords will be auto-hashed by pre-save hook
+            await User.create([
+                { name: "admin", pass: "1234", role: "مسؤول", enabled: true },
+                { name: "editor", pass: "1234", role: "محرر", enabled: true },
+                { name: "viewer", pass: "1234", role: "مشاهد", enabled: true }
+            ]);
+            console.log("✅ Default users created: admin/1234, editor/1234, viewer/1234");
+        }
+
+        const vesselCount = await Vessel.countDocuments();
+        if (vesselCount === 0) {
+            console.log('📝 Creating default vessels...');
+            const defaultVessels = [
+                { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "قاعدة الشمال", stat: "صالح", cat: getCategory(11) },
+                { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "قاعدة الساحل", stat: "صالح", cat: getCategory(10) },
+                { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "قاعدة الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", cat: getCategory(20) },
+                { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "قاعدة الجنوب", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", cat: getCategory(15) },
+                { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة الشمال", stat: "صالح", cat: getCategory(35) }
+            ];
+            await Vessel.insertMany(defaultVessels);
+            console.log(`✅ Default vessels created: ${defaultVessels.length} vessels`);
+        }
+    } catch (error) {
+        console.error("⚠️ Init data error:", error.message);
     }
 }
 
-// Helper to get next ID
-async function getNextVesselId() {
-    const lastVessel = await vesselsCollection.find().sort({ id: -1 }).limit(1).toArray();
-    return lastVessel.length > 0 ? lastVessel[0].id + 1 : 101;
-}
-
-// ================= JWT Middleware =================
+// ================= AUTH MIDDLEWARE =================
 function auth(req, res, next) {
     const token = req.headers.authorization;
-    
     if (!token) {
-        return res.status(401).json({ error: 'Access denied' });
+        return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
-    
     try {
-        const verified = jwt.verify(token, SECRET);
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
         req.user = verified;
         next();
-    } catch {
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Session expired. Please login again.' });
+        }
         res.status(401).json({ error: 'Invalid token' });
     }
 }
 
-// ================= LOGIN =================
+function checkRole(roles) {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+        next();
+    };
+}
+
+// ================= LOGIN ROUTE (FIXED) =================
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
-    
+    const { name, pass } = req.body;  // <- now matches frontend: { name, pass }
+
+    if (!name || !pass) {
+        return res.status(400).json({ error: "اسم المستخدم وكلمة المرور مطلوبان" });
+    }
+
     try {
-        const user = await usersCollection.findOne({ name: username });
-        
+        const user = await User.findOne({ name });
         if (!user) {
-            return res.status(400).json({ error: 'Utilisateur invalide' });
+            return res.status(401).json({ error: "اسم المستخدم غير صحيح" });
         }
-        
+
         if (!user.enabled) {
-            return res.status(403).json({ error: 'Compte désactivé' });
+            return res.status(401).json({ error: "الحساب معطل" });
         }
-        
-        const valid = await bcrypt.compare(password, user.pass);
-        
-        if (!valid) {
-            return res.status(400).json({ error: 'Mot de passe incorrect' });
+
+        const isValid = await bcrypt.compare(pass, user.pass);
+        if (!isValid) {
+            return res.status(401).json({ error: "كلمة المرور غير صحيحة" });
         }
-        
-        const token = jwt.sign({
-            id: user.id,
-            name: user.name,
-            role: user.role
-        }, SECRET, { expiresIn: '7d' });
-        
+
+        const token = jwt.sign(
+            { id: user._id, name: user.name, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        // Log login (non-blocking)
+        Log.create({
+            userName: user.name,
+            action: "تسجيل دخول",
+            details: "قام بتسجيل الدخول إلى النظام"
+        }).catch(err => console.error('Log error:', err));
+
         res.json({
+            success: true,
             token,
             user: {
-                id: user.id,
+                id: user._id,
                 name: user.name,
                 role: user.role
             }
         });
     } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: "خطأ في الخادم" });
+    }
+});
+
+// ================= GET CURRENT USER =================
+app.get('/api/me', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-pass');
+        if (!user) return res.status(404).json({ error: "User not found" });
+        res.json(user);
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ================= GET VESSELS =================
+// ================= VESSEL ROUTES =================
 app.get('/api/vessels', auth, async (req, res) => {
     try {
-        const vessels = await vesselsCollection.find().sort({ id: -1 }).toArray();
-        res.json(vessels);
+        const { page = 1, limit = 100, reg, stat, cat } = req.query;
+        const query = {};
+        if (reg && reg !== 'الكل') query.reg = reg;
+        if (stat && stat !== 'الكل') query.stat = stat;
+        if (cat && cat !== 'الكل') query.cat = cat;
+
+        const vessels = await Vessel.find(query)
+            .sort({ createdAt: -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit));
+
+        const total = await Vessel.countDocuments(query);
+        res.json({ vessels, pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / parseInt(limit)) } });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ================= ADD VESSEL =================
-app.get('/api/vessels/getNextId', auth, async (req, res) => {
+app.get('/api/vessels/:id', auth, async (req, res) => {
     try {
-        const nextId = await getNextVesselId();
-        res.json({ nextId });
+        const vessel = await Vessel.findById(req.params.id);
+        if (!vessel) return res.status(404).json({ error: "المركب غير موجود" });
+        res.json(vessel);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/vessels', auth, async (req, res) => {
+app.post('/api/vessels', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
     try {
         const vessel = req.body;
-        const newId = await getNextVesselId();
-        
-        const newVessel = {
-            id: newId,
-            ...vessel
-        };
-        
-        await vesselsCollection.insertOne(newVessel);
-        res.json({ success: true, id: newId });
+        if (!vessel.name) return res.status(400).json({ error: "اسم المركب مطلوب" });
+        const newVessel = await Vessel.create({ ...vessel, cat: getCategory(vessel.len) });
+        Log.create({ userName: req.user.name, action: "إضافة مركب", details: `أضاف: ${vessel.name}` }).catch(e => console.error(e));
+        res.status(201).json({ success: true, vessel: newVessel });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ================= UPDATE VESSEL =================
-app.put('/api/vessels/:id', auth, async (req, res) => {
+app.put('/api/vessels/:id', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-        const vessel = req.body;
-        
-        await vesselsCollection.updateOne(
-            { id: id },
-            { $set: vessel }
-        );
-        
+        const vessel = await Vessel.findById(req.params.id);
+        if (!vessel) return res.status(404).json({ error: "المركب غير موجود" });
+        const updated = await Vessel.findByIdAndUpdate(req.params.id, { ...req.body, cat: getCategory(req.body.len) }, { new: true });
+        Log.create({ userName: req.user.name, action: "تعديل مركب", details: `عدل: ${updated.name}` }).catch(e => console.error(e));
+        res.json({ success: true, vessel: updated });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/vessels/:id', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const vessel = await Vessel.findById(req.params.id);
+        if (!vessel) return res.status(404).json({ error: "المركب غير موجود" });
+        await Vessel.findByIdAndDelete(req.params.id);
+        Log.create({ userName: req.user.name, action: "حذف مركب", details: `حذف: ${vessel.name}` }).catch(e => console.error(e));
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ================= DELETE VESSEL =================
-app.delete('/api/vessels/:id', auth, async (req, res) => {
+// ================= USER MANAGEMENT =================
+app.get('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-        await vesselsCollection.deleteOne({ id: id });
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ================= USERS =================
-app.get('/api/users', auth, async (req, res) => {
-    try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
-        const users = await usersCollection.find(
-            {},
-            { projection: { id: 1, name: 1, role: 1, enabled: 1 } }
-        ).toArray();
-        
+        const users = await User.find().select('-pass').sort({ createdAt: 1 });
         res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/users', auth, async (req, res) => {
+app.post('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
         const { name, pass, role } = req.body;
-        const hash = await bcrypt.hash(pass, 10);
-        
-        const lastUser = await usersCollection.find().sort({ id: -1 }).limit(1).toArray();
-        const newId = lastUser.length > 0 ? lastUser[0].id + 1 : 4;
-        
-        await usersCollection.insertOne({
-            id: newId,
-            name: name,
-            pass: hash,
-            role: role,
-            enabled: 1
-        });
-        
-        res.json({ success: true });
+        if (!name || !pass) return res.status(400).json({ error: "الاسم وكلمة المرور مطلوبان" });
+        const existing = await User.findOne({ name });
+        if (existing) return res.status(400).json({ error: "المستخدم موجود" });
+        const newUser = await User.create({ name, pass, role: role || "مشاهد", enabled: true });
+        Log.create({ userName: req.user.name, action: "إضافة مستخدم", details: `أضاف: ${name}` }).catch(e => console.error(e));
+        res.status(201).json({ success: true, user: { id: newUser._id, name: newUser.name, role: newUser.role } });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.put('/api/users/:id/toggle', auth, async (req, res) => {
+app.patch('/api/users/:id/toggle', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
-        const id = parseInt(req.params.id);
-        const user = await usersCollection.findOne({ id: id });
-        
-        if (user) {
-            await usersCollection.updateOne(
-                { id: id },
-                { $set: { enabled: user.enabled ? 0 : 1 } }
-            );
-        }
-        
-        res.json({ success: true });
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: "المستخدم غير موجود" });
+        if (user.name === 'admin') return res.status(400).json({ error: "لا يمكن تعطيل admin" });
+        user.enabled = !user.enabled;
+        await user.save();
+        Log.create({ userName: req.user.name, action: user.enabled ? "تفعيل مستخدم" : "تعطيل مستخدم", details: `${user.enabled ? 'تفعيل' : 'تعطيل'} ${user.name}` }).catch(e => console.error(e));
+        res.json({ success: true, enabled: user.enabled });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.put('/api/users/:id/password', auth, async (req, res) => {
+app.put('/api/users/:id/password', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
-        const id = parseInt(req.params.id);
         const { newPassword } = req.body;
-        const hash = await bcrypt.hash(newPassword, 10);
-        
-        await usersCollection.updateOne(
-            { id: id },
-            { $set: { pass: hash } }
-        );
-        
+        if (!newPassword || newPassword.length < 4) return res.status(400).json({ error: "كلمة المرور 4 أحرف على الأقل" });
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: "المستخدم غير موجود" });
+        user.pass = newPassword; // will be hashed by pre-save
+        await user.save();
+        Log.create({ userName: req.user.name, action: "تغيير كلمة مرور", details: `غير كلمة مرور ${user.name}` }).catch(e => console.error(e));
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.delete('/api/users/:id', auth, async (req, res) => {
+app.delete('/api/users/:id', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
-        const id = parseInt(req.params.id);
-        await usersCollection.deleteOne({ id: id });
-        
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: "المستخدم غير موجود" });
+        if (user.name === 'admin') return res.status(400).json({ error: "لا يمكن حذف admin" });
+        await User.findByIdAndDelete(req.params.id);
+        Log.create({ userName: req.user.name, action: "حذف مستخدم", details: `حذف ${user.name}` }).catch(e => console.error(e));
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -316,52 +359,40 @@ app.delete('/api/users/:id', auth, async (req, res) => {
 // ================= STATISTICS =================
 app.get('/api/statistics', auth, async (req, res) => {
     try {
-        const total = await vesselsCollection.countDocuments();
-        const ok = await vesselsCollection.countDocuments({ stat: 'صالح' });
-        const maint = await vesselsCollection.countDocuments({ stat: 'صيانة' });
-        const broken = await vesselsCollection.countDocuments({ stat: 'معطب' });
-        
-        res.json({ total, ok, maint, broken });
+        const total = await Vessel.countDocuments();
+        const ok = await Vessel.countDocuments({ stat: 'صالح' });
+        const maint = await Vessel.countDocuments({ stat: 'صيانة' });
+        const broken = await Vessel.countDocuments({ stat: 'معطب' });
+        const byRegion = {};
+        const regions = ['الشمال', 'الساحل', 'الوسط', 'الجنوب'];
+        for (const region of regions) {
+            const regionVessels = await Vessel.find({ reg: region });
+            const regionOk = regionVessels.filter(v => v.stat === 'صالح').length;
+            byRegion[region] = { total: regionVessels.length, ok: regionOk, broken: regionVessels.length - regionOk, efficiency: regionVessels.length ? ((regionOk / regionVessels.length) * 100).toFixed(1) : 0 };
+        }
+        res.json({ total, ok, maint, broken, efficiency: total ? ((ok / total) * 100).toFixed(1) : 0, byRegion });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ================= ZONES =================
+// ================= ZONES & CATEGORIES =================
 app.get('/api/zones', auth, (req, res) => {
-    const zones = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"]
-    };
-    res.json(zones);
+    res.json({ "الشمال": ["تونس", "بنزرت", "طبرقة"], "الساحل": ["سوسة", "المنستير", "نابل"], "الوسط": ["صفاقس", "المهدية", "قرقنة"], "الجنوب": ["جرجيس", "جربة", "قابس"] });
 });
 
-// ================= CATEGORIES =================
 app.get('/api/categories', auth, (req, res) => {
-    const categories = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-    res.json(categories);
+    res.json(["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"]);
 });
 
-// ================= SUPPORT TICKETS =================
+// ================= TICKETS =================
 app.post('/api/tickets', auth, async (req, res) => {
     try {
         const { subject, message } = req.body;
-        
-        const lastTicket = await ticketsCollection.find().sort({ id: -1 }).limit(1).toArray();
-        const newId = lastTicket.length > 0 ? lastTicket[0].id + 1 : 1;
-        
-        await ticketsCollection.insertOne({
-            id: newId,
-            userName: req.user.name,
-            subject: subject,
-            message: message,
-            status: 'قيد المعالجة',
-            date: new Date().toISOString()
-        });
-        
-        res.json({ success: true });
+        if (!subject || !message) return res.status(400).json({ error: "العنوان والرسالة مطلوبان" });
+        const ticket = await Ticket.create({ userName: req.user.name, subject, message, status: "قيد المعالجة" });
+        Log.create({ userName: req.user.name, action: "إرسال تذكرة", details: subject }).catch(e => console.error(e));
+        res.status(201).json({ success: true, ticket });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -369,7 +400,9 @@ app.post('/api/tickets', auth, async (req, res) => {
 
 app.get('/api/tickets', auth, async (req, res) => {
     try {
-        const tickets = await ticketsCollection.find().sort({ id: -1 }).toArray();
+        let tickets;
+        if (req.user.role === 'مسؤول') tickets = await Ticket.find().sort({ createdAt: -1 }).limit(50);
+        else tickets = await Ticket.find({ userName: req.user.name }).sort({ createdAt: -1 }).limit(50);
         res.json(tickets);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -377,34 +410,18 @@ app.get('/api/tickets', auth, async (req, res) => {
 });
 
 // ================= LOGS =================
-app.post('/api/logs', auth, async (req, res) => {
+app.get('/api/logs', auth, checkRole(['مسؤول']), async (req, res) => {
     try {
-        const { action, details } = req.body;
-        
-        await logsCollection.insertOne({
-            userName: req.user.name,
-            action: action,
-            details: details,
-            date: new Date().toISOString()
-        });
-        
-        res.json({ success: true });
+        const logs = await Log.find().sort({ date: -1 }).limit(200);
+        res.json(logs);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-app.get('/api/logs', auth, async (req, res) => {
-    try {
-        if (req.user.role !== 'مسؤول') {
-            return res.status(403).json({ error: 'Not allowed' });
-        }
-        
-        const logs = await logsCollection.find().sort({ date: -1 }).limit(100).toArray();
-        res.json(logs);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+// ================= HEALTH CHECK =================
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', timestamp: new Date().toISOString(), uptime: process.uptime(), mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
 // ================= FRONTEND =================
@@ -413,14 +430,23 @@ app.get('*', (req, res) => {
 });
 
 // ================= START SERVER =================
-app.listen(PORT, async () => {
-    const connected = await connectDB();
-    if (connected) {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`✅ Database: MongoDB Atlas`);
-        console.log(`👥 Users: admin/1234, editor/1234, viewer/1234`);
-    } else {
-        console.log(`❌ Server running but database connection failed`);
-        console.log(`📌 Make sure MONGODB_URI environment variable is set correctly`);
+const PORT = process.env.PORT || 3000;
+
+const startServer = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI, { serverSelectionTimeoutMS: 10000 });
+        console.log("✅ MongoDB connected");
+        await initDefaultData();
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`🔗 http://localhost:${PORT}`);
+            console.log(`👥 Default users: admin/1234, editor/1234, viewer/1234`);
+            console.log(`✅ System ready for production!`);
+        });
+    } catch (error) {
+        console.error("❌ Failed to start:", error.message);
+        process.exit(1);
     }
-});
+};
+
+startServer();
