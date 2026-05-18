@@ -1,96 +1,33 @@
 const express = require('express');
 const session = require('express-session');
-const path = require('path');
 
 const app = express();
 const PORT = 3000;
 
-// ==================== المستخدمين ====================
+// ==================== المستخدمين (مع صلاحيات صحيحة) ====================
 const users = [
-    { id: 1, username: 'admin', password: '1234', role: 'admin' }
+    { id: 1, username: 'admin', password: '1234', role: 'مسؤول' },
+    { id: 2, username: 'editor', password: '1234', role: 'محرر' },
+    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد' }
 ];
 
 // ==================== المراكب (فيها معطوبة وصيانة) ====================
 let vessels = [
-    { 
-        id: 1, 
-        name: 'خافرة معطوبة', 
-        num: 'K001', 
-        len: 20, 
-        reg: 'الوسط', 
-        zone: 'صفاقس', 
-        port: 'صفاقس',
-        supp: '',
-        stat: 'معطب', 
-        break: 'محرك محترق - يحتاج تبديل', 
-        fDate: '2024-05-01', 
-        eDate: '2024-06-15', 
-        ref: 'REF001', 
-        cat: 'خوافر' 
-    },
-    { 
-        id: 2, 
-        name: 'زورق صيانة', 
-        num: 'Z002', 
-        len: 15, 
-        reg: 'الجنوب', 
-        zone: 'جربة', 
-        port: 'جربة',
-        supp: '',
-        stat: 'صيانة', 
-        break: 'عطل في نظام الملاحة', 
-        fDate: '2024-05-10', 
-        eDate: '2024-05-30', 
-        ref: 'REF002', 
-        cat: 'زوارق مزدوجة' 
-    },
-    { 
-        id: 3, 
-        name: 'البروق 1', 
-        num: 'B003', 
-        len: 11, 
-        reg: 'الشمال', 
-        zone: 'تونس', 
-        port: 'تونس',
-        supp: '',
-        stat: 'صالح', 
-        break: '', 
-        fDate: '', 
-        eDate: '', 
-        ref: '', 
-        cat: 'البروق' 
-    },
-    { 
-        id: 4, 
-        name: 'صقر الشمال', 
-        num: 'S004', 
-        len: 10, 
-        reg: 'الشمال', 
-        zone: 'بنزرت', 
-        port: 'بنزرت',
-        supp: '',
-        stat: 'صالح', 
-        break: '', 
-        fDate: '', 
-        eDate: '', 
-        ref: '', 
-        cat: 'صقور' 
-    }
+    { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
+    { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق - يحتاج تبديل', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
+    { id: 3, name: 'زورق صيانة', num: 'Z003', len: 15, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صيانة', break: 'عطل في نظام الملاحة', fDate: '2024-05-10', eDate: '2024-05-30', ref: 'REF002', cat: 'زوارق مزدوجة' },
+    { id: 4, name: 'صقر الشمال', num: 'S004', len: 10, reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'صقور' }
 ];
 
-// ==================== التذاكر ====================
 let tickets = [];
-
-// ==================== سجل النشاطات ====================
 let logs = [];
-
 let nextId = 5;
 
-// ==================== Middleware ====================
+// Middleware
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-    secret: 'my_secret_key_2024',
+    secret: 'my_secret_key',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
@@ -102,7 +39,7 @@ function isAuthenticated(req) {
 }
 
 function isAdmin(req) {
-    return req.session && req.session.userRole === 'admin';
+    return req.session && req.session.userRole === 'مسؤول';
 }
 
 // ==================== مسارات المصادقة ====================
@@ -116,7 +53,7 @@ app.post('/api/login', (req, res) => {
         req.session.userId = user.id;
         req.session.userName = user.username;
         req.session.userRole = user.role;
-        console.log('✅ دخول ناجح:', name);
+        console.log('✅ دخول ناجح:', name, 'الصلاحية:', user.role);
         res.json({ name: user.username, role: user.role });
     } else {
         console.log('❌ دخول فاشل:', name);
@@ -127,14 +64,6 @@ app.post('/api/login', (req, res) => {
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
-});
-
-app.get('/api/check-session', (req, res) => {
-    if (isAuthenticated(req)) {
-        res.json({ loggedIn: true, user: { name: req.session.userName, role: req.session.userRole } });
-    } else {
-        res.json({ loggedIn: false });
-    }
 });
 
 // ==================== مسارات المراكب ====================
@@ -153,30 +82,24 @@ app.post('/api/vessels', (req, res) => {
     
     const newVessel = {
         id: nextId++,
-        ...req.body,
-        cat: getCategory(req.body.len)
+        name: req.body.name,
+        num: req.body.num,
+        len: req.body.len,
+        reg: req.body.reg,
+        zone: req.body.zone,
+        port: req.body.port,
+        supp: req.body.supp || '',
+        stat: req.body.stat,
+        break: req.body.break || '',
+        fDate: req.body.fDate || '',
+        eDate: req.body.eDate || '',
+        ref: req.body.ref || '',
+        cat: req.body.cat || getCategory(req.body.len)
     };
     
     vessels.push(newVessel);
     console.log('➕ تم إضافة مركب:', newVessel.name);
-    res.json({ success: true, message: 'تم حفظ المركب بنجاح', vessel: newVessel });
-});
-
-app.put('/api/vessels/:id', (req, res) => {
-    if (!isAuthenticated(req)) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
-    const id = parseInt(req.params.id);
-    const index = vessels.findIndex(v => v.id === id);
-    
-    if (index !== -1) {
-        vessels[index] = { ...vessels[index], ...req.body };
-        console.log('✏️ تم تعديل مركب:', vessels[index].name);
-        res.json({ success: true, message: 'تم التعديل بنجاح' });
-    } else {
-        res.status(404).json({ error: 'المركب غير موجود' });
-    }
+    res.json({ success: true, message: 'تم حفظ المركب بنجاح' });
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
@@ -194,7 +117,7 @@ app.delete('/api/vessels/:id', (req, res) => {
 // ==================== مسارات المستخدمين ====================
 app.get('/api/users', (req, res) => {
     if (!isAdmin(req)) {
-        return res.status(403).json({ error: 'غير مصرح' });
+        return res.status(403).json({ error: 'غير مصرح - هذه الصفحة للمسؤول فقط' });
     }
     res.json(users.map(u => ({ id: u.id, name: u.username, role: u.role, enabled: true })));
 });
@@ -233,16 +156,22 @@ app.post('/api/tickets', (req, res) => {
         return res.status(401).json({ error: 'غير مصرح' });
     }
     
+    const now = new Date();
     const newTicket = {
         id: Date.now(),
-        ...req.body,
-        replies: [],
-        status: 'قيد المعالجة'
+        userName: req.body.userName,
+        userRole: req.body.userRole,
+        subject: req.body.subject,
+        message: req.body.message,
+        date: `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`,
+        time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`,
+        status: 'قيد المعالجة',
+        replies: []
     };
     
     tickets.unshift(newTicket);
     console.log('📧 تم إرسال تذكرة جديدة:', newTicket.subject);
-    res.json({ success: true, ticket: newTicket });
+    res.json({ success: true });
 });
 
 app.put('/api/tickets/:id/reply', (req, res) => {
@@ -257,8 +186,14 @@ app.put('/api/tickets/:id/reply', (req, res) => {
         return res.status(404).json({ error: 'التذكرة غير موجودة' });
     }
     
+    const now = new Date();
     if (!ticket.replies) ticket.replies = [];
-    ticket.replies.push(req.body.reply);
+    ticket.replies.push({
+        adminName: req.session.userName,
+        reply: req.body.reply,
+        date: `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`,
+        time: `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+    });
     ticket.status = 'تم الرد';
     
     console.log('💬 تم الرد على تذكرة:', ticket.subject);
@@ -297,8 +232,12 @@ app.post('/api/logs', (req, res) => {
     
     const log = {
         id: Date.now(),
-        ...req.body,
-        timestamp: new Date().toISOString()
+        userName: req.body.userName,
+        userRole: req.body.userRole,
+        action: req.body.action,
+        details: req.body.details,
+        date: req.body.date,
+        time: req.body.time
     };
     
     logs.unshift(log);
@@ -319,12 +258,10 @@ app.post('/api/import-all', (req, res) => {
         return res.status(403).json({ error: 'غير مصرح' });
     }
     
-    const { vessels: newVessels, tickets: newTickets, logs: newLogs } = req.body;
-    if (newVessels) vessels = newVessels;
-    if (newTickets) tickets = newTickets;
-    if (newLogs) logs = newLogs;
+    if (req.body.vessels) vessels = req.body.vessels;
+    if (req.body.tickets) tickets = req.body.tickets;
+    if (req.body.logs) logs = req.body.logs;
     
-    console.log('📥 تم استيراد البيانات');
     res.json({ success: true });
 });
 
@@ -345,15 +282,17 @@ app.listen(PORT, () => {
     console.log('╚════════════════════════════════════════════════╝\n');
     console.log(`📡 الرابط: http://localhost:${PORT}`);
     console.log('\n🔐 بيانات الدخول:');
-    console.log('   ┌─────────────────────────────┐');
-    console.log('   │  👑 admin  │  كلمة السر: 1234  │');
-    console.log('   └─────────────────────────────┘\n');
-    console.log('📊 إحصائيات:');
-    console.log(`   🚢 إجمالي المراكب: ${vessels.length}`);
-    console.log(`   🛠️ مراكب معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}`);
-    console.log(`   🔧 مراكب تحت صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}`);
-    console.log(`   ✅ مراكب صالحة: ${vessels.filter(v => v.stat === 'صالح').length}`);
-    console.log('\n🛠️ قائمة المراكب المعطوبة والتي تحت الصيانة:');
+    console.log('   ┌─────────────────────────────────────┐');
+    console.log('   │  👑 admin  │  كلمة السر: 1234  │ مسؤول │');
+    console.log('   │  ✏️ editor │  كلمة السر: 1234  │ محرر  │');
+    console.log('   │  👁️ viewer │  كلمة السر: 1234  │ مشاهد │');
+    console.log('   └─────────────────────────────────────┘\n');
+    console.log('📊 إحصائيات المراكب:');
+    console.log(`   🚢 الإجمالي: ${vessels.length}`);
+    console.log(`   🛠️ معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}`);
+    console.log(`   🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}`);
+    console.log(`   ✅ صالحة: ${vessels.filter(v => v.stat === 'صالح').length}`);
+    console.log('\n🛠️ سجل الصيانة (مراكب معطوبة/صيانة):');
     vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').forEach(v => {
         console.log(`   - ${v.name} (${v.stat}): ${v.break}`);
     });
