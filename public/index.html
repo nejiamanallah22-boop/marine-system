@@ -2,12 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة الوسائل البحرية - متصل بقاعدة البيانات</title>
+    <title>منظومة الوسائل البحرية - نظام متكامل</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         :root { --primary: #2e7d32; --accent: #d9534f; --success: #28a745; --orange: #f39c12; --bg: #f4f7f9; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; direction: rtl; }
+        @media (max-width: 768px) { body { padding: 10px; } .input-grid { grid-template-columns: 1fr !important; } .nav { flex-direction: column; } .nav button { width: 100%; } .filter-bar { flex-direction: column; } .scrollable-table { overflow-x: auto; } }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
@@ -50,11 +51,11 @@
         .stats-cards { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
         .stat-card { background: white; border-radius: 12px; padding: 15px 25px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; min-width: 150px; border-top: 4px solid var(--primary); }
         .stat-card .number { font-size: 28px; font-weight: bold; color: var(--primary); }
-        .chart-switch { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .chart-switch { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
         .chart-switch button { padding: 5px 15px; border-radius: 20px; background: #e9ecef; border: none; cursor: pointer; }
         .chart-switch button.active { background: var(--primary); color: white; }
         .charts-container { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; justify-content: center; }
-        .chart-box { flex: 1; min-width: 350px; background: #f9f9f9; padding: 20px; border-radius: 12px; }
+        .chart-box { flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border-radius: 12px; }
         canvas { max-height: 350px; width: 100% !important; }
         .role-badge { background: #ffd966; color: #2e7d32; padding: 4px 12px; border-radius: 20px; margin-right: 10px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
@@ -65,70 +66,14 @@
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
-        
-        .scroll-buttons {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        .scroll-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .scroll-btn:hover {
-            transform: scale(1.1);
-            background: #1e5a22;
-        }
-        
-        .damage-column {
-            min-width: 200px;
-            max-width: 300px;
-            word-break: break-word;
-            white-space: normal;
-        }
-        
-        .ticket-reply {
-            background: #e9ecef;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: right;
-        }
-
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            opacity: 0.08;
-            z-index: 0;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .watermark img {
-            width: 70%;
-            max-width: 600px;
-            height: auto;
-            object-fit: contain;
-        }
-        
-        @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark { display: none !important; } @page { size: landscape; margin: 1cm; } }
+        .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
+        .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
+        .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; opacity: 0.05; z-index: 0; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .watermark img { width: 70%; max-width: 500px; height: auto; object-fit: contain; }
+        @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .scroll-buttons, .watermark { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
 <body>
@@ -150,7 +95,7 @@
 <div id="mainApp" class="container" style="display: none;">
     <header>
         <h1>⚓ منظومة متابعة الوسائل البحرية – متصل بقاعدة البيانات</h1>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
             <div class="developer-info">💻 Développeur: أمان الله ناجي 🚀</div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <span id="userRoleDisplay" class="role-badge"></span>
@@ -183,11 +128,6 @@
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
         <select id="iZone"><option value="">المنطقة</option></select>
         <input type="text" id="iPort" placeholder="الميناء">
@@ -209,12 +149,12 @@
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <table id="mainTable">
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="mainBody"></tbody>
-            </table>
+            艰苦
         </div>
     </div>
 
@@ -228,7 +168,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            </table>
+            <table id="maintTable">
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -247,11 +187,6 @@
                 <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
                 <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
                 <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             </select>
             <button class="btn-sm btn-green" onclick="refreshEff()">🔄 تحديث</button>
         </div>
@@ -302,7 +237,7 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <table id="usersTable">
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -337,12 +272,7 @@
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
         "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-        "المجمع الأمني بقبيبة": ["قبيبة"]
+        "الجنوب": ["جرجيس", "جربة", "قابس"]
     };
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
@@ -351,12 +281,7 @@
         "الشمال": "🗺️ الحرس البحري بالشمال",
         "الساحل": "🗺️ الحرس البحري بالساحل",
         "الوسط": "🗺️ الحرس البحري بالوسط",
-        "الجنوب": "🗺️ الحرس البحري بالجنوب",
-        "وحدة الصيانة والإسناد البحري تونس": "🛠️ وحدة الصيانة تونس",
-        "وحدة الصيانة والإسناد البحري المنستير": "🛠️ وحدة الصيانة المنستير",
-        "وحدة الصيانة والإسناد البحري صفاقس": "🛠️ وحدة الصيانة صفاقس",
-        "وحدة الصيانة والإسناد البحري جرجيس": "🛠️ وحدة الصيانة جرجيس",
-        "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
+        "الجنوب": "🗺️ الحرس البحري بالجنوب"
     };
 
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -560,8 +485,8 @@
         };
         
         try {
-            await saveVessel(newItem);
-            await logActivity("إضافة مركب", `قام بإضافة مركب "${name}" رقم ${newItem.num || 'غير محدد'} في ${getCurrentTime()}`);
+            const result = await saveVessel(newItem);
+            await logActivity("إضافة مركب", `قام بإضافة مركب "${name}"`);
             
             ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
                 const el = document.getElementById(id);
@@ -582,7 +507,7 @@
     async function editItem(id, name) {
         if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
         let data = await loadVessels();
-        let item = data.find(x => (x._id || x.id).toString() === id.toString());
+        let item = data.find(x => x.id === id || x._id === id);
         if(item) {
             document.getElementById('iName').value = item.name;
             document.getElementById('iNum').value = item.num || '';
@@ -619,7 +544,7 @@
                     cat: getCat(document.getElementById('iLen').value)
                 };
                 try {
-                    await updateVessel(item._id || item.id, updatedItem);
+                    await updateVessel(item.id || item._id, updatedItem);
                     await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}" إلى "${updatedItem.name}"`);
                     await renderMain();
                     await renderMaint();
@@ -688,7 +613,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td><tr>';
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -706,8 +631,8 @@
                         <td>${formatDate(x.fDate)}</td>
                         <td>${formatDate(x.eDate)}</td>
                         <td>
-                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${x.id}, '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem(${x.id}, '${x.name}')">حذف</button>` : ''}
                         </td>
                     </tr>`;
                 });
@@ -724,8 +649,15 @@
         renderMain();
     }
     
+    // ==================== دالة سجل الصيانة المصححة ====================
     async function renderMaint() {
         try {
+            const maintBody = document.getElementById('maintBody');
+            if (!maintBody) {
+                console.error('العنصر maintBody غير موجود');
+                return;
+            }
+            
             let data = await loadVessels();
             const fReg = document.getElementById('fRegMaint').value;
             const dStart = document.getElementById('fDateStart').value;
@@ -782,16 +714,20 @@
                         <td>${formatDate(x.eDate)}</td>
                         <td>${x.ref || '-'}</td>
                         <td>
-                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${x.id}, '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem(${x.id}, '${x.name}')">حذف</button>` : ''}
                         </td>
                     </tr>`;
                 });
             }
-            document.getElementById('maintBody').innerHTML = html;
+            
+            maintBody.innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMaint:', error);
-            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
+            const maintBody = document.getElementById('maintBody');
+            if (maintBody) {
+                maintBody.innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات: ' + error.message + '</td></tr>';
+            }
         }
     }
     
@@ -918,12 +854,7 @@
             let selectedRegion = document.getElementById('fRegEff').value;
             let html = "";
             
-            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب", 
-                                "وحدة الصيانة والإسناد البحري تونس", 
-                                "وحدة الصيانة والإسناد البحري المنستير",
-                                "وحدة الصيانة والإسناد البحري صفاقس",
-                                "وحدة الصيانة والإسناد البحري جرجيس",
-                                "المجمع الأمني بقبيبة"];
+            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب"];
             
             if(selectedRegion === "نجاعة عامة") {
                 document.getElementById('regionTables').innerHTML = "";
@@ -1019,8 +950,7 @@
         renderCharts();
     }
     
-    // ==================== دوال التذاكر (تم إصلاح الرد نهائياً) ====================
-    
+    // ==================== دوال التذاكر ====================
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
@@ -1059,23 +989,16 @@
         }
     }
     
-    // 🔧 الدالة المصححة للرد على التذاكر
     async function replyToTicket(ticketId) {
         if(!canManageUsers()) { 
             showToast("غير مسموح - فقط للمسؤول", true); 
             return; 
         }
         
-        if (!ticketId) {
-            showToast("خطأ: معرف التذكرة غير صالح", true);
-            return;
-        }
-        
         const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
         if(!replyText) return;
         
         try {
-            // استخدام route مخصص للرد
             const response = await fetch(`/api/tickets/${ticketId}/reply`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1104,22 +1027,15 @@
         }
     }
     
-    // 🔧 الدالة المصححة لإغلاق التذكرة
     async function closeTicket(ticketId) {
         if(!canManageUsers()) { 
             showToast("غير مسموح - فقط للمسؤول", true); 
             return; 
         }
         
-        if (!ticketId) {
-            showToast("خطأ: معرف التذكرة غير صالح", true);
-            return;
-        }
-        
         if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
         
         try {
-            // استخدام route مخصص للإغلاق
             const response = await fetch(`/api/tickets/${ticketId}/close`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' }
@@ -1139,7 +1055,6 @@
         }
     }
     
-    // 🔧 دالة عرض التذاكر (باستخدام _id)
     async function renderTickets() {
         try {
             let tickets = await loadTickets();
@@ -1162,8 +1077,7 @@
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                     const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
-                    // استخدام _id من MongoDB
-                    const ticketId = t._id;
+                    const ticketId = t.id;
                     
                     html += `<tr>
                         <td>${index + 1}</td>
@@ -1191,8 +1105,8 @@
                     if(canManageUsers()) {
                         if(t.status !== 'مغلقة') {
                             html += `<td style="text-align:center;">
-                                <button class="btn-sm btn-cyan" onclick="replyToTicket('${ticketId}')" style="background:#17a2b8; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">💬 رد</button>
-                                <button class="btn-sm btn-red" onclick="closeTicket('${ticketId}')" style="background:#d9534f; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin:2px;">🔒 إغلاق</button>
+                                <button class="btn-sm btn-cyan" onclick="replyToTicket(${ticketId})">💬 رد</button>
+                                <button class="btn-sm btn-red" onclick="closeTicket(${ticketId})">🔒 إغلاق</button>
                             </td>`;
                         } else {
                             html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
@@ -1277,7 +1191,7 @@
                 });
             }
             
-            html += `</tbody></td></div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
@@ -1302,9 +1216,9 @@
                     <td>${u.name}</td>
                     <td>${u.role}</td>
                     <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u._id || u.id}', '${u.name}')">تغيير</button></td>
-                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u._id || u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u._id || u.id}', true)">تفعيل</button>`}</td>
-                    <td><button class="btn-sm btn-red" onclick="deleteUser('${u._id || u.id}')">حذف</button></td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal(${u.id}, '${u.name}')">تغيير</button></td>
+                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser(${u.id}, false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser(${u.id}, true)">تفعيل</button>`}</td>
+                    <td><button class="btn-sm btn-red" onclick="deleteUser(${u.id})">حذف</button></td>
                 </tr>
             `).join('');
         } catch(error) {
@@ -1355,7 +1269,7 @@
         
         try {
             let users = await loadUsers();
-            let user = users.find(u => (u._id || u.id).toString() === selectedUserId.toString());
+            let user = users.find(u => u.id === selectedUserId);
             if(user) {
                 user.pass = np;
                 await updateUser(selectedUserId, user);
@@ -1372,7 +1286,7 @@
     async function toggleUser(userId, enable) {
         try {
             let users = await loadUsers();
-            let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+            let user = users.find(u => u.id === userId);
             if(user) {
                 user.enabled = enable;
                 await updateUser(userId, user);
@@ -1389,7 +1303,7 @@
         if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
             try {
                 let users = await loadUsers();
-                let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+                let user = users.find(u => u.id === userId);
                 await deleteUserAPI(userId);
                 await renderUsers();
                 await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
