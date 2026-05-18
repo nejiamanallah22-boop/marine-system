@@ -12,14 +12,15 @@ let users = [
     { id: 3, name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// مراكب معطوبة لظهورها في سجل الصيانة
+// مراكب - تأكد من وجود مراكب معطوبة لظهورها في سجل الصيانة
 let vessels = [
-    { id: 1, name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
-    { id: 2, name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
-    { id: 3, name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "", stat: "معطب", break: "محرك محترق - يحتاج تبديل", fDate: "2024-05-01", eDate: "2024-06-15", ref: "REF001", cat: "خوافر" },
-    { id: 4, name: "زورق الصيانة", num: "Z002", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "", stat: "صيانة", break: "عطل في نظام الملاحة", fDate: "2024-05-10", eDate: "2024-05-30", ref: "REF002", cat: "زوارق مزدوجة" },
-    { id: 5, name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" },
-    { id: 6, name: "البروق المعطب", num: "B005", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "", stat: "معطب", break: "عطل في المحرك الرئيسي", fDate: "2024-05-15", eDate: "2024-06-10", ref: "REF003", cat: "البروق" }
+    { id: 1, name: "البروق الساحل", num: "B001", len: 11, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "الميناء التجاري", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
+    { id: 2, name: "صقر الشمال", num: "S002", len: 10, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "قاعدة بنزرت", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
+    { id: 3, name: "خافرة الوسط", num: "K003", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "الميناء", stat: "معطب", break: "عطل في المحرك الرئيسي - يحتاج تبديل", fDate: "2024-05-01", eDate: "2024-06-15", ref: "REF/2024/001", cat: "خوافر" },
+    { id: 4, name: "زورق الجنوب", num: "Z004", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "ميناء جربة", stat: "صيانة", break: "عطل في نظام الملاحة البحرية", fDate: "2024-05-10", eDate: "2024-05-30", ref: "REF/2024/002", cat: "زوارق مزدوجة" },
+    { id: 5, name: "طوافة الشمال", num: "T005", len: 35, reg: "الشمال", zone: "طبرقة", port: "طبرقة", supp: "الميناء", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" },
+    { id: 6, name: "البروق المعطب", num: "B006", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "قاعدة المنستير", stat: "معطب", break: "انهيار في المحرك - عطل ميكانيكي", fDate: "2024-05-15", eDate: "2024-06-20", ref: "REF/2024/003", cat: "البروق" },
+    { id: 7, name: "صقر الصيانة", num: "S007", len: 10, reg: "الوسط", zone: "المهدية", port: "المهدية", supp: "الميناء", stat: "صيانة", break: "صيانة دورية للمحركات", fDate: "2024-05-20", eDate: "2024-06-05", ref: "REF/2024/004", cat: "صقور" }
 ];
 
 let logs = [];
@@ -29,14 +30,14 @@ let tickets = [
         userName: "admin",
         userRole: "مسؤول",
         subject: "تذكرة تجريبية للاختبار",
-        message: "هذه تذكرة تجريبية للتأكد من عمل النظام بشكل صحيح",
+        message: "هذه تذكرة تجريبية للتأكد من عمل نظام الرد بشكل صحيح",
         date: "18/05/2024",
         time: "14:30",
         status: "قيد المعالجة",
         replies: []
     }
 ];
-let nextId = 7;
+let nextId = 8;
 
 // ==================== Middleware ====================
 app.use(express.json());
@@ -205,7 +206,7 @@ app.post('/api/tickets', requireAuth, (req, res) => {
     }
 });
 
-// الرد على التذكرة - تم الإصلاح
+// الرد على التذكرة - نسخة مصححة
 app.put('/api/tickets/:id/reply', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
@@ -222,7 +223,7 @@ app.put('/api/tickets/:id/reply', requireAuth, (req, res) => {
         ticket.replies.push(req.body.reply);
         ticket.status = 'تم الرد';
         
-        res.json({ success: true, ticket: ticket });
+        res.json({ success: true, message: 'تم الرد بنجاح', ticket: ticket });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -284,5 +285,9 @@ app.listen(PORT, () => {
     console.log(`\n📊 عدد المراكب: ${vessels.length}`);
     console.log(`🛠️  مراكب معطوبة/صيانة: ${vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length}`);
     console.log(`🎫 عدد التذاكر: ${tickets.length}`);
+    console.log(`\n📋 المراكب المعطوبة:`);
+    vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').forEach(v => {
+        console.log(`   - ${v.name} (${v.stat}): ${v.break}`);
+    });
     console.log(`\n========================================\n`);
 });
