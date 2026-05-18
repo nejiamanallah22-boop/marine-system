@@ -5,13 +5,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== قاعدة بيانات بسيطة في الذاكرة ====================
+// ==================== قاعدة بيانات بسيطة مع بيانات افتراضية ====================
 let users = [
     { id: 1, name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
     { id: 2, name: 'editor', pass: '1234', role: 'محرر', enabled: true },
     { id: 3, name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
+// بيانات المراكب (مع مراكب معطوبة لظهورها في سجل الصيانة)
 let vessels = [
     { id: 1, name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
     { id: 2, name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
@@ -28,7 +29,7 @@ let nextId = 6;
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'marine_fleet_secret_2024',
+    secret: 'secret_key_2024',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
@@ -36,6 +37,7 @@ app.use(session({
 
 // ==================== Routes ====================
 
+// تسجيل الدخول
 app.post('/api/login', (req, res) => {
     const { name, pass } = req.body;
     const user = users.find(u => u.name === name);
@@ -51,11 +53,13 @@ app.post('/api/login', (req, res) => {
     res.json({ name: user.name, role: user.role, id: user.id });
 });
 
+// تسجيل الخروج
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
 });
 
+// التحقق من الجلسة
 app.get('/api/check-session', (req, res) => {
     if (req.session.userId) {
         res.json({ loggedIn: true, user: { name: req.session.userName, role: req.session.userRole } });
@@ -64,40 +68,53 @@ app.get('/api/check-session', (req, res) => {
     }
 });
 
+// مصادقة للمسارات المحمية
 function requireAuth(req, res, next) {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     next();
 }
 
-// Vessels
+// ==================== مسارات المراكب ====================
 app.get('/api/vessels', requireAuth, (req, res) => {
     res.json(vessels);
 });
 
 app.post('/api/vessels', requireAuth, (req, res) => {
-    const newVessel = { id: nextId++, ...req.body };
-    vessels.push(newVessel);
-    res.status(201).json(newVessel);
+    try {
+        const newVessel = { id: nextId++, ...req.body };
+        vessels.push(newVessel);
+        res.status(201).json(newVessel);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 app.put('/api/vessels/:id', requireAuth, (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = vessels.findIndex(v => v.id === id);
-    if (index !== -1) {
-        vessels[index] = { ...vessels[index], ...req.body };
-        res.json(vessels[index]);
-    } else {
-        res.status(404).json({ error: 'غير موجود' });
+    try {
+        const id = parseInt(req.params.id);
+        const index = vessels.findIndex(v => v.id === id);
+        if (index !== -1) {
+            vessels[index] = { ...vessels[index], ...req.body };
+            res.json(vessels[index]);
+        } else {
+            res.status(404).json({ error: 'المركب غير موجود' });
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
 app.delete('/api/vessels/:id', requireAuth, (req, res) => {
-    const id = parseInt(req.params.id);
-    vessels = vessels.filter(v => v.id !== id);
-    res.json({ success: true });
+    try {
+        const id = parseInt(req.params.id);
+        vessels = vessels.filter(v => v.id !== id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
-// Users
+// ==================== مسارات المستخدمين ====================
 app.get('/api/users', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
     const usersWithoutPass = users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled }));
@@ -106,101 +123,143 @@ app.get('/api/users', requireAuth, (req, res) => {
 
 app.post('/api/users', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const { name, pass, role, enabled } = req.body;
-    const newUser = { id: nextId++, name, pass, role, enabled };
-    users.push(newUser);
-    res.status(201).json({ id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled });
+    try {
+        const { name, pass, role, enabled } = req.body;
+        const newUser = { id: nextId++, name, pass, role, enabled };
+        users.push(newUser);
+        res.status(201).json({ id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 app.put('/api/users/:id', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const id = parseInt(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-    if (index !== -1) {
-        users[index] = { ...users[index], ...req.body };
-        res.json({ id: users[index].id, name: users[index].name, role: users[index].role, enabled: users[index].enabled });
-    } else {
-        res.status(404).json({ error: 'غير موجود' });
+    try {
+        const id = parseInt(req.params.id);
+        const index = users.findIndex(u => u.id === id);
+        if (index !== -1) {
+            users[index] = { ...users[index], ...req.body };
+            res.json({ id: users[index].id, name: users[index].name, role: users[index].role, enabled: users[index].enabled });
+        } else {
+            res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
 app.delete('/api/users/:id', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const id = parseInt(req.params.id);
-    users = users.filter(u => u.id !== id);
-    res.json({ success: true });
+    try {
+        const id = parseInt(req.params.id);
+        users = users.filter(u => u.id !== id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
-// Logs
+// ==================== مسارات سجل النشاطات ====================
 app.get('/api/logs', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
     res.json(logs);
 });
 
 app.post('/api/logs', requireAuth, (req, res) => {
-    const log = { id: Date.now(), ...req.body };
-    logs.unshift(log);
-    if (logs.length > 500) logs = logs.slice(0, 500);
-    res.status(201).json(log);
+    try {
+        const log = { id: Date.now(), ...req.body };
+        logs.unshift(log);
+        if (logs.length > 500) logs = logs.slice(0, 500);
+        res.status(201).json(log);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
-// Tickets
+// ==================== مسارات التذاكر (تم إصلاح مشكلة الرد) ====================
 app.get('/api/tickets', requireAuth, (req, res) => {
     res.json(tickets);
 });
 
 app.post('/api/tickets', requireAuth, (req, res) => {
-    const newTicket = { id: Date.now(), ...req.body };
-    tickets.unshift(newTicket);
-    res.status(201).json(newTicket);
+    try {
+        const newTicket = { id: Date.now(), ...req.body, replies: [] };
+        tickets.unshift(newTicket);
+        res.status(201).json(newTicket);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
+// إصلاح مشكلة الرد على التذكرة
 app.put('/api/tickets/:id/reply', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const id = parseInt(req.params.id);
-    const ticket = tickets.find(t => t.id === id);
-    if (ticket) {
+    try {
+        const id = parseInt(req.params.id);
+        const ticket = tickets.find(t => t.id === id);
+        if (!ticket) {
+            return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        }
         if (!ticket.replies) ticket.replies = [];
         ticket.replies.push(req.body.reply);
         ticket.status = 'تم الرد';
         res.json(ticket);
-    } else {
-        res.status(404).json({ error: 'غير موجود' });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
+// إغلاق التذكرة
 app.put('/api/tickets/:id/close', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const id = parseInt(req.params.id);
-    const ticket = tickets.find(t => t.id === id);
-    if (ticket) {
+    try {
+        const id = parseInt(req.params.id);
+        const ticket = tickets.find(t => t.id === id);
+        if (!ticket) {
+            return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        }
         ticket.status = 'مغلقة';
         res.json(ticket);
-    } else {
-        res.status(404).json({ error: 'غير موجود' });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
-// Export/Import
+// ==================== تصدير واستيراد ====================
 app.get('/api/export-all', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    res.json({ vessels, users: users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })), logs, tickets });
+    res.json({ 
+        vessels, 
+        users: users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })), 
+        logs, 
+        tickets 
+    });
 });
 
 app.post('/api/import-all', requireAuth, (req, res) => {
     if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
-    const { vessels: newVessels, tickets: newTickets, logs: newLogs } = req.body;
-    if (newVessels) vessels = newVessels;
-    if (newTickets) tickets = newTickets;
-    if (newLogs) logs = newLogs;
-    res.json({ success: true });
+    try {
+        const { vessels: newVessels, tickets: newTickets, logs: newLogs } = req.body;
+        if (newVessels && Array.isArray(newVessels)) vessels = newVessels;
+        if (newTickets && Array.isArray(newTickets)) tickets = newTickets;
+        if (newLogs && Array.isArray(newLogs)) logs = newLogs;
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
-// Serve HTML
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
+// ==================== تشغيل السيرفر ====================
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`\n🚀 ======================================`);
+    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
+    console.log(`🚀 ======================================\n`);
+    console.log(`🔐 بيانات الدخول:`);
+    console.log(`   👑 admin / 1234 (مسؤول كامل الصلاحيات)`);
+    console.log(`   ✏️ editor / 1234 (محرر)`);
+    console.log(`   👁️ viewer / 1234 (مشاهد فقط)`);
+    console.log(`\n📊 عدد المراكب: ${vessels.length}`);
+    console.log(`🛠️  مراكب معطوبة/صيانة: ${vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length}`);
+    console.log(`\n========================================\n`);
 });
