@@ -5,25 +5,38 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== قاعدة بيانات بسيطة مع بيانات افتراضية ====================
+// ==================== قاعدة البيانات مع بيانات افتراضية ====================
 let users = [
     { id: 1, name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
     { id: 2, name: 'editor', pass: '1234', role: 'محرر', enabled: true },
     { id: 3, name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// بيانات المراكب (مع مراكب معطوبة لظهورها في سجل الصيانة)
+// مراكب معطوبة لظهورها في سجل الصيانة
 let vessels = [
     { id: 1, name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", port: "تونس", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "البروق" },
     { id: 2, name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", port: "سوسة", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "صقور" },
-    { id: 3, name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "", stat: "معطب", break: "محرك", fDate: "2024-03-01", eDate: "2024-04-01", ref: "REF001", cat: "خوافر" },
-    { id: 4, name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "", stat: "صيانة", break: "كهرباء", fDate: "2024-02-15", eDate: "2024-03-15", ref: "REF002", cat: "زوارق مزدوجة" },
-    { id: 5, name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" }
+    { id: 3, name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", port: "صفاقس", supp: "", stat: "معطب", break: "محرك محترق - يحتاج تبديل", fDate: "2024-05-01", eDate: "2024-06-15", ref: "REF001", cat: "خوافر" },
+    { id: 4, name: "زورق الصيانة", num: "Z002", len: 15, reg: "الجنوب", zone: "جربة", port: "جربة", supp: "", stat: "صيانة", break: "عطل في نظام الملاحة", fDate: "2024-05-10", eDate: "2024-05-30", ref: "REF002", cat: "زوارق مزدوجة" },
+    { id: 5, name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", port: "بنزرت", supp: "", stat: "صالح", break: "", fDate: "", eDate: "", ref: "", cat: "طوافات" },
+    { id: 6, name: "البروق المعطب", num: "B005", len: 11, reg: "الساحل", zone: "المنستير", port: "المنستير", supp: "", stat: "معطب", break: "عطل في المحرك الرئيسي", fDate: "2024-05-15", eDate: "2024-06-10", ref: "REF003", cat: "البروق" }
 ];
 
 let logs = [];
-let tickets = [];
-let nextId = 6;
+let tickets = [
+    {
+        id: 1,
+        userName: "admin",
+        userRole: "مسؤول",
+        subject: "تذكرة تجريبية للاختبار",
+        message: "هذه تذكرة تجريبية للتأكد من عمل النظام بشكل صحيح",
+        date: "18/05/2024",
+        time: "14:30",
+        status: "قيد المعالجة",
+        replies: []
+    }
+];
+let nextId = 7;
 
 // ==================== Middleware ====================
 app.use(express.json());
@@ -83,7 +96,7 @@ app.post('/api/vessels', requireAuth, (req, res) => {
     try {
         const newVessel = { id: nextId++, ...req.body };
         vessels.push(newVessel);
-        res.status(201).json(newVessel);
+        res.status(201).json({ success: true, message: 'تم حفظ المركب بنجاح', vessel: newVessel });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -95,7 +108,7 @@ app.put('/api/vessels/:id', requireAuth, (req, res) => {
         const index = vessels.findIndex(v => v.id === id);
         if (index !== -1) {
             vessels[index] = { ...vessels[index], ...req.body };
-            res.json(vessels[index]);
+            res.json({ success: true, vessel: vessels[index] });
         } else {
             res.status(404).json({ error: 'المركب غير موجود' });
         }
@@ -127,7 +140,7 @@ app.post('/api/users', requireAuth, (req, res) => {
         const { name, pass, role, enabled } = req.body;
         const newUser = { id: nextId++, name, pass, role, enabled };
         users.push(newUser);
-        res.status(201).json({ id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled });
+        res.status(201).json({ success: true, user: { id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled } });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -140,7 +153,7 @@ app.put('/api/users/:id', requireAuth, (req, res) => {
         const index = users.findIndex(u => u.id === id);
         if (index !== -1) {
             users[index] = { ...users[index], ...req.body };
-            res.json({ id: users[index].id, name: users[index].name, role: users[index].role, enabled: users[index].enabled });
+            res.json({ success: true });
         } else {
             res.status(404).json({ error: 'المستخدم غير موجود' });
         }
@@ -171,13 +184,13 @@ app.post('/api/logs', requireAuth, (req, res) => {
         const log = { id: Date.now(), ...req.body };
         logs.unshift(log);
         if (logs.length > 500) logs = logs.slice(0, 500);
-        res.status(201).json(log);
+        res.status(201).json({ success: true });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
-// ==================== مسارات التذاكر (تم إصلاح مشكلة الرد) ====================
+// ==================== مسارات التذاكر (تم إصلاح الرد) ====================
 app.get('/api/tickets', requireAuth, (req, res) => {
     res.json(tickets);
 });
@@ -186,25 +199,30 @@ app.post('/api/tickets', requireAuth, (req, res) => {
     try {
         const newTicket = { id: Date.now(), ...req.body, replies: [] };
         tickets.unshift(newTicket);
-        res.status(201).json(newTicket);
+        res.status(201).json({ success: true, ticket: newTicket });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
-// إصلاح مشكلة الرد على التذكرة
+// الرد على التذكرة - تم الإصلاح
 app.put('/api/tickets/:id/reply', requireAuth, (req, res) => {
-    if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+    }
     try {
         const id = parseInt(req.params.id);
         const ticket = tickets.find(t => t.id === id);
+        
         if (!ticket) {
             return res.status(404).json({ error: 'التذكرة غير موجودة' });
         }
+        
         if (!ticket.replies) ticket.replies = [];
         ticket.replies.push(req.body.reply);
         ticket.status = 'تم الرد';
-        res.json(ticket);
+        
+        res.json({ success: true, ticket: ticket });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -212,15 +230,19 @@ app.put('/api/tickets/:id/reply', requireAuth, (req, res) => {
 
 // إغلاق التذكرة
 app.put('/api/tickets/:id/close', requireAuth, (req, res) => {
-    if (req.session.userRole !== 'مسؤول') return res.status(403).json({ error: 'غير مصرح' });
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+    }
     try {
         const id = parseInt(req.params.id);
         const ticket = tickets.find(t => t.id === id);
+        
         if (!ticket) {
             return res.status(404).json({ error: 'التذكرة غير موجودة' });
         }
+        
         ticket.status = 'مغلقة';
-        res.json(ticket);
+        res.json({ success: true, ticket: ticket });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -261,5 +283,6 @@ app.listen(PORT, () => {
     console.log(`   👁️ viewer / 1234 (مشاهد فقط)`);
     console.log(`\n📊 عدد المراكب: ${vessels.length}`);
     console.log(`🛠️  مراكب معطوبة/صيانة: ${vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length}`);
+    console.log(`🎫 عدد التذاكر: ${tickets.length}`);
     console.log(`\n========================================\n`);
 });
