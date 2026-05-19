@@ -5,13 +5,15 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ==================== المستخدمين ====================
-const users = [
+let users = [
     { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true },
     { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
-    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
+    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true },
+    { id: 4, username: 'user1', password: '1234', role: 'مشاهد', enabled: true },
+    { id: 5, username: 'user2', password: '1234', role: 'محرر', enabled: true }
 ];
 
-// ==================== المراكب (مع وحدات الصيانة والمجمع الأمني) ====================
+// ==================== المراكب ====================
 let vessels = [
     { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
     { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
@@ -25,25 +27,33 @@ let vessels = [
 ];
 
 let tickets = [];
-let userSessions = [];
+
+// ==================== جلسات المستخدمين (وهمية لجميع المستخدمين) ====================
+let userSessions = [
+    { id: 100, username: 'admin', role: 'مسؤول', ip: '192.168.1.1', country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, loginTime: new Date().toISOString() },
+    { id: 101, username: 'editor', role: 'محرر', ip: '192.168.1.2', country: 'تونس', city: 'سوسة', lat: 35.8333, lon: 10.6333, loginTime: new Date().toISOString() },
+    { id: 102, username: 'viewer', role: 'مشاهد', ip: '192.168.1.3', country: 'تونس', city: 'صفاقس', lat: 34.7333, lon: 10.7667, loginTime: new Date().toISOString() },
+    { id: 103, username: 'user1', role: 'مشاهد', ip: '192.168.1.4', country: 'تونس', city: 'بنزرت', lat: 37.2667, lon: 9.8667, loginTime: new Date().toISOString() },
+    { id: 104, username: 'user2', role: 'محرر', ip: '192.168.1.5', country: 'تونس', city: 'المنستير', lat: 35.7667, lon: 10.8167, loginTime: new Date().toISOString() }
+];
+
 let nextId = 10;
 
 // Middleware
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({
-    secret: 'marine_fleet_secret_' + Date.now(),
+    secret: 'secret_' + Date.now(),
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
-// ==================== دوال مساعدة ====================
 function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// ==================== مسارات المصادقة ====================
+// ==================== تسجيل الدخول ====================
 app.post('/api/login', async (req, res) => {
     const { username, password, location } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -53,12 +63,8 @@ app.post('/api/login', async (req, res) => {
     }
     
     const ip = getClientIp(req);
-    
-    // استخدام الموقع الحقيقي من المتصفح أو موقع افتراضي
-    let lat = 36.8065;
-    let lon = 10.1815;
-    let city = 'تونس';
-    let country = 'تونس';
+    let lat = 36.8065, lon = 10.1815;
+    let city = 'تونس', country = 'تونس';
     
     if (location && location.lat && location.lon) {
         lat = location.lat;
@@ -86,12 +92,7 @@ app.post('/api/login', async (req, res) => {
     req.session.userName = user.username;
     req.session.userRole = user.role;
     
-    res.json({
-        success: true,
-        name: user.username,
-        role: user.role,
-        location: { lat: lat, lon: lon, city: city, country: country }
-    });
+    res.json({ success: true, name: user.username, role: user.role, location: { lat, lon, city, country } });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -99,11 +100,10 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== مسارات التتبع ====================
+// ==================== جلسات المستخدمين للخريطة ====================
 app.get('/api/sessions', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
-    const userSessionsList = userSessions.filter(s => s.username === req.session.userName);
-    res.json(userSessionsList);
+    res.json(userSessions.filter(s => s.username === req.session.userName));
 });
 
 app.get('/api/sessions/map', (req, res) => {
@@ -113,7 +113,7 @@ app.get('/api/sessions/map', (req, res) => {
     res.json(userSessions);
 });
 
-// ==================== مسارات المراكب ====================
+// ==================== المراكب ====================
 app.get('/api/vessels', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(vessels);
@@ -121,9 +121,8 @@ app.get('/api/vessels', (req, res) => {
 
 app.post('/api/vessels', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
-    const newVessel = { id: nextId++, ...req.body };
-    vessels.push(newVessel);
-    res.json({ success: true, message: 'تم حفظ المركب بنجاح' });
+    vessels.push({ id: nextId++, ...req.body });
+    res.json({ success: true, message: 'تم الحفظ' });
 });
 
 app.put('/api/vessels/:id', (req, res) => {
@@ -134,18 +133,17 @@ app.put('/api/vessels/:id', (req, res) => {
         vessels[index] = { ...vessels[index], ...req.body };
         res.json({ success: true });
     } else {
-        res.status(404).json({ error: 'المركب غير موجود' });
+        res.status(404).json({ error: 'غير موجود' });
     }
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
-    const id = parseInt(req.params.id);
-    vessels = vessels.filter(v => v.id !== id);
+    vessels = vessels.filter(v => v.id !== parseInt(req.params.id));
     res.json({ success: true });
 });
 
-// ==================== مسارات المستخدمين ====================
+// ==================== المستخدمين (مع تفعيل/تعطيل) ====================
 app.get('/api/users', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -158,8 +156,7 @@ app.post('/api/users', (req, res) => {
         return res.status(403).json({ error: 'غير مصرح' });
     }
     const { name, pass, role, enabled } = req.body;
-    const newUser = { id: nextId++, username: name, password: pass, role, enabled };
-    users.push(newUser);
+    users.push({ id: nextId++, username: name, password: pass, role, enabled });
     res.json({ success: true });
 });
 
@@ -173,7 +170,7 @@ app.put('/api/users/:id', (req, res) => {
         users[index] = { ...users[index], ...req.body };
         res.json({ success: true });
     } else {
-        res.status(404).json({ error: 'المستخدم غير موجود' });
+        res.status(404).json({ error: 'غير موجود' });
     }
 });
 
@@ -181,17 +178,11 @@ app.delete('/api/users/:id', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
     }
-    const id = parseInt(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-    if (index !== -1) {
-        users.splice(index, 1);
-        res.json({ success: true });
-    } else {
-        res.status(404).json({ error: 'المستخدم غير موجود' });
-    }
+    users = users.filter(u => u.id !== parseInt(req.params.id));
+    res.json({ success: true });
 });
 
-// ==================== مسارات التذاكر (تم إصلاح الرد) ====================
+// ==================== التذاكر ====================
 app.get('/api/tickets', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(tickets);
@@ -199,40 +190,33 @@ app.get('/api/tickets', (req, res) => {
 
 app.post('/api/tickets', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
-    const newTicket = { id: Date.now(), ...req.body, replies: [] };
-    tickets.unshift(newTicket);
-    res.json({ success: true, ticket: newTicket });
+    tickets.unshift({ id: Date.now(), ...req.body, replies: [] });
+    res.json({ success: true });
 });
 
 app.put('/api/tickets/:id/reply', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
-        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+        return res.status(403).json({ error: 'غير مصرح' });
     }
-    const id = parseInt(req.params.id);
-    const ticket = tickets.find(t => t.id === id);
-    if (!ticket) {
-        return res.status(404).json({ error: 'التذكرة غير موجودة' });
-    }
+    const ticket = tickets.find(t => t.id === parseInt(req.params.id));
+    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
     if (!ticket.replies) ticket.replies = [];
     ticket.replies.push(req.body.reply);
     ticket.status = 'تم الرد';
-    res.json({ success: true, message: 'تم الرد بنجاح' });
+    res.json({ success: true });
 });
 
 app.put('/api/tickets/:id/close', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
-        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+        return res.status(403).json({ error: 'غير مصرح' });
     }
-    const id = parseInt(req.params.id);
-    const ticket = tickets.find(t => t.id === id);
-    if (!ticket) {
-        return res.status(404).json({ error: 'التذكرة غير موجودة' });
-    }
+    const ticket = tickets.find(t => t.id === parseInt(req.params.id));
+    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
     ticket.status = 'مغلقة';
     res.json({ success: true });
 });
 
-// ==================== مسارات سجل النشاطات ====================
+// ==================== سجل النشاطات ====================
 app.get('/api/logs', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -250,7 +234,7 @@ app.get('/api/export-all', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
     }
-    res.json({ vessels, tickets, sessions: userSessions });
+    res.json({ vessels, users: users.map(u => ({ id: u.id, name: u.username, role: u.role, enabled: u.enabled })), tickets, sessions: userSessions });
 });
 
 app.post('/api/import-all', (req, res) => {
@@ -262,9 +246,8 @@ app.post('/api/import-all', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== مسار اختبار ====================
 app.get('/api/test', (req, res) => {
-    res.json({ status: 'OK', message: 'السيرفر يعمل بشكل صحيح' });
+    res.json({ status: 'OK' });
 });
 
 // ==================== تشغيل السيرفر ====================
@@ -274,20 +257,18 @@ app.listen(PORT, () => {
 ║     🚀 السيرفر يعمل بنجاح! 🚀                             ║
 ╚══════════════════════════════════════════════════════════╝
 
-📡 الرابط: http://localhost:${PORT}
+📡 http://localhost:${PORT}
+🔐 admin / 1234
 
-🔐 بيانات الدخول: admin / 1234
-
-📊 إحصائيات المراكب:
-   🚢 الإجمالي: ${vessels.length}
+📊 المراكب: ${vessels.length}
    🛠️ معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}
    🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
 
-🛠️ سجل الصيانة (مراكب معطوبة/صيانة):
-${vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').map(v => `   - ${v.name} (${v.stat})`).join('\n')}
+👥 المستخدمين النشطين على الخريطة: ${userSessions.length}
+   ${userSessions.map(s => `   📍 ${s.username} - ${s.city} (${s.lat}, ${s.lon})`).join('\n   ')}
 
-✅ النظام جاهز للاستخدام!
+✅ النظام جاهز!
 `);
 });
