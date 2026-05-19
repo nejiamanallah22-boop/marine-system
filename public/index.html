@@ -2,24 +2,26 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الوسائل البحرية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>منظومة الوسائل البحرية - نظام متكامل</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',Tahoma,sans-serif;background:#f4f7f9;padding:20px;direction:rtl}
-        #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#2e7d32;display:flex;justify-content:center;align-items:center;z-index:9999}
-        .login-box{background:white;padding:30px;border-radius:15px;width:350px;text-align:center}
+        :root{--primary:#2e7d32;--accent:#d9534f;--success:#28a745;--orange:#f39c12;--bg:#f4f7f9}
+        body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);padding:20px;direction:rtl}
+        @media(max-width:768px){body{padding:10px}}
+        #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--primary);display:flex;justify-content:center;align-items:center;z-index:9999}
+        .login-box{background:white;padding:30px;border-radius:15px;width:350px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
         .login-box input{width:100%;padding:12px;margin-bottom:15px;border:1px solid #ccc;border-radius:8px}
-        .login-box button{width:100%;padding:12px;background:#2e7d32;color:white;border:none;border-radius:8px;cursor:pointer}
-        .container{max-width:1400px;margin:auto;background:white;padding:20px;border-radius:15px}
+        .login-box button{width:100%;padding:12px;background:var(--primary);color:white;border:none;border-radius:8px;cursor:pointer}
+        .container{max-width:1400px;margin:auto;background:white;padding:20px;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1)}
         .nav{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-        .nav button{padding:10px 20px;background:#2e7d32;color:white;border:none;border-radius:5px;cursor:pointer}
+        .nav button{padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:5px;cursor:pointer}
         table{width:100%;border-collapse:collapse;margin-top:10px}
         th,td{border:1px solid #ddd;padding:8px;text-align:center}
-        th{background:#2e7d32;color:white}
+        th{background:var(--primary);color:white}
         .hidden{display:none}
         input,select{padding:8px;border:1px solid #ddd;border-radius:5px;width:100%}
         .input-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;padding:15px;background:#f8f9fa;border-radius:10px}
@@ -29,15 +31,19 @@
         .btn-blue{background:#007bff}
         .btn-orange{background:#fd7e14}
         .btn-sm{padding:5px 10px;font-size:12px;margin:2px;border:none;border-radius:3px;cursor:pointer;color:white}
+        .btn-cyan{background:#17a2b8}
+        .btn-purple{background:#6f42c1}
         .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;padding:10px;background:#e9ecef;border-radius:8px;align-items:center}
-        .stat-card{background:white;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex:1;min-width:120px;border-top:4px solid #2e7d32}
-        .stat-card .number{font-size:28px;font-weight:bold;color:#2e7d32}
+        .stat-card{background:white;border-radius:12px;padding:15px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);flex:1;min-width:120px;border-top:4px solid var(--primary)}
+        .stat-card .number{font-size:28px;font-weight:bold;color:var(--primary)}
         .stats{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px}
         .error-msg{color:red;margin-top:10px;display:none}
-        .map-container{height:400px;margin:20px 0;border-radius:10px;overflow:hidden;border:2px solid #2e7d32}
+        .toast{position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:12px 24px;border-radius:8px;z-index:1000;animation:fadeOut 3s ease forwards}
+        @keyframes fadeOut{0%{opacity:1}70%{opacity:1}100%{opacity:0;visibility:hidden}}
+        .map-container{height:500px;width:100%;margin:20px 0;border-radius:10px;overflow:hidden;border:2px solid var(--primary)}
         #locationMap{height:100%;width:100%}
         .region-table-card{background:white;border-radius:12px;margin-bottom:20px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-        .region-table-header{background:#2e7d32;color:white;padding:12px;font-weight:bold}
+        .region-table-header{background:var(--primary);color:white;padding:12px;font-weight:bold}
         .scrollable-table{overflow-x:auto;max-height:500px;overflow-y:auto}
         .status-صالح{color:green;font-weight:bold}
         .status-معطب{color:red;font-weight:bold}
@@ -46,17 +52,29 @@
         .mid-eff{background-color:#fff3cd}
         .low-eff{background-color:#f8d7da}
         .role-badge{background:#ffd966;color:#2e7d32;padding:4px 12px;border-radius:20px}
-        .search-input{flex:1}
+        .damage-column{min-width:200px;word-break:break-word}
+        .ticket-reply{background:#e9ecef;margin:5px 0;padding:8px;border-radius:8px}
+        .search-input{flex:1;min-width:200px}
         .search-input input{width:100%;padding:8px;border-radius:20px}
-        .toast{position:fixed;bottom:20px;right:20px;background:#2e7d32;color:white;padding:12px 24px;border-radius:8px;z-index:1000;animation:fadeOut 3s ease forwards}
-        @keyframes fadeOut{0%{opacity:1}70%{opacity:1}100%{opacity:0;visibility:hidden}}
+        .chart-switch{display:flex;gap:10px;justify-content:center;margin:15px 0}
+        .chart-switch button{padding:5px 15px;border-radius:20px;background:#e9ecef;border:none;cursor:pointer}
+        .chart-switch button.active{background:var(--primary);color:white}
+        .chart-box{background:#f9f9f9;padding:20px;border-radius:12px;margin-bottom:20px}
+        canvas{max-height:350px;width:100%}
+        .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;opacity:0.05;z-index:0;pointer-events:none}
+        .watermark img{width:70%;max-width:500px;height:auto}
+        @media print{.nav,#inputArea,.btn-sm,.filter-bar,.btn,.header-logo,.chart-switch,.map-container,.watermark{display:none}}
     </style>
 </head>
 <body>
 
+<div class="watermark">
+    <img src="https://cdn-icons-png.flaticon.com/512/10428/10428984.png" alt="مركب">
+</div>
+
 <div id="loginOverlay">
     <div class="login-box">
-        <h2>⚓ منظومة الوسائل البحرية</h2>
+        <h2 style="color:#2e7d32">⚓ منظومة الوسائل البحرية</h2>
         <input type="text" id="username" placeholder="اسم المستخدم">
         <input type="password" id="password" placeholder="كلمة المرور">
         <button onclick="doLogin()">دخول</button>
@@ -106,261 +124,4 @@
     <div id="pageMain">
         <div class="filter-bar">
             <div class="search-input"><input type="text" id="searchMain" placeholder="بحث" onkeyup="renderMain()"></div>
-            <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
-            <label>الإقليم:</label><select id="fRegMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
-            <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
-            <button class="btn-sm btn-green" onclick="refreshMain()">تحديث</button>
-        </div>
-        <div class="scrollable-table">
-            <table>
-                <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
-                <tbody id="mainBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="pageMaint" class="hidden">
-        <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()">
-            <label>الإقليم:</label><select id="fRegMaint" onchange="renderMaint()"><option value="الكل">الكل</option></select>
-            <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
-            <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
-            <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
-            <button class="btn-sm btn-green" onclick="refreshMaint()">تحديث</button>
-        </div>
-        <div class="scrollable-table">
-            <tr>
-                <thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead>
-                <tbody id="maintBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="pageEff" class="hidden">
-        <div class="filter-bar">
-            <label>تصفية الإقليم:</label>
-            <select id="fRegEff" onchange="renderEff()">
-                <option value="الكل">الكل</option>
-                <option value="نجاعة عامة">نجاعة عامة</option>
-                <option value="الشمال">الشمال</option>
-                <option value="الساحل">الساحل</option>
-                <option value="الوسط">الوسط</option>
-                <option value="الجنوب">الجنوب</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">المجمع الأمني بقبيبة</option>
-            </select>
-            <button class="btn-sm btn-green" onclick="refreshEff()">تحديث</button>
-        </div>
-        <div class="stats" id="statsCards"></div>
-        <div id="generalEffTableContainer"></div>
-        <div id="regionTables"></div>
-    </div>
-
-    <div id="pageSupport" class="hidden">
-        <div style="padding:20px">
-            <h3>نظام التذاكر - الدعم الفني</h3>
-            <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%;padding:10px;margin:10px 0">
-            <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة..." style="width:100%;padding:10px"></textarea>
-            <button class="btn btn-blue" onclick="sendTicket()">إرسال</button>
-            <div id="ticketResponse" style="margin-top:10px;color:green"></div>
-            <div id="ticketsList" style="margin-top:20px"></div>
-        </div>
-    </div>
-
-    <div id="pageTrack" class="hidden">
-        <div class="filter-bar">
-            <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
-            <label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()">
-            <button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button>
-        </div>
-        <div id="trackContent"></div>
-    </div>
-
-    <div id="pageMap" class="hidden">
-        <div class="map-container"><div id="locationMap"></div></div>
-        <button class="btn-sm btn-green" onclick="loadLocationMap()">تحديث الخريطة</button>
-    </div>
-
-    <div id="pageUsers" class="hidden">
-        <div class="input-grid">
-            <input type="text" id="un" placeholder="اسم المستخدم">
-            <input type="password" id="up" placeholder="كلمة السر">
-            <select id="ur"><option value="مسؤول">مسؤول</option><option value="محرر">محرر</option><option value="مشاهد">مشاهد</option></select>
-            <button class="btn btn-blue" onclick="addUser()">إضافة</button>
-        </div>
-        <div class="scrollable-table">
-            <table>
-                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
-                <tbody id="usersBody"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div id="passwordModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;justify-content:center;align-items:center">
-    <div style="background:white;padding:25px;border-radius:15px;width:400px;text-align:center">
-        <h3>تغيير كلمة المرور</h3>
-        <p id="modalUserName"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" style="width:100%;padding:10px;margin:10px 0">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="width:100%;padding:10px;margin:10px 0">
-        <button class="btn btn-green" onclick="saveNewPassword()">حفظ</button>
-        <button class="btn btn-red" onclick="closePasswordModal()">إلغاء</button>
-    </div>
-</div>
-
-<script>
-let currentUser = null;
-let selectedUserId = null;
-let locationMap = null;
-let mapMarkers = [];
-
-const ZONES_DATA = {
-    "الشمال":["تونس","بنزرت","طبرقة"],"الساحل":["سوسة","المنستير","نابل"],
-    "الوسط":["صفاقس","المهدية","قرقنة"],"الجنوب":["جرجيس","جربة","قابس"],
-    "وحدة الصيانة والإسناد البحري تونس":["تونس"],"وحدة الصيانة والإسناد البحري المنستير":["المنستير"],
-    "وحدة الصيانة والإسناد البحري صفاقس":["صفاقس"],"وحدة الصيانة والإسناد البحري جرجيس":["جرجيس"],
-    "المجمع الأمني بقبيبة":["قبيبة"]
-};
-
-const CATS_LIST = ["البروق","صقور","خوافر","زوارق مزدوجة","طوافات","وحدة صيانة","مركز أمني"];
-const ALL_REGIONS = ["الشمال","الساحل","الوسط","الجنوب","وحدة الصيانة والإسناد البحري تونس","وحدة الصيانة والإسناد البحري المنستير","وحدة الصيانة والإسناد البحري صفاقس","وحدة الصيانة والإسناد البحري جرجيس","المجمع الأمني بقبيبة"];
-
-function showToast(msg,isErr){let t=document.createElement('div');t.className='toast';t.style.background=isErr?'#d9534f':'#2e7d32';t.innerHTML=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
-function formatDate(d){if(!d)return'-';return d;}
-function canEdit(){return currentUser&&(currentUser.role==="مسؤول"||currentUser.role==="محرر");}
-function canDelete(){return currentUser&&currentUser.role==="مسؤول";}
-function canManageUsers(){return currentUser&&currentUser.role==="مسؤول";}
-function getCurrentDate(){let n=new Date();return`${n.getDate().toString().padStart(2,'0')}/${(n.getMonth()+1).toString().padStart(2,'0')}/${n.getFullYear()}`;}
-function getCurrentTime(){let n=new Date();return`${n.getHours().toString().padStart(2,'0')}:${n.getMinutes().toString().padStart(2,'0')}`;}
-
-async function apiCall(url,method='GET',body=null){
-    let opts={method,headers:{'Content-Type':'application/json'}};
-    if(body)opts.body=JSON.stringify(body);
-    let res=await fetch(url,opts);
-    if(!res.ok)throw new Error(await res.text());
-    return res.json();
-}
-async function loadVessels(){return apiCall('/api/vessels');}
-async function saveVessel(v){return apiCall('/api/vessels','POST',v);}
-async function updateVessel(id,v){return apiCall(`/api/vessels/${id}`,'PUT',v);}
-async function deleteVessel(id){return apiCall(`/api/vessels/${id}`,'DELETE');}
-async function loadUsers(){return apiCall('/api/users');}
-async function saveUser(u){return apiCall('/api/users','POST',u);}
-async function updateUser(id,u){return apiCall(`/api/users/${id}`,'PUT',u);}
-async function deleteUserAPI(id){return apiCall(`/api/users/${id}`,'DELETE');}
-async function loadTickets(){return apiCall('/api/tickets');}
-async function saveTicket(t){return apiCall('/api/tickets','POST',t);}
-async function loadLogs(){return apiCall('/api/logs');}
-async function saveLog(l){return apiCall('/api/logs','POST',l);}
-async function loadSessions(){return apiCall('/api/sessions');}
-async function loadMapSessions(){return apiCall('/api/sessions/map');}
-async function loginAPI(name,pass,loc){return apiCall('/api/login','POST',{username:name,password:pass,location:loc});}
-async function exportAllDataAPI(){return apiCall('/api/export-all');}
-async function importAllDataAPI(d){return apiCall('/api/import-all','POST',d);}
-
-async function logActivity(a,d){if(!currentUser)return;try{await saveLog({userName:currentUser.name,userRole:currentUser.role,action:a,details:d,date:getCurrentDate(),time:getCurrentTime()});}catch(e){}}
-
-async function refreshMain(){await renderMain();showToast("تم تحديث الأسطول");}
-async function refreshMaint(){await renderMaint();showToast("تم تحديث سجل الصيانة");}
-async function refreshEff(){await renderStatsCards();await renderGeneralEfficiencyTable();await renderRegionTables();showToast("تم تحديث الجاهزية");}
-async function refreshTickets(){await renderTickets();showToast("تم تحديث التذاكر");}
-async function refreshTrack(){if(canManageUsers()){await renderTrack();showToast("تم تحديث التتبع");}}
-async function refreshUsers(){if(canManageUsers()){await renderUsers();showToast("تم تحديث المستخدمين");}}
-
-async function loadLocationMap(){
-    if(!canManageUsers())return;
-    try{
-        let s=await loadMapSessions();
-        if(locationMap)locationMap.remove();
-        locationMap=L.map('locationMap').setView([36.8065,10.1815],13);
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{subdomains:['mt0','mt1','mt2','mt3'],attribution:'Google Satellite',maxZoom:20}).addTo(locationMap);
-        mapMarkers.forEach(m=>locationMap.removeLayer(m));mapMarkers=[];
-        s.forEach(ses=>{if(ses.lat&&ses.lon){let m=L.marker([ses.lat,ses.lon]).addTo(locationMap);m.bindPopup(`<b>${ses.username}</b><br>${ses.role}<br>${new Date(ses.loginTime).toLocaleString('ar-TN')}<br>${ses.city},${ses.country}<br>IP:${ses.ip}`);mapMarkers.push(m);}});
-    }catch(e){console.error(e);}
-}
-
-async function getUserLocation(){
-    return new Promise(r=>{if(!navigator.geolocation)r(null);navigator.geolocation.getCurrentPosition(p=>r({lat:p.coords.latitude,lon:p.coords.longitude,city:"الموقع الحقيقي",country:"المستخدم"}),()=>r(null));});
-}
-
-async function doLogin(){
-    let u=document.getElementById('username').value.trim(),p=document.getElementById('password').value.trim(),e=document.getElementById('loginError');
-    if(!u||!p){e.innerHTML="يرجى إدخال اسم المستخدم وكلمة المرور";e.style.display="block";return;}
-    try{
-        let loc=await getUserLocation(),user=await loginAPI(u,p,loc);
-        if(user.error){e.innerHTML=user.error;e.style.display="block";return;}
-        currentUser={name:user.name,role:user.role};
-        document.getElementById('loginOverlay').style.display='none';
-        document.getElementById('mainApp').style.display='block';
-        let isAdmin=currentUser.role==="مسؤول",isViewer=currentUser.role==="مشاهد";
-        document.getElementById('inputArea').style.display=isViewer?'none':'grid';
-        let fill=(id,list)=>{let s=document.getElementById(id);if(s){s.innerHTML='<option value="الكل">الكل</option>';list.forEach(i=>s.innerHTML+=`<option value="${i}">${i}</option>`);}};
-        fill('fCatMain',CATS_LIST);fill('fRegMain',ALL_REGIONS);fill('fRegMaint',ALL_REGIONS);
-        await renderMain();await renderMaint();await renderStatsCards();await renderGeneralEfficiencyTable();await renderRegionTables();await renderTickets();
-        if(isAdmin){await renderUsers();await renderTrack();await loadLocationMap();}
-        await logActivity("تسجيل دخول",`دخل من ${getCurrentTime()}`);
-        showToast(`مرحباً ${u}`);
-    }catch(e){e.innerHTML="خطأ في الاتصال";e.style.display="block";}
-}
-async function logout(){await logActivity("تسجيل خروج","");currentUser=null;document.getElementById('loginOverlay').style.display='flex';document.getElementById('mainApp').style.display='none';}
-
-async function addItem(){
-    if(!canEdit()){showToast("لا صلاحية",true);return;}
-    let n=document.getElementById('iName').value.trim();if(!n){showToast("الاسم مطلوب",true);return;}
-    let s=document.getElementById('iStat').value,f=document.getElementById('iDate').value;
-    if((s==='معطب'||s==='صيانة')&&!f){showToast("تاريخ العطب مطلوب",true);return;}
-    let it={name:n,num:document.getElementById('iNum').value,len:parseFloat(document.getElementById('iLen').value)||0,reg:document.getElementById('iReg').value,zone:document.getElementById('iZone').value,port:document.getElementById('iPort').value,supp:document.getElementById('iSupp').value,stat:s,break:document.getElementById('iBreak').value,fDate:f,eDate:document.getElementById('iEnd').value,ref:document.getElementById('iRef').value,cat:"زوارق مزدوجة"};
-    try{await saveVessel(it);await logActivity("إضافة مركب",`أضاف ${n}`);['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});document.getElementById('iReg').value='';document.getElementById('iZone').innerHTML='<option value="">المنطقة</option>';await renderMain();await renderMaint();await refreshEff();showToast("تم الحفظ");}catch(e){showToast("خطأ",true);}
-}
-async function editItem(id,name){if(!canEdit())return;let data=await loadVessels(),item=data.find(x=>(x.id||x._id).toString()===id.toString());if(item){document.getElementById('iName').value=item.name;document.getElementById('iNum').value=item.num||'';document.getElementById('iLen').value=item.len||'';document.getElementById('iReg').value=item.reg||'';updateZones();setTimeout(()=>{document.getElementById('iZone').value=item.zone},50);document.getElementById('iPort').value=item.port||'';document.getElementById('iSupp').value=item.supp||'';document.getElementById('iStat').value=item.stat;document.getElementById('iBreak').value=item.break||'';document.getElementById('iDate').value=item.fDate||'';document.getElementById('iEnd').value=item.eDate||'';document.getElementById('iRef').value=item.ref||'';window.scrollTo(0,0);let old=item.name,saveBtn=document.querySelector('#inputArea .btn-green'),orig=saveBtn.onclick;saveBtn.onclick=async()=>{let up={name:document.getElementById('iName').value.trim(),num:document.getElementById('iNum').value,len:parseFloat(document.getElementById('iLen').value)||0,reg:document.getElementById('iReg').value,zone:document.getElementById('iZone').value,port:document.getElementById('iPort').value,supp:document.getElementById('iSupp').value,stat:document.getElementById('iStat').value,break:document.getElementById('iBreak').value,fDate:document.getElementById('iDate').value,eDate:document.getElementById('iEnd').value,ref:document.getElementById('iRef').value,cat:"زوارق مزدوجة"};try{await updateVessel(item.id||item._id,up);await logActivity("تعديل مركب",`تم تعديل ${old}`);await renderMain();await renderMaint();await refreshEff();showToast("تم التحديث");saveBtn.onclick=orig;['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id=>{let el=document.getElementById(id);if(el)el.value='';});document.getElementById('iReg').value='';document.getElementById('iZone').innerHTML='<option value="">المنطقة</option>';}catch(e){showToast("خطأ",true);}};showToast("قم بالتعديل ثم حفظ");}}
-async function delItem(id,name){if(!canDelete())return;if(confirm(`حذف ${name}?`)){await deleteVessel(id);await logActivity("حذف مركب",`حذف ${name}`);await renderMain();await renderMaint();await refreshEff();showToast("تم الحذف");}}
-function updateZones(){let r=document.getElementById('iReg').value,z=document.getElementById('iZone');z.innerHTML='<option value="">المنطقة</option>';if(ZONES_DATA[r])ZONES_DATA[r].forEach(zo=>z.innerHTML+=`<option value="${zo}">${zo}</option>`);}
-
-async function renderMain(){let data=await loadVessels(),fc=document.getElementById('fCatMain').value,fr=document.getElementById('fRegMain').value,st=document.getElementById('searchMain').value.toLowerCase();let f=data.filter(x=>(fc==="الكل"||x.cat===fc)&&(fr==="الكل"||x.reg===fr)&&(!st||x.name?.toLowerCase().includes(st)||x.num?.toLowerCase().includes(st)));let h="";f.forEach(x=>{h+=`<tr><td>${x.name}</td><td>${x.num||'-'}</td><td>${x.len||'-'}</td><td>${x.cat||'-'}</td><td>${x.reg||'-'}</td><td>${x.zone||'-'}</td><td>${x.port||'-'}</td><td>${x.supp||'-'}</td><td class="status-${x.stat}">${x.stat}</td><td>${x.break||'-'}</td><td>${formatDate(x.fDate)}</td><td>${formatDate(x.eDate)}</td><td>${canEdit()?`<button class="btn-sm btn-orange" onclick="editItem(${x.id},'${x.name}')">تعديل</button>`:''}${canDelete()?`<button class="btn-sm btn-red" onclick="delItem(${x.id},'${x.name}')">حذف</button>`:''}</td>`});document.getElementById('mainBody').innerHTML=h||'<tr><td colspan="13">لا توجد مراكب</td></tr>';}
-function clearMainSearch(){document.getElementById('searchMain').value='';renderMain();}
-async function renderMaint(){let data=await loadVessels(),fr=document.getElementById('fRegMaint').value,ds=document.getElementById('fDateStart').value,de=document.getElementById('fDateEnd').value,st=document.getElementById('searchMaint').value.toLowerCase();let f=data.filter(x=>x.stat==='معطب'||x.stat==='صيانة');if(fr!=="الكل")f=f.filter(x=>x.reg===fr);if(ds||de){let s=ds?new Date(ds):null,e=de?new Date(de):null;f=f.filter(x=>{if(!x.fDate)return false;let d=new Date(x.fDate);if(s&&d<s)return false;if(e&&d>e)return false;return true;});}if(st)f=f.filter(x=>x.name?.toLowerCase().includes(st)||x.break?.toLowerCase().includes(st));let h="";f.forEach(x=>{h+=`<tr><td>${x.name}</td><td>${x.num||'-'}</td><td>${x.reg||'-'}</td><td>${x.zone||'-'}</td><td class="status-${x.stat}">${x.stat}</td><td>${x.break||'-'}</td><td>${formatDate(x.fDate)}</td><td>${formatDate(x.eDate)}</td><td>${x.ref||'-'}</td><td>${canEdit()?`<button class="btn-sm btn-orange" onclick="editItem(${x.id},'${x.name}')">تعديل</button>`:''}${canDelete()?`<button class="btn-sm btn-red" onclick="delItem(${x.id},'${x.name}')">حذف</button>`:''}</td>`});document.getElementById('maintBody').innerHTML=h||'<tr><td colspan="10">لا توجد مراكب معطوبة</td></tr>';}
-function resetMaintFilters(){document.getElementById('fRegMaint').value='الكل';document.getElementById('fDateStart').value='';document.getElementById('fDateEnd').value='';document.getElementById('searchMaint').value='';renderMaint();}
-
-async function renderStatsCards(){let d=await loadVessels();let total=d.length,ok=d.filter(v=>v.stat==='صالح').length,broken=d.filter(v=>v.stat==='معطب').length,maint=d.filter(v=>v.stat==='صيانة').length,eff=total?((ok/total)*100).toFixed(1):0,maintUnits=d.filter(v=>v.cat==='وحدة صيانة').length,secComplex=d.filter(v=>v.cat==='مركز أمني').length;document.getElementById('statsCards').innerHTML=`<div class="stat-card"><div class="number">${total}</div><div>🚢 الإجمالي</div></div><div class="stat-card"><div class="number">${ok}</div><div>✅ الصالح</div></div><div class="stat-card"><div class="number">${broken}</div><div>⚠️ المعطوب</div></div><div class="stat-card"><div class="number">${maint}</div><div>🔧 الصيانة</div></div><div class="stat-card"><div class="number">${eff}%</div><div>📈 النجاعة</div></div><div class="stat-card"><div class="number">${maintUnits}</div><div>🏢 وحدات الصيانة</div></div><div class="stat-card"><div class="number">${secComplex}</div><div>🏛️ المجمع الأمني</div></div>`;}
-async function renderGeneralEfficiencyTable(){let d=await loadVessels();let ok=d.filter(v=>v.stat==='صالح').length,all=d.length,eff=all?((ok/all)*100).toFixed(1):0;let h=`<div class="region-table-card"><div class="region-table-header">النجاعة العامة: ${eff}% (${ok}/${all})</div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>الصالح</th><th>المعطوب</th><th>الصيانة</th><th>النجاعة</th></tr></thead><tbody>`;for(let cat of CATS_LIST){let cd=d.filter(v=>v.cat===cat),okk=cd.filter(v=>v.stat==='صالح').length,brk=cd.filter(v=>v.stat==='معطب').length,mnt=cd.filter(v=>v.stat==='صيانة').length,pct=cd.length?((okk/cd.length)*100).toFixed(1):0,cls=pct>=80?'high-eff':(pct>=50?'mid-eff':'low-eff');h+=`<tr class="${cls}"><td>${cat}</td><td style="color:green">${okk}</td><td style="color:red">${brk}</td><td style="color:orange">${mnt}</td><td><strong>${pct}%</strong></td></tr>`;}h+=`</tbody></table></div></div>`;document.getElementById('generalEffTableContainer').innerHTML=h;}
-async function renderRegionTables(){let d=await loadVessels(),sel=document.getElementById('fRegEff').value;if(sel==="نجاعة عامة"){document.getElementById('regionTables').innerHTML="";return;}let h='',regs=sel==="الكل"?ALL_REGIONS:[sel];for(let reg of regs){let rd=d.filter(v=>v.reg===reg),tot=rd.length,ok=rd.filter(v=>v.stat==='صالح').length,brk=rd.filter(v=>v.stat==='معطب').length,mnt=rd.filter(v=>v.stat==='صيانة').length,eff=tot?((ok/tot)*100).toFixed(1):0,col=reg.includes("وحدة الصيانة")?"#f39c12":(reg.includes("المجمع")?"#6f42c1":"#2e7d32");h+=`<div class="region-table-card" style="margin-bottom:20px"><div class="region-table-header" style="background:${col}">📍 ${reg} - الجاهزية: ${eff}% (${ok}/${tot})</div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>الصالح</th><th>المعطوب</th><th>الصيانة</th><th>النجاعة</th></tr></thead><tbody>`;for(let cat of CATS_LIST){let cd=rd.filter(v=>v.cat===cat),okk=cd.filter(v=>v.stat==='صالح').length,brk=cd.filter(v=>v.stat==='معطب').length,mnt=cd.filter(v=>v.stat==='صيانة').length,pct=cd.length?((okk/cd.length)*100).toFixed(1):0,cls=pct>=80?'high-eff':(pct>=50?'mid-eff':'low-eff');h+=`<tr class="${cls}"><td>${cat}</td><td style="color:green">${okk}</td><td style="color:red">${brk}</td><td style="color:orange">${mnt}</td><td><strong>${pct}%</strong></td></tr>`;}h+=`</tbody></table></div></div>`;}document.getElementById('regionTables').innerHTML=h;}
-
-async function sendTicket(){if(!currentUser)return;let s=document.getElementById('ticketSubject').value.trim(),m=document.getElementById('ticketMessage').value.trim();if(!s||!m)return;await saveTicket({userName:currentUser.name,userRole:currentUser.role,subject:s,message:m,date:getCurrentDate(),time:getCurrentTime(),status:'قيد المعالجة',replies:[]});document.getElementById('ticketSubject').value='';document.getElementById('ticketMessage').value='';document.getElementById('ticketResponse').innerHTML='✅ تم الإرسال';setTimeout(()=>document.getElementById('ticketResponse').innerHTML='',3000);await renderTickets();showToast("تم الإرسال");}
-async function replyToTicket(id){if(!canManageUsers())return;let r=prompt("أدخل ردك:");if(!r)return;await fetch(`/api/tickets/${id}/reply`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({reply:{adminName:currentUser.name,reply:r,date:getCurrentDate(),time:getCurrentTime()}})});await renderTickets();showToast("تم الرد");}
-async function closeTicket(id){if(!canManageUsers())return;if(!confirm("إغلاق التذكرة؟"))return;await fetch(`/api/tickets/${id}/close`,{method:'PUT'});await renderTickets();showToast("تم الإغلاق");}
-async function renderTickets(){let t=await loadTickets(),h='<div class="scrollable-table"><table class="region-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th><th>إجراءات</th></tr></thead><tbody>';if(t.length===0)h+='<tr><td colspan="9">لا توجد تذاكر</td>$5';else t.forEach((x,i)=>{h+=`<tr><td>${i+1}</td><td>${x.date}</td><td>${x.time}</td><td>${x.userName}<br><small>${x.userRole}</small></td><td><b>${x.subject}</b></td><td style="color:${x.status==='مغلقة'?'#888':(x.status==='تم الرد'?'green':'orange')}">${x.status}</td><td>${x.message}</td><td>${x.replies?.length||0}</td><td><button class="btn-sm btn-cyan" onclick="replyToTicket(${x.id})">رد</button> <button class="btn-sm btn-red" onclick="closeTicket(${x.id})">إغلاق</button></td></tr>`;});h+='</tbody></table></div>';document.getElementById('ticketsList').innerHTML=h;}
-
-async function renderTrack(){if(!canManageUsers())return;let s=await loadSessions(),h='<div class="stats"><div class="stat-card"><div class="number">'+s.length+'</div><div>جلسات</div></div></div><div class="scrollable-table"><table class="region-table"><thead><tr><th>#</th><th>التاريخ</th><th>المستخدم</th><th>الصلاحية</th><th>IP</th><th>الدولة</th><th>المدينة</th></tr></thead><tbody>';s.forEach((x,i)=>{h+=`<tr><td>${i+1}</td><td>${new Date(x.loginTime).toLocaleString('ar-TN')}</td><td><b>${x.username}</b></td><td>${x.role}</td><td>${x.ip||'-'}</td><td>${x.country||'-'}</td><td>${x.city||'-'}</td></tr>`;});h+='</tbody>}</div>';document.getElementById('trackContent').innerHTML=h;}
-function resetTrackFilters(){document.getElementById('trackDateStart').value='';document.getElementById('trackDateEnd').value='';renderTrack();}
-
-async function renderUsers(){if(!canManageUsers())return;let u=await loadUsers(),h='';u.forEach(x=>{h+=`<tr><td>${x.name}</td><td>${x.role}</td><td class="${x.enabled?'status-صالح':'status-معطب'}">${x.enabled?'مفعل':'معطل'}</td><td><button class="btn-sm btn-warning" onclick="openPasswordModal(${x.id},'${x.name}')">تغيير</button></td><td>${x.enabled?`<button class="btn-sm btn-orange" onclick="toggleUser(${x.id},false)">تعطيل</button>`:`<button class="btn-sm btn-green" onclick="toggleUser(${x.id},true)">تفعيل</button>`}</td><td><button class="btn-sm btn-red" onclick="deleteUser(${x.id})">حذف</button></td></tr>`;});document.getElementById('usersBody').innerHTML=h;}
-async function addUser(){if(!canManageUsers())return;let u=document.getElementById('un').value.trim(),p=document.getElementById('up').value.trim(),r=document.getElementById('ur').value;if(!u||!p)return;let us=await loadUsers();if(us.find(x=>x.name===u)){showToast("الاسم موجود",true);return;}await saveUser({name:u,pass:p,role:r,enabled:true});document.getElementById('un').value='';document.getElementById('up').value='';await renderUsers();showToast("تم الإضافة");}
-function openPasswordModal(id,name){selectedUserId=id;document.getElementById('modalUserName').innerHTML=`تغيير كلمة المرور: ${name}`;document.getElementById('passwordModal').style.display='flex';}
-function closePasswordModal(){document.getElementById('passwordModal').style.display='none';selectedUserId=null;}
-async function saveNewPassword(){if(!canManageUsers())return;let np=document.getElementById('newPassword').value.trim(),cp=document.getElementById('confirmPassword').value.trim();if(!np||np!==cp)return;await updateUser(selectedUserId,{pass:np});closePasswordModal();await renderUsers();showToast("تم التغيير");}
-async function toggleUser(id,enable){await updateUser(id,{enabled:enable});await renderUsers();showToast(enable?"تم التفعيل":"تم التعطيل");}
-async function deleteUser(id){if(confirm("حذف المستخدم؟")){await deleteUserAPI(id);await renderUsers();showToast("تم الحذف");}}
-
-async function exportAllData(){if(!canManageUsers())return;let d=await exportAllDataAPI();let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`marine_backup_${new Date().toISOString().split('T')[0]}.json`;a.click();showToast("تم التصدير");}
-async function importAllData(inp){if(!canManageUsers())return;if(!inp.files[0])return;let r=new FileReader();r.onload=async e=>{let d=JSON.parse(e.target.result);await importAllDataAPI(d);await refreshAllPages();showToast("تم الاستيراد");};r.readAsText(inp.files[0]);inp.value='';}
-
-function showPage(p){
-    let pages=['pageMain','pageMaint','pageEff','pageSupport','pageTrack','pageMap','pageUsers'];
-    pages.forEach(pid=>document.getElementById(pid).classList.add('hidden'));
-    let ia=currentUser?.role==="مسؤول";
-    if(p==='main')document.getElementById('pageMain').classList.remove('hidden');
-    if(p==='maint'){document.getElementById('pageMaint').classList.remove('hidden');renderMaint();}
-    if(p==='eff'){document.getElementById('pageEff').classList.remove('hidden');refreshEff();}
-    if(p==='support'){document.getElementById('pageSupport').classList.remove('hidden');renderTickets();}
-    if(p==='track'&&ia){document.getElementById('pageTrack').classList.remove('hidden');renderTrack();}
-    if(p==='map'&&ia){document.getElementById('pageMap').classList.remove('hidden');loadLocationMap();}
-    if(p==='users'&&ia){document.getElementById('pageUsers').classList.remove('hidden');renderUsers();}
-}
-
-window.doLogin=doLogin;window.logout=logout;window.showPage=showPage;window.updateZones=updateZones;window.addItem=addItem;window.editItem=editItem;window.delItem=delItem;window.renderMain=renderMain;window.renderMaint=renderMaint;window.renderStatsCards=renderStatsCards;window.renderGeneralEfficiencyTable=renderGeneralEfficiencyTable;window.renderRegionTables=renderRegionTables;window.renderTrack=renderTrack;window.resetMaintFilters=resetMaintFilters;window.resetTrackFilters=resetTrackFilters;window.clearMainSearch=clearMainSearch;window.sendTicket=sendTicket;window.replyToTicket=replyToTicket;window.closeTicket=closeTicket;window.addUser=addUser;window.openPasswordModal=openPasswordModal;window.closePasswordModal=closePasswordModal;window.saveNewPassword=saveNewPassword;window.toggleUser=toggleUser;window.deleteUser=deleteUser;window.exportAllData=exportAllData;window.importAllData=importAllData;window.refreshMain=refreshMain;window.refreshMaint=refreshMaint;window.refreshEff=refreshEff;window.refreshTickets=refreshTickets;window.refreshTrack=refreshTrack;window.refreshUsers=refreshUsers;window.loadLocationMap=loadLocationMap;
-</script>
-</body>
-</html>
+            <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="
