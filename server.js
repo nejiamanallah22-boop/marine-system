@@ -8,9 +8,7 @@ const PORT = process.env.PORT || 3000;
 let users = [
     { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true },
     { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
-    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true },
-    { id: 4, username: 'user1', password: '1234', role: 'مشاهد', enabled: true },
-    { id: 5, username: 'user2', password: '1234', role: 'محرر', enabled: true }
+    { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
 ];
 
 // ==================== المراكب ====================
@@ -27,16 +25,7 @@ let vessels = [
 ];
 
 let tickets = [];
-
-// ==================== جلسات المستخدمين (وهمية لجميع المستخدمين) ====================
-let userSessions = [
-    { id: 100, username: 'admin', role: 'مسؤول', ip: '192.168.1.1', country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, loginTime: new Date().toISOString() },
-    { id: 101, username: 'editor', role: 'محرر', ip: '192.168.1.2', country: 'تونس', city: 'سوسة', lat: 35.8333, lon: 10.6333, loginTime: new Date().toISOString() },
-    { id: 102, username: 'viewer', role: 'مشاهد', ip: '192.168.1.3', country: 'تونس', city: 'صفاقس', lat: 34.7333, lon: 10.7667, loginTime: new Date().toISOString() },
-    { id: 103, username: 'user1', role: 'مشاهد', ip: '192.168.1.4', country: 'تونس', city: 'بنزرت', lat: 37.2667, lon: 9.8667, loginTime: new Date().toISOString() },
-    { id: 104, username: 'user2', role: 'محرر', ip: '192.168.1.5', country: 'تونس', city: 'المنستير', lat: 35.7667, lon: 10.8167, loginTime: new Date().toISOString() }
-];
-
+let userSessions = [];
 let nextId = 10;
 
 // Middleware
@@ -53,9 +42,29 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// ==================== تسجيل الدخول ====================
+// دالة لتحديد الموقع بناءً على IP (تلقائياً بدون طلب إذن)
+async function getLocationByIp(ip) {
+    try {
+        if (ip === '::1' || ip === '127.0.0.1') {
+            return { country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, isp: 'محلي' };
+        }
+        const response = await fetch(`http://ip-api.com/json/${ip}?lang=ar`);
+        const data = await response.json();
+        return {
+            country: data.country || 'تونس',
+            city: data.city || 'تونس',
+            lat: data.lat || 36.8065,
+            lon: data.lon || 10.1815,
+            isp: data.isp || 'غير معروف'
+        };
+    } catch (error) {
+        return { country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, isp: 'غير معروف' };
+    }
+}
+
+// ==================== تسجيل الدخول (تحديد الموقع تلقائياً) ====================
 app.post('/api/login', async (req, res) => {
-    const { username, password, location } = req.body;
+    const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
     
     if (!user || !user.enabled) {
@@ -63,25 +72,20 @@ app.post('/api/login', async (req, res) => {
     }
     
     const ip = getClientIp(req);
-    let lat = 36.8065, lon = 10.1815;
-    let city = 'تونس', country = 'تونس';
+    const geo = await getLocationByIp(ip);
     
-    if (location && location.lat && location.lon) {
-        lat = location.lat;
-        lon = location.lon;
-        city = "الموقع الحقيقي";
-        country = "المستخدم";
-    }
+    console.log(`📍 موقع ${user.username}: ${geo.city}, ${geo.country} (${geo.lat}, ${geo.lon}) - IP: ${ip}`);
     
     const sessionData = {
         id: Date.now(),
         username: user.username,
         role: user.role,
         ip: ip,
-        country: country,
-        city: city,
-        lat: lat,
-        lon: lon,
+        country: geo.country,
+        city: geo.city,
+        lat: geo.lat,
+        lon: geo.lon,
+        isp: geo.isp,
         loginTime: new Date().toISOString()
     };
     
@@ -92,7 +96,12 @@ app.post('/api/login', async (req, res) => {
     req.session.userName = user.username;
     req.session.userRole = user.role;
     
-    res.json({ success: true, name: user.username, role: user.role, location: { lat, lon, city, country } });
+    res.json({ 
+        success: true, 
+        name: user.username, 
+        role: user.role, 
+        location: { country: geo.country, city: geo.city, lat: geo.lat, lon: geo.lon }
+    });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -143,7 +152,7 @@ app.delete('/api/vessels/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== المستخدمين (مع تفعيل/تعطيل) ====================
+// ==================== المستخدمين ====================
 app.get('/api/users', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -199,7 +208,7 @@ app.put('/api/tickets/:id/reply', (req, res) => {
         return res.status(403).json({ error: 'غير مصرح' });
     }
     const ticket = tickets.find(t => t.id === parseInt(req.params.id));
-    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
+    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
     if (!ticket.replies) ticket.replies = [];
     ticket.replies.push(req.body.reply);
     ticket.status = 'تم الرد';
@@ -211,7 +220,7 @@ app.put('/api/tickets/:id/close', (req, res) => {
         return res.status(403).json({ error: 'غير مصرح' });
     }
     const ticket = tickets.find(t => t.id === parseInt(req.params.id));
-    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
+    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
     ticket.status = 'مغلقة';
     res.json({ success: true });
 });
@@ -260,14 +269,14 @@ app.listen(PORT, () => {
 📡 http://localhost:${PORT}
 🔐 admin / 1234
 
-📊 المراكب: ${vessels.length}
+📍 نظام تحديد الموقع عبر IP (تلقائي بدون طلب إذن)
+
+📊 إحصائيات المراكب:
+   🚢 الإجمالي: ${vessels.length}
    🛠️ معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}
    🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
-
-👥 المستخدمين النشطين على الخريطة: ${userSessions.length}
-   ${userSessions.map(s => `   📍 ${s.username} - ${s.city} (${s.lat}, ${s.lon})`).join('\n   ')}
 
 ✅ النظام جاهز!
 `);
