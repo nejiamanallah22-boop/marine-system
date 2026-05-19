@@ -2,21 +2,27 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة الوسائل البحرية - نظام متكامل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>منظومة الوسائل البحرية - نظام متكامل مع تتبع المواقع</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root { --primary: #2e7d32; --accent: #d9534f; --success: #28a745; --orange: #f39c12; --bg: #f4f7f9; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; direction: rtl; }
         @media (max-width: 768px) { body { padding: 10px; } .input-grid { grid-template-columns: 1fr !important; } .nav { flex-direction: column; } .nav button { width: 100%; } .filter-bar { flex-direction: column; } .scrollable-table { overflow-x: auto; } }
+        
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         .login-box button { width: 100%; }
+        
         .container { max-width: 1550px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--primary); }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; position: relative; }
         .header-logo { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 60px; height: auto; opacity: 0.85; }
         .developer-info { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #2e7d32; padding: 6px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1em; display: inline-block; }
+        
         .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
         .btn-blue { background: var(--primary); } 
@@ -27,13 +33,16 @@
         .btn-warning { background: #ffc107; color: #333; }
         .btn-purple { background: #6f42c1; }
         .btn-cyan { background: #17a2b8; }
+        
         .filter-bar { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #ddd; }
         .filter-bar label { font-weight: bold; color: var(--primary); font-size: 0.9em; }
         .filter-bar input, .filter-bar select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
         .search-input { flex: 1; min-width: 200px; }
         .search-input input { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ccc; }
+        
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 0.9em; }
         th { background: var(--primary); color: white; }
@@ -41,6 +50,7 @@
         .status-معطب { color: red; font-weight: bold; }
         .status-صيانة { color: orange; font-weight: bold; }
         .hidden { display: none !important; }
+        
         .region-table-card { background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .region-table-header { background: var(--primary); color: white; padding: 12px; font-weight: bold; font-size: 1.1em; }
         .region-table { width: 100%; margin: 0; }
@@ -48,32 +58,51 @@
         .high-eff { background-color: #d4edda; }
         .mid-eff { background-color: #fff3cd; }
         .low-eff { background-color: #f8d7da; }
+        
         .stats-cards { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
         .stat-card { background: white; border-radius: 12px; padding: 15px 25px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; min-width: 150px; border-top: 4px solid var(--primary); }
         .stat-card .number { font-size: 28px; font-weight: bold; color: var(--primary); }
+        
         .chart-switch { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
         .chart-switch button { padding: 5px 15px; border-radius: 20px; background: #e9ecef; border: none; cursor: pointer; }
         .chart-switch button.active { background: var(--primary); color: white; }
+        
         .charts-container { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; justify-content: center; }
         .chart-box { flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border-radius: 12px; }
         canvas { max-height: 350px; width: 100% !important; }
+        
         .role-badge { background: #ffd966; color: #2e7d32; padding: 4px 12px; border-radius: 20px; margin-right: 10px; }
+        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 450px; text-align: center; }
+        
         .error-msg { color: red; margin-top: 10px; display: none; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 12px 24px; border-radius: 8px; z-index: 10001; animation: fadeOut 3s ease forwards; }
         @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(20px); visibility: hidden; } }
+        
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
+        
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
         .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
         .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
+        
         .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
         .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        
         .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; opacity: 0.05; z-index: 0; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .watermark img { width: 70%; max-width: 500px; height: auto; object-fit: contain; }
-        @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .scroll-buttons, .watermark { display: none !important; } @page { size: landscape; margin: 1cm; } }
+        
+        /* خريطة التتبع */
+        .map-container { height: 400px; width: 100%; margin: 20px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
+        #locationMap { height: 100%; width: 100%; }
+        .session-card { background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 10px 0; border-right: 4px solid var(--primary); }
+        .session-card h4 { color: var(--primary); margin-bottom: 10px; }
+        .session-info { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .session-info span { background: white; padding: 5px 10px; border-radius: 5px; font-size: 0.85em; }
+        
+        @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
 <body>
@@ -84,7 +113,7 @@
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="color:#2e7d32">منظومة الوسائل البحرية</h2>
+        <h2 style="color:#2e7d32">⚓ منظومة الوسائل البحرية</h2>
         <input type="text" id="username" placeholder="اسم المستخدم">
         <input type="password" id="password" placeholder="كلمة المرور">
         <button class="btn btn-blue" onclick="doLogin()">دخول</button>
@@ -94,14 +123,14 @@
 
 <div id="mainApp" class="container" style="display: none;">
     <header>
-        <h1>منظومة متابعة الوسائل البحرية</h1>
+        <h1>⚓ منظومة متابعة الوسائل البحرية – نظام متكامل مع تتبع المواقع</h1>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
-            <div class="developer-info">مطور: أمان الله ناجي</div>
+            <div class="developer-info">💻 Développeur: أمان الله ناجي 🚀</div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <span id="userRoleDisplay" class="role-badge"></span>
-                <button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn">تصدير البيانات</button>
-                <label class="file-input-label" id="importLabelBtn">استيراد بيانات <input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label>
-                <button class="btn-sm btn-blue" onclick="refreshAllPages()">تحديث الكل</button>
+                <button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn">📤 تصدير البيانات</button>
+                <label class="file-input-label" id="importLabelBtn">📥 استيراد بيانات <input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label>
+                <button class="btn-sm btn-blue" onclick="refreshAllPages()">🔄 تحديث الكل</button>
                 <button class="btn-sm btn-red" onclick="logout()">خروج</button>
             </div>
         </div>
@@ -109,13 +138,14 @@
     </header>
 
     <div class="nav">
-        <button class="btn btn-blue" onclick="showPage('main')">الأسطول البحري</button>
-        <button class="btn btn-orange" onclick="showPage('maint')">سجل الصيانة</button>
-        <button class="btn btn-green" onclick="showPage('eff')">جاهزية الأسطول</button>
-        <button class="btn btn-cyan" onclick="showPage('support')">الدعم الفني</button>
-        <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">تتبع المستخدمين</button>
-        <button id="admBtn" class="btn btn-red" onclick="showPage('users')">المستخدمين</button>
-        <button id="printBtn" class="btn btn-blue" onclick="window.print()">طباعة</button>
+        <button class="btn btn-blue" onclick="showPage('main')">⚓ الأسطول البحري</button>
+        <button class="btn btn-orange" onclick="showPage('maint')">🛠️ سجل الصيانة</button>
+        <button class="btn btn-green" onclick="showPage('eff')">📈 جاهزية الأسطول</button>
+        <button class="btn btn-cyan" onclick="showPage('support')">📞 الدعم الفني</button>
+        <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">📊 تتبع المستخدمين</button>
+        <button id="mapBtn" class="btn btn-info" onclick="showPage('map')">🗺️ خريطة التتبع</button>
+        <button id="admBtn" class="btn btn-red" onclick="showPage('users')">👥 المستخدمين</button>
+        <button id="printBtn" class="btn btn-blue" onclick="window.print()">🖨️ طباعة</button>
     </div>
 
     <div id="inputArea" class="input-grid">
@@ -124,10 +154,15 @@
         <input type="number" id="iLen" placeholder="الطول (م)">
         <select id="iReg" onchange="updateZones()">
             <option value="">الإقليم</option>
-            <option value="الشمال">الحرس البحري بالشمال</option>
-            <option value="الساحل">الحرس البحري بالساحل</option>
-            <option value="الوسط">الحرس البحري بالوسط</option>
-            <option value="الجنوب">الحرس البحري بالجنوب</option>
+            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
         <select id="iZone"><option value="">المنطقة</option></select>
         <input type="text" id="iPort" placeholder="الميناء">
@@ -137,25 +172,22 @@
         <input type="date" id="iDate">
         <input type="date" id="iEnd">
         <input type="text" id="iRef" placeholder="المرجع">
-        <button class="btn btn-green" onclick="addItem()">حفظ</button>
+        <button class="btn btn-green" onclick="addItem()">✅ حفظ</button>
     </div>
 
     <!-- صفحة الأسطول البحري -->
     <div id="pageMain">
         <div class="filter-bar">
-            <div class="search-input"><input type="text" id="searchMain" placeholder="بحث" onkeyup="renderMain()"></div>
+            <div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث" onkeyup="renderMain()"></div>
             <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
             <label>الإقليم:</label><select id="fRegMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
             <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
-            <button class="btn-sm btn-green" onclick="refreshMain()">تحديث</button>
+            <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <table id="mainTable">
                 <thead>
-                    <tr>
-                        <th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
-                        <th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th>
-                    </tr>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="mainBody"></tbody>
             </table>
@@ -165,20 +197,17 @@
     <!-- صفحة سجل الصيانة -->
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()">
+            <input type="text" id="searchMaint" placeholder="🔍 بحث" onkeyup="renderMaint()">
             <label>الإقليم:</label><select id="fRegMaint" onchange="renderMaint()"><option value="الكل">الكل</option></select>
             <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
             <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
             <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
-            <button class="btn-sm btn-green" onclick="refreshMaint()">تحديث</button>
+            <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <table id="maintTable">
                 <thead>
-                    <tr>
-                        <th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th>
-                        <th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th>
-                    </tr>
+                    <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="maintBody"></tbody>
             </table>
@@ -191,21 +220,26 @@
             <label>تصفية الإقليم:</label>
             <select id="fRegEff" onchange="renderEff()">
                 <option value="الكل">الكل</option>
-                <option value="نجاعة عامة">نجاعة عامة</option>
-                <option value="الشمال">الشمال</option>
-                <option value="الساحل">الساحل</option>
-                <option value="الوسط">الوسط</option>
-                <option value="الجنوب">الجنوب</option>
+                <option value="نجاعة عامة">📊 نجاعة عامة</option>
+                <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+                <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+                <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+                <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             </select>
-            <button class="btn-sm btn-green" onclick="refreshEff()">تحديث</button>
+            <button class="btn-sm btn-green" onclick="refreshEff()">🔄 تحديث</button>
         </div>
         <div class="stats-cards" id="statsCards"></div>
         <div id="generalEffTableContainer"></div>
         <div id="regionTables"></div>
         <div class="chart-switch">
-            <button class="active" onclick="switchChartType('doughnut', this)">دائري</button>
-            <button onclick="switchChartType('bar', this)">شريطي</button>
-            <button onclick="switchChartType('line', this)">خطي</button>
+            <button class="active" onclick="switchChartType('doughnut', this)">🥧 دائري</button>
+            <button onclick="switchChartType('bar', this)">📊 شريطي</button>
+            <button onclick="switchChartType('line', this)">📈 خطي</button>
         </div>
         <div id="chartsArea"></div>
     </div>
@@ -213,17 +247,17 @@
     <!-- صفحة الدعم الفني -->
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px">
-            <h3>نظام التذاكر - الدعم الفني</h3>
-            <p>support@marine.gov.tn | 29659945</p>
+            <h3>📞 نظام التذاكر - الدعم الفني</h3>
+            <p>📧 support@marine.gov.tn | 📞 29659945</p>
             <hr>
-            <h4>إرسال طلب دعم جديد</h4>
+            <h4>📨 إرسال طلب دعم جديد</h4>
             <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
             <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة بالتفصيل..." style="width:100%; padding:10px"></textarea>
-            <button class="btn btn-blue" onclick="sendTicket()">إرسال الطلب</button>
-            <button class="btn-sm btn-green" onclick="refreshTickets()">تحديث</button>
+            <button class="btn btn-blue" onclick="sendTicket()">📤 إرسال الطلب</button>
+            <button class="btn-sm btn-green" onclick="refreshTickets()">🔄 تحديث</button>
             <div id="ticketResponse" style="margin-top:10px; color:green"></div>
             <hr>
-            <h4>قائمة التذاكر</h4>
+            <h4>📋 قائمة التذاكر</h4>
             <div id="ticketsList"></div>
         </div>
     </div>
@@ -234,9 +268,24 @@
             <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
             <label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()">
             <button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button>
-            <button class="btn-sm btn-green" onclick="refreshTrack()">تحديث</button>
+            <button class="btn-sm btn-green" onclick="refreshTrack()">🔄 تحديث</button>
         </div>
         <div id="trackContent"></div>
+    </div>
+
+    <!-- صفحة خريطة التتبع -->
+    <div id="pageMap" class="hidden">
+        <div class="region-table-card">
+            <div class="region-table-header">🗺️ خريطة تتبع المستخدمين - المواقع الجغرافية</div>
+            <div class="map-container" id="mapContainer">
+                <div id="locationMap"></div>
+            </div>
+            <div style="padding: 15px;">
+                <button class="btn-sm btn-green" onclick="loadLocationMap()">🔄 تحديث الخريطة</button>
+                <button class="btn-sm btn-blue" onclick="centerMapOnTunisia()">📍 تمركز على تونس</button>
+            </div>
+        </div>
+        <div id="sessionsList" style="margin-top: 20px;"></div>
     </div>
 
     <!-- صفحة المستخدمين -->
@@ -245,11 +294,11 @@
             <input type="text" id="un" placeholder="اسم المستخدم">
             <input type="password" id="up" placeholder="كلمة السر">
             <select id="ur"><option value="مسؤول">مسؤول</option><option value="محرر">محرر</option><option value="مشاهد">مشاهد</option></select>
-            <button class="btn btn-blue" onclick="addUser()">إضافة</button>
-            <button class="btn-sm btn-green" onclick="refreshUsers()">تحديث</button>
+            <button class="btn btn-blue" onclick="addUser()">➕ إضافة</button>
+            <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table>
+            <table id="usersTable">
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -259,7 +308,7 @@
 
 <div id="passwordModal" class="modal">
     <div class="modal-content">
-        <h3>تغيير كلمة المرور</h3>
+        <h3>🔐 تغيير كلمة المرور</h3>
         <p id="modalUserName"></p>
         <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
         <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
@@ -269,30 +318,43 @@
 </div>
 
 <div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()">▲</button>
-    <button class="scroll-btn" onclick="scrollToBottom()">▼</button>
+    <button class="scroll-btn" onclick="scrollToTop()">⬆️</button>
+    <button class="scroll-btn" onclick="scrollToBottom()">⬇️</button>
 </div>
 
 <script>
+    // ==================== المتغيرات العامة ====================
     let currentUser = null;
     let selectedUserId = null;
     let fleetChart = null, categoriesChart = null, comparisonChart = null;
     let currentChartType = 'doughnut';
+    let locationMap = null;
+    let mapMarkers = [];
 
     const ZONES_DATA = {
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
         "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"]
+        "الجنوب": ["جرجيس", "جربة", "قابس"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "المجمع الأمني بقبيبة": ["قبيبة"]
     };
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
 
     const REGION_NAMES = {
-        "الشمال": "الحرس البحري بالشمال",
-        "الساحل": "الحرس البحري بالساحل",
-        "الوسط": "الحرس البحري بالوسط",
-        "الجنوب": "الحرس البحري بالجنوب"
+        "الشمال": "🗺️ الحرس البحري بالشمال",
+        "الساحل": "🗺️ الحرس البحري بالساحل",
+        "الوسط": "🗺️ الحرس البحري بالوسط",
+        "الجنوب": "🗺️ الحرس البحري بالجنوب",
+        "وحدة الصيانة والإسناد البحري تونس": "🛠️ وحدة الصيانة تونس",
+        "وحدة الصيانة والإسناد البحري المنستير": "🛠️ وحدة الصيانة المنستير",
+        "وحدة الصيانة والإسناد البحري صفاقس": "🛠️ وحدة الصيانة صفاقس",
+        "وحدة الصيانة والإسناد البحري جرجيس": "🛠️ وحدة الصيانة جرجيس",
+        "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
     };
 
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -339,6 +401,7 @@
         return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
 
+    // ==================== دوال الاتصال بالسيرفر ====================
     async function apiCall(url, method = 'GET', body = null) {
         const options = { method, headers: { 'Content-Type': 'application/json' } };
         if (body) options.body = JSON.stringify(body);
@@ -363,7 +426,10 @@
     async function loadLogs() { return apiCall('/api/logs'); }
     async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
     
-    async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { name, pass }); }
+    async function loadSessions() { return apiCall('/api/sessions'); }
+    async function loadMapSessions() { return apiCall('/api/sessions/map'); }
+    
+    async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { username: name, password: pass }); }
     async function exportAllDataAPI() { return apiCall('/api/export-all'); }
     async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
 
@@ -381,19 +447,125 @@
         } catch(e) { console.error('Log error:', e); }
     }
 
-    async function refreshMain() { await renderMain(); showToast("تم تحديث الأسطول البحري"); }
-    async function refreshMaint() { await renderMaint(); showToast("تم تحديث سجل الصيانة"); }
-    async function refreshEff() { await renderEff(); showToast("تم تحديث جاهزية الأسطول"); }
-    async function refreshTickets() { await renderTickets(); showToast("تم تحديث قائمة التذاكر"); }
-    async function refreshTrack() { if(canManageUsers()) { await renderTrack(); showToast("تم تحديث سجل التتبع"); } }
-    async function refreshUsers() { if(canManageUsers()) { await renderUsers(); showToast("تم تحديث قائمة المستخدمين"); } }
+    // ==================== دوال التحديث ====================
+    async function refreshMain() { await renderMain(); showToast("✅ تم تحديث الأسطول البحري"); }
+    async function refreshMaint() { await renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
+    async function refreshEff() { await renderEff(); showToast("✅ تم تحديث جاهزية الأسطول"); }
+    async function refreshTickets() { await renderTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
+    async function refreshTrack() { if(canManageUsers()) { await renderTrack(); showToast("✅ تم تحديث سجل التتبع"); } }
+    async function refreshUsers() { if(canManageUsers()) { await renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); } }
+    async function refreshMap() { if(canManageUsers()) { await loadLocationMap(); await renderSessionsList(); showToast("✅ تم تحديث الخريطة"); } }
     
     async function refreshAllPages() { 
         await renderMain(); await renderMaint(); await renderEff(); await renderTickets(); 
-        if(canManageUsers()) { await renderUsers(); await renderTrack(); }
-        showToast("تم تحديث جميع الصفحات");
+        if(canManageUsers()) { await renderUsers(); await renderTrack(); await refreshMap(); }
+        showToast("✅ تم تحديث جميع الصفحات");
     }
 
+    // ==================== دوال الخريطة ====================
+    async function loadLocationMap() {
+        if (!canManageUsers()) return;
+        
+        try {
+            const sessions = await loadMapSessions();
+            
+            if (locationMap) {
+                locationMap.remove();
+            }
+            
+            locationMap = L.map('locationMap').setView([36.8065, 10.1815], 7);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> & CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19,
+                minZoom: 3
+            }).addTo(locationMap);
+            
+            mapMarkers.forEach(marker => locationMap.removeLayer(marker));
+            mapMarkers = [];
+            
+            const colors = ['#2e7d32', '#d9534f', '#f39c12', '#28a745', '#6f42c1', '#17a2b8'];
+            
+            sessions.forEach((session, index) => {
+                if (session.lat && session.lon && session.lat !== 0 && session.lon !== 0) {
+                    const color = colors[index % colors.length];
+                    
+                    const customIcon = L.divIcon({
+                        html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px black;"></div>`,
+                        iconSize: [16, 16],
+                        className: 'custom-marker'
+                    });
+                    
+                    const marker = L.marker([session.lat, session.lon], { icon: customIcon }).addTo(locationMap);
+                    
+                    const loginDate = new Date(session.loginTime);
+                    marker.bindPopup(`
+                        <div style="direction: rtl; text-align: right;">
+                            <strong>👤 ${session.username}</strong><br>
+                            <strong>📍 ${session.city || 'غير معروف'}, ${session.country || 'غير معروف'}</strong><br>
+                            <strong>🕐 ${loginDate.toLocaleString('ar-TN')}</strong><br>
+                            <strong>🔧 ${session.role || 'مستخدم'}</strong><br>
+                            <strong>🌐 IP: ${session.ip || 'غير معروف'}</strong>
+                        </div>
+                    `);
+                    
+                    mapMarkers.push(marker);
+                }
+            });
+            
+            if (sessions.length === 0) {
+                L.marker([36.8065, 10.1815]).addTo(locationMap)
+                    .bindPopup('📍 تونس - المركز الرئيسي<br>لا توجد جلسات مسجلة بعد');
+            }
+            
+        } catch (error) {
+            console.error('خطأ في تحميل الخريطة:', error);
+            showToast('خطأ في تحميل الخريطة', true);
+        }
+    }
+    
+    function centerMapOnTunisia() {
+        if (locationMap) {
+            locationMap.setView([36.8065, 10.1815], 7);
+            showToast('✅ تم تمركز الخريطة على تونس');
+        }
+    }
+    
+    async function renderSessionsList() {
+        if (!canManageUsers()) return;
+        try {
+            const sessions = await loadMapSessions();
+            
+            let html = '<div class="region-table-card"><div class="region-table-header">📋 سجل جلسات المستخدمين</div><div class="scrollable-table"><table class="region-table"><thead><tr>';
+            html += '<th>المستخدم</th><th>الدولة</th><th>المدينة</th><th>IP</th><th>وقت الدخول</th><th>الصلاحية</th>';
+            html += '</tr></thead><tbody>';
+            
+            if (sessions.length === 0) {
+                html += '<tr><td colspan="6" style="text-align:center;">لا توجد جلسات مسجلة</td></tr>';
+            } else {
+                sessions.forEach(session => {
+                    const loginDate = new Date(session.loginTime);
+                    html += `<tr>
+                        <td><b>${session.username}</b></td>
+                        <td>${session.country || 'غير معروف'}</td>
+                        <td>${session.city || 'غير معروف'}</td>
+                        <td><code>${session.ip || 'غير معروف'}</code></td>
+                        <td>${loginDate.toLocaleString('ar-TN')}</td>
+                        <td><span class="role-badge">${session.role || 'مستخدم'}</span></td>
+                    </tr>`;
+                });
+            }
+            
+            html += '</tbody></table></div></div>';
+            document.getElementById('sessionsList').innerHTML = html;
+        } catch (error) {
+            console.error('خطأ:', error);
+            document.getElementById('sessionsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل الجلسات</div></div>';
+        }
+    }
+
+    // ==================== دوال الدخول والخروج ====================
     async function doLogin() {
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value.trim();
@@ -413,15 +585,16 @@
                 return;
             }
             
-            currentUser = user;
+            currentUser = { name: user.name, role: user.role };
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userRoleDisplay').innerHTML = `${currentUser.name} | ${currentUser.role}`;
+            document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
             
             const isAdmin = currentUser.role === "مسؤول";
             const isViewer = currentUser.role === "مشاهد";
             
             document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('mapBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
             document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
@@ -443,11 +616,15 @@
             await renderMaint();
             await renderEff();
             await renderTickets();
-            if(isAdmin) { await renderUsers(); await renderTrack(); }
+            if(isAdmin) { await renderUsers(); await renderTrack(); await loadLocationMap(); await renderSessionsList(); }
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
-            showToast(`مرحباً ${username}`);
+            showToast(`مرحباً ${username} - موقع الدخول: ${user.location?.city || 'تونس'}`);
+            
+            if (user.location) {
+                showToast(`📍 تم تسجيل دخولك من ${user.location.city || 'تونس'}, ${user.location.country || 'تونس'}`);
+            }
         } catch(error) {
-            errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر";
+            errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
             errorDiv.style.display = "block";
         }
     }
@@ -462,8 +639,9 @@
         document.getElementById('loginError').style.display = 'none';
     }
 
+    // ==================== دوال إدارة المراكب ====================
     async function addItem() {
-        if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة", true); return; }
+        if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
         const name = document.getElementById('iName').value.trim();
         if(!name) return showToast("الاسم مطلوب", true);
         
@@ -471,7 +649,7 @@
         const fDate = document.getElementById('iDate').value;
         
         if((stat === 'معطب' || stat === 'صيانة') && !fDate) {
-            showToast("تاريخ العطب إلزامي للمراكب المعطوبة أو التي تحت الصيانة", true);
+            showToast("تاريخ العطب إلزامي للمراكب المعطوبة أو التي تحت الصيانة!", true);
             return;
         }
         
@@ -492,7 +670,7 @@
         };
         
         try {
-            await saveVessel(newItem);
+            const result = await saveVessel(newItem);
             await logActivity("إضافة مركب", `قام بإضافة مركب "${name}"`);
             
             ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
@@ -505,16 +683,16 @@
             await renderMain();
             await renderMaint();
             await renderEff();
-            showToast(`تم حفظ المركب بنجاح`);
+            showToast(`✅ تم حفظ المركب بنجاح`);
         } catch(error) {
             showToast("خطأ في حفظ المركب: " + error.message, true);
         }
     }
     
     async function editItem(id, name) {
-        if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل", true); return; }
+        if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
         let data = await loadVessels();
-        let item = data.find(x => x.id === id || x._id === id);
+        let item = data.find(x => (x.id || x._id).toString() === id.toString());
         if(item) {
             document.getElementById('iName').value = item.name;
             document.getElementById('iNum').value = item.num || '';
@@ -556,7 +734,7 @@
                     await renderMain();
                     await renderMaint();
                     await renderEff();
-                    showToast("تم تحديث المركب بنجاح");
+                    showToast("✅ تم تحديث المركب بنجاح");
                     saveBtn.onclick = originalClick;
                     ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
                         const el = document.getElementById(id);
@@ -568,12 +746,12 @@
                     showToast("خطأ في التحديث: " + error.message, true);
                 }
             };
-            showToast("قم بتعديل البيانات ثم اضغط حفظ");
+            showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
         }
     }
     
     async function delItem(id, name) {
-        if(!canDelete()) { showToast("ليس لديك صلاحية للحذف", true); return; }
+        if(!canDelete()) { showToast("ليس لديك صلاحية للحذف!", true); return; }
         if(confirm(`هل أنت متأكد من حذف المركب "${name}"؟`)) {
             try {
                 await deleteVessel(id);
@@ -581,7 +759,7 @@
                 await renderMain();
                 await renderMaint();
                 await renderEff();
-                showToast("تم حذف المركب بنجاح");
+                showToast("✅ تم حذف المركب بنجاح");
             } catch(error) {
                 showToast("خطأ في الحذف: " + error.message, true);
             }
@@ -620,12 +798,12 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">لا توجد مراكب مسجلة</td</tr>';
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
                     html += `<tr>
-                        <td>${x.name}</b></td>
+                        <td><b>${x.name}</b></td>
                         <td>${x.num || '-'}</td>
                         <td>${x.len || '-'}</td>
                         <td>${x.cat || '-'}</td>
@@ -638,8 +816,8 @@
                         <td>${formatDate(x.fDate)}</td>
                         <td>${formatDate(x.eDate)}</td>
                         <td>
-                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${x.id}, '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem(${x.id}, '${x.name}')">حذف</button>` : ''}
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id || x._id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id || x._id}', '${x.name}')">حذف</button>` : ''}
                         </td>
                     </tr>`;
                 });
@@ -647,7 +825,7 @@
             document.getElementById('mainBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMain:', error);
-            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">خطأ في تحميل数据</td>';
+            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -658,12 +836,6 @@
     
     async function renderMaint() {
         try {
-            const maintBody = document.getElementById('maintBody');
-            if (!maintBody) {
-                console.error('العنصر maintBody غير موجود');
-                return;
-            }
-            
             let data = await loadVessels();
             const fReg = document.getElementById('fRegMaint').value;
             const dStart = document.getElementById('fDateStart').value;
@@ -705,12 +877,12 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="10" style="text-align:center;">لا توجد مراكب معطوبة أو تحت الصيانة<br>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</td>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
                     html += `<tr>
-                        <td>${x.name}</b></td>
+                        <td><b>${x.name}</b></td>
                         <td>${x.num || '-'}</td>
                         <td>${regionDisplay}</td>
                         <td>${x.zone || '-'}</td>
@@ -720,20 +892,16 @@
                         <td>${formatDate(x.eDate)}</td>
                         <td>${x.ref || '-'}</td>
                         <td>
-                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem(${x.id}, '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem(${x.id}, '${x.name}')">حذف</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id || x._id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id || x._id}', '${x.name}')">حذف</button>` : ''}
                         </td>
                     </tr>`;
                 });
             }
-            
-            maintBody.innerHTML = html;
+            document.getElementById('maintBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMaint:', error);
-            const maintBody = document.getElementById('maintBody');
-            if (maintBody) {
-                maintBody.innerHTML = '<tr><td colspan="10">خطأ في تحميل البيانات: ' + error.message + '</td>';
-            }
+            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
         }
     }
     
@@ -743,9 +911,10 @@
         document.getElementById('fDateEnd').value = "";
         document.getElementById('searchMaint').value = "";
         renderMaint();
-        showToast("تم إعادة ضبط الفلاتر");
+        showToast("✅ تم إعادة ضبط الفلاتر");
     }
     
+    // ==================== دوال الجاهزية ====================
     async function renderGeneralEfficiencyTable() {
         try {
             let data = await loadVessels();
@@ -754,7 +923,7 @@
             let generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0;
             
             let html = `<div class="region-table-card">
-                <div class="region-table-header">النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
+                <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
                     <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
@@ -781,7 +950,7 @@
             document.getElementById('generalEffTableContainer').innerHTML = html;
         } catch(error) {
             console.error('خطأ:', error);
-            document.getElementById('generalEffTableContainer').innerHTML = '<div class="region-table-card"><div class="region-table-header">خطأ في تحميل البيانات</div></div>';
+            document.getElementById('generalEffTableContainer').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل البيانات</div></div>';
         }
     }
     
@@ -794,11 +963,11 @@
             let broken = data.filter(x => x.stat === 'معطب').length;
             let eff = total ? ((ok / total) * 100).toFixed(1) : 0;
             document.getElementById('statsCards').innerHTML = `
-                <div class="stat-card"><div class="number">${total}</div><div class="label">إجمالي المراكب</div></div>
-                <div class="stat-card"><div class="number">${ok}</div><div class="label">الصالح</div></div>
-                <div class="stat-card"><div class="number">${maint}</div><div class="label">تحت الصيانة</div></div>
-                <div class="stat-card"><div class="number">${broken}</div><div class="label">المعطوب</div></div>
-                <div class="stat-card"><div class="number">${eff}%</div><div class="label">نسبة النجاعة</div></div>
+                <div class="stat-card"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div>
+                <div class="stat-card"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div>
+                <div class="stat-card"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div>
+                <div class="stat-card"><div class="number">${broken}</div><div class="label">⚠️ المعطوب</div></div>
+                <div class="stat-card"><div class="number">${eff}%</div><div class="label">📈 نسبة النجاعة</div></div>
             `;
         } catch(error) {
             console.error('خطأ:', error);
@@ -826,9 +995,9 @@
             
             document.getElementById('chartsArea').innerHTML = `
                 <div class="charts-container">
-                    <div class="chart-box"><h4>حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div>
-                    <div class="chart-box"><h4>توزيع المراكب حسب الفئة</h4><canvas id="categoriesChartCanvas"></canvas></div>
-                    <div class="chart-box"><h4>مقارنة النجاعة بين الأقاليم</h4><canvas id="comparisonChartCanvas"></canvas></div>
+                    <div class="chart-box"><h4>📊 حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div>
+                    <div class="chart-box"><h4>📦 توزيع المراكب حسب الفئة</h4><canvas id="categoriesChartCanvas"></canvas></div>
+                    <div class="chart-box"><h4>🏆 مقارنة النجاعة بين الأقاليم</h4><canvas id="comparisonChartCanvas"></canvas></div>
                 </div>
             `;
             
@@ -859,7 +1028,12 @@
             let selectedRegion = document.getElementById('fRegEff').value;
             let html = "";
             
-            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب"];
+            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب", 
+                                "وحدة الصيانة والإسناد البحري تونس", 
+                                "وحدة الصيانة والإسناد البحري المنستير",
+                                "وحدة الصيانة والإسناد البحري صفاقس",
+                                "وحدة الصيانة والإسناد البحري جرجيس",
+                                "المجمع الأمني بقبيبة"];
             
             if(selectedRegion === "نجاعة عامة") {
                 document.getElementById('regionTables').innerHTML = "";
@@ -878,7 +1052,7 @@
                         <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
                         <div class="scrollable-table">
                         <table class="region-table">
-                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></td></thead>
+                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                             <tbody>`;
                     
                     for(const cat of CATS_LIST) {
@@ -937,7 +1111,7 @@
             document.getElementById('regionTables').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderRegionTables:', error);
-            document.getElementById('regionTables').innerHTML = '<div class="region-table-card"><div class="region-table-header">خطأ في تحميل البيانات</div></div>';
+            document.getElementById('regionTables').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل البيانات</div></div>';
         }
     }
     
@@ -955,6 +1129,7 @@
         renderCharts();
     }
     
+    // ==================== دوال التذاكر ====================
     async function sendTicket() {
         if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
         
@@ -982,12 +1157,12 @@
             
             document.getElementById('ticketSubject').value = "";
             document.getElementById('ticketMessage').value = "";
-            document.getElementById('ticketResponse').innerHTML = "تم إرسال طلبك بنجاح";
+            document.getElementById('ticketResponse').innerHTML = "✅ تم إرسال طلبك بنجاح! سيتم الرد عليك قريباً.";
             setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
             
             await renderTickets();
             await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
-            showToast("تم إرسال طلبك بنجاح");
+            showToast("✅ تم إرسال طلبك بنجاح");
         } catch(error) {
             showToast("خطأ في الإرسال: " + error.message, true);
         }
@@ -999,7 +1174,7 @@
             return; 
         }
         
-        const replyText = prompt("أدخل ردك على هذه التذكرة:");
+        const replyText = prompt("✏️ أدخل ردك على هذه التذكرة:");
         if(!replyText) return;
         
         try {
@@ -1023,7 +1198,7 @@
             
             await renderTickets();
             await logActivity("رد على تذكرة", `قام بالرد على التذكرة`);
-            showToast("تم إرسال الرد بنجاح");
+            showToast("✅ تم إرسال الرد بنجاح");
             
         } catch(error) {
             console.error('خطأ في الرد:', error);
@@ -1052,7 +1227,7 @@
             
             await renderTickets();
             await logActivity("إغلاق تذكرة", `قام بإغلاق التذكرة`);
-            showToast("تم إغلاق التذكرة");
+            showToast("✅ تم إغلاق التذكرة");
             
         } catch(error) {
             showToast("خطأ في الإغلاق: " + error.message, true);
@@ -1063,7 +1238,7 @@
         try {
             let tickets = await loadTickets();
             let html = '<div class="scrollable-table"><table class="region-table"><thead>';
-            html += '<table>';
+            html += '</tr>';
             html += '<th>#</th>';
             html += '<th>التاريخ</th>';
             html += '<th>الوقت</th>';
@@ -1076,11 +1251,11 @@
             html += '</thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<tr><td colspan="9">لا توجد تذاكر</td>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
-                    const statusText = t.status === 'مغلقة' ? 'مغلقة' : (t.status === 'تم الرد' ? 'تم الرد' : 'قيد المعالجة');
+                    const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
                     const ticketId = t.id;
                     
                     html += `<tr>
@@ -1096,8 +1271,8 @@
                     if(t.replies && t.replies.length > 0) {
                         t.replies.forEach(reply => {
                             html += `<div class="ticket-reply">
-                                <small>${reply.adminName} - ${reply.date} ${reply.time}</small>
-                                <p style="margin:5px 0 0 0;">${reply.reply}</p>
+                                <small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small>
+                                <p style="margin:5px 0 0 0;">📝 ${reply.reply}</p>
                             </div>`;
                         });
                     } else {
@@ -1109,11 +1284,11 @@
                     if(canManageUsers()) {
                         if(t.status !== 'مغلقة') {
                             html += `<td style="text-align:center;">
-                                <button class="btn-sm btn-cyan" onclick="replyToTicket(${ticketId})">رد</button>
-                                <button class="btn-sm btn-red" onclick="closeTicket(${ticketId})">إغلاق</button>
-                             </td>`;
+                                <button class="btn-sm btn-cyan" onclick="replyToTicket(${ticketId})">💬 رد</button>
+                                <button class="btn-sm btn-red" onclick="closeTicket(${ticketId})">🔒 إغلاق</button>
+                            </td>`;
                         } else {
-                            html += `<td style="text-align:center;"><span style="color:green;">مغلقة</span></td>`;
+                            html += `<td style="text-align:center;"><span style="color:green;">✅ مغلقة</span></td>`;
                         }
                     } else {
                         html += `<td>-</td>`;
@@ -1127,69 +1302,58 @@
             document.getElementById('ticketsList').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTickets:', error);
-            document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">خطأ في تحميل التذاكر</div></div>';
+            document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>';
         }
     }
     
+    // ==================== دوال التتبع ====================
     async function renderTrack() {
         if(!canManageUsers()) return;
         try {
-            let logs = await loadLogs();
+            let sessions = await loadSessions();
             const start = document.getElementById('trackDateStart').value;
             const end = document.getElementById('trackDateEnd').value;
-            let filtered = [...logs];
+            let filtered = [...sessions];
             
             if(start) {
                 const s = new Date(start);
                 filtered = filtered.filter(l => {
-                    const [d,m,y] = l.date.split('/');
-                    return new Date(`${y}-${m}-${d}`) >= s;
+                    return new Date(l.loginTime) >= s;
                 });
             }
             if(end) {
                 const e = new Date(end);
                 filtered = filtered.filter(l => {
-                    const [d,m,y] = l.date.split('/');
-                    return new Date(`${y}-${m}-${d}`) <= e;
+                    return new Date(l.loginTime) <= e;
                 });
             }
             
-            const totalActivities = filtered.length;
-            const uniqueUsers = [...new Set(filtered.map(l => l.userName))];
-            
             let html = `
                 <div class="stats-cards" style="margin-bottom: 20px;">
-                    <div class="stat-card"><div class="number">${totalActivities}</div><div class="label">إجمالي النشاطات</div></div>
-                    <div class="stat-card"><div class="number">${uniqueUsers.length}</div><div class="label">عدد المستخدمين</div></div>
+                    <div class="stat-card"><div class="number">${filtered.length}</div><div class="label">📊 إجمالي الجلسات</div></div>
+                    <div class="stat-card"><div class="number">${[...new Set(filtered.map(l => l.username))].length}</div><div class="label">👥 عدد المستخدمين</div></div>
                 </div>
                 <div class="scrollable-table">
                 <table class="region-table">
                     <thead>
-                        <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th></tr>
+                        <tr><th>#</th><th>التاريخ</th><th>المستخدم</th><th>الصلاحية</th><th>الدولة</th><th>المدينة</th><th>IP</th>
                     </thead>
                     <tbody>
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td>';
+                html += '<tr><td colspan="7" style="text-align:center;">لا توجد جلسات مسجلة</td>';
             } else {
-                filtered.forEach((l, index) => {
-                    let actionIcon = '';
-                    if (l.action === 'إضافة مركب') actionIcon = '➕';
-                    else if (l.action === 'تعديل مركب') actionIcon = '✏️';
-                    else if (l.action === 'حذف مركب') actionIcon = '🗑️';
-                    else if (l.action === 'تسجيل دخول') actionIcon = '🔐';
-                    else if (l.action === 'تسجيل خروج') actionIcon = '🚪';
-                    else actionIcon = '📝';
-                    
+                filtered.forEach((session, index) => {
+                    const loginDate = new Date(session.loginTime);
                     html += `<tr>
                         <td>${index + 1}</td>
-                        <td>${l.date}</td>
-                        <td>${l.time || '-'}</td>
-                        <td><b>${l.userName}</b></td>
-                        <td><span class="role-badge" style="background:#e9ecef;">${l.userRole}</span></td>
-                        <td><span style="color:var(--primary); font-weight:bold;">${actionIcon} ${l.action}</span></td>
-                        <td style="text-align:right;">${l.details}</td>
+                        <td>${loginDate.toLocaleString('ar-TN')}</td>
+                        <td><b>${session.username}</b></td>
+                        <td><span class="role-badge">${session.role}</span></td>
+                        <td>${session.country || '-'}</td>
+                        <td>${session.city || '-'}</td>
+                        <td><code>${session.ip || '-'}</code></td>
                     </tr>`;
                 });
             }
@@ -1198,7 +1362,7 @@
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
-            document.getElementById('trackContent').innerHTML = '<div class="region-table-card"><div class="region-table-header">خطأ في تحميل سجل التتبع</div></div>';
+            document.getElementById('trackContent').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل سجل التتبع</div></div>';
         }
     }
     
@@ -1206,9 +1370,10 @@
         document.getElementById('trackDateStart').value = "";
         document.getElementById('trackDateEnd').value = "";
         renderTrack();
-        showToast("تم إعادة ضبط فلاتر التتبع");
+        showToast("✅ تم إعادة ضبط فلاتر التتبع");
     }
     
+    // ==================== دوال المستخدمين ====================
     async function renderUsers() {
         if(!canManageUsers()) return;
         try {
@@ -1218,7 +1383,7 @@
                     <td>${u.name}</td>
                     <td>${u.role}</td>
                     <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal(${u.id}, '${u.name}')">تغيير</button></td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${u.name}')">تغيير</button></td>
                     <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser(${u.id}, false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser(${u.id}, true)">تفعيل</button>`}</td>
                     <td><button class="btn-sm btn-red" onclick="deleteUser(${u.id})">حذف</button></td>
                 </tr>
@@ -1229,7 +1394,7 @@
     }
     
     async function addUser() {
-        if(!canManageUsers()) { showToast("ليس لديك صلاحية", true); return; }
+        if(!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
         let u = document.getElementById('un').value.trim();
         let p = document.getElementById('up').value.trim();
         let r = document.getElementById('ur').value;
@@ -1237,13 +1402,13 @@
         
         try {
             let users = await loadUsers();
-            if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود", true); return; }
+            if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود!", true); return; }
             await saveUser({ name: u, pass: p, role: r, enabled: true });
             document.getElementById('un').value = "";
             document.getElementById('up').value = "";
             await renderUsers();
             await logActivity("إضافة مستخدم", `قام بإضافة مستخدم جديد: ${u} (${r})`);
-            showToast("تم إضافة المستخدم");
+            showToast("✅ تم إضافة المستخدم");
         } catch(error) {
             showToast("خطأ في الإضافة: " + error.message, true);
         }
@@ -1278,7 +1443,7 @@
                 closePasswordModal();
                 await renderUsers();
                 await logActivity("تغيير كلمة مرور", `قام بتغيير كلمة مرور المستخدم: ${user.name}`);
-                showToast("تم تغيير كلمة المرور");
+                showToast("✅ تم تغيير كلمة المرور");
             }
         } catch(error) {
             showToast("خطأ في تغيير كلمة المرور: " + error.message, true);
@@ -1294,7 +1459,7 @@
                 await updateUser(userId, user);
                 await renderUsers();
                 await logActivity(enable ? "تفعيل مستخدم" : "تعطيل مستخدم", `قام ${enable ? 'بتفعيل' : 'بتعطيل'} المستخدم: ${user.name}`);
-                showToast(enable ? "تم تفعيل المستخدم" : "تم تعطيل المستخدم");
+                showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
             }
         } catch(error) {
             showToast("خطأ: " + error.message, true);
@@ -1309,13 +1474,14 @@
                 await deleteUserAPI(userId);
                 await renderUsers();
                 await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
-                showToast("تم حذف المستخدم");
+                showToast("✅ تم حذف المستخدم");
             } catch(error) {
                 showToast("خطأ في الحذف: " + error.message, true);
             }
         }
     }
     
+    // ==================== دوال تصدير واستيراد ====================
     async function exportAllData() {
         if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
         try {
@@ -1331,7 +1497,7 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             await logActivity("تصدير بيانات", "قام بتصدير جميع البيانات إلى ملف JSON");
-            showToast("تم تصدير البيانات بنجاح");
+            showToast("✅ تم تصدير البيانات بنجاح!");
         } catch(error) {
             showToast("خطأ في التصدير: " + error.message, true);
         }
@@ -1348,17 +1514,18 @@
                 await importAllDataAPI(importedData);
                 await refreshAllPages();
                 await logActivity("استيراد بيانات", "قام باستيراد البيانات من ملف JSON");
-                showToast("تم استيراد البيانات بنجاح");
+                showToast("✅ تم استيراد البيانات بنجاح!");
             } catch(err) {
-                showToast("خطأ في قراءة الملف: " + err.message, true);
+                showToast("❌ خطأ في قراءة الملف: " + err.message, true);
             }
         };
         reader.readAsText(file);
         input.value = "";
     }
     
+    // ==================== دوال التنقل ====================
     function showPage(page) {
-        const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageUsers'];
+        const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageMap', 'pageUsers'];
         pages.forEach(p => document.getElementById(p).classList.add('hidden'));
         
         const isAdmin = currentUser && currentUser.role === "مسؤول";
@@ -1386,6 +1553,15 @@
                 showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
             }
         }
+        else if(page === 'map') { 
+            if(isAdmin) { 
+                document.getElementById('pageMap').classList.remove('hidden'); 
+                loadLocationMap(); 
+                renderSessionsList();
+            } else { 
+                showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
+            }
+        }
         else if(page === 'users') { 
             if(isAdmin) { 
                 document.getElementById('pageUsers').classList.remove('hidden'); 
@@ -1396,6 +1572,7 @@
         }
     }
     
+    // ==================== ربط الدوال ====================
     window.doLogin = doLogin;
     window.logout = logout;
     window.showPage = showPage;
@@ -1429,6 +1606,8 @@
     window.refreshTrack = refreshTrack;
     window.refreshUsers = refreshUsers;
     window.refreshAllPages = refreshAllPages;
+    window.loadLocationMap = loadLocationMap;
+    window.centerMapOnTunisia = centerMapOnTunisia;
     window.scrollToTop = scrollToTop;
     window.scrollToBottom = scrollToBottom;
 </script>
