@@ -42,85 +42,38 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// دالة لتحديد الموقع الجغرافي بناءً على IP (خدمة مجانية)
-async function getGeoLocation(ip) {
-    try {
-        if (ip === '::1' || ip === '127.0.0.1') {
-            return { 
-                country: 'تونس', 
-                city: 'تونس', 
-                lat: 36.8065, 
-                lon: 10.1815, 
-                isp: 'محلي',
-                regionName: 'تونس',
-                status: 'success'
-            };
-        }
-        
-        const response = await fetch(`http://ip-api.com/json/${ip}?lang=ar&fields=status,country,city,lat,lon,isp,regionName`);
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-            console.log(`📍 موقع IP ${ip}: ${data.city}, ${data.country} (${data.lat}, ${data.lon})`);
-            return {
-                country: data.country || 'تونس',
-                city: data.city || 'تونس',
-                lat: data.lat || 36.8065,
-                lon: data.lon || 10.1815,
-                isp: data.isp || 'غير معروف',
-                regionName: data.regionName || 'تونس',
-                status: 'success'
-            };
-        } else {
-            return { 
-                country: 'تونس', 
-                city: 'تونس', 
-                lat: 36.8065, 
-                lon: 10.1815, 
-                isp: 'غير معروف',
-                regionName: 'تونس',
-                status: 'error'
-            };
-        }
-    } catch (error) {
-        console.error('خطأ في تحديد الموقع:', error.message);
-        return { 
-            country: 'تونس', 
-            city: 'تونس', 
-            lat: 36.8065, 
-            lon: 10.1815, 
-            isp: 'غير معروف',
-            regionName: 'تونس',
-            status: 'error'
-        };
-    }
-}
-
-// ==================== تسجيل الدخول ====================
+// ==================== تسجيل الدخول (يتطلب موقع المستخدم إجبارياً) ====================
 app.post('/api/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, location } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
     
     if (!user || !user.enabled) {
         return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
     
-    const ip = getClientIp(req);
-    const geo = await getGeoLocation(ip);
+    // التحقق من وجود موقع المستخدم - إجبارياً
+    if (!location || !location.lat || !location.lon) {
+        return res.status(401).json({ 
+            error: '⚠️ لا يمكن تسجيل الدخول بدون مشاركة الموقع! ⚠️\n\nيرجى السماح للمتصفح بالوصول إلى موقعك للمتابعة.',
+            requiresLocation: true
+        });
+    }
     
-    console.log(`✅ تسجيل دخول: ${username} - ${geo.city}, ${geo.country} (${geo.lat}, ${geo.lon}) - IP: ${ip}`);
+    const ip = getClientIp(req);
+    
+    console.log(`📍 تسجيل دخول ناجح: ${username}`);
+    console.log(`   📍 الموقع: ${location.lat}, ${location.lon}`);
+    console.log(`   🌐 IP: ${ip}`);
     
     const sessionData = {
         id: Date.now(),
         username: user.username,
         role: user.role,
         ip: ip,
-        country: geo.country,
-        city: geo.city,
-        lat: geo.lat,
-        lon: geo.lon,
-        isp: geo.isp,
-        regionName: geo.regionName,
+        country: location.country || 'المستخدم',
+        city: location.city || 'الموقع الحقيقي',
+        lat: location.lat,
+        lon: location.lon,
         loginTime: new Date().toISOString()
     };
     
@@ -136,12 +89,10 @@ app.post('/api/login', async (req, res) => {
         name: user.username, 
         role: user.role, 
         location: { 
-            country: geo.country, 
-            city: geo.city, 
-            lat: geo.lat, 
-            lon: geo.lon,
-            regionName: geo.regionName,
-            ip: ip
+            lat: location.lat, 
+            lon: location.lon, 
+            city: location.city || 'الموقع الحقيقي',
+            country: location.country || 'المستخدم'
         }
     });
 });
@@ -151,7 +102,7 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== جلسات المستخدمين للخريطة ====================
+// ==================== باقي المسارات (نفسها) ====================
 app.get('/api/sessions', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(userSessions.filter(s => s.username === req.session.userName));
@@ -164,7 +115,6 @@ app.get('/api/sessions/map', (req, res) => {
     res.json(userSessions);
 });
 
-// ==================== المراكب ====================
 app.get('/api/vessels', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(vessels);
@@ -194,7 +144,6 @@ app.delete('/api/vessels/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== المستخدمين ====================
 app.get('/api/users', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -233,7 +182,6 @@ app.delete('/api/users/:id', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== التذاكر ====================
 app.get('/api/tickets', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(tickets);
@@ -273,7 +221,6 @@ app.put('/api/tickets/:id/close', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== سجل النشاطات ====================
 app.get('/api/logs', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -286,7 +233,6 @@ app.post('/api/logs', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== تصدير واستيراد ====================
 app.get('/api/export-all', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -307,7 +253,6 @@ app.get('/api/test', (req, res) => {
     res.json({ status: 'OK', message: 'السيرفر يعمل بشكل صحيح' });
 });
 
-// ==================== تشغيل السيرفر ====================
 app.listen(PORT, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════╗
@@ -317,7 +262,8 @@ app.listen(PORT, () => {
 📡 http://localhost:${PORT}
 🔐 admin / 1234
 
-📍 نظام تحديد الموقع الجغرافي عبر IP يعمل بنشاط
+📍 ** تنبيه: تسجيل الدخول يتطلب مشاركة الموقع إجبارياً **
+📍 إذا لم يشارك المستخدم موقعه، سيتم رفض الدخول
 
 📊 إحصائيات المراكب:
    🚢 الإجمالي: ${vessels.length}
