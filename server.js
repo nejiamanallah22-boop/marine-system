@@ -26,7 +26,7 @@ let vessels = [
 
 let tickets = [];
 
-// ==================== جلسات المستخدمين (سيتم تحديد الموقع عبر IP) ====================
+// ==================== جلسات المستخدمين ====================
 let userSessions = [];
 let nextId = 10;
 
@@ -44,27 +44,7 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// دالة لتحديد الموقع التقريبي بناءً على IP (بدون طلب إذن)
-async function getLocationByIp(ip) {
-    try {
-        if (ip === '::1' || ip === '127.0.0.1') {
-            return { country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, isp: 'محلي' };
-        }
-        const response = await fetch(`http://ip-api.com/json/${ip}?lang=ar`);
-        const data = await response.json();
-        return {
-            country: data.country || 'تونس',
-            city: data.city || 'تونس',
-            lat: data.lat || 36.8065,
-            lon: data.lon || 10.1815,
-            isp: data.isp || 'غير معروف'
-        };
-    } catch (error) {
-        return { country: 'تونس', city: 'تونس', lat: 36.8065, lon: 10.1815, isp: 'غير معروف' };
-    }
-}
-
-// ==================== تسجيل الدخول (تحديد الموقع تلقائياً عبر IP) ====================
+// ==================== تسجيل الدخول ====================
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -74,7 +54,215 @@ app.post('/api/login', async (req, res) => {
     }
     
     const ip = getClientIp(req);
-    const geo = await getLocationByIp(ip);
+    
+    // موقع تونس الافتراضي
+    let lat = 36.8065;
+    let lon = 10.1815;
+    let city = 'تونس';
+    let country = 'تونس';
     
     const sessionData = {
-        id: Date.now
+        id: Date.now(),
+        username: user.username,
+        role: user.role,
+        ip: ip,
+        country: country,
+        city: city,
+        lat: lat,
+        lon: lon,
+        loginTime: new Date().toISOString()
+    };
+    
+    userSessions.unshift(sessionData);
+    if (userSessions.length > 500) userSessions = userSessions.slice(0, 500);
+    
+    req.session.userId = user.id;
+    req.session.userName = user.username;
+    req.session.userRole = user.role;
+    
+    res.json({ success: true, name: user.username, role: user.role, location: { lat, lon, city, country } });
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+// ==================== جلسات المستخدمين للخريطة ====================
+app.get('/api/sessions', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    res.json(userSessions.filter(s => s.username === req.session.userName));
+});
+
+app.get('/api/sessions/map', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json(userSessions);
+});
+
+// ==================== المراكب ====================
+app.get('/api/vessels', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    res.json(vessels);
+});
+
+app.post('/api/vessels', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    vessels.push({ id: nextId++, ...req.body });
+    res.json({ success: true, message: 'تم الحفظ' });
+});
+
+app.put('/api/vessels/:id', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index !== -1) {
+        vessels[index] = { ...vessels[index], ...req.body };
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'غير موجود' });
+    }
+});
+
+app.delete('/api/vessels/:id', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    vessels = vessels.filter(v => v.id !== parseInt(req.params.id));
+    res.json({ success: true });
+});
+
+// ==================== المستخدمين ====================
+app.get('/api/users', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json(users.map(u => ({ id: u.id, name: u.username, role: u.role, enabled: u.enabled })));
+});
+
+app.post('/api/users', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    const { name, pass, role, enabled } = req.body;
+    users.push({ id: nextId++, username: name, password: pass, role, enabled });
+    res.json({ success: true });
+});
+
+app.put('/api/users/:id', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    const id = parseInt(req.params.id);
+    const index = users.findIndex(u => u.id === id);
+    if (index !== -1) {
+        users[index] = { ...users[index], ...req.body };
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'غير موجود' });
+    }
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    users = users.filter(u => u.id !== parseInt(req.params.id));
+    res.json({ success: true });
+});
+
+// ==================== التذاكر ====================
+app.get('/api/tickets', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    res.json(tickets);
+});
+
+app.post('/api/tickets', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    tickets.unshift({ id: Date.now(), ...req.body, replies: [] });
+    res.json({ success: true });
+});
+
+app.put('/api/tickets/:id/reply', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+    }
+    const id = parseInt(req.params.id);
+    const ticket = tickets.find(t => t.id === id);
+    if (!ticket) {
+        return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    }
+    if (!ticket.replies) ticket.replies = [];
+    ticket.replies.push(req.body.reply);
+    ticket.status = 'تم الرد';
+    res.json({ success: true, message: 'تم الرد بنجاح' });
+});
+
+app.put('/api/tickets/:id/close', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح - فقط للمسؤول' });
+    }
+    const id = parseInt(req.params.id);
+    const ticket = tickets.find(t => t.id === id);
+    if (!ticket) {
+        return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    }
+    ticket.status = 'مغلقة';
+    res.json({ success: true });
+});
+
+// ==================== سجل النشاطات ====================
+app.get('/api/logs', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json(userSessions);
+});
+
+app.post('/api/logs', (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
+    res.json({ success: true });
+});
+
+// ==================== تصدير واستيراد ====================
+app.get('/api/export-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json({ vessels, users: users.map(u => ({ id: u.id, name: u.username, role: u.role, enabled: u.enabled })), tickets, sessions: userSessions });
+});
+
+app.post('/api/import-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    if (req.body.vessels) vessels = req.body.vessels;
+    if (req.body.tickets) tickets = req.body.tickets;
+    res.json({ success: true });
+});
+
+app.get('/api/test', (req, res) => {
+    res.json({ status: 'OK' });
+});
+
+// ==================== تشغيل السيرفر ====================
+app.listen(PORT, () => {
+    console.log(`
+╔══════════════════════════════════════════════════════════╗
+║     🚀 السيرفر يعمل بنجاح! 🚀                             ║
+╚══════════════════════════════════════════════════════════╝
+
+📡 http://localhost:${PORT}
+🔐 admin / 1234
+
+📊 إحصائيات المراكب:
+   🚢 الإجمالي: ${vessels.length}
+   🛠️ معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}
+   🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
+   🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
+   🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
+
+👥 المستخدمين على الخريطة: ${userSessions.length}
+
+✅ النظام جاهز!
+`);
+});
