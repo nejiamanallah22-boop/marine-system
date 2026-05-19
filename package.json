@@ -1,13 +1,14 @@
 {
-  "name": "marine-fleet-system",
+  "name": "marine-system",
   "version": "1.0.0",
-  "description": "منظومة متابعة الوسائل البحرية",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "express-session": "^1.17.3"
+    "mongoose": "^8.0.0",
+    "express-session": "^1.17.3",
+    "dotenv": "^16.0.3"
   }
 }
