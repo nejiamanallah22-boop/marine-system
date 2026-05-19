@@ -12,17 +12,14 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; direction: rtl; }
         @media (max-width: 768px) { body { padding: 10px; } .input-grid { grid-template-columns: 1fr !important; } .nav { flex-direction: column; } .nav button { width: 100%; } .filter-bar { flex-direction: column; } .scrollable-table { overflow-x: auto; } }
-        
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
         .login-box button { width: 100%; }
-        
         .container { max-width: 1550px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--primary); }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; position: relative; }
         .header-logo { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 60px; height: auto; opacity: 0.85; }
         .developer-info { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #2e7d32; padding: 6px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1em; display: inline-block; }
-        
         .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
         .btn-blue { background: var(--primary); } 
@@ -34,16 +31,13 @@
         .btn-purple { background: #6f42c1; }
         .btn-cyan { background: #17a2b8; }
         .btn-info { background: #138496; }
-        
         .filter-bar { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; border: 1px solid #ddd; }
         .filter-bar label { font-weight: bold; color: var(--primary); font-size: 0.9em; }
         .filter-bar input, .filter-bar select { padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
         .search-input { flex: 1; min-width: 200px; }
         .search-input input { width: 100%; padding: 8px; border-radius: 20px; border: 1px solid #ccc; }
-        
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
         input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; width: 100%; box-sizing: border-box; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 0.9em; }
         th { background: var(--primary); color: white; }
@@ -51,7 +45,6 @@
         .status-معطب { color: red; font-weight: bold; }
         .status-صيانة { color: orange; font-weight: bold; }
         .hidden { display: none !important; }
-        
         .region-table-card { background: white; border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .region-table-header { background: var(--primary); color: white; padding: 12px; font-weight: bold; font-size: 1.1em; }
         .region-table { width: 100%; margin: 0; }
@@ -59,46 +52,34 @@
         .high-eff { background-color: #d4edda; }
         .mid-eff { background-color: #fff3cd; }
         .low-eff { background-color: #f8d7da; }
-        
         .stats-cards { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
         .stat-card { background: white; border-radius: 12px; padding: 15px 25px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); flex: 1; min-width: 150px; border-top: 4px solid var(--primary); }
         .stat-card .number { font-size: 28px; font-weight: bold; color: var(--primary); }
-        
         .chart-switch { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
         .chart-switch button { padding: 5px 15px; border-radius: 20px; background: #e9ecef; border: none; cursor: pointer; }
         .chart-switch button.active { background: var(--primary); color: white; }
-        
         .charts-container { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; justify-content: center; }
         .chart-box { flex: 1; min-width: 300px; background: #f9f9f9; padding: 20px; border-radius: 12px; }
         canvas { max-height: 350px; width: 100% !important; }
-        
         .role-badge { background: #ffd966; color: #2e7d32; padding: 4px 12px; border-radius: 20px; margin-right: 10px; }
-        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 15px; width: 450px; text-align: center; }
-        
         .error-msg { color: red; margin-top: 10px; display: none; }
         .toast { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 12px 24px; border-radius: 8px; z-index: 10001; animation: fadeOut 3s ease forwards; }
         @keyframes fadeOut { 0% { opacity: 1; transform: translateY(0); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(20px); visibility: hidden; } }
-        
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
-        
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
         .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
         .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
-        
         .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
         .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
-        
         .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; opacity: 0.05; z-index: 0; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .watermark img { width: 70%; max-width: 500px; height: auto; object-fit: contain; }
-        
         .map-container { height: 450px; width: 100%; margin: 20px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
         #locationMap { height: 100%; width: 100%; }
         .session-card { background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 10px 0; border-right: 4px solid var(--primary); }
-        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -155,6 +136,11 @@
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
         <select id="iZone"><option value="">المنطقة</option></select>
         <input type="text" id="iPort" placeholder="الميناء">
@@ -217,6 +203,11 @@
                 <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
                 <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
                 <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             </select>
             <button class="btn-sm btn-green" onclick="refreshEff()">🔄 تحديث</button>
         </div>
@@ -322,16 +313,28 @@
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
         "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"]
+        "الجنوب": ["جرجيس", "جربة", "قابس"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "المجمع الأمني بقبيبة": ["قبيبة"]
     };
     
-    const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
+    const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات", "وحدة صيانة", "مركز أمني"];
+
+    const ALL_REGIONS = ["الشمال", "الساحل", "الوسط", "الجنوب", "وحدة الصيانة والإسناد البحري تونس", "وحدة الصيانة والإسناد البحري المنستير", "وحدة الصيانة والإسناد البحري صفاقس", "وحدة الصيانة والإسناد البحري جرجيس", "المجمع الأمني بقبيبة"];
 
     const REGION_NAMES = {
         "الشمال": "🗺️ الحرس البحري بالشمال",
         "الساحل": "🗺️ الحرس البحري بالساحل",
         "الوسط": "🗺️ الحرس البحري بالوسط",
-        "الجنوب": "🗺️ الحرس البحري بالجنوب"
+        "الجنوب": "🗺️ الحرس البحري بالجنوب",
+        "وحدة الصيانة والإسناد البحري تونس": "🛠️ وحدة الصيانة تونس",
+        "وحدة الصيانة والإسناد البحري المنستير": "🛠️ وحدة الصيانة المنستير",
+        "وحدة الصيانة والإسناد البحري صفاقس": "🛠️ وحدة الصيانة صفاقس",
+        "وحدة الصيانة والإسناد البحري جرجيس": "🛠️ وحدة الصيانة جرجيس",
+        "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
     };
 
     // ==================== دوال مساعدة ====================
@@ -362,6 +365,7 @@
         if(n >= 8 && n <= 12) return "صقور"; 
         if(n > 12 && n <= 25) return "خوافر"; 
         if(n >= 30) return "طوافات"; 
+        if(n === 0) return "وحدة صيانة";
         return "زوارق مزدوجة"; 
     }
     
@@ -407,7 +411,7 @@
     async function loadSessions() { return apiCall('/api/sessions'); }
     async function loadMapSessions() { return apiCall('/api/sessions/map'); }
     
-    async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { username: name, password: pass }); }
+    async function loginAPI(name, pass, loc) { return apiCall('/api/login', 'POST', { username: name, password: pass, location: loc }); }
     async function exportAllDataAPI() { return apiCall('/api/export-all'); }
     async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
 
@@ -438,6 +442,20 @@
         await renderMain(); await renderMaint(); await renderEff(); await renderTickets(); 
         if(canManageUsers()) { await renderUsers(); await renderTrack(); await refreshMap(); }
         showToast("✅ تم تحديث جميع الصفحات");
+    }
+
+    // ==================== الحصول على موقع المستخدم ====================
+    async function getUserLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve(null);
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                () => resolve(null)
+            );
+        });
     }
 
     // ==================== دوال الخريطة ====================
@@ -519,10 +537,10 @@
             
             let html = '<div class="region-table-card"><div class="region-table-header">📋 سجل جلسات المستخدمين</div><div class="scrollable-table"><table class="region-table"><thead><tr>';
             html += '<th>المستخدم</th><th>الدولة</th><th>المدينة</th><th>IP</th><th>وقت الدخول</th><th>الصلاحية</th>';
-            html += '</table></thead><tbody>';
+            html += '</tr></thead><tbody>';
             
             if (sessions.length === 0) {
-                html += '<tr><td colspan="6" style="text-align:center;">لا توجد جلسات مسجلة</td</tr>';
+                html += '<tr><td colspan="6" style="text-align:center;">لا توجد جلسات مسجلة</td>';
             } else {
                 sessions.forEach(session => {
                     const loginDate = new Date(session.loginTime);
@@ -558,7 +576,8 @@
         }
         
         try {
-            const user = await loginAPI(username, password);
+            const location = await getUserLocation();
+            const user = await loginAPI(username, password, location);
             if(user.error) {
                 errorDiv.innerHTML = user.error;
                 errorDiv.style.display = "block";
@@ -589,8 +608,8 @@
                 }
             };
             fill('fCatMain', CATS_LIST);
-            fill('fRegMain', Object.keys(ZONES_DATA));
-            fill('fRegMaint', Object.keys(ZONES_DATA));
+            fill('fRegMain', ALL_REGIONS);
+            fill('fRegMaint', ALL_REGIONS);
             
             await renderMain();
             await renderMaint();
@@ -600,6 +619,9 @@
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
             showToast(`مرحباً ${username}`);
             
+            if (user.location) {
+                showToast(`📍 تم تسجيل دخولك من ${user.location.city || 'تونس'}, ${user.location.country || 'تونس'}`);
+            }
         } catch(error) {
             errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
             errorDiv.style.display = "block";
@@ -775,7 +797,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td</tr>';
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -860,7 +882,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small>倍';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
@@ -887,7 +909,7 @@
             console.error('خطأ في renderMaint:', error);
             const maintBody = document.getElementById('maintBody');
             if (maintBody) {
-                maintBody.innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات: ' + error.message + '</td>';
+                maintBody.innerHTML = '｜｜DSML｜｜<td colspan="10">❌ خطأ في تحميل البيانات: ' + error.message + '</td>';
             }
         }
     }
@@ -913,7 +935,7 @@
                 <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
                 <div class="scrollable-table">
                 <table class="region-table">
-                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></td></thead>
+                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                     <tbody>`;
             
             CATS_LIST.forEach(cat => {
@@ -973,7 +995,7 @@
             CATS_LIST.forEach(cat => { catCount[cat] = data.filter(x => x.cat === cat).length; });
             
             let regions = [], regionsEff = [];
-            Object.keys(ZONES_DATA).forEach(reg => {
+            ALL_REGIONS.forEach(reg => {
                 let regData = data.filter(x => x.reg === reg);
                 let regOk = regData.filter(x => x.stat === 'صالح').length;
                 regions.push(REGION_NAMES[reg] || reg);
@@ -1015,62 +1037,48 @@
             let selectedRegion = document.getElementById('fRegEff').value;
             let html = "";
             
-            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب"];
-            
             if(selectedRegion === "نجاعة عامة") {
                 document.getElementById('regionTables').innerHTML = "";
                 return;
             }
             
             if(selectedRegion === "الكل") {
-                for(const region of allRegions) {
-                    let regData = data.filter(x => x.reg === region);
-                    let totalReg = regData.length;
-                    let okReg = regData.filter(x => x.stat === 'صالح').length;
-                    let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-                    let regionDisplay = REGION_NAMES[region] || region;
+                html = '<div class="region-table-card"><div class="region-table-header">📊 توزيع المراكب حسب الإقليم</div><div class="scrollable-table"><table class="region-table"><thead><tr><th>الإقليم</th><th>العدد</th><th>الصالح</th><th>المعطوب</th><th>تحت الصيانة</th></tr></thead><tbody>';
+                
+                for (const reg of ALL_REGIONS) {
+                    let regData = data.filter(x => x.reg === reg);
+                    let total = regData.length;
+                    let okCount = regData.filter(x => x.stat === 'صالح').length;
+                    let brokenCount = regData.filter(x => x.stat === 'معطب').length;
+                    let maintCount = regData.filter(x => x.stat === 'صيانة').length;
+                    let regionDisplay = REGION_NAMES[reg] || reg;
                     
-                    html += `<div class="region-table-card">
-                        <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
-                        <div class="scrollable-table">
-                        <table class="region-table">
-                            <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
-                            <tbody>`;
-                    
-                    for(const cat of CATS_LIST) {
-                        let catData = regData.filter(x => x.cat === cat);
-                        let ok = catData.filter(x => x.stat === 'صالح').length;
-                        let broken = catData.filter(x => x.stat !== 'صالح').length;
-                        let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
-                        let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-                        html += `<tr class="${rowClass}">
-                            <td>${cat}</td>
-                            <td style="color:green;">${ok}</td>
-                            <td style="color:red;">${broken}</td>
-                            <td><strong>${percent}%</strong></td>
-                        </tr>`;
-                    }
-                    
-                    html += `</tbody>
-                        </table>
-                        </div>
-                        </div>`;
+                    html += `<tr>
+                        <td><b>${regionDisplay}</b></td>
+                        <td>${total}</td>
+                        <td style="color:green; font-weight:bold;">${okCount}</td>
+                        <td style="color:red; font-weight:bold;">${brokenCount}</td>
+                        <td style="color:orange; font-weight:bold;">${maintCount}</td>
+                    </tr>`;
                 }
+                
+                html += `</tbody>}</div></div>`;
             } else {
                 let regData = data.filter(x => x.reg === selectedRegion);
-                let totalReg = regData.length;
-                let okReg = regData.filter(x => x.stat === 'صالح').length;
-                let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
+                let total = regData.length;
+                let okCount = regData.filter(x => x.stat === 'صالح').length;
+                let brokenCount = regData.filter(x => x.stat === 'معطب').length;
+                let maintCount = regData.filter(x => x.stat === 'صيانة').length;
                 let regionDisplay = REGION_NAMES[selectedRegion] || selectedRegion;
                 
-                html += `<div class="region-table-card">
-                    <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
+                html = `<div class="region-table-card">
+                    <div class="region-table-header">📍 ${regionDisplay}</div>
                     <div class="scrollable-table">
                     <table class="region-table">
                         <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
                         <tbody>`;
                 
-                for(const cat of CATS_LIST) {
+                for (const cat of CATS_LIST) {
                     let catData = regData.filter(x => x.cat === cat);
                     let ok = catData.filter(x => x.stat === 'صالح').length;
                     let broken = catData.filter(x => x.stat !== 'صالح').length;
@@ -1084,10 +1092,13 @@
                     </tr>`;
                 }
                 
-                html += `</tbody>
-                    </table>
-                    </div>
-                    </div>`;
+                html += `<tr style="background-color: #2e7d32; color: white;">
+                    <td colspan="3">📍 النجاعة العامة للإقليم</td>
+                    <td><strong>${total ? ((okCount / total) * 100).toFixed(1) : 0}% (${okCount}/${total})</strong></td>
+                </tr></tbody>
+                </table>
+                </div>
+                </div>`;
             }
             
             document.getElementById('regionTables').innerHTML = html;
@@ -1220,7 +1231,7 @@
         try {
             let tickets = await loadTickets();
             let html = '<div class="scrollable-table"><table class="region-table"><thead>';
-            html += '</tr>';
+            html += '<tr>';
             html += '<th>#</th>';
             html += '<th>التاريخ</th>';
             html += '<th>الوقت</th>';
@@ -1230,10 +1241,10 @@
             html += '<th>الرسالة</th>';
             html += '<th>الردود</th>';
             if(canManageUsers()) html += '<th>إجراءات</th>';
-            html += '</thead><tbody>';
+            html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td</tr>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
@@ -1324,7 +1335,7 @@
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="5" style="text-align:center;">لا توجد جلسات مسجلة</td</tr>';
+                html += '<tr><td colspan="5" style="text-align:center;">لا توجد جلسات مسجلة</td>';
             } else {
                 filtered.forEach((session, index) => {
                     const loginDate = new Date(session.loginTime);
