@@ -121,7 +121,1042 @@
         <button class="btn btn-green" onclick="addItem()">حفظ</button>
     </div>
 
+    <!-- صفحة الأسطول البحري -->
     <div id="pageMain">
         <div class="filter-bar">
             <div class="search-input"><input type="text" id="searchMain" placeholder="بحث" onkeyup="renderMain()"></div>
-            <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="
+            <label>الفئة:</label><select id="fCatMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
+            <label>الإقليم:</label><select id="fRegMain" onchange="renderMain()"><option value="الكل">الكل</option></select>
+            <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
+            <button class="btn-sm btn-green" onclick="refreshMain()">تحديث</button>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr></thead>
+                <tbody id="mainBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- صفحة سجل الصيانة -->
+    <div id="pageMaint" class="hidden">
+        <div class="filter-bar">
+            <input type="text" id="searchMaint" placeholder="بحث" onkeyup="renderMaint()">
+            <label>الإقليم:</label><select id="fRegMaint" onchange="renderMaint()"><option value="الكل">الكل</option></select>
+            <label>من تاريخ:</label><input type="date" id="fDateStart" onchange="renderMaint()">
+            <label>إلى تاريخ:</label><input type="date" id="fDateEnd" onchange="renderMaint()">
+            <button class="btn-sm btn-blue" onclick="resetMaintFilters()">إعادة ضبط</button>
+            <button class="btn-sm btn-green" onclick="refreshMaint()">تحديث</button>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead>
+                <tbody id="maintBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- صفحة جاهزية الأسطول -->
+    <div id="pageEff" class="hidden">
+        <div class="filter-bar">
+            <label>تصفية الإقليم:</label>
+            <select id="fRegEff" onchange="renderEff()"><option value="الكل">الكل</option><option value="نجاعة عامة">نجاعة عامة</option><option value="الشمال">الشمال</option><option value="الساحل">الساحل</option><option value="الوسط">الوسط</option><option value="الجنوب">الجنوب</option></select>
+            <button class="btn-sm btn-green" onclick="refreshEff()">تحديث</button>
+        </div>
+        <div class="stats" id="statsCards"></div>
+        <div id="generalEffTableContainer"></div>
+        <div id="regionTables"></div>
+        <div class="chart-switch">
+            <button class="active" onclick="switchChartType('doughnut', this)">دائري</button>
+            <button onclick="switchChartType('bar', this)">شريطي</button>
+            <button onclick="switchChartType('line', this)">خطي</button>
+        </div>
+        <div id="chartsArea"></div>
+    </div>
+
+    <!-- صفحة الدعم الفني -->
+    <div id="pageSupport" class="hidden">
+        <div class="region-table-card" style="padding:20px">
+            <h3>نظام التذاكر - الدعم الفني</h3>
+            <p>support@marine.gov.tn | 29659945</p>
+            <hr>
+            <h4>إرسال طلب دعم جديد</h4>
+            <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
+            <textarea id="ticketMessage" rows="4" placeholder="شرح المشكلة بالتفصيل..." style="width:100%; padding:10px"></textarea>
+            <button class="btn btn-blue" onclick="sendTicket()">إرسال الطلب</button>
+            <button class="btn-sm btn-green" onclick="refreshTickets()">تحديث</button>
+            <div id="ticketResponse" style="margin-top:10px; color:green"></div>
+            <hr>
+            <h4>قائمة التذاكر</h4>
+            <div id="ticketsList"></div>
+        </div>
+    </div>
+
+    <!-- صفحة تتبع المستخدمين (سجل النشاط) -->
+    <div id="pageTrack" class="hidden">
+        <div class="filter-bar">
+            <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
+            <label>إلى تاريخ:</label><input type="date" id="trackDateEnd" onchange="renderTrack()">
+            <button class="btn-sm btn-blue" onclick="resetTrackFilters()">إعادة ضبط</button>
+            <button class="btn-sm btn-green" onclick="refreshTrack()">تحديث</button>
+        </div>
+        <div id="trackContent"></div>
+    </div>
+
+    <!-- صفحة الخريطة -->
+    <div id="pageMap" class="hidden">
+        <div class="filter-bar">
+            <label>اختر الموقع:</label>
+            <select id="mapRegionSelect" onchange="updateMapLocation()">
+                <option value="">-- اختر منطقة --</option>
+                <option value="تونس">تونس</option>
+                <option value="بنزرت">بنزرت</option>
+                <option value="طبرقة">طبرقة</option>
+                <option value="سوسة">سوسة</option>
+                <option value="المنستير">المنستير</option>
+                <option value="نابل">نابل</option>
+                <option value="صفاقس">صفاقس</option>
+                <option value="المهدية">المهدية</option>
+                <option value="قرقنة">قرقنة</option>
+                <option value="جرجيس">جرجيس</option>
+                <option value="جربة">جربة</option>
+                <option value="قابس">قابس</option>
+            </select>
+            <button class="btn-sm btn-cyan" onclick="centerMapOnUser()">📍 موقعي الحالي</button>
+            <button class="btn-sm btn-green" onclick="refreshMapMarkers()">تحديث الخريطة</button>
+        </div>
+        <div id="map" class="map-container"></div>
+        <div id="mapInfo" style="text-align:center; margin-top:10px;"></div>
+    </div>
+
+    <!-- صفحة المستخدمين -->
+    <div id="pageUsers" class="hidden">
+        <div class="input-grid">
+            <input type="text" id="un" placeholder="اسم المستخدم">
+            <input type="password" id="up" placeholder="كلمة السر">
+            <select id="ur"><option value="مسؤول">مسؤول</option><option value="محرر">محرر</option><option value="مشاهد">مشاهد</option></select>
+            <button class="btn btn-blue" onclick="addUser()">إضافة</button>
+            <button class="btn-sm btn-green" onclick="refreshUsers()">تحديث</button>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUser = null;
+    let map = null;
+    let markersLayer = null;
+    let fleetChart = null, categoriesChart = null, comparisonChart = null;
+    let currentChartType = 'doughnut';
+
+    const ZONES_DATA = {
+        "الشمال": ["تونس", "بنزرت", "طبرقة"],
+        "الساحل": ["سوسة", "المنستير", "نابل"],
+        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+        "الجنوب": ["جرجيس", "جربة", "قابس"]
+    };
+    
+    const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
+    const REGION_NAMES = {
+        "الشمال": "الحرس البحري بالشمال",
+        "الساحل": "الحرس البحري بالساحل",
+        "الوسط": "الحرس البحري بالوسط",
+        "الجنوب": "الحرس البحري بالجنوب"
+    };
+
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.style.background = isError ? '#d9534f' : '#2e7d32';
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function formatDate(d) { 
+        if(!d) return '-'; 
+        try { 
+            let date = new Date(d); 
+            if(isNaN(date.getTime())) return d; 
+            return `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`; 
+        } catch(e) { return d; } 
+    }
+    
+    function getCat(len) { 
+        let n = parseFloat(len); 
+        if(n === 11) return "البروق"; 
+        if(n >= 8 && n <= 12) return "صقور"; 
+        if(n > 12 && n <= 25) return "خوافر"; 
+        if(n >= 30) return "طوافات"; 
+        return "زوارق مزدوجة"; 
+    }
+    
+    function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
+    function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
+    function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
+
+    function getCurrentDate() {
+        const now = new Date();
+        return `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
+    }
+
+    function getCurrentTime() {
+        const now = new Date();
+        return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    async function apiCall(url, method = 'GET', body = null) {
+        const options = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) options.body = JSON.stringify(body);
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error(await response.text());
+        return response.json();
+    }
+
+    async function loadVessels() { return apiCall('/api/vessels'); }
+    async function saveVessel(vessel) { return apiCall('/api/vessels', 'POST', vessel); }
+    async function updateVessel(id, vessel) { return apiCall(`/api/vessels/${id}`, 'PUT', vessel); }
+    async function deleteVessel(id) { return apiCall(`/api/vessels/${id}`, 'DELETE'); }
+    
+    async function loadUsers() { return apiCall('/api/users'); }
+    async function saveUser(user) { return apiCall('/api/users', 'POST', user); }
+    async function updateUser(id, user) { return apiCall(`/api/users/${id}`, 'PUT', user); }
+    async function deleteUserAPI(id) { return apiCall(`/api/users/${id}`, 'DELETE'); }
+    
+    async function loadTickets() { return apiCall('/api/tickets'); }
+    async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
+    async function replyToTicketAPI(id, reply) { return apiCall(`/api/tickets/${id}/reply`, 'PUT', { reply }); }
+    async function closeTicketAPI(id) { return apiCall(`/api/tickets/${id}/close`, 'PUT'); }
+    
+    async function loadLogs() { return apiCall('/api/logs'); }
+    async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
+    
+    async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { name, pass }); }
+    async function exportAllDataAPI() { return apiCall('/api/export-all'); }
+    async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
+
+    async function logActivity(action, details) { 
+        if(!currentUser) return; 
+        try {
+            await saveLog({
+                userName: currentUser.name,
+                userRole: currentUser.role,
+                action: action,
+                details: details,
+                date: getCurrentDate(),
+                time: getCurrentTime()
+            });
+        } catch(e) { console.error('Log error:', e); }
+    }
+
+    async function refreshMain() { await renderMain(); showToast("تم تحديث الأسطول البحري"); }
+    async function refreshMaint() { await renderMaint(); showToast("تم تحديث سجل الصيانة"); }
+    async function refreshEff() { await renderEff(); showToast("تم تحديث جاهزية الأسطول"); }
+    async function refreshTickets() { await renderTickets(); showToast("تم تحديث قائمة التذاكر"); }
+    async function refreshTrack() { if(canManageUsers()) { await renderTrack(); showToast("تم تحديث سجل التتبع"); } }
+    async function refreshUsers() { if(canManageUsers()) { await renderUsers(); showToast("تم تحديث قائمة المستخدمين"); } }
+    async function refreshMapMarkers() { if(map) { await loadMapMarkers(); showToast("تم تحديث مواقع المراكب"); } }
+    
+    async function refreshAllPages() { 
+        await renderMain(); await renderMaint(); await renderEff(); await renderTickets(); 
+        if(canManageUsers()) { await renderUsers(); await renderTrack(); }
+        showToast("تم تحديث جميع الصفحات");
+    }
+
+    async function doLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorDiv = document.getElementById('loginError');
+        
+        if(!username || !password) {
+            errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور";
+            errorDiv.style.display = "block";
+            return;
+        }
+        
+        try {
+            const user = await loginAPI(username, password);
+            if(user.error) {
+                errorDiv.innerHTML = user.error;
+                errorDiv.style.display = "block";
+                return;
+            }
+            
+            currentUser = user;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            const isAdmin = currentUser.role === "مسؤول";
+            
+            await renderMain();
+            await renderMaint();
+            await renderEff();
+            await renderTickets();
+            if(isAdmin) { await renderUsers(); await renderTrack(); }
+            await initMap();
+            await loadMapMarkers();
+            await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
+            showToast(`مرحباً ${username}`);
+        } catch(error) {
+            errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر";
+            errorDiv.style.display = "block";
+        }
+    }
+    
+    async function logout() {
+        if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
+        currentUser = null;
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('loginError').style.display = 'none';
+    }
+
+    async function addItem() {
+        if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة", true); return; }
+        const name = document.getElementById('iName').value.trim();
+        if(!name) return showToast("الاسم مطلوب", true);
+        
+        const stat = document.getElementById('iStat').value;
+        const fDate = document.getElementById('iDate').value;
+        
+        if((stat === 'معطب' || stat === 'صيانة') && !fDate) {
+            showToast("تاريخ العطب إلزامي للمراكب المعطوبة أو التي تحت الصيانة", true);
+            return;
+        }
+        
+        const newItem = {
+            name: name,
+            num: document.getElementById('iNum').value,
+            len: parseFloat(document.getElementById('iLen').value) || 0,
+            reg: document.getElementById('iReg').value,
+            zone: document.getElementById('iZone').value,
+            port: document.getElementById('iPort').value,
+            supp: document.getElementById('iSupp').value,
+            stat: stat,
+            break: document.getElementById('iBreak').value,
+            fDate: fDate,
+            eDate: document.getElementById('iEnd').value,
+            ref: document.getElementById('iRef').value,
+            cat: getCat(document.getElementById('iLen').value)
+        };
+        
+        try {
+            await saveVessel(newItem);
+            await logActivity("إضافة مركب", `قام بإضافة مركب "${name}"`);
+            
+            ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = "";
+            });
+            document.getElementById('iReg').value = "";
+            document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
+            
+            await renderMain();
+            await renderMaint();
+            await renderEff();
+            await loadMapMarkers();
+            showToast(`تم حفظ المركب بنجاح`);
+        } catch(error) {
+            showToast("خطأ في حفظ المركب: " + error.message, true);
+        }
+    }
+    
+    async function editItem(id, name) {
+        if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل", true); return; }
+        let data = await loadVessels();
+        let item = data.find(x => x.id === id || x._id === id);
+        if(item) {
+            document.getElementById('iName').value = item.name;
+            document.getElementById('iNum').value = item.num || '';
+            document.getElementById('iLen').value = item.len || '';
+            document.getElementById('iReg').value = item.reg || '';
+            updateZones();
+            setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
+            document.getElementById('iPort').value = item.port || '';
+            document.getElementById('iSupp').value = item.supp || '';
+            document.getElementById('iStat').value = item.stat;
+            document.getElementById('iBreak').value = item.break || '';
+            document.getElementById('iDate').value = item.fDate || '';
+            document.getElementById('iEnd').value = item.eDate || '';
+            document.getElementById('iRef').value = item.ref || '';
+            window.scrollTo(0,0);
+            
+            const oldName = item.name;
+            const saveBtn = document.querySelector('#inputArea .btn-green');
+            const originalClick = saveBtn.onclick;
+            saveBtn.onclick = async () => {
+                const updatedItem = {
+                    name: document.getElementById('iName').value.trim(),
+                    num: document.getElementById('iNum').value,
+                    len: parseFloat(document.getElementById('iLen').value) || 0,
+                    reg: document.getElementById('iReg').value,
+                    zone: document.getElementById('iZone').value,
+                    port: document.getElementById('iPort').value,
+                    supp: document.getElementById('iSupp').value,
+                    stat: document.getElementById('iStat').value,
+                    break: document.getElementById('iBreak').value,
+                    fDate: document.getElementById('iDate').value,
+                    eDate: document.getElementById('iEnd').value,
+                    ref: document.getElementById('iRef').value,
+                    cat: getCat(document.getElementById('iLen').value)
+                };
+                try {
+                    await updateVessel(item.id || item._id, updatedItem);
+                    await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}" إلى "${updatedItem.name}"`);
+                    await renderMain();
+                    await renderMaint();
+                    await renderEff();
+                    await loadMapMarkers();
+                    showToast("تم تحديث المركب بنجاح");
+                    saveBtn.onclick = originalClick;
+                    ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el) el.value = "";
+                    });
+                    document.getElementById('iReg').value = "";
+                    document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
+                } catch(error) {
+                    showToast("خطأ في التحديث: " + error.message, true);
+                }
+            };
+            showToast("قم بتعديل البيانات ثم اضغط حفظ");
+        }
+    }
+    
+    async function delItem(id, name) {
+        if(!canDelete()) { showToast("ليس لديك صلاحية للحذف", true); return; }
+        if(confirm(`هل أنت متأكد من حذف المركب "${name}"؟`)) {
+            try {
+                await deleteVessel(id);
+                await logActivity("حذف مركب", `قام بحذف مركب "${name}"`);
+                await renderMain();
+                await renderMaint();
+                await renderEff();
+                await loadMapMarkers();
+                showToast("تم حذف المركب بنجاح");
+            } catch(error) {
+                showToast("خطأ في الحذف: " + error.message, true);
+            }
+        }
+    }
+    
+    function updateZones() {
+        const reg = document.getElementById('iReg').value;
+        const zoneSel = document.getElementById('iZone');
+        zoneSel.innerHTML = '<option value="">المنطقة</option>';
+        if(ZONES_DATA[reg]) {
+            ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`);
+        }
+    }
+    
+    async function renderMain() {
+        try {
+            let data = await loadVessels();
+            const fCat = document.getElementById('fCatMain').value;
+            const fReg = document.getElementById('fRegMain').value;
+            const searchText = document.getElementById('searchMain').value.toLowerCase();
+            
+            let filtered = data.filter(x => {
+                let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
+                let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
+                let matchSearch = !searchText || 
+                    (x.name && x.name.toLowerCase().includes(searchText)) ||
+                    (x.num && x.num.toLowerCase().includes(searchText)) ||
+                    (x.reg && x.reg.toLowerCase().includes(searchText)) ||
+                    (x.zone && x.zone.toLowerCase().includes(searchText)) ||
+                    (x.port && x.port.toLowerCase().includes(searchText));
+                return matchCat && matchReg && matchSearch;
+            });
+            
+            let html = "";
+            const isAdmin = currentUser?.role === "مسؤول";
+            
+            if(filtered.length === 0) {
+                html = '<tr><td colspan="13" style="text-align:center;">لا توجد مراكب مسجلة</td></tr>';
+            } else {
+                filtered.forEach(x => {
+                    let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
+                    html += `<tr>
+                        <td>${x.name}</td>
+                        <td>${x.num || '-'}</td>
+                        <td>${x.len || '-'}</td>
+                        <td>${x.cat || '-'}</td>
+                        <td>${regionDisplay}</td>
+                        <td>${x.zone || '-'}</td>
+                        <td>${x.port || '-'}</td>
+                        <td>${x.supp || '-'}</td>
+                        <td class="status-${x.stat}">${x.stat}</td>
+                        <td>${x.break || '-'}</td>
+                        <td>${formatDate(x.fDate)}</td>
+                        <td>${formatDate(x.eDate)}</td>
+                        <td>
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id}', '${x.name}')">حذف</button>` : ''}
+                        </td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('mainBody').innerHTML = html;
+        } catch(error) {
+            console.error('خطأ في renderMain:', error);
+            document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">خطأ في تحميل البيانات</td></tr>';
+        }
+    }
+    
+    function clearMainSearch() {
+        document.getElementById('searchMain').value = '';
+        renderMain();
+    }
+    
+    async function renderMaint() {
+        try {
+            let data = await loadVessels();
+            const fReg = document.getElementById('fRegMaint').value;
+            const dStart = document.getElementById('fDateStart').value;
+            const dEnd = document.getElementById('fDateEnd').value;
+            const searchText = document.getElementById('searchMaint').value.toLowerCase();
+            
+            let filtered = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
+            if(fReg !== "الكل") filtered = filtered.filter(x => x.reg === fReg);
+            
+            if(dStart || dEnd) {
+                const start = dStart ? new Date(dStart) : null;
+                const end = dEnd ? new Date(dEnd) : null;
+                filtered = filtered.filter(x => {
+                    if(!x.fDate) return false;
+                    const itemDate = new Date(x.fDate);
+                    if(start && itemDate < start) return false;
+                    if(end && itemDate > end) return false;
+                    return true;
+                });
+            }
+            
+            if(searchText) {
+                filtered = filtered.filter(x => 
+                    (x.name && x.name.toLowerCase().includes(searchText)) ||
+                    (x.break && x.break.toLowerCase().includes(searchText)) ||
+                    (x.ref && x.ref.toLowerCase().includes(searchText)) ||
+                    (x.num && x.num.toLowerCase().includes(searchText))
+                );
+            }
+            
+            filtered.sort((a, b) => {
+                if(!a.fDate) return 1;
+                if(!b.fDate) return -1;
+                return new Date(b.fDate) - new Date(a.fDate);
+            });
+            
+            let html = "";
+            const isAdmin = currentUser?.role === "مسؤول";
+            
+            if(filtered.length === 0) {
+                html = '<tr><td colspan="10">لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+            } else {
+                filtered.forEach(x => {
+                    let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
+                    html += `<tr>
+                        <td>${x.name}</td>
+                        <td>${x.num || '-'}</td>
+                        <td>${regionDisplay}</td>
+                        <td>${x.zone || '-'}</td>
+                        <td class="status-${x.stat}">${x.stat}</td>
+                        <td class="damage-column">${x.break || '-'}</td>
+                        <td>${formatDate(x.fDate)}</td>
+                        <td>${formatDate(x.eDate)}</td>
+                        <td>${x.ref || '-'}</td>
+                        <td>
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id}', '${x.name}')">حذف</button>` : ''}
+                        </td>
+                    </tr>`;
+                });
+            }
+            document.getElementById('maintBody').innerHTML = html;
+        } catch(error) {
+            console.error(error);
+            document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">خطأ في تحميل البيانات</td></tr>';
+        }
+    }
+    
+    function resetMaintFilters() {
+        document.getElementById('fRegMaint').value = "الكل";
+        document.getElementById('fDateStart').value = "";
+        document.getElementById('fDateEnd').value = "";
+        document.getElementById('searchMaint').value = "";
+        renderMaint();
+        showToast("تم إعادة ضبط الفلاتر");
+    }
+    
+    async function renderStatsCards() {
+        try {
+            let data = await loadVessels();
+            let total = data.length;
+            let ok = data.filter(x => x.stat === 'صالح').length;
+            let maint = data.filter(x => x.stat === 'صيانة').length;
+            let broken = data.filter(x => x.stat === 'معطب').length;
+            let eff = total ? ((ok / total) * 100).toFixed(1) : 0;
+            document.getElementById('statsCards').innerHTML = `
+                <div class="stat-card"><div class="number">${total}</div><div>إجمالي المراكب</div></div>
+                <div class="stat-card"><div class="number">${ok}</div><div>الصالح</div></div>
+                <div class="stat-card"><div class="number">${maint}</div><div>تحت الصيانة</div></div>
+                <div class="stat-card"><div class="number">${broken}</div><div>المعطوب</div></div>
+                <div class="stat-card"><div class="number">${eff}%</div><div>نسبة النجاعة</div></div>
+            `;
+        } catch(e) { console.error(e); }
+    }
+    
+    async function renderGeneralEfficiencyTable() {
+        try {
+            let data = await loadVessels();
+            let totalOk = data.filter(x => x.stat === 'صالح').length;
+            let totalAll = data.length;
+            let generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0;
+            let html = `<div class="region-table-card">
+                <div class="region-table-header">النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
+                <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+            CATS_LIST.forEach(cat => {
+                let catData = data.filter(x => x.cat === cat);
+                let ok = catData.filter(x => x.stat === 'صالح').length;
+                let broken = catData.filter(x => x.stat !== 'صالح').length;
+                let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
+                let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
+                html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+            });
+            html += `</tbody></table></div></div>`;
+            document.getElementById('generalEffTableContainer').innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+    
+    async function renderRegionTables() {
+        try {
+            let data = await loadVessels();
+            let selectedRegion = document.getElementById('fRegEff').value;
+            let html = "";
+            const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب"];
+            if(selectedRegion === "نجاعة عامة") { document.getElementById('regionTables').innerHTML = ""; return; }
+            if(selectedRegion === "الكل") {
+                for(const region of allRegions) {
+                    let regData = data.filter(x => x.reg === region);
+                    let totalReg = regData.length;
+                    let okReg = regData.filter(x => x.stat === 'صالح').length;
+                    let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
+                    let regionDisplay = REGION_NAMES[region] || region;
+                    html += `<div class="region-table-card"><div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
+                        <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+                    for(const cat of CATS_LIST) {
+                        let catData = regData.filter(x => x.cat === cat);
+                        let ok = catData.filter(x => x.stat === 'صالح').length;
+                        let broken = catData.filter(x => x.stat !== 'صالح').length;
+                        let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
+                        let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
+                        html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+                    }
+                    html += `</tbody></table></div></div>`;
+                }
+            } else {
+                let regData = data.filter(x => x.reg === selectedRegion);
+                let totalReg = regData.length;
+                let okReg = regData.filter(x => x.stat === 'صالح').length;
+                let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
+                let regionDisplay = REGION_NAMES[selectedRegion] || selectedRegion;
+                html += `<div class="region-table-card"><div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
+                    <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+                for(const cat of CATS_LIST) {
+                    let catData = regData.filter(x => x.cat === cat);
+                    let ok = catData.filter(x => x.stat === 'صالح').length;
+                    let broken = catData.filter(x => x.stat !== 'صالح').length;
+                    let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
+                    let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
+                    html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+                }
+                html += `</tbody></table></div></div>`;
+            }
+            document.getElementById('regionTables').innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+    
+    async function renderCharts() {
+        try {
+            let data = await loadVessels();
+            let ok = data.filter(x => x.stat === 'صالح').length;
+            let maint = data.filter(x => x.stat === 'صيانة').length;
+            let broken = data.filter(x => x.stat === 'معطب').length;
+            let catCount = {};
+            CATS_LIST.forEach(cat => { catCount[cat] = data.filter(x => x.cat === cat).length; });
+            let regions = [], regionsEff = [];
+            Object.keys(ZONES_DATA).forEach(reg => {
+                let regData = data.filter(x => x.reg === reg);
+                let regOk = regData.filter(x => x.stat === 'صالح').length;
+                regions.push(REGION_NAMES[reg] || reg);
+                regionsEff.push(regData.length ? (regOk / regData.length * 100) : 0);
+            });
+            document.getElementById('chartsArea').innerHTML = `
+                <div class="chart-box"><h4>حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div>
+                <div class="chart-box"><h4>توزيع المراكب حسب الفئة</h4><canvas id="categoriesChartCanvas"></canvas></div>
+                <div class="chart-box"><h4>مقارنة النجاعة بين الأقاليم</h4><canvas id="comparisonChartCanvas"></canvas></div>
+            `;
+            if(fleetChart) fleetChart.destroy();
+            if(categoriesChart) categoriesChart.destroy();
+            if(comparisonChart) comparisonChart.destroy();
+            const fleetCtx = document.getElementById('fleetChartCanvas').getContext('2d');
+            if(currentChartType === 'doughnut') {
+                fleetChart = new Chart(fleetCtx, { type: 'doughnut', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ data: [ok, maint, broken], backgroundColor: ['#28a745', '#ffc107', '#dc3545'] }] } });
+            } else if(currentChartType === 'bar') {
+                fleetChart = new Chart(fleetCtx, { type: 'bar', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], backgroundColor: ['#28a745', '#ffc107', '#dc3545'] }] }, options: { scales: { y: { beginAtZero: true } } } });
+            } else {
+                fleetChart = new Chart(fleetCtx, { type: 'line', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], borderColor: '#2e7d32', fill: true }] }, options: { scales: { y: { beginAtZero: true } } } });
+            }
+            categoriesChart = new Chart(document.getElementById('categoriesChartCanvas').getContext('2d'), { type: 'bar', data: { labels: CATS_LIST, datasets: [{ label: 'عدد المراكب', data: CATS_LIST.map(c => catCount[c] || 0), backgroundColor: '#2e7d32' }] }, options: { scales: { y: { beginAtZero: true } } } });
+            comparisonChart = new Chart(document.getElementById('comparisonChartCanvas').getContext('2d'), { type: 'line', data: { labels: regions, datasets: [{ label: 'نسبة النجاعة (%)', data: regionsEff, borderColor: '#f39c12', fill: true }] }, options: { scales: { y: { beginAtZero: true, max: 100 } } } });
+        } catch(e) { console.error(e); }
+    }
+    
+    async function renderEff() {
+        await renderStatsCards();
+        await renderGeneralEfficiencyTable();
+        await renderRegionTables();
+        await renderCharts();
+    }
+    
+    function switchChartType(type, btn) {
+        currentChartType = type;
+        document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
+        if(btn) btn.classList.add('active');
+        renderCharts();
+    }
+    
+    async function sendTicket() {
+        if(!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
+        const subject = document.getElementById('ticketSubject').value.trim();
+        const message = document.getElementById('ticketMessage').value.trim();
+        if(!subject || !message) { showToast("يرجى إدخال عنوان ورسالة الطلب", true); return; }
+        try {
+            const newTicket = {
+                userName: currentUser.name,
+                userRole: currentUser.role,
+                subject: subject,
+                message: message,
+                date: getCurrentDate(),
+                time: getCurrentTime(),
+                status: 'قيد المعالجة',
+                replies: []
+            };
+            await saveTicket(newTicket);
+            document.getElementById('ticketSubject').value = "";
+            document.getElementById('ticketMessage').value = "";
+            document.getElementById('ticketResponse').innerHTML = "تم إرسال طلبك بنجاح";
+            setTimeout(() => { document.getElementById('ticketResponse').innerHTML = ""; }, 3000);
+            await renderTickets();
+            await logActivity("إرسال تذكرة", `قام بإرسال تذكرة دعم: ${subject}`);
+            showToast("تم إرسال طلبك بنجاح");
+        } catch(error) {
+            showToast("خطأ في الإرسال: " + error.message, true);
+        }
+    }
+    
+    async function renderTickets() {
+        if(!canManageUsers()) return;
+        try {
+            let tickets = await loadTickets();
+            let html = '<div class="scrollable-table"><table class="region-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>العنوان</th><th>الحالة</th><th>الرسالة</th><th>الردود</th><th>إجراءات</th></tr></thead><tbody>';
+            if(tickets.length === 0) {
+                html += '<tr><td colspan="9">لا توجد تذاكر</td></tr>';
+            } else {
+                tickets.forEach((t, idx) => {
+                    const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
+                    const statusText = t.status === 'مغلقة' ? 'مغلقة' : (t.status === 'تم الرد' ? 'تم الرد' : 'قيد المعالجة');
+                    let repliesHtml = '';
+                    if(t.replies && t.replies.length) {
+                        t.replies.forEach(r => {
+                            repliesHtml += `<div class="ticket-reply"><small>${r.adminName} - ${r.date} ${r.time}</small><p>${r.reply}</p></div>`;
+                        });
+                    } else { repliesHtml = '<span style="color:#999;">لا توجد ردود</span>'; }
+                    html += `<tr>
+                        <td>${idx+1}</td>
+                        <td>${t.date}</td>
+                        <td>${t.time}</td>
+                        <td><b>${t.userName}</b><br><small>${t.userRole}</small></td>
+                        <td><strong>${t.subject}</strong></td>
+                        <td style="color:${statusColor}">${statusText}</td>
+                        <td style="text-align:right;">${t.message}</td>
+                        <td style="text-align:right;">${repliesHtml}</td>
+                        <td>
+                            ${t.status !== 'مغلقة' ? `<button class="btn-sm btn-cyan" onclick="replyToTicket('${t._id}')">رد</button>
+                            <button class="btn-sm btn-red" onclick="closeTicket('${t._id}')">إغلاق</button>` : `<span style="color:green;">مغلقة</span>`}
+                        </td>
+                    </tr>`;
+                });
+            }
+            html += `</tbody></table></div>`;
+            document.getElementById('ticketsList').innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+    
+    window.replyToTicket = async function(ticketId) {
+        const replyText = prompt("أدخل ردك على هذه التذكرة:");
+        if(!replyText) return;
+        try {
+            await replyToTicketAPI(ticketId, {
+                adminName: currentUser.name,
+                reply: replyText,
+                date: getCurrentDate(),
+                time: getCurrentTime()
+            });
+            await renderTickets();
+            await logActivity("رد على تذكرة", "قام بالرد على تذكرة");
+            showToast("تم إرسال الرد بنجاح");
+        } catch(e) { showToast("خطأ: "+e.message, true); }
+    };
+    
+    window.closeTicket = async function(ticketId) {
+        if(!confirm("هل أنت متأكد من إغلاق هذه التذكرة؟")) return;
+        try {
+            await closeTicketAPI(ticketId);
+            await renderTickets();
+            await logActivity("إغلاق تذكرة", "قام بإغلاق تذكرة");
+            showToast("تم إغلاق التذكرة");
+        } catch(e) { showToast("خطأ: "+e.message, true); }
+    };
+    
+    async function renderTrack() {
+        if(!canManageUsers()) return;
+        try {
+            let logs = await loadLogs();
+            const start = document.getElementById('trackDateStart').value;
+            const end = document.getElementById('trackDateEnd').value;
+            let filtered = [...logs];
+            if(start) {
+                const s = new Date(start);
+                filtered = filtered.filter(l => {
+                    const [d,m,y] = l.date.split('/');
+                    return new Date(`${y}-${m}-${d}`) >= s;
+                });
+            }
+            if(end) {
+                const e = new Date(end);
+                filtered = filtered.filter(l => {
+                    const [d,m,y] = l.date.split('/');
+                    return new Date(`${y}-${m}-${d}`) <= e;
+                });
+            }
+            const totalActivities = filtered.length;
+            const uniqueUsers = [...new Set(filtered.map(l => l.userName))];
+            let html = `<div class="stats"><div class="stat-card"><div class="number">${totalActivities}</div><div>إجمالي النشاطات</div></div>
+                        <div class="stat-card"><div class="number">${uniqueUsers.length}</div><div>عدد المستخدمين</div></div></div>
+                        <div class="scrollable-table"><table class="region-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>`;
+            if(filtered.length === 0) html += '<tr><td colspan="7">لا توجد نشاطات</td></tr>';
+            else {
+                filtered.forEach((l, i) => {
+                    let icon = '';
+                    if(l.action === 'إضافة مركب') icon='➕';
+                    else if(l.action === 'تعديل مركب') icon='✏️';
+                    else if(l.action === 'حذف مركب') icon='🗑️';
+                    else if(l.action === 'تسجيل دخول') icon='🔐';
+                    else if(l.action === 'تسجيل خروج') icon='🚪';
+                    else icon='📝';
+                    html += `<tr><td>${i+1}</td><td>${l.date}</td><td>${l.time}</td><td><b>${l.userName}</b></td><td><span class="role-badge">${l.userRole}</span></td><td>${icon} ${l.action}</td><td style="text-align:right;">${l.details}</td></tr>`;
+                });
+            }
+            html += `</tbody></table></div>`;
+            document.getElementById('trackContent').innerHTML = html;
+        } catch(e) { console.error(e); }
+    }
+    
+    function resetTrackFilters() {
+        document.getElementById('trackDateStart').value = "";
+        document.getElementById('trackDateEnd').value = "";
+        renderTrack();
+        showToast("تم إعادة ضبط الفلاتر");
+    }
+    
+    // الخريطة
+    async function initMap() {
+        if(map) return;
+        map = L.map('map').setView([34.5, 9.5], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+        }).addTo(map);
+        markersLayer = L.layerGroup().addTo(map);
+    }
+    
+    async function loadMapMarkers() {
+        if(!map || !markersLayer) return;
+        markersLayer.clearLayers();
+        try {
+            const vessels = await loadVessels();
+            const coords = {
+                "تونس": [36.8065, 10.1815], "بنزرت": [37.2744, 9.8739], "طبرقة": [36.9544, 8.7580],
+                "سوسة": [35.8333, 10.6333], "المنستير": [35.7770, 10.8260], "نابل": [36.4500, 10.7333],
+                "صفاقس": [34.7400, 10.7600], "المهدية": [35.5000, 11.0667], "قرقنة": [34.6667, 11.1000],
+                "جرجيس": [33.5000, 11.1167], "جربة": [33.8075, 10.8452], "قابس": [33.8833, 10.1167]
+            };
+            vessels.forEach(v => {
+                const zone = v.zone;
+                if(zone && coords[zone]) {
+                    const statusIcon = v.stat === 'صالح' ? 'green' : (v.stat === 'معطب' ? 'red' : 'orange');
+                    const marker = L.circleMarker(coords[zone], { radius: 8, color: statusIcon, fillColor: statusIcon, fillOpacity: 0.7 }).addTo(markersLayer);
+                    marker.bindPopup(`<b>${v.name}</b><br>الرقم: ${v.num}<br>الحالة: ${v.stat}<br>العطب: ${v.break || 'لا يوجد'}`);
+                }
+            });
+            if(vessels.length === 0) document.getElementById('mapInfo').innerHTML = "لا توجد مراكب لعرضها على الخريطة";
+            else document.getElementById('mapInfo').innerHTML = `تم تحميل ${vessels.length} مركب على الخريطة`;
+        } catch(e) { console.error(e); }
+    }
+    
+    function updateMapLocation() {
+        const region = document.getElementById('mapRegionSelect').value;
+        const coords = {
+            "تونس": [36.8065, 10.1815], "بنزرت": [37.2744, 9.8739], "طبرقة": [36.9544, 8.7580],
+            "سوسة": [35.8333, 10.6333], "المنستير": [35.7770, 10.8260], "نابل": [36.4500, 10.7333],
+            "صفاقس": [34.7400, 10.7600], "المهدية": [35.5000, 11.0667], "قرقنة": [34.6667, 11.1000],
+            "جرجيس": [33.5000, 11.1167], "جربة": [33.8075, 10.8452], "قابس": [33.8833, 10.1167]
+        };
+        if(map && coords[region]) {
+            map.setView(coords[region], 12);
+        }
+    }
+    
+    function centerMapOnUser() {
+        if(map && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 13);
+            }, () => { showToast("لا يمكن الحصول على موقعك", true); });
+        } else { showToast("المتصفح لا يدعم تحديد الموقع", true); }
+    }
+    
+    // إدارة المستخدمين
+    async function renderUsers() {
+        if(!canManageUsers()) return;
+        try {
+            let users = await loadUsers();
+            document.getElementById('usersBody').innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.role}</td>
+                    <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u._id}', '${u.name}')">تغيير</button></td>
+                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u._id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u._id}', true)">تفعيل</button>`}</td>
+                    <td><button class="btn-sm btn-red" onclick="deleteUser('${u._id}')">حذف</button></td>
+                </tr>
+            `).join('');
+        } catch(e) { console.error(e); }
+    }
+    
+    async function addUser() {
+        if(!canManageUsers()) { showToast("ليس لديك صلاحية", true); return; }
+        let u = document.getElementById('un').value.trim();
+        let p = document.getElementById('up').value.trim();
+        let r = document.getElementById('ur').value;
+        if(!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
+        try {
+            let users = await loadUsers();
+            if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود", true); return; }
+            await saveUser({ name: u, pass: p, role: r, enabled: true });
+            document.getElementById('un').value = "";
+            document.getElementById('up').value = "";
+            await renderUsers();
+            await logActivity("إضافة مستخدم", `قام بإضافة مستخدم جديد: ${u} (${r})`);
+            showToast("تم إضافة المستخدم");
+        } catch(e) { showToast("خطأ: "+e.message, true); }
+    }
+    
+    window.openPasswordModal = function(userId, userName) {
+        window.selectedUserId = userId;
+        const newPass = prompt(`تغيير كلمة المرور للمستخدم ${userName}\nأدخل كلمة المرور الجديدة:`);
+        if(newPass && newPass.trim()) {
+            changePassword(userId, newPass);
+        }
+    };
+    
+    async function changePassword(userId, newPass) {
+        try {
+            let users = await loadUsers();
+            let user = users.find(u => u._id === userId);
+            if(user) {
+                user.pass = newPass;
+                await updateUser(userId, user);
+                await renderUsers();
+                await logActivity("تغيير كلمة مرور", `قام بتغيير كلمة مرور المستخدم: ${user.name}`);
+                showToast("تم تغيير كلمة المرور");
+            }
+        } catch(e) { showToast("خطأ: "+e.message, true); }
+    }
+    
+    async function toggleUser(userId, enable) {
+        try {
+            let users = await loadUsers();
+            let user = users.find(u => u._id === userId);
+            if(user) {
+                user.enabled = enable;
+                await updateUser(userId, user);
+                await renderUsers();
+                await logActivity(enable ? "تفعيل مستخدم" : "تعطيل مستخدم", `قام ${enable ? 'بتفعيل' : 'بتعطيل'} المستخدم: ${user.name}`);
+                showToast(enable ? "تم تفعيل المستخدم" : "تم تعطيل المستخدم");
+            }
+        } catch(e) { showToast("خطأ: "+e.message, true); }
+    }
+    
+    async function deleteUser(userId) {
+        if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
+            try {
+                let users = await loadUsers();
+                let user = users.find(u => u._id === userId);
+                await deleteUserAPI(userId);
+                await renderUsers();
+                await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
+                showToast("تم حذف المستخدم");
+            } catch(e) { showToast("خطأ: "+e.message, true); }
+        }
+    }
+    
+    function showPage(page) {
+        const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageMap', 'pageUsers'];
+        pages.forEach(p => document.getElementById(p).classList.add('hidden'));
+        if(page === 'main') document.getElementById('pageMain').classList.remove('hidden');
+        else if(page === 'maint') { document.getElementById('pageMaint').classList.remove('hidden'); renderMaint(); }
+        else if(page === 'eff') { document.getElementById('pageEff').classList.remove('hidden'); renderEff(); }
+        else if(page === 'support') { document.getElementById('pageSupport').classList.remove('hidden'); renderTickets(); }
+        else if(page === 'track') { if(canManageUsers()) { document.getElementById('pageTrack').classList.remove('hidden'); renderTrack(); } else showToast("غير مسموح", true); }
+        else if(page === 'map') { document.getElementById('pageMap').classList.remove('hidden'); if(!map) initMap(); loadMapMarkers(); }
+        else if(page === 'users') { if(canManageUsers()) { document.getElementById('pageUsers').classList.remove('hidden'); renderUsers(); } else showToast("غير مسموح", true); }
+    }
+    
+    window.doLogin = doLogin;
+    window.logout = logout;
+    window.showPage = showPage;
+    window.updateZones = updateZones;
+    window.addItem = addItem;
+    window.editItem = editItem;
+    window.delItem = delItem;
+    window.renderMain = renderMain;
+    window.renderMaint = renderMaint;
+    window.renderEff = renderEff;
+    window.renderTrack = renderTrack;
+    window.resetMaintFilters = resetMaintFilters;
+    window.resetTrackFilters = resetTrackFilters;
+    window.clearMainSearch = clearMainSearch;
+    window.switchChartType = switchChartType;
+    window.sendTicket = sendTicket;
+    window.refreshMain = refreshMain;
+    window.refreshMaint = refreshMaint;
+    window.refreshEff = refreshEff;
+    window.refreshTickets = refreshTickets;
+    window.refreshTrack = refreshTrack;
+    window.refreshUsers = refreshUsers;
+    window.refreshMapMarkers = refreshMapMarkers;
+    window.updateMapLocation = updateMapLocation;
+    window.centerMapOnUser = centerMapOnUser;
+    window.addUser = addUser;
+    window.toggleUser = toggleUser;
+    window.deleteUser = deleteUser;
+    window.changePassword = changePassword;
+</script>
+</body>
+</html>
