@@ -42,7 +42,7 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// ==================== تسجيل الدخول (يتطلب موقع المستخدم إجبارياً) ====================
+// ==================== تسجيل الدخول ====================
 app.post('/api/login', async (req, res) => {
     const { username, password, location } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -51,29 +51,32 @@ app.post('/api/login', async (req, res) => {
         return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
     
-    // التحقق من وجود موقع المستخدم - إجبارياً
-    if (!location || !location.lat || !location.lon) {
-        return res.status(401).json({ 
-            error: '⚠️ لا يمكن تسجيل الدخول بدون مشاركة الموقع! ⚠️\n\nيرجى السماح للمتصفح بالوصول إلى موقعك للمتابعة.',
-            requiresLocation: true
-        });
-    }
-    
     const ip = getClientIp(req);
     
-    console.log(`📍 تسجيل دخول ناجح: ${username}`);
-    console.log(`   📍 الموقع: ${location.lat}, ${location.lon}`);
-    console.log(`   🌐 IP: ${ip}`);
+    let lat = 36.8065;
+    let lon = 10.1815;
+    let city = 'تونس';
+    let country = 'تونس';
+    
+    if (location && location.lat && location.lon) {
+        lat = location.lat;
+        lon = location.lon;
+        city = location.city || 'الموقع الحقيقي';
+        country = location.country || 'المستخدم';
+        console.log(`📍 موقع حقيقي للمستخدم ${username}: ${lat}, ${lon}`);
+    } else {
+        console.log(`⚠️ موقع افتراضي للمستخدم ${username}: ${lat}, ${lon}`);
+    }
     
     const sessionData = {
         id: Date.now(),
         username: user.username,
         role: user.role,
         ip: ip,
-        country: location.country || 'المستخدم',
-        city: location.city || 'الموقع الحقيقي',
-        lat: location.lat,
-        lon: location.lon,
+        country: country,
+        city: city,
+        lat: lat,
+        lon: lon,
         loginTime: new Date().toISOString()
     };
     
@@ -88,12 +91,7 @@ app.post('/api/login', async (req, res) => {
         success: true, 
         name: user.username, 
         role: user.role, 
-        location: { 
-            lat: location.lat, 
-            lon: location.lon, 
-            city: location.city || 'الموقع الحقيقي',
-            country: location.country || 'المستخدم'
-        }
+        location: { lat, lon, city, country }
     });
 });
 
@@ -102,7 +100,7 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== باقي المسارات (نفسها) ====================
+// ==================== جلسات المستخدمين للخريطة ====================
 app.get('/api/sessions', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(userSessions.filter(s => s.username === req.session.userName));
@@ -115,6 +113,7 @@ app.get('/api/sessions/map', (req, res) => {
     res.json(userSessions);
 });
 
+// ==================== المراكب ====================
 app.get('/api/vessels', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(vessels);
@@ -144,6 +143,7 @@ app.delete('/api/vessels/:id', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== المستخدمين ====================
 app.get('/api/users', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -182,6 +182,7 @@ app.delete('/api/users/:id', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== التذاكر ====================
 app.get('/api/tickets', (req, res) => {
     if (!req.session.userId) return res.status(401).json({ error: 'غير مصرح' });
     res.json(tickets);
@@ -221,6 +222,7 @@ app.put('/api/tickets/:id/close', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== سجل النشاطات ====================
 app.get('/api/logs', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -233,6 +235,7 @@ app.post('/api/logs', (req, res) => {
     res.json({ success: true });
 });
 
+// ==================== تصدير واستيراد ====================
 app.get('/api/export-all', (req, res) => {
     if (!req.session.userId || req.session.userRole !== 'مسؤول') {
         return res.status(403).json({ error: 'غير مصرح' });
@@ -253,6 +256,7 @@ app.get('/api/test', (req, res) => {
     res.json({ status: 'OK', message: 'السيرفر يعمل بشكل صحيح' });
 });
 
+// ==================== تشغيل السيرفر ====================
 app.listen(PORT, () => {
     console.log(`
 ╔══════════════════════════════════════════════════════════╗
@@ -260,10 +264,7 @@ app.listen(PORT, () => {
 ╚══════════════════════════════════════════════════════════╝
 
 📡 http://localhost:${PORT}
-🔐 admin / 1234
-
-📍 ** تنبيه: تسجيل الدخول يتطلب مشاركة الموقع إجبارياً **
-📍 إذا لم يشارك المستخدم موقعه، سيتم رفض الدخول
+🔐 admin / 1234 (editor / 1234, viewer / 1234)
 
 📊 إحصائيات المراكب:
    🚢 الإجمالي: ${vessels.length}
@@ -272,6 +273,6 @@ app.listen(PORT, () => {
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
 
-✅ النظام جاهز!
+✅ النظام جاهز للاستخدام!
 `);
 });
