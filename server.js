@@ -25,8 +25,6 @@ let vessels = [
 ];
 
 let tickets = [];
-
-// ==================== جلسات المستخدمين ====================
 let userSessions = [];
 let nextId = 10;
 
@@ -44,6 +42,60 @@ function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
+// دالة لتحديد الموقع الجغرافي بناءً على IP (خدمة مجانية)
+async function getGeoLocation(ip) {
+    try {
+        if (ip === '::1' || ip === '127.0.0.1') {
+            return { 
+                country: 'تونس', 
+                city: 'تونس', 
+                lat: 36.8065, 
+                lon: 10.1815, 
+                isp: 'محلي',
+                regionName: 'تونس',
+                status: 'success'
+            };
+        }
+        
+        const response = await fetch(`http://ip-api.com/json/${ip}?lang=ar&fields=status,country,city,lat,lon,isp,regionName`);
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            console.log(`📍 موقع IP ${ip}: ${data.city}, ${data.country} (${data.lat}, ${data.lon})`);
+            return {
+                country: data.country || 'تونس',
+                city: data.city || 'تونس',
+                lat: data.lat || 36.8065,
+                lon: data.lon || 10.1815,
+                isp: data.isp || 'غير معروف',
+                regionName: data.regionName || 'تونس',
+                status: 'success'
+            };
+        } else {
+            return { 
+                country: 'تونس', 
+                city: 'تونس', 
+                lat: 36.8065, 
+                lon: 10.1815, 
+                isp: 'غير معروف',
+                regionName: 'تونس',
+                status: 'error'
+            };
+        }
+    } catch (error) {
+        console.error('خطأ في تحديد الموقع:', error.message);
+        return { 
+            country: 'تونس', 
+            city: 'تونس', 
+            lat: 36.8065, 
+            lon: 10.1815, 
+            isp: 'غير معروف',
+            regionName: 'تونس',
+            status: 'error'
+        };
+    }
+}
+
 // ==================== تسجيل الدخول ====================
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -54,22 +106,21 @@ app.post('/api/login', async (req, res) => {
     }
     
     const ip = getClientIp(req);
+    const geo = await getGeoLocation(ip);
     
-    // موقع تونس الافتراضي
-    let lat = 36.8065;
-    let lon = 10.1815;
-    let city = 'تونس';
-    let country = 'تونس';
+    console.log(`✅ تسجيل دخول: ${username} - ${geo.city}, ${geo.country} (${geo.lat}, ${geo.lon}) - IP: ${ip}`);
     
     const sessionData = {
         id: Date.now(),
         username: user.username,
         role: user.role,
         ip: ip,
-        country: country,
-        city: city,
-        lat: lat,
-        lon: lon,
+        country: geo.country,
+        city: geo.city,
+        lat: geo.lat,
+        lon: geo.lon,
+        isp: geo.isp,
+        regionName: geo.regionName,
         loginTime: new Date().toISOString()
     };
     
@@ -80,7 +131,19 @@ app.post('/api/login', async (req, res) => {
     req.session.userName = user.username;
     req.session.userRole = user.role;
     
-    res.json({ success: true, name: user.username, role: user.role, location: { lat, lon, city, country } });
+    res.json({ 
+        success: true, 
+        name: user.username, 
+        role: user.role, 
+        location: { 
+            country: geo.country, 
+            city: geo.city, 
+            lat: geo.lat, 
+            lon: geo.lon,
+            regionName: geo.regionName,
+            ip: ip
+        }
+    });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -241,7 +304,7 @@ app.post('/api/import-all', (req, res) => {
 });
 
 app.get('/api/test', (req, res) => {
-    res.json({ status: 'OK' });
+    res.json({ status: 'OK', message: 'السيرفر يعمل بشكل صحيح' });
 });
 
 // ==================== تشغيل السيرفر ====================
@@ -254,14 +317,14 @@ app.listen(PORT, () => {
 📡 http://localhost:${PORT}
 🔐 admin / 1234
 
+📍 نظام تحديد الموقع الجغرافي عبر IP يعمل بنشاط
+
 📊 إحصائيات المراكب:
    🚢 الإجمالي: ${vessels.length}
    🛠️ معطوبة: ${vessels.filter(v => v.stat === 'معطب').length}
    🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
-
-👥 المستخدمين على الخريطة: ${userSessions.length}
 
 ✅ النظام جاهز!
 `);
