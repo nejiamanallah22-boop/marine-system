@@ -4,13 +4,14 @@ const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== بيانات مؤقتة (بدون MongoDB) ====================
+// ==================== المستخدمين الافتراضيين ====================
 let users = [
     { id: 1, username: 'admin', password: '1234', role: 'مسؤول', enabled: true },
     { id: 2, username: 'editor', password: '1234', role: 'محرر', enabled: true },
     { id: 3, username: 'viewer', password: '1234', role: 'مشاهد', enabled: true }
 ];
 
+// ==================== المراكب ====================
 let vessels = [
     { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
     { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
@@ -42,11 +43,14 @@ function getClientIp(req) {
 }
 
 // ==================== تسجيل الدخول ====================
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { username, password, location } = req.body;
+    console.log(`محاولة دخول: ${username} / ${password}`);
+    
     const user = users.find(u => u.username === username && u.password === password);
     
     if (!user || !user.enabled) {
+        console.log(`فشل دخول: ${username}`);
         return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
     
@@ -82,6 +86,8 @@ app.post('/api/login', async (req, res) => {
     req.session.userId = user.id;
     req.session.userName = user.username;
     req.session.userRole = user.role;
+    
+    console.log(`✅ دخول ناجح: ${username} (${user.role})`);
     
     res.json({ 
         success: true, 
@@ -268,6 +274,9 @@ app.listen(PORT, () => {
    🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
+
+👥 المستخدمين المتاحين:
+   ${users.map(u => `   - ${u.username} / ${u.password} (${u.role})`).join('\n   ')}
 
 ✅ النظام جاهز للاستخدام!
 `);
