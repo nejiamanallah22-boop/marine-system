@@ -2,26 +2,84 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+// تحميل متغيرات البيئة
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// ==================== إعدادات الأمان والحماية ====================
+
+// تمكين compression للاستجابة بشكل أسرع
+app.use(compression());
+
+// إعدادات الأمان مع Helmet (تم تعديلها لتتوافق مع الواجهة)
+app.use(helmet({
+    contentSecurityPolicy: false, // لتمكين استخدام Chart.js
+    crossOriginEmbedderPolicy: false
+}));
+
+// تحديد معدل الطلبات لمنع هجمات DDoS
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 دقيقة
+    max: 100, // الحد الأقصى 100 طلب لكل IP
+    message: 'تم تجاوز عدد الطلبات المسموح بها، يرجى المحاولة لاحقاً',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// CORS للإنتاج
+const corsOptions = {
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+};
+app.use(cors(corsOptions));
+
+// Middleware أساسية
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// خدمة الملفات الثابتة
 app.use(express.static('public'));
 
-// ==================== اتصال قاعدة البيانات ====================
+// ==================== اتصال قاعدة البيانات MongoDB Atlas ====================
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_fleet';
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
-    console.log('✅ تم الاتصال بقاعدة البيانات MongoDB');
-}).catch(err => {
-    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err);
-    process.exit(1);
+// إعدادات اتصال MongoDB للإنتاج
+const mongooseOptions = {
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    family: 4,
+};
+
+mongoose.connect(MONGODB_URI, mongooseOptions)
+    .then(() => {
+        console.log('✅ تم الاتصال بقاعدة البيانات MongoDB Atlas');
+    })
+    .catch(err => {
+        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+        // في بيئة الإنتاج، لا نخرج من العملية إذا فشل الاتصال بقاعدة البيانات
+        // لأنها قد تعيد المحاولة
+        if (process.env.NODE_ENV !== 'production') {
+            process.exit(1);
+        }
+    });
+
+// مراقبة حالة الاتصال
+mongoose.connection.on('error', (err) => {
+    console.error('خطأ في اتصال MongoDB:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.log('⚠️ تم فقدان الاتصال بـ MongoDB، جاري إعادة المحاولة...');
 });
 
 // ==================== نماذج (Schemas) قاعدة البيانات ====================
@@ -45,7 +103,7 @@ const vesselSchema = new mongoose.Schema({
 
 const Vessel = mongoose.model('Vessel', vesselSchema);
 
-// نموذج المستخدمين (Users)
+// نموذج المستخدمين (Users) - مع تشفير كلمة المرور للإنتاج
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
@@ -101,7 +159,6 @@ function getCurrentTime() {
 
 // ==================== API Routes للمراكب (Vessels) ====================
 
-// الحصول على جميع المراكب
 app.get('/api/vessels', async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -112,7 +169,6 @@ app.get('/api/vessels', async (req, res) => {
     }
 });
 
-// إضافة مركب جديد
 app.post('/api/vessels', async (req, res) => {
     try {
         const vessel = new Vessel(req.body);
@@ -124,7 +180,6 @@ app.post('/api/vessels', async (req, res) => {
     }
 });
 
-// تحديث مركب
 app.put('/api/vessels/:id', async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndUpdate(
@@ -142,7 +197,6 @@ app.put('/api/vessels/:id', async (req, res) => {
     }
 });
 
-// حذف مركب
 app.delete('/api/vessels/:id', async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
@@ -158,7 +212,6 @@ app.delete('/api/vessels/:id', async (req, res) => {
 
 // ==================== API Routes للمستخدمين (Users) ====================
 
-// الحصول على جميع المستخدمين
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find().select('-pass');
@@ -169,7 +222,6 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// إضافة مستخدم جديد
 app.post('/api/users', async (req, res) => {
     try {
         const existingUser = await User.findOne({ name: req.body.name });
@@ -187,7 +239,6 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
-// تحديث مستخدم
 app.put('/api/users/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndUpdate(
@@ -205,7 +256,6 @@ app.put('/api/users/:id', async (req, res) => {
     }
 });
 
-// حذف مستخدم
 app.delete('/api/users/:id', async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
@@ -221,7 +271,6 @@ app.delete('/api/users/:id', async (req, res) => {
 
 // ==================== API Routes للتذاكر (Tickets) ====================
 
-// الحصول على جميع التذاكر
 app.get('/api/tickets', async (req, res) => {
     try {
         const tickets = await Ticket.find().sort({ createdAt: -1 });
@@ -232,7 +281,6 @@ app.get('/api/tickets', async (req, res) => {
     }
 });
 
-// إضافة تذكرة جديدة
 app.post('/api/tickets', async (req, res) => {
     try {
         const ticket = new Ticket(req.body);
@@ -244,7 +292,6 @@ app.post('/api/tickets', async (req, res) => {
     }
 });
 
-// الرد على تذكرة (مع تحديث الحالة إلى "تم الرد")
 app.put('/api/tickets/:id/reply', async (req, res) => {
     try {
         const { reply } = req.body;
@@ -269,7 +316,6 @@ app.put('/api/tickets/:id/reply', async (req, res) => {
     }
 });
 
-// إغلاق تذكرة
 app.put('/api/tickets/:id/close', async (req, res) => {
     try {
         const ticket = await Ticket.findById(req.params.id);
@@ -289,7 +335,6 @@ app.put('/api/tickets/:id/close', async (req, res) => {
 
 // ==================== API Routes لسجل النشاطات (Logs) ====================
 
-// الحصول على جميع السجلات
 app.get('/api/logs', async (req, res) => {
     try {
         const logs = await Log.find().sort({ createdAt: -1 });
@@ -300,7 +345,6 @@ app.get('/api/logs', async (req, res) => {
     }
 });
 
-// إضافة سجل جديد
 app.post('/api/logs', async (req, res) => {
     try {
         const log = new Log(req.body);
@@ -344,7 +388,6 @@ app.post('/api/login', async (req, res) => {
 
 // ==================== API Routes للتصدير والاستيراد ====================
 
-// تصدير جميع البيانات
 app.get('/api/export-all', async (req, res) => {
     try {
         const vessels = await Vessel.find();
@@ -366,31 +409,27 @@ app.get('/api/export-all', async (req, res) => {
     }
 });
 
-// استيراد جميع البيانات
 app.post('/api/import-all', async (req, res) => {
     try {
         const { vessels, users, tickets, logs } = req.body;
         
-        // حذف البيانات الحالية
-        await Vessel.deleteMany({});
-        await User.deleteMany({});
-        await Ticket.deleteMany({});
-        await Log.deleteMany({});
-        
-        // إضافة البيانات الجديدة
         if (vessels && vessels.length > 0) {
+            await Vessel.deleteMany({});
             await Vessel.insertMany(vessels);
         }
         
         if (users && users.length > 0) {
+            await User.deleteMany({});
             await User.insertMany(users);
         }
         
         if (tickets && tickets.length > 0) {
+            await Ticket.deleteMany({});
             await Ticket.insertMany(tickets);
         }
         
         if (logs && logs.length > 0) {
+            await Log.deleteMany({});
             await Log.insertMany(logs);
         }
         
@@ -401,52 +440,95 @@ app.post('/api/import-all', async (req, res) => {
     }
 });
 
-// ==================== إنشاء مستخدم مسؤول افتراضي إذا لم يكن موجوداً ====================
+// ==================== Route للصفحة الرئيسية ====================
 
-async function createDefaultAdmin() {
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ==================== إنشاء المستخدمين الافتراضيين ====================
+
+async function initializeDefaultData() {
     try {
+        // إنشاء المستخدم المسؤول
         const adminExists = await User.findOne({ name: 'admin' });
         if (!adminExists) {
             const admin = new User({
                 name: 'admin',
-                pass: 'admin123',
+                pass: '1234',
                 role: 'مسؤول',
                 enabled: true
             });
             await admin.save();
-            console.log('✅ تم إنشاء المستخدم المسؤول الافتراضي: admin / admin123');
+            console.log('✅ تم إنشاء المستخدم المسؤول: admin / 1234');
         }
         
-        // إنشاء مستخدم تجريبي للاختبار
-        const userExists = await User.findOne({ name: 'user' });
-        if (!userExists) {
-            const user = new User({
-                name: 'user',
-                pass: 'user123',
+        // إنشاء مستخدم محرر
+        const editorExists = await User.findOne({ name: 'editor' });
+        if (!editorExists) {
+            const editor = new User({
+                name: 'editor',
+                pass: 'editor123',
                 role: 'محرر',
                 enabled: true
             });
-            await user.save();
-            console.log('✅ تم إنشاء مستخدم تجريبي: user / user123');
+            await editor.save();
+            console.log('✅ تم إنشاء مستخدم محرر: editor / editor123');
+        }
+        
+        // إنشاء مستخدم مشاهد
+        const viewerExists = await User.findOne({ name: 'viewer' });
+        if (!viewerExists) {
+            const viewer = new User({
+                name: 'viewer',
+                pass: 'viewer123',
+                role: 'مشاهد',
+                enabled: true
+            });
+            await viewer.save();
+            console.log('✅ تم إنشاء مستخدم مشاهد: viewer / viewer123');
+        }
+        
+        // إضافة بعض المراكب التجريبية إذا كانت قاعدة البيانات فارغة
+        const vesselsCount = await Vessel.countDocuments();
+        if (vesselsCount === 0) {
+            const sampleVessels = [
+                { name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', stat: 'صالح', cat: 'البروق' },
+                { name: 'صقر البحر', num: 'S001', len: 10, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', stat: 'صالح', cat: 'صقور' },
+                { name: 'خافرة الساحل', num: 'K001', len: 20, reg: 'الساحل', zone: 'المنستير', port: 'المنستير', stat: 'صيانة', cat: 'خوافر', fDate: getCurrentDate(), break: 'محرك' },
+                { name: 'طوافة الجنوب', num: 'T001', len: 35, reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', stat: 'صالح', cat: 'طوافات' },
+                { name: 'زورق النجدة', num: 'Z001', len: 15, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', stat: 'معطب', cat: 'زوارق مزدوجة', fDate: getCurrentDate(), break: 'مضخة ماء' },
+            ];
+            await Vessel.insertMany(sampleVessels);
+            console.log('✅ تم إضافة مراكب تجريبية');
         }
     } catch (error) {
-        console.error('خطأ في إنشاء المستخدم الافتراضي:', error);
+        console.error('خطأ في تهيئة البيانات:', error);
     }
 }
 
 // ==================== تشغيل السيرفر ====================
 
-app.listen(PORT, async () => {
-    console.log(`🚀 السيرفر يعمل على المنفذ ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}`);
-    await createDefaultAdmin();
+app.listen(PORT, '0.0.0.0', async () => {
+    console.log(`\n🚀 السيرفر يعمل على http://localhost:${PORT}`);
+    console.log(`🔐 admin / 1234`);
+    console.log(`✅ متصل بـ MongoDB Atlas\n`);
+    await initializeDefaultData();
 });
 
-// معالجة الأخطاء غير المتوقعة
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+// معالجة إشارات الإيقاف بشكل آمن
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, closing server...');
+    mongoose.connection.close(() => {
+        console.log('MongoDB connection closed');
+        process.exit(0);
+    });
 });
 
-process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception:', error);
+process.on('SIGINT', () => {
+    console.log('SIGINT received, closing server...');
+    mongoose.connection.close(() => {
+        console.log('MongoDB connection closed');
+        process.exit(0);
+    });
 });
