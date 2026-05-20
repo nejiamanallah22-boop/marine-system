@@ -50,8 +50,10 @@ const ticketSchema = new mongoose.Schema({
 });
 
 const sessionSchema = new mongoose.Schema({
-    username: String, role: String, ip: String, country: String, city: String,
-    lat: Number, lon: Number, userAgent: String, loginTime: { type: Date, default: Date.now }, sessionId: String
+    username: String, role: String, ip: String,
+    lat: Number, lon: Number, userAgent: String,
+    loginTime: { type: Date, default: Date.now },
+    sessionId: String
 });
 
 const User = mongoose.model('User', userSchema);
@@ -103,15 +105,21 @@ function requireEditor(req, res, next) {
     next();
 }
 
-// ==================== تهيئة المستخدمين ====================
+// ==================== تهيئة المستخدمين (مع معالجة الأخطاء) ====================
 async function initializeUsers() {
-    const adminExists = await User.findOne({ name: 'admin' });
-    if (!adminExists) {
-        const hashedPass = await bcrypt.hash('1234', 10);
-        await User.create({ name: 'admin', pass: hashedPass, role: 'مسؤول', enabled: true, isMainAdmin: true });
-        await User.create({ name: 'editor', pass: hashedPass, role: 'محرر', enabled: true });
-        await User.create({ name: 'viewer', pass: hashedPass, role: 'مشاهد', enabled: true });
-        console.log('✅ تم إنشاء المستخدمين: admin, editor, viewer (كلمة المرور: 1234)');
+    try {
+        const adminExists = await User.findOne({ name: 'admin' });
+        if (!adminExists) {
+            const hashedPass = await bcrypt.hash('1234', 10);
+            await User.create({ name: 'admin', pass: hashedPass, role: 'مسؤول', enabled: true, isMainAdmin: true });
+            await User.create({ name: 'editor', pass: hashedPass, role: 'محرر', enabled: true });
+            await User.create({ name: 'viewer', pass: hashedPass, role: 'مشاهد', enabled: true });
+            console.log('✅ تم إنشاء المستخدمين: admin, editor, viewer (كلمة المرور: 1234)');
+        } else {
+            console.log('✅ المستخدمين موجودين بالفعل');
+        }
+    } catch (err) {
+        console.error('❌ خطأ في إنشاء المستخدمين:', err.message);
     }
 }
 
