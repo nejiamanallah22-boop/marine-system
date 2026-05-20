@@ -44,39 +44,33 @@ function getClientIp(req) {
 
 // ==================== تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
-    const { username, password, location } = req.body;
-    console.log(`محاولة دخول: ${username} / ${password}`);
+    const { username, password } = req.body;
+    
+    console.log(`📝 محاولة دخول: ${username} / ${password}`);
     
     const user = users.find(u => u.username === username && u.password === password);
     
-    if (!user || !user.enabled) {
-        console.log(`فشل دخول: ${username}`);
+    if (!user) {
+        console.log(`❌ فشل: المستخدم ${username} غير موجود`);
         return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
     
-    const ip = getClientIp(req);
-    
-    let lat = 36.8065;
-    let lon = 10.1815;
-    let city = 'تونس';
-    let country = 'تونس';
-    
-    if (location && location.lat && location.lon) {
-        lat = location.lat;
-        lon = location.lon;
-        city = location.city || 'الموقع الحقيقي';
-        country = location.country || 'المستخدم';
+    if (!user.enabled) {
+        console.log(`❌ فشل: المستخدم ${username} معطل`);
+        return res.status(401).json({ error: 'هذا المستخدم معطل' });
     }
+    
+    const ip = getClientIp(req);
     
     const sessionData = {
         id: Date.now(),
         username: user.username,
         role: user.role,
         ip: ip,
-        country: country,
-        city: city,
-        lat: lat,
-        lon: lon,
+        country: 'تونس',
+        city: 'تونس',
+        lat: 36.8065,
+        lon: 10.1815,
         loginTime: new Date().toISOString()
     };
     
@@ -87,13 +81,12 @@ app.post('/api/login', (req, res) => {
     req.session.userName = user.username;
     req.session.userRole = user.role;
     
-    console.log(`✅ دخول ناجح: ${username} (${user.role})`);
+    console.log(`✅ نجاح: ${username} (${user.role})`);
     
     res.json({ 
         success: true, 
         name: user.username, 
-        role: user.role, 
-        location: { lat, lon, city, country }
+        role: user.role
     });
 });
 
@@ -266,7 +259,10 @@ app.listen(PORT, () => {
 ╚══════════════════════════════════════════════════════════╝
 
 📡 http://localhost:${PORT}
-🔐 admin / 1234
+🔐 بيانات الدخول المتاحة:
+   👑 admin / 1234 (مسؤول)
+   ✏️ editor / 1234 (محرر)
+   👁️ viewer / 1234 (مشاهد)
 
 📊 إحصائيات المراكب:
    🚢 الإجمالي: ${vessels.length}
@@ -274,9 +270,6 @@ app.listen(PORT, () => {
    🔧 صيانة: ${vessels.filter(v => v.stat === 'صيانة').length}
    🏢 وحدات صيانة: ${vessels.filter(v => v.cat === 'وحدة صيانة').length}
    🏛️ المجمع الأمني: ${vessels.filter(v => v.cat === 'مركز أمني').length}
-
-👥 المستخدمين المتاحين:
-   ${users.map(u => `   - ${u.username} / ${u.password} (${u.role})`).join('\n   ')}
 
 ✅ النظام جاهز للاستخدام!
 `);
