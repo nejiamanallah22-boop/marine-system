@@ -105,19 +105,61 @@ function requireEditor(req, res, next) {
     next();
 }
 
-// ==================== تهيئة المستخدمين (مع معالجة الأخطاء) ====================
+// ==================== تهيئة المستخدمين الافتراضيين (مع التأكيد) ====================
 async function initializeUsers() {
     try {
-        const adminExists = await User.findOne({ name: 'admin' });
+        // التحقق من وجود المستخدم admin
+        let adminExists = await User.findOne({ name: 'admin' });
+        
         if (!adminExists) {
             const hashedPass = await bcrypt.hash('1234', 10);
-            await User.create({ name: 'admin', pass: hashedPass, role: 'مسؤول', enabled: true, isMainAdmin: true });
-            await User.create({ name: 'editor', pass: hashedPass, role: 'محرر', enabled: true });
-            await User.create({ name: 'viewer', pass: hashedPass, role: 'مشاهد', enabled: true });
+            
+            // إنشاء admin
+            await User.create({ 
+                name: 'admin', 
+                pass: hashedPass, 
+                role: 'مسؤول', 
+                enabled: true, 
+                isMainAdmin: true 
+            });
+            
+            // إنشاء editor
+            await User.create({ 
+                name: 'editor', 
+                pass: hashedPass, 
+                role: 'محرر', 
+                enabled: true 
+            });
+            
+            // إنشاء viewer
+            await User.create({ 
+                name: 'viewer', 
+                pass: hashedPass, 
+                role: 'مشاهد', 
+                enabled: true 
+            });
+            
             console.log('✅ تم إنشاء المستخدمين: admin, editor, viewer (كلمة المرور: 1234)');
         } else {
             console.log('✅ المستخدمين موجودين بالفعل');
+            
+            // التأكد من أن كلمة مرور admin صحيحة (في حالة تغيرها)
+            const adminUser = await User.findOne({ name: 'admin' });
+            const isValid = await bcrypt.compare('1234', adminUser.pass);
+            if (!isValid) {
+                // إعادة تعيين كلمة المرور إلى 1234
+                const newHashedPass = await bcrypt.hash('1234', 10);
+                await User.updateOne({ name: 'admin' }, { pass: newHashedPass });
+                await User.updateOne({ name: 'editor' }, { pass: newHashedPass });
+                await User.updateOne({ name: 'viewer' }, { pass: newHashedPass });
+                console.log('✅ تم إعادة تعيين كلمات المرور إلى 1234');
+            }
         }
+        
+        // عرض عدد المستخدمين في قاعدة البيانات
+        const userCount = await User.countDocuments();
+        console.log(`📊 عدد المستخدمين في قاعدة البيانات: ${userCount}`);
+        
     } catch (err) {
         console.error('❌ خطأ في إنشاء المستخدمين:', err.message);
     }
@@ -132,12 +174,25 @@ app.post('/api/login', [
     if (!errors.isEmpty()) return res.status(400).json({ error: 'بيانات غير صالحة' });
     
     const { name, pass, location } = req.body;
+    console.log(`📝 محاولة دخول: ${name}`);
+    
     const user = await User.findOne({ name: String(name).trim() });
     
-    if (!user || !user.enabled) return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    if (!user) {
+        console.log(`❌ المستخدم ${name} غير موجود`);
+        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    }
+    
+    if (!user.enabled) {
+        console.log(`❌ المستخدم ${name} معطل`);
+        return res.status(401).json({ error: 'هذا الحساب معطل' });
+    }
     
     const isValid = await bcrypt.compare(pass, user.pass);
-    if (!isValid) return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    if (!isValid) {
+        console.log(`❌ كلمة مرور غير صحيحة لـ ${name}`);
+        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    }
     
     await new Promise((resolve, reject) => {
         req.session.regenerate(err => { if (err) reject(err); else resolve(); });
@@ -156,6 +211,7 @@ app.post('/api/login', [
         userAgent: req.headers['user-agent'], sessionId: req.sessionID
     });
     
+    console.log(`✅ دخول ناجح: ${user.name} (${user.role})`);
     res.json({ success: true, name: user.name, role: user.role, location: { lat, lon } });
 }));
 
