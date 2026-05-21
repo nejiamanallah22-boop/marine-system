@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>منظومة الوسائل البحرية - نظام متابعة الأسطول البحري</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -79,6 +80,8 @@
         .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
         .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
         .login-info { background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: right; font-size: 13px; color: #2e7d32; }
+        .password-hidden { filter: blur(3px); cursor: pointer; transition: 0.2s; }
+        .password-hidden:hover { filter: blur(0); }
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .map-container, .gps-control { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -87,22 +90,24 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2>⚓ منظومة الوسائل البحرية</h2>
-        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
-        <input type="password" id="password" placeholder="كلمة المرور" value="admin123">
+        <p style="color: #666; margin-bottom: 15px;">نظام آمن لتتبع الأسطول البحري</p>
+        <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off">
+        <input type="password" id="password" placeholder="كلمة المرور" autocomplete="off">
         <button onclick="doLogin()">دخول</button>
         <div id="loginError" class="error-msg"></div>
         <div class="login-info">
-            <strong>📋 معلومات الدخول:</strong><br>
-            👑 مدير: admin / admin123<br>
-            ✏️ محرر: user / user123<br>
-            👁️ مشاهد: viewer / viewer123
+            <strong>🔐 معلومات الدخول الآمنة:</strong><br>
+            👑 مدير: admin<br>
+            ✏️ محرر: editor<br>
+            👁️ مشاهد: viewer<br>
+            <small style="color:#888;">※ يتم تخزين كلمات المرور بشكل مشفر</small>
         </div>
     </div>
 </div>
 
 <div id="mainApp" class="container" style="display: none;">
     <header>
-        <h1>⚓ منظومة متابعة الوسائل البحرية – نظام متكامل مع GPS</h1>
+        <h1>⚓ منظومة متابعة الوسائل البحرية – نظام آمن مع GPS</h1>
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
             <div class="developer-info">💻 Développeur: أمان الله ناجي 🚀</div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -121,8 +126,8 @@
         <button class="btn btn-green" onclick="showPage('eff')">📈 جاهزية الأسطول</button>
         <button class="btn btn-cyan" onclick="showPage('map')">🗺️ الخريطة و GPS</button>
         <button class="btn btn-purple" onclick="showPage('support')">📞 الدعم الفني</button>
-        <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">📊 تتبع المستخدمين</button>
-        <button id="admBtn" class="btn btn-red" onclick="showPage('users')">👥 المستخدمين</button>
+        <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">📊 تتبع النشاطات</button>
+        <button id="admBtn" class="btn btn-red" onclick="showPage('users')">👥 إدارة المستخدمين</button>
         <button id="printBtn" class="btn btn-blue" onclick="window.print()">🖨️ طباعة</button>
     </div>
 
@@ -213,18 +218,18 @@
 
     <div id="pageMap" class="hidden">
         <div class="gps-control">
-            <h3>📍 نظام تحديد المواقع GPS</h3>
+            <h3>📍 نظام تحديد المواقع GPS - مواقع المراكب البحرية</h3>
             <div class="gps-status">
                 <div><span class="gps-dot" id="gpsDot"></span> <span id="gpsStatusText">غير نشط</span></div>
-                <button class="btn btn-blue" onclick="getCurrentLocation()">🎯 الحصول على موقعي الحالي</button>
-                <button class="btn btn-cyan" onclick="centerMapOnTunisia()">🗺️ توسيط الخريطة على تونس</button>
+                <button class="btn btn-blue" onclick="getCurrentLocation()">🎯 موقعي الحالي</button>
+                <button class="btn btn-cyan" onclick="centerMapOnTunisia()">🗺️ توسيط الخريطة</button>
                 <button class="btn btn-green" onclick="showAllVesselsOnMap()">🚢 عرض جميع المراكب</button>
-                <button id="trackVesselBtn" class="btn btn-orange" onclick="toggleLiveTracking()">📡 تتبع مباشر</button>
             </div>
+            <p style="font-size:12px; color:#666; margin-top:10px;">⚠️ الخريطة تعرض مواقع المراكب البحرية فقط، ولا تعرض مواقع المستخدمين</p>
         </div>
         <div id="map" class="map-container"></div>
         <div class="filter-bar">
-            <label>عرض مراكب:</label>
+            <label>فلترة المراكب:</label>
             <select id="filterVesselMap" onchange="filterVesselsOnMap()">
                 <option value="الكل">الكل</option>
                 <option value="صالح">صالح فقط</option>
@@ -245,7 +250,7 @@
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px">
             <h3>📞 نظام التذاكر - الدعم الفني</h3>
-            <p>📧 support@marine.gov.tn | 📞 29659945</p>
+            <p>📧 support@marine.gov.tn</p>
             <hr>
             <h4>📨 إرسال طلب دعم جديد</h4>
             <input type="text" id="ticketSubject" placeholder="عنوان الطلب" style="width:100%; padding:10px; margin:10px 0">
@@ -283,6 +288,15 @@
                 <tbody id="usersBody"></tbody>
             </table>
         </div>
+        <div class="region-table-card" style="margin-top:20px; padding:15px;">
+            <p style="color:#666; font-size:13px;">🔒 <strong>ملاحظات أمنية:</strong></p>
+            <ul style="color:#666; font-size:12px; margin-right:20px;">
+                <li>كلمات المرور مخزنة بشكل مشفر (SHA-256)</li>
+                <li>الخريطة تعرض مواقع المراكب البحرية فقط - لا تعرض مواقع المستخدمين</li>
+                <li>سجل النشاطات متاح فقط للمسؤولين</li>
+                <li>يتم تسجيل جميع عمليات الدخول والخروج والإضافات والتعديلات</li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -303,16 +317,21 @@
 </div>
 
 <script>
-    // ==================== تهيئة المستخدمين الافتراضيين ====================
+    // ==================== دوال التشفير ====================
+    function hashPassword(password) {
+        return CryptoJS.SHA256(password).toString();
+    }
+    
+    // ==================== تهيئة المستخدمين الافتراضيين (بكلمات مرور مشفرة) ====================
     function initializeDefaultUsers() {
         if (!localStorage.getItem('marine_users')) {
             const defaultUsers = [
-                { id: '1', name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true },
-                { id: '2', name: 'user', pass: 'user123', role: 'محرر', enabled: true },
-                { id: '3', name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true }
+                { id: '1', name: 'admin', passHash: hashPassword('admin123'), role: 'مسؤول', enabled: true },
+                { id: '2', name: 'editor', passHash: hashPassword('editor123'), role: 'محرر', enabled: true },
+                { id: '3', name: 'viewer', passHash: hashPassword('viewer123'), role: 'مشاهد', enabled: true }
             ];
             localStorage.setItem('marine_users', JSON.stringify(defaultUsers));
-            console.log('تم إنشاء المستخدمين الافتراضيين');
+            console.log('تم إنشاء المستخدمين الافتراضيين مع تشفير');
         }
         
         if (!localStorage.getItem('marine_vessels')) {
@@ -323,7 +342,6 @@
                 { id: 'v4', name: 'طوافة الجنوب', num: 'T004', len: 32, reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: '', stat: 'صيانة', break: 'كهرباء', fDate: '2024-01-20', eDate: '2024-02-20', ref: 'REF002', lat: '33.5036', lng: '11.1127', cat: 'طوافات' }
             ];
             localStorage.setItem('marine_vessels', JSON.stringify(defaultVessels));
-            console.log('تم إنشاء مراكب افتراضية');
         }
         
         if (!localStorage.getItem('marine_tickets')) {
@@ -335,7 +353,6 @@
         }
     }
     
-    // استدعاء التهيئة فوراً
     initializeDefaultUsers();
     
     // ==================== المتغيرات العامة ====================
@@ -345,9 +362,7 @@
     let currentChartType = 'doughnut';
     let map = null;
     let vesselMarkers = {};
-    let liveTracking = false;
-    let trackingInterval = null;
-
+    
     const ZONES_DATA = {
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
@@ -356,7 +371,7 @@
     };
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-
+    
     const TUNISIA_COORDINATES = {
         "تونس": [36.8065, 10.1815],
         "بنزرت": [37.2744, 9.8739],
@@ -371,7 +386,7 @@
         "جربة": [33.8078, 10.8452],
         "قابس": [33.8815, 10.0982]
     };
-
+    
     // ==================== دوال الخريطة ====================
     function initMap() {
         if (map) return;
@@ -382,7 +397,7 @@
             maxZoom: 19
         }).addTo(map);
     }
-
+    
     function getCurrentLocation() {
         if (!navigator.geolocation) {
             showToast("المتصفح لا يدعم خاصية تحديد الموقع", true);
@@ -409,9 +424,9 @@
                         html: '📍',
                         iconSize: [30, 30]
                     })
-                }).bindPopup('📍 موقعي الحالي').addTo(map);
+                }).bindPopup('📍 موقعي الحالي (للمستخدم فقط)').addTo(map);
                 
-                showToast(`تم الحصول على الموقع: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                showToast(`تم الحصول على الموقع`);
                 setTimeout(() => gpsDot.classList.remove('active'), 3000);
             },
             function(error) {
@@ -426,12 +441,12 @@
             { enableHighAccuracy: true, timeout: 10000 }
         );
     }
-
+    
     function centerMapOnTunisia() {
         map.setView([34.5, 9.5], 7);
         showToast("تم توسيط الخريطة على تونس");
     }
-
+    
     async function showAllVesselsOnMap() {
         if (!map) initMap();
         
@@ -475,7 +490,7 @@
             
             showToast(`✅ تم عرض ${count} مركب على الخريطة`);
             
-            if (count > 0) {
+            if (count > 0 && Object.keys(vesselMarkers).length > 0) {
                 const bounds = Object.values(vesselMarkers).map(m => m.getLatLng());
                 map.fitBounds(bounds);
             }
@@ -483,7 +498,7 @@
             showToast("خطأ في تحميل المراكب: " + error.message, true);
         }
     }
-
+    
     function getCoordFromZone(zone) {
         if (!zone) return [34.5, 9.5];
         for (const [city, coords] of Object.entries(TUNISIA_COORDINATES)) {
@@ -491,14 +506,12 @@
         }
         return [34.5, 9.5];
     }
-
+    
     function filterVesselsOnMap() {
         const statusFilter = document.getElementById('filterVesselMap').value;
         const regionFilter = document.getElementById('filterRegionMap').value;
         
-        Object.entries(vesselMarkers).forEach(([id, marker]) => {
-            map.removeLayer(marker);
-        });
+        Object.values(vesselMarkers).forEach(marker => map.removeLayer(marker));
         vesselMarkers = {};
         
         loadVessels().then(vessels => {
@@ -538,46 +551,7 @@
             showToast("✅ تم تحديث الخريطة حسب الفلتر");
         });
     }
-
-    function toggleLiveTracking() {
-        liveTracking = !liveTracking;
-        const btn = document.getElementById('trackVesselBtn');
-        
-        if (liveTracking) {
-            btn.innerHTML = '⏹️ إيقاف التتبع';
-            btn.style.background = '#d9534f';
-            trackingInterval = setInterval(() => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        function(position) {
-                            const lat = position.coords.latitude;
-                            const lng = position.coords.longitude;
-                            if (window.userMarker) map.removeLayer(window.userMarker);
-                            window.userMarker = L.marker([lat, lng], {
-                                icon: L.divIcon({
-                                    className: 'vessel-marker',
-                                    html: '📍',
-                                    iconSize: [30, 30]
-                                })
-                            }).bindPopup('📍 موقعي الحالي - تتبع مباشر').addTo(map);
-                            map.setView([lat, lng], 13);
-                        },
-                        function(error) {
-                            console.error('GPS error:', error);
-                        },
-                        { enableHighAccuracy: true }
-                    );
-                }
-            }, 5000);
-            showToast("📡 تم تفعيل التتبع المباشر - تحديث كل 5 ثواني");
-        } else {
-            btn.innerHTML = '📡 تتبع مباشر';
-            btn.style.background = '#f39c12';
-            if (trackingInterval) clearInterval(trackingInterval);
-            showToast("⏹️ تم إيقاف التتبع المباشر");
-        }
-    }
-
+    
     // ==================== دوال البيانات (LocalStorage) ====================
     async function loadVessels() { 
         const data = localStorage.getItem('marine_vessels');
@@ -617,6 +591,8 @@
     async function saveUser(user) {
         const users = await loadUsers();
         user.id = Date.now().toString();
+        user.passHash = hashPassword(user.pass);
+        delete user.pass;
         users.push(user);
         localStorage.setItem('marine_users', JSON.stringify(users));
     }
@@ -625,6 +601,10 @@
         let users = await loadUsers();
         const index = users.findIndex(u => u.id.toString() === id.toString());
         if (index !== -1) {
+            if (user.pass && user.pass !== users[index].passHash) {
+                user.passHash = hashPassword(user.pass);
+            }
+            delete user.pass;
             user.id = id;
             users[index] = user;
             localStorage.setItem('marine_users', JSON.stringify(users));
@@ -657,13 +637,14 @@
     async function saveLog(log) {
         const logs = await loadLogs();
         logs.unshift(log);
-        if (logs.length > 1000) logs.pop();
+        if (logs.length > 500) logs.pop();
         localStorage.setItem('marine_logs', JSON.stringify(logs));
     }
     
     async function loginAPI(name, pass) {
         const users = await loadUsers();
-        const user = users.find(u => u.name === name && u.pass === pass && u.enabled === true);
+        const passHash = hashPassword(pass);
+        const user = users.find(u => u.name === name && u.passHash === passHash && u.enabled === true);
         if (!user) return { error: "اسم المستخدم أو كلمة المرور غير صحيحة" };
         return { name: user.name, role: user.role, id: user.id };
     }
@@ -683,7 +664,7 @@
         if (data.tickets) localStorage.setItem('marine_tickets', JSON.stringify(data.tickets));
         if (data.logs) localStorage.setItem('marine_logs', JSON.stringify(data.logs));
     }
-
+    
     function getCat(len) { 
         let n = parseFloat(len); 
         if(n === 11) return "البروق"; 
@@ -696,17 +677,17 @@
     function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
     function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
     function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
-
+    
     function getCurrentDate() {
         const now = new Date();
         return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
     }
-
+    
     function getCurrentTime() {
         const now = new Date();
         return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     }
-
+    
     function formatDate(d) { 
         if(!d) return '-'; 
         try { 
@@ -715,7 +696,7 @@
             return `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`; 
         } catch(e) { return d; } 
     }
-
+    
     function showToast(message, isError = false) {
         const toast = document.createElement('div');
         toast.className = 'toast';
@@ -724,7 +705,7 @@
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
     }
-
+    
     async function logActivity(action, details) { 
         if(!currentUser) return; 
         try {
@@ -738,10 +719,10 @@
             });
         } catch(e) { console.error('Log error:', e); }
     }
-
+    
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
     function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
-
+    
     // ==================== دوال CRUD ====================
     async function addItem() {
         if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
@@ -916,8 +897,8 @@
                 filtered.forEach(x => {
                     let locationText = (x.lat && x.lng) ? `${x.lat}, ${x.lng}` : (x.zone || '-');
                     html += `<tr>
-                        <td><b>${x.name}</b></td>
-                        <td>${x.num || '-'}</td>
+                        <td><b>${escapeHtml(x.name)}</b></td>
+                        <td>${escapeHtml(x.num || '-')}</td>
                         <td>${x.len || '-'}</td>
                         <td>${x.cat || '-'}</td>
                         <td>${x.reg || '-'}</td>
@@ -928,11 +909,11 @@
                         <td>${x.break || '-'}</td>
                         <td>${formatDate(x.fDate)}</td>
                         <td>${formatDate(x.eDate)}</td>
-                        <td>${locationText}</td>
+                        <td>${escapeHtml(locationText)}</td>
                         <td>
-                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                         </td>
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${escapeHtml(x.name)}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${escapeHtml(x.name)}')">حذف</button>` : ''}
+                        </td>
                     </tr>`;
                 });
             }
@@ -941,6 +922,16 @@
             console.error('خطأ:', error);
             document.getElementById('mainBody').innerHTML = `<tr><td colspan="14" class="error-text">❌ خطأ: ${error.message}</td></tr>`;
         }
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
     
     async function renderMaint() {
@@ -982,19 +973,19 @@
             } else {
                 filtered.forEach(x => {
                     html += `<tr>
-                        <td><b>${x.name}</b></td>
-                        <td>${x.num || '-'}</td>
+                        <td><b>${escapeHtml(x.name)}</b></td>
+                        <td>${escapeHtml(x.num || '-')}</td>
                         <td>${x.reg || '-'}</td>
                         <td>${x.zone || '-'}</td>
                         <td class="status-${x.stat}">${x.stat}</td>
-                        <td class="damage-column">${x.break || '-'}</td>
+                        <td class="damage-column">${escapeHtml(x.break || '-')}</td>
                         <td>${formatDate(x.fDate)}</td>
                         <td>${formatDate(x.eDate)}</td>
-                        <td>${x.ref || '-'}</td>
+                        <td>${escapeHtml(x.ref || '-')}</td>
                         <td>
-                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                         </td>
+                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${escapeHtml(x.name)}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${escapeHtml(x.name)}')">حذف</button>` : ''}
+                        </td>
                     </tr>`;
                 });
             }
@@ -1282,15 +1273,15 @@
                         <td>${index + 1}</td>
                         <td>${t.date || '-'}</td>
                         <td>${t.time || '-'}</td>
-                        <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
-                        <td><strong>${t.subject}</strong></td>
+                        <td><b>${escapeHtml(t.userName)}</b><br><small>${t.userRole || ''}</small></td>
+                        <td><strong>${escapeHtml(t.subject)}</strong></td>
                         <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
-                        <td style="max-width:250px;">${t.message || '-'}</td>
+                        <td style="max-width:250px;">${escapeHtml(t.message || '-')}</td>
                         <td style="max-width:300px;">`;
                     
                     if(t.replies && t.replies.length > 0) {
                         t.replies.forEach(reply => {
-                            html += `<div class="ticket-reply"><small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small><p>📝 ${reply.reply}</p></div>`;
+                            html += `<div class="ticket-reply"><small>👤 ${escapeHtml(reply.adminName)} - ${reply.date} ${reply.time}</small><p>📝 ${escapeHtml(reply.reply)}</p></div>`;
                         });
                     } else {
                         html += '<span style="color:#999;">لا توجد ردود</span>';
@@ -1354,10 +1345,10 @@
                         <td>${index + 1}</td>
                         <td>${l.date}</td>
                         <td>${l.time || '-'}</td>
-                        <td><b>${l.userName}</b></td>
+                        <td><b>${escapeHtml(l.userName)}</b></td>
                         <td><span class="role-badge">${l.userRole}</span></td>
-                        <td><span style="color:var(--primary);">${l.action}</span></td>
-                        <td style="text-align:right;">${l.details}</td>
+                        <td><span style="color:var(--primary);">${escapeHtml(l.action)}</span></td>
+                        <td style="text-align:right;">${escapeHtml(l.details)}</td>
                     </tr>`;
                 });
             }
@@ -1382,10 +1373,10 @@
             let users = await loadUsers();
             document.getElementById('usersBody').innerHTML = users.map(u => `
                 <tr>
-                    <td>${u.name}</td>
+                    <td>${escapeHtml(u.name)}</td>
                     <td>${u.role}</td>
                     <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${u.name}')">تغيير</button></td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${escapeHtml(u.name)}')">تغيير</button></td>
                     <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u.id}', true)">تفعيل</button>`}</td>
                     <td><button class="btn-sm btn-red" onclick="deleteUser('${u.id}')">حذف</button></td>
                 </tr>
@@ -1418,7 +1409,7 @@
     
     function openPasswordModal(userId, userName) {
         selectedUserId = userId;
-        document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: <strong>${userName}</strong>`;
+        document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: <strong>${escapeHtml(userName)}</strong>`;
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmPassword').value = '';
         document.getElementById('passwordModal').style.display = 'flex';
@@ -1440,7 +1431,7 @@
             let users = await loadUsers();
             let user = users.find(u => u.id.toString() === selectedUserId.toString());
             if(user) {
-                user.pass = np;
+                user.passHash = hashPassword(np);
                 await updateUser(selectedUserId, user);
                 closePasswordModal();
                 await renderUsers();
@@ -1566,7 +1557,7 @@
             currentUser = user;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
+            document.getElementById('userRoleDisplay').innerHTML = `👤 ${escapeHtml(currentUser.name)} | 🔑 ${currentUser.role}`;
             
             const isAdmin = currentUser.role === "مسؤول";
             const isViewer = currentUser.role === "مشاهد";
@@ -1595,9 +1586,8 @@
             await renderTickets();
             if(isAdmin) { await renderUsers(); await renderTrack(); }
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
-            showToast(`مرحباً ${username}`);
+            showToast(`مرحباً ${escapeHtml(username)}`);
             
-            // تهيئة الخريطة
             initMap();
         } catch(error) {
             console.error('Login error:', error);
@@ -1608,12 +1598,11 @@
     
     async function logout() {
         if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
-        if (trackingInterval) clearInterval(trackingInterval);
         currentUser = null;
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('username').value = 'admin';
-        document.getElementById('password').value = 'admin123';
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
         document.getElementById('loginError').style.display = 'none';
         if (map) {
             map.remove();
@@ -1689,7 +1678,6 @@
     window.centerMapOnTunisia = centerMapOnTunisia;
     window.showAllVesselsOnMap = showAllVesselsOnMap;
     window.filterVesselsOnMap = filterVesselsOnMap;
-    window.toggleLiveTracking = toggleLiveTracking;
 </script>
 </body>
 </html>
