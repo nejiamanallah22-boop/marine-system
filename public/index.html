@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الوسائل البحرية - نظام متابعة الأسطول البحري مع الخريطة</title>
+    <title>منظومة الوسائل البحرية - نظام متابعة الأسطول البحري</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -12,7 +12,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 20px; direction: rtl; }
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1a5a1e, #2e7d32); display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .login-box { background: white; padding: 30px; border-radius: 15px; width: 380px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .login-box h2 { color: #2e7d32; margin-bottom: 20px; }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .login-box button { width: 100%; background: #2e7d32; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer; }
@@ -58,8 +58,6 @@
         .gps-dot { width: 12px; height: 12px; border-radius: 50%; background: gray; display: inline-block; }
         .gps-dot.active { background: #28a745; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .vessel-marker { font-size: 20px; text-align: center; }
-        .vessel-marker span { display: block; font-size: 12px; background: white; padding: 2px 6px; border-radius: 4px; margin-top: 4px; }
         .chart-switch { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
         .chart-switch button { padding: 5px 15px; border-radius: 20px; background: #e9ecef; border: none; cursor: pointer; }
         .chart-switch button.active { background: var(--primary); color: white; }
@@ -80,6 +78,7 @@
         .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
         .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
         .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        .login-info { background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: right; font-size: 13px; color: #2e7d32; }
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .map-container, .gps-control { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -88,10 +87,16 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2>⚓ منظومة الوسائل البحرية</h2>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="password" id="password" placeholder="كلمة المرور">
+        <input type="text" id="username" placeholder="اسم المستخدم" value="admin">
+        <input type="password" id="password" placeholder="كلمة المرور" value="admin123">
         <button onclick="doLogin()">دخول</button>
         <div id="loginError" class="error-msg"></div>
+        <div class="login-info">
+            <strong>📋 معلومات الدخول:</strong><br>
+            👑 مدير: admin / admin123<br>
+            ✏️ محرر: user / user123<br>
+            👁️ مشاهد: viewer / viewer123
+        </div>
     </div>
 </div>
 
@@ -131,10 +136,6 @@
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
             <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
             <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="تونس">📍 تونس</option>
-            <option value="بنزرت">📍 بنزرت</option>
-            <option value="صفاقس">📍 صفاقس</option>
-            <option value="سوسة">📍 سوسة</option>
         </select>
         <select id="iZone"><option value="">المنطقة</option></select>
         <input type="text" id="iPort" placeholder="الميناء">
@@ -302,6 +303,41 @@
 </div>
 
 <script>
+    // ==================== تهيئة المستخدمين الافتراضيين ====================
+    function initializeDefaultUsers() {
+        if (!localStorage.getItem('marine_users')) {
+            const defaultUsers = [
+                { id: '1', name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true },
+                { id: '2', name: 'user', pass: 'user123', role: 'محرر', enabled: true },
+                { id: '3', name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true }
+            ];
+            localStorage.setItem('marine_users', JSON.stringify(defaultUsers));
+            console.log('تم إنشاء المستخدمين الافتراضيين');
+        }
+        
+        if (!localStorage.getItem('marine_vessels')) {
+            const defaultVessels = [
+                { id: 'v1', name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', lat: '36.8065', lng: '10.1815', cat: 'البروق' },
+                { id: 'v2', name: 'صقر البحر', num: 'S002', len: 10, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', lat: '35.8336', lng: '10.6384', cat: 'صقور' },
+                { id: 'v3', name: 'خوفارة', num: 'K003', len: 18, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF001', lat: '34.7406', lng: '10.7603', cat: 'خوافر' },
+                { id: 'v4', name: 'طوافة الجنوب', num: 'T004', len: 32, reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: '', stat: 'صيانة', break: 'كهرباء', fDate: '2024-01-20', eDate: '2024-02-20', ref: 'REF002', lat: '33.5036', lng: '11.1127', cat: 'طوافات' }
+            ];
+            localStorage.setItem('marine_vessels', JSON.stringify(defaultVessels));
+            console.log('تم إنشاء مراكب افتراضية');
+        }
+        
+        if (!localStorage.getItem('marine_tickets')) {
+            localStorage.setItem('marine_tickets', JSON.stringify([]));
+        }
+        
+        if (!localStorage.getItem('marine_logs')) {
+            localStorage.setItem('marine_logs', JSON.stringify([]));
+        }
+    }
+    
+    // استدعاء التهيئة فوراً
+    initializeDefaultUsers();
+    
     // ==================== المتغيرات العامة ====================
     let currentUser = null;
     let selectedUserId = null;
@@ -316,16 +352,11 @@
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
         "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "تونس": ["تونس"],
-        "بنزرت": ["بنزرت"],
-        "صفاقس": ["صفاقس"],
-        "سوسة": ["سوسة"]
+        "الجنوب": ["جرجيس", "جربة", "قابس"]
     };
     
     const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
 
-    // إحداثيات المدن التونسية
     const TUNISIA_COORDINATES = {
         "تونس": [36.8065, 10.1815],
         "بنزرت": [37.2744, 9.8739],
@@ -350,9 +381,6 @@
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(map);
-        
-        // إضافة علامة تونس
-        L.marker([36.8065, 10.1815]).bindPopup('🇹🇳 تونس العاصمة').addTo(map);
     }
 
     function getCurrentLocation() {
@@ -407,7 +435,6 @@
     async function showAllVesselsOnMap() {
         if (!map) initMap();
         
-        // إزالة جميع العلامات السابقة
         Object.values(vesselMarkers).forEach(marker => map.removeLayer(marker));
         vesselMarkers = {};
         
@@ -416,10 +443,16 @@
             let count = 0;
             
             vessels.forEach(vessel => {
-                let lat = vessel.lat || getCoordFromZone(vessel.zone || vessel.reg)[0];
-                let lng = vessel.lng || getCoordFromZone(vessel.zone || vessel.reg)[1];
+                let lat = vessel.lat ? parseFloat(vessel.lat) : null;
+                let lng = vessel.lng ? parseFloat(vessel.lng) : null;
                 
-                if (lat && lng) {
+                if (!lat || !lng) {
+                    const coords = getCoordFromZone(vessel.zone || vessel.reg);
+                    lat = coords[0];
+                    lng = coords[1];
+                }
+                
+                if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
                     const statusIcon = vessel.stat === 'صالح' ? '🟢' : (vessel.stat === 'معطب' ? '🔴' : '🟠');
                     const marker = L.marker([lat, lng], {
                         icon: L.divIcon({
@@ -435,7 +468,7 @@
                         ${vessel.break ? `العطب: ${vessel.break}` : ''}
                     `);
                     marker.addTo(map);
-                    vesselMarkers[vessel._id || vessel.id] = marker;
+                    vesselMarkers[vessel.id] = marker;
                     count++;
                 }
             });
@@ -466,6 +499,7 @@
         Object.entries(vesselMarkers).forEach(([id, marker]) => {
             map.removeLayer(marker);
         });
+        vesselMarkers = {};
         
         loadVessels().then(vessels => {
             vessels.forEach(vessel => {
@@ -473,10 +507,16 @@
                 let matchRegion = regionFilter === 'الكل' || vessel.reg === regionFilter;
                 
                 if (matchStatus && matchRegion) {
-                    let lat = vessel.lat || getCoordFromZone(vessel.zone || vessel.reg)[0];
-                    let lng = vessel.lng || getCoordFromZone(vessel.zone || vessel.reg)[1];
+                    let lat = vessel.lat ? parseFloat(vessel.lat) : null;
+                    let lng = vessel.lng ? parseFloat(vessel.lng) : null;
                     
-                    if (lat && lng) {
+                    if (!lat || !lng) {
+                        const coords = getCoordFromZone(vessel.zone || vessel.reg);
+                        lat = coords[0];
+                        lng = coords[1];
+                    }
+                    
+                    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
                         const statusIcon = vessel.stat === 'صالح' ? '🟢' : (vessel.stat === 'معطب' ? '🔴' : '🟠');
                         const marker = L.marker([lat, lng], {
                             icon: L.divIcon({
@@ -491,7 +531,7 @@
                             الإقليم: ${vessel.reg || '-'}
                         `);
                         marker.addTo(map);
-                        vesselMarkers[vessel._id || vessel.id] = marker;
+                        vesselMarkers[vessel.id] = marker;
                     }
                 }
             });
@@ -506,7 +546,7 @@
         if (liveTracking) {
             btn.innerHTML = '⏹️ إيقاف التتبع';
             btn.style.background = '#d9534f';
-            trackingInterval = setInterval(async () => {
+            trackingInterval = setInterval(() => {
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         function(position) {
@@ -538,7 +578,7 @@
         }
     }
 
-    // ==================== بقية الدوال (نفس الكود السابق مع إضافة الإحداثيات) ====================
+    // ==================== دوال البيانات (LocalStorage) ====================
     async function loadVessels() { 
         const data = localStorage.getItem('marine_vessels');
         return data ? JSON.parse(data) : [];
@@ -554,7 +594,7 @@
     
     async function updateVessel(id, vessel) {
         let vessels = await loadVessels();
-        const index = vessels.findIndex(v => (v._id || v.id).toString() === id.toString());
+        const index = vessels.findIndex(v => v.id.toString() === id.toString());
         if (index !== -1) {
             vessel.id = id;
             vessels[index] = vessel;
@@ -565,21 +605,13 @@
     
     async function deleteVessel(id) {
         let vessels = await loadVessels();
-        vessels = vessels.filter(v => (v._id || v.id).toString() !== id.toString());
+        vessels = vessels.filter(v => v.id.toString() !== id.toString());
         localStorage.setItem('marine_vessels', JSON.stringify(vessels));
     }
     
     async function loadUsers() {
         const data = localStorage.getItem('marine_users');
-        if (!data) {
-            const defaultUsers = [
-                { id: '1', name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true },
-                { id: '2', name: 'user', pass: 'user123', role: 'محرر', enabled: true }
-            ];
-            localStorage.setItem('marine_users', JSON.stringify(defaultUsers));
-            return defaultUsers;
-        }
-        return JSON.parse(data);
+        return data ? JSON.parse(data) : [];
     }
     
     async function saveUser(user) {
@@ -591,7 +623,7 @@
     
     async function updateUser(id, user) {
         let users = await loadUsers();
-        const index = users.findIndex(u => (u._id || u.id).toString() === id.toString());
+        const index = users.findIndex(u => u.id.toString() === id.toString());
         if (index !== -1) {
             user.id = id;
             users[index] = user;
@@ -601,7 +633,7 @@
     
     async function deleteUserAPI(id) {
         let users = await loadUsers();
-        users = users.filter(u => (u._id || u.id).toString() !== id.toString());
+        users = users.filter(u => u.id.toString() !== id.toString());
         localStorage.setItem('marine_users', JSON.stringify(users));
     }
     
@@ -633,7 +665,7 @@
         const users = await loadUsers();
         const user = users.find(u => u.name === name && u.pass === pass && u.enabled === true);
         if (!user) return { error: "اسم المستخدم أو كلمة المرور غير صحيحة" };
-        return { name: user.name, role: user.role };
+        return { name: user.name, role: user.role, id: user.id };
     }
     
     async function exportAllDataAPI() {
@@ -672,7 +704,7 @@
 
     function getCurrentTime() {
         const now = new Date();
-        return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
     }
 
     function formatDate(d) { 
@@ -757,7 +789,7 @@
             await renderMain();
             await renderMaint();
             await renderEff();
-            if (map) showAllVesselsOnMap();
+            if (map && document.getElementById('pageMap').classList.contains('hidden') === false) showAllVesselsOnMap();
             showToast(`✅ تم حفظ المركب بنجاح`);
         } catch(error) {
             showToast("خطأ في حفظ المركب: " + error.message, true);
@@ -768,7 +800,7 @@
         if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
         try {
             let data = await loadVessels();
-            let item = data.find(x => (x._id || x.id).toString() === id.toString());
+            let item = data.find(x => x.id.toString() === id.toString());
             if(item) {
                 document.getElementById('iName').value = item.name;
                 document.getElementById('iNum').value = item.num || '';
@@ -813,7 +845,7 @@
                         await renderMain();
                         await renderMaint();
                         await renderEff();
-                        if (map) showAllVesselsOnMap();
+                        if (map && document.getElementById('pageMap').classList.contains('hidden') === false) showAllVesselsOnMap();
                         showToast("✅ تم تحديث المركب بنجاح");
                         saveBtn.onclick = originalClick;
                         ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef','iLat','iLng'].forEach(id => {
@@ -826,7 +858,7 @@
                         showToast("خطأ في التحديث: " + error.message, true);
                     }
                 };
-                showToast("✏️ قم بتعديل البيانات ثم اضبط حفظ");
+                showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
             }
         } catch(error) {
             showToast("خطأ: " + error.message, true);
@@ -842,7 +874,7 @@
                 await renderMain();
                 await renderMaint();
                 await renderEff();
-                if (map) showAllVesselsOnMap();
+                if (map && document.getElementById('pageMap').classList.contains('hidden') === false) showAllVesselsOnMap();
                 showToast("✅ تم حذف المركب بنجاح");
             } catch(error) {
                 showToast("خطأ في الحذف: " + error.message, true);
@@ -898,9 +930,9 @@
                         <td>${formatDate(x.eDate)}</td>
                         <td>${locationText}</td>
                         <td>
-                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
-                        </td>
+                            ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
+                         </td>
                     </tr>`;
                 });
             }
@@ -946,7 +978,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<table><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     html += `<tr>
@@ -960,9 +992,9 @@
                         <td>${formatDate(x.eDate)}</td>
                         <td>${x.ref || '-'}</td>
                         <td>
-                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
-                        </td>
+                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
+                         </td>
                     </tr>`;
                 });
             }
@@ -1190,7 +1222,7 @@
         
         try {
             let tickets = await loadTickets();
-            const index = tickets.findIndex(t => (t._id || t.id).toString() === ticketId.toString());
+            const index = tickets.findIndex(t => t.id.toString() === ticketId.toString());
             if (index !== -1) {
                 if (!tickets[index].replies) tickets[index].replies = [];
                 tickets[index].replies.push({
@@ -1217,7 +1249,7 @@
         
         try {
             let tickets = await loadTickets();
-            const index = tickets.findIndex(t => (t._id || t.id).toString() === ticketId.toString());
+            const index = tickets.findIndex(t => t.id.toString() === ticketId.toString());
             if (index !== -1) {
                 tickets[index].status = 'مغلقة';
                 localStorage.setItem('marine_tickets', JSON.stringify(tickets));
@@ -1244,7 +1276,7 @@
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
                     const statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
-                    const ticketId = t._id || t.id;
+                    const ticketId = t.id;
                     
                     html += `<tr>
                         <td>${index + 1}</td>
@@ -1353,9 +1385,9 @@
                     <td>${u.name}</td>
                     <td>${u.role}</td>
                     <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u._id || u.id}', '${u.name}')">تغيير</button></td>
-                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u._id || u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u._id || u.id}', true)">تفعيل</button>`}</td>
-                    <td><button class="btn-sm btn-red" onclick="deleteUser('${u._id || u.id}')">حذف</button></td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${u.name}')">تغيير</button></td>
+                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u.id}', true)">تفعيل</button>`}</td>
+                    <td><button class="btn-sm btn-red" onclick="deleteUser('${u.id}')">حذف</button></td>
                 </tr>
             `).join('');
         } catch(error) {
@@ -1406,7 +1438,7 @@
         
         try {
             let users = await loadUsers();
-            let user = users.find(u => (u._id || u.id).toString() === selectedUserId.toString());
+            let user = users.find(u => u.id.toString() === selectedUserId.toString());
             if(user) {
                 user.pass = np;
                 await updateUser(selectedUserId, user);
@@ -1423,7 +1455,7 @@
     async function toggleUser(userId, enable) {
         try {
             let users = await loadUsers();
-            let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+            let user = users.find(u => u.id.toString() === userId.toString());
             if(user) {
                 user.enabled = enable;
                 await updateUser(userId, user);
@@ -1440,7 +1472,7 @@
         if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
             try {
                 let users = await loadUsers();
-                let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+                let user = users.find(u => u.id.toString() === userId.toString());
                 await deleteUserAPI(userId);
                 await renderUsers();
                 await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
@@ -1501,7 +1533,7 @@
             await renderUsers();
             await renderTrack();
         }
-        if (map) showAllVesselsOnMap();
+        if (map && document.getElementById('pageMap').classList.contains('hidden') === false) showAllVesselsOnMap();
         showToast("✅ تم تحديث جميع الصفحات");
     }
     
@@ -1580,8 +1612,8 @@
         currentUser = null;
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
+        document.getElementById('username').value = 'admin';
+        document.getElementById('password').value = 'admin123';
         document.getElementById('loginError').style.display = 'none';
         if (map) {
             map.remove();
