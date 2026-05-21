@@ -4,20 +4,17 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
-const { body, validationResult } = require('express-validator');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================== بيانات محلية (بدون bcrypt) ====================
-// المستخدمون (كلمات المرور نصية)
+// ==================== بيانات محلية ====================
 const users = [
     { id: 1, name: 'admin', pass: '1234', role: 'مسؤول', enabled: true, isMainAdmin: true },
     { id: 2, name: 'editor', pass: '1234', role: 'محرر', enabled: true },
     { id: 3, name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// المراكب
 let vessels = [
     { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
     { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
@@ -53,7 +50,6 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000, httpOnly: true, secure: false, sameSite: 'lax' }
 }));
 
-// دوال مساعدة
 function getClientIp(req) {
     return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
@@ -74,7 +70,7 @@ function requireEditor(req, res, next) {
     next();
 }
 
-// تسجيل الدخول
+// ==================== تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
     const { name, pass, location } = req.body;
     console.log(`📝 محاولة دخول: ${name}`);
@@ -82,7 +78,6 @@ app.post('/api/login', (req, res) => {
     const user = users.find(u => u.name === name && u.pass === pass);
     
     if (!user || !user.enabled) {
-        console.log(`❌ فشل دخول: ${name}`);
         return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
     
@@ -101,7 +96,8 @@ app.post('/api/login', (req, res) => {
             role: user.role,
             ip: getClientIp(req),
             lat, lon,
-            city: 'تونس', country: 'تونس',
+            city: location?.city || 'تونس',
+            country: location?.country || 'تونس',
             loginTime: new Date().toISOString()
         });
         
@@ -114,8 +110,10 @@ app.post('/api/logout', requireAuth, (req, res) => {
     req.session.destroy(() => { res.clearCookie('connect.sid'); res.json({ success: true }); });
 });
 
-// المراكب
-app.get('/api/vessels', requireAuth, (req, res) => res.json(vessels));
+// ==================== المراكب ====================
+app.get('/api/vessels', requireAuth, (req, res) => {
+    res.json(vessels);
+});
 
 app.post('/api/vessels', requireEditor, (req, res) => {
     vessels.push({ id: nextId++, ...req.body });
@@ -129,7 +127,7 @@ app.put('/api/vessels/:id', requireEditor, (req, res) => {
         vessels[index] = { ...vessels[index], ...req.body };
         res.json({ success: true });
     } else {
-        res.status(404).json({ error: 'غير موجود' });
+        res.status(404).json({ error: 'المركب غير موجود' });
     }
 });
 
@@ -139,7 +137,7 @@ app.delete('/api/vessels/:id', requireAdmin, (req, res) => {
     res.json({ success: true });
 });
 
-// جلسات المستخدمين
+// ==================== جلسات المستخدمين ====================
 app.get('/api/sessions', requireAuth, (req, res) => {
     res.json(userSessions.filter(s => s.username === req.session.userName));
 });
@@ -148,20 +146,40 @@ app.get('/api/sessions/map', requireAdmin, (req, res) => {
     res.json(userSessions);
 });
 
-// التذاكر
-app.get('/api/tickets', requireAuth, (req, res) => res.json(tickets));
+// ==================== التذاكر (تم إصلاح المسارات) ====================
+app.get('/api/tickets', requireAuth, (req, res) => {
+    res.json(tickets);
+});
 
 app.post('/api/tickets', requireAuth, (req, res) => {
-    tickets.unshift({ id: Date.now(), ...req.body, replies: [] });
-    res.json({ success: true });
+    const newTicket = {
+        id: Date.now(),
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        subject: req.body.subject,
+        message: req.body.message,
+        date: new Date().toLocaleDateString('ar-TN'),
+        time: new Date().toLocaleTimeString('ar-TN'),
+        status: 'قيد المعالجة',
+        replies: []
+    };
+    tickets.unshift(newTicket);
+    res.json({ success: true, ticket: newTicket });
 });
 
 app.put('/api/tickets/:id/reply', requireAdmin, (req, res) => {
     const id = parseInt(req.params.id);
     const ticket = tickets.find(t => t.id === id);
-    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
+    if (!ticket) {
+        return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    }
     if (!ticket.replies) ticket.replies = [];
-    ticket.replies.push(req.body.reply);
+    ticket.replies.push({
+        adminName: req.session.userName,
+        reply: req.body.reply,
+        date: new Date().toLocaleDateString('ar-TN'),
+        time: new Date().toLocaleTimeString('ar-TN')
+    });
     ticket.status = 'تم الرد';
     res.json({ success: true });
 });
@@ -169,19 +187,23 @@ app.put('/api/tickets/:id/reply', requireAdmin, (req, res) => {
 app.put('/api/tickets/:id/close', requireAdmin, (req, res) => {
     const id = parseInt(req.params.id);
     const ticket = tickets.find(t => t.id === id);
-    if (!ticket) return res.status(404).json({ error: 'غير موجود' });
+    if (!ticket) {
+        return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    }
     ticket.status = 'مغلقة';
     res.json({ success: true });
 });
 
-// المستخدمين
+// ==================== المستخدمين ====================
 app.get('/api/users', requireAdmin, (req, res) => {
     res.json(users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })));
 });
 
 app.post('/api/users', requireAdmin, (req, res) => {
     const { name, pass, role, enabled } = req.body;
-    if (users.find(u => u.name === name)) return res.status(400).json({ error: 'الاسم موجود' });
+    if (users.find(u => u.name === name)) {
+        return res.status(400).json({ error: 'الاسم موجود' });
+    }
     users.push({ id: nextId++, name, pass, role: role || 'مشاهد', enabled: enabled !== false });
     res.json({ success: true });
 });
@@ -207,11 +229,16 @@ app.delete('/api/users/:id', requireAdmin, (req, res) => {
     res.json({ success: true });
 });
 
-// سجل النشاطات
-app.get('/api/logs', requireAdmin, (req, res) => res.json(userSessions));
-app.post('/api/logs', requireAuth, (req, res) => res.json({ success: true }));
+// ==================== سجل النشاطات ====================
+app.get('/api/logs', requireAdmin, (req, res) => {
+    res.json(userSessions);
+});
 
-// تصدير واستيراد
+app.post('/api/logs', requireAuth, (req, res) => {
+    res.json({ success: true });
+});
+
+// ==================== تصدير واستيراد ====================
 app.get('/api/export-all', requireAdmin, (req, res) => {
     res.json({ vessels, users: users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })), tickets, sessions: userSessions });
 });
@@ -230,7 +257,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'خطأ داخلي في السيرفر' });
 });
 
-// تشغيل السيرفر
 app.listen(PORT, () => {
     console.log(`
 ╔════════════════════════════════════════════════════════════╗
