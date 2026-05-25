@@ -10,10 +10,10 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // ==================== الاتصال بقاعدة البيانات ====================
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://hamza:hamza123@cluster0.ajb5w1z.mongodb.net/marine_fleet';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://hamza:hamza123@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بـ MongoDB Atlas'))
@@ -308,10 +308,11 @@ app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req
     }
 })();
 
-// ==================== تشغيل الخادم ====================
-server.listen(PORT, () => {
-    console.log(`🚀 الخادم يعمل على http://localhost:${PORT}`);
+// ==================== تشغيل الخادم (معدل لـ Render) ====================
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
     console.log(`🔐 admin / 1234`);
     console.log(`📧 إشعارات البريد الإلكتروني: مفعلة`);
     console.log(`🗺️ خريطة GPS و WebSocket: مفعلة`);
+    console.log(`✅ متصل بـ MongoDB Atlas`);
 });
