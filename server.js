@@ -160,19 +160,30 @@ io.on('connection', (socket) => {
 // ==================== مسارات المصادقة ====================
 app.post('/api/login', async (req, res) => {
     const { name, pass } = req.body;
-    const user = await User.findOne({ name, pass, enabled: true });
-    if (!user) return res.status(401).json({ error: 'بيانات غير صحيحة' });
+    console.log('محاولة تسجيل دخول:', name);
     
-    req.session.userId = user._id;
-    req.session.userRole = user.role;
-    req.session.userName = user.name;
-    
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const currentTime = new Date().toLocaleString('ar-EG');
-    
-    await sendLoginEmail(user.name, user.role, currentTime, ip);
-    
-    res.json({ id: user._id, name: user.name, role: user.role });
+    try {
+        const user = await User.findOne({ name, pass, enabled: true });
+        if (!user) {
+            console.log('❌ مستخدم غير موجود:', name);
+            return res.status(401).json({ error: 'بيانات غير صحيحة' });
+        }
+        
+        req.session.userId = user._id;
+        req.session.userRole = user.role;
+        req.session.userName = user.name;
+        
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const currentTime = new Date().toLocaleString('ar-EG');
+        
+        await sendLoginEmail(user.name, user.role, currentTime, ip);
+        
+        console.log('✅ تسجيل دخول ناجح:', name);
+        res.json({ id: user._id, name: user.name, role: user.role });
+    } catch(err) {
+        console.error('خطأ في تسجيل الدخول:', err);
+        res.status(500).json({ error: 'خطأ في السيرفر' });
+    }
 });
 
 app.post('/api/logout', (req, res) => {
@@ -300,12 +311,24 @@ app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req
     res.json({ success: true });
 });
 
-// ==================== إنشاء مستخدم admin افتراضي ====================
+// ==================== إنشاء مستخدم admin افتراضي (مصحح) ====================
 (async () => {
-    const adminExists = await User.findOne({ name: 'admin' });
-    if (!adminExists) {
-        await User.create({ name: 'admin', pass: '1234', role: 'مسؤول', enabled: true });
-        console.log('✅ تم إنشاء مستخدم admin افتراضي (admin / 1234)');
+    try {
+        const adminExists = await User.findOne({ name: 'admin' });
+        if (!adminExists) {
+            const newAdmin = new User({
+                name: 'admin',
+                pass: '1234',
+                role: 'مسؤول',
+                enabled: true
+            });
+            await newAdmin.save();
+            console.log('✅ تم إنشاء مستخدم admin افتراضي (admin / 1234)');
+        } else {
+            console.log('✅ مستخدم admin موجود بالفعل');
+        }
+    } catch (err) {
+        console.error('❌ خطأ في إنشاء المستخدم:', err.message);
     }
 })();
 
