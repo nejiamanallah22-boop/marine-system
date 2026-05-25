@@ -106,6 +106,7 @@ const logSchema = new mongoose.Schema({
 });
 const Log = mongoose.model('Log', logSchema);
 
+// نموذج مواقع GPS
 const locationSchema = new mongoose.Schema({
     userName: String,
     userRole: String,
@@ -308,7 +309,7 @@ app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req
     }
 })();
 
-// ==================== تشغيل الخادم (معدل لـ Render) ====================
+// ==================== تشغيل الخادم ====================
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
     console.log(`🔐 admin / 1234`);
