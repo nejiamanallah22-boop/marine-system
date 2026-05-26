@@ -14,14 +14,13 @@ app.use(express.static('public'));
 
 let db;
 
-// تهيئة قاعدة بيانات SQLite
+// ==================== تهيئة قاعدة البيانات ====================
 async function initDatabase() {
     db = await open({
         filename: './marine.db',
         driver: sqlite3.Database
     });
 
-    // إنشاء الجداول
     await db.exec(`
         CREATE TABLE IF NOT EXISTS vessels (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,10 +81,22 @@ async function initDatabase() {
                      ['admin', hashedPass, 'مسؤول', 1]);
         console.log('✅ تم إنشاء المستخدم الافتراضي: admin / admin123');
     }
+    
     console.log('✅ قاعدة بيانات SQLite جاهزة');
 }
 
-// ==================== API Routes (مختصرة كمثال) ====================
+// ==================== دوال مساعدة ====================
+function getCurrentDate() {
+    const now = new Date();
+    return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+// ==================== API - المراكب ====================
 app.get('/api/vessels', async (req, res) => {
     try {
         const vessels = await db.all('SELECT * FROM vessels ORDER BY createdAt DESC');
@@ -110,9 +121,218 @@ app.post('/api/vessels', async (req, res) => {
     }
 });
 
-// يمكنك إضافة باقي Routes (PUT, DELETE, users, tickets, logs) بنفس النمط الموجود مسبقاً
-
-app.listen(PORT, async () => {
-    await initDatabase();
-    console.log(`🚀 الخادم يعمل على http://localhost:${PORT}`);
+app.put('/api/vessels/:id', async (req, res) => {
+    try {
+        const { name, num, len, reg, zone, port, supp, stat, break: brk, fDate, eDate, ref, cat } = req.body;
+        await db.run(
+            `UPDATE vessels SET name=?, num=?, len=?, reg=?, zone=?, port=?, supp=?, stat=?, break=?, fDate=?, eDate=?, ref=?, cat=?
+             WHERE id=?`,
+            [name, num, len, reg, zone, port, supp, stat, brk, fDate, eDate, ref, cat, req.params.id]
+        );
+        const updated = await db.get('SELECT * FROM vessels WHERE id = ?', [req.params.id]);
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
+
+app.delete('/api/vessels/:id', async (req, res) => {
+    try {
+        await db.run('DELETE FROM vessels WHERE id = ?', [req.params.id]);
+        res.json({ message: 'deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== API - المستخدمين ====================
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await db.all('SELECT id, name, role, enabled FROM users');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users', async (req, res) => {
+    try {
+        const { name, pass, role, enabled } = req.body;
+        const hashedPass = bcrypt.hashSync(pass, 10);
+        const result = await db.run(
+            'INSERT INTO users (name, pass, role, enabled) VALUES (?, ?, ?, ?)',
+            [name, hashedPass, role, enabled ? 1 : 0]
+        );
+        res.json({ id: result.lastID, name, role, enabled });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const { name, pass, role, enabled } = req.body;
+        const updateData = { name, role, enabled };
+        if (pass) {
+            updateData.pass = bcrypt.hashSync(pass, 10);
+        }
+        await db.run(
+            `UPDATE users SET name=?, pass=?, role=?, enabled=? WHERE id=?`,
+            [name, updateData.pass || null, role, enabled ? 1 : 0, req.params.id]
+        );
+        const updated = await db.get('SELECT id, name, role, enabled FROM users WHERE id = ?', [req.params.id]);
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+        res.json({ message: 'deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== API - تسجيل الدخول ====================
+app.post('/api/login', async (req, res) => {
+    try {
+        const { name, pass } = req.body;
+        const user = await db.get('SELECT * FROM users WHERE name = ?', [name]);
+        
+        if (!user) return res.json({ error: 'اسم المستخدم غير موجود' });
+        if (!user.enabled) return res.json({ error: 'هذا الحساب معطل' });
+        
+        const isValid = bcrypt.compareSync(pass, user.pass);
+        if (!isValid) return res.json({ error: 'كلمة المرور غير صحيحة' });
+        
+        res.json({ id: user.id, name: user.name, role: user.role, enabled: user.enabled });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== API - التذاكر ====================
+app.get('/api/tickets', async (req, res) => {
+    try {
+        const tickets = await db.all('SELECT * FROM tickets ORDER BY createdAt DESC');
+        tickets.forEach(t => { t.replies = t.replies ? JSON.parse(t.replies) : []; });
+        res.json(tickets);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/tickets', async (req, res) => {
+    try {
+        const { userName, userRole, subject, message, date, time, status, replies } = req.body;
+        const result = await db.run(
+            `INSERT INTO tickets (userName, userRole, subject, message, date, time, status, replies)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userName, userRole, subject, message, date, time, status, JSON.stringify(replies || [])]
+        );
+        const newTicket = await db.get('SELECT * FROM tickets WHERE id = ?', [result.lastID]);
+        newTicket.replies = JSON.parse(newTicket.replies);
+        res.json(newTicket);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/tickets/:id/reply', async (req, res) => {
+    try {
+        const ticket = await db.get('SELECT * FROM tickets WHERE id = ?', [req.params.id]);
+        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        
+        const replies = JSON.parse(ticket.replies || '[]');
+        replies.push(req.body.reply);
+        
+        await db.run('UPDATE tickets SET replies = ?, status = ? WHERE id = ?',
+                     [JSON.stringify(replies), 'تم الرد', req.params.id]);
+        
+        const updated = await db.get('SELECT * FROM tickets WHERE id = ?', [req.params.id]);
+        updated.replies = JSON.parse(updated.replies);
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/tickets/:id/close', async (req, res) => {
+    try {
+        await db.run('UPDATE tickets SET status = ? WHERE id = ?', ['مغلقة', req.params.id]);
+        const updated = await db.get('SELECT * FROM tickets WHERE id = ?', [req.params.id]);
+        updated.replies = JSON.parse(updated.replies || '[]');
+        res.json(updated);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== API - سجل التتبع ====================
+app.get('/api/logs', async (req, res) => {
+    try {
+        const logs = await db.all('SELECT * FROM logs ORDER BY createdAt DESC');
+        res.json(logs);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/logs', async (req, res) => {
+    try {
+        const { userName, userRole, action, details, date, time } = req.body;
+        const result = await db.run(
+            `INSERT INTO logs (userName, userRole, action, details, date, time)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [userName, userRole, action, details, date, time]
+        );
+        res.json({ id: result.lastID });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== API - تصدير واستيراد ====================
+app.get('/api/export-all', async (req, res) => {
+    try {
+        const vessels = await db.all('SELECT * FROM vessels');
+        const users = await db.all('SELECT id, name, role, enabled FROM users');
+        const tickets = await db.all('SELECT * FROM tickets');
+        const logs = await db.all('SELECT * FROM logs');
+        res.json({ vessels, users, tickets, logs });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/import-all', async (req, res) => {
+    try {
+        const { vessels } = req.body;
+        if (vessels && Array.isArray(vessels)) {
+            await db.run('DELETE FROM vessels');
+            for (const v of vessels) {
+                await db.run(
+                    `INSERT INTO vessels (name, num, len, reg, zone, port, supp, stat, break, fDate, eDate, ref, cat)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [v.name, v.num, v.len, v.reg, v.zone, v.port, v.supp, v.stat, v.break, v.fDate, v.eDate, v.ref, v.cat]
+                );
+            }
+        }
+        res.json({ message: 'تم الاستيراد بنجاح' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== تشغيل الخادم ====================
+async function startServer() {
+    await initDatabase();
+    app.listen(PORT, () => {
+        console.log(`🚀 الخادم يعمل على http://localhost:${PORT}`);
+    });
+}
+
+startServer();
