@@ -14,6 +14,17 @@ app.use(express.static('public'));
 
 let db;
 
+// ==================== دوال مساعدة ====================
+function getCurrentDate() {
+    const now = new Date();
+    return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
 // ==================== تهيئة قاعدة البيانات ====================
 async function initDatabase() {
     db = await open({
@@ -73,7 +84,7 @@ async function initDatabase() {
         );
     `);
 
-    // إنشاء مستخدم مسؤول افتراضي
+    // إنشاء مستخدمين افتراضيين
     const adminExists = await db.get('SELECT * FROM users WHERE name = ?', ['admin']);
     if (!adminExists) {
         const hashedPass = bcrypt.hashSync('admin123', 10);
@@ -81,19 +92,24 @@ async function initDatabase() {
                      ['admin', hashedPass, 'مسؤول', 1]);
         console.log('✅ تم إنشاء المستخدم الافتراضي: admin / admin123');
     }
-    
+
+    const editorExists = await db.get('SELECT * FROM users WHERE name = ?', ['editor']);
+    if (!editorExists) {
+        const hashedPass = bcrypt.hashSync('editor123', 10);
+        await db.run('INSERT INTO users (name, pass, role, enabled) VALUES (?, ?, ?, ?)',
+                     ['editor', hashedPass, 'محرر', 1]);
+        console.log('✅ تم إنشاء المستخدم: editor / editor123');
+    }
+
+    const viewerExists = await db.get('SELECT * FROM users WHERE name = ?', ['viewer']);
+    if (!viewerExists) {
+        const hashedPass = bcrypt.hashSync('viewer123', 10);
+        await db.run('INSERT INTO users (name, pass, role, enabled) VALUES (?, ?, ?, ?)',
+                     ['viewer', hashedPass, 'مشاهد', 1]);
+        console.log('✅ تم إنشاء المستخدم: viewer / viewer123');
+    }
+
     console.log('✅ قاعدة بيانات SQLite جاهزة');
-}
-
-// ==================== دوال مساعدة ====================
-function getCurrentDate() {
-    const now = new Date();
-    return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-}
-
-function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 }
 
 // ==================== API - المراكب ====================
@@ -172,14 +188,14 @@ app.post('/api/users', async (req, res) => {
 app.put('/api/users/:id', async (req, res) => {
     try {
         const { name, pass, role, enabled } = req.body;
-        const updateData = { name, role, enabled };
         if (pass) {
-            updateData.pass = bcrypt.hashSync(pass, 10);
+            const hashedPass = bcrypt.hashSync(pass, 10);
+            await db.run('UPDATE users SET name=?, pass=?, role=?, enabled=? WHERE id=?',
+                         [name, hashedPass, role, enabled ? 1 : 0, req.params.id]);
+        } else {
+            await db.run('UPDATE users SET name=?, role=?, enabled=? WHERE id=?',
+                         [name, role, enabled ? 1 : 0, req.params.id]);
         }
-        await db.run(
-            `UPDATE users SET name=?, pass=?, role=?, enabled=? WHERE id=?`,
-            [name, updateData.pass || null, role, enabled ? 1 : 0, req.params.id]
-        );
         const updated = await db.get('SELECT id, name, role, enabled FROM users WHERE id = ?', [req.params.id]);
         res.json(updated);
     } catch (err) {
