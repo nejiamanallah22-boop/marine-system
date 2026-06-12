@@ -12,7 +12,7 @@ const io = socketIo(server);            // ← إضافة Socket.IO
 const PORT = process.env.PORT || 10000;
 
 // رابط قاعدة البيانات
-const MONGO_URI = 'mongodb+srv://marineUser:marineUser@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
+const MONGO_URI = 'mongodb+srv://marineUser:Marine2024Secure!@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
 
 console.log('🔄 جاري الاتصال بقاعدة البيانات...');
 
