@@ -99,7 +99,7 @@
         <button class="btn btn-green" onclick="showPage('eff')">📈 جاهزية الأسطول</button>
         <button class="btn btn-cyan" onclick="showPage('support')">📞 الدعم الفني</button>
         <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">📊 تتبع المستخدمين</button>
-        <button class="btn btn-purple" onclick="showPage('map')">🗺️ خريطة التتبع</button>
+        <button id="mapBtn" class="btn btn-purple" onclick="showPage('map')">🗺️ خريطة التتبع</button>
         <button id="admBtn" class="btn btn-red" onclick="showPage('users')">👥 المستخدمين</button>
         <button id="printBtn" class="btn btn-blue" onclick="window.print()">🖨️ طباعة</button>
     </div>
@@ -154,7 +154,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            <table><thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead><tbody id="maintBody"></tbody></table>
+            <tr><thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr></thead><tbody id="maintBody"></tbody></table>
         </div>
     </div>
 
@@ -266,6 +266,7 @@ let trackingMap = null;
 let trackingMarkers = {};
 let socket = null;
 
+// قائمة المناطق
 const ZONES_DATA = {
     "الشمال": ["تونس", "بنزرت", "طبرقة"],
     "الساحل": ["سوسة", "المنستير", "نابل"],
@@ -279,7 +280,15 @@ const ZONES_DATA = {
 };
 
 const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-const ALL_REGIONS = ["الشمال", "الساحل", "الوسط", "الجنوب", "وحدة الصيانة والإسناد البحري تونس", "وحدة الصيانة والإسناد البحري المنستير", "وحدة الصيانة والإسناد البحري صفاقس", "وحدة الصيانة والإسناد البحري جرجيس", "المجمع الأمني بقبيبة"];
+
+const ALL_REGIONS = [
+    "الشمال", "الساحل", "الوسط", "الجنوب",
+    "وحدة الصيانة والإسناد البحري تونس",
+    "وحدة الصيانة والإسناد البحري المنستير",
+    "وحدة الصيانة والإسناد البحري صفاقس",
+    "وحدة الصيانة والإسناد البحري جرجيس",
+    "المجمع الأمني بقبيبة"
+];
 
 const REGION_DISPLAY_NAMES = {
     "الشمال": "🗺️ الحرس البحري بالشمال",
@@ -378,10 +387,15 @@ async function logActivity(action, details) {
 function initSocket() {
     if (socket) return;
     socket = io();
+    
+    // ✅ استقبال المواقع - فقط المسؤول يراها
     socket.on('receive-location', (data) => {
         if (currentUser && currentUser.role === 'مسؤول') {
-            updateMapMarker(data.userName, data.lat, data.lng, data.time);
-            showToast(`📍 موقع المستخدم: ${data.userName}`);
+            // لا نعرض موقع المستخدم الحالي نفسه
+            if (data.userName !== currentUser.name) {
+                updateMapMarker(data.userName, data.lat, data.lng, data.time);
+                showToast(`📍 المستخدم ${data.userName} - موقع محدث`);
+            }
         }
     });
 }
@@ -389,18 +403,22 @@ function initSocket() {
 function initTrackingMap() {
     if (trackingMap) return;
     trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM' }).addTo(trackingMap);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors' 
+    }).addTo(trackingMap);
 }
 
 function updateMapMarker(userName, lat, lng, time) {
     if (!trackingMap) initTrackingMap();
     let key = userName;
+    let popupContent = `<b>${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`;
+    
     if (trackingMarkers[key]) {
         trackingMarkers[key].setLatLng([lat, lng]);
-        trackingMarkers[key].bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`);
+        trackingMarkers[key].bindPopup(popupContent);
     } else {
         let marker = L.marker([lat, lng]).addTo(trackingMap);
-        marker.bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`);
+        marker.bindPopup(popupContent);
         trackingMarkers[key] = marker;
     }
 }
@@ -422,33 +440,50 @@ function startTracking() {
                 document.getElementById('mapStatus').innerHTML = `📍 يتم مشاركة موقعك... ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
             }
         }, (error) => {
+            console.error('GPS error:', error);
             document.getElementById('mapStatus').innerHTML = '❌ تعذر الحصول على الموقع';
-        }, { enableHighAccuracy: true, timeout: 5000 });
+        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
     }, 5000);
     
     document.getElementById('startTrackingBtn').style.display = 'none';
     document.getElementById('stopTrackingBtn').style.display = 'inline-block';
-    showToast("✅ بدأ مشاركة الموقع");
+    showToast("✅ بدأ مشاركة الموقع (يتم التحديث كل 5 ثوانٍ)");
 }
 
 function stopTracking() {
-    if (trackingInterval) clearInterval(trackingInterval);
+    if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+    }
     document.getElementById('startTrackingBtn').style.display = 'inline-block';
     document.getElementById('stopTrackingBtn').style.display = 'none';
     document.getElementById('mapStatus').innerHTML = '⏹️ توقفت مشاركة الموقع';
     showToast("⏹️ تم إيقاف مشاركة الموقع");
 }
 
+// ✅ دالة تحميل المواقع - فقط للمسؤول
 async function loadLocations() {
-    if (!canManageUsers()) { showToast("غير مسموح - فقط للمسؤول", true); return; }
+    if (!currentUser || currentUser.role !== 'مسؤول') {
+        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
+        return;
+    }
     try {
         let locations = await apiCall('/api/locations');
         if (!trackingMap) initTrackingMap();
-        Object.values(trackingMarkers).forEach(m => m.remove());
+        Object.values(trackingMarkers).forEach(marker => marker.remove());
         trackingMarkers = {};
-        locations.forEach(loc => updateMapMarker(loc.userName, loc.lat, loc.lng, loc.timestamp));
-        showToast(`✅ تم تحميل ${locations.length} موقع محفوظ`);
-    } catch(err) { showToast("خطأ في تحميل المواقع", true); }
+        
+        // عرض مواقع جميع المستخدمين باستثناء المسؤول نفسه
+        locations.forEach(loc => {
+            if (loc.userName !== currentUser.name) {
+                updateMapMarker(loc.userName, loc.lat, loc.lng, loc.timestamp);
+            }
+        });
+        showToast(`✅ تم تحميل مواقع ${locations.filter(l => l.userName !== currentUser.name).length} مستخدم`);
+    } catch(err) { 
+        console.error(err);
+        showToast("❌ خطأ في تحميل المواقع", true); 
+    }
 }
 
 function centerMapOnUser() {
@@ -470,8 +505,14 @@ async function refreshTrack() { if(canManageUsers()) { await renderTrack(); show
 async function refreshUsers() { if(canManageUsers()) { await renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); } }
 
 async function refreshAllPages() {
-    await renderMain(); await renderMaint(); await renderEff(); await renderTickets();
-    if (canManageUsers()) { await renderUsers(); await renderTrack(); }
+    await renderMain(); 
+    await renderMaint(); 
+    await renderEff(); 
+    await renderTickets();
+    if (canManageUsers()) { 
+        await renderUsers(); 
+        await renderTrack(); 
+    }
     showToast("✅ تم تحديث جميع الصفحات");
 }
 
@@ -506,13 +547,16 @@ async function doLogin() {
         let isAdmin = currentUser.role === "مسؤول";
         let isViewer = currentUser.role === "مشاهد";
         
+        // إظهار/إخفاء أزرار المسؤول
         document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
+        document.getElementById('mapBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
         document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
         document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
         document.getElementById('inputArea').classList.toggle('hidden', isViewer);
         
+        // تعبئة القوائم المنسدلة
         function fill(id, list) {
             let sel = document.getElementById(id);
             if (sel) {
@@ -530,11 +574,15 @@ async function doLogin() {
             ALL_REGIONS.forEach(reg => effSel.innerHTML += `<option value="${reg}">${REGION_DISPLAY_NAMES[reg] || reg}</option>`);
         }
         
+        // تحميل البيانات
         await renderMain();
         await renderMaint();
         await renderEff();
         await renderTickets();
-        if (isAdmin) { await renderUsers(); await renderTrack(); }
+        if (isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
         await logActivity("تسجيل دخول", `قام بتسجيل الدخول`);
         showToast(`مرحباً ${username}`);
     } catch(error) {
@@ -645,7 +693,7 @@ async function editItem(id, name) {
             };
             try {
                 await updateVessel(id, updatedItem);
-                await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}"`);
+                await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}" إلى "${updatedItem.name}"`);
                 await renderMain();
                 await renderMaint();
                 await renderEff();
@@ -707,29 +755,34 @@ async function renderMain() {
         let html = "";
         let isAdmin = currentUser?.role === "مسؤول";
         
-        filtered.forEach(x => {
-            let regionDisplay = REGION_DISPLAY_NAMES[x.reg] || x.reg || '-';
-            html += `<tr>
-                <td><b>${x.name}</b></td>
-                <td>${x.num || '-'}</td>
-                <td>${x.len || '-'}</td>
-                <td>${x.cat || '-'}</td>
-                <td>${regionDisplay}</td>
-                <td>${x.zone || '-'}</td>
-                <td>${x.port || '-'}</td>
-                <td>${x.supp || '-'}</td>
-                <td class="status-${x.stat}">${x.stat}</td>
-                <td>${x.break || '-'}</td>
-                <td>${formatDate(x.fDate)}</td>
-                <td>${formatDate(x.eDate)}</td>
-                <td>
-                    ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
-                    ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
-                </td>
-            </tr>`;
-        });
-        document.getElementById('mainBody').innerHTML = html || '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+        if (filtered.length === 0) {
+            html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+        } else {
+            filtered.forEach(x => {
+                let regionDisplay = REGION_DISPLAY_NAMES[x.reg] || x.reg || '-';
+                html += `<tr>
+                    <td><b>${x.name}</b></td>
+                    <td>${x.num || '-'}</td>
+                    <td>${x.len || '-'}</td>
+                    <td>${x.cat || '-'}</td>
+                    <td>${regionDisplay}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td>${x.port || '-'}</td>
+                    <td>${x.supp || '-'}</td>
+                    <td class="status-${x.stat}">${x.stat}</td>
+                    <td>${x.break || '-'}</td>
+                    <td>${formatDate(x.fDate)}</td>
+                    <td>${formatDate(x.eDate)}</td>
+                    <td>
+                        ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}
+                        ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x.id}', '${x.name}')">حذف</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('mainBody').innerHTML = html;
     } catch(error) {
+        console.error('خطأ في renderMain:', error);
         document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
     }
 }
@@ -771,23 +824,28 @@ async function renderMaint() {
         let html = "";
         let isAdmin = currentUser?.role === "مسؤول";
         
-        filtered.forEach(x => {
-            let regionDisplay = REGION_DISPLAY_NAMES[x.reg] || x.reg || '-';
-            html += `<tr>
-                <td><b>${x.name}</b></td>
-                <td>${x.num || '-'}</td>
-                <td>${regionDisplay}</td>
-                <td>${x.zone || '-'}</td>
-                <td class="status-${x.stat}">${x.stat}</td>
-                <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
-                <td>${formatDate(x.fDate)}</td>
-                <td>${formatDate(x.eDate)}</td>
-                <td>${x.ref || '-'}</td>
-                <td>${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}</td>
-            </tr>`;
-        });
-        document.getElementById('maintBody').innerHTML = html || '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+        if (filtered.length === 0) {
+            html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+        } else {
+            filtered.forEach(x => {
+                let regionDisplay = REGION_DISPLAY_NAMES[x.reg] || x.reg || '-';
+                html += `<tr>
+                    <td><b>${x.name}</b></td>
+                    <td>${x.num || '-'}</td>
+                    <td>${regionDisplay}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td class="status-${x.stat}">${x.stat}</td>
+                    <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
+                    <td>${formatDate(x.fDate)}</td>
+                    <td>${formatDate(x.eDate)}</td>
+                    <td>${x.ref || '-'}</td>
+                    <td>${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x.id}', '${x.name}')">تعديل</button>` : ''}</td>
+                </tr>`;
+            });
+        }
+        document.getElementById('maintBody').innerHTML = html;
     } catch(error) {
+        console.error('خطأ في renderMaint:', error);
         document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
     }
 }
@@ -811,7 +869,10 @@ async function renderGeneralEfficiencyTable() {
         
         let html = `<div class="region-table-card">
             <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
-            <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+            <div class="scrollable-table">
+            <table class="region-table">
+                <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                <tbody>`;
         
         CATS_LIST.forEach(cat => {
             let catData = data.filter(x => x.cat === cat);
@@ -819,12 +880,21 @@ async function renderGeneralEfficiencyTable() {
             let broken = catData.filter(x => x.stat !== 'صالح').length;
             let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
             let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-            html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+            html += `<tr class="${rowClass}">
+                <td>${cat}</td>
+                <td style="color:green;">${ok}</td>
+                <td style="color:red;">${broken}</td>
+                <td><strong>${percent}%</strong></td>
+            </tr>`;
         });
         
-        html += `</tbody></table></div></div>`;
+        html += `</tbody>
+            </table>
+            </div>
+            </div>`;
         document.getElementById('generalEffTableContainer').innerHTML = html;
     } catch(error) {
+        console.error(error);
         document.getElementById('generalEffTableContainer').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل البيانات</div></div>';
     }
 }
@@ -868,7 +938,10 @@ async function renderRegionTables() {
                 
                 html += `<div class="region-table-card">
                     <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
-                    <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+                    <div class="scrollable-table">
+                    <table class="region-table">
+                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                        <tbody>`;
                 
                 for (let cat of CATS_LIST) {
                     let catData = regData.filter(x => x.cat === cat);
@@ -876,10 +949,18 @@ async function renderRegionTables() {
                     let broken = catData.filter(x => x.stat !== 'صالح').length;
                     let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
                     let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-                    html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+                    html += `<tr class="${rowClass}">
+                        <td>${cat}</td>
+                        <td style="color:green;">${ok}</td>
+                        <td style="color:red;">${broken}</td>
+                        <td><strong>${percent}%</strong></td>
+                    </tr>`;
                 }
                 
-                html += `</tbody></table></div></div>`;
+                html += `</tbody>
+                    </table>
+                    </div>
+                    </div>`;
             }
         } else {
             let regData = data.filter(x => x.reg === selectedRegion);
@@ -890,7 +971,10 @@ async function renderRegionTables() {
             
             html += `<div class="region-table-card">
                 <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
-                <div class="scrollable-table"><table class="region-table"><thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead><tbody>`;
+                <div class="scrollable-table">
+                <table class="region-table">
+                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
+                    <tbody>`;
             
             for (let cat of CATS_LIST) {
                 let catData = regData.filter(x => x.cat === cat);
@@ -898,10 +982,18 @@ async function renderRegionTables() {
                 let broken = catData.filter(x => x.stat !== 'صالح').length;
                 let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
                 let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-                html += `<tr class="${rowClass}"><td>${cat}</td><td style="color:green;">${ok}</td><td style="color:red;">${broken}</td><td><strong>${percent}%</strong></td></tr>`;
+                html += `<tr class="${rowClass}">
+                    <td>${cat}</td>
+                    <td style="color:green;">${ok}</td>
+                    <td style="color:red;">${broken}</td>
+                    <td><strong>${percent}%</strong></td>
+                </tr>`;
             }
             
-            html += `</tbody></table></div></div>`;
+            html += `</tbody>
+                </table>
+                </div>
+                </div>`;
         }
         
         document.getElementById('regionTables').innerHTML = html;
@@ -1034,38 +1126,44 @@ async function renderTickets() {
         if (canManageUsers()) html += '<th>إجراءات</th>';
         html += '</tr></thead><tbody>';
         
-        tickets.forEach((t, index) => {
-            let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
-            let statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
-            
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td>${t.date || '-'}</td>
-                <td>${t.time || '-'}</td>
-                <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
-                <td><strong>${t.subject}</strong></td>
-                <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
-                <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
-                <td style="max-width:300px; text-align:right;">`;
-            
-            if (t.replies && t.replies.length > 0) {
-                t.replies.forEach(reply => {
-                    html += `<div class="ticket-reply"><small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small><p style="margin:5px 0 0 0;">📝 ${reply.reply}</p></div>`;
-                });
-            } else { html += '<span style="color:#999;">لا توجد ردود</span>'; }
-            html += `</td>`;
-            
-            if (canManageUsers()) {
-                if (t.status !== 'مغلقة') {
-                    html += `<td><button class="btn-sm btn-cyan" onclick="replyToTicket('${t.id}')">💬 رد</button> <button class="btn-sm btn-red" onclick="closeTicket('${t.id}')">🔒 إغلاق</button></td>`;
-                } else { html += `<td><span style="color:green;">✅ مغلقة</span></td>`; }
-            } else { html += `<td>-</td>`; }
-            html += `</tr>`;
-        });
-        if (tickets.length === 0) html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
+        if (tickets.length === 0) {
+            html += ' hilab<td colspan="9" style="text-align:center;">📭 لا توجد تذاكر</td></tr>';
+        } else {
+            tickets.forEach((t, index) => {
+                let statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
+                let statusText = t.status === 'مغلقة' ? '✅ مغلقة' : (t.status === 'تم الرد' ? '💬 تم الرد' : '⏳ قيد المعالجة');
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${t.date || '-'}</td>
+                    <td>${t.time || '-'}</td>
+                    <td><b>${t.userName}</b><br><small>${t.userRole || ''}</small></td>
+                    <td><strong>${t.subject}</strong></td>
+                    <td style="color:${statusColor}; font-weight:bold;">${statusText}</td>
+                    <td style="max-width:250px; text-align:right;">${t.message || '-'}</td>
+                    <td style="max-width:300px; text-align:right;">`;
+                
+                if (t.replies && t.replies.length > 0) {
+                    t.replies.forEach(reply => {
+                        html += `<div class="ticket-reply"><small>👤 ${reply.adminName} - ${reply.date} ${reply.time}</small><p style="margin:5px 0 0 0;">📝 ${reply.reply}</p></div>`;
+                    });
+                } else { html += '<span style="color:#999;">لا توجد ردود</span>'; }
+                html += `</td>`;
+                
+                if (canManageUsers()) {
+                    if (t.status !== 'مغلقة') {
+                        html += `<td><button class="btn-sm btn-cyan" onclick="replyToTicket('${t.id}')">💬 رد</button> <button class="btn-sm btn-red" onclick="closeTicket('${t.id}')">🔒 إغلاق</button></td>`;
+                    } else { html += `<td><span style="color:green;">✅ مغلقة</span></td>`; }
+                } else { html += `<td>-</td>`; }
+                html += `</tr>`;
+            });
+        }
         html += `</tbody></table></div>`;
         document.getElementById('ticketsList').innerHTML = html;
-    } catch(error) { console.error(error); document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>'; }
+    } catch(error) { 
+        console.error(error); 
+        document.getElementById('ticketsList').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل التذاكر</div></div>';
+    }
 }
 
 // ==================== دوال التتبع ====================
@@ -1095,19 +1193,22 @@ async function renderTrack() {
         let html = `<div class="stats-cards"><div class="stat-card"><div class="number">${filtered.length}</div><div>📊 إجمالي النشاطات</div></div></div>
             <div class="scrollable-table"><table class="region-table"><thead><tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>`;
         
-        filtered.forEach((l, index) => {
-            let actionIcon = l.action === 'إضافة مركب' ? '➕' : (l.action === 'تعديل مركب' ? '✏️' : (l.action === 'حذف مركب' ? '🗑️' : (l.action === 'تسجيل دخول' ? '🔐' : '📝')));
-            html += `<tr>
-                <td>${index + 1}</td>
-                <td>${l.date}</td>
-                <td>${l.time || '-'}</td>
-                <td><b>${l.userName}</b></td>
-                <td>${l.userRole}</td>
-                <td>${actionIcon} ${l.action}</td>
-                <td style="text-align:right;">${l.details}</td>
-            </tr>`;
-        });
-        if (filtered.length === 0) html += '<tr><td colspan="7">لا توجد نشاطات مسجلة</td></tr>';
+        if (filtered.length === 0) {
+            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+        } else {
+            filtered.forEach((l, index) => {
+                let actionIcon = l.action === 'إضافة مركب' ? '➕' : (l.action === 'تعديل مركب' ? '✏️' : (l.action === 'حذف مركب' ? '🗑️' : (l.action === 'تسجيل دخول' ? '🔐' : '📝')));
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${l.date}</td>
+                    <td>${l.time || '-'}</td>
+                    <td><b>${l.userName}</b></td>
+                    <td>${l.userRole}</td>
+                    <td>${actionIcon} ${l.action}</td>
+                    <td style="text-align:right;">${l.details}</td>
+                </tr>`;
+            });
+        }
         html += `</tbody></table></div>`;
         document.getElementById('trackContent').innerHTML = html;
     } catch(error) { console.error(error); }
@@ -1125,16 +1226,20 @@ async function renderUsers() {
     if (!canManageUsers()) return;
     try {
         let users = await loadUsers();
-        document.getElementById('usersBody').innerHTML = users.map(u => `
-            <tr>
-                <td>${u.name}</td>
-                <td>${u.role}</td>
-                <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${u.name}')">تغيير</button></td>
-                <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u.id}', true)">تفعيل</button>`}</td>
-                <td><button class="btn-sm btn-red" onclick="deleteUser('${u.id}')">حذف</button></td>
-            </tr>
-        `).join('');
+        if (users.length === 0) {
+            document.getElementById('usersBody').innerHTML = '<tr><td colspan="6" style="text-align:center;">لا يوجد مستخدمين</td></tr>';
+        } else {
+            document.getElementById('usersBody').innerHTML = users.map(u => `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.role}</td>
+                    <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
+                    <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u.id}', '${u.name}')">تغيير</button></td>
+                    <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u.id}', true)">تفعيل</button>`}</td>
+                    <td><button class="btn-sm btn-red" onclick="deleteUser('${u.id}')">حذف</button></td>
+                </tr>
+            `).join('');
+        }
     } catch(error) { console.error(error); }
 }
 
@@ -1260,22 +1365,59 @@ function showPage(page) {
     pages.forEach(p => document.getElementById(p).classList.add('hidden'));
     
     let inputArea = document.getElementById('inputArea');
+    
+    // ✅ التحقق من الصلاحيات للصفحات المقيدة
+    if (page === 'map' && (!currentUser || currentUser.role !== 'مسؤول')) {
+        showToast("غير مسموح - صفحة تتبع المواقع متاحة للمسؤول فقط", true);
+        return;
+    }
+    
+    if (page === 'track' && (!currentUser || currentUser.role !== 'مسؤول')) {
+        showToast("غير مسموح - صفحة تتبع المستخدمين متاحة للمسؤول فقط", true);
+        return;
+    }
+    
+    if (page === 'users' && (!currentUser || currentUser.role !== 'مسؤول')) {
+        showToast("غير مسموح - إدارة المستخدمين متاحة للمسؤول فقط", true);
+        return;
+    }
+    
     if (page === 'main') {
         document.getElementById('pageMain').classList.remove('hidden');
         if (inputArea) inputArea.classList.remove('hidden');
+        renderMain();
     } else {
         if (inputArea) inputArea.classList.add('hidden');
-        if (page === 'maint') { document.getElementById('pageMaint').classList.remove('hidden'); renderMaint(); }
-        else if (page === 'eff') { document.getElementById('pageEff').classList.remove('hidden'); renderEff(); }
-        else if (page === 'support') { document.getElementById('pageSupport').classList.remove('hidden'); renderTickets(); }
-        else if (page === 'track') { if (canManageUsers()) { document.getElementById('pageTrack').classList.remove('hidden'); renderTrack(); } else showToast("غير مسموح", true); }
-        else if (page === 'map') { 
-            if (canManageUsers()) {
+        
+        switch(page) {
+            case 'maint':
+                document.getElementById('pageMaint').classList.remove('hidden');
+                renderMaint();
+                break;
+            case 'eff':
+                document.getElementById('pageEff').classList.remove('hidden');
+                renderEff();
+                break;
+            case 'support':
+                document.getElementById('pageSupport').classList.remove('hidden');
+                renderTickets();
+                break;
+            case 'track':
+                document.getElementById('pageTrack').classList.remove('hidden');
+                renderTrack();
+                break;
+            case 'map':
                 document.getElementById('pageMap').classList.remove('hidden');
-                setTimeout(() => { if (trackingMap) trackingMap.invalidateSize(); loadLocations(); }, 100);
-            } else { showToast("غير مسموح - فقط للمسؤول", true); }
+                setTimeout(() => {
+                    if (trackingMap) trackingMap.invalidateSize();
+                    loadLocations();
+                }, 100);
+                break;
+            case 'users':
+                document.getElementById('pageUsers').classList.remove('hidden');
+                renderUsers();
+                break;
         }
-        else if (page === 'users') { if (canManageUsers()) { document.getElementById('pageUsers').classList.remove('hidden'); renderUsers(); } else showToast("غير مسموح", true); }
     }
 }
 
