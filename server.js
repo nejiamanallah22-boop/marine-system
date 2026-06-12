@@ -36,7 +36,6 @@ const sampleVessels = [
     { id: '6', name: 'البروق 6', num: 'B006', len: 11, reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: '', stat: 'صيانة', break: 'عطل في نظام الملاحة', fDate: '2024-02-10', eDate: '2024-02-25', ref: 'REF003', cat: 'البروق' },
     { id: '7', name: 'صقر 7', num: 'S007', len: 9, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'صقور' },
 ];
-
 vessels.push(...sampleVessels);
 
 // المستخدمون
@@ -99,11 +98,8 @@ io.on('connection', (socket) => {
             socketId: socket.id
         };
         locations.push(locationData);
-        
-        // الاحتفاظ فقط بآخر 100 موقع
         if (locations.length > 100) locations.shift();
         
-        // بث الموقع لجميع المستخدمين
         io.emit('receive-location', {
             userName: data.userName,
             userRole: data.userRole,
@@ -111,7 +107,6 @@ io.on('connection', (socket) => {
             lng: data.lng,
             time: new Date()
         });
-        
         console.log(`📍 موقع ${data.userName}: ${data.lat}, ${data.lng}`);
     });
     
@@ -124,11 +119,7 @@ io.on('connection', (socket) => {
 
 // التحقق من صحة الخادم
 app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        vesselsCount: vessels.length,
-        session: req.session.userId ? 'active' : 'none'
-    });
+    res.json({ status: 'ok', vesselsCount: vessels.length });
 });
 
 // تسجيل الدخول
@@ -146,7 +137,6 @@ app.post('/api/login', (req, res) => {
     req.session.userRole = user.role;
     req.session.userName = user.name;
     
-    // تسجيل نشاط تسجيل الدخول
     logs.unshift({
         id: Date.now().toString(),
         userName: user.name,
@@ -180,26 +170,17 @@ app.post('/api/logout', (req, res) => {
 // التحقق من الجلسة
 app.get('/api/check-session', (req, res) => {
     if (req.session.userId) {
-        res.json({ 
-            loggedIn: true, 
-            user: { 
-                name: req.session.userName, 
-                role: req.session.userRole 
-            } 
-        });
+        res.json({ loggedIn: true, user: { name: req.session.userName, role: req.session.userRole } });
     } else {
         res.json({ loggedIn: false });
     }
 });
 
 // ==================== مسارات المراكب ====================
-
-// جلب جميع المراكب
 app.get('/api/vessels', isAuth, (req, res) => {
     res.json(vessels);
 });
 
-// إضافة مركب جديد
 app.post('/api/vessels', canEdit, (req, res) => {
     const newVessel = {
         id: Date.now().toString(),
@@ -208,7 +189,6 @@ app.post('/api/vessels', canEdit, (req, res) => {
     };
     vessels.unshift(newVessel);
     
-    // تسجيل النشاط
     logs.unshift({
         id: Date.now().toString(),
         userName: req.session.userName,
@@ -222,18 +202,12 @@ app.post('/api/vessels', canEdit, (req, res) => {
     res.status(201).json(newVessel);
 });
 
-// تعديل مركب
 app.put('/api/vessels/:id', canEdit, (req, res) => {
     const index = vessels.findIndex(v => v.id === req.params.id);
     if (index !== -1) {
         const oldName = vessels[index].name;
-        vessels[index] = { 
-            ...vessels[index], 
-            ...req.body, 
-            cat: getCategory(req.body.len || vessels[index].len) 
-        };
+        vessels[index] = { ...vessels[index], ...req.body, cat: getCategory(req.body.len || vessels[index].len) };
         
-        // تسجيل النشاط
         logs.unshift({
             id: Date.now().toString(),
             userName: req.session.userName,
@@ -250,14 +224,12 @@ app.put('/api/vessels/:id', canEdit, (req, res) => {
     }
 });
 
-// حذف مركب
 app.delete('/api/vessels/:id', isAdmin, (req, res) => {
     const index = vessels.findIndex(v => v.id === req.params.id);
     if (index !== -1) {
         const deletedName = vessels[index].name;
         vessels = vessels.filter(v => v.id !== req.params.id);
         
-        // تسجيل النشاط
         logs.unshift({
             id: Date.now().toString(),
             userName: req.session.userName,
@@ -275,31 +247,31 @@ app.delete('/api/vessels/:id', isAdmin, (req, res) => {
 });
 
 // ==================== مسارات المستخدمين ====================
-
-// جلب جميع المستخدمين
 app.get('/api/users', isAuth, isAdmin, (req, res) => {
     const usersWithoutPass = users.map(({ pass, ...user }) => user);
     res.json(usersWithoutPass);
 });
 
-// إضافة مستخدم جديد
 app.post('/api/users', isAuth, isAdmin, (req, res) => {
     const { name, pass, role } = req.body;
+    
+    if (!name || !pass) {
+        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+    }
     
     if (users.find(u => u.name === name)) {
         return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً' });
     }
     
-    const newUser = { 
-        id: Date.now().toString(), 
-        name, 
-        pass, 
-        role: role || 'مشاهد', 
-        enabled: true 
+    const newUser = {
+        id: Date.now().toString(),
+        name,
+        pass,
+        role: role || 'مشاهد',
+        enabled: true
     };
     users.push(newUser);
     
-    // تسجيل النشاط
     logs.unshift({
         id: Date.now().toString(),
         userName: req.session.userName,
@@ -313,7 +285,6 @@ app.post('/api/users', isAuth, isAdmin, (req, res) => {
     res.status(201).json({ id: newUser.id, name, role: newUser.role });
 });
 
-// تحديث مستخدم
 app.put('/api/users/:id', isAuth, isAdmin, (req, res) => {
     const index = users.findIndex(u => u.id === req.params.id);
     if (index !== -1) {
@@ -325,14 +296,12 @@ app.put('/api/users/:id', isAuth, isAdmin, (req, res) => {
     }
 });
 
-// حذف مستخدم
 app.delete('/api/users/:id', isAuth, isAdmin, (req, res) => {
     const index = users.findIndex(u => u.id === req.params.id);
-    if (index !== -1) {
+    if (index !== -1 && users[index].name !== 'admin') {
         const deletedName = users[index].name;
         users.splice(index, 1);
         
-        // تسجيل النشاط
         logs.unshift({
             id: Date.now().toString(),
             userName: req.session.userName,
@@ -345,18 +314,15 @@ app.delete('/api/users/:id', isAuth, isAdmin, (req, res) => {
         
         res.json({ success: true });
     } else {
-        res.status(404).json({ error: 'المستخدم غير موجود' });
+        res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
     }
 });
 
 // ==================== مسارات التذاكر ====================
-
-// جلب جميع التذاكر
 app.get('/api/tickets', isAuth, (req, res) => {
     res.json(tickets);
 });
 
-// إضافة تذكرة جديدة
 app.post('/api/tickets', isAuth, (req, res) => {
     const newTicket = {
         id: Date.now().toString(),
@@ -366,7 +332,6 @@ app.post('/api/tickets', isAuth, (req, res) => {
     };
     tickets.unshift(newTicket);
     
-    // تسجيل النشاط
     logs.unshift({
         id: Date.now().toString(),
         userName: req.session.userName,
@@ -380,20 +345,17 @@ app.post('/api/tickets', isAuth, (req, res) => {
     res.status(201).json(newTicket);
 });
 
-// الرد على تذكرة
 app.put('/api/tickets/:id/reply', isAuth, isAdmin, (req, res) => {
     const ticket = tickets.find(t => t.id === req.params.id);
     if (ticket) {
         ticket.replies.push(req.body.reply);
         ticket.status = 'تم الرد';
-        
         res.json(ticket);
     } else {
         res.status(404).json({ error: 'التذكرة غير موجودة' });
     }
 });
 
-// إغلاق تذكرة
 app.put('/api/tickets/:id/close', isAuth, isAdmin, (req, res) => {
     const ticket = tickets.find(t => t.id === req.params.id);
     if (ticket) {
@@ -405,13 +367,10 @@ app.put('/api/tickets/:id/close', isAuth, isAdmin, (req, res) => {
 });
 
 // ==================== مسارات سجل النشاطات ====================
-
-// جلب سجل النشاطات
 app.get('/api/logs', isAuth, isAdmin, (req, res) => {
     res.json(logs);
 });
 
-// إضافة نشاط (يستخدم من前端)
 app.post('/api/logs', isAuth, (req, res) => {
     const newLog = {
         id: Date.now().toString(),
@@ -424,15 +383,11 @@ app.post('/api/logs', isAuth, (req, res) => {
 });
 
 // ==================== مسارات GPS ====================
-
-// جلب المواقع المحفوظة
 app.get('/api/locations', isAuth, (req, res) => {
-    res.json(locations.slice(-50)); // آخر 50 موقع
+    res.json(locations.slice(-50));
 });
 
 // ==================== مسارات التصدير والاستيراد ====================
-
-// تصدير جميع البيانات
 app.get('/api/export-all', isAuth, isAdmin, (req, res) => {
     res.json({
         vessels,
@@ -443,14 +398,11 @@ app.get('/api/export-all', isAuth, isAdmin, (req, res) => {
     });
 });
 
-// استيراد البيانات
 app.post('/api/import-all', isAuth, isAdmin, (req, res) => {
     const { vessels: newVessels, tickets: newTickets, logs: newLogs } = req.body;
-    
     if (newVessels && newVessels.length) vessels.push(...newVessels);
     if (newTickets && newTickets.length) tickets.push(...newTickets);
     if (newLogs && newLogs.length) logs.push(...newLogs);
-    
     res.json({ success: true });
 });
 
