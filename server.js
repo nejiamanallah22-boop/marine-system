@@ -2,8 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
+const http = require('http');        // ← إضافة
+const socketIo = require('socket.io'); // ← إضافة
 
 const app = express();
+const server = http.createServer(app);  // ← تغيير مهم
+const io = socketIo(server);            // ← إضافة Socket.IO
+
 const PORT = process.env.PORT || 10000;
 
 // رابط قاعدة البيانات
@@ -15,7 +20,7 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ متصل بـ MongoDB Atlas'))
     .catch(err => console.error('❌ خطأ في الاتصال:', err.message));
 
-// نماذج البيانات
+// ==================== نماذج البيانات ====================
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     pass: { type: String, required: true },
@@ -43,7 +48,17 @@ const logSchema = new mongoose.Schema({
 });
 const Log = mongoose.model('Log', logSchema);
 
-// Middleware
+// ==================== نموذج مواقع GPS ====================
+const locationSchema = new mongoose.Schema({
+    userName: String,
+    userRole: String,
+    lat: Number,
+    lng: Number,
+    timestamp: { type: Date, default: Date.now }
+});
+const Location = mongoose.model('Location', locationSchema);
+
+// ==================== Middleware ====================
 app.use(express.json());
 app.use(express.static('public'));
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: true }));
@@ -52,6 +67,42 @@ function isAuth(req, res, next) {
     if (req.session.userId) return next();
     res.status(401).json({ error: 'غير مصرح' });
 }
+
+// ==================== Socket.IO ====================
+io.on('connection', (socket) => {
+    console.log('🟢 مستخدم جديد متصل:', socket.id);
+    
+    // استقبال موقع المستخدم
+    socket.on('send-location', async (data) => {
+        console.log(`📍 موقع من ${data.userName}: ${data.lat}, ${data.lng}`);
+        
+        // حفظ الموقع في قاعدة البيانات
+        try {
+            const location = new Location({
+                userName: data.userName,
+                userRole: data.userRole,
+                lat: data.lat,
+                lng: data.lng
+            });
+            await location.save();
+            
+            // بث الموقع لجميع المستخدمين المتصلين
+            io.emit('receive-location', {
+                userName: data.userName,
+                userRole: data.userRole,
+                lat: data.lat,
+                lng: data.lng,
+                time: new Date()
+            });
+        } catch (err) {
+            console.error('خطأ في حفظ الموقع:', err);
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('🔴 مستخدم انقطع:', socket.id);
+    });
+});
 
 // ==================== API Routes ====================
 
@@ -175,25 +226,33 @@ app.post('/api/logs', isAuth, async (req, res) => {
     res.status(201).json(log);
 });
 
+// المواقع المحفوظة (GPS)
+app.get('/api/locations', isAuth, async (req, res) => {
+    const locations = await Location.find().sort({ timestamp: -1 }).limit(100);
+    res.json(locations);
+});
+
 // تصدير واستيراد
 app.get('/api/export-all', isAuth, async (req, res) => {
     const vessels = await Vessel.find();
     const users = await User.find().select('-pass');
     const tickets = await Ticket.find();
     const logs = await Log.find();
-    res.json({ vessels, users, tickets, logs });
+    const locations = await Location.find();
+    res.json({ vessels, users, tickets, logs, locations });
 });
 
 app.post('/api/import-all', isAuth, async (req, res) => {
-    const { vessels, users, tickets, logs } = req.body;
+    const { vessels, users, tickets, logs, locations } = req.body;
     if (vessels) await Vessel.insertMany(vessels);
     if (users) await User.insertMany(users);
     if (tickets) await Ticket.insertMany(tickets);
     if (logs) await Log.insertMany(logs);
+    if (locations) await Location.insertMany(locations);
     res.json({ success: true });
 });
 
-// إنشاء مستخدم admin
+// ==================== إنشاء مستخدم admin ====================
 (async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -206,9 +265,10 @@ app.post('/api/import-all', isAuth, async (req, res) => {
     }
 })();
 
-// تشغيل الخادم
-app.listen(PORT, '0.0.0.0', () => {
+// ==================== تشغيل الخادم ====================
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
     console.log(`🔐 admin / 1234`);
     console.log(`✅ متصل بـ MongoDB Atlas`);
+    console.log(`✅ Socket.IO جاهز للعمل`);
 });
