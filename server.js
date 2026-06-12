@@ -1,9 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const session = require('express-session');
-const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -11,85 +10,57 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 10000;
 
-// رابط قاعدة البيانات - يجب تعديل كلمة المرور إلى الصحيحة
-const MONGO_URI = 'mongodb+srv://marineUser:marineUser@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
+// ==================== البيانات المخزنة في الذاكرة ====================
+let vessels = [];
+let tickets = [];
+let logs = [];
+let locations = [];
 
-console.log('🔄 جاري الاتصال بقاعدة البيانات...');
+// دالة لتحديد الفئة بناءً على الطول
+function getCategory(len) {
+    const n = parseFloat(len);
+    if (n === 11) return "البروق";
+    if (n >= 8 && n <= 12) return "صقور";
+    if (n > 12 && n <= 25) return "خوافر";
+    if (n >= 30) return "طوافات";
+    return "زوارق مزدوجة";
+}
 
-// الاتصال بقاعدة البيانات
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('✅ متصل بـ MongoDB Atlas'))
-.catch(err => {
-    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-    console.log('⚠️ سيتم استخدام التخزين المؤقت بدلاً من MongoDB');
-});
+// بيانات تجريبية افتراضية للمراكب
+const sampleVessels = [
+    { id: '1', name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
+    { id: '2', name: 'صقر 2', num: 'S002', len: 10, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'صقور' },
+    { id: '3', name: 'خافرة 3', num: 'K003', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'عطل في المحرك الرئيسي', fDate: '2024-01-15', eDate: '2024-03-15', ref: 'REF001', cat: 'خوافر' },
+    { id: '4', name: 'طوافة 4', num: 'T004', len: 35, reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: '', stat: 'صيانة', break: 'أعطال كهربائية', fDate: '2024-02-01', eDate: '2024-03-01', ref: 'REF002', cat: 'طوافات' },
+    { id: '5', name: 'زورق سريع 5', num: 'Z005', len: 15, reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'قاعدة بنزرت', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'زوارق مزدوجة' },
+    { id: '6', name: 'البروق 6', num: 'B006', len: 11, reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: '', stat: 'صيانة', break: 'عطل في نظام الملاحة', fDate: '2024-02-10', eDate: '2024-02-25', ref: 'REF003', cat: 'البروق' },
+    { id: '7', name: 'صقر 7', num: 'S007', len: 9, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'صقور' },
+];
 
-// ==================== نماذج البيانات ====================
-// نموذج المستخدم
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    pass: { type: String, required: true },
-    role: { type: String, default: 'مشاهد' },
-    enabled: { type: Boolean, default: true }
-});
+vessels.push(...sampleVessels);
 
-// نموذج المركب
-const vesselSchema = new mongoose.Schema({
-    name: String, 
-    num: String, 
-    len: Number, 
-    reg: String,
-    zone: String, 
-    port: String, 
-    supp: String, 
-    stat: String,
-    break: String, 
-    fDate: Date, 
-    eDate: Date, 
-    ref: String, 
-    cat: String
-});
+// المستخدمون
+const users = [
+    { id: '1', name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
+    { id: '2', name: 'user', pass: 'user', role: 'مشاهد', enabled: true },
+    { id: '3', name: 'editor', pass: 'editor', role: 'محرر', enabled: true },
+];
 
-// نموذج التذكرة
-const ticketSchema = new mongoose.Schema({
-    userName: String, 
-    userRole: String, 
-    subject: String, 
-    message: String,
-    date: String, 
-    time: String, 
-    status: String, 
-    replies: Array
-});
-
-// نموذج سجل النشاطات
-const logSchema = new mongoose.Schema({
-    userName: String, 
-    userRole: String, 
-    action: String,
-    details: String, 
-    date: String, 
-    time: String
-});
-
-// نموذج موقع GPS
-const locationSchema = new mongoose.Schema({
-    userName: String,
-    userRole: String,
-    lat: Number,
-    lng: Number,
-    timestamp: { type: Date, default: Date.now }
-});
-
-// تعريف النماذج (مع التحقق من وجودها مسبقاً)
-const User = mongoose.models.User || mongoose.model('User', userSchema);
-const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', vesselSchema);
-const Ticket = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
-const Log = mongoose.models.Log || mongoose.model('Log', logSchema);
-const Location = mongoose.models.Location || mongoose.model('Location', locationSchema);
+// بيانات تجريبية للتذاكر
+const sampleTickets = [
+    {
+        id: '1',
+        userName: 'admin',
+        userRole: 'مسؤول',
+        subject: 'مشكلة في تحميل البيانات',
+        message: 'البيانات لا تظهر بشكل صحيح في صفحة الأسطول',
+        date: '15/02/2024',
+        time: '10:30',
+        status: 'قيد المعالجة',
+        replies: []
+    }
+];
+tickets.push(...sampleTickets);
 
 // ==================== Middleware ====================
 app.use(express.json());
@@ -98,7 +69,7 @@ app.use(session({
     secret: 'marine_secret_key_2024',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24 ساعة
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
 // Middleware للتحقق من المصادقة
@@ -107,40 +78,41 @@ function isAuth(req, res, next) {
     res.status(401).json({ error: 'غير مصرح، يرجى تسجيل الدخول' });
 }
 
-// Middleware للتحقق من صلاحية المسؤول
 function isAdmin(req, res, next) {
     if (req.session.userRole === 'مسؤول') return next();
     res.status(403).json({ error: 'غير مسموح - هذه الخاصية للمسؤول فقط' });
+}
+
+function canEdit(req, res, next) {
+    if (req.session.userRole === 'مسؤول' || req.session.userRole === 'محرر') return next();
+    res.status(403).json({ error: 'غير مسموح - ليس لديك صلاحية التعديل' });
 }
 
 // ==================== Socket.IO ====================
 io.on('connection', (socket) => {
     console.log('🟢 مستخدم جديد متصل:', socket.id);
     
-    socket.on('send-location', async (data) => {
-        console.log(`📍 موقع من ${data.userName}: ${data.lat}, ${data.lng}`);
+    socket.on('send-location', (data) => {
+        const locationData = {
+            ...data,
+            timestamp: new Date(),
+            socketId: socket.id
+        };
+        locations.push(locationData);
         
-        try {
-            // حفظ الموقع في قاعدة البيانات
-            const location = new Location({
-                userName: data.userName,
-                userRole: data.userRole,
-                lat: data.lat,
-                lng: data.lng
-            });
-            await location.save();
-            
-            // بث الموقع لجميع المستخدمين
-            io.emit('receive-location', {
-                userName: data.userName,
-                userRole: data.userRole,
-                lat: data.lat,
-                lng: data.lng,
-                time: new Date()
-            });
-        } catch (err) {
-            console.error('خطأ في حفظ الموقع:', err);
-        }
+        // الاحتفاظ فقط بآخر 100 موقع
+        if (locations.length > 100) locations.shift();
+        
+        // بث الموقع لجميع المستخدمين
+        io.emit('receive-location', {
+            userName: data.userName,
+            userRole: data.userRole,
+            lat: data.lat,
+            lng: data.lng,
+            time: new Date()
+        });
+        
+        console.log(`📍 موقع ${data.userName}: ${data.lat}, ${data.lng}`);
     });
     
     socket.on('disconnect', () => {
@@ -150,48 +122,57 @@ io.on('connection', (socket) => {
 
 // ==================== API Routes ====================
 
-// مسار صحي للتحقق من عمل الخادم
+// التحقق من صحة الخادم
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString(), session: req.session.userId ? 'active' : 'none' });
+    res.json({ 
+        status: 'ok', 
+        vesselsCount: vessels.length,
+        session: req.session.userId ? 'active' : 'none'
+    });
 });
 
 // تسجيل الدخول
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', (req, res) => {
     const { name, pass } = req.body;
     console.log('محاولة تسجيل دخول:', name);
     
-    try {
-        // التحقق من اتصال قاعدة البيانات
-        if (mongoose.connection.readyState !== 1) {
-            console.log('⚠️ قاعدة البيانات غير متصلة، استخدام المستخدم الافتراضي');
-            if (name === 'admin' && pass === '1234') {
-                req.session.userId = 'admin_id';
-                req.session.userRole = 'مسؤول';
-                req.session.userName = 'admin';
-                return res.json({ id: 'admin_id', name: 'admin', role: 'مسؤول' });
-            }
-            return res.status(401).json({ error: 'بيانات غير صحيحة' });
-        }
-        
-        const user = await User.findOne({ name, pass, enabled: true });
-        
-        if (!user) {
-            return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-        
-        req.session.userId = user._id;
-        req.session.userRole = user.role;
-        req.session.userName = user.name;
-        
-        res.json({ id: user._id, name: user.name, role: user.role });
-    } catch (err) {
-        console.error('خطأ في تسجيل الدخول:', err);
-        res.status(500).json({ error: 'خطأ في الخادم، يرجى المحاولة لاحقاً' });
+    const user = users.find(u => u.name === name && u.pass === pass && u.enabled === true);
+    
+    if (!user) {
+        return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
+    
+    req.session.userId = user.id;
+    req.session.userRole = user.role;
+    req.session.userName = user.name;
+    
+    // تسجيل نشاط تسجيل الدخول
+    logs.unshift({
+        id: Date.now().toString(),
+        userName: user.name,
+        userRole: user.role,
+        action: 'تسجيل دخول',
+        details: `قام بتسجيل الدخول إلى النظام`,
+        date: new Date().toLocaleDateString('ar-EG'),
+        time: new Date().toLocaleTimeString('ar-EG')
+    });
+    
+    res.json({ id: user.id, name: user.name, role: user.role });
 });
 
 // تسجيل الخروج
 app.post('/api/logout', (req, res) => {
+    if (req.session.userName) {
+        logs.unshift({
+            id: Date.now().toString(),
+            userName: req.session.userName,
+            userRole: req.session.userRole,
+            action: 'تسجيل خروج',
+            details: `قام بتسجيل الخروج من النظام`,
+            date: new Date().toLocaleDateString('ar-EG'),
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+    }
     req.session.destroy();
     res.json({ success: true });
 });
@@ -199,255 +180,295 @@ app.post('/api/logout', (req, res) => {
 // التحقق من الجلسة
 app.get('/api/check-session', (req, res) => {
     if (req.session.userId) {
-        res.json({ loggedIn: true, user: { name: req.session.userName, role: req.session.userRole } });
+        res.json({ 
+            loggedIn: true, 
+            user: { 
+                name: req.session.userName, 
+                role: req.session.userRole 
+            } 
+        });
     } else {
         res.json({ loggedIn: false });
     }
 });
 
 // ==================== مسارات المراكب ====================
-app.get('/api/vessels', isAuth, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json(vessels);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+
+// جلب جميع المراكب
+app.get('/api/vessels', isAuth, (req, res) => {
+    res.json(vessels);
+});
+
+// إضافة مركب جديد
+app.post('/api/vessels', canEdit, (req, res) => {
+    const newVessel = {
+        id: Date.now().toString(),
+        ...req.body,
+        cat: getCategory(req.body.len)
+    };
+    vessels.unshift(newVessel);
+    
+    // تسجيل النشاط
+    logs.unshift({
+        id: Date.now().toString(),
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        action: 'إضافة مركب',
+        details: `قام بإضافة مركب "${newVessel.name}" رقم ${newVessel.num || 'غير محدد'}`,
+        date: new Date().toLocaleDateString('ar-EG'),
+        time: new Date().toLocaleTimeString('ar-EG')
+    });
+    
+    res.status(201).json(newVessel);
+});
+
+// تعديل مركب
+app.put('/api/vessels/:id', canEdit, (req, res) => {
+    const index = vessels.findIndex(v => v.id === req.params.id);
+    if (index !== -1) {
+        const oldName = vessels[index].name;
+        vessels[index] = { 
+            ...vessels[index], 
+            ...req.body, 
+            cat: getCategory(req.body.len || vessels[index].len) 
+        };
+        
+        // تسجيل النشاط
+        logs.unshift({
+            id: Date.now().toString(),
+            userName: req.session.userName,
+            userRole: req.session.userRole,
+            action: 'تعديل مركب',
+            details: `قام بتعديل مركب "${oldName}" إلى "${vessels[index].name}"`,
+            date: new Date().toLocaleDateString('ar-EG'),
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+        
+        res.json(vessels[index]);
+    } else {
+        res.status(404).json({ error: 'المركب غير موجود' });
     }
 });
 
-app.post('/api/vessels', isAuth, async (req, res) => {
-    try {
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        res.status(201).json(vessel);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/vessels/:id', isAuth, async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(vessel);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/vessels/:id', isAuth, async (req, res) => {
-    try {
-        await Vessel.findByIdAndDelete(req.params.id);
+// حذف مركب
+app.delete('/api/vessels/:id', isAdmin, (req, res) => {
+    const index = vessels.findIndex(v => v.id === req.params.id);
+    if (index !== -1) {
+        const deletedName = vessels[index].name;
+        vessels = vessels.filter(v => v.id !== req.params.id);
+        
+        // تسجيل النشاط
+        logs.unshift({
+            id: Date.now().toString(),
+            userName: req.session.userName,
+            userRole: req.session.userRole,
+            action: 'حذف مركب',
+            details: `قام بحذف مركب "${deletedName}"`,
+            date: new Date().toLocaleDateString('ar-EG'),
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+        
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } else {
+        res.status(404).json({ error: 'المركب غير موجود' });
     }
 });
 
 // ==================== مسارات المستخدمين ====================
-app.get('/api/users', isAuth, isAdmin, async (req, res) => {
-    try {
-        const users = await User.find().select('-pass');
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+
+// جلب جميع المستخدمين
+app.get('/api/users', isAuth, isAdmin, (req, res) => {
+    const usersWithoutPass = users.map(({ pass, ...user }) => user);
+    res.json(usersWithoutPass);
+});
+
+// إضافة مستخدم جديد
+app.post('/api/users', isAuth, isAdmin, (req, res) => {
+    const { name, pass, role } = req.body;
+    
+    if (users.find(u => u.name === name)) {
+        return res.status(400).json({ error: 'اسم المستخدم موجود مسبقاً' });
+    }
+    
+    const newUser = { 
+        id: Date.now().toString(), 
+        name, 
+        pass, 
+        role: role || 'مشاهد', 
+        enabled: true 
+    };
+    users.push(newUser);
+    
+    // تسجيل النشاط
+    logs.unshift({
+        id: Date.now().toString(),
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        action: 'إضافة مستخدم',
+        details: `قام بإضافة مستخدم جديد: ${name} (${newUser.role})`,
+        date: new Date().toLocaleDateString('ar-EG'),
+        time: new Date().toLocaleTimeString('ar-EG')
+    });
+    
+    res.status(201).json({ id: newUser.id, name, role: newUser.role });
+});
+
+// تحديث مستخدم
+app.put('/api/users/:id', isAuth, isAdmin, (req, res) => {
+    const index = users.findIndex(u => u.id === req.params.id);
+    if (index !== -1) {
+        users[index] = { ...users[index], ...req.body };
+        const { pass, ...userWithoutPass } = users[index];
+        res.json(userWithoutPass);
+    } else {
+        res.status(404).json({ error: 'المستخدم غير موجود' });
     }
 });
 
-app.post('/api/users', isAuth, isAdmin, async (req, res) => {
-    try {
-        const { name, pass, role } = req.body;
-        const existing = await User.findOne({ name });
-        if (existing) return res.status(400).json({ error: 'اسم المستخدم موجود' });
+// حذف مستخدم
+app.delete('/api/users/:id', isAuth, isAdmin, (req, res) => {
+    const index = users.findIndex(u => u.id === req.params.id);
+    if (index !== -1) {
+        const deletedName = users[index].name;
+        users.splice(index, 1);
         
-        const user = new User({ name, pass, role, enabled: true });
-        await user.save();
-        res.status(201).json({ id: user._id, name, role });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/users/:id', isAuth, isAdmin, async (req, res) => {
-    try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-pass');
-        res.json(user);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/users/:id', isAuth, isAdmin, async (req, res) => {
-    try {
-        await User.findByIdAndDelete(req.params.id);
+        // تسجيل النشاط
+        logs.unshift({
+            id: Date.now().toString(),
+            userName: req.session.userName,
+            userRole: req.session.userRole,
+            action: 'حذف مستخدم',
+            details: `قام بحذف المستخدم: ${deletedName}`,
+            date: new Date().toLocaleDateString('ar-EG'),
+            time: new Date().toLocaleTimeString('ar-EG')
+        });
+        
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } else {
+        res.status(404).json({ error: 'المستخدم غير موجود' });
     }
 });
 
 // ==================== مسارات التذاكر ====================
-app.get('/api/tickets', isAuth, async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json(tickets);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+
+// جلب جميع التذاكر
+app.get('/api/tickets', isAuth, (req, res) => {
+    res.json(tickets);
 });
 
-app.post('/api/tickets', isAuth, async (req, res) => {
-    try {
-        const ticket = new Ticket(req.body);
-        await ticket.save();
-        res.status(201).json(ticket);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+// إضافة تذكرة جديدة
+app.post('/api/tickets', isAuth, (req, res) => {
+    const newTicket = {
+        id: Date.now().toString(),
+        ...req.body,
+        status: 'قيد المعالجة',
+        replies: []
+    };
+    tickets.unshift(newTicket);
+    
+    // تسجيل النشاط
+    logs.unshift({
+        id: Date.now().toString(),
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        action: 'إرسال تذكرة',
+        details: `قام بإرسال تذكرة دعم: ${newTicket.subject}`,
+        date: new Date().toLocaleDateString('ar-EG'),
+        time: new Date().toLocaleTimeString('ar-EG')
+    });
+    
+    res.status(201).json(newTicket);
 });
 
-app.put('/api/tickets/:id/reply', isAuth, isAdmin, async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        
+// الرد على تذكرة
+app.put('/api/tickets/:id/reply', isAuth, isAdmin, (req, res) => {
+    const ticket = tickets.find(t => t.id === req.params.id);
+    if (ticket) {
         ticket.replies.push(req.body.reply);
         ticket.status = 'تم الرد';
-        await ticket.save();
+        
         res.json(ticket);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } else {
+        res.status(404).json({ error: 'التذكرة غير موجودة' });
     }
 });
 
-app.put('/api/tickets/:id/close', isAuth, isAdmin, async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        
+// إغلاق تذكرة
+app.put('/api/tickets/:id/close', isAuth, isAdmin, (req, res) => {
+    const ticket = tickets.find(t => t.id === req.params.id);
+    if (ticket) {
         ticket.status = 'مغلقة';
-        await ticket.save();
         res.json(ticket);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } else {
+        res.status(404).json({ error: 'التذكرة غير موجودة' });
     }
 });
 
 // ==================== مسارات سجل النشاطات ====================
-app.get('/api/logs', isAuth, isAdmin, async (req, res) => {
-    try {
-        const logs = await Log.find().sort({ createdAt: -1 });
-        res.json(logs);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+
+// جلب سجل النشاطات
+app.get('/api/logs', isAuth, isAdmin, (req, res) => {
+    res.json(logs);
 });
 
-app.post('/api/logs', isAuth, async (req, res) => {
-    try {
-        const log = new Log(req.body);
-        await log.save();
-        res.status(201).json(log);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+// إضافة نشاط (يستخدم من前端)
+app.post('/api/logs', isAuth, (req, res) => {
+    const newLog = {
+        id: Date.now().toString(),
+        ...req.body,
+        date: new Date().toLocaleDateString('ar-EG'),
+        time: new Date().toLocaleTimeString('ar-EG')
+    };
+    logs.unshift(newLog);
+    res.status(201).json(newLog);
 });
 
 // ==================== مسارات GPS ====================
-app.get('/api/locations', isAuth, async (req, res) => {
-    try {
-        const locations = await Location.find().sort({ timestamp: -1 }).limit(100);
-        res.json(locations);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+
+// جلب المواقع المحفوظة
+app.get('/api/locations', isAuth, (req, res) => {
+    res.json(locations.slice(-50)); // آخر 50 موقع
 });
 
 // ==================== مسارات التصدير والاستيراد ====================
-app.get('/api/export-all', isAuth, isAdmin, async (req, res) => {
-    try {
-        const vessels = await Vessel.find();
-        const users = await User.find().select('-pass');
-        const tickets = await Ticket.find();
-        const logs = await Log.find();
-        const locations = await Location.find();
-        res.json({ vessels, users, tickets, logs, locations });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+
+// تصدير جميع البيانات
+app.get('/api/export-all', isAuth, isAdmin, (req, res) => {
+    res.json({
+        vessels,
+        users: users.map(({ pass, ...user }) => user),
+        tickets,
+        logs,
+        locations
+    });
 });
 
-app.post('/api/import-all', isAuth, isAdmin, async (req, res) => {
-    try {
-        const { vessels, users, tickets, logs, locations } = req.body;
-        if (vessels && vessels.length) await Vessel.insertMany(vessels);
-        if (users && users.length) await User.insertMany(users);
-        if (tickets && tickets.length) await Ticket.insertMany(tickets);
-        if (logs && logs.length) await Log.insertMany(logs);
-        if (locations && locations.length) await Location.insertMany(locations);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+// استيراد البيانات
+app.post('/api/import-all', isAuth, isAdmin, (req, res) => {
+    const { vessels: newVessels, tickets: newTickets, logs: newLogs } = req.body;
+    
+    if (newVessels && newVessels.length) vessels.push(...newVessels);
+    if (newTickets && newTickets.length) tickets.push(...newTickets);
+    if (newLogs && newLogs.length) logs.push(...newLogs);
+    
+    res.json({ success: true });
 });
 
-// ==================== إنشاء المستخدمين الافتراضيين ====================
-async function initializeDatabase() {
-    try {
-        // انتظار اتصال قاعدة البيانات
-        if (mongoose.connection.readyState !== 1) {
-            console.log('⚠️ انتظار اتصال قاعدة البيانات...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-        
-        if (mongoose.connection.readyState === 1) {
-            // إنشاء المستخدم admin إذا لم يكن موجوداً
-            const adminExists = await User.findOne({ name: 'admin' });
-            if (!adminExists) {
-                await User.create({ 
-                    name: 'admin', 
-                    pass: '1234', 
-                    role: 'مسؤول', 
-                    enabled: true 
-                });
-                console.log('✅ تم إنشاء مستخدم admin (admin / 1234)');
-            } else {
-                console.log('✅ مستخدم admin موجود مسبقاً');
-            }
-            
-            // إنشاء مستخدم تجريبي إذا لم يكن موجوداً
-            const viewerExists = await User.findOne({ name: 'user' });
-            if (!viewerExists) {
-                await User.create({ 
-                    name: 'user', 
-                    pass: 'user', 
-                    role: 'مشاهد', 
-                    enabled: true 
-                });
-                console.log('✅ تم إنشاء مستخدم تجريبي (user / user)');
-            }
-        } else {
-            console.log('⚠️ لا يمكن إنشاء المستخدمين الافتراضيين - قاعدة البيانات غير متصلة');
-        }
-    } catch (err) {
-        console.error('❌ خطأ في تهيئة قاعدة البيانات:', err.message);
-    }
-}
-
-// تشغيل الخادم
-server.listen(PORT, '0.0.0.0', async () => {
-    console.log(`\n🚀 الخادم يعمل على المنفذ ${PORT}`);
-    console.log(`🌐 الرابط: http://localhost:${PORT}`);
-    console.log(`\n📝 بيانات الدخول:`);
-    console.log(`   👑 admin / 1234 (مسؤول كامل الصلاحيات)`);
-    console.log(`   👤 user / user (مشاهد فقط)`);
-    
-    await initializeDatabase();
-    
-    if (mongoose.connection.readyState === 1) {
-        console.log(`\n✅ متصل بـ MongoDB Atlas بنجاح`);
-    } else {
-        console.log(`\n⚠️ يعمل بدون قاعدة بيانات - سيتم استخدام الجلسات فقط`);
-    }
-    
-    console.log(`\n💡 Socket.IO جاهز للعمل على /socket.io/socket.io.js`);
+// ==================== التشغيل ====================
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`
+╔══════════════════════════════════════════════════════════╗
+║     🚀 منظومة متابعة الوسائل البحرية - تعمل بنجاح       ║
+╠══════════════════════════════════════════════════════════╣
+║  📡 الخادم يعمل على: http://localhost:${PORT}             ║
+║  🔌 Socket.IO جاهز للعمل                                 ║
+╠══════════════════════════════════════════════════════════╣
+║  📝 بيانات الدخول:                                       ║
+║  👑 admin / 1234 (مسؤول - كامل الصلاحيات)               ║
+║  ✏️ editor / editor (محرر - يمكنه التعديل)              ║
+║  👤 user / user (مشاهد - قراءة فقط)                     ║
+╠══════════════════════════════════════════════════════════╣
+║  📊 عدد المراكب في النظام: ${vessels.length}              ║
+╚══════════════════════════════════════════════════════════╝
+    `);
 });
