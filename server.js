@@ -1,4 +1,4 @@
-معconst express = require('express');
+const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
@@ -81,7 +81,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'marine_system_secret_key_2025',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 3600000 } // ساعة واحدة
+    cookie: { maxAge: 3600000 }
 }));
 
 // دوال المساعدة
