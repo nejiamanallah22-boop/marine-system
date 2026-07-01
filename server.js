@@ -17,15 +17,23 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://marineUser:marineUser@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
 
 console.log('📡 محاولة الاتصال بقاعدة البيانات...');
+console.log('🔗 الرابط:', MONGO_URI.replace(/\/\/.*@/, '//****:****@')); // إخفاء كلمة المرور
 
 mongoose.connect(MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
 })
-.then(() => console.log('✅ متصل بـ MongoDB بنجاح'))
+.then(() => {
+    console.log('✅ متصل بـ MongoDB بنجاح');
+    console.log('📊 قاعدة البيانات:', mongoose.connection.db.databaseName);
+})
 .catch(err => {
     console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+    console.log('💡 تأكد من:');
+    console.log('   1. صحة اسم المستخدم وكلمة المرور');
+    console.log('   2. إضافة 0.0.0.0/0 في Network Access في MongoDB Atlas');
+    console.log('   3. أن الرابط صحيح');
 });
 
 // ==================== Middleware ====================
@@ -47,12 +55,26 @@ app.use(session({
 
 // نموذج المستخدم
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    pass: { type: String, required: true },
-    role: { type: String, enum: ['مسؤول', 'محرر', 'مشاهد'], default: 'مشاهد' },
-    enabled: { type: Boolean, default: true }
+    name: { 
+        type: String, 
+        required: [true, 'اسم المستخدم مطلوب'],
+        unique: true,
+        trim: true
+    },
+    pass: { 
+        type: String, 
+        required: [true, 'كلمة المرور مطلوبة']
+    },
+    role: { 
+        type: String, 
+        enum: ['مسؤول', 'محرر', 'مشاهد'], 
+        default: 'مشاهد' 
+    },
+    enabled: { 
+        type: Boolean, 
+        default: true 
+    }
 }, { timestamps: true });
-const User = mongoose.model('User', userSchema);
 
 // نموذج المركب
 const vesselSchema = new mongoose.Schema({
@@ -70,7 +92,6 @@ const vesselSchema = new mongoose.Schema({
     ref: String,
     cat: String
 }, { timestamps: true });
-const Vessel = mongoose.model('Vessel', vesselSchema);
 
 // نموذج تذكرة الدعم
 const ticketSchema = new mongoose.Schema({
@@ -88,7 +109,6 @@ const ticketSchema = new mongoose.Schema({
         time: String
     }]
 }, { timestamps: true });
-const Ticket = mongoose.model('Ticket', ticketSchema);
 
 // نموذج سجل النشاطات
 const logSchema = new mongoose.Schema({
@@ -99,7 +119,6 @@ const logSchema = new mongoose.Schema({
     date: String,
     time: String
 }, { timestamps: true });
-const Log = mongoose.model('Log', logSchema);
 
 // نموذج مواقع GPS
 const locationSchema = new mongoose.Schema({
@@ -109,7 +128,39 @@ const locationSchema = new mongoose.Schema({
     lng: { type: Number, required: true },
     timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
-const Location = mongoose.model('Location', locationSchema);
+
+// ==================== إنشاء النماذج ====================
+let User, Vessel, Ticket, Log, Location;
+
+try {
+    User = mongoose.model('User');
+} catch (error) {
+    User = mongoose.model('User', userSchema);
+}
+
+try {
+    Vessel = mongoose.model('Vessel');
+} catch (error) {
+    Vessel = mongoose.model('Vessel', vesselSchema);
+}
+
+try {
+    Ticket = mongoose.model('Ticket');
+} catch (error) {
+    Ticket = mongoose.model('Ticket', ticketSchema);
+}
+
+try {
+    Log = mongoose.model('Log');
+} catch (error) {
+    Log = mongoose.model('Log', logSchema);
+}
+
+try {
+    Location = mongoose.model('Location');
+} catch (error) {
+    Location = mongoose.model('Location', locationSchema);
+}
 
 // ==================== دوال المساعدة ====================
 function isAuthenticated(req, res, next) {
@@ -139,27 +190,62 @@ function getCurrentTime() {
 
 // ==================== مسارات API ====================
 
-// ✅ مسار تسجيل الدخول - يجب أن يكون أولاً
+// ✅ مسار تسجيل الدخول - مع تصحيح الأخطاء
 app.post('/api/login', async (req, res) => {
-    const { name, pass } = req.body;
-    console.log('📝 محاولة تسجيل دخول:', name);
+    console.log('📝 محاولة تسجيل دخول');
+    console.log('📦 البيانات المستلمة:', req.body);
     
     try {
+        const { name, pass } = req.body;
+        
+        // تحقق من وجود البيانات
+        if (!name || !pass) {
+            console.log('❌ البيانات ناقصة');
+            return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
+        }
+        
+        // تحقق من الاتصال بقاعدة البيانات
+        if (mongoose.connection.readyState !== 1) {
+            console.log('❌ قاعدة البيانات غير متصلة');
+            console.log('📊 حالة الاتصال:', mongoose.connection.readyState);
+            return res.status(500).json({ error: 'قاعدة البيانات غير متصلة' });
+        }
+        
+        console.log('🔍 البحث عن المستخدم:', name);
+        
+        // البحث عن المستخدم
         const user = await User.findOne({ name, pass, enabled: true });
+        
         if (!user) {
-            console.log('❌ فشل تسجيل الدخول: مستخدم غير موجود');
+            console.log('❌ مستخدم غير موجود أو كلمة مرور خاطئة');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
         
+        // حفظ الجلسة
         req.session.userId = user._id;
         req.session.userRole = user.role;
         req.session.userName = user.name;
         
         console.log('✅ تسجيل دخول ناجح:', name);
-        res.json({ id: user._id, name: user.name, role: user.role });
-    } catch (err) {
-        console.error('❌ خطأ في تسجيل الدخول:', err);
-        res.status(500).json({ error: 'خطأ داخلي في السيرفر' });
+        console.log('👤 الدور:', user.role);
+        console.log('🆔 المعرف:', user._id);
+        
+        res.json({ 
+            id: user._id, 
+            name: user.name, 
+            role: user.role 
+        });
+        
+    } catch (error) {
+        console.error('❌ خطأ في تسجيل الدخول:', error);
+        console.error('📝 تفاصيل الخطأ:', error.message);
+        console.error('📚 Stack Trace:', error.stack);
+        
+        res.status(500).json({ 
+            error: 'خطأ داخلي في السيرفر',
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 
@@ -172,7 +258,13 @@ app.post('/api/logout', (req, res) => {
 // مسار التحقق من الجلسة
 app.get('/api/check-session', (req, res) => {
     if (req.session.userId) {
-        res.json({ loggedIn: true, user: { name: req.session.userName, role: req.session.userRole } });
+        res.json({ 
+            loggedIn: true, 
+            user: { 
+                name: req.session.userName, 
+                role: req.session.userRole 
+            } 
+        });
     } else {
         res.json({ loggedIn: false });
     }
@@ -185,6 +277,7 @@ app.get('/api/vessels', isAuthenticated, async (req, res) => {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
         res.json(vessels);
     } catch (err) {
+        console.error('❌ خطأ في جلب المراكب:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -196,6 +289,7 @@ app.post('/api/vessels', isAuthenticated, hasRole(['مسؤول', 'محرر']), a
         console.log('✅ تم إضافة مركب جديد:', vessel.name);
         res.status(201).json(vessel);
     } catch (err) {
+        console.error('❌ خطأ في إضافة مركب:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -206,6 +300,7 @@ app.put('/api/vessels/:id', isAuthenticated, hasRole(['مسؤول', 'محرر'])
         if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
         res.json(vessel);
     } catch (err) {
+        console.error('❌ خطأ في تحديث مركب:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -216,6 +311,7 @@ app.delete('/api/vessels/:id', isAuthenticated, hasRole(['مسؤول']), async (
         if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
         res.json({ success: true });
     } catch (err) {
+        console.error('❌ خطأ في حذف مركب:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -227,6 +323,7 @@ app.get('/api/users', isAuthenticated, hasRole(['مسؤول']), async (req, res)
         const users = await User.find().select('-pass');
         res.json(users);
     } catch (err) {
+        console.error('❌ خطأ في جلب المستخدمين:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -241,6 +338,7 @@ app.post('/api/users', isAuthenticated, hasRole(['مسؤول']), async (req, res
         await user.save();
         res.status(201).json({ id: user._id, name, role });
     } catch (err) {
+        console.error('❌ خطأ في إضافة مستخدم:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -251,6 +349,7 @@ app.put('/api/users/:id', isAuthenticated, hasRole(['مسؤول']), async (req, 
         if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
         res.json(user);
     } catch (err) {
+        console.error('❌ خطأ في تحديث مستخدم:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -261,6 +360,7 @@ app.delete('/api/users/:id', isAuthenticated, hasRole(['مسؤول']), async (re
         if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
         res.json({ success: true });
     } catch (err) {
+        console.error('❌ خطأ في حذف مستخدم:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -272,6 +372,7 @@ app.get('/api/tickets', isAuthenticated, hasRole(['مسؤول']), async (req, re
         const tickets = await Ticket.find().sort({ createdAt: -1 });
         res.json(tickets);
     } catch (err) {
+        console.error('❌ خطأ في جلب التذاكر:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -282,6 +383,7 @@ app.post('/api/tickets', isAuthenticated, async (req, res) => {
         await ticket.save();
         res.status(201).json(ticket);
     } catch (err) {
+        console.error('❌ خطأ في إضافة تذكرة:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -296,6 +398,7 @@ app.put('/api/tickets/:id/reply', isAuthenticated, hasRole(['مسؤول']), asyn
         await ticket.save();
         res.json(ticket);
     } catch (err) {
+        console.error('❌ خطأ في الرد على تذكرة:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -309,6 +412,7 @@ app.put('/api/tickets/:id/close', isAuthenticated, hasRole(['مسؤول']), asyn
         await ticket.save();
         res.json(ticket);
     } catch (err) {
+        console.error('❌ خطأ في إغلاق تذكرة:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -320,6 +424,7 @@ app.get('/api/logs', isAuthenticated, hasRole(['مسؤول']), async (req, res) 
         const logs = await Log.find().sort({ createdAt: -1 });
         res.json(logs);
     } catch (err) {
+        console.error('❌ خطأ في جلب السجلات:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -330,6 +435,7 @@ app.post('/api/logs', isAuthenticated, async (req, res) => {
         await log.save();
         res.status(201).json(log);
     } catch (err) {
+        console.error('❌ خطأ في إضافة سجل:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -349,6 +455,7 @@ app.post('/api/locations', isAuthenticated, async (req, res) => {
         await location.save();
         res.status(201).json(location);
     } catch (err) {
+        console.error('❌ خطأ في حفظ موقع:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -358,6 +465,7 @@ app.get('/api/locations', isAuthenticated, hasRole(['مسؤول']), async (req, 
         const locations = await Location.find().sort({ timestamp: -1 });
         res.json(locations);
     } catch (err) {
+        console.error('❌ خطأ في جلب المواقع:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -373,6 +481,7 @@ app.get('/api/export-all', isAuthenticated, hasRole(['مسؤول']), async (req,
         const locations = await Location.find();
         res.json({ vessels, users, tickets, logs, locations });
     } catch (err) {
+        console.error('❌ خطأ في التصدير:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -387,6 +496,7 @@ app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req
         if (locations && locations.length > 0) await Location.insertMany(locations);
         res.json({ success: true, message: 'تم استيراد البيانات بنجاح' });
     } catch (err) {
+        console.error('❌ خطأ في الاستيراد:', err);
         res.status(400).json({ error: err.message });
     }
 });
@@ -427,10 +537,10 @@ io.on('connection', (socket) => {
 
 // ==================== الملفات الثابتة ====================
 
-// ✅ مسار الملفات الثابتة - بعد مسارات API
+// خدمة الملفات الثابتة من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ مسار الصفحة الرئيسية
+// مسار الصفحة الرئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -438,7 +548,19 @@ app.get('/', (req, res) => {
 // ==================== إنشاء مستخدم admin ====================
 (async () => {
     try {
+        // انتظر حتى يتصل mongoose
+        const maxAttempts = 10;
+        let attempts = 0;
+        
+        while (mongoose.connection.readyState !== 1 && attempts < maxAttempts) {
+            console.log(`⏳ انتظار الاتصال بقاعدة البيانات... (${attempts + 1}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
+        }
+        
         if (mongoose.connection.readyState === 1) {
+            console.log('✅ قاعدة البيانات جاهزة، جاري إنشاء المستخدم admin...');
+            
             const adminExists = await User.findOne({ name: 'admin' });
             if (!adminExists) {
                 await User.create({
@@ -451,6 +573,8 @@ app.get('/', (req, res) => {
             } else {
                 console.log('✅ مستخدم admin موجود بالفعل');
             }
+        } else {
+            console.log('⚠️ لم يتم إنشاء المستخدم admin بسبب عدم الاتصال بقاعدة البيانات');
         }
     } catch (err) {
         console.error('❌ خطأ في إنشاء المستخدم:', err.message);
@@ -466,4 +590,13 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`   📧 admin`);
     console.log(`   🔑 1234`);
     console.log(`========================================\n`);
+});
+
+// ==================== التعامل مع الأخطاء غير المتوقعة ====================
+process.on('uncaughtException', (err) => {
+    console.error('❌ خطأ غير متوقع:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('❌ وعد مرفوض غير معالج:', err);
 });
