@@ -1,3 +1,6 @@
+// server.js
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
@@ -11,11 +14,24 @@ const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 
 // ==================== الاتصال بقاعدة البيانات ====================
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://marineUser:marineUser@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/marine_fleet';
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ متصل بـ MongoDB Atlas بنجاح'))
-    .catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message));
+console.log('📡 محاولة الاتصال بقاعدة البيانات...');
+
+mongoose.connect(MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+})
+.then(() => console.log('✅ متصل بـ MongoDB بنجاح'))
+.catch(err => {
+    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+    console.log('💡 تأكد من:');
+    console.log('   1. صحة اسم المستخدم وكلمة المرور في ملف .env');
+    console.log('   2. إضافة عنوان IP الخاص بك في Network Access في MongoDB Atlas');
+    console.log('   3. تشغيل MongoDB محلياً إذا كنت تستخدمه');
+    console.log('   4. أن ملف .env موجود في نفس المجلد');
+});
 
 // ==================== نماذج قاعدة البيانات ====================
 
@@ -89,10 +105,10 @@ const Location = mongoose.model('Location', locationSchema);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ تصحيح: خدمة الملفات الثابتة من المجلد الحالي
+// خدمة الملفات الثابتة من المجلد الحالي
 app.use(express.static(__dirname));
 
-// ✅ إضافة: خدمة الصفحة الرئيسية
+// خدمة الصفحة الرئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -102,7 +118,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'marine_system_secret_key_2025',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 3600000 }
+    cookie: { 
+        maxAge: 3600000,
+        secure: process.env.NODE_ENV === 'production'
+    }
 }));
 
 // ==================== دوال المساعدة ====================
@@ -442,17 +461,22 @@ io.on('connection', (socket) => {
 // ==================== إنشاء مستخدم admin افتراضي ====================
 (async () => {
     try {
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (!adminExists) {
-            await User.create({
-                name: 'admin',
-                pass: '1234',
-                role: 'مسؤول',
-                enabled: true
-            });
-            console.log('✅ تم إنشاء مستخدم admin افتراضي (admin / 1234)');
+        // تأكد من الاتصال بقاعدة البيانات قبل إنشاء المستخدم
+        if (mongoose.connection.readyState === 1) {
+            const adminExists = await User.findOne({ name: 'admin' });
+            if (!adminExists) {
+                await User.create({
+                    name: 'admin',
+                    pass: '1234',
+                    role: 'مسؤول',
+                    enabled: true
+                });
+                console.log('✅ تم إنشاء مستخدم admin افتراضي (admin / 1234)');
+            } else {
+                console.log('✅ مستخدم admin موجود بالفعل');
+            }
         } else {
-            console.log('✅ مستخدم admin موجود بالفعل');
+            console.log('⚠️ لم يتم إنشاء المستخدم admin بسبب عدم الاتصال بقاعدة البيانات');
         }
     } catch (err) {
         console.error('❌ خطأ في إنشاء المستخدم:', err.message);
@@ -468,4 +492,11 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`   📧 admin`);
     console.log(`   🔑 1234`);
     console.log(`========================================\n`);
+});
+
+// ==================== إغلاق الاتصال بقاعدة البيانات عند إيقاف الخادم ====================
+process.on('SIGINT', async () => {
+    await mongoose.connection.close();
+    console.log('🔌 تم إغلاق الاتصال بقاعدة البيانات');
+    process.exit(0);
 });
