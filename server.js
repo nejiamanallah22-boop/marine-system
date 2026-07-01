@@ -2,8 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const session = require('express-session');
 const path = require('path');
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 
 // ==================== الاتصال بقاعدة البيانات ====================
@@ -71,10 +75,27 @@ const logSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Log = mongoose.model('Log', logSchema);
 
+// نموذج مواقع GPS
+const locationSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: String,
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+    timestamp: { type: Date, default: Date.now }
+}, { timestamps: true });
+const Location = mongoose.model('Location', locationSchema);
+
 // ==================== Middleware ====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+
+// ✅ تصحيح: خدمة الملفات الثابتة من المجلد الحالي
+app.use(express.static(__dirname));
+
+// ✅ إضافة: خدمة الصفحة الرئيسية
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // إدارة الجلسات
 app.use(session({
@@ -84,7 +105,7 @@ app.use(session({
     cookie: { maxAge: 3600000 }
 }));
 
-// دوال المساعدة
+// ==================== دوال المساعدة ====================
 function isAuthenticated(req, res, next) {
     if (req.session.userId) return next();
     res.status(401).json({ error: 'غير مصرح، يرجى تسجيل الدخول' });
@@ -92,6 +113,9 @@ function isAuthenticated(req, res, next) {
 
 function hasRole(roles) {
     return (req, res, next) => {
+        if (!req.session.userId) {
+            return res.status(401).json({ error: 'غير مصرح، يرجى تسجيل الدخول' });
+        }
         if (roles.includes(req.session.userRole)) return next();
         res.status(403).json({ error: 'ليس لديك صلاحية لهذه العملية' });
     };
@@ -318,6 +342,36 @@ app.post('/api/logs', isAuthenticated, async (req, res) => {
     }
 });
 
+// ==================== مسارات GPS والمواقع ====================
+
+// حفظ موقع المستخدم
+app.post('/api/locations', isAuthenticated, async (req, res) => {
+    try {
+        const { lat, lng } = req.body;
+        const location = new Location({
+            userName: req.session.userName,
+            userRole: req.session.userRole,
+            lat: lat,
+            lng: lng,
+            timestamp: new Date()
+        });
+        await location.save();
+        res.status(201).json(location);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// جلب جميع المواقع (للمسؤول فقط)
+app.get('/api/locations', isAuthenticated, hasRole(['مسؤول']), async (req, res) => {
+    try {
+        const locations = await Location.find().sort({ timestamp: -1 });
+        res.json(locations);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ==================== مسارات التصدير والاستيراد ====================
 
 // تصدير جميع البيانات (للمسؤول فقط)
@@ -327,7 +381,8 @@ app.get('/api/export-all', isAuthenticated, hasRole(['مسؤول']), async (req,
         const users = await User.find().select('-pass');
         const tickets = await Ticket.find();
         const logs = await Log.find();
-        res.json({ vessels, users, tickets, logs });
+        const locations = await Location.find();
+        res.json({ vessels, users, tickets, logs, locations });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -336,15 +391,52 @@ app.get('/api/export-all', isAuthenticated, hasRole(['مسؤول']), async (req,
 // استيراد جميع البيانات (للمسؤول فقط)
 app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req, res) => {
     try {
-        const { vessels, users, tickets, logs } = req.body;
-        if (vessels) await Vessel.insertMany(vessels);
-        if (users) await User.insertMany(users);
-        if (tickets) await Ticket.insertMany(tickets);
-        if (logs) await Log.insertMany(logs);
-        res.json({ success: true });
+        const { vessels, users, tickets, logs, locations } = req.body;
+        if (vessels && vessels.length > 0) await Vessel.insertMany(vessels);
+        if (users && users.length > 0) await User.insertMany(users);
+        if (tickets && tickets.length > 0) await Ticket.insertMany(tickets);
+        if (logs && logs.length > 0) await Log.insertMany(logs);
+        if (locations && locations.length > 0) await Location.insertMany(locations);
+        res.json({ success: true, message: 'تم استيراد البيانات بنجاح' });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
+});
+
+// ==================== Socket.IO ====================
+
+io.on('connection', (socket) => {
+    console.log('📡 مستخدم متصل:', socket.id);
+    
+    socket.on('send-location', async (data) => {
+        console.log('📍 موقع مستلم من:', data.userName);
+        
+        // حفظ الموقع في قاعدة البيانات
+        try {
+            const location = new Location({
+                userName: data.userName,
+                userRole: data.userRole || 'مستخدم',
+                lat: data.lat,
+                lng: data.lng,
+                timestamp: new Date()
+            });
+            await location.save();
+        } catch (err) {
+            console.error('❌ خطأ في حفظ الموقع:', err);
+        }
+        
+        // بث الموقع لجميع المستخدمين الآخرين
+        socket.broadcast.emit('receive-location', {
+            userName: data.userName,
+            lat: data.lat,
+            lng: data.lng,
+            time: new Date().toISOString()
+        });
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('📡 مستخدم غير متصل:', socket.id);
+    });
 });
 
 // ==================== إنشاء مستخدم admin افتراضي ====================
@@ -368,7 +460,7 @@ app.post('/api/import-all', isAuthenticated, hasRole(['مسؤول']), async (req
 })();
 
 // ==================== تشغيل الخادم ====================
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`\n🚀 ========================================`);
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
     console.log(`🚀 ========================================`);
