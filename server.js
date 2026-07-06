@@ -227,10 +227,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
     console.log('   🔑 1234');
-    console.log('   📧 user');
-    console.log('   🔑 1234');
-    console.log('   📧 viewer');
-    console.log('   🔑 1234');
     console.log('========================================');
     console.log('📍 نظام تتبع GPS نشط');
     console.log('========================================');
