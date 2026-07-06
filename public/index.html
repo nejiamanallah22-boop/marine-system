@@ -14,18 +14,21 @@
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); display: flex; justify-content: center; align-items: center; z-index: 9999; }
         .login-box { background: white; padding: 30px; border-radius: 15px; width: 350px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
-        .login-box button { width: 100%; }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .login-box button:hover { background: #1e5a22; }
         .container { max-width: 1550px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); border-top: 6px solid var(--primary); }
         header { background: var(--primary); color: white; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 20px; position: relative; }
         .header-logo { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 60px; height: auto; opacity: 0.85; }
         .developer-info { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #2e7d32; padding: 6px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1em; display: inline-block; }
         .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
+        .btn:hover { transform: scale(1.05); }
         .btn-blue { background: var(--primary); } 
         .btn-green { background: #28a745; } 
         .btn-orange { background: #f39c12; }
         .btn-red { background: var(--accent); }
-        .btn-sm { padding: 5px 10px; font-size: 0.85em; cursor: pointer; border: none; color: white; border-radius: 3px; }
+        .btn-sm { padding: 5px 10px; font-size: 0.85em; cursor: pointer; border: none; color: white; border-radius: 3px; transition: 0.3s; }
+        .btn-sm:hover { opacity: 0.8; }
         .btn-warning { background: #ffc107; color: #333; }
         .btn-purple { background: #6f42c1; }
         .btn-cyan { background: #17a2b8; }
@@ -68,69 +71,19 @@
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
-        
-        .scroll-buttons {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        .scroll-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .scroll-btn:hover {
-            transform: scale(1.1);
-            background: #1e5a22;
-        }
-        
-        .damage-column {
-            min-width: 200px;
-            max-width: 300px;
-            word-break: break-word;
-            white-space: normal;
-        }
-        
-        .ticket-reply {
-            background: #e9ecef;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: right;
-        }
-
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            opacity: 0.08;
-            z-index: 0;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .watermark span {
-            font-size: 200px;
-        }
-        
+        .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
+        .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
+        .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; opacity: 0.08; z-index: 0; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .watermark span { font-size: 200px; }
         .map-container { height: 500px; width: 100%; margin: 15px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
         #trackMap { height: 100%; width: 100%; }
-        
+        .gps-status { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-left: 5px; }
+        .gps-active { background: #28a745; animation: pulse 1.5s infinite; }
+        .gps-inactive { background: #dc3545; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -145,7 +98,7 @@
         <h2 style="color:#2e7d32">⚓ منظومة الوسائل البحرية</h2>
         <input type="text" id="username" placeholder="اسم المستخدم">
         <input type="password" id="password" placeholder="كلمة المرور">
-        <button class="btn btn-blue" onclick="doLogin()">دخول</button>
+        <button onclick="doLogin()">دخول</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 </div>
@@ -214,7 +167,6 @@
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         
-        <!-- جدول الأسطول فقط -->
         <div class="region-table-card">
             <div class="region-table-header">⚓ الأسطول البحري</div>
             <div class="scrollable-table">
@@ -310,12 +262,18 @@
     <!-- ==================== صفحة خريطة التتبع ==================== -->
     <div id="pageMap" class="hidden">
         <div class="filter-bar">
-            <button class="btn-sm btn-cyan" onclick="startTracking()" id="startTrackingBtn">📍 بدء مشاركة الموقع</button>
-            <button class="btn-sm btn-red" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">⏹️ إيقاف المشاركة</button>
+            <span style="font-weight:bold; color:var(--primary);">📍 تتبع GPS المباشر</span>
+            <span id="gpsStatusIndicator">
+                <span class="gps-status gps-inactive" id="gpsDot"></span>
+                <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
+            </span>
+            <button class="btn-sm btn-cyan" onclick="startTracking()" id="startTrackingBtn">▶️ بدء التتبع المباشر</button>
+            <button class="btn-sm btn-red" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">⏹️ إيقاف التتبع</button>
             <button class="btn-sm btn-green" onclick="loadLocations()">🔄 تحديث الخريطة</button>
             <button class="btn-sm btn-blue" onclick="centerMapOnUser()">🎯 مركز موقعي</button>
+            <button class="btn-sm btn-success" onclick="getRealLocation()" style="background:#28a745;">📍 موقعي الحقيقي</button>
         </div>
-        <div id="mapStatus" style="text-align:center; margin:10px; color:#666;"></div>
+        <div id="mapStatus" style="text-align:center; margin:10px; color:#666; padding:8px; background:#f8f9fa; border-radius:8px;">📍 اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي</div>
         <div class="map-container">
             <div id="trackMap"></div>
         </div>
@@ -367,11 +325,6 @@
     let trackingMap = null;
     let trackingMarkers = {};
     let socket = null;
-
-    // متغيرات التتبع التلقائي
-    let autoTrackingInterval = null;
-    let fakeLat = 36.8065; // تونس العاصمة
-    let fakeLng = 10.1815;
 
     const ZONES_DATA = {
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
@@ -490,21 +443,38 @@
     // ==================== دوال GPS و Socket ====================
     function initSocket() {
         if (socket) return;
-        socket = io();
-        
-        socket.on('receive-location', (data) => {
-            console.log('📍 موقع مستلم:', data);
-            updateMapMarker(data.userName, data.lat, data.lng, data.time);
-            showToast(`📍 تم تحديث موقع المستخدم: ${data.userName}`);
-        });
+        try {
+            socket = io();
+            socket.on('connect', () => {
+                console.log('✅ متصل بـ Socket.IO');
+                if (currentUser) {
+                    socket.emit('user-connected', { userName: currentUser.name });
+                }
+            });
+            socket.on('receive-location', (data) => {
+                console.log('📍 موقع مستلم:', data);
+                updateMapMarker(data.userName, data.lat, data.lng, data.time);
+                showToast(`📍 تم تحديث موقع: ${data.userName}`);
+            });
+            socket.on('disconnect', () => {
+                console.log('❌ غير متصل بـ Socket.IO');
+            });
+        } catch(e) {
+            console.error('خطأ في Socket:', e);
+        }
     }
 
     function initTrackingMap() {
         if (trackingMap) return;
-        trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        }).addTo(trackingMap);
+        try {
+            trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+            }).addTo(trackingMap);
+            console.log('✅ تم تهيئة الخريطة');
+        } catch(e) {
+            console.error('خطأ في الخريطة:', e);
+        }
     }
 
     function updateMapMarker(userName, lat, lng, time) {
@@ -513,73 +483,245 @@
         const timeFormatted = time ? new Date(time).toLocaleString('ar-EG') : new Date().toLocaleString('ar-EG');
         if (trackingMarkers[key]) {
             trackingMarkers[key].setLatLng([lat, lng]);
-            trackingMarkers[key].bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${timeFormatted}`);
+            trackingMarkers[key].setPopupContent(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
         } else {
-            const marker = L.marker([lat, lng]).addTo(trackingMap);
-            marker.bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${timeFormatted}`);
+            const icon = L.divIcon({
+                html: `<div style="background:#2e7d32; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 10px rgba(0,0,0,0.3); font-size:16px;">📍</div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+            const marker = L.marker([lat, lng], { icon: icon }).addTo(trackingMap);
+            marker.bindPopup(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
             trackingMarkers[key] = marker;
         }
-        trackingMap.setView([lat, lng], 12);
+        if (userName === currentUser?.name) {
+            trackingMap.setView([lat, lng], 13);
+        }
     }
 
-    // ==================== التتبع التلقائي بدون GPS ====================
+    function updateGpsStatus(active, text) {
+        const dot = document.getElementById('gpsDot');
+        const statusText = document.getElementById('gpsStatusText');
+        if (active) {
+            dot.className = 'gps-status gps-active';
+            statusText.textContent = text || 'نشط';
+            statusText.style.color = '#28a745';
+        } else {
+            dot.className = 'gps-status gps-inactive';
+            statusText.textContent = text || 'غير نشط';
+            statusText.style.color = '#dc3545';
+        }
+    }
+
+    // ==================== التتبع المباشر بالـ GPS ====================
     function startTracking() {
         if (!currentUser) {
             showToast("الرجاء تسجيل الدخول أولاً", true);
             return;
         }
         
+        if (!navigator.geolocation) {
+            showToast("المتصفح لا يدعم تحديد الموقع", true);
+            return;
+        }
+        
         if (!socket) initSocket();
         if (!trackingMap) initTrackingMap();
         
-        // إرسال موقع افتراضي فوراً
-        if (socket && currentUser) {
-            socket.emit('send-location', {
-                userName: currentUser.name,
-                userRole: currentUser.role,
-                lat: fakeLat,
-                lng: fakeLng
-            });
-            updateMapMarker(currentUser.name, fakeLat, fakeLng, new Date().toISOString());
-            document.getElementById('mapStatus').innerHTML = `📍 موقع افتراضي: ${fakeLat.toFixed(6)}, ${fakeLng.toFixed(6)} (تونس)`;
-            showToast("📍 تم مشاركة موقع افتراضي");
-        }
+        showToast("⏳ جاري الحصول على موقعك...");
+        document.getElementById('mapStatus').innerHTML = "⏳ جاري الحصول على موقعك...";
         
-        // تحديث الموقع كل 5 ثوانٍ (حركة عشوائية)
-        if (autoTrackingInterval) {
-            clearInterval(autoTrackingInterval);
-        }
-        
-        autoTrackingInterval = setInterval(() => {
-            if (socket && currentUser) {
-                // حركة عشوائية بسيطة (تغير طفيف في الموقع)
-                fakeLat += (Math.random() - 0.5) * 0.005;
-                fakeLng += (Math.random() - 0.5) * 0.005;
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
                 
-                socket.emit('send-location', {
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: fakeLat,
-                    lng: fakeLng
-                });
-                updateMapMarker(currentUser.name, fakeLat, fakeLng, new Date().toISOString());
-            }
-        }, 5000);
+                if (socket && currentUser) {
+                    socket.emit('send-location', {
+                        userName: currentUser.name,
+                        userRole: currentUser.role,
+                        lat: latitude,
+                        lng: longitude
+                    });
+                    updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
+                    document.getElementById('mapStatus').innerHTML = `📍 موقعك الحقيقي: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                    showToast(`✅ تم تحديد موقعك بدقة`);
+                    updateGpsStatus(true, 'مباشر');
+                }
+                
+                // حفظ الموقع في السيرفر
+                fetch('/api/locations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userName: currentUser.name,
+                        userRole: currentUser.role,
+                        lat: latitude,
+                        lng: longitude
+                    })
+                }).catch(err => console.error('خطأ في حفظ الموقع:', err));
+                
+                // تحديث الموقع كل 10 ثوانٍ
+                if (trackingInterval) {
+                    clearInterval(trackingInterval);
+                }
+                
+                trackingInterval = setInterval(() => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            const newLat = pos.coords.latitude;
+                            const newLng = pos.coords.longitude;
+                            
+                            if (socket && currentUser) {
+                                socket.emit('send-location', {
+                                    userName: currentUser.name,
+                                    userRole: currentUser.role,
+                                    lat: newLat,
+                                    lng: newLng
+                                });
+                                updateMapMarker(currentUser.name, newLat, newLng, new Date().toISOString());
+                                document.getElementById('mapStatus').innerHTML = `📍 تحديث الموقع: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
+                            }
+                            
+                            fetch('/api/locations', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: currentUser.name,
+                                    userRole: currentUser.role,
+                                    lat: newLat,
+                                    lng: newLng
+                                })
+                            }).catch(err => console.error('خطأ في حفظ الموقع:', err));
+                        },
+                        (error) => {
+                            console.error('خطأ في تحديث الموقع:', error);
+                            document.getElementById('mapStatus').innerHTML = `❌ خطأ في تحديث الموقع: ${error.message}`;
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    );
+                }, 10000);
+            },
+            (error) => {
+                console.error('خطأ في الحصول على الموقع:', error);
+                document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الموقع: ${error.message}`;
+                showToast(`❌ خطأ في GPS: ${error.message}`, true);
+                updateGpsStatus(false, 'خطأ');
+                
+                if (error.code === 1) {
+                    showToast("⚠️ يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح", true);
+                }
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
         
         document.getElementById('startTrackingBtn').style.display = 'none';
         document.getElementById('stopTrackingBtn').style.display = 'inline-block';
-        showToast("✅ بدأ التتبع التلقائي (موقع افتراضي)");
     }
 
     function stopTracking() {
-        if (autoTrackingInterval) {
-            clearInterval(autoTrackingInterval);
-            autoTrackingInterval = null;
+        if (trackingInterval) {
+            clearInterval(trackingInterval);
+            trackingInterval = null;
         }
         document.getElementById('startTrackingBtn').style.display = 'inline-block';
         document.getElementById('stopTrackingBtn').style.display = 'none';
-        document.getElementById('mapStatus').innerHTML = '⏹️ توقفت مشاركة الموقع';
-        showToast("⏹️ تم إيقاف مشاركة الموقع");
+        document.getElementById('mapStatus').innerHTML = '⏹️ توقف التتبع';
+        updateGpsStatus(false, 'متوقف');
+        showToast("⏹️ تم إيقاف التتبع");
+    }
+
+    // ==================== الحصول على الموقع الحقيقي فوراً ====================
+    function getRealLocation() {
+        if (!currentUser) {
+            showToast("الرجاء تسجيل الدخول أولاً", true);
+            return;
+        }
+        
+        if (!navigator.geolocation) {
+            showToast("المتصفح لا يدعم تحديد الموقع", true);
+            return;
+        }
+        
+        showToast("⏳ جاري تحديد موقعك...");
+        document.getElementById('mapStatus').innerHTML = "⏳ جاري تحديد موقعك...";
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                
+                if (!socket) initSocket();
+                if (!trackingMap) initTrackingMap();
+                
+                if (socket && currentUser) {
+                    socket.emit('send-location', {
+                        userName: currentUser.name,
+                        userRole: currentUser.role,
+                        lat: latitude,
+                        lng: longitude
+                    });
+                    updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
+                    document.getElementById('mapStatus').innerHTML = `📍 موقعك الحقيقي: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                    showToast(`✅ تم تحديد موقعك بدقة`);
+                }
+                
+                fetch('/api/locations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userName: currentUser.name,
+                        userRole: currentUser.role,
+                        lat: latitude,
+                        lng: longitude,
+                        action: 'تحديد موقع'
+                    })
+                }).catch(err => console.error('خطأ:', err));
+            },
+            (error) => {
+                console.error('خطأ:', error);
+                document.getElementById('mapStatus').innerHTML = `❌ تعذر تحديد الموقع: ${error.message}`;
+                showToast(`❌ خطأ: ${error.message}`, true);
+                
+                if (error.code === 1) {
+                    showToast("⚠️ يرجى السماح بالوصول إلى الموقع في إعدادات Chrome", true);
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    // ==================== تسجيل موقع المستخدم عند الدخول ====================
+    function logUserLocation() {
+        if (!currentUser) return;
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    
+                    await logActivity("دخول من موقع", `قام بتسجيل الدخول من: ${latitude}, ${longitude}`);
+                    
+                    try {
+                        await fetch('/api/locations', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userName: currentUser.name,
+                                userRole: currentUser.role,
+                                lat: latitude,
+                                lng: longitude,
+                                action: 'تسجيل دخول'
+                            })
+                        });
+                    } catch(e) {
+                        console.error('خطأ في حفظ موقع الدخول:', e);
+                    }
+                },
+                (error) => {
+                    console.log('لا يمكن تحديد موقع الدخول:', error.message);
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
     }
 
     async function loadLocations() {
@@ -603,11 +745,17 @@
 
     function centerMapOnUser() {
         if (!trackingMap) initTrackingMap();
-        if (fakeLat && fakeLng) {
-            trackingMap.setView([fakeLat, fakeLng], 13);
-            showToast("🎯 تم التمركز على الموقع الافتراضي");
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    trackingMap.setView([pos.coords.latitude, pos.coords.longitude], 15);
+                    showToast("🎯 تم التمركز على موقعك");
+                },
+                () => showToast("لا يمكن الحصول على موقعك", true),
+                { enableHighAccuracy: true }
+            );
         } else {
-            showToast("لا يوجد موقع لعرضه", true);
+            showToast("المتصفح لا يدعم تحديد الموقع", true);
         }
     }
 
@@ -650,7 +798,6 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
             
-            // تهيئة Socket والخريطة
             initSocket();
             initTrackingMap();
             
@@ -682,6 +829,10 @@
             if(isAdmin) { await renderUsers(); await renderTrack(); }
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
             showToast(`مرحباً ${username}`);
+            
+            // تسجيل موقع المستخدم عند الدخول
+            logUserLocation();
+            
         } catch(error) {
             errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
             errorDiv.style.display = "block";
@@ -835,7 +986,6 @@
         }
     }
     
-    // ==================== دالة renderMain ====================
     async function renderMain() {
         try {
             let data = await loadVessels();
@@ -1695,6 +1845,7 @@
     window.stopTracking = stopTracking;
     window.loadLocations = loadLocations;
     window.centerMapOnUser = centerMapOnUser;
+    window.getRealLocation = getRealLocation;
 </script>
 </body>
 </html>
