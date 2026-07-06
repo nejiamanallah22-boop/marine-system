@@ -30,6 +30,17 @@ let memoryLogs = [];
 let memoryLocations = [];
 let onlineUsers = new Set();
 
+// ==================== دوال مساعدة ====================
+function getCurrentDate() {
+    const now = new Date();
+    return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
 // ==================== مسار تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
     const { name, pass } = req.body;
@@ -47,7 +58,6 @@ app.post('/api/login', (req, res) => {
     res.json({ id: user.name, name: user.name, role: user.role });
 });
 
-// ==================== مسار تسجيل الخروج ====================
 app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
@@ -84,6 +94,31 @@ app.get('/api/users', (req, res) => {
         return { ...rest, enabled: true, _id: u.name };
     });
     res.json(users);
+});
+
+app.post('/api/users', (req, res) => {
+    const { name, pass, role } = req.body;
+    if (DEFAULT_USERS.find(u => u.name === name)) {
+        return res.status(400).json({ error: 'اسم المستخدم موجود' });
+    }
+    const user = { name, pass, role, enabled: true };
+    DEFAULT_USERS.push(user);
+    res.status(201).json(user);
+});
+
+app.put('/api/users/:id', (req, res) => {
+    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...req.body };
+    const { pass, ...rest } = DEFAULT_USERS[index];
+    res.json(rest);
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    DEFAULT_USERS.splice(index, 1);
+    res.json({ success: true });
 });
 
 // ==================== مسارات التذاكر ====================
@@ -178,8 +213,7 @@ io.on('connection', (socket) => {
                 userRole: data.userRole || 'مستخدم',
                 lat: data.lat,
                 lng: data.lng,
-                timestamp: new Date().toISOString(),
-                _id: Date.now().toString()
+                timestamp: new Date().toISOString()
             };
             memoryLocations.push(locationData);
             
@@ -212,10 +246,21 @@ io.on('connection', (socket) => {
 });
 
 // ==================== الملفات الثابتة ====================
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    const fs = require('fs');
+    const publicIndex = path.join(__dirname, 'public', 'index.html');
+    const rootIndex = path.join(__dirname, 'index.html');
+    
+    if (fs.existsSync(publicIndex)) {
+        res.sendFile(publicIndex);
+    } else if (fs.existsSync(rootIndex)) {
+        res.sendFile(rootIndex);
+    } else {
+        res.status(404).send('ملف index.html غير موجود');
+    }
 });
 
 // ==================== تشغيل الخادم ====================
@@ -226,6 +271,10 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
+    console.log('   🔑 1234');
+    console.log('   📧 user');
+    console.log('   🔑 1234');
+    console.log('   📧 viewer');
     console.log('   🔑 1234');
     console.log('========================================');
     console.log('📍 نظام تتبع GPS نشط');
