@@ -11,6 +11,7 @@ const io = socketIo(server, {
 });
 const PORT = process.env.PORT || 3000;
 
+// ==================== Middleware ====================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,6 +23,7 @@ const DEFAULT_USERS = [
     { name: 'viewer', pass: '1234', role: 'مشاهد' }
 ];
 
+// ==================== التخزين المؤقت ====================
 let memoryVessels = [];
 let memoryTickets = [];
 let memoryLogs = [];
@@ -45,6 +47,7 @@ app.post('/api/login', (req, res) => {
     res.json({ id: user.name, name: user.name, role: user.role });
 });
 
+// ==================== مسار تسجيل الخروج ====================
 app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
@@ -97,6 +100,7 @@ app.post('/api/tickets', (req, res) => {
 app.put('/api/tickets/:id/reply', (req, res) => {
     const ticket = memoryTickets.find(t => t._id === req.params.id);
     if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    if (!ticket.replies) ticket.replies = [];
     ticket.replies.push(req.body.reply);
     ticket.status = 'تم الرد';
     res.json(ticket);
@@ -122,7 +126,11 @@ app.post('/api/logs', (req, res) => {
 
 // ==================== مسارات GPS ====================
 app.post('/api/locations', (req, res) => {
-    const location = { ...req.body, _id: Date.now().toString() };
+    const location = { 
+        ...req.body, 
+        _id: Date.now().toString(),
+        timestamp: new Date().toISOString()
+    };
     memoryLocations.push(location);
     res.status(201).json(location);
 });
@@ -156,26 +164,34 @@ io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
     socket.on('user-connected', (data) => {
-        onlineUsers.add(data.userName);
-        io.emit('online-users', { users: Array.from(onlineUsers) });
+        if (data && data.userName) {
+            onlineUsers.add(data.userName);
+            io.emit('online-users', { users: Array.from(onlineUsers) });
+            console.log('👤', data.userName, 'متصل');
+        }
     });
     
     socket.on('send-location', (data) => {
-        memoryLocations.push({
-            userName: data.userName,
-            userRole: data.userRole,
-            lat: data.lat,
-            lng: data.lng,
-            timestamp: new Date().toISOString(),
-            _id: Date.now().toString()
-        });
-        
-        socket.broadcast.emit('receive-location', {
-            userName: data.userName,
-            lat: data.lat,
-            lng: data.lng,
-            time: new Date().toISOString()
-        });
+        if (data && data.userName && data.lat && data.lng) {
+            const locationData = {
+                userName: data.userName,
+                userRole: data.userRole || 'مستخدم',
+                lat: data.lat,
+                lng: data.lng,
+                timestamp: new Date().toISOString(),
+                _id: Date.now().toString()
+            };
+            memoryLocations.push(locationData);
+            
+            socket.broadcast.emit('receive-location', {
+                userName: data.userName,
+                lat: data.lat,
+                lng: data.lng,
+                time: new Date().toISOString()
+            });
+            
+            console.log('📍 موقع من', data.userName, ':', data.lat, ',', data.lng);
+        }
     });
     
     socket.on('get-online-users', () => {
@@ -183,8 +199,11 @@ io.on('connection', (socket) => {
     });
     
     socket.on('user-disconnected', (data) => {
-        onlineUsers.delete(data.userName);
-        io.emit('online-users', { users: Array.from(onlineUsers) });
+        if (data && data.userName) {
+            onlineUsers.delete(data.userName);
+            io.emit('online-users', { users: Array.from(onlineUsers) });
+            console.log('👤', data.userName, 'غير متصل');
+        }
     });
     
     socket.on('disconnect', () => {
@@ -207,6 +226,10 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
+    console.log('   🔑 1234');
+    console.log('   📧 user');
+    console.log('   🔑 1234');
+    console.log('   📧 viewer');
     console.log('   🔑 1234');
     console.log('========================================');
     console.log('📍 نظام تتبع GPS نشط');
