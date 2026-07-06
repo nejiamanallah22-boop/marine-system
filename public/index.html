@@ -124,15 +124,21 @@
             justify-content: center;
             align-items: center;
         }
-        .watermark img {
-            width: 70%;
-            max-width: 600px;
-            height: auto;
-            object-fit: contain;
+        .watermark span {
+            font-size: 200px;
         }
         
         .map-container { height: 500px; width: 100%; margin: 15px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
         #trackMap { height: 100%; width: 100%; }
+        
+        .region-title {
+            font-size: 1.2em;
+            padding: 10px 15px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
         
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
@@ -140,7 +146,7 @@
 <body>
 
 <div class="watermark">
-    <img src="https://cdn-icons-png.flaticon.com/512/10428/10428984.png" alt="مركب حرس بحري تونسي">
+    <span>⚓</span>
 </div>
 
 <div id="loginOverlay">
@@ -207,6 +213,7 @@
         <button class="btn btn-green" onclick="addItem()">✅ حفظ</button>
     </div>
 
+    <!-- ==================== الصفحة الرئيسية ==================== -->
     <div id="pageMain">
         <div class="filter-bar">
             <div class="search-input"><input type="text" id="searchMain" placeholder="🔍 بحث" onkeyup="renderMain()"></div>
@@ -215,16 +222,35 @@
             <button class="btn-sm btn-blue" onclick="clearMainSearch()">مسح</button>
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
-                </thead>
-                <tbody id="mainBody"></tbody>
-            <tr>
+        
+        <!-- جدول الأسطول -->
+        <div class="region-table-card">
+            <div class="region-table-header">⚓ الأسطول البحري</div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
+                    </thead>
+                    <tbody id="mainBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- جدول الصيانة في الصفحة الرئيسية -->
+        <div class="region-table-card" style="margin-top:20px;">
+            <div class="region-table-header">🛠️ سجل الصيانة (المراكب المعطوبة)</div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
+                    </thead>
+                    <tbody id="maintMainBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- ==================== صفحة سجل الصيانة ==================== -->
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
             <input type="text" id="searchMaint" placeholder="🔍 بحث" onkeyup="renderMaint()">
@@ -235,7 +261,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            表
+            <table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -244,6 +270,7 @@
         </div>
     </div>
 
+    <!-- ==================== صفحة الجاهزية ==================== -->
     <div id="pageEff" class="hidden">
         <div class="filter-bar">
             <label>تصفية الإقليم:</label>
@@ -273,6 +300,7 @@
         <div id="chartsArea"></div>
     </div>
 
+    <!-- ==================== صفحة الدعم الفني ==================== -->
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px">
             <h3>📞 نظام التذاكر - الدعم الفني</h3>
@@ -290,6 +318,7 @@
         </div>
     </div>
 
+    <!-- ==================== صفحة تتبع المستخدمين ==================== -->
     <div id="pageTrack" class="hidden">
         <div class="filter-bar">
             <label>من تاريخ:</label><input type="date" id="trackDateStart" onchange="renderTrack()">
@@ -300,7 +329,7 @@
         <div id="trackContent"></div>
     </div>
 
-    <!-- صفحة خريطة التتبع GPS -->
+    <!-- ==================== صفحة خريطة التتبع ==================== -->
     <div id="pageMap" class="hidden">
         <div class="filter-bar">
             <button class="btn-sm btn-cyan" onclick="startTracking()" id="startTrackingBtn">📍 بدء مشاركة الموقع</button>
@@ -314,6 +343,7 @@
         </div>
     </div>
 
+    <!-- ==================== صفحة المستخدمين ==================== -->
     <div id="pageUsers" class="hidden">
         <div class="input-grid">
             <input type="text" id="un" placeholder="اسم المستخدم">
@@ -323,7 +353,7 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            表
+            <table>
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -346,6 +376,7 @@
     <button class="scroll-btn" onclick="scrollToTop()">⬆️</button>
     <button class="scroll-btn" onclick="scrollToBottom()">⬇️</button>
 </div>
+
 <script>
     // ==================== المتغيرات العامة ====================
     let currentUser = null;
@@ -805,6 +836,7 @@
         }
     }
     
+    // ==================== دالة renderMain المُصلحة ====================
     async function renderMain() {
         try {
             let data = await loadVessels();
@@ -812,6 +844,7 @@
             const fReg = document.getElementById('fRegMain').value;
             const searchText = document.getElementById('searchMain').value.toLowerCase();
             
+            // ====== تصفية مراكب الأسطول ======
             let filtered = data.filter(x => {
                 let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
                 let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
@@ -824,15 +857,16 @@
                 return matchCat && matchReg && matchSearch;
             });
             
-            let html = "";
+            // ====== عرض جدول الأسطول ======
+            let htmlMain = "";
             const isAdmin = currentUser?.role === "مسؤول";
             
-            if(filtered.length === 0) {
-                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+            if (filtered.length === 0) {
+                htmlMain = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-                    html += `<tr>
+                    htmlMain += `<tr>
                         <td><b>${x.name}</b></td>
                         <td>${x.num || '-'}</td>
                         <td>${x.len || '-'}</td>
@@ -852,7 +886,41 @@
                     </tr>`;
                 });
             }
-            document.getElementById('mainBody').innerHTML = html;
+            document.getElementById('mainBody').innerHTML = htmlMain;
+            
+            // ====== عرض جدول الصيانة (المراكب المعطوبة فقط) ======
+            let maintData = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
+            let htmlMaint = "";
+            
+            if (maintData.length === 0) {
+                htmlMaint = '<tr><td colspan="10" style="text-align:center;">✅ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+            } else {
+                maintData.forEach(x => {
+                    let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
+                    htmlMaint += `<tr>
+                        <td><b>${x.name}</b></td>
+                        <td>${x.num || '-'}</td>
+                        <td>${regionDisplay}</td>
+                        <td>${x.zone || '-'}</td>
+                        <td class="status-${x.stat}">${x.stat}</td>
+                        <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
+                        <td>${formatDate(x.fDate)}</td>
+                        <td>${formatDate(x.eDate)}</td>
+                        <td>${x.ref || '-'}</td>
+                        <td>
+                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
+                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
+                        </td>
+                    </tr>`;
+                });
+            }
+            
+            // ====== تحديث جدول الصيانة في الصفحة الرئيسية ======
+            const maintBody = document.getElementById('maintMainBody');
+            if (maintBody) {
+                maintBody.innerHTML = htmlMaint;
+            }
+            
         } catch(error) {
             console.error('خطأ في renderMain:', error);
             document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
@@ -1291,7 +1359,7 @@
             html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<table><td colspan="9">📭 لا توجد تذاكر</td><\/tr>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
@@ -1338,7 +1406,7 @@
                 });
             }
             
-            html += `</tbody>}</div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('ticketsList').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTickets:', error);
@@ -1358,6 +1426,7 @@
             if(start) {
                 const s = new Date(start);
                 filtered = filtered.filter(l => {
+                    if(!l.date) return false;
                     const [d,m,y] = l.date.split('/');
                     return new Date(`${y}-${m}-${d}`) >= s;
                 });
@@ -1365,6 +1434,7 @@
             if(end) {
                 const e = new Date(end);
                 filtered = filtered.filter(l => {
+                    if(!l.date) return false;
                     const [d,m,y] = l.date.split('/');
                     return new Date(`${y}-${m}-${d}`) <= e;
                 });
@@ -1387,7 +1457,7 @@
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td><\/tr>';
+                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
             } else {
                 filtered.forEach((l, index) => {
                     let actionIcon = '';
@@ -1410,7 +1480,7 @@
                 });
             }
             
-            html += `</tbody>}</div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
