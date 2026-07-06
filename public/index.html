@@ -68,79 +68,22 @@
         .file-input-label { background: #17a2b8; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 0.85em; color: white; display: inline-flex; align-items: center; gap: 5px; }
         #fileInput { display: none; }
         .scrollable-table { overflow-x: auto; margin-top: 10px; max-height: 600px; overflow-y: auto; }
-        
-        .scroll-buttons {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        .scroll-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-        }
-        .scroll-btn:hover {
-            transform: scale(1.1);
-            background: #1e5a22;
-        }
-        
-        .damage-column {
-            min-width: 200px;
-            max-width: 300px;
-            word-break: break-word;
-            white-space: normal;
-        }
-        
-        .ticket-reply {
-            background: #e9ecef;
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 8px;
-            text-align: right;
-        }
-
-        .watermark {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            opacity: 0.08;
-            z-index: 0;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        .watermark img {
-            width: 70%;
-            max-width: 600px;
-            height: auto;
-            object-fit: contain;
-        }
-        
+        .scroll-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .scroll-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); transition: all 0.3s; }
+        .scroll-btn:hover { transform: scale(1.1); background: #1e5a22; }
+        .damage-column { min-width: 200px; max-width: 300px; word-break: break-word; white-space: normal; }
+        .ticket-reply { background: #e9ecef; margin: 5px 0; padding: 8px; border-radius: 8px; text-align: right; }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; height: 100%; opacity: 0.08; z-index: 0; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .watermark span { font-size: 200px; }
         .map-container { height: 500px; width: 100%; margin: 15px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
         #trackMap { height: 100%; width: 100%; }
-        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
 <body>
 
 <div class="watermark">
-    <img src="https://cdn-icons-png.flaticon.com/512/10428/10428984.png" alt="مركب حرس بحري تونسي">
+    <span>⚓</span>
 </div>
 
 <div id="loginOverlay">
@@ -221,7 +164,7 @@
                     <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
                 </thead>
                 <tbody id="mainBody"></tbody>
-            <tr>
+            </table>
         </div>
     </div>
 
@@ -235,7 +178,7 @@
             <button class="btn-sm btn-green" onclick="refreshMaint()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            表
+            <table>
                 <thead>
                     <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
                 </thead>
@@ -300,7 +243,6 @@
         <div id="trackContent"></div>
     </div>
 
-    <!-- صفحة خريطة التتبع GPS -->
     <div id="pageMap" class="hidden">
         <div class="filter-bar">
             <button class="btn-sm btn-cyan" onclick="startTracking()" id="startTrackingBtn">📍 بدء مشاركة الموقع</button>
@@ -323,7 +265,7 @@
             <button class="btn-sm btn-green" onclick="refreshUsers()">🔄 تحديث</button>
         </div>
         <div class="scrollable-table">
-            表
+            <table>
                 <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>تغيير كلمة المرور</th><th>تعطيل/تفعيل</th><th>حذف</th></tr></thead>
                 <tbody id="usersBody"></tbody>
             </table>
@@ -346,6 +288,7 @@
     <button class="scroll-btn" onclick="scrollToTop()">⬆️</button>
     <button class="scroll-btn" onclick="scrollToBottom()">⬇️</button>
 </div>
+
 <script>
     // ==================== المتغيرات العامة ====================
     let currentUser = null;
@@ -353,7 +296,6 @@
     let fleetChart = null, categoriesChart = null, comparisonChart = null;
     let currentChartType = 'doughnut';
     
-    // متغيرات GPS و Socket
     let trackingInterval = null;
     let trackingMap = null;
     let trackingMarkers = {};
@@ -385,6 +327,7 @@
         "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
     };
 
+    // ==================== دوال مساعدة ====================
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
     function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
@@ -434,7 +377,10 @@
         const options = { method, headers: { 'Content-Type': 'application/json' } };
         if (body) options.body = JSON.stringify(body);
         const response = await fetch(url, options);
-        if (!response.ok) throw new Error(await response.text());
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'خطأ في الاتصال');
+        }
         return response.json();
     }
 
@@ -475,21 +421,28 @@
     // ==================== دوال GPS و Socket ====================
     function initSocket() {
         if (socket) return;
-        socket = io();
-        
-        socket.on('receive-location', (data) => {
-            console.log('📍 موقع مستلم:', data);
-            updateMapMarker(data.userName, data.lat, data.lng, data.time);
-            showToast(`📍 تم تحديث موقع المستخدم: ${data.userName}`);
-        });
+        try {
+            socket = io();
+            socket.on('receive-location', (data) => {
+                console.log('📍 موقع مستلم:', data);
+                updateMapMarker(data.userName, data.lat, data.lng, data.time);
+                showToast(`📍 تم تحديث موقع المستخدم: ${data.userName}`);
+            });
+        } catch(e) {
+            console.error('خطأ في تهيئة Socket:', e);
+        }
     }
 
     function initTrackingMap() {
         if (trackingMap) return;
-        trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        }).addTo(trackingMap);
+        try {
+            trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+            }).addTo(trackingMap);
+        } catch(e) {
+            console.error('خطأ في تهيئة الخريطة:', e);
+        }
     }
 
     function updateMapMarker(userName, lat, lng, time) {
@@ -609,18 +562,12 @@
         
         try {
             const user = await loginAPI(username, password);
-            if(user.error) {
-                errorDiv.innerHTML = user.error;
-                errorDiv.style.display = "block";
-                return;
-            }
             
             currentUser = user;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
             
-            // تهيئة Socket والخريطة
             initSocket();
             initTrackingMap();
             
@@ -653,7 +600,7 @@
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
             showToast(`مرحباً ${username}`);
         } catch(error) {
-            errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
+            errorDiv.innerHTML = "خطأ في تسجيل الدخول: " + error.message;
             errorDiv.style.display = "block";
         }
     }
@@ -1291,7 +1238,7 @@
             html += '</tr></thead><tbody>';
             
             if(tickets.length === 0) {
-                html += '<table><td colspan="9">📭 لا توجد تذاكر</td><\/tr>';
+                html += '<tr><td colspan="9">📭 لا توجد تذاكر</td></tr>';
             } else {
                 tickets.forEach((t, index) => {
                     const statusColor = t.status === 'مغلقة' ? '#888' : (t.status === 'تم الرد' ? '#28a745' : '#f39c12');
@@ -1338,7 +1285,7 @@
                 });
             }
             
-            html += `</tbody>}</div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('ticketsList').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTickets:', error);
@@ -1387,7 +1334,7 @@
             `;
             
             if(filtered.length === 0) {
-                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td><\/tr>';
+                html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
             } else {
                 filtered.forEach((l, index) => {
                     let actionIcon = '';
@@ -1410,7 +1357,7 @@
                 });
             }
             
-            html += `</tbody>}</div>`;
+            html += `</tbody></table></div>`;
             document.getElementById('trackContent').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderTrack:', error);
