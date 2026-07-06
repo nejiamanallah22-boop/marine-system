@@ -16,15 +16,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== بيانات المستخدمين الثابتة ====================
+// ==================== بيانات المستخدمين ====================
 const DEFAULT_USERS = [
-    { name: 'admin', pass: '1234', role: 'مسؤول' },
-    { name: 'user', pass: '1234', role: 'محرر' },
-    { name: 'viewer', pass: '1234', role: 'مشاهد' }
+    { name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
+    { name: 'user', pass: '1234', role: 'محرر', enabled: true },
+    { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// ==================== التخزين المؤقت ====================
-let memoryVessels = [];
+// ==================== بيانات افتراضية للمراكب ====================
+let memoryVessels = [
+    { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: null, eDate: null, ref: '', cat: 'صقور' },
+    { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: '', stat: 'صيانة', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF001', cat: 'البروق' },
+    { _id: '3', name: 'المركب 3', num: 'M003', len: 15, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'هيكل', fDate: '2024-01-20', eDate: null, ref: 'REF002', cat: 'خوافر' }
+];
+
 let memoryTickets = [];
 let memoryLogs = [];
 let memoryLocations = [];
@@ -43,18 +48,21 @@ function getCurrentTime() {
 
 // ==================== مسار تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
+    console.log('📝 محاولة تسجيل دخول:', req.body);
     const { name, pass } = req.body;
     
     if (!name || !pass) {
         return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
     }
     
-    const user = DEFAULT_USERS.find(u => u.name === name && u.pass === pass);
+    const user = DEFAULT_USERS.find(u => u.name === name && u.pass === pass && u.enabled === true);
     
     if (!user) {
+        console.log('❌ فشل تسجيل الدخول:', name);
         return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
     }
     
+    console.log('✅ تسجيل دخول ناجح:', name);
     res.json({ id: user.name, name: user.name, role: user.role });
 });
 
@@ -64,11 +72,17 @@ app.post('/api/logout', (req, res) => {
 
 // ==================== مسارات المراكب ====================
 app.get('/api/vessels', (req, res) => {
+    console.log('📊 جلب المراكب:', memoryVessels.length);
     res.json(memoryVessels);
 });
 
 app.post('/api/vessels', (req, res) => {
-    const vessel = { ...req.body, _id: Date.now().toString() };
+    console.log('➕ إضافة مركب:', req.body.name);
+    const vessel = { 
+        ...req.body, 
+        _id: Date.now().toString(),
+        cat: req.body.cat || getCat(req.body.len)
+    };
     memoryVessels.push(vessel);
     res.status(201).json(vessel);
 });
@@ -77,21 +91,33 @@ app.put('/api/vessels/:id', (req, res) => {
     const index = memoryVessels.findIndex(v => v._id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
     memoryVessels[index] = { ...memoryVessels[index], ...req.body };
+    console.log('✏️ تعديل مركب:', memoryVessels[index].name);
     res.json(memoryVessels[index]);
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
     const index = memoryVessels.findIndex(v => v._id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
+    const name = memoryVessels[index].name;
     memoryVessels.splice(index, 1);
+    console.log('🗑️ حذف مركب:', name);
     res.json({ success: true });
 });
+
+function getCat(len) {
+    let n = parseFloat(len);
+    if (n === 11) return "البروق";
+    if (n >= 8 && n <= 12) return "صقور";
+    if (n > 12 && n <= 25) return "خوافر";
+    if (n >= 30) return "طوافات";
+    return "زوارق مزدوجة";
+}
 
 // ==================== مسارات المستخدمين ====================
 app.get('/api/users', (req, res) => {
     const users = DEFAULT_USERS.map(u => {
         const { pass, ...rest } = u;
-        return { ...rest, enabled: true, _id: u.name };
+        return { ...rest, _id: u.name };
     });
     res.json(users);
 });
@@ -174,7 +200,7 @@ app.get('/api/locations', (req, res) => {
     res.json(memoryLocations.slice(-100));
 });
 
-// ==================== مسارات التصدير والاستيراد ====================
+// ==================== التصدير والاستيراد ====================
 app.get('/api/export-all', (req, res) => {
     res.json({ 
         vessels: memoryVessels, 
@@ -188,6 +214,7 @@ app.get('/api/export-all', (req, res) => {
 app.post('/api/import-all', (req, res) => {
     const { vessels, users, tickets, logs, locations } = req.body;
     if (vessels) memoryVessels = vessels;
+    if (users) { DEFAULT_USERS.length = 0; DEFAULT_USERS.push(...users); }
     if (tickets) memoryTickets = tickets;
     if (logs) memoryLogs = logs;
     if (locations) memoryLocations = locations;
@@ -246,21 +273,10 @@ io.on('connection', (socket) => {
 });
 
 // ==================== الملفات الثابتة ====================
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
-    const fs = require('fs');
-    const publicIndex = path.join(__dirname, 'public', 'index.html');
-    const rootIndex = path.join(__dirname, 'index.html');
-    
-    if (fs.existsSync(publicIndex)) {
-        res.sendFile(publicIndex);
-    } else if (fs.existsSync(rootIndex)) {
-        res.sendFile(rootIndex);
-    } else {
-        res.status(404).send('ملف index.html غير موجود');
-    }
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // ==================== تشغيل الخادم ====================
@@ -272,11 +288,8 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
     console.log('   🔑 1234');
-    console.log('   📧 user');
-    console.log('   🔑 1234');
-    console.log('   📧 viewer');
-    console.log('   🔑 1234');
     console.log('========================================');
+    console.log(`📊 عدد المراكب: ${memoryVessels.length}`);
     console.log('📍 نظام تتبع GPS نشط');
     console.log('========================================');
 });
