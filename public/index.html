@@ -131,15 +131,6 @@
         .map-container { height: 500px; width: 100%; margin: 15px 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); }
         #trackMap { height: 100%; width: 100%; }
         
-        .region-title {
-            font-size: 1.2em;
-            padding: 10px 15px;
-            background: var(--primary);
-            color: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        
         @media print { .nav, #inputArea, .btn-sm, .filter-bar, .btn, .header-logo, #admBtn, #printBtn, .chart-switch, .export-import-bar, .scroll-buttons, .watermark, .map-container { display: none !important; } @page { size: landscape; margin: 1cm; } }
     </style>
 </head>
@@ -223,7 +214,7 @@
             <button class="btn-sm btn-green" onclick="refreshMain()">🔄 تحديث</button>
         </div>
         
-        <!-- جدول الأسطول -->
+        <!-- جدول الأسطول فقط -->
         <div class="region-table-card">
             <div class="region-table-header">⚓ الأسطول البحري</div>
             <div class="scrollable-table">
@@ -232,19 +223,6 @@
                         <tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>المنطقة</th><th>الميناء</th><th>التعزيز</th><th>الحالة</th><th>العطب</th><th>التاريخ</th><th>الانتهاء</th><th>إجراء</th></tr>
                     </thead>
                     <tbody id="mainBody"></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- جدول الصيانة في الصفحة الرئيسية -->
-        <div class="region-table-card" style="margin-top:20px;">
-            <div class="region-table-header">🛠️ سجل الصيانة (المراكب المعطوبة)</div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th class="damage-column">العطب</th><th>تاريخ العطب</th><th>الانتهاء</th><th>المرجع</th><th>إجراء</th></tr>
-                    </thead>
-                    <tbody id="maintMainBody"></tbody>
                 </table>
             </div>
         </div>
@@ -390,6 +368,11 @@
     let trackingMarkers = {};
     let socket = null;
 
+    // متغيرات التتبع التلقائي
+    let autoTrackingInterval = null;
+    let fakeLat = 36.8065; // تونس العاصمة
+    let fakeLng = 10.1815;
+
     const ZONES_DATA = {
         "الشمال": ["تونس", "بنزرت", "طبرقة"],
         "الساحل": ["سوسة", "المنستير", "نابل"],
@@ -416,6 +399,7 @@
         "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
     };
 
+    // ==================== دوال مساعدة ====================
     function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
     function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
@@ -526,56 +510,71 @@
     function updateMapMarker(userName, lat, lng, time) {
         if (!trackingMap) initTrackingMap();
         const key = userName;
+        const timeFormatted = time ? new Date(time).toLocaleString('ar-EG') : new Date().toLocaleString('ar-EG');
         if (trackingMarkers[key]) {
             trackingMarkers[key].setLatLng([lat, lng]);
-            trackingMarkers[key].bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`);
+            trackingMarkers[key].bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${timeFormatted}`);
         } else {
             const marker = L.marker([lat, lng]).addTo(trackingMap);
-            marker.bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`);
+            marker.bindPopup(`<b>${userName}</b><br>📍 ${lat}, ${lng}<br>🕐 ${timeFormatted}`);
             trackingMarkers[key] = marker;
         }
         trackingMap.setView([lat, lng], 12);
     }
 
+    // ==================== التتبع التلقائي بدون GPS ====================
     function startTracking() {
         if (!currentUser) {
             showToast("الرجاء تسجيل الدخول أولاً", true);
             return;
         }
-        if (!navigator.geolocation) {
-            showToast("المتصفح لا يدعم تحديد الموقع", true);
-            return;
-        }
         
         if (!socket) initSocket();
+        if (!trackingMap) initTrackingMap();
         
-        trackingInterval = setInterval(() => {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                if (socket && currentUser) {
-                    socket.emit('send-location', {
-                        userName: currentUser.name,
-                        userRole: currentUser.role,
-                        lat: latitude,
-                        lng: longitude
-                    });
-                    document.getElementById('mapStatus').innerHTML = `📍 يتم مشاركة موقعك... ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                }
-            }, (error) => {
-                console.error('خطأ في GPS:', error);
-                document.getElementById('mapStatus').innerHTML = '❌ تعذر الحصول على الموقع';
-            }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+        // إرسال موقع افتراضي فوراً
+        if (socket && currentUser) {
+            socket.emit('send-location', {
+                userName: currentUser.name,
+                userRole: currentUser.role,
+                lat: fakeLat,
+                lng: fakeLng
+            });
+            updateMapMarker(currentUser.name, fakeLat, fakeLng, new Date().toISOString());
+            document.getElementById('mapStatus').innerHTML = `📍 موقع افتراضي: ${fakeLat.toFixed(6)}, ${fakeLng.toFixed(6)} (تونس)`;
+            showToast("📍 تم مشاركة موقع افتراضي");
+        }
+        
+        // تحديث الموقع كل 5 ثوانٍ (حركة عشوائية)
+        if (autoTrackingInterval) {
+            clearInterval(autoTrackingInterval);
+        }
+        
+        autoTrackingInterval = setInterval(() => {
+            if (socket && currentUser) {
+                // حركة عشوائية بسيطة (تغير طفيف في الموقع)
+                fakeLat += (Math.random() - 0.5) * 0.005;
+                fakeLng += (Math.random() - 0.5) * 0.005;
+                
+                socket.emit('send-location', {
+                    userName: currentUser.name,
+                    userRole: currentUser.role,
+                    lat: fakeLat,
+                    lng: fakeLng
+                });
+                updateMapMarker(currentUser.name, fakeLat, fakeLng, new Date().toISOString());
+            }
         }, 5000);
         
         document.getElementById('startTrackingBtn').style.display = 'none';
         document.getElementById('stopTrackingBtn').style.display = 'inline-block';
-        showToast("✅ بدأ مشاركة الموقع لحظة بلحظة (كل 5 ثوانٍ)");
+        showToast("✅ بدأ التتبع التلقائي (موقع افتراضي)");
     }
 
     function stopTracking() {
-        if (trackingInterval) {
-            clearInterval(trackingInterval);
-            trackingInterval = null;
+        if (autoTrackingInterval) {
+            clearInterval(autoTrackingInterval);
+            autoTrackingInterval = null;
         }
         document.getElementById('startTrackingBtn').style.display = 'inline-block';
         document.getElementById('stopTrackingBtn').style.display = 'none';
@@ -604,11 +603,11 @@
 
     function centerMapOnUser() {
         if (!trackingMap) initTrackingMap();
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                trackingMap.setView([pos.coords.latitude, pos.coords.longitude], 13);
-                showToast("🎯 تم التمركز على موقعك");
-            }, () => showToast("لا يمكن الحصول على موقعك", true));
+        if (fakeLat && fakeLng) {
+            trackingMap.setView([fakeLat, fakeLng], 13);
+            showToast("🎯 تم التمركز على الموقع الافتراضي");
+        } else {
+            showToast("لا يوجد موقع لعرضه", true);
         }
     }
 
@@ -836,7 +835,7 @@
         }
     }
     
-    // ==================== دالة renderMain المُصلحة ====================
+    // ==================== دالة renderMain ====================
     async function renderMain() {
         try {
             let data = await loadVessels();
@@ -844,7 +843,6 @@
             const fReg = document.getElementById('fRegMain').value;
             const searchText = document.getElementById('searchMain').value.toLowerCase();
             
-            // ====== تصفية مراكب الأسطول ======
             let filtered = data.filter(x => {
                 let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
                 let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
@@ -857,16 +855,15 @@
                 return matchCat && matchReg && matchSearch;
             });
             
-            // ====== عرض جدول الأسطول ======
-            let htmlMain = "";
+            let html = "";
             const isAdmin = currentUser?.role === "مسؤول";
             
-            if (filtered.length === 0) {
-                htmlMain = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+            if(filtered.length === 0) {
+                html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-                    htmlMain += `<tr>
+                    html += `<tr>
                         <td><b>${x.name}</b></td>
                         <td>${x.num || '-'}</td>
                         <td>${x.len || '-'}</td>
@@ -886,41 +883,7 @@
                     </tr>`;
                 });
             }
-            document.getElementById('mainBody').innerHTML = htmlMain;
-            
-            // ====== عرض جدول الصيانة (المراكب المعطوبة فقط) ======
-            let maintData = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
-            let htmlMaint = "";
-            
-            if (maintData.length === 0) {
-                htmlMaint = '<tr><td colspan="10" style="text-align:center;">✅ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
-            } else {
-                maintData.forEach(x => {
-                    let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-                    htmlMaint += `<tr>
-                        <td><b>${x.name}</b></td>
-                        <td>${x.num || '-'}</td>
-                        <td>${regionDisplay}</td>
-                        <td>${x.zone || '-'}</td>
-                        <td class="status-${x.stat}">${x.stat}</td>
-                        <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
-                        <td>${formatDate(x.fDate)}</td>
-                        <td>${formatDate(x.eDate)}</td>
-                        <td>${x.ref || '-'}</td>
-                        <td>
-                            ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                            ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
-                        </td>
-                    </tr>`;
-                });
-            }
-            
-            // ====== تحديث جدول الصيانة في الصفحة الرئيسية ======
-            const maintBody = document.getElementById('maintMainBody');
-            if (maintBody) {
-                maintBody.innerHTML = htmlMaint;
-            }
-            
+            document.getElementById('mainBody').innerHTML = html;
         } catch(error) {
             console.error('خطأ في renderMain:', error);
             document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
@@ -975,7 +938,7 @@
             const isAdmin = currentUser?.role === "مسؤول";
             
             if(filtered.length === 0) {
-                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة<br><small>قم بإضافة مركب جديد بحالة "معطب" أو "صيانة"</small></td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
             } else {
                 filtered.forEach(x => {
                     let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
