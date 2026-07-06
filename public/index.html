@@ -125,7 +125,7 @@
         <button class="btn btn-green" onclick="showPage('eff')">📈 جاهزية الأسطول</button>
         <button class="btn btn-cyan" onclick="showPage('support')">📞 الدعم الفني</button>
         <button id="trackBtn" class="btn btn-purple" onclick="showPage('track')">📊 تتبع المستخدمين</button>
-        <button class="btn btn-purple" onclick="showPage('map')">🗺️ خريطة التتبع</button>
+        <button id="mapNavBtn" class="btn btn-purple" onclick="showPage('map')">🗺️ خريطة التتبع</button>
         <button id="admBtn" class="btn btn-red" onclick="showPage('users')">👥 المستخدمين</button>
         <button id="printBtn" class="btn btn-blue" onclick="window.print()">🖨️ طباعة</button>
     </div>
@@ -271,7 +271,7 @@
             <button class="btn-sm btn-red" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">⏹️ إيقاف التتبع</button>
             <button class="btn-sm btn-green" onclick="loadLocations()">🔄 تحديث الخريطة</button>
             <button class="btn-sm btn-blue" onclick="centerMapOnUser()">🎯 مركز موقعي</button>
-            <button class="btn-sm btn-success" onclick="getRealLocation()" style="background:#28a745;">📍 موقعي الحقيقي</button>
+            <button class="btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800;">🔓 طلب إذن الموقع</button>
         </div>
         <div id="mapStatus" style="text-align:center; margin:10px; color:#666; padding:8px; background:#f8f9fa; border-radius:8px;">📍 اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي</div>
         <div class="map-container">
@@ -362,7 +362,7 @@
         toast.style.background = isError ? '#d9534f' : '#2e7d32';
         toast.innerHTML = message;
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        setTimeout(() => toast.remove(), 5000);
     }
 
     function formatDate(d) { 
@@ -513,10 +513,63 @@
         }
     }
 
+    // ==================== طلب إذن الموقع ====================
+    function requestLocationPermission() {
+        if (!currentUser) {
+            showToast("الرجاء تسجيل الدخول أولاً", true);
+            return;
+        }
+        
+        if (currentUser.role !== "مسؤول") {
+            showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
+            return;
+        }
+        
+        if (!navigator.geolocation) {
+            showToast("المتصفح لا يدعم تحديد الموقع", true);
+            return;
+        }
+        
+        showToast("⏳ جاري طلب إذن الموقع...");
+        document.getElementById('mapStatus').innerHTML = "⏳ جاري طلب إذن الموقع...";
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                showToast(`✅ تم منح إذن الموقع! ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                document.getElementById('mapStatus').innerHTML = `✅ تم منح إذن الموقع: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                updateGpsStatus(true, 'مصرح');
+                
+                // بدء التتبع تلقائياً بعد الحصول على الإذن
+                startTracking();
+            },
+            (error) => {
+                console.error('خطأ:', error);
+                document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الإذن: ${error.message}`;
+                
+                if (error.code === 1) {
+                    showToast("❌ تم رفض الإذن. يرجى السماح يدوياً في إعدادات المتصفح", true);
+                    showToast("💡 اضغط على 🔒 القفل بجانب الرابط → إعدادات الموقع → سماح", true);
+                    document.getElementById('mapStatus').innerHTML = "❌ تم رفض الإذن. يرجى السماح يدوياً";
+                } else {
+                    showToast(`❌ خطأ: ${error.message}`, true);
+                }
+                updateGpsStatus(false, 'مرفوض');
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
     // ==================== التتبع المباشر بالـ GPS ====================
     function startTracking() {
         if (!currentUser) {
             showToast("الرجاء تسجيل الدخول أولاً", true);
+            return;
+        }
+        
+        // ====== التحقق من صلاحية المستخدم ======
+        if (currentUser.role !== "مسؤول") {
+            showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
             return;
         }
         
@@ -609,6 +662,7 @@
                 
                 if (error.code === 1) {
                     showToast("⚠️ يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح", true);
+                    showToast("💡 اضغط على 🔒 القفل بجانب الرابط → إعدادات الموقع → سماح", true);
                 }
             },
             { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -634,6 +688,11 @@
     function getRealLocation() {
         if (!currentUser) {
             showToast("الرجاء تسجيل الدخول أولاً", true);
+            return;
+        }
+        
+        if (currentUser.role !== "مسؤول") {
+            showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
             return;
         }
         
@@ -693,6 +752,9 @@
     function logUserLocation() {
         if (!currentUser) return;
         
+        // فقط للمسؤول
+        if (currentUser.role !== "مسؤول") return;
+        
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
@@ -745,6 +807,10 @@
 
     function centerMapOnUser() {
         if (!trackingMap) initTrackingMap();
+        if (currentUser?.role !== "مسؤول") {
+            showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
+            return;
+        }
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
@@ -806,6 +872,7 @@
             
             document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
             document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
+            document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
             document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
             document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
             document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
@@ -830,8 +897,10 @@
             await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
             showToast(`مرحباً ${username}`);
             
-            // تسجيل موقع المستخدم عند الدخول
-            logUserLocation();
+            // تسجيل موقع المستخدم عند الدخول (للمسؤول فقط)
+            if(isAdmin) {
+                logUserLocation();
+            }
             
         } catch(error) {
             errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
@@ -1789,11 +1858,15 @@
             }
         }
         else if(page === 'map') { 
-            document.getElementById('pageMap').classList.remove('hidden');
-            setTimeout(() => {
-                if (trackingMap) trackingMap.invalidateSize();
-                loadLocations();
-            }, 100);
+            if(isAdmin) {
+                document.getElementById('pageMap').classList.remove('hidden');
+                setTimeout(() => {
+                    if (trackingMap) trackingMap.invalidateSize();
+                    loadLocations();
+                }, 100);
+            } else {
+                showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true);
+            }
         }
         else if(page === 'users') { 
             if(isAdmin) { 
@@ -1845,6 +1918,7 @@
     window.stopTracking = stopTracking;
     window.loadLocations = loadLocations;
     window.centerMapOnUser = centerMapOnUser;
+    window.requestLocationPermission = requestLocationPermission;
     window.getRealLocation = getRealLocation;
 </script>
 </body>
