@@ -3,6 +3,7 @@ const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,24 +17,69 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== بيانات المستخدمين ====================
+// ==================== استيراد النماذج ====================
+let User, Vessel, Ticket, Log;
+
+try {
+    // محاولة استيراد النماذج من مجلد models
+    const modelsPath = path.join(__dirname, 'models');
+    
+    if (fs.existsSync(path.join(modelsPath, 'User.js'))) {
+        User = require('./models/User');
+        console.log('✅ تم تحميل نموذج User');
+    }
+    if (fs.existsSync(path.join(modelsPath, 'Vessel.js'))) {
+        Vessel = require('./models/Vessel');
+        console.log('✅ تم تحميل نموذج Vessel');
+    }
+    if (fs.existsSync(path.join(modelsPath, 'Ticket.js'))) {
+        Ticket = require('./models/Ticket');
+        console.log('✅ تم تحميل نموذج Ticket');
+    }
+    if (fs.existsSync(path.join(modelsPath, 'Log.js'))) {
+        Log = require('./models/Log');
+        console.log('✅ تم تحميل نموذج Log');
+    }
+} catch (err) {
+    console.log('⚠️ لا يمكن تحميل النماذج من مجلد models، سيتم استخدام البيانات المؤقتة');
+}
+
+// ==================== بيانات مؤقتة (في حالة عدم وجود قاعدة بيانات) ====================
 const DEFAULT_USERS = [
     { name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
     { name: 'user', pass: '1234', role: 'محرر', enabled: true },
     { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// ==================== بيانات افتراضية للمراكب ====================
-let memoryVessels = [
-    { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: null, eDate: null, ref: '', cat: 'صقور' },
-    { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: '', stat: 'صيانة', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF001', cat: 'البروق' },
-    { _id: '3', name: 'المركب 3', num: 'M003', len: 15, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'هيكل', fDate: '2024-01-20', eDate: null, ref: 'REF002', cat: 'خوافر' }
-];
-
+let memoryVessels = [];
 let memoryTickets = [];
 let memoryLogs = [];
 let memoryLocations = [];
 let onlineUsers = new Set();
+
+// ==================== البحث عن index.html ====================
+const findIndexHtml = () => {
+    const paths = [
+        path.join(__dirname, 'public', 'index.html'),
+        path.join(__dirname, 'index.html'),
+        path.join(__dirname, 'src', 'index.html')
+    ];
+    
+    for (const p of paths) {
+        if (fs.existsSync(p)) {
+            console.log('✅ تم العثور على index.html في:', p);
+            return p;
+        }
+    }
+    console.log('❌ لم يتم العثور على index.html');
+    return null;
+};
+
+const indexHtmlPath = findIndexHtml();
+
+// ==================== الملفات الثابتة ====================
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 // ==================== دوال مساعدة ====================
 function getCurrentDate() {
@@ -46,64 +92,6 @@ function getCurrentTime() {
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 }
 
-// ==================== مسار تسجيل الدخول ====================
-app.post('/api/login', (req, res) => {
-    console.log('📝 محاولة تسجيل دخول:', req.body);
-    const { name, pass } = req.body;
-    
-    if (!name || !pass) {
-        return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
-    }
-    
-    const user = DEFAULT_USERS.find(u => u.name === name && u.pass === pass && u.enabled === true);
-    
-    if (!user) {
-        console.log('❌ فشل تسجيل الدخول:', name);
-        return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-    
-    console.log('✅ تسجيل دخول ناجح:', name);
-    res.json({ id: user.name, name: user.name, role: user.role });
-});
-
-app.post('/api/logout', (req, res) => {
-    res.json({ success: true });
-});
-
-// ==================== مسارات المراكب ====================
-app.get('/api/vessels', (req, res) => {
-    console.log('📊 جلب المراكب:', memoryVessels.length);
-    res.json(memoryVessels);
-});
-
-app.post('/api/vessels', (req, res) => {
-    console.log('➕ إضافة مركب:', req.body.name);
-    const vessel = { 
-        ...req.body, 
-        _id: Date.now().toString(),
-        cat: req.body.cat || getCat(req.body.len)
-    };
-    memoryVessels.push(vessel);
-    res.status(201).json(vessel);
-});
-
-app.put('/api/vessels/:id', (req, res) => {
-    const index = memoryVessels.findIndex(v => v._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
-    memoryVessels[index] = { ...memoryVessels[index], ...req.body };
-    console.log('✏️ تعديل مركب:', memoryVessels[index].name);
-    res.json(memoryVessels[index]);
-});
-
-app.delete('/api/vessels/:id', (req, res) => {
-    const index = memoryVessels.findIndex(v => v._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
-    const name = memoryVessels[index].name;
-    memoryVessels.splice(index, 1);
-    console.log('🗑️ حذف مركب:', name);
-    res.json({ success: true });
-});
-
 function getCat(len) {
     let n = parseFloat(len);
     if (n === 11) return "البروق";
@@ -113,38 +101,258 @@ function getCat(len) {
     return "زوارق مزدوجة";
 }
 
-// ==================== مسارات المستخدمين ====================
-app.get('/api/users', (req, res) => {
-    const users = DEFAULT_USERS.map(u => {
-        const { pass, ...rest } = u;
-        return { ...rest, _id: u.name };
-    });
-    res.json(users);
-});
-
-app.post('/api/users', (req, res) => {
-    const { name, pass, role } = req.body;
-    if (DEFAULT_USERS.find(u => u.name === name)) {
-        return res.status(400).json({ error: 'اسم المستخدم موجود' });
+// ==================== دوال للتعامل مع النماذج أو الذاكرة ====================
+async function getVessels() {
+    if (Vessel) {
+        try {
+            return await Vessel.find();
+        } catch (err) {
+            console.error('خطأ في جلب المراكب من DB:', err);
+            return memoryVessels;
+        }
     }
-    const user = { name, pass, role, enabled: true };
-    DEFAULT_USERS.push(user);
-    res.status(201).json(user);
-});
+    return memoryVessels;
+}
 
-app.put('/api/users/:id', (req, res) => {
-    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...req.body };
-    const { pass, ...rest } = DEFAULT_USERS[index];
-    res.json(rest);
-});
+async function saveVessel(data) {
+    if (Vessel) {
+        try {
+            const vessel = new Vessel(data);
+            await vessel.save();
+            return vessel;
+        } catch (err) {
+            console.error('خطأ في حفظ المركب في DB:', err);
+            const vessel = { ...data, _id: Date.now().toString() };
+            memoryVessels.push(vessel);
+            return vessel;
+        }
+    }
+    const vessel = { ...data, _id: Date.now().toString() };
+    memoryVessels.push(vessel);
+    return vessel;
+}
 
-app.delete('/api/users/:id', (req, res) => {
-    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
+async function updateVessel(id, data) {
+    if (Vessel) {
+        try {
+            return await Vessel.findByIdAndUpdate(id, data, { new: true });
+        } catch (err) {
+            console.error('خطأ في تحديث المركب في DB:', err);
+            const index = memoryVessels.findIndex(v => v._id === id);
+            if (index === -1) return null;
+            memoryVessels[index] = { ...memoryVessels[index], ...data };
+            return memoryVessels[index];
+        }
+    }
+    const index = memoryVessels.findIndex(v => v._id === id);
+    if (index === -1) return null;
+    memoryVessels[index] = { ...memoryVessels[index], ...data };
+    return memoryVessels[index];
+}
+
+async function deleteVessel(id) {
+    if (Vessel) {
+        try {
+            await Vessel.findByIdAndDelete(id);
+            return true;
+        } catch (err) {
+            console.error('خطأ في حذف المركب من DB:', err);
+            const index = memoryVessels.findIndex(v => v._id === id);
+            if (index === -1) return false;
+            memoryVessels.splice(index, 1);
+            return true;
+        }
+    }
+    const index = memoryVessels.findIndex(v => v._id === id);
+    if (index === -1) return false;
+    memoryVessels.splice(index, 1);
+    return true;
+}
+
+async function getUsers() {
+    if (User) {
+        try {
+            return await User.find().select('-pass');
+        } catch (err) {
+            console.error('خطأ في جلب المستخدمين من DB:', err);
+            return DEFAULT_USERS.map(u => ({ ...u, _id: u.name }));
+        }
+    }
+    return DEFAULT_USERS.map(u => ({ ...u, _id: u.name }));
+}
+
+async function saveUser(data) {
+    if (User) {
+        try {
+            const user = new User(data);
+            await user.save();
+            return user;
+        } catch (err) {
+            console.error('خطأ في حفظ المستخدم في DB:', err);
+            DEFAULT_USERS.push(data);
+            return data;
+        }
+    }
+    DEFAULT_USERS.push(data);
+    return data;
+}
+
+async function updateUser(id, data) {
+    if (User) {
+        try {
+            return await User.findByIdAndUpdate(id, data, { new: true }).select('-pass');
+        } catch (err) {
+            console.error('خطأ في تحديث المستخدم في DB:', err);
+            const index = DEFAULT_USERS.findIndex(u => u.name === id);
+            if (index === -1) return null;
+            DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...data };
+            return DEFAULT_USERS[index];
+        }
+    }
+    const index = DEFAULT_USERS.findIndex(u => u.name === id);
+    if (index === -1) return null;
+    DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...data };
+    return DEFAULT_USERS[index];
+}
+
+async function deleteUser(id) {
+    if (User) {
+        try {
+            await User.findByIdAndDelete(id);
+            return true;
+        } catch (err) {
+            console.error('خطأ في حذف المستخدم من DB:', err);
+            const index = DEFAULT_USERS.findIndex(u => u.name === id);
+            if (index === -1) return false;
+            DEFAULT_USERS.splice(index, 1);
+            return true;
+        }
+    }
+    const index = DEFAULT_USERS.findIndex(u => u.name === id);
+    if (index === -1) return false;
     DEFAULT_USERS.splice(index, 1);
+    return true;
+}
+
+// ==================== مسار تسجيل الدخول ====================
+app.post('/api/login', async (req, res) => {
+    console.log('📝 محاولة تسجيل دخول:', req.body);
+    const { name, pass } = req.body;
+    
+    if (!name || !pass) {
+        return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
+    }
+    
+    try {
+        let user = null;
+        
+        // البحث في قاعدة البيانات
+        if (User) {
+            try {
+                user = await User.findOne({ name, pass, enabled: true });
+            } catch (err) {
+                console.error('خطأ في البحث عن المستخدم في DB:', err);
+            }
+        }
+        
+        // إذا لم يوجد، البحث في الذاكرة
+        if (!user) {
+            user = DEFAULT_USERS.find(u => u.name === name && u.pass === pass && u.enabled === true);
+        }
+        
+        if (!user) {
+            console.log('❌ فشل تسجيل الدخول:', name);
+            return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+        }
+        
+        console.log('✅ تسجيل دخول ناجح:', name);
+        res.json({ id: user._id || user.name, name: user.name, role: user.role });
+    } catch (error) {
+        console.error('خطأ في تسجيل الدخول:', error);
+        res.status(500).json({ error: 'خطأ داخلي في السيرفر' });
+    }
+});
+
+app.post('/api/logout', (req, res) => {
     res.json({ success: true });
+});
+
+// ==================== مسارات المراكب ====================
+app.get('/api/vessels', async (req, res) => {
+    try {
+        const vessels = await getVessels();
+        res.json(vessels);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/vessels', async (req, res) => {
+    try {
+        const vessel = await saveVessel(req.body);
+        res.status(201).json(vessel);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.put('/api/vessels/:id', async (req, res) => {
+    try {
+        const vessel = await updateVessel(req.params.id, req.body);
+        if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+        res.json(vessel);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete('/api/vessels/:id', async (req, res) => {
+    try {
+        const deleted = await deleteVessel(req.params.id);
+        if (!deleted) return res.status(404).json({ error: 'المركب غير موجود' });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==================== مسارات المستخدمين ====================
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await getUsers();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users', async (req, res) => {
+    try {
+        const user = await saveUser(req.body);
+        res.status(201).json(user);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const user = await updateUser(req.params.id, req.body);
+        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+        res.json(user);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const deleted = await deleteUser(req.params.id);
+        if (!deleted) return res.status(404).json({ error: 'المستخدم غير موجود' });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // ==================== مسارات التذاكر ====================
@@ -229,29 +437,24 @@ io.on('connection', (socket) => {
         if (data && data.userName) {
             onlineUsers.add(data.userName);
             io.emit('online-users', { users: Array.from(onlineUsers) });
-            console.log('👤', data.userName, 'متصل');
         }
     });
     
     socket.on('send-location', (data) => {
         if (data && data.userName && data.lat && data.lng) {
-            const locationData = {
+            memoryLocations.push({
                 userName: data.userName,
                 userRole: data.userRole || 'مستخدم',
                 lat: data.lat,
                 lng: data.lng,
                 timestamp: new Date().toISOString()
-            };
-            memoryLocations.push(locationData);
-            
+            });
             socket.broadcast.emit('receive-location', {
                 userName: data.userName,
                 lat: data.lat,
                 lng: data.lng,
                 time: new Date().toISOString()
             });
-            
-            console.log('📍 موقع من', data.userName, ':', data.lat, ',', data.lng);
         }
     });
     
@@ -263,7 +466,6 @@ io.on('connection', (socket) => {
         if (data && data.userName) {
             onlineUsers.delete(data.userName);
             io.emit('online-users', { users: Array.from(onlineUsers) });
-            console.log('👤', data.userName, 'غير متصل');
         }
     });
     
@@ -272,18 +474,49 @@ io.on('connection', (socket) => {
     });
 });
 
-// ==================== الملفات الثابتة ====================
-app.use(express.static(path.join(__dirname)));
-
+// ==================== الصفحة الرئيسية ====================
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    if (indexHtmlPath && fs.existsSync(indexHtmlPath)) {
+        res.sendFile(indexHtmlPath);
+    } else {
+        // عرض صفحة بسيطة إذا لم يوجد index.html
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>منظومة الوسائل البحرية</title>
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; direction: rtl; }
+                    .container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); text-align: center; max-width: 500px; }
+                    h1 { color: #2e7d32; font-size: 32px; }
+                    .btn { display: inline-block; padding: 12px 30px; background: #2e7d32; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; }
+                    .btn:hover { background: #1e5a22; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>⚓ منظومة الوسائل البحرية</h1>
+                    <p>📡 نظام تتبع GPS متكامل</p>
+                    <p style="color:#999;font-size:14px;">جاري تحميل التطبيق...</p>
+                    <button class="btn" onclick="window.location.reload()">🔄 إعادة تحميل</button>
+                </div>
+            </body>
+            </html>
+        `);
+    }
 });
 
 // ==================== تشغيل الخادم ====================
 server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
-    console.log(`🌐 http://localhost:${PORT}`);
+    console.log(`🌐 https://marine-system-71eo.onrender.com`);
+    console.log('========================================');
+    console.log('📁 الملفات الموجودة:');
+    console.log('   - models/ (User.js, Vessel.js, Ticket.js, Log.js)');
+    console.log('   - public/index.html');
+    console.log('   - server.js');
     console.log('========================================');
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
