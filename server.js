@@ -24,7 +24,7 @@ const DEFAULT_USERS = [
     { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// ==================== بيانات افتراضية للمراكب (مهمة جداً) ====================
+// ==================== بيانات المراكب ====================
 let memoryVessels = [
     { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: 'قاعدة الشمال', stat: 'صالح', break: '', fDate: '2024-01-01', eDate: '2024-12-31', ref: 'REF001', cat: 'صقور' },
     { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'قاعدة الساحل', stat: 'صيانة', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF002', cat: 'البروق' },
@@ -286,12 +286,9 @@ io.on('connection', (socket) => {
 });
 
 // ==================== الملفات الثابتة ====================
-// خدمة الملفات من المجلد الحالي
 app.use(express.static(path.join(__dirname)));
 
-// الصفحة الرئيسية
 app.get('/', (req, res) => {
-    // البحث عن index.html في عدة أماكن
     const paths = [
         path.join(__dirname, 'index.html'),
         path.join(__dirname, 'public', 'index.html')
@@ -304,7 +301,6 @@ app.get('/', (req, res) => {
         }
     }
     
-    // إذا لم يوجد الملف
     res.send(`
         <!DOCTYPE html>
         <html>
@@ -332,6 +328,6 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`👥 عدد المستخدمين: ${DEFAULT_USERS.length}`);
     console.log(`📋 عدد التذاكر: ${memoryTickets.length}`);
     console.log('========================================');
-    console.log('✅ التطبيق جاهز للاستخدام!');
+    console.log('📍 نظام تتبع GPS نشط (تلقائي)');
     console.log('========================================');
 });
