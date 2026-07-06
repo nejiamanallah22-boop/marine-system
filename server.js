@@ -17,14 +17,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== بيانات افتراضية للمستخدمين ====================
+// ==================== بيانات المستخدمين ====================
 const DEFAULT_USERS = [
     { name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
     { name: 'user', pass: '1234', role: 'محرر', enabled: true },
     { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
 ];
 
-// ==================== بيانات افتراضية للمراكب ====================
+// ==================== بيانات افتراضية للمراكب (مهمة جداً) ====================
 let memoryVessels = [
     { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: 'قاعدة الشمال', stat: 'صالح', break: '', fDate: '2024-01-01', eDate: '2024-12-31', ref: 'REF001', cat: 'صقور' },
     { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'قاعدة الساحل', stat: 'صيانة', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF002', cat: 'البروق' },
@@ -65,7 +65,7 @@ function getCat(len) {
 }
 
 // ==================== مسار تسجيل الدخول ====================
-app.post('/api/login', (req, res) => {   // <--- هذا السطر كان به خطأ
+app.post('/api/login', (req, res) => {
     console.log('📝 محاولة تسجيل دخول:', req.body);
     const { name, pass } = req.body;
     
@@ -286,13 +286,15 @@ io.on('connection', (socket) => {
 });
 
 // ==================== الملفات الثابتة ====================
-app.use(express.static(path.join(__dirname, 'public')));
+// خدمة الملفات من المجلد الحالي
 app.use(express.static(path.join(__dirname)));
 
+// الصفحة الرئيسية
 app.get('/', (req, res) => {
+    // البحث عن index.html في عدة أماكن
     const paths = [
-        path.join(__dirname, 'public', 'index.html'),
-        path.join(__dirname, 'index.html')
+        path.join(__dirname, 'index.html'),
+        path.join(__dirname, 'public', 'index.html')
     ];
     
     for (const p of paths) {
@@ -302,24 +304,15 @@ app.get('/', (req, res) => {
         }
     }
     
+    // إذا لم يوجد الملف
     res.send(`
         <!DOCTYPE html>
-        <html lang="ar" dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>منظومة الوسائل البحرية</title>
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; direction: rtl; }
-                .container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.1); text-align: center; max-width: 500px; }
-                h1 { color: #2e7d32; font-size: 32px; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>⚓ منظومة الوسائل البحرية</h1>
-                <p>📡 نظام تتبع GPS متكامل</p>
-                <p style="color:#999;">جاري تحميل التطبيق...</p>
-            </div>
+        <html>
+        <head><title>منظومة الوسائل البحرية</title></head>
+        <body style="font-family:Arial;text-align:center;padding:50px;direction:rtl;">
+            <h1 style="color:#2e7d32;">⚓ منظومة الوسائل البحرية</h1>
+            <p>جاري تحميل التطبيق...</p>
+            <p style="color:#999;font-size:14px;">يرجى التأكد من وجود ملف index.html</p>
         </body>
         </html>
     `);
@@ -337,6 +330,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log(`📊 عدد المراكب: ${memoryVessels.length}`);
     console.log(`👥 عدد المستخدمين: ${DEFAULT_USERS.length}`);
+    console.log(`📋 عدد التذاكر: ${memoryTickets.length}`);
     console.log('========================================');
     console.log('✅ التطبيق جاهز للاستخدام!');
     console.log('========================================');
