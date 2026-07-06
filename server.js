@@ -87,4 +87,145 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users', (req, res) => {
     const { name, pass, role } = req.body;
     if (DEFAULT_USERS.find(u => u.name === name)) return res.status(400).json({ error: 'اسم المستخدم موجود' });
-    const user
+    const user = { name, pass, role, enabled: true };
+    DEFAULT_USERS.push(user);
+    res.status(201).json(user);
+});
+app.put('/api/users/:id', (req, res) => {
+    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...req.body };
+    const { pass, ...rest } = DEFAULT_USERS[index];
+    res.json(rest);
+});
+app.delete('/api/users/:id', (req, res) => {
+    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
+    DEFAULT_USERS.splice(index, 1);
+    res.json({ success: true });
+});
+
+app.get('/api/tickets', (req, res) => { res.json(memoryTickets); });
+app.post('/api/tickets', (req, res) => {
+    const ticket = { ...req.body, _id: Date.now().toString() };
+    memoryTickets.push(ticket);
+    res.status(201).json(ticket);
+});
+app.put('/api/tickets/:id/reply', (req, res) => {
+    const ticket = memoryTickets.find(t => t._id === req.params.id);
+    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    if (!ticket.replies) ticket.replies = [];
+    ticket.replies.push(req.body.reply);
+    ticket.status = 'تم الرد';
+    res.json(ticket);
+});
+app.put('/api/tickets/:id/close', (req, res) => {
+    const ticket = memoryTickets.find(t => t._id === req.params.id);
+    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    ticket.status = 'مغلقة';
+    res.json(ticket);
+});
+
+app.get('/api/logs', (req, res) => { res.json(memoryLogs); });
+app.post('/api/logs', (req, res) => {
+    const log = { ...req.body, _id: Date.now().toString() };
+    memoryLogs.push(log);
+    res.status(201).json(log);
+});
+
+app.post('/api/locations', (req, res) => {
+    const location = { ...req.body, _id: Date.now().toString(), timestamp: new Date().toISOString() };
+    memoryLocations.push(location);
+    res.status(201).json(location);
+});
+app.get('/api/locations', (req, res) => { res.json(memoryLocations.slice(-100)); });
+
+app.get('/api/export-all', (req, res) => {
+    res.json({ vessels: memoryVessels, users: DEFAULT_USERS, tickets: memoryTickets, logs: memoryLogs, locations: memoryLocations });
+});
+app.post('/api/import-all', (req, res) => {
+    const { vessels, users, tickets, logs, locations } = req.body;
+    if (vessels) memoryVessels = vessels;
+    if (users) { DEFAULT_USERS.length = 0; DEFAULT_USERS.push(...users); }
+    if (tickets) memoryTickets = tickets;
+    if (logs) memoryLogs = logs;
+    if (locations) memoryLocations = locations;
+    res.json({ success: true });
+});
+
+// ==================== Socket.IO ====================
+io.on('connection', (socket) => {
+    console.log('📡 مستخدم متصل:', socket.id);
+    
+    socket.on('user-connected', (data) => {
+        if (data && data.userName) {
+            onlineUsers.add(data.userName);
+            io.emit('online-users', { users: Array.from(onlineUsers) });
+            console.log('👤', data.userName, 'متصل');
+        }
+    });
+    
+    socket.on('send-location', (data) => {
+        if (data && data.userName && data.lat && data.lng) {
+            const locationData = {
+                userName: data.userName,
+                userRole: data.userRole || 'مستخدم',
+                lat: data.lat,
+                lng: data.lng,
+                timestamp: new Date().toISOString()
+            };
+            memoryLocations.push(locationData);
+            socket.broadcast.emit('receive-location', {
+                userName: data.userName,
+                lat: data.lat,
+                lng: data.lng,
+                time: new Date().toISOString()
+            });
+            console.log('📍 موقع من', data.userName, ':', data.lat, ',', data.lng);
+        }
+    });
+    
+    socket.on('get-online-users', () => {
+        socket.emit('online-users', { users: Array.from(onlineUsers) });
+    });
+    
+    socket.on('user-disconnected', (data) => {
+        if (data && data.userName) {
+            onlineUsers.delete(data.userName);
+            io.emit('online-users', { users: Array.from(onlineUsers) });
+            console.log('👤', data.userName, 'غير متصل');
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('📡 مستخدم غير متصل:', socket.id);
+    });
+});
+
+// ==================== الملفات الثابتة ====================
+app.use(express.static(path.join(__dirname)));
+
+app.get('/', (req, res) => {
+    const paths = [path.join(__dirname, 'index.html'), path.join(__dirname, 'public', 'index.html')];
+    for (const p of paths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+    res.send(`<!DOCTYPE html><html><head><title>منظومة الوسائل البحرية</title></head><body style="font-family:Arial;text-align:center;padding:50px;direction:rtl;"><h1 style="color:#2e7d32;">⚓ منظومة الوسائل البحرية</h1><p>جاري تحميل التطبيق...</p></body></html>`);
+});
+
+// ==================== تشغيل الخادم ====================
+server.listen(PORT, '0.0.0.0', () => {
+    console.log('========================================');
+    console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
+    console.log(`🌐 http://localhost:${PORT}`);
+    console.log('========================================');
+    console.log('🔐 بيانات تسجيل الدخول:');
+    console.log('   📧 admin');
+    console.log('   🔑 1234');
+    console.log('========================================');
+    console.log(`📊 عدد المراكب: ${memoryVessels.length}`);
+    console.log('📍 نظام تتبع GPS المباشر نشط');
+    console.log('========================================');
+});
