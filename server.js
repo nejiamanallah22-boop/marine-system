@@ -3,6 +3,7 @@ const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,126 +17,83 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== بيانات افتراضية للمستخدمين ====================
-const DEFAULT_USERS = [
-    { name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
-    { name: 'user', pass: '1234', role: 'محرر', enabled: true },
-    { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
-];
+// ==================== ملف حفظ البيانات ====================
+const DATA_FILE = path.join(__dirname, 'data.json');
 
-// ==================== بيانات افتراضية للمراكب (مهمة جداً) ====================
-let memoryVessels = [
-    { 
-        _id: '1', 
-        name: 'المركب 1', 
-        num: 'M001', 
-        len: 12, 
-        reg: 'الشمال', 
-        zone: 'تونس', 
-        port: 'تونس', 
-        supp: 'قاعدة الشمال', 
-        stat: 'صالح', 
-        break: '', 
-        fDate: '2024-01-01', 
-        eDate: '2024-12-31', 
-        ref: 'REF001', 
-        cat: 'صقور' 
-    },
-    { 
-        _id: '2', 
-        name: 'المركب 2', 
-        num: 'M002', 
-        len: 8, 
-        reg: 'الساحل', 
-        zone: 'سوسة', 
-        port: 'سوسة', 
-        supp: 'قاعدة الساحل', 
-        stat: 'صيانة', 
-        break: 'محرك', 
-        fDate: '2024-01-15', 
-        eDate: '2024-02-15', 
-        ref: 'REF002', 
-        cat: 'البروق' 
-    },
-    { 
-        _id: '3', 
-        name: 'المركب 3', 
-        num: 'M003', 
-        len: 15, 
-        reg: 'الوسط', 
-        zone: 'صفاقس', 
-        port: 'صفاقس', 
-        supp: 'قاعدة الوسط', 
-        stat: 'معطب', 
-        break: 'هيكل', 
-        fDate: '2024-01-20', 
-        eDate: '', 
-        ref: 'REF003', 
-        cat: 'خوافر' 
-    },
-    { 
-        _id: '4', 
-        name: 'المركب 4', 
-        num: 'M004', 
-        len: 11, 
-        reg: 'الجنوب', 
-        zone: 'جرجيس', 
-        port: 'جرجيس', 
-        supp: 'قاعدة الجنوب', 
-        stat: 'صالح', 
-        break: '', 
-        fDate: '2024-02-01', 
-        eDate: '2024-12-31', 
-        ref: 'REF004', 
-        cat: 'البروق' 
-    },
-    { 
-        _id: '5', 
-        name: 'المركب 5', 
-        num: 'M005', 
-        len: 25, 
-        reg: 'الشمال', 
-        zone: 'بنزرت', 
-        port: 'بنزرت', 
-        supp: 'قاعدة الشمال', 
-        stat: 'صالح', 
-        break: '', 
-        fDate: '2024-02-01', 
-        eDate: '2024-12-31', 
-        ref: 'REF005', 
-        cat: 'خوافر' 
+// ==================== تحميل البيانات من الملف ====================
+function loadData() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+            console.log('✅ تم تحميل البيانات من الملف');
+            return data;
+        }
+    } catch (err) {
+        console.error('❌ خطأ في تحميل البيانات:', err);
     }
-];
+    return null;
+}
 
-let memoryTickets = [
-    {
-        _id: '1',
-        userName: 'admin',
-        userRole: 'مسؤول',
-        subject: 'مشكلة في الخريطة',
-        message: 'الخريطة لا تظهر بشكل صحيح',
-        date: '01/01/2024',
-        time: '10:00',
-        status: 'تم الرد',
-        replies: [
-            { adminName: 'admin', reply: 'تم إصلاح المشكلة', date: '02/01/2024', time: '11:00' }
-        ]
+// ==================== حفظ البيانات في الملف ====================
+function saveData(data) {
+    try {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+        console.log('✅ تم حفظ البيانات في الملف');
+        return true;
+    } catch (err) {
+        console.error('❌ خطأ في حفظ البيانات:', err);
+        return false;
     }
-];
+}
 
-let memoryLogs = [
-    {
-        userName: 'admin',
-        userRole: 'مسؤول',
-        action: 'تسجيل دخول',
-        details: 'قام بتسجيل الدخول إلى النظام',
-        date: '01/01/2024',
-        time: '10:00'
-    }
-];
+// ==================== البيانات الافتراضية ====================
+const DEFAULT_DATA = {
+    users: [
+        { name: 'admin', pass: '1234', role: 'مسؤول', enabled: true },
+        { name: 'user', pass: '1234', role: 'محرر', enabled: true },
+        { name: 'viewer', pass: '1234', role: 'مشاهد', enabled: true }
+    ],
+    vessels: [
+        { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: 'قاعدة الشمال', stat: 'صالح', break: '', fDate: '2024-01-01', eDate: '2024-12-31', ref: 'REF001', cat: 'صقور' },
+        { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'قاعدة الساحل', stat: 'صيانة', break: 'محرك', fDate: '2024-01-15', eDate: '2024-02-15', ref: 'REF002', cat: 'البروق' },
+        { _id: '3', name: 'المركب 3', num: 'M003', len: 15, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'قاعدة الوسط', stat: 'معطب', break: 'هيكل', fDate: '2024-01-20', eDate: '', ref: 'REF003', cat: 'خوافر' },
+        { _id: '4', name: 'المركب 4', num: 'M004', len: 11, reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'قاعدة الجنوب', stat: 'صالح', break: '', fDate: '2024-02-01', eDate: '2024-12-31', ref: 'REF004', cat: 'البروق' },
+        { _id: '5', name: 'المركب 5', num: 'M005', len: 25, reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'قاعدة الشمال', stat: 'صالح', break: '', fDate: '2024-02-01', eDate: '2024-12-31', ref: 'REF005', cat: 'خوافر' }
+    ],
+    tickets: [
+        { _id: '1', userName: 'admin', userRole: 'مسؤول', subject: 'مشكلة في الخريطة', message: 'الخريطة لا تظهر بشكل صحيح', date: '01/01/2024', time: '10:00', status: 'تم الرد', replies: [{ adminName: 'admin', reply: 'تم إصلاح المشكلة', date: '02/01/2024', time: '11:00' }] }
+    ],
+    logs: [
+        { userName: 'admin', userRole: 'مسؤول', action: 'تسجيل دخول', details: 'قام بتسجيل الدخول إلى النظام', date: '01/01/2024', time: '10:00' }
+    ],
+    locations: []
+};
 
-let memoryLocations = [];
+// ==================== تحميل البيانات أو استخدام الافتراضية ====================
+let appData = loadData();
+if (!appData) {
+    appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    saveData(appData);
+    console.log('📁 تم إنشاء ملف البيانات الافتراضي');
+}
+
+// ==================== متغيرات البيانات ====================
+let users = appData.users;
+let vessels = appData.vessels;
+let tickets = appData.tickets;
+let logs = appData.logs;
+let locations = appData.locations;
 let onlineUsers = new Set();
+
+// ==================== حفظ البيانات تلقائياً ====================
+function saveAllData() {
+    appData.users = users;
+    appData.vessels = vessels;
+    appData.tickets = tickets;
+    appData.logs = logs;
+    appData.locations = locations;
+    saveData(appData);
+}
 
 // ==================== دوال مساعدة ====================
 function getCurrentDate() {
@@ -166,7 +124,7 @@ app.post('/api/login', (req, res) => {
         return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
     }
     
-    const user = DEFAULT_USERS.find(u => u.name === name && u.pass === pass && u.enabled === true);
+    const user = users.find(u => u.name === name && u.pass === pass && u.enabled === true);
     
     if (!user) {
         console.log('❌ فشل تسجيل الدخول:', name);
@@ -183,8 +141,8 @@ app.post('/api/logout', (req, res) => {
 
 // ==================== مسارات المراكب ====================
 app.get('/api/vessels', (req, res) => {
-    console.log('📊 جلب المراكب:', memoryVessels.length);
-    res.json(memoryVessels);
+    console.log('📊 جلب المراكب:', vessels.length);
+    res.json(vessels);
 });
 
 app.post('/api/vessels', (req, res) => {
@@ -194,99 +152,109 @@ app.post('/api/vessels', (req, res) => {
         _id: Date.now().toString(),
         cat: req.body.cat || getCat(req.body.len)
     };
-    memoryVessels.push(vessel);
+    vessels.push(vessel);
+    saveAllData();
     res.status(201).json(vessel);
 });
 
 app.put('/api/vessels/:id', (req, res) => {
-    const index = memoryVessels.findIndex(v => v._id === req.params.id);
+    const index = vessels.findIndex(v => v._id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
-    memoryVessels[index] = { ...memoryVessels[index], ...req.body };
-    console.log('✏️ تعديل مركب:', memoryVessels[index].name);
-    res.json(memoryVessels[index]);
+    vessels[index] = { ...vessels[index], ...req.body };
+    saveAllData();
+    console.log('✏️ تعديل مركب:', vessels[index].name);
+    res.json(vessels[index]);
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
-    const index = memoryVessels.findIndex(v => v._id === req.params.id);
+    const index = vessels.findIndex(v => v._id === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المركب غير موجود' });
-    const name = memoryVessels[index].name;
-    memoryVessels.splice(index, 1);
+    const name = vessels[index].name;
+    vessels.splice(index, 1);
+    saveAllData();
     console.log('🗑️ حذف مركب:', name);
     res.json({ success: true });
 });
 
 // ==================== مسارات المستخدمين ====================
 app.get('/api/users', (req, res) => {
-    const users = DEFAULT_USERS.map(u => {
+    const usersList = users.map(u => {
         const { pass, ...rest } = u;
         return { ...rest, _id: u.name };
     });
-    console.log('👥 جلب المستخدمين:', users.length);
-    res.json(users);
+    console.log('👥 جلب المستخدمين:', usersList.length);
+    res.json(usersList);
 });
 
 app.post('/api/users', (req, res) => {
     const { name, pass, role } = req.body;
-    if (DEFAULT_USERS.find(u => u.name === name)) {
+    if (users.find(u => u.name === name)) {
         return res.status(400).json({ error: 'اسم المستخدم موجود' });
     }
     const user = { name, pass, role, enabled: true };
-    DEFAULT_USERS.push(user);
+    users.push(user);
+    saveAllData();
     res.status(201).json(user);
 });
 
 app.put('/api/users/:id', (req, res) => {
-    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    const index = users.findIndex(u => u.name === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    DEFAULT_USERS[index] = { ...DEFAULT_USERS[index], ...req.body };
-    const { pass, ...rest } = DEFAULT_USERS[index];
+    users[index] = { ...users[index], ...req.body };
+    saveAllData();
+    const { pass, ...rest } = users[index];
     res.json(rest);
 });
 
 app.delete('/api/users/:id', (req, res) => {
-    const index = DEFAULT_USERS.findIndex(u => u.name === req.params.id);
+    const index = users.findIndex(u => u.name === req.params.id);
     if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    DEFAULT_USERS.splice(index, 1);
+    users.splice(index, 1);
+    saveAllData();
     res.json({ success: true });
 });
 
 // ==================== مسارات التذاكر ====================
 app.get('/api/tickets', (req, res) => {
-    console.log('📋 جلب التذاكر:', memoryTickets.length);
-    res.json(memoryTickets);
+    console.log('📋 جلب التذاكر:', tickets.length);
+    res.json(tickets);
 });
 
 app.post('/api/tickets', (req, res) => {
     const ticket = { ...req.body, _id: Date.now().toString() };
-    memoryTickets.push(ticket);
+    tickets.push(ticket);
+    saveAllData();
     res.status(201).json(ticket);
 });
 
 app.put('/api/tickets/:id/reply', (req, res) => {
-    const ticket = memoryTickets.find(t => t._id === req.params.id);
+    const ticket = tickets.find(t => t._id === req.params.id);
     if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
     if (!ticket.replies) ticket.replies = [];
     ticket.replies.push(req.body.reply);
     ticket.status = 'تم الرد';
+    saveAllData();
     res.json(ticket);
 });
 
 app.put('/api/tickets/:id/close', (req, res) => {
-    const ticket = memoryTickets.find(t => t._id === req.params.id);
+    const ticket = tickets.find(t => t._id === req.params.id);
     if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
     ticket.status = 'مغلقة';
+    saveAllData();
     res.json(ticket);
 });
 
 // ==================== مسارات السجلات ====================
 app.get('/api/logs', (req, res) => {
-    console.log('📜 جلب السجلات:', memoryLogs.length);
-    res.json(memoryLogs);
+    console.log('📜 جلب السجلات:', logs.length);
+    res.json(logs);
 });
 
 app.post('/api/logs', (req, res) => {
     const log = { ...req.body, _id: Date.now().toString() };
-    memoryLogs.push(log);
+    logs.push(log);
+    saveAllData();
     res.status(201).json(log);
 });
 
@@ -297,33 +265,29 @@ app.post('/api/locations', (req, res) => {
         _id: Date.now().toString(),
         timestamp: new Date().toISOString()
     };
-    memoryLocations.push(location);
+    locations.push(location);
+    saveAllData();
     res.status(201).json(location);
 });
 
 app.get('/api/locations', (req, res) => {
-    console.log('📍 جلب المواقع:', memoryLocations.length);
-    res.json(memoryLocations.slice(-100));
+    console.log('📍 جلب المواقع:', locations.length);
+    res.json(locations.slice(-100));
 });
 
 // ==================== التصدير والاستيراد ====================
 app.get('/api/export-all', (req, res) => {
-    res.json({ 
-        vessels: memoryVessels, 
-        users: DEFAULT_USERS, 
-        tickets: memoryTickets, 
-        logs: memoryLogs, 
-        locations: memoryLocations 
-    });
+    res.json({ vessels, users, tickets, logs, locations });
 });
 
 app.post('/api/import-all', (req, res) => {
-    const { vessels, users, tickets, logs, locations } = req.body;
-    if (vessels) memoryVessels = vessels;
-    if (users) { DEFAULT_USERS.length = 0; DEFAULT_USERS.push(...users); }
-    if (tickets) memoryTickets = tickets;
-    if (logs) memoryLogs = logs;
-    if (locations) memoryLocations = locations;
+    const { vessels: v, users: u, tickets: t, logs: l, locations: loc } = req.body;
+    if (v) { vessels = v; }
+    if (u) { users = u; }
+    if (t) { tickets = t; }
+    if (l) { logs = l; }
+    if (loc) { locations = loc; }
+    saveAllData();
     res.json({ success: true });
 });
 
@@ -348,7 +312,8 @@ io.on('connection', (socket) => {
                 lng: data.lng,
                 timestamp: new Date().toISOString()
             };
-            memoryLocations.push(locationData);
+            locations.push(locationData);
+            saveAllData();
             
             socket.broadcast.emit('receive-location', {
                 userName: data.userName,
@@ -383,7 +348,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname)));
 
 app.get('/', (req, res) => {
-    // البحث عن index.html
     const paths = [
         path.join(__dirname, 'public', 'index.html'),
         path.join(__dirname, 'index.html')
@@ -396,7 +360,6 @@ app.get('/', (req, res) => {
         }
     }
     
-    // إذا لم يوجد، عرض صفحة بسيطة
     res.send(`
         <!DOCTYPE html>
         <html lang="ar" dir="rtl">
@@ -409,15 +372,13 @@ app.get('/', (req, res) => {
                 h1 { color: #2e7d32; font-size: 32px; }
                 .btn { display: inline-block; padding: 12px 30px; background: #2e7d32; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; border: none; cursor: pointer; }
                 .btn:hover { background: #1e5a22; }
-                .error { color: #d9534f; }
             </style>
         </head>
         <body>
             <div class="container">
                 <h1>⚓ منظومة الوسائل البحرية</h1>
                 <p>📡 نظام تتبع GPS متكامل</p>
-                <p class="error">⚠️ لم يتم العثور على ملف index.html</p>
-                <p style="color:#999;font-size:14px;">يرجى التأكد من وجود الملف في مجلد public</p>
+                <p style="color:#999;font-size:14px;">جاري تحميل التطبيق...</p>
                 <button class="btn" onclick="window.location.reload()">🔄 إعادة تحميل</button>
             </div>
         </body>
@@ -435,11 +396,12 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('   📧 admin');
     console.log('   🔑 1234');
     console.log('========================================');
-    console.log(`📊 عدد المراكب: ${memoryVessels.length}`);
-    console.log(`👥 عدد المستخدمين: ${DEFAULT_USERS.length}`);
-    console.log(`📋 عدد التذاكر: ${memoryTickets.length}`);
-    console.log(`📍 عدد المواقع: ${memoryLocations.length}`);
+    console.log(`📊 عدد المراكب: ${vessels.length}`);
+    console.log(`👥 عدد المستخدمين: ${users.length}`);
+    console.log(`📋 عدد التذاكر: ${tickets.length}`);
+    console.log(`📍 عدد المواقع: ${locations.length}`);
     console.log('========================================');
+    console.log('✅ البيانات محفوظة في ملف data.json');
     console.log('✅ التطبيق جاهز للاستخدام!');
     console.log('========================================');
 });
