@@ -11,35 +11,22 @@ const io = socketIo(server, {
 });
 const PORT = process.env.PORT || 3000;
 
-// ==================== Middleware ====================
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==================== بيانات ثابتة ====================
+// ==================== بيانات المستخدمين الثابتة ====================
 const DEFAULT_USERS = [
     { name: 'admin', pass: '1234', role: 'مسؤول' },
     { name: 'user', pass: '1234', role: 'محرر' },
     { name: 'viewer', pass: '1234', role: 'مشاهد' }
 ];
 
-let memoryUsers = [...DEFAULT_USERS];
 let memoryVessels = [];
 let memoryTickets = [];
 let memoryLogs = [];
 let memoryLocations = [];
 let onlineUsers = new Set();
-
-// ==================== دوال مساعدة ====================
-function getCurrentDate() {
-    const now = new Date();
-    return `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
-}
-
-function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-}
 
 // ==================== مسار تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
@@ -60,10 +47,6 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/logout', (req, res) => {
     res.json({ success: true });
-});
-
-app.get('/api/check-session', (req, res) => {
-    res.json({ loggedIn: false });
 });
 
 // ==================== مسارات المراكب ====================
@@ -93,36 +76,11 @@ app.delete('/api/vessels/:id', (req, res) => {
 
 // ==================== مسارات المستخدمين ====================
 app.get('/api/users', (req, res) => {
-    const users = memoryUsers.map(u => {
+    const users = DEFAULT_USERS.map(u => {
         const { pass, ...rest } = u;
-        return rest;
+        return { ...rest, enabled: true, _id: u.name };
     });
     res.json(users);
-});
-
-app.post('/api/users', (req, res) => {
-    const { name, pass, role } = req.body;
-    if (memoryUsers.find(u => u.name === name)) {
-        return res.status(400).json({ error: 'اسم المستخدم موجود' });
-    }
-    const user = { name, pass, role, enabled: true, _id: Date.now().toString() };
-    memoryUsers.push(user);
-    res.status(201).json(user);
-});
-
-app.put('/api/users/:id', (req, res) => {
-    const index = memoryUsers.findIndex(u => u._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    memoryUsers[index] = { ...memoryUsers[index], ...req.body };
-    const { pass, ...rest } = memoryUsers[index];
-    res.json(rest);
-});
-
-app.delete('/api/users/:id', (req, res) => {
-    const index = memoryUsers.findIndex(u => u._id === req.params.id);
-    if (index === -1) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    memoryUsers.splice(index, 1);
-    res.json({ success: true });
 });
 
 // ==================== مسارات التذاكر ====================
@@ -170,14 +128,14 @@ app.post('/api/locations', (req, res) => {
 });
 
 app.get('/api/locations', (req, res) => {
-    res.json(memoryLocations.slice(-100)); // آخر 100 موقع
+    res.json(memoryLocations.slice(-100));
 });
 
 // ==================== مسارات التصدير والاستيراد ====================
 app.get('/api/export-all', (req, res) => {
     res.json({ 
         vessels: memoryVessels, 
-        users: memoryUsers, 
+        users: DEFAULT_USERS, 
         tickets: memoryTickets, 
         logs: memoryLogs, 
         locations: memoryLocations 
@@ -187,28 +145,22 @@ app.get('/api/export-all', (req, res) => {
 app.post('/api/import-all', (req, res) => {
     const { vessels, users, tickets, logs, locations } = req.body;
     if (vessels) memoryVessels = vessels;
-    if (users) memoryUsers = users;
     if (tickets) memoryTickets = tickets;
     if (logs) memoryLogs = logs;
     if (locations) memoryLocations = locations;
     res.json({ success: true });
 });
 
-// ==================== Socket.IO لتتبع GPS ====================
+// ==================== Socket.IO ====================
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
     socket.on('user-connected', (data) => {
         onlineUsers.add(data.userName);
-        console.log(`👤 ${data.userName} متصل`);
-        io.emit('user-connected', { userName: data.userName });
         io.emit('online-users', { users: Array.from(onlineUsers) });
     });
     
     socket.on('send-location', (data) => {
-        console.log(`📍 موقع من ${data.userName}: ${data.lat}, ${data.lng}`);
-        
-        // حفظ الموقع
         memoryLocations.push({
             userName: data.userName,
             userRole: data.userRole,
@@ -218,16 +170,12 @@ io.on('connection', (socket) => {
             _id: Date.now().toString()
         });
         
-        // بث الموقع للجميع
         socket.broadcast.emit('receive-location', {
             userName: data.userName,
             lat: data.lat,
             lng: data.lng,
             time: new Date().toISOString()
         });
-        
-        // إرسال تأكيد للمرسل
-        socket.emit('location-sent', { status: 'ok' });
     });
     
     socket.on('get-online-users', () => {
@@ -236,14 +184,11 @@ io.on('connection', (socket) => {
     
     socket.on('user-disconnected', (data) => {
         onlineUsers.delete(data.userName);
-        console.log(`👤 ${data.userName} غير متصل`);
-        io.emit('user-disconnected', { userName: data.userName });
         io.emit('online-users', { users: Array.from(onlineUsers) });
     });
     
     socket.on('disconnect', () => {
         console.log('📡 مستخدم غير متصل:', socket.id);
-        // يمكن إضافة منطق لإزالة المستخدم عند قطع الاتصال
     });
 });
 
