@@ -30,13 +30,11 @@ app.use('/api', rateLimit({
 }));
 
 // ==================== قاعدة البيانات ====================
-// ✅ قراءة الرابط من متغيرات البيئة (الإصلاح)
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
     console.error('❌ خطأ: MONGODB_URI غير معرف في متغيرات البيئة!');
     console.error('💡 أضف MONGODB_URI في Render.com → Settings → Environment Variables');
-    // نستمر في التشغيل للواجهة لكن بدون قاعدة بيانات
 } else {
     console.log('🔍 محاولة الاتصال بقاعدة البيانات...');
     console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@'));
@@ -166,7 +164,7 @@ const authorize = (...roles) => {
 
 // ==================== API Routes ====================
 
-// ===== تسجيل الدخول =====
+// ===== تسجيل الدخول (معدل - يقارن النص مباشرة) =====
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -175,18 +173,24 @@ app.post('/api/login', async (req, res) => {
         }
 
         const user = await User.findOne({ name: username });
+        console.log('🔍 محاولة تسجيل دخول:', { username, password, found: !!user });
+        
         if (!user || !user.enabled) {
+            console.log('❌ المستخدم غير موجود أو معطل');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        // ✅ مقارنة مباشرة (بدون تشفير)
         if (user.pass !== password) {
+            console.log('❌ كلمة المرور غير صحيحة');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
+        console.log('✅ تسجيل دخول ناجح:', username);
         const token = jwt.sign(
             { id: user._id, name: user.name, role: user.role },
             JWT_SECRET,
-            { expiresIn: '7d' }
+            { expiresIn: process.env.JWT_EXPIRE || '7d' }
         );
 
         res.json({
@@ -196,7 +200,29 @@ app.post('/api/login', async (req, res) => {
             role: user.role
         });
     } catch (error) {
+        console.error('❌ خطأ في تسجيل الدخول:', error.message);
         res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message });
+    }
+});
+
+// ===== إنشاء مستخدم admin يدوياً (via API) =====
+app.get('/api/create-admin', async (req, res) => {
+    try {
+        const adminExists = await User.findOne({ name: 'admin' });
+        if (adminExists) {
+            return res.json({ message: 'المستخدم admin موجود بالفعل', user: adminExists });
+        }
+        
+        const newAdmin = new User({
+            name: 'admin',
+            pass: '1234',
+            role: 'مسؤول',
+            enabled: true
+        });
+        await newAdmin.save();
+        res.json({ message: '✅ تم إنشاء المستخدم admin بنجاح!', user: newAdmin });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -213,6 +239,14 @@ app.get('/api/vessels', authenticate, async (req, res) => {
 app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         const data = req.body;
+        // حساب الفئة تلقائياً
+        const n = parseFloat(data.len);
+        if (n === 11) data.cat = 'البروق';
+        else if (n >= 8 && n <= 12) data.cat = 'صقور';
+        else if (n > 12 && n <= 25) data.cat = 'خوافر';
+        else if (n > 30) data.cat = 'طوافات';
+        else data.cat = 'زوارق مزدوجة';
+        
         const vessel = new Vessel(data);
         await vessel.save();
         res.status(201).json(vessel);
@@ -223,7 +257,16 @@ app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), asyn
 
 app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const data = req.body;
+        // إعادة حساب الفئة
+        const n = parseFloat(data.len);
+        if (n === 11) data.cat = 'البروق';
+        else if (n >= 8 && n <= 12) data.cat = 'صقور';
+        else if (n > 12 && n <= 25) data.cat = 'خوافر';
+        else if (n > 30) data.cat = 'طوافات';
+        else data.cat = 'زوارق مزدوجة';
+        
+        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
         if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
         res.json(vessel);
     } catch (error) {
@@ -406,12 +449,12 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
     }
 });
 
-// ==================== مسار الصحة ====================
+// ===== مسار الصحة =====
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ==================== تقديم الملفات الثابتة ====================
+// ===== تقديم الملفات الثابتة =====
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
