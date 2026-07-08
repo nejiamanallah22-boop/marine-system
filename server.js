@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 // ==================== إعدادات Express ====================
 const app = express();
@@ -29,17 +30,28 @@ app.use('/api', rateLimit({
 }));
 
 // ==================== قاعدة البيانات ====================
+// ✅ قراءة الرابط من متغيرات البيئة
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
+
+console.log('🔍 محاولة الاتصال بقاعدة البيانات...');
+console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // إخفاء كلمة المرور في السجلات
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
 })
-.then(() => console.log('✅ متصل بقاعدة البيانات MongoDB'))
-.catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message));
+.then(() => {
+    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
+    initializeDefaultUsers();
+})
+.catch(err => {
+    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+    console.error('💡 تأكد من صحة MONGODB_URI في متغيرات البيئة');
+});
 
 // ==================== نماذج البيانات ====================
-// ===== نموذج المركب =====
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -56,18 +68,8 @@ const VesselSchema = new mongoose.Schema({
     ref: { type: String, trim: true }
 }, { timestamps: true });
 
-VesselSchema.methods.calculateCategory = function() {
-    const n = parseFloat(this.len);
-    if (n === 11) return 'البروق';
-    if (n >= 8 && n <= 12) return 'صقور';
-    if (n > 12 && n <= 25) return 'خوافر';
-    if (n > 30) return 'طوافات';
-    return 'زوارق مزدوجة';
-};
-
 const Vessel = mongoose.model('Vessel', VesselSchema);
 
-// ===== نموذج المستخدم =====
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true, trim: true },
     pass: { type: String, required: true },
@@ -77,53 +79,8 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-// ===== نموذج التذكرة =====
-const ReplySchema = new mongoose.Schema({
-    adminName: { type: String, required: true },
-    reply: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true }
-});
-
-const TicketSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    subject: { type: String, required: true, trim: true },
-    message: { type: String, required: true, trim: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true },
-    status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
-    replies: [ReplySchema]
-}, { timestamps: true });
-
-const Ticket = mongoose.model('Ticket', TicketSchema);
-
-// ===== نموذج السجل =====
-const LogSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    action: { type: String, required: true },
-    details: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true }
-}, { timestamps: true });
-
-const Log = mongoose.model('Log', LogSchema);
-
-// ===== نموذج الموقع =====
-const LocationSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
-    timestamp: { type: Date, default: Date.now }
-});
-
-const Location = mongoose.model('Location', LocationSchema);
-
 // ==================== المصادقة ====================
-const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
+const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key';
 
 const authenticate = async (req, res, next) => {
     try {
@@ -167,7 +124,6 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // مقارنة كلمة المرور (بدون تشفير للتبسيط)
         if (user.pass !== password) {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
@@ -175,7 +131,7 @@ app.post('/api/login', async (req, res) => {
         const token = jwt.sign(
             { id: user._id, name: user.name, role: user.role },
             JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE || '7d' }
+            { expiresIn: '7d' }
         );
 
         res.json({
@@ -202,7 +158,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
 app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         const data = req.body;
-        data.cat = new Vessel(data).calculateCategory();
         const vessel = new Vessel(data);
         await vessel.save();
         res.status(201).json(vessel);
@@ -213,9 +168,7 @@ app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), asyn
 
 app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
-        const data = req.body;
-        data.cat = new Vessel(data).calculateCategory();
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
+        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
         res.json(vessel);
     } catch (error) {
@@ -287,41 +240,6 @@ app.get('/api/tickets', authenticate, async (req, res) => {
     }
 });
 
-app.post('/api/tickets', authenticate, async (req, res) => {
-    try {
-        const ticket = new Ticket(req.body);
-        await ticket.save();
-        res.status(201).json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        ticket.replies.push(req.body.reply);
-        ticket.status = 'تم الرد';
-        await ticket.save();
-        res.json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        ticket.status = 'مغلقة';
-        await ticket.save();
-        res.json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
 // ===== السجلات =====
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
@@ -329,16 +247,6 @@ app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => 
         res.json(logs);
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/logs', authenticate, async (req, res) => {
-    try {
-        const log = new Log(req.body);
-        await log.save();
-        res.status(201).json(log);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
     }
 });
 
@@ -352,61 +260,14 @@ app.get('/api/locations', async (req, res) => {
     }
 });
 
-app.post('/api/locations', async (req, res) => {
-    try {
-        const location = new Location(req.body);
-        await location.save();
-        res.status(201).json(location);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== تصدير واستيراد =====
-app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const vessels = await Vessel.find();
-        const users = await User.find().select('-pass');
-        const tickets = await Ticket.find();
-        const logs = await Log.find();
-        const locations = await Location.find();
-        res.json({ vessels, users, tickets, logs, locations });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { vessels, users, tickets, logs, locations } = req.body;
-        
-        if (vessels) await Vessel.deleteMany({});
-        if (users) await User.deleteMany({});
-        if (tickets) await Ticket.deleteMany({});
-        if (logs) await Log.deleteMany({});
-        if (locations) await Location.deleteMany({});
-        
-        if (vessels) await Vessel.insertMany(vessels);
-        if (users) await User.insertMany(users);
-        if (tickets) await Ticket.insertMany(tickets);
-        if (logs) await Log.insertMany(logs);
-        if (locations) await Location.insertMany(locations);
-        
-        res.json({ message: 'تم استيراد البيانات بنجاح' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== مسار الصحة ====================
+// ===== الصحة =====
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ==================== تقديم الملفات الثابتة ====================
+// ===== الملفات الثابتة =====
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ===== مسار رئيسي للواجهة =====
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -414,23 +275,15 @@ app.get('*', (req, res) => {
 // ==================== Socket.IO ====================
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
-    
     socket.on('send-location', (data) => {
         socket.broadcast.emit('receive-location', data);
     });
-    
     socket.on('disconnect', () => {
         console.log('📡 مستخدم غير متصل:', socket.id);
     });
 });
 
-// ==================== تشغيل السيرفر ====================
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
-});
-
-// ==================== إنشاء مستخدم افتراضي ====================
+// ==================== إنشاء المستخدم الافتراضي ====================
 const initializeDefaultUsers = async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -442,13 +295,24 @@ const initializeDefaultUsers = async () => {
                 enabled: true
             });
             console.log('✅ تم إنشاء المستخدم الافتراضي: admin / 1234');
+        } else {
+            console.log('✅ المستخدم admin موجود بالفعل');
         }
     } catch (error) {
         console.error('❌ خطأ في إنشاء المستخدم الافتراضي:', error.message);
     }
 };
 
-initializeDefaultUsers();
+// ==================== تشغيل السيرفر ====================
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
+    console.log('========================================');
+    console.log('🔐 بيانات تسجيل الدخول:');
+    console.log('   📧 admin');
+    console.log('   🔑 1234');
+    console.log('========================================');
+});
 
 // ==================== إغلاق الاتصال ====================
 process.on('SIGINT', async () => {
@@ -456,12 +320,3 @@ process.on('SIGINT', async () => {
     console.log('🔌 تم إغلاق الاتصال بقاعدة البيانات');
     process.exit(0);
 });
-
-console.log('========================================');
-console.log('🚀 الخادم يعمل على المنفذ', PORT);
-console.log('🌐 http://localhost:' + PORT);
-console.log('========================================');
-console.log('🔐 بيانات تسجيل الدخول:');
-console.log('   📧 admin');
-console.log('   🔑 1234');
-console.log('========================================');
