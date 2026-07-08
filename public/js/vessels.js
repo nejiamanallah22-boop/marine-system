@@ -1,4 +1,3 @@
-
 // ==================== دوال المراكب ====================
 
 async function addItem() {
@@ -146,4 +145,131 @@ async function renderMain() {
         let filtered = data.filter(x => {
             let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
             let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
-            let matchSearch = !searchText ||
+            let matchSearch = !searchText || 
+                (x.name && x.name.toLowerCase().includes(searchText)) ||
+                (x.num && x.num.toLowerCase().includes(searchText)) ||
+                (x.reg && x.reg.toLowerCase().includes(searchText)) ||
+                (x.zone && x.zone.toLowerCase().includes(searchText)) ||
+                (x.port && x.port.toLowerCase().includes(searchText));
+            return matchCat && matchReg && matchSearch;
+        });
+        
+        let html = "";
+        const isAdmin = currentUser?.role === "مسؤول";
+        
+        if(filtered.length === 0) {
+            html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
+        } else {
+            filtered.forEach(x => {
+                let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
+                html += `<tr>
+                    <td><b>${x.name}</b></td>
+                    <td>${x.num || '-'}</td>
+                    <td>${x.len || '-'}</td>
+                    <td>${x.cat || '-'}</td>
+                    <td>${regionDisplay}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td>${x.port || '-'}</td>
+                    <td>${x.supp || '-'}</td>
+                    <td class="status-${x.stat}">${x.stat}</td>
+                    <td>${x.break || '-'}</td>
+                    <td>${formatDate(x.fDate)}</td>
+                    <td>${formatDate(x.eDate)}</td>
+                    <td>
+                        ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
+                        ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('mainBody').innerHTML = html;
+    } catch(error) {
+        console.error('خطأ في renderMain:', error);
+        document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
+    }
+}
+
+function clearMainSearch() {
+    document.getElementById('searchMain').value = '';
+    renderMain();
+}
+
+async function renderMaint() {
+    try {
+        let data = await loadVessels();
+        const fReg = document.getElementById('fRegMaint').value;
+        const dStart = document.getElementById('fDateStart').value;
+        const dEnd = document.getElementById('fDateEnd').value;
+        const searchText = document.getElementById('searchMaint').value.toLowerCase();
+        
+        let filtered = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
+        
+        if(fReg !== "الكل") filtered = filtered.filter(x => x.reg === fReg);
+        
+        if(dStart || dEnd) {
+            const start = dStart ? new Date(dStart) : null;
+            const end = dEnd ? new Date(dEnd) : null;
+            filtered = filtered.filter(x => {
+                if(!x.fDate) return false;
+                const itemDate = new Date(x.fDate);
+                if(start && itemDate < start) return false;
+                if(end && itemDate > end) return false;
+                return true;
+            });
+        }
+        
+        if(searchText) {
+            filtered = filtered.filter(x => 
+                (x.name && x.name.toLowerCase().includes(searchText)) ||
+                (x.break && x.break.toLowerCase().includes(searchText)) ||
+                (x.ref && x.ref.toLowerCase().includes(searchText)) ||
+                (x.num && x.num.toLowerCase().includes(searchText))
+            );
+        }
+        
+        filtered.sort((a, b) => {
+            if(!a.fDate) return 1;
+            if(!b.fDate) return -1;
+            return new Date(b.fDate) - new Date(a.fDate);
+        });
+        
+        let html = "";
+        const isAdmin = currentUser?.role === "مسؤول";
+        
+        if(filtered.length === 0) {
+            html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
+        } else {
+            filtered.forEach(x => {
+                let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
+                html += `<tr>
+                    <td><b>${x.name}</b></td>
+                    <td>${x.num || '-'}</td>
+                    <td>${regionDisplay}</td>
+                    <td>${x.zone || '-'}</td>
+                    <td class="status-${x.stat}">${x.stat}</td>
+                    <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
+                    <td>${formatDate(x.fDate)}</td>
+                    <td>${formatDate(x.eDate)}</td>
+                    <td>${x.ref || '-'}</td>
+                    <td>
+                        ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
+                        ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+        }
+        document.getElementById('maintBody').innerHTML = html;
+    } catch(error) {
+        console.error('خطأ في renderMaint:', error);
+        document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
+    }
+}
+
+function resetMaintFilters() {
+    document.getElementById('fRegMaint').value = "الكل";
+    document.getElementById('fDateStart').value = "";
+    document.getElementById('fDateEnd').value = "";
+    document.getElementById('searchMaint').value = "";
+    renderMaint();
+    showToast("✅ تم إعادة ضبط الفلاتر");
+}
