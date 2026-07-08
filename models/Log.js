@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    pass: { type: String, required: true },
-    role: { type: String, default: 'مشاهد' },
-    enabled: { type: Boolean, default: true }
-});
+const LogSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String, required: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true }
+}, { timestamps: true });
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('Log', LogSchema);
