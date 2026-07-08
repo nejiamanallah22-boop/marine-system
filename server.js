@@ -8,6 +8,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 // ==================== إعدادات Express ====================
 const app = express();
@@ -40,7 +41,6 @@ if (!MONGODB_URI) {
     console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@'));
 }
 
-// محاولة الاتصال بقاعدة البيانات
 const connectDB = async () => {
     if (!MONGODB_URI) {
         console.log('⚠️ تخطي الاتصال بقاعدة البيانات (MONGODB_URI غير معرف)');
@@ -59,7 +59,6 @@ const connectDB = async () => {
     } catch (err) {
         console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
         console.error('💡 تأكد من صحة MONGODB_URI في متغيرات البيئة');
-        console.error('📌 الرابط المستخدم:', MONGODB_URI?.replace(/\/\/.*@/, '//***:***@'));
     }
 };
 
@@ -164,24 +163,29 @@ const authorize = (...roles) => {
 
 // ==================== API Routes ====================
 
-// ===== تسجيل الدخول (معدل - يقارن النص مباشرة) =====
+// ===== تسجيل الدخول (مع bcrypt) =====
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        console.log('🔍 محاولة تسجيل دخول:', { username, password });
+        
         if (!username || !password) {
             return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
         }
 
         const user = await User.findOne({ name: username });
-        console.log('🔍 محاولة تسجيل دخول:', { username, password, found: !!user });
+        console.log('📌 المستخدم في قاعدة البيانات:', user ? { name: user.name, pass: user.pass } : 'غير موجود');
         
         if (!user || !user.enabled) {
             console.log('❌ المستخدم غير موجود أو معطل');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ مقارنة مباشرة (بدون تشفير)
-        if (user.pass !== password) {
+        // ✅ مقارنة مشفرة باستخدام bcrypt
+        const isMatch = await bcrypt.compare(password, user.pass);
+        console.log('🔐 نتيجة المقارنة:', isMatch);
+        
+        if (!isMatch) {
             console.log('❌ كلمة المرور غير صحيحة');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
@@ -205,7 +209,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ===== إنشاء مستخدم admin يدوياً (via API) =====
+// ===== إنشاء مستخدم admin (مع bcrypt) =====
 app.get('/api/create-admin', async (req, res) => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -213,9 +217,12 @@ app.get('/api/create-admin', async (req, res) => {
             return res.json({ message: 'المستخدم admin موجود بالفعل', user: adminExists });
         }
         
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('1234', salt);
+        
         const newAdmin = new User({
             name: 'admin',
-            pass: '1234',
+            pass: hashedPassword,
             role: 'مسؤول',
             enabled: true
         });
@@ -239,7 +246,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
 app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         const data = req.body;
-        // حساب الفئة تلقائياً
         const n = parseFloat(data.len);
         if (n === 11) data.cat = 'البروق';
         else if (n >= 8 && n <= 12) data.cat = 'صقور';
@@ -258,7 +264,6 @@ app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), asyn
 app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         const data = req.body;
-        // إعادة حساب الفئة
         const n = parseFloat(data.len);
         if (n === 11) data.cat = 'البروق';
         else if (n >= 8 && n <= 12) data.cat = 'صقور';
@@ -299,7 +304,11 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
         const { name, pass, role } = req.body;
         const existing = await User.findOne({ name });
         if (existing) return res.status(400).json({ error: 'اسم المستخدم موجود' });
-        const user = new User({ name, pass, role, enabled: true });
+        
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(pass, salt);
+        
+        const user = new User({ name, pass: hashedPassword, role, enabled: true });
         await user.save();
         res.status(201).json({ message: 'تم إضافة المستخدم' });
     } catch (error) {
@@ -310,7 +319,10 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
 app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const { pass, ...updateData } = req.body;
-        if (pass) updateData.pass = pass;
+        if (pass) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.pass = await bcrypt.hash(pass, salt);
+        }
         const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
         if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
         res.json({ message: 'تم تحديث المستخدم' });
@@ -432,16 +444,19 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
         const { vessels, users, tickets, logs, locations } = req.body;
         
         if (vessels) await Vessel.deleteMany({});
-        if (users) await User.deleteMany({});
-        if (tickets) await Ticket.deleteMany({});
-        if (logs) await Log.deleteMany({});
-        if (locations) await Location.deleteMany({});
-        
-        if (vessels) await Vessel.insertMany(vessels);
-        if (users) await User.insertMany(users);
-        if (tickets) await Ticket.insertMany(tickets);
-        if (logs) await Log.insertMany(logs);
-        if (locations) await Location.insertMany(locations);
+        if (users) {
+            for (const user of users) {
+                if (user.pass && !user.pass.startsWith('$2')) {
+                    const salt = await bcrypt.genSalt(10);
+                    user.pass = await bcrypt.hash(user.pass, salt);
+                }
+            }
+            await User.deleteMany({});
+            await User.insertMany(users);
+        }
+        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
+        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
+        if (locations) { await Location.deleteMany({}); await Location.insertMany(locations); }
         
         res.json({ message: 'تم استيراد البيانات بنجاح' });
     } catch (error) {
@@ -479,9 +494,11 @@ const initializeDefaultUsers = async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
         if (!adminExists) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash('1234', salt);
             await User.create({
                 name: 'admin',
-                pass: '1234',
+                pass: hashedPassword,
                 role: 'مسؤول',
                 enabled: true
             });
@@ -497,7 +514,6 @@ const initializeDefaultUsers = async () => {
 // ==================== تشغيل السيرفر ====================
 const PORT = process.env.PORT || 3000;
 
-// الاتصال بقاعدة البيانات ثم تشغيل السيرفر
 connectDB().then(() => {
     server.listen(PORT, '0.0.0.0', () => {
         console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
@@ -510,7 +526,6 @@ connectDB().then(() => {
     });
 });
 
-// ==================== إغلاق الاتصال ====================
 process.on('SIGINT', async () => {
     await mongoose.connection.close();
     console.log('🔌 تم إغلاق الاتصال بقاعدة البيانات');
