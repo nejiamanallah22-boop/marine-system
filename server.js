@@ -30,26 +30,40 @@ app.use('/api', rateLimit({
 }));
 
 // ==================== قاعدة البيانات ====================
-// ✅ قراءة الرابط من متغيرات البيئة
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
+// ✅ قراءة الرابط من متغيرات البيئة (الإصلاح)
+const MONGODB_URI = process.env.MONGODB_URI;
 
-console.log('🔍 محاولة الاتصال بقاعدة البيانات...');
-console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@')); // إخفاء كلمة المرور في السجلات
+if (!MONGODB_URI) {
+    console.error('❌ خطأ: MONGODB_URI غير معرف في متغيرات البيئة!');
+    console.error('💡 أضف MONGODB_URI في Render.com → Settings → Environment Variables');
+    // نستمر في التشغيل للواجهة لكن بدون قاعدة بيانات
+} else {
+    console.log('🔍 محاولة الاتصال بقاعدة البيانات...');
+    console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@'));
+}
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-})
-.then(() => {
-    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
-    initializeDefaultUsers();
-})
-.catch(err => {
-    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-    console.error('💡 تأكد من صحة MONGODB_URI في متغيرات البيئة');
-});
+// محاولة الاتصال بقاعدة البيانات
+const connectDB = async () => {
+    if (!MONGODB_URI) {
+        console.log('⚠️ تخطي الاتصال بقاعدة البيانات (MONGODB_URI غير معرف)');
+        return;
+    }
+    
+    try {
+        await mongoose.connect(MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
+        await initializeDefaultUsers();
+    } catch (err) {
+        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+        console.error('💡 تأكد من صحة MONGODB_URI في متغيرات البيئة');
+        console.error('📌 الرابط المستخدم:', MONGODB_URI?.replace(/\/\/.*@/, '//***:***@'));
+    }
+};
 
 // ==================== نماذج البيانات ====================
 const VesselSchema = new mongoose.Schema({
@@ -79,8 +93,49 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
+const ReplySchema = new mongoose.Schema({
+    adminName: { type: String, required: true },
+    reply: { type: String, required: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true }
+});
+
+const TicketSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    subject: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
+    replies: [ReplySchema]
+}, { timestamps: true });
+
+const Ticket = mongoose.model('Ticket', TicketSchema);
+
+const LogSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String, required: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true }
+}, { timestamps: true });
+
+const Log = mongoose.model('Log', LogSchema);
+
+const LocationSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    lat: { type: Number, required: true },
+    lng: { type: Number, required: true },
+    timestamp: { type: Date, default: Date.now }
+});
+
+const Location = mongoose.model('Location', LocationSchema);
+
 // ==================== المصادقة ====================
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
 
 const authenticate = async (req, res, next) => {
     try {
@@ -240,6 +295,41 @@ app.get('/api/tickets', authenticate, async (req, res) => {
     }
 });
 
+app.post('/api/tickets', authenticate, async (req, res) => {
+    try {
+        const ticket = new Ticket(req.body);
+        await ticket.save();
+        res.status(201).json(ticket);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        ticket.replies.push(req.body.reply);
+        ticket.status = 'تم الرد';
+        await ticket.save();
+        res.json(ticket);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const ticket = await Ticket.findById(req.params.id);
+        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        ticket.status = 'مغلقة';
+        await ticket.save();
+        res.json(ticket);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
 // ===== السجلات =====
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
@@ -247,6 +337,16 @@ app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => 
         res.json(logs);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/logs', authenticate, async (req, res) => {
+    try {
+        const log = new Log(req.body);
+        await log.save();
+        res.status(201).json(log);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -260,12 +360,58 @@ app.get('/api/locations', async (req, res) => {
     }
 });
 
-// ===== الصحة =====
+app.post('/api/locations', async (req, res) => {
+    try {
+        const location = new Location(req.body);
+        await location.save();
+        res.status(201).json(location);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// ===== تصدير واستيراد =====
+app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const vessels = await Vessel.find();
+        const users = await User.find().select('-pass');
+        const tickets = await Ticket.find();
+        const logs = await Log.find();
+        const locations = await Location.find();
+        res.json({ vessels, users, tickets, logs, locations });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const { vessels, users, tickets, logs, locations } = req.body;
+        
+        if (vessels) await Vessel.deleteMany({});
+        if (users) await User.deleteMany({});
+        if (tickets) await Ticket.deleteMany({});
+        if (logs) await Log.deleteMany({});
+        if (locations) await Location.deleteMany({});
+        
+        if (vessels) await Vessel.insertMany(vessels);
+        if (users) await User.insertMany(users);
+        if (tickets) await Ticket.insertMany(tickets);
+        if (logs) await Log.insertMany(logs);
+        if (locations) await Location.insertMany(locations);
+        
+        res.json({ message: 'تم استيراد البيانات بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==================== مسار الصحة ====================
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ===== الملفات الثابتة =====
+// ==================== تقديم الملفات الثابتة ====================
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
@@ -275,9 +421,11 @@ app.get('*', (req, res) => {
 // ==================== Socket.IO ====================
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
+    
     socket.on('send-location', (data) => {
         socket.broadcast.emit('receive-location', data);
     });
+    
     socket.on('disconnect', () => {
         console.log('📡 مستخدم غير متصل:', socket.id);
     });
@@ -305,13 +453,18 @@ const initializeDefaultUsers = async () => {
 
 // ==================== تشغيل السيرفر ====================
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
-    console.log('========================================');
-    console.log('🔐 بيانات تسجيل الدخول:');
-    console.log('   📧 admin');
-    console.log('   🔑 1234');
-    console.log('========================================');
+
+// الاتصال بقاعدة البيانات ثم تشغيل السيرفر
+connectDB().then(() => {
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
+        console.log('========================================');
+        console.log('🔐 بيانات تسجيل الدخول:');
+        console.log('   📧 admin');
+        console.log('   🔑 1234');
+        console.log('========================================');
+        console.log(`🌐 رابط التطبيق: https://marine-system-71eo.onrender.com`);
+    });
 });
 
 // ==================== إغلاق الاتصال ====================
