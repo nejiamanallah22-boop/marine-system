@@ -27,7 +27,6 @@ async function doLogin() {
         const isAdmin = currentUser.role === "مسؤول";
         const isViewer = currentUser.role === "مشاهد";
         
-        // ✅ إظهار/إخفاء الأزرار حسب الصلاحية
         document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
@@ -36,7 +35,6 @@ async function doLogin() {
         document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
         document.getElementById('inputArea').classList.toggle('hidden', isViewer);
         
-        // ✅ تعبئة القوائم المنسدلة
         const fill = (id, list) => {
             const sel = document.getElementById(id);
             if(sel) {
@@ -48,10 +46,15 @@ async function doLogin() {
         fill('fRegMain', Object.keys(ZONES_DATA));
         fill('fRegMaint', Object.keys(ZONES_DATA));
         
-        // ✅ استدعاء تهيئة التطبيق بعد تسجيل الدخول
         await initAppAfterLogin();
         
-        // ✅ تسجيل موقع المستخدم (للمسؤول)
+        // ✅ إضافة موقع المستخدم على الخريطة
+        setTimeout(() => {
+            if (typeof addUserLocation === 'function') {
+                addUserLocation(currentUser.name);
+            }
+        }, 1000);
+        
         if(isAdmin) {
             logUserLocation();
         }
