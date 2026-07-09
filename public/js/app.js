@@ -1,4 +1,3 @@
-
 // ==================== تشغيل التطبيق ====================
 
 // ===== دوال التحديث =====
@@ -153,6 +152,8 @@ function showPage(page) {
     
     if(page === 'main') { 
         document.getElementById('pageMain').classList.remove('hidden');
+        // ✅ إعادة تحميل البيانات عند فتح الصفحة
+        renderMain();
     }
     else if(page === 'maint') { 
         document.getElementById('pageMaint').classList.remove('hidden'); 
@@ -177,10 +178,19 @@ function showPage(page) {
     else if(page === 'map') { 
         if(isAdmin) {
             document.getElementById('pageMap').classList.remove('hidden');
+            // ✅ إعادة تهيئة الخريطة بعد فتح الصفحة
             setTimeout(() => {
-                if (trackingMap) trackingMap.invalidateSize();
+                if (trackingMap) {
+                    trackingMap.invalidateSize();
+                    console.log('✅ تم إعادة تهيئة الخريطة');
+                } else {
+                    initTrackingMap();
+                    setTimeout(() => {
+                        if (trackingMap) trackingMap.invalidateSize();
+                    }, 300);
+                }
                 loadLocations();
-            }, 100);
+            }, 500);
         } else {
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true);
         }
@@ -194,3 +204,72 @@ function showPage(page) {
         }
     }
 }
+
+// ===== إعادة تهيئة الخريطة بعد تحميل الصفحة =====
+function reinitMap() {
+    if (trackingMap) {
+        setTimeout(() => {
+            trackingMap.invalidateSize();
+            console.log('✅ تم إعادة تهيئة الخريطة');
+        }, 500);
+    } else {
+        initTrackingMap();
+        setTimeout(() => {
+            if (trackingMap) trackingMap.invalidateSize();
+        }, 500);
+    }
+}
+
+// ===== إعادة تحميل البيانات =====
+async function refreshData() {
+    await renderMain();
+    await renderMaint();
+    await renderEff();
+    await renderTickets();
+    if(canManageUsers()) { await renderUsers(); await renderTrack(); }
+    showToast('✅ تم تحديث البيانات');
+}
+
+// ===== تهيئة التطبيق بعد تسجيل الدخول =====
+async function initAppAfterLogin() {
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
+    
+    // ✅ تحميل البيانات مع تأخير بسيط
+    setTimeout(async () => {
+        await renderMain();
+        await renderMaint();
+        await renderEff();
+        await renderTickets();
+        if(isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
+        await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
+        showToast(`مرحباً ${currentUser.name}`);
+    }, 300);
+    
+    // ✅ تهيئة الخريطة مع تأخير أطول
+    setTimeout(() => {
+        initSocket();
+        initTrackingMap();
+        if (trackingMap) {
+            trackingMap.invalidateSize();
+        }
+    }, 600);
+}
+
+// ===== تصدير الدوال للاستخدام من ملفات أخرى =====
+window.reinitMap = reinitMap;
+window.refreshData = refreshData;
+window.initAppAfterLogin = initAppAfterLogin;
+window.showPage = showPage;
+window.refreshMain = refreshMain;
+window.refreshMaint = refreshMaint;
+window.refreshEff = refreshEff;
+window.refreshTickets = refreshTickets;
+window.refreshTrack = refreshTrack;
+window.refreshUsers = refreshUsers;
+window.refreshAllPages = refreshAllPages;
+window.exportAllData = exportAllData;
+window.importAllData = importAllData;
+window.resetTrackFilters = resetTrackFilters;
