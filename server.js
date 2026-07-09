@@ -18,7 +18,7 @@ const io = socketIO(server, {
 });
 
 // ==================== Middleware ====================
-// ✅ Helmet مع إعدادات CSP مخصصة للسماح بالمكتبات الخارجية
+// ✅ Helmet مع إعدادات CSP كاملة
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -60,7 +60,9 @@ app.use(helmet({
             connectSrc: [
                 "'self'",
                 "https://*.tile.openstreetmap.org",
-                "https://*.basemaps.cartocdn.com"
+                "https://*.basemaps.cartocdn.com",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com"
             ]
         }
     }
