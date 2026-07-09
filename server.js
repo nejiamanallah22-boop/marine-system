@@ -18,7 +18,6 @@ const io = socketIO(server, {
 });
 
 // ==================== Middleware ====================
-// ✅ Helmet مع إعدادات CSP صحيحة
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -65,7 +64,8 @@ app.use(helmet({
                 "https://*.tile.openstreetmap.org",
                 "https://*.basemaps.cartocdn.com",
                 "https://cdn.jsdelivr.net",
-                "https://unpkg.com"
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com"
             ]
         }
     }
@@ -215,7 +215,7 @@ const authorize = (...roles) => {
 
 // ==================== API Routes ====================
 
-// ===== تسجيل الدخول (مع bcrypt) =====
+// ===== تسجيل الدخول =====
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -233,7 +233,6 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        // ✅ مقارنة مشفرة باستخدام bcrypt
         const isMatch = await bcrypt.compare(password, user.pass);
         console.log('🔐 نتيجة المقارنة:', isMatch);
         
@@ -261,7 +260,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ===== إنشاء مستخدم admin (مع bcrypt) =====
+// ===== إنشاء مستخدم admin =====
 app.get('/api/create-admin', async (req, res) => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
