@@ -11,21 +11,18 @@ async function doLogin() {
         return;
     }
     
-    // ✅ التحقق من دعم تحديد الموقع
     if (!navigator.geolocation) {
         errorDiv.innerHTML = "⚠️ متصفحك لا يدعم تحديد الموقع. استخدم متصفحاً حديثاً.";
         errorDiv.style.display = "block";
         return;
     }
     
-    // ✅ طلب إذن الموقع أولاً
     errorDiv.innerHTML = "⏳ جاري طلب إذن الموقع...";
     errorDiv.style.display = "block";
     errorDiv.style.color = "#f39c12";
     
     navigator.geolocation.getCurrentPosition(
         async (position) => {
-            // ✅ تم منح الإذن
             errorDiv.style.display = "none";
             
             try {
@@ -37,11 +34,8 @@ async function doLogin() {
                     return;
                 }
                 
-                // ✅ حفظ موقع المستخدم
                 const { latitude, longitude } = position.coords;
                 await saveUserLocation(user.name, latitude, longitude);
-                
-                // ✅ متابعة تسجيل الدخول
                 completeLogin(user, latitude, longitude);
                 
             } catch(error) {
@@ -51,7 +45,6 @@ async function doLogin() {
             }
         },
         (error) => {
-            // ❌ رفض الإذن - منع تسجيل الدخول
             errorDiv.innerHTML = "❌ لا يمكن تسجيل الدخول دون مشاركة الموقع. يرجى السماح بالوصول إلى الموقع.";
             errorDiv.style.display = "block";
             errorDiv.style.color = "#d9534f";
@@ -93,8 +86,19 @@ async function completeLogin(user, lat, lng) {
     fill('fRegMain', Object.keys(ZONES_DATA));
     fill('fRegMaint', Object.keys(ZONES_DATA));
     
-    // ✅ تهيئة التطبيق مع الموقع
     await initAppAfterLoginWithLocation(lat, lng);
+    
+    setTimeout(async () => {
+        await renderMain();
+        await renderMaint();
+        await renderEff();
+        await renderTickets();
+        if(isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
+        console.log('✅ تم تحديث جميع البيانات بعد تسجيل الدخول');
+    }, 1000);
     
     if(isAdmin) {
         logUserLocation();
@@ -119,48 +123,6 @@ async function saveUserLocation(userName, lat, lng) {
     } catch(e) {
         console.error('خطأ في حفظ الموقع:', e);
     }
-}
-
-// ===== تهيئة التطبيق مع الموقع =====
-async function initAppAfterLoginWithLocation(lat, lng) {
-    const isAdmin = currentUser && currentUser.role === "مسؤول";
-    
-    setTimeout(async () => {
-        await renderMain();
-        await renderMaint();
-        await renderEff();
-        await renderTickets();
-        if(isAdmin) { 
-            await renderUsers(); 
-            await renderTrack(); 
-        }
-        await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
-        showToast(`مرحباً ${currentUser.name} ✅`, false);
-    }, 500);
-    
-    setTimeout(() => {
-        initSocket();
-        initTrackingMapWithLocation(lat, lng);
-    }, 600);
-}
-
-// ===== تهيئة الخريطة مع الموقع =====
-function initTrackingMapWithLocation(lat, lng) {
-    setTimeout(() => {
-        if (trackingMap) {
-            trackingMap.setView([lat, lng], 15);
-            updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
-            trackingMap.invalidateSize();
-        } else {
-            initTrackingMap();
-            setTimeout(() => {
-                if (trackingMap) {
-                    trackingMap.setView([lat, lng], 15);
-                    updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
-                }
-            }, 500);
-        }
-    }, 300);
 }
 
 // ===== تسجيل الخروج =====
