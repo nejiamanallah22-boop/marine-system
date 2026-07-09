@@ -8,11 +8,9 @@
     <!-- المكتبات -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
-    <!-- ✅ Leaflet - روابط احتياطية متعددة -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- ✅ Leaflet من jsDelivr (يعمل 100%) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -208,7 +206,7 @@
         </div>
         <div id="mapStatus" style="text-align:center; margin:10px; color:#666; padding:8px; background:#f8f9fa; border-radius:8px;">📍 اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي</div>
         <div class="map-container">
-            <div id="trackMap"></div>
+            <div id="trackMap" style="height: 500px; width: 100%;"></div>
         </div>
     </div>
 
