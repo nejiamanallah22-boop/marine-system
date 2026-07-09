@@ -28,12 +28,7 @@ app.use(helmet({
                 "'unsafe-eval'",
                 "https://cdn.jsdelivr.net",
                 "https://unpkg.com",
-                "https://cdnjs.cloudflare.com",
-                "https://code.jquery.com",
-                "https://stackpath.bootstrapcdn.com",
-                "https://polyfill.io",
-                "https://kit.fontawesome.com",
-                "https://api.mapbox.com"
+                "https://cdnjs.cloudflare.com"
             ],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: [
@@ -81,36 +76,21 @@ app.use('/api', rateLimit({
 }));
 
 // ==================== قاعدة البيانات ====================
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
 
-if (!MONGODB_URI) {
-    console.error('❌ خطأ: MONGODB_URI غير معرف في متغيرات البيئة!');
-    console.error('💡 أضف MONGODB_URI في Render.com → Settings → Environment Variables');
-} else {
-    console.log('🔍 محاولة الاتصال بقاعدة البيانات...');
-    console.log('📌 MONGODB_URI:', MONGODB_URI.replace(/\/\/.*@/, '//***:***@'));
-}
-
-const connectDB = async () => {
-    if (!MONGODB_URI) {
-        console.log('⚠️ تخطي الاتصال بقاعدة البيانات (MONGODB_URI غير معرف)');
-        return;
-    }
-    
-    try {
-        await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-        });
-        console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
-        await initializeDefaultUsers();
-    } catch (err) {
-        console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-        console.error('💡 تأكد من صحة MONGODB_URI في متغيرات البيئة');
-    }
-};
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+})
+.then(() => {
+    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
+    initializeDefaultUsers();
+})
+.catch(err => {
+    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
+});
 
 // ==================== نماذج البيانات ====================
 const VesselSchema = new mongoose.Schema({
@@ -219,33 +199,27 @@ const authorize = (...roles) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log('🔍 محاولة تسجيل دخول:', { username, password });
         
         if (!username || !password) {
             return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
         }
 
         const user = await User.findOne({ name: username });
-        console.log('📌 المستخدم في قاعدة البيانات:', user ? { name: user.name, pass: user.pass } : 'غير موجود');
         
         if (!user || !user.enabled) {
-            console.log('❌ المستخدم غير موجود أو معطل');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
         const isMatch = await bcrypt.compare(password, user.pass);
-        console.log('🔐 نتيجة المقارنة:', isMatch);
         
         if (!isMatch) {
-            console.log('❌ كلمة المرور غير صحيحة');
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
-        console.log('✅ تسجيل دخول ناجح:', username);
         const token = jwt.sign(
             { id: user._id, name: user.name, role: user.role },
             JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRE || '7d' }
+            { expiresIn: '7d' }
         );
 
         res.json({
@@ -255,8 +229,7 @@ app.post('/api/login', async (req, res) => {
             role: user.role
         });
     } catch (error) {
-        console.error('❌ خطأ في تسجيل الدخول:', error.message);
-        res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message });
+        res.status(500).json({ error: 'خطأ في السيرفر' });
     }
 });
 
@@ -521,15 +494,9 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================
-// ✅ تقديم الملفات الثابتة (الجزء المهم)
+// ✅ تقديم الملفات الثابتة - النسخة المُبسطة
 // ============================================================
-const path = require('path');
-
-// تقديم الملفات من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
-
-// تقديم الملفات من الجذر (كحل بديل)
-app.use(express.static(__dirname));
 
 // مسار index.html الرئيسي
 app.get('/', (req, res) => {
@@ -604,16 +571,13 @@ const initializeDefaultUsers = async () => {
 // ==================== تشغيل السيرفر ====================
 const PORT = process.env.PORT || 3000;
 
-connectDB().then(() => {
-    server.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
-        console.log('========================================');
-        console.log('🔐 بيانات تسجيل الدخول:');
-        console.log('   📧 admin');
-        console.log('   🔑 1234');
-        console.log('========================================');
-        console.log(`🌐 رابط التطبيق: https://marine-system-71eo.onrender.com`);
-    });
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
+    console.log('========================================');
+    console.log('🔐 بيانات تسجيل الدخول:');
+    console.log('   📧 admin');
+    console.log('   🔑 1234');
+    console.log('========================================');
 });
 
 process.on('SIGINT', async () => {
