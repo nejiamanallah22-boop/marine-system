@@ -35,9 +35,7 @@ app.use(helmet({
                 "https://kit.fontawesome.com",
                 "https://api.mapbox.com"
             ],
-            scriptSrcAttr: [
-                "'unsafe-inline'"
-            ],
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: [
                 "'self'",
                 "'unsafe-inline'",
@@ -178,7 +176,8 @@ const LocationSchema = new mongoose.Schema({
     userRole: { type: String, required: true },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
-    timestamp: { type: Date, default: Date.now }
+    timestamp: { type: Date, default: Date.now },
+    action: { type: String, default: 'تحديث موقع' }
 });
 
 const Location = mongoose.model('Location', LocationSchema);
@@ -527,16 +526,44 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================== Socket.IO ====================
+// ==================== Socket.IO (مع إدارة المستخدمين) ====================
+const connectedUsers = {};
+
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
+    socket.on('user-connected', (data) => {
+        connectedUsers[socket.id] = {
+            userName: data.userName,
+            userRole: data.userRole,
+            lat: data.lat || 36.8065,
+            lng: data.lng || 10.1815,
+            socketId: socket.id
+        };
+        console.log('👥 مستخدم متصل:', data.userName);
+        
+        // ✅ إرسال قائمة المستخدمين للجميع
+        io.emit('user-list', Object.values(connectedUsers));
+    });
+    
     socket.on('send-location', (data) => {
+        if (connectedUsers[socket.id]) {
+            connectedUsers[socket.id].lat = data.lat;
+            connectedUsers[socket.id].lng = data.lng;
+        }
         socket.broadcast.emit('receive-location', data);
     });
     
     socket.on('disconnect', () => {
-        console.log('📡 مستخدم غير متصل:', socket.id);
+        const user = connectedUsers[socket.id];
+        if (user) {
+            console.log('📡 مستخدم غير متصل:', user.userName);
+            delete connectedUsers[socket.id];
+            // ✅ إعلام الجميع بأن المستخدم غير متصل
+            io.emit('user-list', Object.values(connectedUsers));
+        } else {
+            console.log('📡 مستخدم غير متصل:', socket.id);
+        }
     });
 });
 
