@@ -73,10 +73,10 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ==================== Rate Limiting (معدل) ====================
+// ==================== Rate Limiting ====================
 app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 1000, // ✅ زيادة الحد من 100 إلى 1000
+    max: 1000,
     message: '⚠️ تجاوزت الحد المسموح'
 }));
 
@@ -160,7 +160,6 @@ const TicketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model('Ticket', TicketSchema);
 
-// ✅ إصلاح LogSchema بإضافة _id صريح
 const LogSchema = new mongoose.Schema({
     _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     userName: { type: String, required: true },
@@ -521,9 +520,23 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ===== تقديم الملفات الثابتة =====
+// ============================================================
+// ✅ تقديم الملفات الثابتة (الجزء المهم)
+// ============================================================
+const path = require('path');
+
+// تقديم الملفات من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 
+// تقديم الملفات من الجذر (كحل بديل)
+app.use(express.static(__dirname));
+
+// مسار index.html الرئيسي
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// أي مسار آخر يعيد index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
