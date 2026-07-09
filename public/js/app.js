@@ -261,10 +261,122 @@ async function initAppAfterLogin() {
     }, 600);
 }
 
-// ===== تصدير الدوال =====
+// ============================================================
+// ✅ الدوال الجديدة المضافة لربط تسجيل الدخول بإذن الموقع
+// ============================================================
+
+// ===== تهيئة الخريطة مع موقع المستخدم =====
+function initTrackingMapWithLocation(lat, lng) {
+    setTimeout(() => {
+        if (trackingMap) {
+            trackingMap.setView([lat, lng], 15);
+            if (currentUser) {
+                updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+            }
+            trackingMap.invalidateSize();
+            console.log('✅ تم تهيئة الخريطة مع موقع المستخدم');
+        } else {
+            initTrackingMap();
+            setTimeout(() => {
+                if (trackingMap) {
+                    trackingMap.setView([lat, lng], 15);
+                    if (currentUser) {
+                        updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+                    }
+                    trackingMap.invalidateSize();
+                    console.log('✅ تم تهيئة الخريطة مع موقع المستخدم (بعد التأخير)');
+                }
+            }, 500);
+        }
+    }, 300);
+}
+
+// ===== دالة إضافة موقع المستخدم =====
+async function addUserLocation(userName) {
+    if (!userName) return;
+    
+    // استخدام موقع المستخدم الحالي إذا كان موجوداً
+    const lat = currentUser?.lat || 36.8065;
+    const lng = currentUser?.lng || 10.1815;
+    
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                userRole: currentUser?.role || 'مستخدم',
+                lat: lat,
+                lng: lng,
+                action: 'تسجيل دخول'
+            })
+        });
+        console.log(`📍 تم حفظ موقع المستخدم: ${userName}`);
+    } catch(e) {
+        console.error('خطأ في حفظ موقع المستخدم:', e);
+    }
+    
+    if (trackingMap) {
+        updateMapMarker(userName, lat, lng, new Date().toISOString());
+    }
+}
+
+// ===== دالة حفظ موقع المستخدم =====
+async function saveUserLocation(userName, lat, lng) {
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                userRole: currentUser?.role || 'مستخدم',
+                lat: lat,
+                lng: lng,
+                action: 'تسجيل دخول'
+            })
+        });
+        console.log(`📍 تم حفظ موقع ${userName}: ${lat}, ${lng}`);
+        return true;
+    } catch(e) {
+        console.error('خطأ في حفظ الموقع:', e);
+        return false;
+    }
+}
+
+// ===== دالة تهيئة التطبيق مع الموقع =====
+async function initAppAfterLoginWithLocation(lat, lng) {
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
+    
+    setTimeout(async () => {
+        await renderMain();
+        await renderMaint();
+        await renderEff();
+        await renderTickets();
+        if(isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
+        await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
+        showToast(`مرحباً ${currentUser.name} ✅`, false);
+    }, 500);
+    
+    setTimeout(() => {
+        initSocket();
+        initTrackingMapWithLocation(lat, lng);
+    }, 600);
+}
+
+// ============================================================
+// تصدير الدوال للاستخدام من ملفات أخرى
+// ============================================================
+
 window.reinitMap = reinitMap;
 window.refreshData = refreshData;
 window.initAppAfterLogin = initAppAfterLogin;
+window.initAppAfterLoginWithLocation = initAppAfterLoginWithLocation;
+window.initTrackingMapWithLocation = initTrackingMapWithLocation;
+window.addUserLocation = addUserLocation;
+window.saveUserLocation = saveUserLocation;
 window.showPage = showPage;
 window.refreshMain = refreshMain;
 window.refreshMaint = refreshMaint;
@@ -276,4 +388,3 @@ window.refreshAllPages = refreshAllPages;
 window.exportAllData = exportAllData;
 window.importAllData = importAllData;
 window.resetTrackFilters = resetTrackFilters;
-window.addUserLocation = addUserLocation;
