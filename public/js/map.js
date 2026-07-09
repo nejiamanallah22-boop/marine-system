@@ -5,19 +5,46 @@ let trackingMap = null;
 let trackingMarkers = {};
 let socket = null;
 
+// ===== إضافة موقع افتراضي للمستخدم عند تسجيل الدخول =====
+async function addUserLocation(userName) {
+    if (!userName) return;
+    
+    const defaultLat = 36.8065;
+    const defaultLng = 10.1815;
+    
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                userRole: 'مستخدم',
+                lat: defaultLat,
+                lng: defaultLng,
+                action: 'تسجيل دخول'
+            })
+        });
+        console.log(`📍 تم حفظ موقع المستخدم: ${userName}`);
+    } catch(e) {
+        console.error('خطأ في حفظ موقع المستخدم:', e);
+    }
+    
+    if (trackingMap) {
+        updateMapMarker(userName, defaultLat, defaultLng, new Date().toISOString());
+    }
+}
+
 // ===== موقع افتراضي دقيق (تونس العاصمة) =====
 function setDefaultLocation() {
     if (!trackingMap) {
         initTrackingMap();
     }
     
-    // ✅ موقع دقيق: تونس العاصمة
     const defaultLat = 36.8065;
     const defaultLng = 10.1815;
     
     trackingMap.setView([defaultLat, defaultLng], 14);
     
-    // إضافة علامة دائمة
     if (trackingMarkers['default']) {
         trackingMarkers['default'].remove();
     }
@@ -45,13 +72,24 @@ function initSocket() {
         socket.on('connect', () => {
             console.log('✅ متصل بـ Socket.IO');
             if (currentUser) {
-                socket.emit('user-connected', { userName: currentUser.name });
+                socket.emit('user-connected', { 
+                    userName: currentUser.name,
+                    userRole: currentUser.role,
+                    lat: 36.8065,
+                    lng: 10.1815
+                });
             }
         });
         socket.on('receive-location', (data) => {
             console.log('📍 موقع مستلم:', data);
             updateMapMarker(data.userName, data.lat, data.lng, data.time);
             showToast(`📍 تم تحديث موقع: ${data.userName}`);
+        });
+        socket.on('user-list', (users) => {
+            console.log('👥 قائمة المستخدمين:', users);
+            users.forEach(user => {
+                updateMapMarker(user.userName, user.lat, user.lng, new Date().toISOString());
+            });
         });
         socket.on('disconnect', () => {
             console.log('❌ غير متصل بـ Socket.IO');
@@ -77,7 +115,6 @@ function initTrackingMap() {
         }).addTo(trackingMap);
         console.log('✅ تم تهيئة الخريطة');
         
-        // ✅ تعيين الموقع الافتراضي فوراً
         setTimeout(() => {
             setDefaultLocation();
         }, 300);
@@ -123,7 +160,6 @@ function updateGpsStatus(active, text) {
     }
 }
 
-// ===== طلب إذن الموقع (بدون أخطاء) =====
 function requestLocationPermission() {
     if (!currentUser) {
         showToast("الرجاء تسجيل الدخول أولاً", true);
@@ -135,14 +171,12 @@ function requestLocationPermission() {
         return;
     }
     
-    // ✅ استخدام الموقع الافتراضي مباشرة
     showToast("📍 الموقع الافتراضي مفعل: تونس العاصمة", false);
     document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
     setDefaultLocation();
     updateGpsStatus(false, 'افتراضي');
 }
 
-// ===== بدء التتبع (بدون أخطاء) =====
 function startTracking() {
     if (!currentUser) {
         showToast("الرجاء تسجيل الدخول أولاً", true);
@@ -154,7 +188,6 @@ function startTracking() {
         return;
     }
     
-    // ✅ استخدام الموقع الافتراضي مباشرة
     setDefaultLocation();
     showToast("📍 تم تعيين الموقع الافتراضي: تونس", false);
     document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
@@ -182,7 +215,6 @@ async function loadLocations() {
         const locations = await response.json();
         if (!trackingMap) initTrackingMap();
         
-        // ✅ إزالة العلامات القديمة (مع الاحتفاظ بالعلامة الافتراضية)
         Object.keys(trackingMarkers).forEach(key => {
             if (key !== 'default') {
                 trackingMarkers[key].remove();
@@ -210,7 +242,6 @@ function centerMapOnUser() {
         showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
         return;
     }
-    // ✅ استخدام الموقع الافتراضي
     showToast("🎯 تم التمركز على الموقع الافتراضي: تونس", false);
     setDefaultLocation();
 }
@@ -219,7 +250,6 @@ function logUserLocation() {
     if (!currentUser) return;
     if (currentUser.role !== "مسؤول") return;
     
-    // ✅ تسجيل موقع افتراضي
     const defaultLat = 36.8065;
     const defaultLng = 10.1815;
     
