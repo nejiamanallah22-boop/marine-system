@@ -11,7 +11,7 @@ function setDefaultLocation() {
         initTrackingMap();
     }
     
-    // ✅ موقع دقيق: تونس العاصمة - شارع الحبيب بورقيبة
+    // ✅ موقع دقيق: تونس العاصمة
     const defaultLat = 36.8065;
     const defaultLng = 10.1815;
     
@@ -30,10 +30,11 @@ function setDefaultLocation() {
     
     const marker = L.marker([defaultLat, defaultLng], { icon: icon })
         .addTo(trackingMap)
-        .bindPopup('📍 تونس العاصمة<br>شارع الحبيب بورقيبة');
+        .bindPopup('📍 تونس العاصمة<br>الموقع الافتراضي');
     
     trackingMarkers['default'] = marker;
     
+    document.getElementById('mapStatus').innerHTML = '📍 الموقع الافتراضي: تونس العاصمة';
     console.log('📍 تم تعيين الموقع الافتراضي: تونس العاصمة');
 }
 
@@ -70,7 +71,7 @@ function initTrackingMap() {
     }
     
     try {
-        trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
+        trackingMap = L.map('trackMap').setView([36.8065, 10.1815], 7);
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
         }).addTo(trackingMap);
@@ -133,45 +134,43 @@ function requestLocationPermission() {
         return;
     }
     
-    if (!navigator.geolocation) {
+    // ✅ عرض رسالة توجيهية
+    showToast("📱 سيتم فتح إعدادات الموقع في المتصفح", false);
+    document.getElementById('mapStatus').innerHTML = "📱 افتح إعدادات المتصفح → الموقع → سماح";
+    
+    // ✅ محاولة طلب الإذن
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                showToast(`✅ تم منح إذن الموقع!`, false);
+                document.getElementById('mapStatus').innerHTML = `✅ الموقع: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+                updateGpsStatus(true, 'مصرح');
+                
+                if (trackingMap) {
+                    trackingMap.setView([latitude, longitude], 15);
+                    updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
+                }
+                startTracking();
+            },
+            (error) => {
+                console.error('خطأ:', error);
+                if (error.code === 1) {
+                    showToast("❌ تم رفض الإذن. استخدم الموقع الافتراضي", true);
+                    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
+                    setDefaultLocation();
+                } else {
+                    showToast(`❌ خطأ: ${error.message}`, true);
+                    setDefaultLocation();
+                }
+                updateGpsStatus(false, 'مرفوض');
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    } else {
         showToast("المتصفح لا يدعم تحديد الموقع", true);
         setDefaultLocation();
-        return;
     }
-    
-    showToast("⏳ جاري طلب إذن الموقع...");
-    document.getElementById('mapStatus').innerHTML = "⏳ جاري طلب إذن الموقع...";
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude } = position.coords;
-            showToast(`✅ تم منح إذن الموقع! ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-            document.getElementById('mapStatus').innerHTML = `✅ تم منح إذن الموقع: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-            updateGpsStatus(true, 'مصرح');
-            
-            // تحديث الخريطة إلى الموقع الحقيقي
-            if (trackingMap) {
-                trackingMap.setView([latitude, longitude], 15);
-                updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
-            }
-            startTracking();
-        },
-        (error) => {
-            console.error('خطأ:', error);
-            document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الإذن: ${error.message}`;
-            
-            if (error.code === 1) {
-                showToast("❌ تم رفض الإذن. سيتم استخدام الموقع الافتراضي", true);
-                setDefaultLocation();
-                document.getElementById('mapStatus').innerHTML = "📍 تم تعيين الموقع الافتراضي: تونس";
-            } else {
-                showToast(`❌ خطأ: ${error.message}`, true);
-                setDefaultLocation();
-            }
-            updateGpsStatus(false, 'مرفوض');
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-    );
 }
 
 function startTracking() {
@@ -210,7 +209,7 @@ function startTracking() {
                 });
                 updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
                 document.getElementById('mapStatus').innerHTML = `📍 موقعك الحقيقي: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                showToast(`✅ تم تحديد موقعك بدقة`);
+                showToast(`✅ تم تحديد موقعك`);
                 updateGpsStatus(true, 'مباشر');
             }
             
@@ -259,7 +258,7 @@ function startTracking() {
                     },
                     (error) => {
                         console.error('خطأ في تحديث الموقع:', error);
-                        document.getElementById('mapStatus').innerHTML = `❌ خطأ في تحديث الموقع: ${error.message}`;
+                        document.getElementById('mapStatus').innerHTML = `❌ خطأ في تحديث الموقع`;
                     },
                     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                 );
@@ -267,12 +266,12 @@ function startTracking() {
         },
         (error) => {
             console.error('خطأ في الحصول على الموقع:', error);
-            document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الموقع: ${error.message}`;
+            document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الموقع`;
             showToast(`❌ خطأ في GPS: ${error.message}`, true);
             updateGpsStatus(false, 'خطأ');
             
             if (error.code === 1) {
-                showToast("⚠️ سيتم استخدام الموقع الافتراضي", true);
+                showToast("⚠️ استخدام الموقع الافتراضي", true);
                 setDefaultLocation();
             }
         },
@@ -301,8 +300,13 @@ async function loadLocations() {
         const locations = await response.json();
         if (!trackingMap) initTrackingMap();
         
-        Object.values(trackingMarkers).forEach(marker => marker.remove());
-        trackingMarkers = {};
+        // ✅ إزالة العلامات القديمة (مع الاحتفاظ بالعلامة الافتراضية)
+        Object.keys(trackingMarkers).forEach(key => {
+            if (key !== 'default') {
+                trackingMarkers[key].remove();
+                delete trackingMarkers[key];
+            }
+        });
         
         if (locations.length === 0) {
             setDefaultLocation();
@@ -315,7 +319,6 @@ async function loadLocations() {
     } catch (err) {
         console.error(err);
         setDefaultLocation();
-        showToast("📍 تم تعيين الموقع الافتراضي", true);
     }
 }
 
@@ -332,7 +335,7 @@ function centerMapOnUser() {
                 showToast("🎯 تم التمركز على موقعك");
             },
             () => {
-                showToast("لا يمكن الحصول على موقعك، استخدم الموقع الافتراضي", true);
+                showToast("استخدم الموقع الافتراضي", true);
                 setDefaultLocation();
             },
             { enableHighAccuracy: true }
