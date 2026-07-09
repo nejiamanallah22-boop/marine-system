@@ -22,44 +22,17 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "'unsafe-eval'",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com"
-            ],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'",
+                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: [
-                "'self'",
-                "'unsafe-inline'",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "https://fonts.googleapis.com",
-                "https://cdnjs.cloudflare.com"
-            ],
-            fontSrc: [
-                "'self'",
-                "https://fonts.gstatic.com",
-                "https://cdnjs.cloudflare.com"
-            ],
-            imgSrc: [
-                "'self'",
-                "data:",
-                "https://unpkg.com",
-                "https://cdn.jsdelivr.net",
-                "https://*.tile.openstreetmap.org",
-                "https://*.basemaps.cartocdn.com"
-            ],
-            connectSrc: [
-                "'self'",
-                "https://*.tile.openstreetmap.org",
-                "https://*.basemaps.cartocdn.com",
-                "https://cdn.jsdelivr.net",
-                "https://unpkg.com",
-                "https://cdnjs.cloudflare.com"
-            ]
+            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net",
+                "https://unpkg.com", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+            imgSrc: ["'self'", "data:", "https://unpkg.com", "https://cdn.jsdelivr.net",
+                "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com"],
+            connectSrc: ["'self'", "https://*.tile.openstreetmap.org",
+                "https://*.basemaps.cartocdn.com", "https://cdn.jsdelivr.net",
+                "https://unpkg.com", "https://cdnjs.cloudflare.com"]
         }
     }
 }));
@@ -68,7 +41,6 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ==================== Rate Limiting ====================
 app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 1000,
@@ -84,13 +56,8 @@ mongoose.connect(MONGODB_URI, {
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
 })
-.then(() => {
-    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
-    initializeDefaultUsers();
-})
-.catch(err => {
-    console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message);
-});
+.then(() => { console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!'); initializeDefaultUsers(); })
+.catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message));
 
 // ==================== نماذج البيانات ====================
 const VesselSchema = new mongoose.Schema({
@@ -169,14 +136,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
 const authenticate = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ error: 'غير مصرح به - الرجاء تسجيل الدخول' });
-        }
+        if (!token) return res.status(401).json({ error: 'غير مصرح به - الرجاء تسجيل الدخول' });
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id);
-        if (!user || !user.enabled) {
-            return res.status(401).json({ error: 'المستخدم غير موجود أو معطل' });
-        }
+        if (!user || !user.enabled) return res.status(401).json({ error: 'المستخدم غير موجود أو معطل' });
         req.user = user;
         next();
     } catch (error) {
@@ -193,25 +156,24 @@ const authorize = (...roles) => {
     };
 };
 
-// ==================== API Routes ====================
+// ============================================================
+// ===== API Routes =====
+// ============================================================
 
 // ===== تسجيل الدخول =====
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        
         if (!username || !password) {
             return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
         }
 
         const user = await User.findOne({ name: username });
-        
         if (!user || !user.enabled) {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
 
         const isMatch = await bcrypt.compare(password, user.pass);
-        
         if (!isMatch) {
             return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
         }
@@ -222,12 +184,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        res.json({
-            token,
-            id: user._id,
-            name: user.name,
-            role: user.role
-        });
+        res.json({ token, id: user._id, name: user.name, role: user.role });
     } catch (error) {
         res.status(500).json({ error: 'خطأ في السيرفر' });
     }
@@ -494,21 +451,21 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================
-// ✅ تقديم الملفات الثابتة - النسخة المُبسطة
+// ===== تقديم الملفات الثابتة =====
 // ============================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مسار index.html الرئيسي
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// أي مسار آخر يعيد index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================== Socket.IO ====================
+// ============================================================
+// ===== Socket.IO =====
+// ============================================================
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
@@ -546,7 +503,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// ==================== إنشاء المستخدم الافتراضي ====================
+// ============================================================
+// ===== إنشاء المستخدم الافتراضي =====
+// ============================================================
 const initializeDefaultUsers = async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -568,7 +527,9 @@ const initializeDefaultUsers = async () => {
     }
 };
 
-// ==================== تشغيل السيرفر ====================
+// ============================================================
+// ===== تشغيل السيرفر =====
+// ============================================================
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
