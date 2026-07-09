@@ -25,13 +25,12 @@
 <body>
 
 <!-- ============================================================ -->
-<!-- ===== خلفية شعار الحرس البحري ===== -->
+<!-- ===== خلفية مركب الحرس البحري ===== -->
 <!-- ============================================================ -->
-<div class="garde-background"></div>
+<div class="ship-background"></div>
 
 <style>
-/* ===== خلفية شعار الحرس البحري ===== */
-.garde-background {
+.ship-background {
     position: fixed;
     top: 0;
     left: 0;
@@ -39,30 +38,28 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.04;
-    background-image: url('/assets/garde-nationale.png');
-    background-size: 50% auto;
+    opacity: 0.07;
+    background-image: url('https://tunisie-telegraph.com/wp-content/uploads/2023/03/IMMIGRATION-scaled-1.jpg');
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
-    animation: gardeFloat 12s ease-in-out infinite;
+    animation: shipFloat 12s ease-in-out infinite;
 }
 
-@keyframes gardeFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-12px) scale(1.02); }
+@keyframes shipFloat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
-/* ===== تحسين للهواتف ===== */
 @media (max-width: 768px) {
-    .garde-background {
-        opacity: 0.025;
-        background-size: 70% auto;
+    .ship-background {
+        opacity: 0.05;
+        background-size: cover;
     }
 }
 
-/* ===== إخفاء الخلفية عند الطباعة ===== */
 @media print {
-    .garde-background { display: none !important; }
+    .ship-background { display: none !important; }
 }
 </style>
 
