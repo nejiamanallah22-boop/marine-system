@@ -18,7 +18,54 @@ const io = socketIO(server, {
 });
 
 // ==================== Middleware ====================
-app.use(helmet());
+// ✅ Helmet مع إعدادات CSP مخصصة للسماح بالمكتبات الخارجية
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://code.jquery.com",
+                "https://stackpath.bootstrapcdn.com",
+                "https://polyfill.io",
+                "https://kit.fontawesome.com",
+                "https://api.mapbox.com"
+            ],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com",
+                "https://fonts.googleapis.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net",
+                "https://*.tile.openstreetmap.org",
+                "https://*.basemaps.cartocdn.com"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://*.tile.openstreetmap.org",
+                "https://*.basemaps.cartocdn.com"
+            ]
+        }
+    }
+}));
+
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
