@@ -135,9 +135,13 @@ function updateZones() {
     }
 }
 
+// ===== دالة renderMain المعدلة =====
 async function renderMain() {
     try {
+        console.log('🔄 جاري تحميل بيانات المراكب...');
         let data = await loadVessels();
+        console.log(`✅ تم تحميل ${data.length} مركب`);
+        
         const fCat = document.getElementById('fCatMain').value;
         const fReg = document.getElementById('fRegMain').value;
         const searchText = document.getElementById('searchMain').value.toLowerCase();
@@ -183,6 +187,7 @@ async function renderMain() {
             });
         }
         document.getElementById('mainBody').innerHTML = html;
+        console.log('✅ تم عرض البيانات في الجدول');
     } catch(error) {
         console.error('خطأ في renderMain:', error);
         document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
@@ -194,8 +199,10 @@ function clearMainSearch() {
     renderMain();
 }
 
+// ===== دالة renderMaint المعدلة =====
 async function renderMaint() {
     try {
+        console.log('🔄 جاري تحميل بيانات الصيانة...');
         let data = await loadVessels();
         const fReg = document.getElementById('fRegMaint').value;
         const dStart = document.getElementById('fDateStart').value;
@@ -259,6 +266,7 @@ async function renderMaint() {
             });
         }
         document.getElementById('maintBody').innerHTML = html;
+        console.log('✅ تم عرض بيانات الصيانة');
     } catch(error) {
         console.error('خطأ في renderMaint:', error);
         document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
