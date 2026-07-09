@@ -152,24 +152,34 @@ function showPage(page) {
     
     if(page === 'main') { 
         document.getElementById('pageMain').classList.remove('hidden');
-        setTimeout(() => renderMain(), 100);
+        setTimeout(async () => {
+            await renderMain();
+        }, 300);
     }
     else if(page === 'maint') { 
         document.getElementById('pageMaint').classList.remove('hidden'); 
-        setTimeout(() => renderMaint(), 100);
+        setTimeout(async () => {
+            await renderMaint();
+        }, 300);
     }
     else if(page === 'eff') { 
         document.getElementById('pageEff').classList.remove('hidden'); 
-        setTimeout(() => renderEff(), 100);
+        setTimeout(async () => {
+            await renderEff();
+        }, 300);
     }
     else if(page === 'support') { 
         document.getElementById('pageSupport').classList.remove('hidden'); 
-        setTimeout(() => renderTickets(), 100);
+        setTimeout(async () => {
+            await renderTickets();
+        }, 300);
     }
     else if(page === 'track') { 
         if(isAdmin) { 
             document.getElementById('pageTrack').classList.remove('hidden'); 
-            setTimeout(() => renderTrack(), 100);
+            setTimeout(async () => {
+                await renderTrack();
+            }, 300);
         } else { 
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
         }
@@ -181,7 +191,6 @@ function showPage(page) {
                 if (typeof L !== 'undefined') {
                     if (trackingMap) {
                         trackingMap.invalidateSize();
-                        console.log('✅ تم إعادة تهيئة الخريطة');
                     } else {
                         initTrackingMap();
                         setTimeout(() => {
@@ -190,7 +199,6 @@ function showPage(page) {
                     }
                     loadLocations();
                 } else {
-                    console.error('❌ Leaflet غير محمل');
                     showToast("❌ خطأ في تحميل مكتبة الخريطة", true);
                 }
             }, 800);
@@ -201,7 +209,9 @@ function showPage(page) {
     else if(page === 'users') { 
         if(isAdmin) { 
             document.getElementById('pageUsers').classList.remove('hidden'); 
-            setTimeout(() => renderUsers(), 100);
+            setTimeout(async () => {
+                await renderUsers();
+            }, 300);
         } else { 
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
         }
@@ -261,10 +271,6 @@ async function initAppAfterLogin() {
     }, 600);
 }
 
-// ============================================================
-// ✅ الدوال الجديدة المضافة لربط تسجيل الدخول بإذن الموقع
-// ============================================================
-
 // ===== تهيئة الخريطة مع موقع المستخدم =====
 function initTrackingMapWithLocation(lat, lng) {
     setTimeout(() => {
@@ -295,7 +301,6 @@ function initTrackingMapWithLocation(lat, lng) {
 async function addUserLocation(userName) {
     if (!userName) return;
     
-    // استخدام موقع المستخدم الحالي إذا كان موجوداً
     const lat = currentUser?.lat || 36.8065;
     const lng = currentUser?.lng || 10.1815;
     
@@ -358,7 +363,8 @@ async function initAppAfterLoginWithLocation(lat, lng) {
         }
         await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
         showToast(`مرحباً ${currentUser.name} ✅`, false);
-    }, 500);
+        console.log('✅ تم تحميل البيانات بنجاح');
+    }, 800);
     
     setTimeout(() => {
         initSocket();
