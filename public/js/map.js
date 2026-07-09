@@ -5,45 +5,56 @@ let trackingMap = null;
 let trackingMarkers = {};
 let socket = null;
 
-// ===== إضافة موقع افتراضي للمستخدم عند تسجيل الدخول =====
-async function addUserLocation(userName) {
-    if (!userName) return;
-    
-    const defaultLat = 36.8065;
-    const defaultLng = 10.1815;
-    
+function initSocket() {
+    if (socket) return;
     try {
-        await fetch('/api/locations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userName: userName,
-                userRole: 'مستخدم',
-                lat: defaultLat,
-                lng: defaultLng,
-                action: 'تسجيل دخول'
-            })
+        socket = io();
+        socket.on('connect', () => {
+            console.log('✅ متصل بـ Socket.IO');
+            if (currentUser) {
+                socket.emit('user-connected', { userName: currentUser.name });
+            }
         });
-        console.log(`📍 تم حفظ موقع المستخدم: ${userName}`);
+        socket.on('receive-location', (data) => {
+            console.log('📍 موقع مستلم:', data);
+            updateMapMarker(data.userName, data.lat, data.lng, data.time);
+            showToast(`📍 تم تحديث موقع: ${data.userName}`);
+        });
+        socket.on('disconnect', () => {
+            console.log('❌ غير متصل بـ Socket.IO');
+        });
     } catch(e) {
-        console.error('خطأ في حفظ موقع المستخدم:', e);
-    }
-    
-    if (trackingMap) {
-        updateMapMarker(userName, defaultLat, defaultLng, new Date().toISOString());
+        console.error('خطأ في Socket:', e);
     }
 }
 
-// ===== موقع افتراضي دقيق (تونس العاصمة) =====
+function initTrackingMap() {
+    if (trackingMap) return;
+    try {
+        trackingMap = L.map('trackMap').setView([36.8065, 10.1815], 7);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
+        }).addTo(trackingMap);
+        console.log('✅ تم تهيئة الخريطة');
+        
+        setTimeout(() => {
+            setDefaultLocation();
+        }, 300);
+    } catch(e) {
+        console.error('خطأ في الخريطة:', e);
+    }
+}
+
 function setDefaultLocation() {
     if (!trackingMap) {
         initTrackingMap();
+        return;
     }
     
     const defaultLat = 36.8065;
     const defaultLng = 10.1815;
     
-    trackingMap.setView([defaultLat, defaultLng], 14);
+    trackingMap.setView([defaultLat, defaultLng], 13);
     
     if (trackingMarkers['default']) {
         trackingMarkers['default'].remove();
@@ -60,74 +71,19 @@ function setDefaultLocation() {
         .bindPopup('📍 تونس العاصمة<br>الموقع الافتراضي');
     
     trackingMarkers['default'] = marker;
-    
     document.getElementById('mapStatus').innerHTML = '📍 الموقع الافتراضي: تونس العاصمة';
-    console.log('📍 تم تعيين الموقع الافتراضي: تونس العاصمة');
-}
-
-function initSocket() {
-    if (socket) return;
-    try {
-        socket = io();
-        socket.on('connect', () => {
-            console.log('✅ متصل بـ Socket.IO');
-            if (currentUser) {
-                socket.emit('user-connected', { 
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: 36.8065,
-                    lng: 10.1815
-                });
-            }
-        });
-        socket.on('receive-location', (data) => {
-            console.log('📍 موقع مستلم:', data);
-            updateMapMarker(data.userName, data.lat, data.lng, data.time);
-            showToast(`📍 تم تحديث موقع: ${data.userName}`);
-        });
-        socket.on('user-list', (users) => {
-            console.log('👥 قائمة المستخدمين:', users);
-            users.forEach(user => {
-                updateMapMarker(user.userName, user.lat, user.lng, new Date().toISOString());
-            });
-        });
-        socket.on('disconnect', () => {
-            console.log('❌ غير متصل بـ Socket.IO');
-        });
-    } catch(e) {
-        console.error('خطأ في Socket:', e);
-    }
-}
-
-function initTrackingMap() {
-    if (trackingMap) return;
-    
-    const mapElement = document.getElementById('trackMap');
-    if (!mapElement) {
-        console.error('❌ عنصر trackMap غير موجود');
-        return;
-    }
-    
-    try {
-        trackingMap = L.map('trackMap').setView([36.8065, 10.1815], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        }).addTo(trackingMap);
-        console.log('✅ تم تهيئة الخريطة');
-        
-        setTimeout(() => {
-            setDefaultLocation();
-        }, 300);
-        
-    } catch(e) {
-        console.error('خطأ في الخريطة:', e);
-    }
+    console.log('📍 تم تعيين الموقع الافتراضي');
 }
 
 function updateMapMarker(userName, lat, lng, time) {
-    if (!trackingMap) initTrackingMap();
+    if (!trackingMap) {
+        initTrackingMap();
+        if (!trackingMap) return;
+    }
+    
     const key = userName;
     const timeFormatted = time ? new Date(time).toLocaleString('ar-EG') : new Date().toLocaleString('ar-EG');
+    
     if (trackingMarkers[key]) {
         trackingMarkers[key].setLatLng([lat, lng]);
         trackingMarkers[key].setPopupContent(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
@@ -141,6 +97,7 @@ function updateMapMarker(userName, lat, lng, time) {
         marker.bindPopup(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
         trackingMarkers[key] = marker;
     }
+    
     if (userName === currentUser?.name) {
         trackingMap.setView([lat, lng], 13);
     }
@@ -149,14 +106,16 @@ function updateMapMarker(userName, lat, lng, time) {
 function updateGpsStatus(active, text) {
     const dot = document.getElementById('gpsDot');
     const statusText = document.getElementById('gpsStatusText');
-    if (active) {
-        dot.className = 'gps-status gps-active';
-        statusText.textContent = text || 'نشط';
-        statusText.style.color = '#28a745';
-    } else {
-        dot.className = 'gps-status gps-inactive';
-        statusText.textContent = text || 'غير نشط';
-        statusText.style.color = '#dc3545';
+    if (dot && statusText) {
+        if (active) {
+            dot.className = 'gps-status gps-active';
+            statusText.textContent = text || 'نشط';
+            statusText.style.color = '#28a745';
+        } else {
+            dot.className = 'gps-status gps-inactive';
+            statusText.textContent = text || 'غير نشط';
+            statusText.style.color = '#dc3545';
+        }
     }
 }
 
@@ -165,12 +124,6 @@ function requestLocationPermission() {
         showToast("الرجاء تسجيل الدخول أولاً", true);
         return;
     }
-    
-    if (currentUser.role !== "مسؤول") {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
-    }
-    
     showToast("📍 الموقع الافتراضي مفعل: تونس العاصمة", false);
     document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
     setDefaultLocation();
@@ -182,12 +135,6 @@ function startTracking() {
         showToast("الرجاء تسجيل الدخول أولاً", true);
         return;
     }
-    
-    if (currentUser.role !== "مسؤول") {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
-    }
-    
     setDefaultLocation();
     showToast("📍 تم تعيين الموقع الافتراضي: تونس", false);
     document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
@@ -212,6 +159,14 @@ function stopTracking() {
 async function loadLocations() {
     try {
         const response = await fetch('/api/locations');
+        if (response.status === 429) {
+            console.warn('⚠️ تجاوزت الحد المسموح');
+            showToast('⚠️ كثرة الطلبات، انتظر دقيقة', true);
+            setDefaultLocation();
+            return;
+        }
+        if (!response.ok) throw new Error(await response.text());
+        
         const locations = await response.json();
         if (!trackingMap) initTrackingMap();
         
@@ -247,14 +202,11 @@ function centerMapOnUser() {
 }
 
 function logUserLocation() {
-    if (!currentUser) return;
-    if (currentUser.role !== "مسؤول") return;
-    
+    if (!currentUser || currentUser.role !== "مسؤول") return;
     const defaultLat = 36.8065;
     const defaultLng = 10.1815;
-    
     (async () => {
-        await logActivity("دخول من موقع", `قام بتسجيل الدخول من الموقع الافتراضي: ${defaultLat}, ${defaultLng}`);
+        await logActivity("دخول من موقع", `موقع افتراضي: ${defaultLat}, ${defaultLng}`);
         try {
             await fetch('/api/locations', {
                 method: 'POST',
@@ -267,8 +219,6 @@ function logUserLocation() {
                     action: 'تسجيل دخول (افتراضي)'
                 })
             });
-        } catch(e) {
-            console.error('خطأ في حفظ موقع الدخول:', e);
-        }
+        } catch(e) { console.error('خطأ في حفظ موقع الدخول:', e); }
     })();
 }
