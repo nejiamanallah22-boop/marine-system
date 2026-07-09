@@ -29,7 +29,7 @@
 
 body {
     font-family: var(--font-ar);
-    background: linear-gradient(135deg, #f0f2f5 0%, #d9e2ec 100%);
+    background: linear-gradient(135deg, #e8f0fe, #d4e0f0);
     color: var(--dark);
     min-height: 100vh;
     direction: rtl;
@@ -40,259 +40,43 @@ body {
 }
 
 /* ============================================================ */
-/* ===== خلفية مركب بتأثير CSS فقط (بدون صور) ===== */
+/* ===== خلفية مائية بسيطة ===== */
 /* ============================================================ */
-
-.ship-art {
+.water-pattern {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.06;
-    overflow: hidden;
+    opacity: 0.04;
+    background-image: 
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(255,255,255,0.25) 0%, transparent 60%);
 }
 
-/* ===== شكل المركب باستخدام CSS ===== */
-.ship-art .boat {
-    position: absolute;
-    bottom: 8%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    max-width: 650px;
-    height: 220px;
-}
-
-/* ===== هيكل المركب ===== */
-.ship-art .hull {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 65px;
-    background: linear-gradient(180deg, #2a4a6c, #1a3a5c);
-    border-radius: 0 60% 20% 20% / 0 80% 20% 20%;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-}
-
-.ship-art .hull::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: 0;
-    width: 100%;
-    height: 20px;
-    background: #3a5a7c;
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-}
-
-/* ===== سطح المركب ===== */
-.ship-art .deck {
-    position: absolute;
-    bottom: 55px;
-    left: 5%;
-    width: 90%;
-    height: 25px;
-    background: linear-gradient(180deg, #4a7a9c, #3a6a8c);
-    border-radius: 10px 10px 0 0;
-}
-
-/* ===== المقصورة ===== */
-.ship-art .cabin {
-    position: absolute;
-    bottom: 75px;
-    left: 25%;
-    width: 50%;
-    height: 55px;
-    background: linear-gradient(180deg, #4a7a9c, #2a4a6c);
-    border-radius: 8px 8px 0 0;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.ship-art .cabin::after {
-    content: '';
-    position: absolute;
-    top: 8px;
-    left: 10%;
-    width: 80%;
-    height: 35px;
-    background: #5a8aac;
-    border-radius: 4px;
-}
-
-/* ===== النوافذ ===== */
-.ship-art .window {
-    position: absolute;
-    top: 12px;
-    width: 15px;
-    height: 20px;
-    background: radial-gradient(circle, #81c784, #4caf50);
-    border-radius: 3px;
-    box-shadow: inset 0 2px 6px rgba(255,255,255,0.3);
-}
-
-.ship-art .window:nth-child(1) { left: 15%; }
-.ship-art .window:nth-child(2) { left: 28%; }
-.ship-art .window:nth-child(3) { left: 41%; }
-.ship-art .window:nth-child(4) { left: 54%; }
-.ship-art .window:nth-child(5) { left: 67%; }
-
-/* ===== الصاري ===== */
-.ship-art .mast {
-    position: absolute;
-    bottom: 130px;
-    left: 48%;
-    width: 4px;
-    height: 80px;
-    background: #444;
-    border-radius: 2px;
-}
-
-.ship-art .mast::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -8px;
-    width: 20px;
+/* ============================================================ */
+/* ===== شريط التمرير ===== */
+/* ============================================================ */
+::-webkit-scrollbar {
+    width: 8px;
     height: 8px;
-    background: #555;
-    border-radius: 4px;
 }
 
-.ship-art .mast::after {
-    content: '';
-    position: absolute;
-    top: 30px;
-    left: -5px;
-    width: 14px;
-    height: 6px;
-    background: #555;
-    border-radius: 3px;
+::-webkit-scrollbar-track {
+    background: #e9ecef;
+    border-radius: 10px;
 }
 
-/* ===== العلم التونسي ===== */
-.ship-art .flag {
-    position: absolute;
-    top: -15px;
-    left: -25px;
-    width: 30px;
-    height: 20px;
-    background: #E70010;
-    border-radius: 2px;
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
 }
 
-.ship-art .flag::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 10px;
-    background: white;
-    border-radius: 50%;
-}
-
-.ship-art .flag::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 6px;
-    height: 6px;
-    background: #E70010;
-    border-radius: 50%;
-    z-index: 1;
-}
-
-/* ===== المدافع ===== */
-.ship-art .cannon {
-    position: absolute;
-    bottom: 55px;
-    width: 20px;
-    height: 8px;
-    background: #333;
-    border-radius: 0 4px 4px 0;
-}
-
-.ship-art .cannon::after {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: -2px;
-    width: 6px;
-    height: 12px;
-    background: #444;
-    border-radius: 2px;
-}
-
-.ship-art .cannon-left { left: 5%; }
-.ship-art .cannon-right { right: 5%; }
-
-/* ===== شعار الحرس البحري ===== */
-.ship-art .badge {
-    position: absolute;
-    bottom: 85px;
-    right: -30px;
-    width: 50px;
-    height: 50px;
-    background: #f5c842;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: bold;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-}
-
-.ship-art .badge::after {
-    content: '⚓';
-    color: #1a3a5c;
-}
-
-/* ===== الأمواج ===== */
-.ship-art .wave {
-    position: absolute;
-    bottom: -10px;
-    left: 0;
-    width: 200%;
-    height: 30px;
-    background: repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 50px,
-        rgba(26, 58, 92, 0.1) 50px,
-        rgba(26, 58, 92, 0.1) 80px
-    );
-    border-radius: 50%;
-    animation: waveMove 6s linear infinite;
-}
-
-.ship-art .wave:nth-child(2) {
-    bottom: 5px;
-    opacity: 0.5;
-    animation-duration: 8s;
-    animation-direction: reverse;
-}
-
-@keyframes waveMove {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-
-/* ===== حركة المركب ===== */
-@keyframes boatFloat {
-    0%, 100% { transform: translateX(-50%) translateY(0) rotate(0deg); }
-    50% { transform: translateX(-50%) translateY(-8px) rotate(0.5deg); }
-}
-
-.ship-art .boat {
-    animation: boatFloat 6s ease-in-out infinite;
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
 }
 
 /* ============================================================ */
@@ -327,13 +111,34 @@ body {
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-.login-box .logo { font-size: 56px; margin-bottom: 10px; display: block; }
-.login-box h2 { color: var(--dark); font-size: 26px; font-weight: 700; margin-bottom: 8px; }
-.login-box .subtitle { color: var(--secondary); font-size: 14px; margin-bottom: 25px; }
+.login-box .logo {
+    font-size: 56px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.login-box h2 {
+    color: var(--dark);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.login-box .subtitle {
+    color: var(--secondary);
+    font-size: 14px;
+    margin-bottom: 25px;
+}
 
 .login-box .location-hint {
     background: #e7f1ff;
@@ -387,7 +192,9 @@ body {
     box-shadow: 0 8px 25px rgba(13, 110, 253, 0.4);
 }
 
-.login-box .login-btn:active { transform: scale(0.98); }
+.login-box .login-btn:active {
+    transform: scale(0.98);
+}
 
 .login-box .error-msg {
     color: var(--danger);
@@ -414,8 +221,14 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================================ */
@@ -431,7 +244,12 @@ header {
     overflow: hidden;
 }
 
-header h1 { font-size: 26px; font-weight: 700; position: relative; z-index: 1; }
+header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
 
 header .header-content {
     display: flex;
@@ -487,28 +305,68 @@ header .header-content {
     justify-content: center;
 }
 
-.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
-.btn:active { transform: scale(0.96); }
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
 
-.btn-primary { background: var(--primary); color: var(--white); }
-.btn-primary:hover { background: var(--primary-dark); }
+.btn:active {
+    transform: scale(0.96);
+}
 
-.btn-success { background: var(--success); color: var(--white); }
-.btn-success:hover { background: #157347; }
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+}
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
 
-.btn-danger { background: var(--danger); color: var(--white); }
-.btn-danger:hover { background: #b02a37; }
+.btn-success {
+    background: var(--success);
+    color: var(--white);
+}
+.btn-success:hover {
+    background: #157347;
+}
 
-.btn-warning { background: var(--warning); color: var(--dark); }
-.btn-warning:hover { background: #e6a700; }
+.btn-danger {
+    background: var(--danger);
+    color: var(--white);
+}
+.btn-danger:hover {
+    background: #b02a37;
+}
 
-.btn-info { background: var(--info); color: var(--dark); }
-.btn-info:hover { background: #0ab5d8; }
+.btn-warning {
+    background: var(--warning);
+    color: var(--dark);
+}
+.btn-warning:hover {
+    background: #e6a700;
+}
 
-.btn-secondary { background: var(--secondary); color: var(--white); }
-.btn-secondary:hover { background: #5c636a; }
+.btn-info {
+    background: var(--info);
+    color: var(--dark);
+}
+.btn-info:hover {
+    background: #0ab5d8;
+}
 
-.btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
+.btn-secondary {
+    background: var(--secondary);
+    color: var(--white);
+}
+.btn-secondary:hover {
+    background: #5c636a;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 6px;
+}
 
 .btn-outline-white {
     background: transparent;
@@ -516,7 +374,10 @@ header .header-content {
     color: var(--white);
 }
 
-.btn-outline-white:hover { background: var(--white); color: var(--primary); }
+.btn-outline-white:hover {
+    background: var(--white);
+    color: var(--primary);
+}
 
 /* ============================================================ */
 /* ===== شريط التنقل ===== */
@@ -547,8 +408,14 @@ header .header-content {
     border: 1px solid #e9ecef;
 }
 
-.filter-bar label { font-weight: 600; color: var(--secondary); font-size: 13px; }
-.filter-bar input, .filter-bar select {
+.filter-bar label {
+    font-weight: 600;
+    color: var(--secondary);
+    font-size: 13px;
+}
+
+.filter-bar input,
+.filter-bar select {
     padding: 8px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid #ced4da;
@@ -558,14 +425,24 @@ header .header-content {
     transition: var(--transition);
 }
 
-.filter-bar input:focus, .filter-bar select:focus {
+.filter-bar input:focus,
+.filter-bar select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
 }
 
-.search-input { flex: 1; min-width: 200px; }
-.search-input input { width: 100%; padding: 8px 18px; border-radius: 30px; border: 1px solid #ced4da; }
+.search-input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-input input {
+    width: 100%;
+    padding: 8px 18px;
+    border-radius: 30px;
+    border: 1px solid #ced4da;
+}
 
 /* ============================================================ */
 /* ===== نموذج الإدخال ===== */
@@ -581,7 +458,8 @@ header .header-content {
     margin-bottom: 25px;
 }
 
-.input-grid input, .input-grid select {
+.input-grid input,
+.input-grid select {
     padding: 10px 14px;
     border-radius: var(--radius-sm);
     border: 1px solid #ced4da;
@@ -592,7 +470,8 @@ header .header-content {
     background: var(--white);
 }
 
-.input-grid input:focus, .input-grid select:focus {
+.input-grid input:focus,
+.input-grid select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
@@ -618,8 +497,17 @@ header .header-content {
     font-size: 16px;
 }
 
-.scrollable-table { overflow-x: auto; max-height: 600px; overflow-y: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.scrollable-table {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
 
 thead th {
     background: #f8f9fa;
@@ -641,18 +529,43 @@ tbody td {
     transition: var(--transition);
 }
 
-tbody tr:hover { background: #f0f7ff; }
-tbody tr:nth-child(even) { background: #fafbfc; }
-tbody tr:nth-child(even):hover { background: #f0f7ff; }
+tbody tr:hover {
+    background: #f0f7ff;
+}
+
+tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+tbody tr:nth-child(even):hover {
+    background: #f0f7ff;
+}
 
 /* ===== الحالات ===== */
-.status-صالح { color: var(--success); font-weight: 700; }
-.status-معطب { color: var(--danger); font-weight: 700; }
-.status-صيانة { color: var(--warning); font-weight: 700; }
+.status-صالح {
+    color: var(--success);
+    font-weight: 700;
+}
 
-.high-eff { background-color: #d1e7dd !important; }
-.mid-eff { background-color: #fff3cd !important; }
-.low-eff { background-color: #f8d7da !important; }
+.status-معطب {
+    color: var(--danger);
+    font-weight: 700;
+}
+
+.status-صيانة {
+    color: var(--warning);
+    font-weight: 700;
+}
+
+.high-eff {
+    background-color: #d1e7dd !important;
+}
+.mid-eff {
+    background-color: #fff3cd !important;
+}
+.low-eff {
+    background-color: #f8d7da !important;
+}
 
 /* ============================================================ */
 /* ===== بطاقات الإحصائيات ===== */
@@ -674,9 +587,23 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
     transition: var(--transition);
 }
 
-.stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
-.stat-card .number { font-size: 32px; font-weight: 800; color: var(--primary); line-height: 1.2; }
-.stat-card .label { font-size: 14px; color: var(--secondary); margin-top: 4px; }
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+}
+
+.stat-card .number {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.2;
+}
+
+.stat-card .label {
+    font-size: 14px;
+    color: var(--secondary);
+    margin-top: 4px;
+}
 
 /* ============================================================ */
 /* ===== الرسوم البيانية ===== */
@@ -696,7 +623,12 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.chart-box h4 { font-size: 15px; font-weight: 700; margin-bottom: 15px; color: var(--dark); }
+.chart-box h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--dark);
+}
 
 .chart-switch {
     display: flex;
@@ -716,8 +648,15 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
     transition: var(--transition);
 }
 
-.chart-switch button.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
-.chart-switch button:hover:not(.active) { background: #f8f9fa; }
+.chart-switch button.active {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+.chart-switch button:hover:not(.active) {
+    background: #f8f9fa;
+}
 
 /* ============================================================ */
 /* ===== الخريطة ===== */
@@ -759,11 +698,21 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
 }
 
 @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.9); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-.modal-content h3 { font-size: 22px; margin-bottom: 10px; }
+.modal-content h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
 .modal-content input {
     width: 100%;
     padding: 12px 16px;
@@ -775,9 +724,20 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
     transition: var(--transition);
 }
 
-.modal-content input:focus { outline: none; border-color: var(--primary); }
-.modal-content .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
-.modal-content .modal-actions .btn { flex: 1; }
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-content .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-content .modal-actions .btn {
+    flex: 1;
+}
 
 /* ============================================================ */
 /* ===== الإشعارات ===== */
@@ -801,12 +761,22 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
 }
 
 @keyframes slideUp {
-    from { opacity: 0; transform: translateX(-50%) translateY(30px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
 @keyframes fadeOut {
-    to { opacity: 0; transform: translateX(-50%) translateY(20px); visibility: hidden; }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+        visibility: hidden;
+    }
 }
 
 /* ============================================================ */
@@ -838,73 +808,154 @@ tbody tr:nth-child(even):hover { background: #f0f7ff; }
     justify-content: center;
 }
 
-.scroll-btn:hover { transform: scale(1.1); box-shadow: var(--shadow-hover); }
+.scroll-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-hover);
+}
 
 /* ============================================================ */
 /* ===== أدوات مساعدة ===== */
 /* ============================================================ */
-.hidden { display: none !important; }
-.text-center { text-align: center; }
-.mt-10 { margin-top: 10px; }
-.mb-10 { margin-bottom: 10px; }
-.gap-10 { gap: 10px; }
-.flex-wrap { flex-wrap: wrap; }
-.flex-center { display: flex; align-items: center; justify-content: center; }
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.gap-10 {
+    gap: 10px;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
 /* ============================================================ */
 /* ===== التجاوب ===== */
 /* ============================================================ */
 @media (max-width: 992px) {
-    .container { padding: 20px; }
-    .login-box { padding: 35px 25px; }
-    .charts-container { grid-template-columns: 1fr; }
-    .ship-art .boat { max-width: 450px; height: 160px; }
-    .ship-art .badge { width: 40px; height: 40px; font-size: 18px; bottom: 70px; right: -20px; }
+    .container {
+        padding: 20px;
+    }
+    .login-box {
+        padding: 35px 25px;
+    }
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 768px) {
-    body { padding: 10px; }
-    .container { padding: 15px; margin: 10px; }
-    header h1 { font-size: 20px; }
-    .login-box { padding: 30px 20px; width: 95%; }
-    .input-grid { grid-template-columns: 1fr 1fr; }
-    .stats-cards { grid-template-columns: repeat(2, 1fr); }
-    .filter-bar { flex-direction: column; align-items: stretch; }
-    .nav { justify-content: center; }
-    .nav .btn { flex: 1; min-width: 80px; font-size: 12px; padding: 8px 12px; }
-    .map-container { height: 350px; }
-    .scroll-buttons { bottom: 15px; right: 15px; }
-    .scroll-btn { width: 42px; height: 42px; font-size: 16px; }
-    .ship-art .boat { max-width: 320px; height: 120px; }
-    .ship-art .badge { width: 30px; height: 30px; font-size: 14px; bottom: 50px; right: -15px; }
-    .ship-art .cabin { height: 40px; bottom: 55px; }
-    .ship-art .deck { bottom: 40px; height: 18px; }
-    .ship-art .hull { height: 45px; }
-    .ship-art .mast { height: 55px; bottom: 90px; }
-    .ship-art .flag { width: 20px; height: 14px; top: -12px; left: -18px; }
-    .ship-art .flag::after { width: 7px; height: 7px; }
-    .ship-art .flag::before { width: 4px; height: 4px; }
-    .ship-art .window { width: 10px; height: 14px; }
-    .ship-art .cannon { width: 14px; height: 6px; }
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+        margin: 10px;
+    }
+    header h1 {
+        font-size: 20px;
+    }
+    .login-box {
+        padding: 30px 20px;
+        width: 95%;
+    }
+    .input-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .nav {
+        justify-content: center;
+    }
+    .nav .btn {
+        flex: 1;
+        min-width: 80px;
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+    .map-container {
+        height: 350px;
+    }
+    .scroll-buttons {
+        bottom: 15px;
+        right: 15px;
+    }
+    .scroll-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+    }
 }
 
 @media (max-width: 480px) {
-    .input-grid { grid-template-columns: 1fr; }
-    .stats-cards { grid-template-columns: 1fr 1fr; }
-    .stat-card .number { font-size: 24px; }
-    header h1 { font-size: 17px; }
-    .login-box .logo { font-size: 40px; }
-    .login-box h2 { font-size: 20px; }
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stat-card .number {
+        font-size: 24px;
+    }
+    header h1 {
+        font-size: 17px;
+    }
+    .login-box .logo {
+        font-size: 40px;
+    }
+    .login-box h2 {
+        font-size: 20px;
+    }
 }
 
 /* ============================================================ */
 /* ===== الطباعة ===== */
 /* ============================================================ */
 @media print {
-    .nav, .filter-bar, .btn, .btn-sm, .scroll-buttons,
-    .watermark, .map-container, #inputArea, .chart-switch,
-    .ship-art { display: none !important; }
-    @page { size: landscape; margin: 1cm; }
-    body { background: white; padding: 0; }
-    .container { box-shadow: none; border: none; }
+    .nav,
+    .filter-bar,
+    .btn,
+    .btn-sm,
+    .scroll-buttons,
+    .watermark,
+    .map-container,
+    #inputArea,
+    .chart-switch,
+    .water-pattern {
+        display: none !important;
+    }
+    @page {
+        size: landscape;
+        margin: 1cm;
+    }
+    body {
+        background: white;
+        padding: 0;
+    }
+    .container {
+        box-shadow: none;
+        border: none;
+    }
 }
