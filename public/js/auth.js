@@ -139,7 +139,6 @@ async function saveUserLocation(userName, lat, lng) {
 
 // ===== تسجيل الخروج =====
 async function logout() {
-    // ✅ استخدام trackingInterval من النطاق العام (معرف في map.js)
     if (typeof trackingInterval !== 'undefined' && trackingInterval) {
         stopTracking();
     }
@@ -261,3 +260,21 @@ async function deleteUser(userId) {
         }
     }
 }
+
+// ============================================================
+// ✅ تصدير الدوال إلى النطاق العام (window) لتكون متاحة في HTML
+// ============================================================
+
+window.doLogin = doLogin;
+window.logout = logout;
+window.completeLogin = completeLogin;
+window.saveUserLocation = saveUserLocation;
+window.renderUsers = renderUsers;
+window.addUser = addUser;
+window.openPasswordModal = openPasswordModal;
+window.closePasswordModal = closePasswordModal;
+window.saveNewPassword = saveNewPassword;
+window.toggleUser = toggleUser;
+window.deleteUser = deleteUser;
+
+console.log('✅ auth.js تم تحميله بنجاح، الدوال متاحة في النطاق العام');
