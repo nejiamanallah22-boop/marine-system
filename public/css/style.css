@@ -3153,11 +3153,20 @@ table{
 
 
 
-
 /* ============================================================
    ===== نهاية منظومة CSS الاحترافية =====
-
    🚢 Marine Management System UI
    Single File Version
-
    ============================================================ */
+
+/* ===== إصلاح إضافي للخريطة ===== */
+#trackMap {
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 400px !important;
+}
+
+.leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+}
