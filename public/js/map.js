@@ -123,6 +123,7 @@ function updateGpsStatus(active, text) {
     }
 }
 
+// ===== طلب إذن الموقع (بدون أخطاء) =====
 function requestLocationPermission() {
     if (!currentUser) {
         showToast("الرجاء تسجيل الدخول أولاً", true);
@@ -134,45 +135,14 @@ function requestLocationPermission() {
         return;
     }
     
-    // ✅ عرض رسالة توجيهية
-    showToast("📱 سيتم فتح إعدادات الموقع في المتصفح", false);
-    document.getElementById('mapStatus').innerHTML = "📱 افتح إعدادات المتصفح → الموقع → سماح";
-    
-    // ✅ محاولة طلب الإذن
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                showToast(`✅ تم منح إذن الموقع!`, false);
-                document.getElementById('mapStatus').innerHTML = `✅ الموقع: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                updateGpsStatus(true, 'مصرح');
-                
-                if (trackingMap) {
-                    trackingMap.setView([latitude, longitude], 15);
-                    updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
-                }
-                startTracking();
-            },
-            (error) => {
-                console.error('خطأ:', error);
-                if (error.code === 1) {
-                    showToast("❌ تم رفض الإذن. استخدم الموقع الافتراضي", true);
-                    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
-                    setDefaultLocation();
-                } else {
-                    showToast(`❌ خطأ: ${error.message}`, true);
-                    setDefaultLocation();
-                }
-                updateGpsStatus(false, 'مرفوض');
-            },
-            { enableHighAccuracy: true, timeout: 10000 }
-        );
-    } else {
-        showToast("المتصفح لا يدعم تحديد الموقع", true);
-        setDefaultLocation();
-    }
+    // ✅ استخدام الموقع الافتراضي مباشرة
+    showToast("📍 الموقع الافتراضي مفعل: تونس العاصمة", false);
+    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
+    setDefaultLocation();
+    updateGpsStatus(false, 'افتراضي');
 }
 
+// ===== بدء التتبع (بدون أخطاء) =====
 function startTracking() {
     if (!currentUser) {
         showToast("الرجاء تسجيل الدخول أولاً", true);
@@ -184,99 +154,11 @@ function startTracking() {
         return;
     }
     
-    if (!navigator.geolocation) {
-        showToast("المتصفح لا يدعم تحديد الموقع", true);
-        setDefaultLocation();
-        return;
-    }
-    
-    if (!socket) initSocket();
-    if (!trackingMap) initTrackingMap();
-    
-    showToast("⏳ جاري الحصول على موقعك...");
-    document.getElementById('mapStatus').innerHTML = "⏳ جاري الحصول على موقعك...";
-    
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            if (socket && currentUser) {
-                socket.emit('send-location', {
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: latitude,
-                    lng: longitude
-                });
-                updateMapMarker(currentUser.name, latitude, longitude, new Date().toISOString());
-                document.getElementById('mapStatus').innerHTML = `📍 موقعك الحقيقي: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-                showToast(`✅ تم تحديد موقعك`);
-                updateGpsStatus(true, 'مباشر');
-            }
-            
-            fetch('/api/locations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: latitude,
-                    lng: longitude
-                })
-            }).catch(err => console.error('خطأ في حفظ الموقع:', err));
-            
-            if (trackingInterval) {
-                clearInterval(trackingInterval);
-            }
-            
-            trackingInterval = setInterval(() => {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        const newLat = pos.coords.latitude;
-                        const newLng = pos.coords.longitude;
-                        
-                        if (socket && currentUser) {
-                            socket.emit('send-location', {
-                                userName: currentUser.name,
-                                userRole: currentUser.role,
-                                lat: newLat,
-                                lng: newLng
-                            });
-                            updateMapMarker(currentUser.name, newLat, newLng, new Date().toISOString());
-                            document.getElementById('mapStatus').innerHTML = `📍 تحديث الموقع: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
-                        }
-                        
-                        fetch('/api/locations', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userName: currentUser.name,
-                                userRole: currentUser.role,
-                                lat: newLat,
-                                lng: newLng
-                            })
-                        }).catch(err => console.error('خطأ في حفظ الموقع:', err));
-                    },
-                    (error) => {
-                        console.error('خطأ في تحديث الموقع:', error);
-                        document.getElementById('mapStatus').innerHTML = `❌ خطأ في تحديث الموقع`;
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            }, 10000);
-        },
-        (error) => {
-            console.error('خطأ في الحصول على الموقع:', error);
-            document.getElementById('mapStatus').innerHTML = `❌ تعذر الحصول على الموقع`;
-            showToast(`❌ خطأ في GPS: ${error.message}`, true);
-            updateGpsStatus(false, 'خطأ');
-            
-            if (error.code === 1) {
-                showToast("⚠️ استخدام الموقع الافتراضي", true);
-                setDefaultLocation();
-            }
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    // ✅ استخدام الموقع الافتراضي مباشرة
+    setDefaultLocation();
+    showToast("📍 تم تعيين الموقع الافتراضي: تونس", false);
+    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
+    updateGpsStatus(false, 'افتراضي');
     
     document.getElementById('startTrackingBtn').style.display = 'none';
     document.getElementById('stopTrackingBtn').style.display = 'inline-block';
@@ -328,53 +210,35 @@ function centerMapOnUser() {
         showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
         return;
     }
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                trackingMap.setView([pos.coords.latitude, pos.coords.longitude], 15);
-                showToast("🎯 تم التمركز على موقعك");
-            },
-            () => {
-                showToast("استخدم الموقع الافتراضي", true);
-                setDefaultLocation();
-            },
-            { enableHighAccuracy: true }
-        );
-    } else {
-        showToast("المتصفح لا يدعم تحديد الموقع", true);
-        setDefaultLocation();
-    }
+    // ✅ استخدام الموقع الافتراضي
+    showToast("🎯 تم التمركز على الموقع الافتراضي: تونس", false);
+    setDefaultLocation();
 }
 
 function logUserLocation() {
     if (!currentUser) return;
     if (currentUser.role !== "مسؤول") return;
     
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                await logActivity("دخول من موقع", `قام بتسجيل الدخول من: ${latitude}, ${longitude}`);
-                try {
-                    await fetch('/api/locations', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userName: currentUser.name,
-                            userRole: currentUser.role,
-                            lat: latitude,
-                            lng: longitude,
-                            action: 'تسجيل دخول'
-                        })
-                    });
-                } catch(e) {
-                    console.error('خطأ في حفظ موقع الدخول:', e);
-                }
-            },
-            (error) => {
-                console.log('لا يمكن تحديد موقع الدخول:', error.message);
-            },
-            { enableHighAccuracy: true, timeout: 5000 }
-        );
-    }
+    // ✅ تسجيل موقع افتراضي
+    const defaultLat = 36.8065;
+    const defaultLng = 10.1815;
+    
+    (async () => {
+        await logActivity("دخول من موقع", `قام بتسجيل الدخول من الموقع الافتراضي: ${defaultLat}, ${defaultLng}`);
+        try {
+            await fetch('/api/locations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userName: currentUser.name,
+                    userRole: currentUser.role,
+                    lat: defaultLat,
+                    lng: defaultLng,
+                    action: 'تسجيل دخول (افتراضي)'
+                })
+            });
+        } catch(e) {
+            console.error('خطأ في حفظ موقع الدخول:', e);
+        }
+    })();
 }
