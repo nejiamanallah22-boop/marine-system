@@ -1,4 +1,3 @@
-
 // ==================== دوال المصادقة ====================
 
 async function doLogin() {
@@ -25,12 +24,10 @@ async function doLogin() {
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
         
-        initSocket();
-        initTrackingMap();
-        
         const isAdmin = currentUser.role === "مسؤول";
         const isViewer = currentUser.role === "مشاهد";
         
+        // ✅ إظهار/إخفاء الأزرار حسب الصلاحية
         document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
         document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
@@ -39,6 +36,7 @@ async function doLogin() {
         document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
         document.getElementById('inputArea').classList.toggle('hidden', isViewer);
         
+        // ✅ تعبئة القوائم المنسدلة
         const fill = (id, list) => {
             const sel = document.getElementById(id);
             if(sel) {
@@ -50,14 +48,10 @@ async function doLogin() {
         fill('fRegMain', Object.keys(ZONES_DATA));
         fill('fRegMaint', Object.keys(ZONES_DATA));
         
-        await renderMain();
-        await renderMaint();
-        await renderEff();
-        await renderTickets();
-        if(isAdmin) { await renderUsers(); await renderTrack(); }
-        await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
-        showToast(`مرحباً ${username}`);
+        // ✅ استدعاء تهيئة التطبيق بعد تسجيل الدخول
+        await initAppAfterLogin();
         
+        // ✅ تسجيل موقع المستخدم (للمسؤول)
         if(isAdmin) {
             logUserLocation();
         }
