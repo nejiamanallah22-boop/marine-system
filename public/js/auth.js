@@ -1,262 +1,263 @@
-// ==================== دوال الخريطة والتتبع ====================
+// ==================== دوال المصادقة ====================
 
-let trackingInterval = null;
-let trackingMap = null;
-let trackingMarkers = {};
-let socket = null;
-
-// ===== موقع افتراضي =====
-function setDefaultLocation() {
-    if (!trackingMap) {
-        initTrackingMap();
+async function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const errorDiv = document.getElementById('loginError');
+    
+    // ✅ التحقق من وجود العنصر
+    if (!errorDiv) {
+        console.error('❌ عنصر loginError غير موجود');
+        return;
     }
     
-    const defaultLat = 36.8065;
-    const defaultLng = 10.1815;
-    
-    if (trackingMap) {
-        trackingMap.setView([defaultLat, defaultLng], 14);
-        
-        if (trackingMarkers['default']) {
-            trackingMarkers['default'].remove();
-        }
-        
-        const icon = L.divIcon({
-            html: `<div style="background:#d9534f; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 10px rgba(0,0,0,0.3); font-size:16px;">📍</div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
-        });
-        
-        const marker = L.marker([defaultLat, defaultLng], { icon: icon })
-            .addTo(trackingMap)
-            .bindPopup('📍 تونس العاصمة<br>الموقع الافتراضي');
-        
-        trackingMarkers['default'] = marker;
-        document.getElementById('mapStatus').innerHTML = '📍 الموقع الافتراضي: تونس العاصمة';
-        console.log('📍 تم تعيين الموقع الافتراضي: تونس العاصمة');
+    if(!username || !password) {
+        errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور";
+        errorDiv.style.display = "block";
+        return;
     }
-}
-
-function initSocket() {
-    if (socket) return;
-    try {
-        socket = io();
-        socket.on('connect', () => {
-            console.log('✅ متصل بـ Socket.IO');
-            if (currentUser) {
-                socket.emit('user-connected', { 
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: 36.8065,
-                    lng: 10.1815
-                });
+    
+    if (!navigator.geolocation) {
+        errorDiv.innerHTML = "⚠️ متصفحك لا يدعم تحديد الموقع. استخدم متصفحاً حديثاً.";
+        errorDiv.style.display = "block";
+        return;
+    }
+    
+    errorDiv.innerHTML = "⏳ جاري طلب إذن الموقع...";
+    errorDiv.style.display = "block";
+    errorDiv.style.color = "#f39c12";
+    
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            if (errorDiv) errorDiv.style.display = "none";
+            
+            try {
+                const user = await loginAPI(username, password);
+                if(user.error) {
+                    if (errorDiv) {
+                        errorDiv.innerHTML = user.error;
+                        errorDiv.style.display = "block";
+                        errorDiv.style.color = "#d9534f";
+                    }
+                    return;
+                }
+                
+                const { latitude, longitude } = position.coords;
+                await saveUserLocation(user.name, latitude, longitude);
+                completeLogin(user, latitude, longitude);
+                
+            } catch(error) {
+                if (errorDiv) {
+                    errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
+                    errorDiv.style.display = "block";
+                    errorDiv.style.color = "#d9534f";
+                }
             }
-        });
-        socket.on('receive-location', (data) => {
-            console.log('📍 موقع مستلم:', data);
-            updateMapMarker(data.userName, data.lat, data.lng, data.time);
-            showToast(`📍 تم تحديث موقع: ${data.userName}`);
-        });
-        socket.on('user-list', (users) => {
-            console.log('👥 قائمة المستخدمين:', users);
-            users.forEach(user => {
-                updateMapMarker(user.userName, user.lat, user.lng, new Date().toISOString());
-            });
-        });
-        socket.on('disconnect', () => {
-            console.log('❌ غير متصل بـ Socket.IO');
-        });
-    } catch(e) {
-        console.error('خطأ في Socket:', e);
-    }
-}
-
-function initTrackingMap() {
-    if (trackingMap) return;
-    
-    const mapElement = document.getElementById('trackMap');
-    if (!mapElement) {
-        console.error('❌ عنصر trackMap غير موجود');
-        return;
-    }
-    
-    try {
-        trackingMap = L.map('trackMap').setView([36.8065, 10.1815], 7);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors'
-        }).addTo(trackingMap);
-        console.log('✅ تم تهيئة الخريطة');
-        
-        setTimeout(() => {
-            setDefaultLocation();
-        }, 300);
-        
-    } catch(e) {
-        console.error('خطأ في الخريطة:', e);
-    }
-}
-
-function updateMapMarker(userName, lat, lng, time) {
-    if (!trackingMap) initTrackingMap();
-    const key = userName;
-    const timeFormatted = time ? new Date(time).toLocaleString('ar-EG') : new Date().toLocaleString('ar-EG');
-    if (trackingMarkers[key]) {
-        trackingMarkers[key].setLatLng([lat, lng]);
-        trackingMarkers[key].setPopupContent(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
-    } else {
-        const icon = L.divIcon({
-            html: `<div style="background:#2e7d32; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 10px rgba(0,0,0,0.3); font-size:16px;">📍</div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
-        });
-        const marker = L.marker([lat, lng], { icon: icon }).addTo(trackingMap);
-        marker.bindPopup(`<b>👤 ${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${timeFormatted}`);
-        trackingMarkers[key] = marker;
-    }
-    if (userName === currentUser?.name) {
-        trackingMap.setView([lat, lng], 13);
-    }
-}
-
-function updateGpsStatus(active, text) {
-    const dot = document.getElementById('gpsDot');
-    const statusText = document.getElementById('gpsStatusText');
-    if (dot && statusText) {
-        if (active) {
-            dot.className = 'gps-status gps-active';
-            statusText.textContent = text || 'نشط';
-            statusText.style.color = '#28a745';
-        } else {
-            dot.className = 'gps-status gps-inactive';
-            statusText.textContent = text || 'غير نشط';
-            statusText.style.color = '#dc3545';
-        }
-    }
-}
-
-function requestLocationPermission() {
-    if (!currentUser) {
-        showToast("الرجاء تسجيل الدخول أولاً", true);
-        return;
-    }
-    
-    if (currentUser.role !== "مسؤول") {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
-    }
-    
-    showToast("📍 الموقع الافتراضي مفعل: تونس العاصمة", false);
-    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
-    setDefaultLocation();
-    updateGpsStatus(false, 'افتراضي');
-}
-
-function startTracking() {
-    if (!currentUser) {
-        showToast("الرجاء تسجيل الدخول أولاً", true);
-        return;
-    }
-    
-    if (currentUser.role !== "مسؤول") {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
-    }
-    
-    setDefaultLocation();
-    showToast("📍 تم تعيين الموقع الافتراضي: تونس", false);
-    document.getElementById('mapStatus').innerHTML = "📍 الموقع الافتراضي: تونس العاصمة";
-    updateGpsStatus(false, 'افتراضي');
-    
-    document.getElementById('startTrackingBtn').style.display = 'none';
-    document.getElementById('stopTrackingBtn').style.display = 'inline-block';
-}
-
-function stopTracking() {
-    if (trackingInterval) {
-        clearInterval(trackingInterval);
-        trackingInterval = null;
-    }
-    document.getElementById('startTrackingBtn').style.display = 'inline-block';
-    document.getElementById('stopTrackingBtn').style.display = 'none';
-    document.getElementById('mapStatus').innerHTML = '⏹️ توقف التتبع';
-    updateGpsStatus(false, 'متوقف');
-    showToast("⏹️ تم إيقاف التتبع");
-}
-
-async function loadLocations() {
-    try {
-        const response = await fetch('/api/locations');
-        
-        // ✅ التحقق من حالة 429 (تجاوز الحد)
-        if (response.status === 429) {
-            console.warn('⚠️ تجاوزت الحد المسموح، انتظر قليلاً');
-            showToast('⚠️ كثرة الطلبات، انتظر دقيقة', true);
-            setDefaultLocation();
-            return;
-        }
-        
-        if (!response.ok) {
-            throw new Error(await response.text());
-        }
-        
-        const locations = await response.json();
-        if (!trackingMap) initTrackingMap();
-        
-        // إزالة العلامات القديمة (مع الاحتفاظ بالعلامة الافتراضية)
-        Object.keys(trackingMarkers).forEach(key => {
-            if (key !== 'default') {
-                trackingMarkers[key].remove();
-                delete trackingMarkers[key];
+        },
+        (error) => {
+            if (errorDiv) {
+                errorDiv.innerHTML = "❌ لا يمكن تسجيل الدخول دون مشاركة الموقع. يرجى السماح بالوصول إلى الموقع.";
+                errorDiv.style.display = "block";
+                errorDiv.style.color = "#d9534f";
             }
-        });
-        
-        if (locations.length === 0) {
-            setDefaultLocation();
-        } else {
-            locations.forEach(loc => {
-                updateMapMarker(loc.userName, loc.lat, loc.lng, loc.timestamp);
-            });
-            showToast(`✅ تم تحميل ${locations.length} موقع محفوظ`);
+            console.error('رفض إذن الموقع:', error);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// ===== دالة إكمال تسجيل الدخول =====
+async function completeLogin(user, lat, lng) {
+    currentUser = user;
+    currentUser.lat = lat;
+    currentUser.lng = lng;
+    
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
+    
+    const isAdmin = currentUser.role === "مسؤول";
+    const isViewer = currentUser.role === "مشاهد";
+    
+    document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
+    document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
+    document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
+    document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
+    document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
+    document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
+    document.getElementById('inputArea').classList.toggle('hidden', isViewer);
+    
+    const fill = (id, list) => {
+        const sel = document.getElementById(id);
+        if(sel) {
+            sel.innerHTML = '<option value="الكل">الكل</option>';
+            list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
         }
-    } catch (err) {
-        console.error(err);
-        setDefaultLocation();
+    };
+    fill('fCatMain', CATS_LIST);
+    fill('fRegMain', Object.keys(ZONES_DATA));
+    fill('fRegMaint', Object.keys(ZONES_DATA));
+    
+    await initAppAfterLoginWithLocation(lat, lng);
+    
+    setTimeout(async () => {
+        await renderMain();
+        await renderMaint();
+        await renderEff();
+        await renderTickets();
+        if(isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
+        console.log('✅ تم تحديث جميع البيانات بعد تسجيل الدخول');
+    }, 1000);
+    
+    if(isAdmin) {
+        logUserLocation();
     }
 }
 
-function centerMapOnUser() {
-    if (!trackingMap) initTrackingMap();
-    if (currentUser?.role !== "مسؤول") {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
+// ===== حفظ موقع المستخدم =====
+async function saveUserLocation(userName, lat, lng) {
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                userRole: currentUser?.role || 'مستخدم',
+                lat: lat,
+                lng: lng,
+                action: 'تسجيل دخول'
+            })
+        });
+        console.log(`📍 تم حفظ موقع ${userName}`);
+    } catch(e) {
+        console.error('خطأ في حفظ الموقع:', e);
     }
-    showToast("🎯 تم التمركز على الموقع الافتراضي: تونس", false);
-    setDefaultLocation();
 }
 
-function logUserLocation() {
-    if (!currentUser) return;
-    if (currentUser.role !== "مسؤول") return;
+// ===== تسجيل الخروج =====
+async function logout() {
+    // ✅ استخدام trackingInterval من النطاق العام (معرف في map.js)
+    if (typeof trackingInterval !== 'undefined' && trackingInterval) {
+        stopTracking();
+    }
+    if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
+    currentUser = null;
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    const errorDiv = document.getElementById('loginError');
+    if (errorDiv) errorDiv.style.display = 'none';
+}
+
+// ==================== دوال المستخدمين ====================
+
+async function renderUsers() {
+    if(!canManageUsers()) return;
+    try {
+        let users = await loadUsers();
+        document.getElementById('usersBody').innerHTML = users.map(u => `
+            <tr>
+                <td>${u.name}</td>
+                <td>${u.role}</td>
+                <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
+                <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u._id || u.id}', '${u.name}')">تغيير</button></td>
+                <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u._id || u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u._id || u.id}', true)">تفعيل</button>`}</td>
+                <td><button class="btn-sm btn-red" onclick="deleteUser('${u._id || u.id}')">حذف</button></td>
+            </tr>
+        `).join('');
+    } catch(error) {
+        console.error('خطأ:', error);
+    }
+}
+
+async function addUser() {
+    if(!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
+    let u = document.getElementById('un').value.trim();
+    let p = document.getElementById('up').value.trim();
+    let r = document.getElementById('ur').value;
+    if(!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
     
-    const defaultLat = 36.8065;
-    const defaultLng = 10.1815;
+    try {
+        let users = await loadUsers();
+        if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود!", true); return; }
+        await saveUser({ name: u, pass: p, role: r, enabled: true });
+        document.getElementById('un').value = "";
+        document.getElementById('up').value = "";
+        await renderUsers();
+        await logActivity("إضافة مستخدم", `قام بإضافة مستخدم جديد: ${u} (${r})`);
+        showToast("✅ تم إضافة المستخدم");
+    } catch(error) {
+        showToast("خطأ في الإضافة: " + error.message, true);
+    }
+}
+
+function openPasswordModal(userId, userName) {
+    selectedUserId = userId;
+    document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: <strong>${userName}</strong>`;
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    document.getElementById('passwordModal').style.display = 'flex';
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    selectedUserId = null;
+}
+
+async function saveNewPassword() {
+    if(!canManageUsers()) return;
+    const np = document.getElementById('newPassword').value.trim();
+    const cp = document.getElementById('confirmPassword').value.trim();
+    if(!np) { showToast("كلمة المرور الجديدة مطلوبة", true); return; }
+    if(np !== cp) { showToast("كلمة المرور غير متطابقة", true); return; }
     
-    (async () => {
-        await logActivity("دخول من موقع", `قام بتسجيل الدخول من الموقع الافتراضي: ${defaultLat}, ${defaultLng}`);
+    try {
+        let users = await loadUsers();
+        let user = users.find(u => (u._id || u.id).toString() === selectedUserId.toString());
+        if(user) {
+            user.pass = np;
+            await updateUser(selectedUserId, user);
+            closePasswordModal();
+            await renderUsers();
+            await logActivity("تغيير كلمة مرور", `قام بتغيير كلمة مرور المستخدم: ${user.name}`);
+            showToast("✅ تم تغيير كلمة المرور");
+        }
+    } catch(error) {
+        showToast("خطأ في تغيير كلمة المرور: " + error.message, true);
+    }
+}
+
+async function toggleUser(userId, enable) {
+    try {
+        let users = await loadUsers();
+        let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+        if(user) {
+            user.enabled = enable;
+            await updateUser(userId, user);
+            await renderUsers();
+            await logActivity(enable ? "تفعيل مستخدم" : "تعطيل مستخدم", `قام ${enable ? 'بتفعيل' : 'بتعطيل'} المستخدم: ${user.name}`);
+            showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
+        }
+    } catch(error) {
+        showToast("خطأ: " + error.message, true);
+    }
+}
+
+async function deleteUser(userId) {
+    if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
         try {
-            await fetch('/api/locations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: defaultLat,
-                    lng: defaultLng,
-                    action: 'تسجيل دخول (افتراضي)'
-                })
-            });
-        } catch(e) {
-            console.error('خطأ في حفظ موقع الدخول:', e);
+            let users = await loadUsers();
+            let user = users.find(u => (u._id || u.id).toString() === userId.toString());
+            await deleteUserAPI(userId);
+            await renderUsers();
+            await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
+            showToast("✅ تم حذف المستخدم");
+        } catch(error) {
+            showToast("خطأ في الحذف: " + error.message, true);
         }
-    })();
+    }
 }
