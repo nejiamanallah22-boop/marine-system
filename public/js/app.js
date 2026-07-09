@@ -152,7 +152,6 @@ function showPage(page) {
     
     if(page === 'main') { 
         document.getElementById('pageMain').classList.remove('hidden');
-        // ✅ إعادة تحميل البيانات عند فتح الصفحة
         setTimeout(() => renderMain(), 100);
     }
     else if(page === 'maint') { 
@@ -178,16 +177,18 @@ function showPage(page) {
     else if(page === 'map') { 
         if(isAdmin) {
             document.getElementById('pageMap').classList.remove('hidden');
-            // ✅ إعادة تهيئة الخريطة بعد فتح الصفحة مع تأخير كافٍ
             setTimeout(() => {
                 if (typeof L !== 'undefined') {
                     if (trackingMap) {
                         trackingMap.invalidateSize();
-                        console.log('✅ تم إعادة تهيئة الخريطة');
+                        loadUserLocationOnMap();
                     } else {
                         initTrackingMap();
                         setTimeout(() => {
-                            if (trackingMap) trackingMap.invalidateSize();
+                            if (trackingMap) {
+                                trackingMap.invalidateSize();
+                                loadUserLocationOnMap();
+                            }
                         }, 500);
                     }
                     loadLocations();
@@ -210,7 +211,7 @@ function showPage(page) {
     }
 }
 
-// ===== إعادة تهيئة الخريطة بعد تحميل الصفحة =====
+// ===== إعادة تهيئة الخريطة =====
 function reinitMap() {
     if (typeof L === 'undefined') {
         console.error('❌ Leaflet غير محمل');
@@ -221,12 +222,16 @@ function reinitMap() {
     if (trackingMap) {
         setTimeout(() => {
             trackingMap.invalidateSize();
+            loadUserLocationOnMap();
             console.log('✅ تم إعادة تهيئة الخريطة');
         }, 500);
     } else {
         initTrackingMap();
         setTimeout(() => {
-            if (trackingMap) trackingMap.invalidateSize();
+            if (trackingMap) {
+                trackingMap.invalidateSize();
+                loadUserLocationOnMap();
+            }
         }, 500);
     }
 }
@@ -241,11 +246,122 @@ async function refreshData() {
     showToast('✅ تم تحديث البيانات');
 }
 
+// ===== الحصول على موقع المستخدم الحقيقي =====
+function getUserRealLocation() {
+    if (!currentUser || currentUser.role !== "مسؤول") {
+        console.log('⚠️ فقط المسؤول يمكنه تحديد الموقع');
+        return;
+    }
+    
+    if (!navigator.geolocation) {
+        showToast("المتصفح لا يدعم تحديد الموقع", true);
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`📍 موقع المستخدم: ${latitude}, ${longitude}`);
+            
+            // حفظ الموقع في قاعدة البيانات
+            fetch('/api/locations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userName: currentUser.name,
+                    userRole: currentUser.role,
+                    lat: latitude,
+                    lng: longitude,
+                    action: 'تسجيل دخول من موقع حقيقي'
+                })
+            }).catch(err => console.error('خطأ في حفظ الموقع:', err));
+            
+            // تحديث الخريطة إذا كانت مفتوحة
+            if (trackingMap) {
+                trackingMap.setView([latitude, longitude], 13);
+                L.marker([latitude, longitude])
+                    .addTo(trackingMap)
+                    .bindPopup(`📍 موقع ${currentUser.name} الحقيقي`)
+                    .openPopup();
+            }
+            
+            showToast(`📍 تم تحديد موقعك: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+        },
+        (error) => {
+            console.error('خطأ في تحديد الموقع:', error);
+            if (error.code === 1) {
+                showToast("⚠️ يرجى السماح بالوصول إلى الموقع في إعدادات المتصفح", true);
+                // استخدام الموقع الافتراضي
+                setDefaultLocation();
+            } else {
+                showToast(`❌ تعذر تحديد الموقع: ${error.message}`, true);
+                setDefaultLocation();
+            }
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// ===== تحميل موقع المستخدم على الخريطة =====
+function loadUserLocationOnMap() {
+    if (!currentUser || !trackingMap) {
+        console.log('⚠️ لا يوجد مستخدم أو خريطة');
+        return;
+    }
+    
+    // البحث عن آخر موقع للمستخدم في قاعدة البيانات
+    fetch('/api/locations')
+        .then(res => {
+            if (!res.ok) throw new Error('فشل في تحميل المواقع');
+            return res.json();
+        })
+        .then(locations => {
+            const userLocations = locations.filter(l => l.userName === currentUser.name);
+            if (userLocations.length > 0) {
+                const lastLocation = userLocations[0]; // أحدث موقع
+                trackingMap.setView([lastLocation.lat, lastLocation.lng], 13);
+                L.marker([lastLocation.lat, lastLocation.lng])
+                    .addTo(trackingMap)
+                    .bindPopup(`📍 موقع ${currentUser.name} الحقيقي`)
+                    .openPopup();
+                showToast(`📍 تم تحميل موقعك: ${lastLocation.lat.toFixed(4)}, ${lastLocation.lng.toFixed(4)}`);
+            } else {
+                // إذا لم يكن هناك موقع محفوظ، استخدم موقع تونس الافتراضي
+                console.log('ℹ️ لا يوجد موقع محفوظ، استخدام الموقع الافتراضي');
+                setDefaultLocation();
+            }
+        })
+        .catch(err => {
+            console.error('خطأ في تحميل المواقع:', err);
+            setDefaultLocation();
+        });
+}
+
+// ===== موقع افتراضي (تونس) =====
+function setDefaultLocation() {
+    if (!trackingMap) {
+        console.log('⚠️ لا توجد خريطة لعرض الموقع الافتراضي');
+        return;
+    }
+    
+    // موقع تونس العاصمة
+    const defaultLat = 36.8065;
+    const defaultLng = 10.1815;
+    
+    trackingMap.setView([defaultLat, defaultLng], 10);
+    L.marker([defaultLat, defaultLng])
+        .addTo(trackingMap)
+        .bindPopup('📍 الموقع الافتراضي: تونس العاصمة')
+        .openPopup();
+    
+    showToast('📍 تم تعيين الموقع الافتراضي: تونس');
+}
+
 // ===== تهيئة التطبيق بعد تسجيل الدخول =====
 async function initAppAfterLogin() {
     const isAdmin = currentUser && currentUser.role === "مسؤول";
     
-    // ✅ تحميل البيانات مع تأخير مناسب
+    // ✅ تحميل البيانات
     setTimeout(async () => {
         await renderMain();
         await renderMaint();
@@ -259,10 +375,17 @@ async function initAppAfterLogin() {
         showToast(`مرحباً ${currentUser.name}`);
     }, 500);
     
-    // ✅ تهيئة Socket (وليس الخريطة، لأنها تحتاج إلى عنصر في الصفحة)
+    // ✅ تهيئة Socket
     setTimeout(() => {
         initSocket();
     }, 600);
+    
+    // ✅ الحصول على موقع المستخدم الحقيقي (للمسؤول)
+    if(isAdmin) {
+        setTimeout(() => {
+            getUserRealLocation();
+        }, 1500);
+    }
 }
 
 // ===== تصدير الدوال للاستخدام من ملفات أخرى =====
@@ -280,3 +403,6 @@ window.refreshAllPages = refreshAllPages;
 window.exportAllData = exportAllData;
 window.importAllData = importAllData;
 window.resetTrackFilters = resetTrackFilters;
+window.getUserRealLocation = getUserRealLocation;
+window.loadUserLocationOnMap = loadUserLocationOnMap;
+window.setDefaultLocation = setDefaultLocation;
