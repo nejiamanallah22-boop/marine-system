@@ -11,60 +11,159 @@ async function doLogin() {
         return;
     }
     
-    try {
-        const user = await loginAPI(username, password);
-        if(user.error) {
-            errorDiv.innerHTML = user.error;
-            errorDiv.style.display = "block";
-            return;
-        }
-        
-        currentUser = user;
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
-        
-        const isAdmin = currentUser.role === "مسؤول";
-        const isViewer = currentUser.role === "مشاهد";
-        
-        document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
-        document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
-        document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
-        document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
-        document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
-        document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
-        document.getElementById('inputArea').classList.toggle('hidden', isViewer);
-        
-        const fill = (id, list) => {
-            const sel = document.getElementById(id);
-            if(sel) {
-                sel.innerHTML = '<option value="الكل">الكل</option>';
-                list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
-            }
-        };
-        fill('fCatMain', CATS_LIST);
-        fill('fRegMain', Object.keys(ZONES_DATA));
-        fill('fRegMaint', Object.keys(ZONES_DATA));
-        
-        await initAppAfterLogin();
-        
-        // ✅ إضافة موقع المستخدم على الخريطة
-        setTimeout(() => {
-            if (typeof addUserLocation === 'function') {
-                addUserLocation(currentUser.name);
-            }
-        }, 1000);
-        
-        if(isAdmin) {
-            logUserLocation();
-        }
-        
-    } catch(error) {
-        errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
+    // ✅ التحقق من دعم تحديد الموقع
+    if (!navigator.geolocation) {
+        errorDiv.innerHTML = "⚠️ متصفحك لا يدعم تحديد الموقع. استخدم متصفحاً حديثاً.";
         errorDiv.style.display = "block";
+        return;
+    }
+    
+    // ✅ طلب إذن الموقع أولاً
+    errorDiv.innerHTML = "⏳ جاري طلب إذن الموقع...";
+    errorDiv.style.display = "block";
+    errorDiv.style.color = "#f39c12";
+    
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            // ✅ تم منح الإذن
+            errorDiv.style.display = "none";
+            
+            try {
+                const user = await loginAPI(username, password);
+                if(user.error) {
+                    errorDiv.innerHTML = user.error;
+                    errorDiv.style.display = "block";
+                    errorDiv.style.color = "#d9534f";
+                    return;
+                }
+                
+                // ✅ حفظ موقع المستخدم
+                const { latitude, longitude } = position.coords;
+                await saveUserLocation(user.name, latitude, longitude);
+                
+                // ✅ متابعة تسجيل الدخول
+                completeLogin(user, latitude, longitude);
+                
+            } catch(error) {
+                errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
+                errorDiv.style.display = "block";
+                errorDiv.style.color = "#d9534f";
+            }
+        },
+        (error) => {
+            // ❌ رفض الإذن - منع تسجيل الدخول
+            errorDiv.innerHTML = "❌ لا يمكن تسجيل الدخول دون مشاركة الموقع. يرجى السماح بالوصول إلى الموقع.";
+            errorDiv.style.display = "block";
+            errorDiv.style.color = "#d9534f";
+            console.error('رفض إذن الموقع:', error);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+// ===== دالة إكمال تسجيل الدخول =====
+async function completeLogin(user, lat, lng) {
+    currentUser = user;
+    currentUser.lat = lat;
+    currentUser.lng = lng;
+    
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
+    
+    const isAdmin = currentUser.role === "مسؤول";
+    const isViewer = currentUser.role === "مشاهد";
+    
+    document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
+    document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
+    document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
+    document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
+    document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
+    document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
+    document.getElementById('inputArea').classList.toggle('hidden', isViewer);
+    
+    const fill = (id, list) => {
+        const sel = document.getElementById(id);
+        if(sel) {
+            sel.innerHTML = '<option value="الكل">الكل</option>';
+            list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
+        }
+    };
+    fill('fCatMain', CATS_LIST);
+    fill('fRegMain', Object.keys(ZONES_DATA));
+    fill('fRegMaint', Object.keys(ZONES_DATA));
+    
+    // ✅ تهيئة التطبيق مع الموقع
+    await initAppAfterLoginWithLocation(lat, lng);
+    
+    if(isAdmin) {
+        logUserLocation();
     }
 }
 
+// ===== حفظ موقع المستخدم =====
+async function saveUserLocation(userName, lat, lng) {
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userName: userName,
+                userRole: currentUser?.role || 'مستخدم',
+                lat: lat,
+                lng: lng,
+                action: 'تسجيل دخول'
+            })
+        });
+        console.log(`📍 تم حفظ موقع ${userName}`);
+    } catch(e) {
+        console.error('خطأ في حفظ الموقع:', e);
+    }
+}
+
+// ===== تهيئة التطبيق مع الموقع =====
+async function initAppAfterLoginWithLocation(lat, lng) {
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
+    
+    setTimeout(async () => {
+        await renderMain();
+        await renderMaint();
+        await renderEff();
+        await renderTickets();
+        if(isAdmin) { 
+            await renderUsers(); 
+            await renderTrack(); 
+        }
+        await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
+        showToast(`مرحباً ${currentUser.name} ✅`, false);
+    }, 500);
+    
+    setTimeout(() => {
+        initSocket();
+        initTrackingMapWithLocation(lat, lng);
+    }, 600);
+}
+
+// ===== تهيئة الخريطة مع الموقع =====
+function initTrackingMapWithLocation(lat, lng) {
+    setTimeout(() => {
+        if (trackingMap) {
+            trackingMap.setView([lat, lng], 15);
+            updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+            trackingMap.invalidateSize();
+        } else {
+            initTrackingMap();
+            setTimeout(() => {
+                if (trackingMap) {
+                    trackingMap.setView([lat, lng], 15);
+                    updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+                }
+            }, 500);
+        }
+    }, 300);
+}
+
+// ===== تسجيل الخروج =====
 async function logout() {
     if (trackingInterval) stopTracking();
     if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
