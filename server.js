@@ -73,10 +73,10 @@ app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ==================== Rate Limiting ====================
+// ==================== Rate Limiting (معدل) ====================
 app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 1000, // ✅ زيادة الحد من 100 إلى 1000
     message: '⚠️ تجاوزت الحد المسموح'
 }));
 
@@ -160,7 +160,9 @@ const TicketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model('Ticket', TicketSchema);
 
+// ✅ إصلاح LogSchema بإضافة _id صريح
 const LogSchema = new mongoose.Schema({
+    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     userName: { type: String, required: true },
     userRole: { type: String, required: true },
     action: { type: String, required: true },
@@ -526,7 +528,7 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================== Socket.IO (مع إدارة المستخدمين) ====================
+// ==================== Socket.IO ====================
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
@@ -541,8 +543,6 @@ io.on('connection', (socket) => {
             socketId: socket.id
         };
         console.log('👥 مستخدم متصل:', data.userName);
-        
-        // ✅ إرسال قائمة المستخدمين للجميع
         io.emit('user-list', Object.values(connectedUsers));
     });
     
@@ -559,7 +559,6 @@ io.on('connection', (socket) => {
         if (user) {
             console.log('📡 مستخدم غير متصل:', user.userName);
             delete connectedUsers[socket.id];
-            // ✅ إعلام الجميع بأن المستخدم غير متصل
             io.emit('user-list', Object.values(connectedUsers));
         } else {
             console.log('📡 مستخدم غير متصل:', socket.id);
