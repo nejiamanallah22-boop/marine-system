@@ -18,7 +18,7 @@ const io = socketIO(server, {
 });
 
 // ==================== Middleware ====================
-// ✅ Helmet مع إعدادات CSP كاملة
+// ✅ Helmet مع إعدادات CSP صحيحة
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -35,6 +35,9 @@ app.use(helmet({
                 "https://polyfill.io",
                 "https://kit.fontawesome.com",
                 "https://api.mapbox.com"
+            ],
+            scriptSrcAttr: [
+                "'unsafe-inline'"
             ],
             styleSrc: [
                 "'self'",
