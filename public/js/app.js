@@ -153,24 +153,24 @@ function showPage(page) {
     if(page === 'main') { 
         document.getElementById('pageMain').classList.remove('hidden');
         // ✅ إعادة تحميل البيانات عند فتح الصفحة
-        renderMain();
+        setTimeout(() => renderMain(), 100);
     }
     else if(page === 'maint') { 
         document.getElementById('pageMaint').classList.remove('hidden'); 
-        renderMaint();
+        setTimeout(() => renderMaint(), 100);
     }
     else if(page === 'eff') { 
         document.getElementById('pageEff').classList.remove('hidden'); 
-        renderEff(); 
+        setTimeout(() => renderEff(), 100);
     }
     else if(page === 'support') { 
         document.getElementById('pageSupport').classList.remove('hidden'); 
-        renderTickets(); 
+        setTimeout(() => renderTickets(), 100);
     }
     else if(page === 'track') { 
         if(isAdmin) { 
             document.getElementById('pageTrack').classList.remove('hidden'); 
-            renderTrack(); 
+            setTimeout(() => renderTrack(), 100);
         } else { 
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
         }
@@ -178,19 +178,24 @@ function showPage(page) {
     else if(page === 'map') { 
         if(isAdmin) {
             document.getElementById('pageMap').classList.remove('hidden');
-            // ✅ إعادة تهيئة الخريطة بعد فتح الصفحة
+            // ✅ إعادة تهيئة الخريطة بعد فتح الصفحة مع تأخير كافٍ
             setTimeout(() => {
-                if (trackingMap) {
-                    trackingMap.invalidateSize();
-                    console.log('✅ تم إعادة تهيئة الخريطة');
+                if (typeof L !== 'undefined') {
+                    if (trackingMap) {
+                        trackingMap.invalidateSize();
+                        console.log('✅ تم إعادة تهيئة الخريطة');
+                    } else {
+                        initTrackingMap();
+                        setTimeout(() => {
+                            if (trackingMap) trackingMap.invalidateSize();
+                        }, 500);
+                    }
+                    loadLocations();
                 } else {
-                    initTrackingMap();
-                    setTimeout(() => {
-                        if (trackingMap) trackingMap.invalidateSize();
-                    }, 300);
+                    console.error('❌ Leaflet غير محمل');
+                    showToast("❌ خطأ في تحميل مكتبة الخريطة", true);
                 }
-                loadLocations();
-            }, 500);
+            }, 800);
         } else {
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true);
         }
@@ -198,7 +203,7 @@ function showPage(page) {
     else if(page === 'users') { 
         if(isAdmin) { 
             document.getElementById('pageUsers').classList.remove('hidden'); 
-            renderUsers(); 
+            setTimeout(() => renderUsers(), 100);
         } else { 
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
         }
@@ -207,6 +212,12 @@ function showPage(page) {
 
 // ===== إعادة تهيئة الخريطة بعد تحميل الصفحة =====
 function reinitMap() {
+    if (typeof L === 'undefined') {
+        console.error('❌ Leaflet غير محمل');
+        showToast("❌ خطأ في تحميل مكتبة الخريطة", true);
+        return;
+    }
+    
     if (trackingMap) {
         setTimeout(() => {
             trackingMap.invalidateSize();
@@ -234,7 +245,7 @@ async function refreshData() {
 async function initAppAfterLogin() {
     const isAdmin = currentUser && currentUser.role === "مسؤول";
     
-    // ✅ تحميل البيانات مع تأخير بسيط
+    // ✅ تحميل البيانات مع تأخير مناسب
     setTimeout(async () => {
         await renderMain();
         await renderMaint();
@@ -246,15 +257,11 @@ async function initAppAfterLogin() {
         }
         await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
         showToast(`مرحباً ${currentUser.name}`);
-    }, 300);
+    }, 500);
     
-    // ✅ تهيئة الخريطة مع تأخير أطول
+    // ✅ تهيئة Socket (وليس الخريطة، لأنها تحتاج إلى عنصر في الصفحة)
     setTimeout(() => {
         initSocket();
-        initTrackingMap();
-        if (trackingMap) {
-            trackingMap.invalidateSize();
-        }
     }, 600);
 }
 
