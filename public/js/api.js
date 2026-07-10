@@ -1,6 +1,3 @@
-
-// ==================== دوال الاتصال بالسيرفر ====================
-
 let currentUser = null;
 let selectedUserId = null;
 let isEditing = false;
@@ -56,4 +53,8 @@ async function logActivity(action, details) {
             time: getCurrentTime()
         });
     } catch(e) { console.error('Log error:', e); }
+}
+
+function getCurrentUser() {
+    return currentUser;
 }
