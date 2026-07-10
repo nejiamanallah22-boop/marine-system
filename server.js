@@ -10,7 +10,6 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-// ==================== إعدادات Express ====================
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
@@ -125,8 +124,10 @@ const LocationSchema = new mongoose.Schema({
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
     timestamp: { type: Date, default: Date.now },
-    action: { type: String, default: 'تحديث موقع' }
-});
+    action: { type: String, default: 'تحديث موقع' },
+    ip: { type: String },
+    userAgent: { type: String }
+}, { timestamps: true });
 
 const Location = mongoose.model('Location', LocationSchema);
 
@@ -156,9 +157,7 @@ const authorize = (...roles) => {
     };
 };
 
-// ============================================================
-// ===== API Routes =====
-// ============================================================
+// ==================== API Routes ====================
 
 // ===== تسجيل الدخول =====
 app.post('/api/login', async (req, res) => {
@@ -386,8 +385,8 @@ app.post('/api/logs', authenticate, async (req, res) => {
     }
 });
 
-// ===== المواقع =====
-app.get('/api/locations', async (req, res) => {
+// ===== المواقع (مع الأمان) =====
+app.get('/api/locations', authenticate, async (req, res) => {
     try {
         const locations = await Location.find().sort({ timestamp: -1 });
         res.json(locations);
@@ -396,9 +395,23 @@ app.get('/api/locations', async (req, res) => {
     }
 });
 
-app.post('/api/locations', async (req, res) => {
+app.post('/api/locations', authenticate, async (req, res) => {
     try {
-        const location = new Location(req.body);
+        const { lat, lng, action } = req.body;
+        
+        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+            return res.status(400).json({ error: 'إحداثيات غير صالحة' });
+        }
+        
+        const location = new Location({
+            userName: req.user.name,
+            userRole: req.user.role,
+            lat: parseFloat(lat),
+            lng: parseFloat(lng),
+            action: action || 'تحديث موقع',
+            ip: req.ip || req.connection.remoteAddress,
+            userAgent: req.headers['user-agent'] || 'غير معروف'
+        });
         await location.save();
         res.status(201).json(location);
     } catch (error) {
@@ -466,29 +479,43 @@ app.get('*', (req, res) => {
 // ============================================================
 // ===== Socket.IO =====
 // ============================================================
+
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
     socket.on('user-connected', (data) => {
-        connectedUsers[socket.id] = {
-            userName: data.userName,
-            userRole: data.userRole,
-            lat: data.lat || 36.8065,
-            lng: data.lng || 10.1815,
-            socketId: socket.id
-        };
-        console.log('👥 مستخدم متصل:', data.userName);
-        io.emit('user-list', Object.values(connectedUsers));
+        if (data.lat && data.lng) {
+            connectedUsers[socket.id] = {
+                userName: data.userName,
+                userRole: data.userRole,
+                lat: data.lat,
+                lng: data.lng,
+                socketId: socket.id,
+                connectedAt: new Date().toISOString()
+            };
+            console.log('👥 مستخدم متصل:', data.userName);
+            io.emit('user-list', Object.values(connectedUsers));
+        }
     });
     
-    socket.on('send-location', (data) => {
-        if (connectedUsers[socket.id]) {
+    socket.on('update-location', (data) => {
+        if (connectedUsers[socket.id] && data.lat && data.lng) {
             connectedUsers[socket.id].lat = data.lat;
             connectedUsers[socket.id].lng = data.lng;
+            connectedUsers[socket.id].lastUpdate = new Date().toISOString();
+            
+            socket.broadcast.emit('receive-location', {
+                userName: data.userName,
+                userRole: data.userRole,
+                lat: data.lat,
+                lng: data.lng,
+                time: new Date().toISOString(),
+                accuracy: data.accuracy || null
+            });
+            console.log(`📍 تحديث موقع ${data.userName}: ${data.lat}, ${data.lng}`);
         }
-        socket.broadcast.emit('receive-location', data);
     });
     
     socket.on('disconnect', () => {
@@ -503,9 +530,7 @@ io.on('connection', (socket) => {
     });
 });
 
-// ============================================================
-// ===== إنشاء المستخدم الافتراضي =====
-// ============================================================
+// ==================== إنشاء المستخدم الافتراضي ====================
 const initializeDefaultUsers = async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -527,9 +552,7 @@ const initializeDefaultUsers = async () => {
     }
 };
 
-// ============================================================
-// ===== تشغيل السيرفر =====
-// ============================================================
+// ==================== تشغيل السيرفر ====================
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
