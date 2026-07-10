@@ -101,7 +101,6 @@ async function completeLogin(user, lat, lng) {
     fill('fRegMain', Object.keys(ZONES_DATA));
     fill('fRegMaint', Object.keys(ZONES_DATA));
     
-    // ✅ تحميل جميع البيانات فوراً
     await renderMain();
     await renderMaint();
     await renderEff();
@@ -111,7 +110,6 @@ async function completeLogin(user, lat, lng) {
         await renderTrack(); 
     }
     
-    // ✅ إظهار الصفحة الرئيسية مع البيانات
     document.getElementById('pageMain').classList.remove('hidden');
     
     initSocket();
