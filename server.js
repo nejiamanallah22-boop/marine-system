@@ -134,39 +134,6 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', LocationSchema);
 
-// ==================== دوال استخراج معلومات الجهاز ====================
-function extractDevice(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Android')) return '📱 Android';
-    if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return '📱 iOS';
-    if (userAgent.includes('Windows')) return '💻 Windows';
-    if (userAgent.includes('Macintosh')) return '🖥️ Mac';
-    if (userAgent.includes('Linux')) return '🐧 Linux';
-    return '💻 غير معروف';
-}
-
-function extractBrowser(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Chrome')) return '🌐 Chrome';
-    if (userAgent.includes('Firefox')) return '🦊 Firefox';
-    if (userAgent.includes('Safari')) return '🧭 Safari';
-    if (userAgent.includes('Edge')) return '🔵 Edge';
-    if (userAgent.includes('Opera')) return '🟠 Opera';
-    return '🌐 غير معروف';
-}
-
-function extractOS(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Android')) return 'Android';
-    if (userAgent.includes('iPhone')) return 'iOS';
-    if (userAgent.includes('iPad')) return 'iPadOS';
-    if (userAgent.includes('Windows NT 10.0')) return 'Windows 10';
-    if (userAgent.includes('Windows NT 6.1')) return 'Windows 7';
-    if (userAgent.includes('Mac OS X')) return 'macOS';
-    if (userAgent.includes('Linux')) return 'Linux';
-    return 'غير معروف';
-}
-
 // ==================== المصادقة ====================
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
 
@@ -223,14 +190,7 @@ app.post('/api/login', async (req, res) => {
             token, 
             id: user._id, 
             name: user.name, 
-            role: user.role,
-            session: {
-                ip: req.ip || req.connection.remoteAddress,
-                userAgent: req.headers['user-agent'] || 'غير معروف',
-                device: extractDevice(req.headers['user-agent']),
-                browser: extractBrowser(req.headers['user-agent']),
-                os: extractOS(req.headers['user-agent'])
-            }
+            role: user.role
         });
     } catch (error) {
         res.status(500).json({ error: 'خطأ في السيرفر' });
@@ -460,9 +420,12 @@ app.post('/api/locations', authenticate, async (req, res) => {
             action: action || 'تحديث موقع',
             ip: req.ip || req.connection.remoteAddress,
             userAgent: userAgent,
-            device: extractDevice(userAgent),
-            browser: extractBrowser(userAgent),
-            os: extractOS(userAgent)
+            device: userAgent.includes('Android') ? 'Android' : 
+                     userAgent.includes('iPhone') ? 'iOS' : 
+                     userAgent.includes('Windows') ? 'Windows' : 'غير معروف',
+            browser: userAgent.includes('Chrome') ? 'Chrome' : 
+                      userAgent.includes('Firefox') ? 'Firefox' : 
+                      userAgent.includes('Safari') ? 'Safari' : 'غير معروف'
         });
         await location.save();
         res.status(201).json(location);
@@ -483,10 +446,8 @@ app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, 
             connectedAt: user.connectedAt,
             lastUpdate: user.lastUpdate || user.connectedAt,
             ip: user.ip || 'غير معروف',
-            userAgent: user.userAgent || 'غير معروف',
             device: user.device || 'غير معروف',
-            browser: user.browser || 'غير معروف',
-            os: user.os || 'غير معروف'
+            browser: user.browser || 'غير معروف'
         }));
         
         res.json({
@@ -566,8 +527,7 @@ io.on('connection', (socket) => {
     
     socket.on('user-connected', (data) => {
         if (data.lat && data.lng) {
-            const userAgent = socket.handshake.headers['user-agent'] || '';
-            const ip = socket.handshake.address || socket.request.connection.remoteAddress || 'غير معروف';
+            const ua = socket.handshake.headers['user-agent'] || '';
             
             connectedUsers[socket.id] = {
                 id: socket.id,
@@ -575,14 +535,15 @@ io.on('connection', (socket) => {
                 userRole: data.userRole,
                 lat: data.lat,
                 lng: data.lng,
-                socketId: socket.id,
                 connectedAt: new Date().toISOString(),
                 lastUpdate: new Date().toISOString(),
-                ip: ip,
-                userAgent: userAgent,
-                device: extractDevice(userAgent),
-                browser: extractBrowser(userAgent),
-                os: extractOS(userAgent)
+                ip: socket.handshake.address || 'غير معروف',
+                device: ua.includes('Android') ? 'Android' : 
+                         ua.includes('iPhone') ? 'iOS' : 
+                         ua.includes('Windows') ? 'Windows' : 'غير معروف',
+                browser: ua.includes('Chrome') ? 'Chrome' : 
+                          ua.includes('Firefox') ? 'Firefox' : 
+                          ua.includes('Safari') ? 'Safari' : 'غير معروف'
             };
             console.log('👥 مستخدم متصل:', data.userName);
             io.emit('user-list', Object.values(connectedUsers));
@@ -594,16 +555,13 @@ io.on('connection', (socket) => {
             connectedUsers[socket.id].lat = data.lat;
             connectedUsers[socket.id].lng = data.lng;
             connectedUsers[socket.id].lastUpdate = new Date().toISOString();
-            
             socket.broadcast.emit('receive-location', {
                 userName: data.userName,
                 userRole: data.userRole,
                 lat: data.lat,
                 lng: data.lng,
-                time: new Date().toISOString(),
-                accuracy: data.accuracy || null
+                time: new Date().toISOString()
             });
-            console.log(`📍 تحديث موقع ${data.userName}: ${data.lat}, ${data.lng}`);
         }
     });
     
@@ -613,8 +571,6 @@ io.on('connection', (socket) => {
             console.log('📡 مستخدم غير متصل:', user.userName);
             delete connectedUsers[socket.id];
             io.emit('user-list', Object.values(connectedUsers));
-        } else {
-            console.log('📡 مستخدم غير متصل:', socket.id);
         }
     });
 });
