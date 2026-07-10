@@ -1,3 +1,5 @@
+// ==================== دوال الاتصال بالسيرفر ====================
+
 let currentUser = null;
 let selectedUserId = null;
 let isEditing = false;
@@ -58,3 +60,5 @@ async function logActivity(action, details) {
 function getCurrentUser() {
     return currentUser;
 }
+
+console.log('✅ api.js تم تحميله بنجاح');
