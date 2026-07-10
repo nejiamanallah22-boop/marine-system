@@ -1,11 +1,8 @@
-// ==================== دوال المصادقة ====================
-
 async function doLogin() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
     const errorDiv = document.getElementById('loginError');
     
-    // ✅ التحقق من وجود العنصر
     if (!errorDiv) {
         console.error('❌ عنصر loginError غير موجود');
         return;
@@ -62,11 +59,14 @@ async function doLogin() {
             }
             console.error('رفض إذن الموقع:', error);
         },
-        { enableHighAccuracy: true, timeout: 10000 }
+        { 
+            enableHighAccuracy: true, 
+            timeout: 30000, 
+            maximumAge: 0 
+        }
     );
 }
 
-// ===== دالة إكمال تسجيل الدخول =====
 async function completeLogin(user, lat, lng) {
     currentUser = user;
     currentUser.lat = lat;
@@ -98,34 +98,40 @@ async function completeLogin(user, lat, lng) {
     fill('fRegMain', Object.keys(ZONES_DATA));
     fill('fRegMaint', Object.keys(ZONES_DATA));
     
-    await initAppAfterLoginWithLocation(lat, lng);
+    await renderMain();
+    await renderMaint();
+    await renderEff();
+    await renderTickets();
+    if(isAdmin) { 
+        await renderUsers(); 
+        await renderTrack(); 
+    }
     
-    setTimeout(async () => {
-        await renderMain();
-        await renderMaint();
-        await renderEff();
-        await renderTickets();
-        if(isAdmin) { 
-            await renderUsers(); 
-            await renderTrack(); 
+    initSocket();
+    
+    setTimeout(() => {
+        if (typeof startTracking === 'function') {
+            startTracking();
         }
-        console.log('✅ تم تحديث جميع البيانات بعد تسجيل الدخول');
-    }, 1000);
+    }, 2000);
+    
+    await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
+    showToast(`مرحباً ${currentUser.name} ✅`, false);
     
     if(isAdmin) {
         logUserLocation();
     }
 }
 
-// ===== حفظ موقع المستخدم =====
 async function saveUserLocation(userName, lat, lng) {
     try {
         await fetch('/api/locations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`
+            },
             body: JSON.stringify({
-                userName: userName,
-                userRole: currentUser?.role || 'مستخدم',
                 lat: lat,
                 lng: lng,
                 action: 'تسجيل دخول'
@@ -137,11 +143,12 @@ async function saveUserLocation(userName, lat, lng) {
     }
 }
 
-// ===== تسجيل الخروج =====
 async function logout() {
-    if (typeof trackingInterval !== 'undefined' && trackingInterval) {
-        stopTracking();
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
     }
+    if (trackingInterval) stopTracking();
     if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
     currentUser = null;
     document.getElementById('loginOverlay').style.display = 'flex';
@@ -151,8 +158,6 @@ async function logout() {
     const errorDiv = document.getElementById('loginError');
     if (errorDiv) errorDiv.style.display = 'none';
 }
-
-// ==================== دوال المستخدمين ====================
 
 async function renderUsers() {
     if(!canManageUsers()) return;
@@ -261,10 +266,6 @@ async function deleteUser(userId) {
     }
 }
 
-// ============================================================
-// ✅ تصدير الدوال إلى النطاق العام (window) لتكون متاحة في HTML
-// ============================================================
-
 window.doLogin = doLogin;
 window.logout = logout;
 window.completeLogin = completeLogin;
@@ -276,5 +277,3 @@ window.closePasswordModal = closePasswordModal;
 window.saveNewPassword = saveNewPassword;
 window.toggleUser = toggleUser;
 window.deleteUser = deleteUser;
-
-console.log('✅ auth.js تم تحميله بنجاح، الدوال متاحة في النطاق العام');
