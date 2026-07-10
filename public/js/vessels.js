@@ -135,7 +135,6 @@ function updateZones() {
     }
 }
 
-// ===== دالة renderMain المعدلة =====
 async function renderMain() {
     try {
         console.log('🔄 جاري تحميل بيانات المراكب...');
@@ -199,7 +198,6 @@ function clearMainSearch() {
     renderMain();
 }
 
-// ===== دالة renderMaint المعدلة =====
 async function renderMaint() {
     try {
         console.log('🔄 جاري تحميل بيانات الصيانة...');
