@@ -143,6 +143,231 @@ function resetTrackFilters() {
     showToast("✅ تم إعادة ضبط فلاتر التتبع");
 }
 
+// ============================================================
+// ===== تتبع المستخدمين المتكامل =====
+// ============================================================
+
+let trackUsersInterval = null;
+
+async function loadTrackUsers() {
+    if (!currentUser || currentUser.role !== 'مسؤول') {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/online-users', {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const data = await response.json();
+        renderTrackUsers(data);
+        updateTrackMap(data);
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب المستخدمين:', error);
+    }
+}
+
+function renderTrackUsers(data) {
+    const tbody = document.getElementById('trackUsersBody');
+    const count = document.getElementById('trackUsersCount');
+    
+    if (!tbody) return;
+    
+    if (count) {
+        count.textContent = `${data.total || 0} متصل`;
+        count.style.background = data.total > 0 ? '#28a745' : '#dc3545';
+    }
+    
+    if (!data.online || data.online.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align:center; padding:30px; color:#6c757d;">
+                    <i class="fas fa-users-slash" style="font-size:24px; display:block; margin-bottom:10px;"></i>
+                    لا يوجد مستخدمين متصلين حالياً
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = data.online.map((user, index) => {
+        const device = user.device || 'غير معروف';
+        const browser = user.browser || 'غير معروف';
+        const ip = user.ip || 'غير معروف';
+        
+        const locationStr = user.lat && user.lng ? 
+            `${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}` : 
+            '⚠️ غير متاح';
+        
+        const locationStatus = user.lat && user.lng ? '✅ نشط' : '❌ غير متاح';
+        const locationColor = user.lat && user.lng ? '#28a745' : '#dc3545';
+        
+        const lastUpdate = user.lastUpdate ? 
+            new Date(user.lastUpdate).toLocaleString('ar-EG') : 
+            new Date(user.connectedAt).toLocaleString('ar-EG');
+        
+        let roleIcon = '';
+        let roleColor = '';
+        if (user.userRole === 'مسؤول') {
+            roleIcon = '👑';
+            roleColor = '#dc3545';
+        } else if (user.userRole === 'محرر') {
+            roleIcon = '✏️';
+            roleColor = '#ffc107';
+        } else {
+            roleIcon = '👁️';
+            roleColor = '#17a2b8';
+        }
+        
+        let deviceIcon = '';
+        if (device.includes('Android')) deviceIcon = '📱';
+        else if (device.includes('iOS')) deviceIcon = '📱';
+        else if (device.includes('Windows')) deviceIcon = '💻';
+        else if (device.includes('Mac')) deviceIcon = '🖥️';
+        else deviceIcon = '🖥️';
+        
+        let browserIcon = '';
+        if (browser.includes('Chrome')) browserIcon = '🌐';
+        else if (browser.includes('Firefox')) browserIcon = '🦊';
+        else if (browser.includes('Safari')) browserIcon = '🧭';
+        else if (browser.includes('Edge')) browserIcon = '🔵';
+        else browserIcon = '🌐';
+        
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td><b>${user.userName}</b></td>
+                <td style="color:${roleColor}; font-weight:bold;">${roleIcon} ${user.userRole}</td>
+                <td>${deviceIcon} ${device}</td>
+                <td>${browserIcon} ${browser}</td>
+                <td><code style="background:#f8f9fa; padding:2px 8px; border-radius:4px; font-size:12px;">${ip}</code></td>
+                <td style="color:${locationColor};">
+                    <div><small>${locationStr}</small></div>
+                    <div><small style="font-weight:bold;">${locationStatus}</small></div>
+                </td>
+                <td style="font-size:12px;">${lastUpdate}</td>
+                <td>
+                    <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#28a745; animation: pulse 1.5s infinite;"></span>
+                    <span style="font-size:12px; color:#28a745; font-weight:bold;">نشط</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updateTrackMap(data) {
+    if (!trackingMap) {
+        initTrackingMap();
+        if (!trackingMap) return;
+    }
+    
+    Object.keys(trackingMarkers).forEach(key => {
+        if (key !== 'default') {
+            trackingMarkers[key].remove();
+            delete trackingMarkers[key];
+        }
+    });
+    
+    if (!data.online || data.online.length === 0) {
+        setDefaultLocation();
+        return;
+    }
+    
+    let hasLocation = false;
+    data.online.forEach(user => {
+        if (user.lat && user.lng) {
+            hasLocation = true;
+            
+            let iconColor = '#2e7d32';
+            if (user.userRole === 'مسؤول') iconColor = '#dc3545';
+            else if (user.userRole === 'محرر') iconColor = '#ffc107';
+            else iconColor = '#17a2b8';
+            
+            const icon = L.divIcon({
+                html: `<div style="background:${iconColor}; color:white; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 10px rgba(0,0,0,0.3); font-size:14px; font-weight:bold;">${user.userName.charAt(0).toUpperCase()}</div>`,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+            
+            const marker = L.marker([user.lat, user.lng], { icon: icon })
+                .addTo(trackingMap)
+                .bindPopup(`
+                    <div style="text-align:center; font-family:Cairo;">
+                        <b>👤 ${user.userName}</b><br>
+                        🔑 ${user.userRole}<br>
+                        📍 ${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}<br>
+                        🕐 ${new Date(user.lastUpdate || user.connectedAt).toLocaleString('ar-EG')}<br>
+                        💻 ${user.device || 'غير معروف'}<br>
+                        🌐 ${user.browser || 'غير معروف'}<br>
+                        📡 ${user.ip || 'غير معروف'}
+                    </div>
+                `);
+            
+            trackingMarkers[user.userName] = marker;
+        }
+    });
+    
+    if (hasLocation) {
+        const firstUser = data.online.find(u => u.lat && u.lng);
+        if (firstUser && isFirstLocation) {
+            trackingMap.setView([firstUser.lat, firstUser.lng], 12);
+            isFirstLocation = false;
+        }
+        document.getElementById('mapStatus').innerHTML = `📍 ${data.online.filter(u => u.lat && u.lng).length} مستخدم نشط على الخريطة`;
+    } else {
+        setDefaultLocation();
+        document.getElementById('mapStatus').innerHTML = '⚠️ لا توجد مواقع للمستخدمين';
+    }
+}
+
+function startTrackUsers() {
+    if (trackUsersInterval) {
+        clearInterval(trackUsersInterval);
+    }
+    
+    loadTrackUsers();
+    trackUsersInterval = setInterval(() => {
+        loadTrackUsers();
+    }, 5000);
+    
+    console.log('✅ بدء تتبع المستخدمين (كل 5 ثواني)');
+}
+
+function stopTrackUsers() {
+    if (trackUsersInterval) {
+        clearInterval(trackUsersInterval);
+        trackUsersInterval = null;
+        console.log('⏹️ إيقاف تتبع المستخدمين');
+    }
+}
+
+async function refreshTrackUsers() {
+    await loadTrackUsers();
+    showToast('✅ تم تحديث بيانات المستخدمين');
+}
+
+function clearTrackUsers() {
+    if (!confirm('هل أنت متأكد من مسح جميع المستخدمين من الخريطة؟')) return;
+    
+    Object.keys(trackingMarkers).forEach(key => {
+        if (key !== 'default') {
+            trackingMarkers[key].remove();
+            delete trackingMarkers[key];
+        }
+    });
+    
+    setDefaultLocation();
+    document.getElementById('mapStatus').innerHTML = '🗑️ تم مسح الخريطة';
+    showToast('🗑️ تم مسح جميع المستخدمين من الخريطة');
+}
+
 // ===== دوال التنقل =====
 async function showPage(page) {
     const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageMap', 'pageUsers'];
@@ -169,7 +394,8 @@ async function showPage(page) {
     else if(page === 'track') { 
         if(isAdmin) { 
             document.getElementById('pageTrack').classList.remove('hidden'); 
-            await renderTrack();
+            await loadTrackUsers();
+            startTrackUsers();
         } else { 
             showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
         }
@@ -230,7 +456,6 @@ function reinitMap() {
     }
 }
 
-// ===== إعادة تحميل البيانات =====
 async function refreshData() {
     await renderMain();
     await renderMaint();
@@ -240,7 +465,6 @@ async function refreshData() {
     showToast('✅ تم تحديث البيانات');
 }
 
-// ===== تهيئة التطبيق بعد تسجيل الدخول =====
 async function initAppAfterLogin() {
     const isAdmin = currentUser && currentUser.role === "مسؤول";
     
@@ -258,7 +482,6 @@ async function initAppAfterLogin() {
     initSocket();
 }
 
-// ===== تهيئة الخريطة مع موقع المستخدم =====
 function initTrackingMapWithLocation(lat, lng) {
     setTimeout(() => {
         if (trackingMap) {
@@ -284,7 +507,6 @@ function initTrackingMapWithLocation(lat, lng) {
     }, 300);
 }
 
-// ===== دالة إضافة موقع المستخدم =====
 async function addUserLocation(userName) {
     if (!userName) return;
     
@@ -319,7 +541,6 @@ async function addUserLocation(userName) {
     }
 }
 
-// ===== دالة حفظ موقع المستخدم =====
 async function saveUserLocation(userName, lat, lng) {
     try {
         await fetch('/api/locations', {
@@ -342,7 +563,6 @@ async function saveUserLocation(userName, lat, lng) {
     }
 }
 
-// ===== دالة تهيئة التطبيق مع الموقع =====
 async function initAppAfterLoginWithLocation(lat, lng) {
     const isAdmin = currentUser && currentUser.role === "مسؤول";
     
@@ -362,7 +582,7 @@ async function initAppAfterLoginWithLocation(lat, lng) {
 }
 
 // ============================================================
-// ✅ تصدير جميع الدوال إلى النطاق العام
+// ✅ تصدير الدوال
 // ============================================================
 
 window.showPage = showPage;
@@ -383,5 +603,12 @@ window.initTrackingMapWithLocation = initTrackingMapWithLocation;
 window.addUserLocation = addUserLocation;
 window.saveUserLocation = saveUserLocation;
 window.resetTrackFilters = resetTrackFilters;
+window.loadTrackUsers = loadTrackUsers;
+window.renderTrackUsers = renderTrackUsers;
+window.updateTrackMap = updateTrackMap;
+window.startTrackUsers = startTrackUsers;
+window.stopTrackUsers = stopTrackUsers;
+window.refreshTrackUsers = refreshTrackUsers;
+window.clearTrackUsers = clearTrackUsers;
 
 console.log('✅ app.js تم تحميله بنجاح');
