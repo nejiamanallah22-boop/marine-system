@@ -1,102 +1,248 @@
-async function doLogin() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const errorDiv = document.getElementById('loginError');
-    
-    if (!errorDiv) {
-        console.error('❌ عنصر loginError غير موجود');
-        return;
+// ==================== تشغيل التطبيق ====================
+
+// ===== دوال التحديث =====
+async function refreshMain() { await renderMain(); showToast("✅ تم تحديث الأسطول البحري"); }
+async function refreshMaint() { await renderMaint(); showToast("✅ تم تحديث سجل الصيانة"); }
+async function refreshEff() { await renderEff(); showToast("✅ تم تحديث جاهزية الأسطول"); }
+async function refreshTickets() { await renderTickets(); showToast("✅ تم تحديث قائمة التذاكر"); }
+async function refreshTrack() { if(canManageUsers()) { await renderTrack(); showToast("✅ تم تحديث سجل التتبع"); } }
+async function refreshUsers() { if(canManageUsers()) { await renderUsers(); showToast("✅ تم تحديث قائمة المستخدمين"); } }
+
+async function refreshAllPages() { 
+    await renderMain(); 
+    await renderMaint(); 
+    await renderEff(); 
+    await renderTickets(); 
+    if(canManageUsers()) { 
+        await renderUsers(); 
+        await renderTrack(); 
     }
-    
-    if(!username || !password) {
-        errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور";
-        errorDiv.style.display = "block";
-        return;
-    }
-    
-    if (!navigator.geolocation) {
-        errorDiv.innerHTML = "⚠️ متصفحك لا يدعم تحديد الموقع. استخدم متصفحاً حديثاً.";
-        errorDiv.style.display = "block";
-        return;
-    }
-    
-    errorDiv.innerHTML = "⏳ جاري طلب إذن الموقع...";
-    errorDiv.style.display = "block";
-    errorDiv.style.color = "#f39c12";
-    
-    navigator.geolocation.getCurrentPosition(
-        async (position) => {
-            if (errorDiv) errorDiv.style.display = "none";
-            
-            try {
-                const user = await loginAPI(username, password);
-                if(user.error) {
-                    if (errorDiv) {
-                        errorDiv.innerHTML = user.error;
-                        errorDiv.style.display = "block";
-                        errorDiv.style.color = "#d9534f";
-                    }
-                    return;
-                }
-                
-                const { latitude, longitude } = position.coords;
-                await saveUserLocation(user.name, latitude, longitude);
-                completeLogin(user, latitude, longitude);
-                
-            } catch(error) {
-                if (errorDiv) {
-                    errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
-                    errorDiv.style.display = "block";
-                    errorDiv.style.color = "#d9534f";
-                }
-            }
-        },
-        (error) => {
-            if (errorDiv) {
-                errorDiv.innerHTML = "❌ لا يمكن تسجيل الدخول دون مشاركة الموقع. يرجى السماح بالوصول إلى الموقع.";
-                errorDiv.style.display = "block";
-                errorDiv.style.color = "#d9534f";
-            }
-            console.error('رفض إذن الموقع:', error);
-        },
-        { 
-            enableHighAccuracy: true, 
-            timeout: 30000, 
-            maximumAge: 0 
-        }
-    );
+    showToast("✅ تم تحديث جميع الصفحات");
 }
 
-async function completeLogin(user, lat, lng) {
-    currentUser = user;
-    currentUser.lat = lat;
-    currentUser.lng = lng;
-    
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
-    
-    const isAdmin = currentUser.role === "مسؤول";
-    const isViewer = currentUser.role === "مشاهد";
-    
-    document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
-    document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
-    document.getElementById('mapNavBtn').style.display = isAdmin ? "inline-block" : "none";
-    document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
-    document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
-    document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
-    document.getElementById('inputArea').classList.toggle('hidden', isViewer);
-    
-    const fill = (id, list) => {
-        const sel = document.getElementById(id);
-        if(sel) {
-            sel.innerHTML = '<option value="الكل">الكل</option>';
-            list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
+// ===== دوال التصدير والاستيراد =====
+async function exportAllData() {
+    if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
+    try {
+        const exportData = await exportAllDataAPI();
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `marine_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await logActivity("تصدير بيانات", "قام بتصدير جميع البيانات إلى ملف JSON");
+        showToast("✅ تم تصدير البيانات بنجاح!");
+    } catch(error) {
+        showToast("خطأ في التصدير: " + error.message, true);
+    }
+}
+
+async function importAllData(input) {
+    if(!canManageUsers()) { showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true); return; }
+    if(!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            await importAllDataAPI(importedData);
+            await refreshAllPages();
+            await logActivity("استيراد بيانات", "قام باستيراد البيانات من ملف JSON");
+            showToast("✅ تم استيراد البيانات بنجاح!");
+        } catch(err) {
+            showToast("❌ خطأ في قراءة الملف: " + err.message, true);
         }
     };
-    fill('fCatMain', CATS_LIST);
-    fill('fRegMain', Object.keys(ZONES_DATA));
-    fill('fRegMaint', Object.keys(ZONES_DATA));
+    reader.readAsText(file);
+    input.value = "";
+}
+
+// ===== دوال التتبع =====
+async function renderTrack() {
+    if(!canManageUsers()) return;
+    try {
+        let logs = await loadLogs();
+        const start = document.getElementById('trackDateStart').value;
+        const end = document.getElementById('trackDateEnd').value;
+        let filtered = [...logs];
+        
+        if(start) {
+            const s = new Date(start);
+            filtered = filtered.filter(l => {
+                if(!l.date) return false;
+                const [d,m,y] = l.date.split('/');
+                return new Date(`${y}-${m}-${d}`) >= s;
+            });
+        }
+        if(end) {
+            const e = new Date(end);
+            filtered = filtered.filter(l => {
+                if(!l.date) return false;
+                const [d,m,y] = l.date.split('/');
+                return new Date(`${y}-${m}-${d}`) <= e;
+            });
+        }
+        
+        const totalActivities = filtered.length;
+        const uniqueUsers = [...new Set(filtered.map(l => l.userName))];
+        
+        let html = `
+            <div class="stats-cards" style="margin-bottom: 20px;">
+                <div class="stat-card"><div class="number">${totalActivities}</div><div class="label">📊 إجمالي النشاطات</div></div>
+                <div class="stat-card"><div class="number">${uniqueUsers.length}</div><div class="label">👥 عدد المستخدمين</div></div>
+            </div>
+            <div class="scrollable-table">
+            <table class="region-table">
+                <thead>
+                    <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>المستخدم</th><th>الصلاحية</th><th>الإجراء</th><th style="min-width: 350px;">التفاصيل</th></tr>
+                </thead>
+                <tbody>
+        `;
+        
+        if(filtered.length === 0) {
+            html += '<tr><td colspan="7" style="text-align:center;">لا توجد نشاطات مسجلة</td></tr>';
+        } else {
+            filtered.forEach((l, index) => {
+                let actionIcon = '';
+                if (l.action === 'إضافة مركب') actionIcon = '➕';
+                else if (l.action === 'تعديل مركب') actionIcon = '✏️';
+                else if (l.action === 'حذف مركب') actionIcon = '🗑️';
+                else if (l.action === 'تسجيل دخول') actionIcon = '🔐';
+                else if (l.action === 'تسجيل خروج') actionIcon = '🚪';
+                else actionIcon = '📝';
+                
+                html += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${l.date}</td>
+                    <td>${l.time || '-'}</td>
+                    <td><b>${l.userName}</b></td>
+                    <td><span class="role-badge" style="background:#e9ecef;">${l.userRole}</span></td>
+                    <td><span style="color:var(--primary); font-weight:bold;">${actionIcon} ${l.action}</span></td>
+                    <td style="text-align:right;">${l.details}</td>
+                </tr>`;
+            });
+        }
+        
+        html += `</tbody></table></div>`;
+        document.getElementById('trackContent').innerHTML = html;
+    } catch(error) {
+        console.error('خطأ في renderTrack:', error);
+        document.getElementById('trackContent').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل سجل التتبع</div></div>';
+    }
+}
+
+function resetTrackFilters() {
+    document.getElementById('trackDateStart').value = "";
+    document.getElementById('trackDateEnd').value = "";
+    renderTrack();
+    showToast("✅ تم إعادة ضبط فلاتر التتبع");
+}
+
+// ===== دوال التنقل =====
+async function showPage(page) {
+    const pages = ['pageMain', 'pageMaint', 'pageEff', 'pageSupport', 'pageTrack', 'pageMap', 'pageUsers'];
+    pages.forEach(p => document.getElementById(p).classList.add('hidden'));
+    
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
+    
+    if(page === 'main') { 
+        document.getElementById('pageMain').classList.remove('hidden');
+        await renderMain();
+    }
+    else if(page === 'maint') { 
+        document.getElementById('pageMaint').classList.remove('hidden'); 
+        await renderMaint();
+    }
+    else if(page === 'eff') { 
+        document.getElementById('pageEff').classList.remove('hidden'); 
+        await renderEff();
+    }
+    else if(page === 'support') { 
+        document.getElementById('pageSupport').classList.remove('hidden'); 
+        await renderTickets();
+    }
+    else if(page === 'track') { 
+        if(isAdmin) { 
+            document.getElementById('pageTrack').classList.remove('hidden'); 
+            await renderTrack();
+        } else { 
+            showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
+        }
+    }
+    else if(page === 'map') { 
+        if(isAdmin) {
+            document.getElementById('pageMap').classList.remove('hidden');
+            setTimeout(() => {
+                if (typeof L !== 'undefined') {
+                    if (!trackingMap) {
+                        initTrackingMap();
+                    }
+                    setTimeout(() => {
+                        if (trackingMap) {
+                            trackingMap.invalidateSize();
+                            loadLocations();
+                            if (watchId === null && currentUser?.lat && currentUser?.lng) {
+                                startTracking();
+                            }
+                        }
+                    }, 300);
+                } else {
+                    showToast("❌ خطأ في تحميل مكتبة الخريطة", true);
+                }
+            }, 100);
+        } else {
+            showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true);
+        }
+    }
+    else if(page === 'users') { 
+        if(isAdmin) { 
+            document.getElementById('pageUsers').classList.remove('hidden'); 
+            await renderUsers();
+        } else { 
+            showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true); 
+        }
+    }
+}
+
+// ===== إعادة تهيئة الخريطة =====
+function reinitMap() {
+    if (typeof L === 'undefined') {
+        console.error('❌ Leaflet غير محمل');
+        showToast("❌ خطأ في تحميل مكتبة الخريطة", true);
+        return;
+    }
+    
+    if (trackingMap) {
+        setTimeout(() => {
+            trackingMap.invalidateSize();
+            console.log('✅ تم إعادة تهيئة الخريطة');
+        }, 500);
+    } else {
+        initTrackingMap();
+        setTimeout(() => {
+            if (trackingMap) trackingMap.invalidateSize();
+        }, 500);
+    }
+}
+
+// ===== إعادة تحميل البيانات =====
+async function refreshData() {
+    await renderMain();
+    await renderMaint();
+    await renderEff();
+    await renderTickets();
+    if(canManageUsers()) { await renderUsers(); await renderTrack(); }
+    showToast('✅ تم تحديث البيانات');
+}
+
+// ===== تهيئة التطبيق بعد تسجيل الدخول =====
+async function initAppAfterLogin() {
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
     
     await renderMain();
     await renderMaint();
@@ -106,24 +252,50 @@ async function completeLogin(user, lat, lng) {
         await renderUsers(); 
         await renderTrack(); 
     }
+    await logActivity("تسجيل دخول", `قام بتسجيل الدخول إلى النظام في ${getCurrentTime()}`);
+    showToast(`مرحباً ${currentUser.name}`);
     
     initSocket();
-    
-    setTimeout(() => {
-        if (typeof startTracking === 'function') {
-            startTracking();
-        }
-    }, 2000);
-    
-    await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
-    showToast(`مرحباً ${currentUser.name} ✅`, false);
-    
-    if(isAdmin) {
-        logUserLocation();
-    }
 }
 
-async function saveUserLocation(userName, lat, lng) {
+// ===== تهيئة الخريطة مع موقع المستخدم =====
+function initTrackingMapWithLocation(lat, lng) {
+    setTimeout(() => {
+        if (trackingMap) {
+            trackingMap.setView([lat, lng], 15);
+            if (currentUser) {
+                updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+            }
+            trackingMap.invalidateSize();
+            console.log('✅ تم تهيئة الخريطة مع موقع المستخدم');
+        } else {
+            initTrackingMap();
+            setTimeout(() => {
+                if (trackingMap) {
+                    trackingMap.setView([lat, lng], 15);
+                    if (currentUser) {
+                        updateMapMarker(currentUser.name, lat, lng, new Date().toISOString());
+                    }
+                    trackingMap.invalidateSize();
+                    console.log('✅ تم تهيئة الخريطة مع موقع المستخدم (بعد التأخير)');
+                }
+            }, 500);
+        }
+    }, 300);
+}
+
+// ===== دالة إضافة موقع المستخدم =====
+async function addUserLocation(userName) {
+    if (!userName) return;
+    
+    if (!currentUser?.lat || !currentUser?.lng) {
+        console.log('⚠️ لا يوجد موقع GPS حقيقي للمستخدم:', userName);
+        return;
+    }
+    
+    const lat = currentUser.lat;
+    const lng = currentUser.lng;
+    
     try {
         await fetch('/api/locations', {
             method: 'POST',
@@ -137,143 +309,79 @@ async function saveUserLocation(userName, lat, lng) {
                 action: 'تسجيل دخول'
             })
         });
-        console.log(`📍 تم حفظ موقع ${userName}`);
+        console.log(`📍 تم حفظ موقع المستخدم: ${userName}`);
+    } catch(e) {
+        console.error('خطأ في حفظ موقع المستخدم:', e);
+    }
+    
+    if (trackingMap) {
+        updateMapMarker(userName, lat, lng, new Date().toISOString());
+    }
+}
+
+// ===== دالة حفظ موقع المستخدم =====
+async function saveUserLocation(userName, lat, lng) {
+    try {
+        await fetch('/api/locations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`
+            },
+            body: JSON.stringify({
+                lat: lat,
+                lng: lng,
+                action: 'تحديث موقع'
+            })
+        });
+        console.log(`📍 تم حفظ موقع ${userName}: ${lat}, ${lng}`);
+        return true;
     } catch(e) {
         console.error('خطأ في حفظ الموقع:', e);
+        return false;
     }
 }
 
-async function logout() {
-    if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-    }
-    if (trackingInterval) stopTracking();
-    if(currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج في ${getCurrentTime()}`);
-    currentUser = null;
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    const errorDiv = document.getElementById('loginError');
-    if (errorDiv) errorDiv.style.display = 'none';
-}
-
-async function renderUsers() {
-    if(!canManageUsers()) return;
-    try {
-        let users = await loadUsers();
-        document.getElementById('usersBody').innerHTML = users.map(u => `
-            <tr>
-                <td>${u.name}</td>
-                <td>${u.role}</td>
-                <td class="${u.enabled ? 'status-صالح' : 'status-معطب'}">${u.enabled ? 'مفعل' : 'معطل'}</td>
-                <td><button class="btn-sm btn-warning" onclick="openPasswordModal('${u._id || u.id}', '${u.name}')">تغيير</button></td>
-                <td>${u.enabled ? `<button class="btn-sm btn-orange" onclick="toggleUser('${u._id || u.id}', false)">تعطيل</button>` : `<button class="btn-sm btn-green" onclick="toggleUser('${u._id || u.id}', true)">تفعيل</button>`}</td>
-                <td><button class="btn-sm btn-red" onclick="deleteUser('${u._id || u.id}')">حذف</button></td>
-            </tr>
-        `).join('');
-    } catch(error) {
-        console.error('خطأ:', error);
-    }
-}
-
-async function addUser() {
-    if(!canManageUsers()) { showToast("ليس لديك صلاحية!", true); return; }
-    let u = document.getElementById('un').value.trim();
-    let p = document.getElementById('up').value.trim();
-    let r = document.getElementById('ur').value;
-    if(!u || !p) return showToast("يرجى إدخال اسم المستخدم وكلمة المرور", true);
+// ===== دالة تهيئة التطبيق مع الموقع =====
+async function initAppAfterLoginWithLocation(lat, lng) {
+    const isAdmin = currentUser && currentUser.role === "مسؤول";
     
-    try {
-        let users = await loadUsers();
-        if(users.find(x => x.name === u)) { showToast("اسم المستخدم موجود!", true); return; }
-        await saveUser({ name: u, pass: p, role: r, enabled: true });
-        document.getElementById('un').value = "";
-        document.getElementById('up').value = "";
-        await renderUsers();
-        await logActivity("إضافة مستخدم", `قام بإضافة مستخدم جديد: ${u} (${r})`);
-        showToast("✅ تم إضافة المستخدم");
-    } catch(error) {
-        showToast("خطأ في الإضافة: " + error.message, true);
+    await renderMain();
+    await renderMaint();
+    await renderEff();
+    await renderTickets();
+    if(isAdmin) { 
+        await renderUsers(); 
+        await renderTrack(); 
     }
-}
-
-function openPasswordModal(userId, userName) {
-    selectedUserId = userId;
-    document.getElementById('modalUserName').innerHTML = `تغيير كلمة المرور للمستخدم: <strong>${userName}</strong>`;
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    document.getElementById('passwordModal').style.display = 'flex';
-}
-
-function closePasswordModal() {
-    document.getElementById('passwordModal').style.display = 'none';
-    selectedUserId = null;
-}
-
-async function saveNewPassword() {
-    if(!canManageUsers()) return;
-    const np = document.getElementById('newPassword').value.trim();
-    const cp = document.getElementById('confirmPassword').value.trim();
-    if(!np) { showToast("كلمة المرور الجديدة مطلوبة", true); return; }
-    if(np !== cp) { showToast("كلمة المرور غير متطابقة", true); return; }
+    await logActivity("تسجيل دخول", `قام بتسجيل الدخول من الموقع: ${lat}, ${lng}`);
+    showToast(`مرحباً ${currentUser.name} ✅`, false);
+    console.log('✅ تم تحميل البيانات بنجاح');
     
-    try {
-        let users = await loadUsers();
-        let user = users.find(u => (u._id || u.id).toString() === selectedUserId.toString());
-        if(user) {
-            user.pass = np;
-            await updateUser(selectedUserId, user);
-            closePasswordModal();
-            await renderUsers();
-            await logActivity("تغيير كلمة مرور", `قام بتغيير كلمة مرور المستخدم: ${user.name}`);
-            showToast("✅ تم تغيير كلمة المرور");
-        }
-    } catch(error) {
-        showToast("خطأ في تغيير كلمة المرور: " + error.message, true);
-    }
+    initSocket();
 }
 
-async function toggleUser(userId, enable) {
-    try {
-        let users = await loadUsers();
-        let user = users.find(u => (u._id || u.id).toString() === userId.toString());
-        if(user) {
-            user.enabled = enable;
-            await updateUser(userId, user);
-            await renderUsers();
-            await logActivity(enable ? "تفعيل مستخدم" : "تعطيل مستخدم", `قام ${enable ? 'بتفعيل' : 'بتعطيل'} المستخدم: ${user.name}`);
-            showToast(enable ? "✅ تم تفعيل المستخدم" : "⚠️ تم تعطيل المستخدم");
-        }
-    } catch(error) {
-        showToast("خطأ: " + error.message, true);
-    }
-}
+// ============================================================
+// ✅ تصدير جميع الدوال إلى النطاق العام
+// ============================================================
 
-async function deleteUser(userId) {
-    if(confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
-        try {
-            let users = await loadUsers();
-            let user = users.find(u => (u._id || u.id).toString() === userId.toString());
-            await deleteUserAPI(userId);
-            await renderUsers();
-            await logActivity("حذف مستخدم", `قام بحذف المستخدم: ${user?.name}`);
-            showToast("✅ تم حذف المستخدم");
-        } catch(error) {
-            showToast("خطأ في الحذف: " + error.message, true);
-        }
-    }
-}
-
-window.doLogin = doLogin;
-window.logout = logout;
-window.completeLogin = completeLogin;
+window.showPage = showPage;
+window.refreshMain = refreshMain;
+window.refreshMaint = refreshMaint;
+window.refreshEff = refreshEff;
+window.refreshTickets = refreshTickets;
+window.refreshTrack = refreshTrack;
+window.refreshUsers = refreshUsers;
+window.refreshAllPages = refreshAllPages;
+window.exportAllData = exportAllData;
+window.importAllData = importAllData;
+window.reinitMap = reinitMap;
+window.refreshData = refreshData;
+window.initAppAfterLogin = initAppAfterLogin;
+window.initAppAfterLoginWithLocation = initAppAfterLoginWithLocation;
+window.initTrackingMapWithLocation = initTrackingMapWithLocation;
+window.addUserLocation = addUserLocation;
 window.saveUserLocation = saveUserLocation;
-window.renderUsers = renderUsers;
-window.addUser = addUser;
-window.openPasswordModal = openPasswordModal;
-window.closePasswordModal = closePasswordModal;
-window.saveNewPassword = saveNewPassword;
-window.toggleUser = toggleUser;
-window.deleteUser = deleteUser;
+window.resetTrackFilters = resetTrackFilters;
+
+console.log('✅ app.js تم تحميله بنجاح');
