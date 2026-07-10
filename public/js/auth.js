@@ -1,3 +1,5 @@
+// ==================== دوال المصادقة ====================
+
 async function doLogin() {
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -67,6 +69,7 @@ async function doLogin() {
     );
 }
 
+// ===== دالة إكمال تسجيل الدخول =====
 async function completeLogin(user, lat, lng) {
     currentUser = user;
     currentUser.lat = lat;
@@ -98,6 +101,7 @@ async function completeLogin(user, lat, lng) {
     fill('fRegMain', Object.keys(ZONES_DATA));
     fill('fRegMaint', Object.keys(ZONES_DATA));
     
+    // ✅ تحميل جميع البيانات فوراً
     await renderMain();
     await renderMaint();
     await renderEff();
@@ -106,6 +110,9 @@ async function completeLogin(user, lat, lng) {
         await renderUsers(); 
         await renderTrack(); 
     }
+    
+    // ✅ إظهار الصفحة الرئيسية مع البيانات
+    document.getElementById('pageMain').classList.remove('hidden');
     
     initSocket();
     
@@ -123,6 +130,7 @@ async function completeLogin(user, lat, lng) {
     }
 }
 
+// ===== حفظ موقع المستخدم =====
 async function saveUserLocation(userName, lat, lng) {
     try {
         await fetch('/api/locations', {
@@ -143,6 +151,7 @@ async function saveUserLocation(userName, lat, lng) {
     }
 }
 
+// ===== تسجيل الخروج =====
 async function logout() {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
@@ -158,6 +167,8 @@ async function logout() {
     const errorDiv = document.getElementById('loginError');
     if (errorDiv) errorDiv.style.display = 'none';
 }
+
+// ==================== دوال المستخدمين ====================
 
 async function renderUsers() {
     if(!canManageUsers()) return;
@@ -266,6 +277,10 @@ async function deleteUser(userId) {
     }
 }
 
+// ============================================================
+// ✅ تصدير الدوال
+// ============================================================
+
 window.doLogin = doLogin;
 window.logout = logout;
 window.completeLogin = completeLogin;
@@ -277,3 +292,5 @@ window.closePasswordModal = closePasswordModal;
 window.saveNewPassword = saveNewPassword;
 window.toggleUser = toggleUser;
 window.deleteUser = deleteUser;
+
+console.log('✅ auth.js تم تحميله بنجاح');
