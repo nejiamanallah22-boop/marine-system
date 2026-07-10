@@ -179,83 +179,26 @@ function renderTrackUsers(data) {
     const count = document.getElementById('trackUsersCount');
     
     if (!tbody) return;
-    
-    if (count) {
-        count.textContent = `${data.total || 0} متصل`;
-        count.style.background = data.total > 0 ? '#28a745' : '#dc3545';
-    }
+    if (count) count.textContent = `${data.total || 0} متصل`;
     
     if (!data.online || data.online.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" style="text-align:center; padding:30px; color:#6c757d;">
-                    <i class="fas fa-users-slash" style="font-size:24px; display:block; margin-bottom:10px;"></i>
-                    لا يوجد مستخدمين متصلين حالياً
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px;">لا يوجد مستخدمين متصلين</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = data.online.map((user, index) => {
-        const device = user.device || 'غير معروف';
-        const browser = user.browser || 'غير معروف';
-        const os = user.os || 'غير معروف';
-        const ip = user.ip || 'غير معروف';
-        const userId = user.id || user.socketId || 'غير معروف';
-        
-        const locationStr = user.lat && user.lng ? 
-            `${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}` : 
-            '⚠️ غير متاح';
-        
-        const locationStatus = user.lat && user.lng ? '✅ نشط' : '❌ غير متاح';
-        const locationColor = user.lat && user.lng ? '#28a745' : '#dc3545';
-        
-        const lastUpdate = user.lastUpdate ? 
-            new Date(user.lastUpdate).toLocaleString('ar-EG') : 
-            new Date(user.connectedAt).toLocaleString('ar-EG');
-        
-        let roleIcon = '';
-        let roleColor = '';
-        if (user.userRole === 'مسؤول') {
-            roleIcon = '👑';
-            roleColor = '#dc3545';
-        } else if (user.userRole === 'محرر') {
-            roleIcon = '✏️';
-            roleColor = '#ffc107';
-        } else {
-            roleIcon = '👁️';
-            roleColor = '#17a2b8';
-        }
-        
-        let deviceIcon = '';
-        if (device.includes('Android')) deviceIcon = '📱';
-        else if (device.includes('iOS')) deviceIcon = '📱';
-        else if (device.includes('Windows')) deviceIcon = '💻';
-        else if (device.includes('Mac')) deviceIcon = '🖥️';
-        else deviceIcon = '💻';
-        
-        return `
-            <tr>
-                <td>${index + 1}</td>
-                <td><b>${user.userName}</b></td>
-                <td style="color:${roleColor}; font-weight:bold;">${roleIcon} ${user.userRole}</td>
-                <td><code style="background:#f8f9fa; padding:2px 8px; border-radius:4px; font-size:11px;">${userId.substring(0, 8)}</code></td>
-                <td>${deviceIcon} ${device}<br><small style="color:#6c757d;">${os}</small></td>
-                <td>${browser}</td>
-                <td><code style="background:#f8f9fa; padding:2px 8px; border-radius:4px; font-size:12px;">${ip}</code></td>
-                <td style="color:${locationColor};">
-                    <div><small>${locationStr}</small></div>
-                    <div><small style="font-weight:bold;">${locationStatus}</small></div>
-                </td>
-                <td style="font-size:12px;">${lastUpdate}</td>
-                <td>
-                    <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#28a745; animation: pulse 1.5s infinite;"></span>
-                    <span style="font-size:12px; color:#28a745; font-weight:bold;">نشط</span>
-                </td>
-            </tr>
-        `;
-    }).join('');
+    tbody.innerHTML = data.online.map((user, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td><b>${user.userName}</b></td>
+            <td>${user.userRole}</td>
+            <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:11px;">${(user.id || '').substring(0, 8)}</code></td>
+            <td>${user.device || 'غير معروف'}</td>
+            <td>${user.browser || 'غير معروف'}</td>
+            <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:12px;">${user.ip || 'غير معروف'}</code></td>
+            <td>${user.lat && user.lng ? `${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}` : '⚠️ غير متاح'}</td>
+            <td>${user.lastUpdate ? new Date(user.lastUpdate).toLocaleString('ar-EG') : 'غير معروف'}</td>
+        </tr>
+    `).join('');
 }
 
 function updateTrackMap(data) {
