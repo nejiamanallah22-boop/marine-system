@@ -188,7 +188,7 @@ function renderTrackUsers(data) {
     if (!data.online || data.online.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align:center; padding:30px; color:#6c757d;">
+                <td colspan="10" style="text-align:center; padding:30px; color:#6c757d;">
                     <i class="fas fa-users-slash" style="font-size:24px; display:block; margin-bottom:10px;"></i>
                     لا يوجد مستخدمين متصلين حالياً
                 </td>
@@ -200,7 +200,9 @@ function renderTrackUsers(data) {
     tbody.innerHTML = data.online.map((user, index) => {
         const device = user.device || 'غير معروف';
         const browser = user.browser || 'غير معروف';
+        const os = user.os || 'غير معروف';
         const ip = user.ip || 'غير معروف';
+        const userId = user.id || user.socketId || 'غير معروف';
         
         const locationStr = user.lat && user.lng ? 
             `${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}` : 
@@ -231,22 +233,16 @@ function renderTrackUsers(data) {
         else if (device.includes('iOS')) deviceIcon = '📱';
         else if (device.includes('Windows')) deviceIcon = '💻';
         else if (device.includes('Mac')) deviceIcon = '🖥️';
-        else deviceIcon = '🖥️';
-        
-        let browserIcon = '';
-        if (browser.includes('Chrome')) browserIcon = '🌐';
-        else if (browser.includes('Firefox')) browserIcon = '🦊';
-        else if (browser.includes('Safari')) browserIcon = '🧭';
-        else if (browser.includes('Edge')) browserIcon = '🔵';
-        else browserIcon = '🌐';
+        else deviceIcon = '💻';
         
         return `
             <tr>
                 <td>${index + 1}</td>
                 <td><b>${user.userName}</b></td>
                 <td style="color:${roleColor}; font-weight:bold;">${roleIcon} ${user.userRole}</td>
-                <td>${deviceIcon} ${device}</td>
-                <td>${browserIcon} ${browser}</td>
+                <td><code style="background:#f8f9fa; padding:2px 8px; border-radius:4px; font-size:11px;">${userId.substring(0, 8)}</code></td>
+                <td>${deviceIcon} ${device}<br><small style="color:#6c757d;">${os}</small></td>
+                <td>${browser}</td>
                 <td><code style="background:#f8f9fa; padding:2px 8px; border-radius:4px; font-size:12px;">${ip}</code></td>
                 <td style="color:${locationColor};">
                     <div><small>${locationStr}</small></div>
