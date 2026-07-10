@@ -126,10 +126,46 @@ const LocationSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
     action: { type: String, default: 'تحديث موقع' },
     ip: { type: String },
-    userAgent: { type: String }
+    userAgent: { type: String },
+    device: { type: String },
+    browser: { type: String },
+    os: { type: String }
 }, { timestamps: true });
 
 const Location = mongoose.model('Location', LocationSchema);
+
+// ==================== دوال استخراج معلومات الجهاز ====================
+function extractDevice(userAgent) {
+    if (!userAgent) return 'غير معروف';
+    if (userAgent.includes('Android')) return '📱 Android';
+    if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return '📱 iOS';
+    if (userAgent.includes('Windows')) return '💻 Windows';
+    if (userAgent.includes('Macintosh')) return '🖥️ Mac';
+    if (userAgent.includes('Linux')) return '🐧 Linux';
+    return '💻 غير معروف';
+}
+
+function extractBrowser(userAgent) {
+    if (!userAgent) return 'غير معروف';
+    if (userAgent.includes('Chrome')) return '🌐 Chrome';
+    if (userAgent.includes('Firefox')) return '🦊 Firefox';
+    if (userAgent.includes('Safari')) return '🧭 Safari';
+    if (userAgent.includes('Edge')) return '🔵 Edge';
+    if (userAgent.includes('Opera')) return '🟠 Opera';
+    return '🌐 غير معروف';
+}
+
+function extractOS(userAgent) {
+    if (!userAgent) return 'غير معروف';
+    if (userAgent.includes('Android')) return 'Android';
+    if (userAgent.includes('iPhone')) return 'iOS';
+    if (userAgent.includes('iPad')) return 'iPadOS';
+    if (userAgent.includes('Windows NT 10.0')) return 'Windows 10';
+    if (userAgent.includes('Windows NT 6.1')) return 'Windows 7';
+    if (userAgent.includes('Mac OS X')) return 'macOS';
+    if (userAgent.includes('Linux')) return 'Linux';
+    return 'غير معروف';
+}
 
 // ==================== المصادقة ====================
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
@@ -183,7 +219,19 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        res.json({ token, id: user._id, name: user.name, role: user.role });
+        res.json({ 
+            token, 
+            id: user._id, 
+            name: user.name, 
+            role: user.role,
+            session: {
+                ip: req.ip || req.connection.remoteAddress,
+                userAgent: req.headers['user-agent'] || 'غير معروف',
+                device: extractDevice(req.headers['user-agent']),
+                browser: extractBrowser(req.headers['user-agent']),
+                os: extractOS(req.headers['user-agent'])
+            }
+        });
     } catch (error) {
         res.status(500).json({ error: 'خطأ في السيرفر' });
     }
@@ -385,7 +433,7 @@ app.post('/api/logs', authenticate, async (req, res) => {
     }
 });
 
-// ===== المواقع (مع الأمان) =====
+// ===== المواقع =====
 app.get('/api/locations', authenticate, async (req, res) => {
     try {
         const locations = await Location.find().sort({ timestamp: -1 });
@@ -403,6 +451,7 @@ app.post('/api/locations', authenticate, async (req, res) => {
             return res.status(400).json({ error: 'إحداثيات غير صالحة' });
         }
         
+        const userAgent = req.headers['user-agent'] || 'غير معروف';
         const location = new Location({
             userName: req.user.name,
             userRole: req.user.role,
@@ -410,12 +459,42 @@ app.post('/api/locations', authenticate, async (req, res) => {
             lng: parseFloat(lng),
             action: action || 'تحديث موقع',
             ip: req.ip || req.connection.remoteAddress,
-            userAgent: req.headers['user-agent'] || 'غير معروف'
+            userAgent: userAgent,
+            device: extractDevice(userAgent),
+            browser: extractBrowser(userAgent),
+            os: extractOS(userAgent)
         });
         await location.save();
         res.status(201).json(location);
     } catch (error) {
         res.status(400).json({ error: error.message });
+    }
+});
+
+// ===== المستخدمين المتصلين =====
+app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const onlineUsers = Object.values(connectedUsers).map(user => ({
+            id: user.socketId,
+            userName: user.userName,
+            userRole: user.userRole,
+            lat: user.lat,
+            lng: user.lng,
+            connectedAt: user.connectedAt,
+            lastUpdate: user.lastUpdate || user.connectedAt,
+            ip: user.ip || 'غير معروف',
+            userAgent: user.userAgent || 'غير معروف',
+            device: user.device || 'غير معروف',
+            browser: user.browser || 'غير معروف',
+            os: user.os || 'غير معروف'
+        }));
+        
+        res.json({
+            online: onlineUsers,
+            total: onlineUsers.length
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -487,13 +566,23 @@ io.on('connection', (socket) => {
     
     socket.on('user-connected', (data) => {
         if (data.lat && data.lng) {
+            const userAgent = socket.handshake.headers['user-agent'] || '';
+            const ip = socket.handshake.address || socket.request.connection.remoteAddress || 'غير معروف';
+            
             connectedUsers[socket.id] = {
+                id: socket.id,
                 userName: data.userName,
                 userRole: data.userRole,
                 lat: data.lat,
                 lng: data.lng,
                 socketId: socket.id,
-                connectedAt: new Date().toISOString()
+                connectedAt: new Date().toISOString(),
+                lastUpdate: new Date().toISOString(),
+                ip: ip,
+                userAgent: userAgent,
+                device: extractDevice(userAgent),
+                browser: extractBrowser(userAgent),
+                os: extractOS(userAgent)
             };
             console.log('👥 مستخدم متصل:', data.userName);
             io.emit('user-list', Object.values(connectedUsers));
