@@ -386,6 +386,10 @@ function centerMapOnUser() {
     }
 }
 
+// ============================================================
+// ✅ تصدير الدوال
+// ============================================================
+
 window.initTrackingMap = initTrackingMap;
 window.setDefaultLocation = setDefaultLocation;
 window.loadLocations = loadLocations;
@@ -395,3 +399,5 @@ window.centerMapOnUser = centerMapOnUser;
 window.requestLocationPermission = requestLocationPermission;
 window.saveUserLocationSecure = saveUserLocationSecure;
 window.updateMapMarker = updateMapMarker;
+
+console.log('✅ map.js تم تحميله بنجاح');
