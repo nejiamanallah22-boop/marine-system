@@ -110,10 +110,10 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== Note Verbale (نسخة احترافية) =====
+// ===== Note Verbale (دعم جميع الملفات) =====
 // ============================================================
 
-// ===== استيراد ملف (يدعم TXT و DOCX) =====
+// ===== استيراد ملف (يدعم جميع الصيغ) =====
 function importNoteFile() {
     const input = document.getElementById('noteFileInput');
     if (!input || !input.files || !input.files[0]) {
@@ -124,6 +124,30 @@ function importNoteFile() {
     const file = input.files[0];
     const fileName = file.name.toLowerCase();
     const fileType = fileName.split('.').pop();
+    
+    // ===== الصور =====
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+    if (imageTypes.includes(fileType)) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+            try {
+                const imageUrl = e.target.result;
+                // عرض الصورة في محتوى المذكرة
+                const imgHtml = `<img src="${imageUrl}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="صورة مستوردة">`;
+                document.getElementById('noteContent').value = imgHtml;
+                document.getElementById('noteTitle').value = fileName;
+                showToast('✅ تم استيراد الصورة بنجاح!');
+                setTimeout(() => saveNote(), 500);
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الصورة: ' + err.message, true);
+            }
+        };
+        reader.onerror = function() {
+            showToast('❌ خطأ في تحميل الصورة', true);
+        };
+        return;
+    }
     
     // ===== ملفات TXT =====
     if (fileType === 'txt') {
@@ -145,20 +169,12 @@ function importNoteFile() {
     
     // ===== ملفات DOCX =====
     if (fileType === 'docx') {
-        // التحقق من وجود المكتبة
         if (typeof mammoth === 'undefined') {
             showToast('⏳ جاري تحميل مكتبة DOCX...', false);
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
-            script.onload = function() {
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js', function() {
                 showToast('✅ تم تحميل المكتبة، حاول مرة أخرى', false);
-                // إعادة المحاولة بعد تحميل المكتبة
                 setTimeout(() => importNoteFile(), 500);
-            };
-            script.onerror = function() {
-                showToast('❌ فشل تحميل مكتبة DOCX، تأكد من الاتصال بالإنترنت', true);
-            };
-            document.head.appendChild(script);
+            });
             return;
         }
         
@@ -169,8 +185,7 @@ function importNoteFile() {
                 const arrayBuffer = e.target.result;
                 mammoth.extractRawText({ arrayBuffer: arrayBuffer })
                     .then(function(result) {
-                        const text = result.value;
-                        extractTextFromFile(text);
+                        extractTextFromFile(result.value);
                     })
                     .catch(function(err) {
                         showToast('❌ خطأ في قراءة DOCX: ' + err.message, true);
@@ -185,26 +200,105 @@ function importNoteFile() {
         return;
     }
     
+    // ===== ملفات PDF =====
+    if (fileType === 'pdf') {
+        if (typeof pdfjsLib === 'undefined') {
+            showToast('⏳ جاري تحميل مكتبة PDF...', false);
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function() {
+                showToast('✅ تم تحميل مكتبة PDF، حاول مرة أخرى', false);
+                setTimeout(() => importNoteFile(), 500);
+            });
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                pdfjsLib.getDocument({ data: arrayBuffer }).promise
+                    .then(function(pdf) {
+                        let fullText = '';
+                        let pages = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            pages.push(pdf.getPage(i));
+                        }
+                        Promise.all(pages).then(function(pagesData) {
+                            let textPromises = pagesData.map(function(page) {
+                                return page.getTextContent();
+                            });
+                            Promise.all(textPromises).then(function(textContents) {
+                                textContents.forEach(function(textContent) {
+                                    textContent.items.forEach(function(item) {
+                                        fullText += item.str + ' ';
+                                    });
+                                    fullText += '\n';
+                                });
+                                extractTextFromFile(fullText);
+                            });
+                        });
+                    })
+                    .catch(function(err) {
+                        showToast('❌ خطأ في قراءة PDF: ' + err.message, true);
+                    });
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+            }
+        };
+        reader.onerror = function() {
+            showToast('❌ خطأ في تحميل الملف', true);
+        };
+        return;
+    }
+    
+    // ===== ملفات HTML =====
+    if (fileType === 'html' || fileType === 'htm') {
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        reader.onload = function(e) {
+            try {
+                const html = e.target.result;
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const text = tempDiv.textContent || tempDiv.innerText || '';
+                extractTextFromFile(text);
+            } catch(err) {
+                showToast('❌ خطأ في قراءة HTML: ' + err.message, true);
+            }
+        };
+        reader.onerror = function() {
+            showToast('❌ خطأ في تحميل الملف', true);
+        };
+        return;
+    }
+    
     // ===== ملفات DOC (قديمة) =====
     if (fileType === 'doc') {
         showToast('⚠️ ملفات DOC غير مدعومة. يرجى تحويل الملف إلى DOCX أو TXT', true);
         return;
     }
     
-    // ===== ملفات PDF =====
-    if (fileType === 'pdf') {
-        showToast('⚠️ ملفات PDF غير مدعومة. يرجى استخدام ملف TXT أو DOCX', true);
-        return;
-    }
-    
     showToast('⚠️ صيغة ملف غير مدعومة: ' + fileType, true);
+}
+
+// ===== تحميل مكتبة خارجية =====
+function loadScript(url, callback) {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = callback;
+    script.onerror = function() {
+        showToast('❌ فشل تحميل المكتبة، تأكد من الاتصال بالإنترنت', true);
+    };
+    document.head.appendChild(script);
 }
 
 // ===== استخراج النص من الملف =====
 function extractTextFromFile(text) {
-    // تنظيف النص من الأحرف الغريبة
+    // تنظيف النص
     text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
+    text = text.replace(/\s+/g, ' ').trim();
     
+    // استخراج العنوان والمحتوى
     const lines = text.split('\n').filter(line => line.trim());
     let title = '';
     let content = '';
@@ -212,6 +306,12 @@ function extractTextFromFile(text) {
     if (lines.length > 0) {
         title = lines[0].trim();
         content = lines.slice(1).join('\n').trim();
+    }
+    
+    // إذا كان النص قصيراً، استخدمه كاملاً كعنوان
+    if (!title && text.length > 0) {
+        title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+        content = text;
     }
     
     if (title) document.getElementById('noteTitle').value = title;
@@ -302,105 +402,25 @@ function exportNotePDF() {
                     padding-bottom: 12px;
                     margin-bottom: 25px;
                 }
-                .header .logo {
-                    font-size: 28px;
-                    color: #1a3a5c;
-                    font-weight: 800;
-                }
-                .header .sub {
-                    font-size: 14px;
-                    color: #6c757d;
-                    margin-top: 2px;
-                }
-                .header .ref {
-                    font-size: 12px;
-                    color: #6c757d;
-                    margin-top: 5px;
-                }
-                .note-title {
-                    font-size: 20px;
-                    font-weight: 700;
-                    color: #0d6efd;
-                    border-right: 5px solid #0d6efd;
-                    padding-right: 15px;
-                    margin: 20px 0 15px 0;
-                    line-height: 1.4;
-                }
-                .note-content {
-                    font-size: 15px;
-                    line-height: 2.2;
-                    padding: 15px 5px;
-                    background: #fafbfc;
-                    border-radius: 6px;
-                    min-height: 200px;
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    margin-bottom: 20px;
-                }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 15px;
-                    border-top: 2px solid #dee2e6;
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 12px;
-                    color: #6c757d;
-                    flex-wrap: wrap;
-                    gap: 10px;
-                }
-                .footer .signature {
-                    text-align: left;
-                    font-weight: 600;
-                }
-                .footer .signature span {
-                    display: block;
-                    margin-top: 5px;
-                    font-weight: 400;
-                    font-size: 11px;
-                    color: #6c757d;
-                }
-                .footer .date-info {
-                    text-align: right;
-                }
-                .print-actions {
-                    text-align: center;
-                    margin-top: 25px;
-                    padding-top: 15px;
-                    border-top: 1px solid #dee2e6;
-                }
-                .print-actions button {
-                    padding: 10px 30px;
-                    margin: 0 8px;
-                    border: none;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                }
-                .print-actions .btn-print {
-                    background: #0d6efd;
-                    color: white;
-                }
-                .print-actions .btn-print:hover {
-                    background: #0a58ca;
-                }
-                .print-actions .btn-close {
-                    background: #dc3545;
-                    color: white;
-                }
-                .print-actions .btn-close:hover {
-                    background: #b02a37;
-                }
+                .header .logo { font-size: 28px; color: #1a3a5c; font-weight: 800; }
+                .header .sub { font-size: 14px; color: #6c757d; margin-top: 2px; }
+                .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
+                .note-title { font-size: 20px; font-weight: 700; color: #0d6efd; border-right: 5px solid #0d6efd; padding-right: 15px; margin: 20px 0 15px 0; }
+                .note-content { font-size: 15px; line-height: 2.2; padding: 15px 5px; background: #fafbfc; border-radius: 6px; min-height: 200px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+                .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
+                .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; flex-wrap: wrap; gap: 10px; }
+                .footer .signature { text-align: left; font-weight: 600; }
+                .footer .signature span { display: block; margin-top: 5px; font-weight: 400; font-size: 11px; color: #6c757d; }
+                .footer .date-info { text-align: right; }
+                .print-actions { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #dee2e6; }
+                .print-actions button { padding: 10px 30px; margin: 0 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+                .print-actions .btn-print { background: #0d6efd; color: white; }
+                .print-actions .btn-print:hover { background: #0a58ca; }
+                .print-actions .btn-close { background: #dc3545; color: white; }
+                .print-actions .btn-close:hover { background: #b02a37; }
                 @media print {
                     body { background: white; padding: 0; }
-                    .document {
-                        width: 100%;
-                        min-height: auto;
-                        padding: 20mm 15mm;
-                        box-shadow: none;
-                        border-radius: 0;
-                    }
+                    .document { width: 100%; min-height: auto; padding: 20mm 15mm; box-shadow: none; border-radius: 0; }
                     .print-actions { display: none; }
                     .no-print { display: none !important; }
                 }
@@ -416,23 +436,15 @@ function exportNotePDF() {
                 <div class="note-title">📄 ${title}</div>
                 <div class="note-content">${content}</div>
                 <div class="footer">
-                    <div class="date-info">
-                        <div>📅 ${date}</div>
-                        <div>🕐 ${time}</div>
-                    </div>
-                    <div class="signature">
-                        ${user}
-                        <span>${role}</span>
-                    </div>
+                    <div class="date-info"><div>📅 ${date}</div><div>🕐 ${time}</div></div>
+                    <div class="signature">${user}<span>${role}</span></div>
                 </div>
                 <div class="print-actions no-print">
                     <button class="btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
                     <button class="btn-close" onclick="window.close()">✖ إغلاق</button>
                 </div>
             </div>
-            <script>
-                setTimeout(() => { window.print(); }, 800);
-            <\/script>
+            <script>setTimeout(() => { window.print(); }, 800);<\/script>
         </body>
         </html>
     `);
@@ -459,104 +471,33 @@ function exportNoteWord() {
         <html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" 
               xmlns:w="urn:schemas-microsoft-com:office:word" 
               xmlns="http://www.w3.org/TR/REC-html40">
-        <head>
-            <meta charset="UTF-8">
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-            <title>Note Verbale</title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 2.5cm 2cm;
-                }
-                body {
-                    font-family: 'Cairo', 'Segoe UI', 'Arial', sans-serif;
-                    direction: rtl;
-                    font-size: 14px;
-                    line-height: 1.8;
-                    padding: 0;
-                }
-                .header {
-                    text-align: center;
-                    border-bottom: 3px solid #1a3a5c;
-                    padding-bottom: 12px;
-                    margin-bottom: 25px;
-                }
-                .header h1 {
-                    font-size: 22px;
-                    color: #1a3a5c;
-                    margin: 0;
-                }
-                .header .sub {
-                    font-size: 13px;
-                    color: #6c757d;
-                    margin-top: 2px;
-                }
-                .header .ref {
-                    font-size: 12px;
-                    color: #6c757d;
-                    margin-top: 5px;
-                }
-                .note-title {
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #0d6efd;
-                    border-right: 4px solid #0d6efd;
-                    padding-right: 12px;
-                    margin: 20px 0 15px 0;
-                }
-                .note-content {
-                    font-size: 14px;
-                    line-height: 2;
-                    padding: 15px 5px;
-                    background: #f8f9fa;
-                    border-radius: 4px;
-                    white-space: pre-wrap;
-                    word-wrap: break-word;
-                    margin-bottom: 20px;
-                }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 15px;
-                    border-top: 2px solid #dee2e6;
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 12px;
-                    color: #6c757d;
-                }
-                .footer .signature {
-                    text-align: left;
-                    font-weight: 600;
-                }
-                .footer .signature span {
-                    display: block;
-                    font-weight: 400;
-                    font-size: 11px;
-                }
-                .footer .date-info {
-                    text-align: right;
-                }
-            </style>
+        <head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Note Verbale</title>
+        <style>
+            @page { size: A4; margin: 2.5cm 2cm; }
+            body { font-family: 'Cairo', 'Segoe UI', 'Arial', sans-serif; direction: rtl; font-size: 14px; line-height: 1.8; padding: 0; }
+            .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 12px; margin-bottom: 25px; }
+            .header h1 { font-size: 22px; color: #1a3a5c; margin: 0; }
+            .header .sub { font-size: 13px; color: #6c757d; margin-top: 2px; }
+            .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
+            .note-title { font-size: 18px; font-weight: 700; color: #0d6efd; border-right: 4px solid #0d6efd; padding-right: 12px; margin: 20px 0 15px 0; }
+            .note-content { font-size: 14px; line-height: 2; padding: 15px 5px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+            .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; }
+            .footer .signature { text-align: left; font-weight: 600; }
+            .footer .signature span { display: block; font-weight: 400; font-size: 11px; }
+            .footer .date-info { text-align: right; }
+        </style>
         </head>
         <body>
-            <div class="header">
-                <h1>⚓ منظومة الوسائل البحرية</h1>
-                <div class="sub">الجمهورية التونسية - وزارة الدفاع الوطني</div>
-                <div class="ref">Note Verbale | 📅 ${date} - 🕐 ${time}</div>
-            </div>
+            <div class="header"><h1>⚓ منظومة الوسائل البحرية</h1><div class="sub">الجمهورية التونسية - وزارة الدفاع الوطني</div><div class="ref">Note Verbale | 📅 ${date} - 🕐 ${time}</div></div>
             <div class="note-title">📄 ${title}</div>
             <div class="note-content">${content}</div>
-            <div class="footer">
-                <div class="date-info">📅 ${date} | 🕐 ${time}</div>
-                <div class="signature">${user}<span>${role}</span></div>
-            </div>
+            <div class="footer"><div class="date-info">📅 ${date} | 🕐 ${time}</div><div class="signature">${user}<span>${role}</span></div></div>
         </body>
         </html>
     `;
     
-    const blob = new Blob([html], { 
-        type: 'application/msword;charset=utf-8' 
-    });
-    
+    const blob = new Blob([html], { type: 'application/msword;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -594,12 +535,9 @@ function loadSavedNote() {
                 document.getElementById('noteResult').style.display = 'block';
             }
         }
-    } catch(e) {
-        console.log('لا توجد مذكرة محفوظة');
-    }
+    } catch(e) { console.log('لا توجد مذكرة محفوظة'); }
 }
 
-// ===== تحميل عند فتح الصفحة =====
 document.addEventListener('DOMContentLoaded', loadSavedNote);
 
 // ============================================================
@@ -628,60 +566,45 @@ function exportEfficiencyReport() {
     win.document.write(`
         <!DOCTYPE html>
         <html dir="rtl">
-        <head>
-            <meta charset="UTF-8">
-            <title>تقرير جاهزية الأسطول</title>
-            <style>
-                body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; padding: 30px; max-width: 1100px; margin: auto; direction: rtl; background: white; }
-                .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 15px; margin-bottom: 25px; }
-                .header h1 { color: #1a3a5c; font-size: 26px; margin: 0; }
-                .header .sub { color: #6c757d; font-size: 14px; }
-                .header .user { font-size: 13px; color: #0d6efd; margin-top: 5px; }
-                .stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
-                .stat-box { background: #f8f9fa; padding: 15px 30px; border-radius: 10px; text-align: center; border: 1px solid #dee2e6; }
-                .stat-box .num { font-size: 28px; font-weight: bold; color: #0d6efd; }
-                .stat-box .label { font-size: 14px; color: #6c757d; }
-                table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; min-width: 900px; }
-                th { background: #1a3a5c; color: white; padding: 10px; text-align: center; }
-                td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #dee2e6; }
-                tr:nth-child(even) { background: #f8f9fa; }
-                .region-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-right: 4px solid #1a3a5c; }
-                .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #dee2e6; text-align: center; color: #6c757d; font-size: 12px; }
-                .status-صالح { color: #28a745; font-weight: bold; }
-                .status-معطب { color: #dc3545; font-weight: bold; }
-                .status-صيانة { color: #ffc107; font-weight: bold; }
-                .high-eff { background: #d1e7dd !important; }
-                .mid-eff { background: #fff3cd !important; }
-                .low-eff { background: #f8d7da !important; }
-                .btn-print { background: #0d6efd; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-                .btn-close { background: #dc3545; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-                .scrollable-table { overflow-x: auto; }
-                @media print { .no-print { display: none; } body { padding: 15px; } }
-            </style>
+        <head><meta charset="UTF-8"><title>تقرير جاهزية الأسطول</title>
+        <style>
+            body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; padding: 30px; max-width: 1100px; margin: auto; direction: rtl; background: white; }
+            .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 15px; margin-bottom: 25px; }
+            .header h1 { color: #1a3a5c; font-size: 26px; margin: 0; }
+            .header .sub { color: #6c757d; font-size: 14px; }
+            .header .user { font-size: 13px; color: #0d6efd; margin-top: 5px; }
+            .stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+            .stat-box { background: #f8f9fa; padding: 15px 30px; border-radius: 10px; text-align: center; border: 1px solid #dee2e6; }
+            .stat-box .num { font-size: 28px; font-weight: bold; color: #0d6efd; }
+            .stat-box .label { font-size: 14px; color: #6c757d; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; min-width: 900px; }
+            th { background: #1a3a5c; color: white; padding: 10px; text-align: center; }
+            td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #dee2e6; }
+            tr:nth-child(even) { background: #f8f9fa; }
+            .region-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-right: 4px solid #1a3a5c; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #dee2e6; text-align: center; color: #6c757d; font-size: 12px; }
+            .status-صالح { color: #28a745; font-weight: bold; }
+            .status-معطب { color: #dc3545; font-weight: bold; }
+            .status-صيانة { color: #ffc107; font-weight: bold; }
+            .high-eff { background: #d1e7dd !important; }
+            .mid-eff { background: #fff3cd !important; }
+            .low-eff { background: #f8d7da !important; }
+            .btn-print { background: #0d6efd; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+            .btn-close { background: #dc3545; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+            .scrollable-table { overflow-x: auto; }
+            @media print { .no-print { display: none; } body { padding: 15px; } }
+        </style>
         </head>
         <body>
-            <div class="header">
-                <h1>⚓ منظومة الوسائل البحرية</h1>
-                <div class="sub">تقرير جاهزية الأسطول</div>
-                <div class="user">👤 ${user} | 📅 ${date}</div>
-            </div>
-            <div class="stats">
-                ${statsCards.innerHTML}
-            </div>
-            <div class="scrollable-table">
-                ${generalTable.innerHTML}
-                ${regionTables?.innerHTML || ''}
-            </div>
-            <div class="footer">
-                📅 ${date} | 👤 ${user}
-            </div>
+            <div class="header"><h1>⚓ منظومة الوسائل البحرية</h1><div class="sub">تقرير جاهزية الأسطول</div><div class="user">👤 ${user} | 📅 ${date}</div></div>
+            <div class="stats">${statsCards.innerHTML}</div>
+            <div class="scrollable-table">${generalTable.innerHTML}${regionTables?.innerHTML || ''}</div>
+            <div class="footer">📅 ${date} | 👤 ${user}</div>
             <div class="no-print" style="text-align:center; margin-top:20px;">
                 <button class="btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
                 <button class="btn-close" onclick="window.close()">✖ إغلاق</button>
             </div>
-            <script>
-                setTimeout(() => { window.print(); }, 1000);
-            <\/script>
+            <script>setTimeout(() => { window.print(); }, 1000);<\/script>
         </body>
         </html>
     `);
