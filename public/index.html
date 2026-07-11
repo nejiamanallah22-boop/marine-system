@@ -64,6 +64,12 @@
             </div>
             
             <div class="header-actions">
+                <!-- ===== إشعارات ===== -->
+                <button class="btn btn-sm btn-outline-white" onclick="toggleNotifications()" style="position:relative;">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationBadge" style="position:absolute; top:-5px; right:-5px; background:#e66100; color:white; border-radius:50%; padding:2px 6px; font-size:10px; display:none;">0</span>
+                </button>
+                
                 <span id="userRoleDisplay" class="role-badge">
                     <i class="fas fa-user"></i> 👤
                 </span>
@@ -174,6 +180,10 @@
             <button class="btn btn-sm btn-secondary" onclick="clearMainSearch()">
                 <i class="fas fa-eraser"></i> مسح
             </button>
+            <!-- ===== زر Note Verbale ===== -->
+            <button class="btn btn-sm btn-primary" onclick="showNoteVerbaleModal()">
+                <i class="fas fa-file-alt"></i> Note Verbale
+            </button>
         </div>
         
         <div class="region-table-card">
@@ -261,7 +271,7 @@
             </button>
         </div>
         
-        <div class="stats-cards" id="statsCards"></div>
+        <div class="stats-grid" id="statsCards"></div>
         <div id="generalEffTableContainer"></div>
         <div id="regionTables"></div>
         
@@ -312,7 +322,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ====== صفحة التتبع (الموحدة) ====== -->
+    <!-- ====== صفحة التتبع ====== -->
     <!-- ============================================================ -->
     <div id="pageTrack" class="hidden">
         <div class="filter-bar">
@@ -320,20 +330,18 @@
                 <i class="fas fa-map-marker-alt"></i> تتبع المستخدمين المباشر (GPS + IP + الجهاز)
             </span>
             <span id="trackUsersCount" style="background:var(--primary); color:white; padding:4px 14px; border-radius:20px; font-size:13px;">0 متصل</span>
-            <button class="btn-sm btn-success" onclick="refreshTrackUsers()">
+            <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-sm btn-danger" onclick="clearTrackUsers()">
+            <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
                 <i class="fas fa-eraser"></i> مسح الكل
             </button>
         </div>
         
-        <!-- ===== خريطة التتبع ===== -->
         <div class="map-container">
             <div id="trackMap" style="height:500px; width:100%;"></div>
         </div>
         
-        <!-- ===== جدول تفاصيل المستخدمين ===== -->
         <div class="region-table-card" style="margin-top:20px;">
             <div class="region-table-header">
                 <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
@@ -445,6 +453,68 @@
 </div>
 
 <!-- ============================================================ -->
+<!-- ===== Note Verbale Modal ===== -->
+<!-- ============================================================ -->
+<div id="noteVerbaleModal" class="modal">
+    <div class="modal-content" style="max-width:600px;">
+        <div class="modal-title">
+            <i class="fas fa-file-alt"></i> إنشاء مذكرة رسمية (Note Verbale)
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600; display:block; margin-bottom:5px;">اختر المركب:</label>
+                <select id="nvVesselSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ced4da;">
+                    <option value="">-- اختر مركب --</option>
+                </select>
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600; display:block; margin-bottom:5px;">الوحدة:</label>
+                <input type="text" id="nvUnit" placeholder="مثال: وحدة الصيانة والإسناد البحري صفاقس" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ced4da;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600; display:block; margin-bottom:5px;">رقم المذكرة:</label>
+                <input type="text" id="nvRef" placeholder="مثال: م/2026/001" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ced4da;">
+            </div>
+            <div style="margin-bottom:15px;">
+                <label style="font-weight:600; display:block; margin-bottom:5px;">ملاحظات إضافية:</label>
+                <textarea id="nvNotes" rows="3" placeholder="ملاحظات إضافية..." style="width:100%; padding:10px; border-radius:8px; border:1px solid #ced4da; resize:vertical;"></textarea>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-success" onclick="generateNoteVerbale()">
+                <i class="fas fa-file-pdf"></i> إنشاء PDF
+            </button>
+            <button class="btn btn-danger" onclick="closeNoteVerbaleModal()">
+                <i class="fas fa-times"></i> إلغاء
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== Notifications Modal ===== -->
+<!-- ============================================================ -->
+<div id="notificationsModal" class="modal">
+    <div class="modal-content" style="max-width:600px; max-height:80vh; overflow-y:auto;">
+        <div class="modal-title">
+            <i class="fas fa-bell"></i> الإشعارات
+            <span id="notifCount" style="background:#e66100; color:white; border-radius:50%; padding:2px 10px; font-size:14px; margin-right:10px;">0</span>
+            <button class="btn btn-sm btn-danger" onclick="clearAllNotifications()" style="margin-right:auto;">
+                <i class="fas fa-trash"></i> حذف الكل
+            </button>
+        </div>
+        <div class="modal-body" id="notificationsList">
+            <p style="text-align:center; color:#8a8aaa; padding:20px;">لا توجد إشعارات</p>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeNotificationsModal()">
+                <i class="fas fa-times"></i> إغلاق
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- ===== النوافذ المنبثقة ===== -->
 <!-- ============================================================ -->
 <div id="passwordModal" class="modal">
@@ -489,6 +559,7 @@
 <script src="/js/map.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/app.js"></script>
+<script src="/js/notifications.js"></script>
 
 </body>
 </html>
