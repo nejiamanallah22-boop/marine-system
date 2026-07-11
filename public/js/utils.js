@@ -12,7 +12,6 @@ function scrollToBottom() {
 
 // ===== الإشعارات (Toast) =====
 function showToast(message, isError = false) {
-    // إزالة الإشعار القديم
     const oldToast = document.querySelector('.toast');
     if (oldToast) oldToast.remove();
     
@@ -60,7 +59,7 @@ function formatDate(d) {
     } catch(e) { return d; } 
 }
 
-// ===== تصنيف المركب حسب الطول =====
+// ===== تصنيف المركب =====
 function getCat(len) { 
     let n = parseFloat(len); 
     if(n === 11) return "البروق"; 
@@ -70,25 +69,16 @@ function getCat(len) {
     return "زوارق مزدوجة"; 
 }
 
-// ===== صلاحيات المستخدم =====
-function canEdit() { 
-    return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); 
-}
+// ===== صلاحيات =====
+function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
+function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
+function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
 
-function canDelete() { 
-    return currentUser && currentUser.role === "مسؤول"; 
-}
-
-function canManageUsers() { 
-    return currentUser && currentUser.role === "مسؤول"; 
-}
-
-// ===== الحصول على التاريخ والوقت الحالي =====
+// ===== التاريخ والوقت =====
 function getCurrentDate() {
     const now = new Date();
     return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
 }
-
 function getCurrentTime() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -106,9 +96,7 @@ const ZONES_DATA = {
     "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
     "المجمع الأمني بقبيبة": ["قبيبة"]
 };
-
 const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-
 const REGION_NAMES = {
     "الشمال": "🗺️ الحرس البحري بالشمال",
     "الساحل": "🗺️ الحرس البحري بالساحل",
@@ -122,9 +110,57 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== Note Verbale =====
+// ===== Note Verbale (استيراد وتصدير) =====
 // ============================================================
 
+// ===== استيراد ملف (PDF أو Word) =====
+function importNoteFile() {
+    const input = document.getElementById('noteFileInput');
+    if (!input || !input.files || !input.files[0]) {
+        showToast('⚠️ يرجى اختيار ملف أولاً', true);
+        return;
+    }
+    
+    const file = input.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const text = e.target.result;
+            
+            // محاولة استخراج العنوان والمحتوى
+            const lines = text.split('\n').filter(line => line.trim());
+            let title = '';
+            let content = '';
+            
+            if (lines.length > 0) {
+                // السطر الأول كعنوان
+                title = lines[0].trim();
+                // باقي السطور كمحتوى
+                content = lines.slice(1).join('\n').trim();
+            }
+            
+            if (title) {
+                document.getElementById('noteTitle').value = title;
+            }
+            if (content) {
+                document.getElementById('noteContent').value = content;
+            }
+            
+            showToast('✅ تم استيراد الملف بنجاح!');
+            
+            // حفظ تلقائي
+            setTimeout(() => saveNote(), 500);
+            
+        } catch(err) {
+            showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+// ===== حفظ المذكرة =====
 function saveNote() {
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
@@ -137,19 +173,21 @@ function saveNote() {
     const noteData = {
         title: title,
         content: content,
-        date: new Date().toLocaleString('ar-EG')
+        date: getCurrentDate(),
+        time: getCurrentTime()
     };
     
     localStorage.setItem('marineNote', JSON.stringify(noteData));
     
     document.getElementById('noteResultTitle').textContent = title;
     document.getElementById('noteResultContent').textContent = content;
-    document.getElementById('noteResultDate').textContent = `📅 ${noteData.date}`;
+    document.getElementById('noteResultDate').textContent = `📅 ${noteData.date} - 🕐 ${noteData.time}`;
     document.getElementById('noteResult').style.display = 'block';
     
     showToast('✅ تم حفظ المذكرة بنجاح!');
 }
 
+// ===== تصدير PDF =====
 function exportNotePDF() {
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
@@ -164,6 +202,9 @@ function exportNotePDF() {
         showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', true);
         return;
     }
+    
+    const user = currentUser?.name || 'مسؤول';
+    const role = currentUser?.role || '';
     
     win.document.write(`
         <!DOCTYPE html>
@@ -189,10 +230,16 @@ function exportNotePDF() {
             <div class="header">
                 <h1>⚓ منظومة الوسائل البحرية</h1>
                 <div class="sub">Note Verbale</div>
+                <div style="font-size:12px; color:#6c757d; margin-top:5px;">
+                    ${user} | ${role} | ${getCurrentDate()} - ${getCurrentTime()}
+                </div>
             </div>
             <div class="title">${title}</div>
             <div class="content">${content.replace(/\n/g, '<br>')}</div>
-            <div class="footer">📅 ${new Date().toLocaleString('ar-EG')}</div>
+            <div class="footer">
+                📅 ${getCurrentDate()} - 🕐 ${getCurrentTime()}<br>
+                ${user} | ${role}
+            </div>
             <div class="no-print" style="text-align:center; margin-top:20px;">
                 <button class="btn btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
                 <button class="btn btn-close" onclick="window.close()">✖ إغلاق</button>
@@ -207,14 +254,74 @@ function exportNotePDF() {
     showToast('📄 جاري فتح المذكرة للطباعة...');
 }
 
+// ===== تصدير Word (ملف .doc) =====
+function exportNoteWord() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteContent').value.trim();
+    
+    if (!title || !content) {
+        showToast('⚠️ لا توجد مذكرة للتصدير', true);
+        return;
+    }
+    
+    const user = currentUser?.name || 'مسؤول';
+    const role = currentUser?.role || '';
+    
+    const html = `
+        <html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:w="urn:schemas-microsoft-com:office:word" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+            <meta charset="UTF-8">
+            <title>Note Verbale</title>
+            <style>
+                body { font-family: 'Cairo', Arial, sans-serif; padding: 40px; direction: rtl; }
+                .header { border-bottom: 3px solid #1a3a5c; padding-bottom: 15px; text-align: center; }
+                .header h1 { color: #1a3a5c; font-size: 24px; }
+                .title { font-size: 22px; font-weight: bold; margin: 20px 0; color: #0d6efd; }
+                .content { font-size: 16px; line-height: 2; margin: 20px 0; padding: 20px; background: #f8f9fa; }
+                .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #dee2e6; text-align: center; color: #6c757d; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>⚓ منظومة الوسائل البحرية</h1>
+                <p>Note Verbale</p>
+            </div>
+            <div class="title">${title}</div>
+            <div class="content">${content.replace(/\n/g, '<br>')}</div>
+            <div class="footer">
+                📅 ${getCurrentDate()} - 🕐 ${getCurrentTime()}<br>
+                ${user} | ${role}
+            </div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Note_Verbale_${getCurrentDate().replace(/\//g, '-')}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('📄 تم تصدير المذكرة كـ Word بنجاح!');
+}
+
+// ===== مسح المذكرة =====
 function clearNote() {
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
     document.getElementById('noteResult').style.display = 'none';
     localStorage.removeItem('marineNote');
+    document.getElementById('noteFileInput').value = '';
     showToast('🗑️ تم مسح المذكرة');
 }
 
+// ===== تحميل المذكرة المحفوظة =====
 function loadSavedNote() {
     try {
         const saved = localStorage.getItem('marineNote');
@@ -225,7 +332,7 @@ function loadSavedNote() {
             if (note.title && note.content) {
                 document.getElementById('noteResultTitle').textContent = note.title;
                 document.getElementById('noteResultContent').textContent = note.content;
-                document.getElementById('noteResultDate').textContent = `📅 ${note.date || ''}`;
+                document.getElementById('noteResultDate').textContent = `📅 ${note.date || ''} - 🕐 ${note.time || ''}`;
                 document.getElementById('noteResult').style.display = 'block';
             }
         }
@@ -234,7 +341,7 @@ function loadSavedNote() {
     }
 }
 
-// ===== تحميل المذكرة عند فتح الصفحة =====
+// ===== تحميل عند فتح الصفحة =====
 document.addEventListener('DOMContentLoaded', loadSavedNote);
 
 // ============================================================
@@ -251,8 +358,10 @@ window.canDelete = canDelete;
 window.canManageUsers = canManageUsers;
 window.getCurrentDate = getCurrentDate;
 window.getCurrentTime = getCurrentTime;
+window.importNoteFile = importNoteFile;
 window.saveNote = saveNote;
 window.exportNotePDF = exportNotePDF;
+window.exportNoteWord = exportNoteWord;
 window.clearNote = clearNote;
 window.loadSavedNote = loadSavedNote;
 
