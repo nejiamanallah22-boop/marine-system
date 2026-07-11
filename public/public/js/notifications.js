@@ -164,4 +164,45 @@ function closeNoteVerbaleModal() {
 async function generateNoteVerbale() {
     const vesselId = document.getElementById('nvVesselSelect').value;
     const unit = document.getElementById('nvUnit').value.trim() || 'غير محدد';
-    const ref = document.getElementById('nvRef').
+    const ref = document.getElementById('nvRef').value.trim() || 'غير محدد';
+    const notes = document.getElementById('nvNotes').value.trim();
+    
+    if (!vesselId) {
+        showToast('⚠️ يرجى اختيار مركب', true);
+        return;
+    }
+    
+    try {
+        showToast('⏳ جاري إنشاء المذكرة...', false);
+        
+        const response = await fetch(`/api/reports/note-verbale/${vesselId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`
+            },
+            body: JSON.stringify({ unit, ref, notes })
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Note_Verbale_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        closeNoteVerbaleModal();
+        showToast('✅ تم إنشاء المذكرة بنجاح!');
+        await logActivity('إنشاء Note Verbale', `تم إنشاء مذكرة رسمية للمركب`);
+        
+    } catch (error) {
+        showToast('❌ خطأ: ' + error.message, true);
+    }
+}
