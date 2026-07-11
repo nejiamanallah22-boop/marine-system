@@ -110,7 +110,12 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== Note Verbale (الكامل النهائي) =====
+// ===== متغيرات الصور =====
+// ============================================================
+let currentImageData = null;
+
+// ============================================================
+// ===== Note Verbale =====
 // ============================================================
 
 // ===== حساب رقم الأسبوع =====
@@ -154,23 +159,17 @@ function importNoteFile() {
         reader.onload = function(e) {
             try {
                 const imageData = e.target.result;
+                currentImageData = imageData;
+                
                 const imgHtml = `<img src="${imageData}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="${fileName}">`;
                 
                 const contentEl = document.getElementById('noteContent');
                 const titleEl = document.getElementById('noteTitle');
                 const typeEl = document.getElementById('noteType');
-                const attachmentEl = document.getElementById('noteAttachment');
                 
                 if (contentEl) contentEl.value = imgHtml;
                 if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
                 if (typeEl) typeEl.value = 'image';
-                if (attachmentEl) {
-                    attachmentEl.value = JSON.stringify({
-                        name: fileName,
-                        type: 'image',
-                        data: imageData
-                    });
-                }
                 
                 showToast('✅ تم استيراد الصورة بنجاح!');
             } catch(err) {
@@ -195,18 +194,10 @@ function importNoteFile() {
                 const contentEl = document.getElementById('noteContent');
                 const titleEl = document.getElementById('noteTitle');
                 const typeEl = document.getElementById('noteType');
-                const attachmentEl = document.getElementById('noteAttachment');
                 
                 if (contentEl) contentEl.value = pdfHtml;
                 if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
                 if (typeEl) typeEl.value = 'document';
-                if (attachmentEl) {
-                    attachmentEl.value = JSON.stringify({
-                        name: fileName,
-                        type: 'pdf',
-                        data: pdfData
-                    });
-                }
                 
                 showToast('✅ تم استيراد PDF بنجاح!');
             } catch(err) {
@@ -284,7 +275,6 @@ async function saveNote() {
     const contentEl = document.getElementById('noteContent');
     const dateEl = document.getElementById('noteDate');
     const typeEl = document.getElementById('noteType');
-    const attachmentEl = document.getElementById('noteAttachment');
     
     if (!titleEl || !contentEl || !dateEl) {
         showToast('⚠️ خطأ في تحميل نموذج المذكرة', true);
@@ -295,7 +285,6 @@ async function saveNote() {
     const content = contentEl.value;
     const date = dateEl.value;
     const type = typeEl ? typeEl.value : 'text';
-    const attachmentData = attachmentEl ? attachmentEl.value : '';
     
     if (!title || !content) {
         showToast('⚠️ يرجى إدخال عنوان ونص المذكرة', true);
@@ -311,14 +300,6 @@ async function saveNote() {
     const week = getWeekNumber(selectedDate);
     const time = getCurrentTime();
     
-    let attachments = [];
-    if (attachmentData) {
-        try {
-            const att = JSON.parse(attachmentData);
-            attachments.push(att);
-        } catch(e) {}
-    }
-    
     const noteData = {
         title: title,
         content: content,
@@ -326,7 +307,7 @@ async function saveNote() {
         time: time,
         week: week.toString(),
         type: type,
-        attachments: attachments
+        imageData: currentImageData || ''
     };
     
     try {
@@ -340,7 +321,8 @@ async function saveNote() {
         });
         
         if (!response.ok) {
-            throw new Error(await response.text());
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في الحفظ');
         }
         
         const savedNote = await response.json();
@@ -359,12 +341,13 @@ async function saveNote() {
         await loadLatestNote();
         await loadNotesByWeek();
         
-        // ✅ تصفير النموذج بعد الحفظ
+        // ✅ تصفير النموذج
         if (titleEl) titleEl.value = '';
         if (contentEl) contentEl.value = '';
         if (dateEl) dateEl.value = '';
-        if (attachmentEl) attachmentEl.value = '';
         if (typeEl) typeEl.value = 'text';
+        currentImageData = null;
+        
         const fileInput = document.getElementById('noteFileInput');
         if (fileInput) fileInput.value = '';
         
@@ -372,10 +355,11 @@ async function saveNote() {
         
     } catch(error) {
         showToast('❌ خطأ في الحفظ: ' + error.message, true);
+        console.error('Save error:', error);
     }
 }
 
-// ===== تحميل آخر مذكرة (لصفحة النجاعة) =====
+// ===== تحميل آخر مذكرة =====
 async function loadLatestNote() {
     if (!currentUser) return;
     
@@ -430,12 +414,11 @@ async function loadLatestNote() {
     }
 }
 
-// ===== تحميل المذكرات (بدون طلب أسبوع إجباري) =====
+// ===== تحميل المذكرات =====
 async function loadNotesByWeek() {
     const week = document.getElementById('filterWeek').value;
     const limit = document.getElementById('filterLimit').value || 10;
     
-    // ✅ بناء الرابط: إذا كان هناك أسبوع محدد، نضيفه للفلتر
     let url = `/api/notes?limit=${limit}`;
     if (week) {
         url = `/api/notes?week=${week}&limit=${limit}`;
@@ -455,7 +438,6 @@ async function loadNotesByWeek() {
         const notes = await response.json();
         renderNotesList(notes);
         
-        // ✅ رسائل توضيحية
         if (week && notes.length === 0) {
             showToast(`📭 لا توجد مذكرات في الأسبوع ${week}`, false);
         } else if (!week && notes.length > 0) {
@@ -714,7 +696,6 @@ function clearNote() {
     const resultEl = document.getElementById('noteResult');
     const fileInput = document.getElementById('noteFileInput');
     const typeEl = document.getElementById('noteType');
-    const attachmentEl = document.getElementById('noteAttachment');
     
     if (titleEl) titleEl.value = '';
     if (contentEl) contentEl.value = '';
@@ -722,7 +703,7 @@ function clearNote() {
     if (resultEl) resultEl.style.display = 'none';
     if (fileInput) fileInput.value = '';
     if (typeEl) typeEl.value = 'text';
-    if (attachmentEl) attachmentEl.value = '';
+    currentImageData = null;
     
     showToast('🗑️ تم مسح المذكرة');
 }
