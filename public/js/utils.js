@@ -1,6 +1,7 @@
-// ==================== دوال مساعدة ====================
+// ============================================================
+// ===== دوال مساعدة =====
+// ============================================================
 
-// ===== التمرير =====
 function scrollToTop() { 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
 }
@@ -11,7 +12,7 @@ function scrollToBottom() {
 
 // ===== الإشعارات (Toast) =====
 function showToast(message, isError = false) {
-    // ✅ إزالة أي إشعار قديم
+    // إزالة الإشعار القديم
     const oldToast = document.querySelector('.toast');
     if (oldToast) oldToast.remove();
     
@@ -39,7 +40,6 @@ function showToast(message, isError = false) {
     toast.innerHTML = message;
     document.body.appendChild(toast);
     
-    // ✅ إزالة بعد 4 ثواني
     setTimeout(() => {
         toast.style.transition = 'opacity 0.5s, transform 0.5s';
         toast.style.opacity = '0';
@@ -122,10 +122,9 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== دوال Note Verbale =====
+// ===== Note Verbale =====
 // ============================================================
 
-// ===== حفظ المذكرة =====
 function saveNote() {
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
@@ -138,97 +137,52 @@ function saveNote() {
     const noteData = {
         title: title,
         content: content,
-        date: getCurrentDate(),
-        time: getCurrentTime()
+        date: new Date().toLocaleString('ar-EG')
     };
     
-    // حفظ في localStorage
     localStorage.setItem('marineNote', JSON.stringify(noteData));
     
-    // عرض النتيجة
-    document.getElementById('noteResultTitle').textContent = `📄 ${title}`;
+    document.getElementById('noteResultTitle').textContent = title;
     document.getElementById('noteResultContent').textContent = content;
-    document.getElementById('noteResultDate').textContent = `🕐 تم الحفظ: ${getCurrentDate()} - ${getCurrentTime()}`;
+    document.getElementById('noteResultDate').textContent = `📅 ${noteData.date}`;
     document.getElementById('noteResult').style.display = 'block';
     
     showToast('✅ تم حفظ المذكرة بنجاح!');
 }
 
-// ===== تصدير PDF (بدون مكتبة خارجية) =====
 function exportNotePDF() {
     const title = document.getElementById('noteTitle').value.trim();
     const content = document.getElementById('noteContent').value.trim();
     
     if (!title || !content) {
-        showToast('⚠️ لا توجد مذكرة لتصديرها', true);
+        showToast('⚠️ لا توجد مذكرة للتصدير', true);
         return;
     }
     
-    // ✅ استخدام window.print() مع تنسيق خاص
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
-    if (!printWindow) {
+    const win = window.open('', '_blank', 'width=800,height=600');
+    if (!win) {
         showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', true);
         return;
     }
     
-    printWindow.document.write(`
+    win.document.write(`
         <!DOCTYPE html>
         <html dir="rtl">
         <head>
             <meta charset="UTF-8">
             <title>Note Verbale</title>
             <style>
-                body {
-                    font-family: 'Cairo', 'Segoe UI', Arial, sans-serif;
-                    padding: 40px;
-                    max-width: 800px;
-                    margin: auto;
-                    direction: rtl;
-                    background: white;
-                }
-                .header {
-                    border-bottom: 3px solid #1a3a5c;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
-                    text-align: center;
-                }
-                .header h1 {
-                    color: #1a3a5c;
-                    font-size: 24px;
-                    margin: 0;
-                }
-                .header .sub {
-                    color: #6c757d;
-                    font-size: 14px;
-                }
-                .title {
-                    font-size: 22px;
-                    font-weight: bold;
-                    margin: 20px 0;
-                    color: #0d6efd;
-                    border-right: 4px solid #0d6efd;
-                    padding-right: 15px;
-                }
-                .content {
-                    font-size: 16px;
-                    line-height: 2;
-                    margin: 20px 0;
-                    padding: 20px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }
-                .footer {
-                    margin-top: 30px;
-                    padding-top: 15px;
-                    border-top: 1px solid #dee2e6;
-                    font-size: 12px;
-                    color: #6c757d;
-                    text-align: center;
-                }
-                @media print {
-                    body { padding: 20px; }
-                    .no-print { display: none; }
-                }
+                body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; padding: 40px; max-width: 800px; margin: auto; direction: rtl; background: white; }
+                .header { border-bottom: 3px solid #1a3a5c; padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+                .header h1 { color: #1a3a5c; font-size: 24px; margin: 0; }
+                .header .sub { color: #6c757d; font-size: 14px; }
+                .title { font-size: 22px; font-weight: bold; margin: 20px 0; color: #0d6efd; border-right: 4px solid #0d6efd; padding-right: 15px; }
+                .content { font-size: 16px; line-height: 2; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+                .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #dee2e6; font-size: 12px; color: #6c757d; text-align: center; }
+                .btn { padding: 10px 20px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+                .btn-print { background: #0d6efd; color: white; }
+                .btn-close { background: #dc3545; color: white; }
+                @media print { body { padding: 20px; } .no-print { display: none; } }
             </style>
         </head>
         <body>
@@ -238,33 +192,21 @@ function exportNotePDF() {
             </div>
             <div class="title">${title}</div>
             <div class="content">${content.replace(/\n/g, '<br>')}</div>
-            <div class="footer">
-                📅 ${getCurrentDate()} | 🕐 ${getCurrentTime()}<br>
-                ${document.getElementById('userRoleDisplay')?.textContent || 'مسؤول'}
-            </div>
+            <div class="footer">📅 ${new Date().toLocaleString('ar-EG')}</div>
             <div class="no-print" style="text-align:center; margin-top:20px;">
-                <button onclick="window.print()" style="padding:12px 30px; background:#0d6efd; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px;">
-                    🖨️ طباعة / حفظ PDF
-                </button>
-                <button onclick="window.close()" style="padding:12px 30px; background:#dc3545; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; margin-right:10px;">
-                    ✖ إغلاق
-                </button>
+                <button class="btn btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+                <button class="btn btn-close" onclick="window.close()">✖ إغلاق</button>
             </div>
             <script>
-                // طباعة تلقائية بعد 1 ثانية
-                setTimeout(() => {
-                    window.print();
-                }, 1000);
+                setTimeout(() => { window.print(); }, 1000);
             <\/script>
         </body>
         </html>
     `);
-    printWindow.document.close();
-    
+    win.document.close();
     showToast('📄 جاري فتح المذكرة للطباعة...');
 }
 
-// ===== مسح المذكرة =====
 function clearNote() {
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
@@ -273,7 +215,6 @@ function clearNote() {
     showToast('🗑️ تم مسح المذكرة');
 }
 
-// ===== تحميل المذكرة المحفوظة =====
 function loadSavedNote() {
     try {
         const saved = localStorage.getItem('marineNote');
@@ -282,9 +223,9 @@ function loadSavedNote() {
             document.getElementById('noteTitle').value = note.title || '';
             document.getElementById('noteContent').value = note.content || '';
             if (note.title && note.content) {
-                document.getElementById('noteResultTitle').textContent = `📄 ${note.title}`;
+                document.getElementById('noteResultTitle').textContent = note.title;
                 document.getElementById('noteResultContent').textContent = note.content;
-                document.getElementById('noteResultDate').textContent = `🕐 تم الحفظ: ${note.date || ''} - ${note.time || ''}`;
+                document.getElementById('noteResultDate').textContent = `📅 ${note.date || ''}`;
                 document.getElementById('noteResult').style.display = 'block';
             }
         }
@@ -294,9 +235,7 @@ function loadSavedNote() {
 }
 
 // ===== تحميل المذكرة عند فتح الصفحة =====
-document.addEventListener('DOMContentLoaded', function() {
-    loadSavedNote();
-});
+document.addEventListener('DOMContentLoaded', loadSavedNote);
 
 // ============================================================
 // ✅ تصدير الدوال
