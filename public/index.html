@@ -5,12 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
     
+    <!-- ===== الخطوط والأيقونات ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- ===== المكتبات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -19,11 +24,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
     
+    <!-- ===== ملفات المشروع ===== -->
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
+<!-- ============================================================ -->
 <!-- ===== شاشة الدخول ===== -->
+<!-- ============================================================ -->
 <div id="loginOverlay">
     <div class="login-box">
         <span class="logo">⚓</span>
@@ -42,7 +50,9 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
 <!-- ===== التطبيق الرئيسي ===== -->
+<!-- ============================================================ -->
 <div id="mainApp" class="container">
 
     <!-- ====== الهيدر ====== -->
@@ -201,7 +211,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ====== صفحة الجاهزية (مع آخر Note Verbale) ====== -->
+    <!-- ====== صفحة الجاهزية ====== -->
     <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
         <div class="filter-bar">
@@ -234,7 +244,8 @@
                 <small style="color:#6c757d;" id="latestNoteDate"></small>
             </div>
             <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
-            <p id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></p>
+            <div id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></div>
+            <div id="latestNoteAttachments" style="margin-top:10px;"></div>
         </div>
         
         <div class="stats-cards" id="statsCards"></div>
@@ -435,6 +446,8 @@
                     <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
                 </div>
                 
+                <!-- ===== مرفق (مخفي) ===== -->
+                <input type="hidden" id="noteAttachment" value="">
                 <input type="hidden" id="noteType" value="text">
                 
                 <!-- ===== أزرار ===== -->
@@ -487,7 +500,9 @@
 
 </div>
 
+<!-- ============================================================ -->
 <!-- ===== النوافذ المنبثقة ===== -->
+<!-- ============================================================ -->
 <div id="passwordModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
@@ -505,7 +520,9 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
 <!-- ===== أزرار التمرير ===== -->
+<!-- ============================================================ -->
 <div class="scroll-buttons">
     <button class="scroll-btn" onclick="scrollToTop()" title="أعلى">
         <i class="fas fa-chevron-up"></i>
@@ -515,7 +532,9 @@
     </button>
 </div>
 
+<!-- ============================================================ -->
 <!-- ===== ملفات الجافاسكريبت ===== -->
+<!-- ============================================================ -->
 <script src="/js/utils.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/vessels.js"></script>
