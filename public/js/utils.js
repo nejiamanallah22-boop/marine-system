@@ -124,4 +124,599 @@ function importNoteFile() {
     const file = input.files[0];
     const fileName = file.name.toLowerCase();
     const fileType = fileName.split('.').pop();
-    const imageTypes = ['jpg', 'jpeg', 'png',
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+    
+    // ===== الصور =====
+    if (imageTypes.includes(fileType)) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+            try {
+                const imageUrl = e.target.result;
+                const imgHtml = `<img src="${imageUrl}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="صورة مستوردة">`;
+                document.getElementById('noteContent').value = imgHtml;
+                document.getElementById('noteTitle').value = fileName;
+                document.getElementById('noteType').value = 'image';
+                showToast('✅ تم استيراد الصورة بنجاح!');
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الصورة: ' + err.message, true);
+            }
+        };
+        return;
+    }
+    
+    // ===== ملفات TXT =====
+    if (fileType === 'txt') {
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        reader.onload = function(e) {
+            try {
+                const text = e.target.result;
+                document.getElementById('noteContent').value = text;
+                document.getElementById('noteTitle').value = fileName.replace('.txt', '');
+                document.getElementById('noteType').value = 'text';
+                showToast('✅ تم استيراد الملف بنجاح!');
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+            }
+        };
+        return;
+    }
+    
+    // ===== ملفات DOCX =====
+    if (fileType === 'docx') {
+        if (typeof mammoth === 'undefined') {
+            showToast('⏳ جاري تحميل مكتبة DOCX...', false);
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js', function() {
+                setTimeout(() => importNoteFile(), 500);
+            });
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        document.getElementById('noteContent').value = result.value;
+                        document.getElementById('noteTitle').value = fileName.replace('.docx', '');
+                        document.getElementById('noteType').value = 'text';
+                        showToast('✅ تم استيراد DOCX بنجاح!');
+                    })
+                    .catch(function(err) {
+                        showToast('❌ خطأ في قراءة DOCX: ' + err.message, true);
+                    });
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+            }
+        };
+        return;
+    }
+    
+    // ===== ملفات PDF =====
+    if (fileType === 'pdf') {
+        if (typeof pdfjsLib === 'undefined') {
+            showToast('⏳ جاري تحميل مكتبة PDF...', false);
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function() {
+                setTimeout(() => importNoteFile(), 500);
+            });
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                pdfjsLib.getDocument({ data: arrayBuffer }).promise
+                    .then(function(pdf) {
+                        let fullText = '';
+                        let pages = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            pages.push(pdf.getPage(i));
+                        }
+                        Promise.all(pages).then(function(pagesData) {
+                            let textPromises = pagesData.map(function(page) {
+                                return page.getTextContent();
+                            });
+                            Promise.all(textPromises).then(function(textContents) {
+                                textContents.forEach(function(textContent) {
+                                    textContent.items.forEach(function(item) {
+                                        fullText += item.str + ' ';
+                                    });
+                                    fullText += '\n';
+                                });
+                                document.getElementById('noteContent').value = fullText;
+                                document.getElementById('noteTitle').value = fileName.replace('.pdf', '');
+                                document.getElementById('noteType').value = 'text';
+                                showToast('✅ تم استيراد PDF بنجاح!');
+                            });
+                        });
+                    })
+                    .catch(function(err) {
+                        showToast('❌ خطأ في قراءة PDF: ' + err.message, true);
+                    });
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+            }
+        };
+        return;
+    }
+    
+    showToast('⚠️ صيغة ملف غير مدعومة: ' + fileType, true);
+}
+
+// ===== تحميل مكتبة خارجية =====
+function loadScript(url, callback) {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = callback;
+    script.onerror = function() {
+        showToast('❌ فشل تحميل المكتبة، تأكد من الاتصال بالإنترنت', true);
+    };
+    document.head.appendChild(script);
+}
+
+// ===== حفظ المذكرة في MongoDB =====
+async function saveNote() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteContent').value.trim();
+    const date = document.getElementById('noteDate').value;
+    const type = document.getElementById('noteType').value || 'text';
+    
+    if (!title || !content) {
+        showToast('⚠️ يرجى إدخال عنوان ونص المذكرة', true);
+        return;
+    }
+    
+    if (!date) {
+        showToast('⚠️ يرجى اختيار تاريخ المذكرة', true);
+        return;
+    }
+    
+    // حساب الأسبوع
+    const selectedDate = new Date(date);
+    const week = getWeekNumber(selectedDate);
+    const time = getCurrentTime();
+    
+    const noteData = {
+        title: title,
+        content: content,
+        date: date,
+        time: time,
+        week: week.toString(),
+        type: type
+    };
+    
+    try {
+        const response = await fetch('/api/notes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.token}`
+            },
+            body: JSON.stringify(noteData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const savedNote = await response.json();
+        showToast('✅ تم حفظ المذكرة في قاعدة البيانات!');
+        
+        // عرض النتيجة
+        document.getElementById('noteResultTitle').textContent = title;
+        document.getElementById('noteResultContent').textContent = content;
+        document.getElementById('noteResultDate').textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
+        document.getElementById('noteResult').style.display = 'block';
+        
+        // تحديث صفحة النجاعة
+        loadLatestNote();
+        
+    } catch(error) {
+        showToast('❌ خطأ في الحفظ: ' + error.message, true);
+    }
+}
+
+// ===== حساب رقم الأسبوع =====
+function getWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+// ===== تحميل آخر مذكرة =====
+async function loadLatestNote() {
+    if (!currentUser) return;
+    
+    try {
+        const response = await fetch('/api/notes/latest', {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const note = await response.json();
+        const container = document.getElementById('latestNoteContainer');
+        if (!container) return;
+        
+        if (note) {
+            document.getElementById('latestNoteTitle').textContent = note.title;
+            document.getElementById('latestNoteContent').textContent = note.content;
+            document.getElementById('latestNoteDate').textContent = `📅 ${note.date} | الأسبوع: ${note.week}`;
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    } catch(error) {
+        console.error('خطأ في تحميل آخر مذكرة:', error);
+    }
+}
+
+// ===== تحميل المذكرات حسب الفلتر =====
+async function loadNotesByWeek() {
+    const week = document.getElementById('filterWeek').value;
+    const limit = document.getElementById('filterLimit').value || 10;
+    
+    if (!week) {
+        showToast('⚠️ يرجى تحديد الأسبوع', true);
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/notes?week=${week}&limit=${limit}`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const notes = await response.json();
+        renderNotesList(notes);
+        
+    } catch(error) {
+        showToast('❌ خطأ في تحميل المذكرات: ' + error.message, true);
+    }
+}
+
+// ===== عرض المذكرات =====
+function renderNotesList(notes) {
+    const container = document.getElementById('notesListContainer');
+    if (!container) return;
+    
+    if (notes.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#6c757d; padding:20px;">لا توجد مذكرات في هذا الأسبوع</p>';
+        return;
+    }
+    
+    let html = '<div style="max-height:500px; overflow-y:auto;">';
+    notes.forEach((note, index) => {
+        html += `
+            <div style="border:1px solid #e9ecef; border-radius:8px; padding:15px; margin-bottom:10px; background:white;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                    <h4 style="color:#0d6efd; margin:0;">${index + 1}. ${note.title}</h4>
+                    <small style="color:#6c757d;">📅 ${note.date} | 🕐 ${note.time}</small>
+                </div>
+                <div style="margin-top:10px; color:#495057; font-size:14px; line-height:1.8; max-height:100px; overflow:hidden;">
+                    ${note.content.substring(0, 200)}${note.content.length > 200 ? '...' : ''}
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center;">
+                    <small style="color:#6c757d;">👤 ${note.createdBy} | ${note.userRole}</small>
+                    <button class="btn btn-sm btn-danger" onclick="deleteNote('${note._id}')">🗑️ حذف</button>
+                    <button class="btn btn-sm btn-info" onclick="viewNote('${note._id}')">👁️ عرض</button>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ===== عرض مذكرة كاملة =====
+async function viewNote(noteId) {
+    try {
+        const response = await fetch(`/api/notes?limit=100`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        const notes = await response.json();
+        const note = notes.find(n => n._id === noteId);
+        
+        if (note) {
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteContent').value = note.content;
+            document.getElementById('noteDate').value = note.date;
+            document.getElementById('noteResultTitle').textContent = note.title;
+            document.getElementById('noteResultContent').textContent = note.content;
+            document.getElementById('noteResultDate').textContent = `📅 ${note.date} - 🕐 ${note.time} | الأسبوع: ${note.week}`;
+            document.getElementById('noteResult').style.display = 'block';
+            showToast('📄 تم تحميل المذكرة');
+        }
+    } catch(error) {
+        showToast('❌ خطأ في تحميل المذكرة: ' + error.message, true);
+    }
+}
+
+// ===== حذف مذكرة =====
+async function deleteNote(noteId) {
+    if (!confirm('هل أنت متأكد من حذف هذه المذكرة؟')) return;
+    
+    try {
+        const response = await fetch(`/api/notes/${noteId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        
+        showToast('✅ تم حذف المذكرة');
+        loadNotesByWeek();
+        loadLatestNote();
+        
+    } catch(error) {
+        showToast('❌ خطأ في الحذف: ' + error.message, true);
+    }
+}
+
+// ===== تصدير PDF =====
+function exportNotePDF() {
+    const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteResultContent').textContent || document.getElementById('noteContent').value.trim();
+    const date = document.getElementById('noteDate').value || getCurrentDate();
+    const time = getCurrentTime();
+    
+    if (!title || !content) {
+        showToast('⚠️ لا توجد مذكرة للتصدير', true);
+        return;
+    }
+    
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (!win) {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', true);
+        return;
+    }
+    
+    const user = currentUser?.name || 'مسؤول';
+    const role = currentUser?.role || '';
+    
+    win.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>Note Verbale</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px 20px; direction: rtl; }
+            .document { background: white; width: 210mm; min-height: 297mm; padding: 25mm 20mm; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 4px; position: relative; }
+            .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 12px; margin-bottom: 25px; }
+            .header .logo { font-size: 28px; color: #1a3a5c; font-weight: 800; }
+            .header .sub { font-size: 14px; color: #6c757d; margin-top: 2px; }
+            .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
+            .note-title { font-size: 20px; font-weight: 700; color: #0d6efd; border-right: 5px solid #0d6efd; padding-right: 15px; margin: 20px 0 15px 0; }
+            .note-content { font-size: 15px; line-height: 2.2; padding: 15px 5px; background: #fafbfc; border-radius: 6px; min-height: 200px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+            .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; flex-wrap: wrap; gap: 10px; }
+            .footer .signature { text-align: left; font-weight: 600; }
+            .footer .signature span { display: block; margin-top: 5px; font-weight: 400; font-size: 11px; color: #6c757d; }
+            .footer .date-info { text-align: right; }
+            .print-actions { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #dee2e6; }
+            .print-actions button { padding: 10px 30px; margin: 0 8px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+            .print-actions .btn-print { background: #0d6efd; color: white; }
+            .print-actions .btn-close { background: #dc3545; color: white; }
+            @media print { body { background: white; padding: 0; } .document { width: 100%; min-height: auto; padding: 20mm 15mm; box-shadow: none; border-radius: 0; } .print-actions { display: none; } .no-print { display: none !important; } }
+        </style>
+        </head>
+        <body>
+            <div class="document">
+                <div class="header">
+                    <div class="logo">⚓ منظومة الوسائل البحرية</div>
+                    <div class="sub">الجمهورية التونسية - وزارة الدفاع الوطني</div>
+                    <div class="ref">Note Verbale | 📅 ${date} - 🕐 ${time}</div>
+                </div>
+                <div class="note-title">📄 ${title}</div>
+                <div class="note-content">${content}</div>
+                <div class="footer">
+                    <div class="date-info"><div>📅 ${date}</div><div>🕐 ${time}</div></div>
+                    <div class="signature">${user}<span>${role}</span></div>
+                </div>
+                <div class="print-actions no-print">
+                    <button class="btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+                    <button class="btn-close" onclick="window.close()">✖ إغلاق</button>
+                </div>
+            </div>
+            <script>setTimeout(() => { window.print(); }, 800);<\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    showToast('📄 جاري فتح المذكرة للطباعة...');
+}
+
+// ===== تصدير Word =====
+function exportNoteWord() {
+    const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteResultContent').textContent || document.getElementById('noteContent').value.trim();
+    const date = document.getElementById('noteDate').value || getCurrentDate();
+    const time = getCurrentTime();
+    
+    if (!title || !content) {
+        showToast('⚠️ لا توجد مذكرة للتصدير', true);
+        return;
+    }
+    
+    const user = currentUser?.name || 'مسؤول';
+    const role = currentUser?.role || '';
+    
+    const html = `
+        <html dir="rtl" xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:w="urn:schemas-microsoft-com:office:word" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Note Verbale</title>
+        <style>
+            @page { size: A4; margin: 2.5cm 2cm; }
+            body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; direction: rtl; font-size: 14px; line-height: 1.8; padding: 0; }
+            .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 12px; margin-bottom: 25px; }
+            .header h1 { font-size: 22px; color: #1a3a5c; margin: 0; }
+            .header .sub { font-size: 13px; color: #6c757d; margin-top: 2px; }
+            .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
+            .note-title { font-size: 18px; font-weight: 700; color: #0d6efd; border-right: 4px solid #0d6efd; padding-right: 12px; margin: 20px 0 15px 0; }
+            .note-content { font-size: 14px; line-height: 2; padding: 15px 5px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+            .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; }
+            .footer .signature { text-align: left; font-weight: 600; }
+            .footer .signature span { display: block; font-weight: 400; font-size: 11px; }
+            .footer .date-info { text-align: right; }
+        </style>
+        </head>
+        <body>
+            <div class="header"><h1>⚓ منظومة الوسائل البحرية</h1><div class="sub">الجمهورية التونسية - وزارة الدفاع الوطني</div><div class="ref">Note Verbale | 📅 ${date} - 🕐 ${time}</div></div>
+            <div class="note-title">📄 ${title}</div>
+            <div class="note-content">${content}</div>
+            <div class="footer"><div class="date-info">📅 ${date} | 🕐 ${time}</div><div class="signature">${user}<span>${role}</span></div></div>
+        </body>
+        </html>
+    `;
+    
+    const blob = new Blob([html], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Note_Verbale_${date.replace(/\//g, '-')}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('📄 تم تصدير المذكرة كـ Word بنجاح!');
+}
+
+// ===== مسح المذكرة =====
+function clearNote() {
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteContent').value = '';
+    document.getElementById('noteDate').value = '';
+    document.getElementById('noteResult').style.display = 'none';
+    document.getElementById('noteFileInput').value = '';
+    document.getElementById('noteType').value = 'text';
+    showToast('🗑️ تم مسح المذكرة');
+}
+
+// ============================================================
+// ===== تصدير تقرير النجاعة =====
+// ============================================================
+
+function exportEfficiencyReport() {
+    const statsCards = document.getElementById('statsCards');
+    const generalTable = document.getElementById('generalEffTableContainer');
+    const regionTables = document.getElementById('regionTables');
+    
+    if (!statsCards || !generalTable) {
+        showToast('⚠️ لا توجد بيانات للتصدير', true);
+        return;
+    }
+    
+    const win = window.open('', '_blank', 'width=1000,height=800');
+    if (!win) {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', true);
+        return;
+    }
+    
+    const user = currentUser?.name || 'مسؤول';
+    const date = new Date().toLocaleString('ar-EG');
+    
+    win.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>تقرير جاهزية الأسطول</title>
+        <style>
+            body { font-family: 'Cairo', 'Segoe UI', Arial, sans-serif; padding: 30px; max-width: 1100px; margin: auto; direction: rtl; background: white; }
+            .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 15px; margin-bottom: 25px; }
+            .header h1 { color: #1a3a5c; font-size: 26px; margin: 0; }
+            .header .sub { color: #6c757d; font-size: 14px; }
+            .header .user { font-size: 13px; color: #0d6efd; margin-top: 5px; }
+            .stats { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+            .stat-box { background: #f8f9fa; padding: 15px 30px; border-radius: 10px; text-align: center; border: 1px solid #dee2e6; }
+            .stat-box .num { font-size: 28px; font-weight: bold; color: #0d6efd; }
+            .stat-box .label { font-size: 14px; color: #6c757d; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; min-width: 900px; }
+            th { background: #1a3a5c; color: white; padding: 10px; text-align: center; }
+            td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #dee2e6; }
+            tr:nth-child(even) { background: #f8f9fa; }
+            .region-title { background: #e9ecef; padding: 10px; font-weight: bold; margin-top: 20px; border-right: 4px solid #1a3a5c; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #dee2e6; text-align: center; color: #6c757d; font-size: 12px; }
+            .status-صالح { color: #28a745; font-weight: bold; }
+            .status-معطب { color: #dc3545; font-weight: bold; }
+            .status-صيانة { color: #ffc107; font-weight: bold; }
+            .high-eff { background: #d1e7dd !important; }
+            .mid-eff { background: #fff3cd !important; }
+            .low-eff { background: #f8d7da !important; }
+            .btn-print { background: #0d6efd; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+            .btn-close { background: #dc3545; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+            .scrollable-table { overflow-x: auto; }
+            @media print { .no-print { display: none; } body { padding: 15px; } }
+        </style>
+        </head>
+        <body>
+            <div class="header"><h1>⚓ منظومة الوسائل البحرية</h1><div class="sub">تقرير جاهزية الأسطول</div><div class="user">👤 ${user} | 📅 ${date}</div></div>
+            <div class="stats">${statsCards.innerHTML}</div>
+            <div class="scrollable-table">${generalTable.innerHTML}${regionTables?.innerHTML || ''}</div>
+            <div class="footer">📅 ${date} | 👤 ${user}</div>
+            <div class="no-print" style="text-align:center; margin-top:20px;">
+                <button class="btn-print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+                <button class="btn-close" onclick="window.close()">✖ إغلاق</button>
+            </div>
+            <script>setTimeout(() => { window.print(); }, 1000);<\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+    showToast('📄 جاري فتح تقرير النجاعة...');
+}
+
+// ============================================================
+// ✅ تصدير الدوال
+// ============================================================
+
+window.showToast = showToast;
+window.scrollToTop = scrollToTop;
+window.scrollToBottom = scrollToBottom;
+window.formatDate = formatDate;
+window.getCat = getCat;
+window.canEdit = canEdit;
+window.canDelete = canDelete;
+window.canManageUsers = canManageUsers;
+window.getCurrentDate = getCurrentDate;
+window.getCurrentTime = getCurrentTime;
+window.importNoteFile = importNoteFile;
+window.saveNote = saveNote;
+window.exportNotePDF = exportNotePDF;
+window.exportNoteWord = exportNoteWord;
+window.clearNote = clearNote;
+window.loadLatestNote = loadLatestNote;
+window.loadNotesByWeek = loadNotesByWeek;
+window.deleteNote = deleteNote;
+window.viewNote = viewNote;
+window.exportEfficiencyReport = exportEfficiencyReport;
+
+console.log('✅ utils.js تم تحميله بنجاح');
