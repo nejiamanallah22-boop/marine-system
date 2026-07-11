@@ -133,7 +133,7 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', LocationSchema);
 
-// ===== نموذج Note Verbale =====
+// ===== نموذج Note Verbale (معدل) =====
 const NoteVerbaleSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
@@ -143,6 +143,7 @@ const NoteVerbaleSchema = new mongoose.Schema({
     createdBy: { type: String, required: true },
     userRole: { type: String, required: true },
     type: { type: String, default: 'text' },
+    imageData: { type: String, default: '' },
     attachments: [{ 
         name: String,
         type: String,
@@ -506,10 +507,10 @@ app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, 
 // ===== Note Verbale Routes =====
 // ============================================================
 
-// ===== حفظ مذكرة جديدة =====
+// ===== حفظ مذكرة جديدة (مع دعم الصور) =====
 app.post('/api/notes', authenticate, async (req, res) => {
     try {
-        const { title, content, date, time, week, type, attachments } = req.body;
+        const { title, content, date, time, week, type, imageData, attachments } = req.body;
         
         if (!title || !content || !date) {
             return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
@@ -524,12 +525,14 @@ app.post('/api/notes', authenticate, async (req, res) => {
             createdBy: req.user.name,
             userRole: req.user.role,
             type: type || 'text',
+            imageData: imageData || '',
             attachments: attachments || []
         });
         
         await note.save();
         res.status(201).json(note);
     } catch (error) {
+        console.error('❌ خطأ في حفظ المذكرة:', error);
         res.status(400).json({ error: error.message });
     }
 });
