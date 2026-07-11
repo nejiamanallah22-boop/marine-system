@@ -37,7 +37,7 @@ app.use(helmet({
 }));
 
 app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '50mb' })); // زيادة للصور
+app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use('/api', rateLimit({
@@ -143,7 +143,11 @@ const NoteVerbaleSchema = new mongoose.Schema({
     createdBy: { type: String, required: true },
     userRole: { type: String, required: true },
     type: { type: String, default: 'text' },
-    imageData: { type: String }
+    attachments: [{ 
+        name: String,
+        type: String,
+        data: String
+    }]
 }, { timestamps: true });
 
 const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
@@ -505,7 +509,7 @@ app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, 
 // ===== حفظ مذكرة جديدة =====
 app.post('/api/notes', authenticate, async (req, res) => {
     try {
-        const { title, content, date, time, week, type, imageData } = req.body;
+        const { title, content, date, time, week, type, attachments } = req.body;
         
         if (!title || !content || !date) {
             return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
@@ -520,7 +524,7 @@ app.post('/api/notes', authenticate, async (req, res) => {
             createdBy: req.user.name,
             userRole: req.user.role,
             type: type || 'text',
-            imageData: imageData || null
+            attachments: attachments || []
         });
         
         await note.save();
