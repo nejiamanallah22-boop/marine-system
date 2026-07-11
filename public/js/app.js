@@ -53,7 +53,7 @@ async function importAllData(input) {
             await importAllDataAPI(importedData);
             await refreshAllPages();
             await logActivity("استيراد بيانات", "قام باستيراد البيانات من ملف JSON");
-            showToast("✅ تم استيراد البيانات بنجاح!");
+            showToast("✅ تم استيراد 데이터 بنجاح!");
         } catch(err) {
             showToast("❌ خطأ في قراءة الملف: " + err.message, true);
         }
@@ -182,23 +182,35 @@ function renderTrackUsers(data) {
     if (count) count.textContent = `${data.total || 0} متصل`;
     
     if (!data.online || data.online.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px;">لا يوجد مستخدمين متصلين</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px;">لا يوجد مستخدمين متصلين</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = data.online.map((user, index) => `
-        <tr>
-            <td>${index + 1}</td>
-            <td><b>${user.userName}</b></td>
-            <td>${user.userRole}</td>
-            <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:11px;">${(user.id || '').substring(0, 8)}</code></td>
-            <td>${user.device || 'غير معروف'}</td>
-            <td>${user.browser || 'غير معروف'}</td>
-            <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:12px;">${user.ip || 'غير معروف'}</code></td>
-            <td>${user.lat && user.lng ? `${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}` : '⚠️ غير متاح'}</td>
-            <td>${user.lastUpdate ? new Date(user.lastUpdate).toLocaleString('ar-EG') : 'غير معروف'}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = data.online.map((user, index) => {
+        const gpsStatus = user.lat && user.lng ? 
+            `<span style="color:#28a745;">✅ ${user.lat.toFixed(4)}, ${user.lng.toFixed(4)}</span>` : 
+            `<span style="color:#dc3545;">❌ غير متاح</span>`;
+        
+        const deviceIcon = user.device?.includes('Android') ? '📱' :
+                           user.device?.includes('iOS') ? '📱' :
+                           user.device?.includes('Windows') ? '💻' :
+                           user.device?.includes('Mac') ? '🖥️' : '💻';
+        
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td><b>${user.userName}</b></td>
+                <td>${user.userRole}</td>
+                <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:11px;">${(user.id || '').substring(0, 8)}</code></td>
+                <td>${deviceIcon} ${user.device || 'غير معروف'}</td>
+                <td>${user.browser || 'غير معروف'}</td>
+                <td><code style="background:#f8f9fa;padding:2px 6px;border-radius:4px;font-size:12px;">${user.ip || 'غير معروف'}</code></td>
+                <td>${gpsStatus}</td>
+                <td>${user.lastUpdate ? new Date(user.lastUpdate).toLocaleString('ar-EG') : 'غير معروف'}</td>
+                <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#28a745;animation:pulse 1.5s infinite;"></span> نشط</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function updateTrackMap(data) {
