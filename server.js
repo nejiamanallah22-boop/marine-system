@@ -128,8 +128,7 @@ const LocationSchema = new mongoose.Schema({
     ip: { type: String },
     userAgent: { type: String },
     device: { type: String },
-    browser: { type: String },
-    os: { type: String }
+    browser: { type: String }
 }, { timestamps: true });
 
 const Location = mongoose.model('Location', LocationSchema);
