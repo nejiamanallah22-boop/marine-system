@@ -307,6 +307,7 @@ async function saveNote() {
         return;
     }
     
+    // ✅ حساب الأسبوع تلقائياً من التاريخ
     const selectedDate = new Date(date);
     const week = getWeekNumber(selectedDate);
     const time = getCurrentTime();
@@ -346,6 +347,7 @@ async function saveNote() {
         const savedNote = await response.json();
         showToast('✅ تم حفظ المذكرة في قاعدة البيانات!');
         
+        // ✅ عرض النتيجة في نفس الصفحة
         const resultTitle = document.getElementById('noteResultTitle');
         const resultContent = document.getElementById('noteResultContent');
         const resultDate = document.getElementById('noteResultDate');
@@ -356,6 +358,7 @@ async function saveNote() {
         if (resultDate) resultDate.textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
         if (resultContainer) resultContainer.style.display = 'block';
         
+        // ✅ تحديث صفحة النجاعة (آخر Note Verbale)
         await loadLatestNote();
         await loadNotesByWeek();
         
@@ -429,7 +432,7 @@ async function loadNotesByWeek() {
     const limit = document.getElementById('filterLimit').value || 10;
     
     if (!week) {
-        showToast('⚠️ يرجى تحديد الأسبوع', true);
+        showToast('⚠️ يرجى تحديد الأسبوع للبحث', true);
         return;
     }
     
