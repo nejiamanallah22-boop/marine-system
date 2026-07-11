@@ -110,7 +110,7 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== Note Verbale (مع MongoDB) =====
+// ===== Note Verbale (الكامل المصحح) =====
 // ============================================================
 
 // ===== استيراد ملف =====
@@ -122,21 +122,29 @@ function importNoteFile() {
     }
     
     const file = input.files[0];
-    const fileName = file.name.toLowerCase();
-    const fileType = fileName.split('.').pop();
+    const fileName = file.name;
+    const fileType = file.name.split('.').pop().toLowerCase();
     const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+    
+    const reader = new FileReader();
     
     // ===== الصور =====
     if (imageTypes.includes(fileType)) {
-        const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = function(e) {
             try {
-                const imageUrl = e.target.result;
-                const imgHtml = `<img src="${imageUrl}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="صورة مستوردة">`;
+                const imageData = e.target.result;
+                const imgHtml = `<img src="${imageData}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="${fileName}">`;
                 document.getElementById('noteContent').value = imgHtml;
-                document.getElementById('noteTitle').value = fileName;
+                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
                 document.getElementById('noteType').value = 'image';
+                
+                document.getElementById('noteAttachment').value = JSON.stringify({
+                    name: fileName,
+                    type: 'image',
+                    data: imageData
+                });
+                
                 showToast('✅ تم استيراد الصورة بنجاح!');
             } catch(err) {
                 showToast('❌ خطأ في قراءة الصورة: ' + err.message, true);
@@ -145,19 +153,30 @@ function importNoteFile() {
         return;
     }
     
-    // ===== ملفات TXT =====
-    if (fileType === 'txt') {
-        const reader = new FileReader();
-        reader.readAsText(file, 'UTF-8');
+    // ===== ملفات PDF =====
+    if (fileType === 'pdf') {
+        reader.readAsDataURL(file);
         reader.onload = function(e) {
             try {
-                const text = e.target.result;
-                document.getElementById('noteContent').value = text;
-                document.getElementById('noteTitle').value = fileName.replace('.txt', '');
-                document.getElementById('noteType').value = 'text';
-                showToast('✅ تم استيراد الملف بنجاح!');
+                const pdfData = e.target.result;
+                const pdfHtml = `<div style="border:1px solid #dee2e6; border-radius:8px; padding:15px; margin:10px 0; background:#f8f9fa;">
+                    <i class="fas fa-file-pdf" style="color:#dc3545; font-size:24px;"></i>
+                    <a href="${pdfData}" target="_blank" style="margin-right:10px; color:#0d6efd;">📄 ${fileName}</a>
+                    <small style="color:#6c757d;">(اضغط للتحميل)</small>
+                </div>`;
+                document.getElementById('noteContent').value = pdfHtml;
+                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
+                document.getElementById('noteType').value = 'document';
+                
+                document.getElementById('noteAttachment').value = JSON.stringify({
+                    name: fileName,
+                    type: 'pdf',
+                    data: pdfData
+                });
+                
+                showToast('✅ تم استيراد PDF بنجاح!');
             } catch(err) {
-                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+                showToast('❌ خطأ في قراءة PDF: ' + err.message, true);
             }
         };
         return;
@@ -173,15 +192,15 @@ function importNoteFile() {
             return;
         }
         
-        const reader = new FileReader();
         reader.readAsArrayBuffer(file);
         reader.onload = function(e) {
             try {
                 const arrayBuffer = e.target.result;
                 mammoth.extractRawText({ arrayBuffer: arrayBuffer })
                     .then(function(result) {
-                        document.getElementById('noteContent').value = result.value;
-                        document.getElementById('noteTitle').value = fileName.replace('.docx', '');
+                        const text = result.value;
+                        document.getElementById('noteContent').value = text;
+                        document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
                         document.getElementById('noteType').value = 'text';
                         showToast('✅ تم استيراد DOCX بنجاح!');
                     })
@@ -195,49 +214,16 @@ function importNoteFile() {
         return;
     }
     
-    // ===== ملفات PDF =====
-    if (fileType === 'pdf') {
-        if (typeof pdfjsLib === 'undefined') {
-            showToast('⏳ جاري تحميل مكتبة PDF...', false);
-            loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', function() {
-                setTimeout(() => importNoteFile(), 500);
-            });
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
+    // ===== ملفات TXT =====
+    if (fileType === 'txt') {
+        reader.readAsText(file, 'UTF-8');
         reader.onload = function(e) {
             try {
-                const arrayBuffer = e.target.result;
-                pdfjsLib.getDocument({ data: arrayBuffer }).promise
-                    .then(function(pdf) {
-                        let fullText = '';
-                        let pages = [];
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            pages.push(pdf.getPage(i));
-                        }
-                        Promise.all(pages).then(function(pagesData) {
-                            let textPromises = pagesData.map(function(page) {
-                                return page.getTextContent();
-                            });
-                            Promise.all(textPromises).then(function(textContents) {
-                                textContents.forEach(function(textContent) {
-                                    textContent.items.forEach(function(item) {
-                                        fullText += item.str + ' ';
-                                    });
-                                    fullText += '\n';
-                                });
-                                document.getElementById('noteContent').value = fullText;
-                                document.getElementById('noteTitle').value = fileName.replace('.pdf', '');
-                                document.getElementById('noteType').value = 'text';
-                                showToast('✅ تم استيراد PDF بنجاح!');
-                            });
-                        });
-                    })
-                    .catch(function(err) {
-                        showToast('❌ خطأ في قراءة PDF: ' + err.message, true);
-                    });
+                const text = e.target.result;
+                document.getElementById('noteContent').value = text;
+                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
+                document.getElementById('noteType').value = 'text';
+                showToast('✅ تم استيراد الملف بنجاح!');
             } catch(err) {
                 showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
             }
@@ -259,12 +245,22 @@ function loadScript(url, callback) {
     document.head.appendChild(script);
 }
 
+// ===== حساب رقم الأسبوع =====
+function getWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
 // ===== حفظ المذكرة في MongoDB =====
 async function saveNote() {
     const title = document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteContent').value.trim();
+    const content = document.getElementById('noteContent').value;
     const date = document.getElementById('noteDate').value;
     const type = document.getElementById('noteType').value || 'text';
+    const attachmentData = document.getElementById('noteAttachment').value;
     
     if (!title || !content) {
         showToast('⚠️ يرجى إدخال عنوان ونص المذكرة', true);
@@ -276,10 +272,17 @@ async function saveNote() {
         return;
     }
     
-    // حساب الأسبوع
     const selectedDate = new Date(date);
     const week = getWeekNumber(selectedDate);
     const time = getCurrentTime();
+    
+    let attachments = [];
+    if (attachmentData) {
+        try {
+            const att = JSON.parse(attachmentData);
+            attachments.push(att);
+        } catch(e) {}
+    }
     
     const noteData = {
         title: title,
@@ -287,7 +290,8 @@ async function saveNote() {
         date: date,
         time: time,
         week: week.toString(),
-        type: type
+        type: type,
+        attachments: attachments
     };
     
     try {
@@ -307,30 +311,23 @@ async function saveNote() {
         const savedNote = await response.json();
         showToast('✅ تم حفظ المذكرة في قاعدة البيانات!');
         
-        // عرض النتيجة
         document.getElementById('noteResultTitle').textContent = title;
-        document.getElementById('noteResultContent').textContent = content;
+        document.getElementById('noteResultContent').innerHTML = content;
         document.getElementById('noteResultDate').textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
         document.getElementById('noteResult').style.display = 'block';
         
-        // تحديث صفحة النجاعة
-        loadLatestNote();
+        await loadLatestNote();
+        await loadNotesByWeek();
+        
+        document.getElementById('noteAttachment').value = '';
+        document.getElementById('noteFileInput').value = '';
         
     } catch(error) {
         showToast('❌ خطأ في الحفظ: ' + error.message, true);
     }
 }
 
-// ===== حساب رقم الأسبوع =====
-function getWeekNumber(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-    const week1 = new Date(d.getFullYear(), 0, 4);
-    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-}
-
-// ===== تحميل آخر مذكرة =====
+// ===== تحميل آخر مذكرة (لصفحة النجاعة) =====
 async function loadLatestNote() {
     if (!currentUser) return;
     
@@ -349,16 +346,35 @@ async function loadLatestNote() {
         const container = document.getElementById('latestNoteContainer');
         if (!container) return;
         
-        if (note) {
+        if (note && note._id) {
             document.getElementById('latestNoteTitle').textContent = note.title;
-            document.getElementById('latestNoteContent').textContent = note.content;
-            document.getElementById('latestNoteDate').textContent = `📅 ${note.date} | الأسبوع: ${note.week}`;
+            document.getElementById('latestNoteContent').innerHTML = note.content;
+            document.getElementById('latestNoteDate').textContent = `📅 ${note.date} | الأسبوع: ${note.week} | 👤 ${note.createdBy}`;
             container.style.display = 'block';
+            
+            const attachmentsContainer = document.getElementById('latestNoteAttachments');
+            if (attachmentsContainer && note.attachments && note.attachments.length > 0) {
+                let attHtml = '<div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">';
+                note.attachments.forEach(att => {
+                    if (att.type === 'image') {
+                        attHtml += `<img src="${att.data}" style="max-width:80px; max-height:80px; border-radius:8px; border:1px solid #dee2e6;">`;
+                    } else if (att.type === 'pdf') {
+                        attHtml += `<a href="${att.data}" target="_blank" style="border:1px solid #dee2e6; border-radius:8px; padding:8px 12px; text-decoration:none; color:#0d6efd; font-size:12px;">
+                            <i class="fas fa-file-pdf" style="color:#dc3545;"></i> ${att.name}
+                        </a>`;
+                    }
+                });
+                attHtml += '</div>';
+                attachmentsContainer.innerHTML = attHtml;
+                attachmentsContainer.style.display = 'block';
+            } else if (attachmentsContainer) {
+                attachmentsContainer.style.display = 'none';
+            }
         } else {
             container.style.display = 'none';
         }
     } catch(error) {
-        console.error('خطأ في تحميل آخر مذكرة:', error);
+        console.error('❌ خطأ في تحميل آخر مذكرة:', error);
     }
 }
 
@@ -445,7 +461,7 @@ async function viewNote(noteId) {
             document.getElementById('noteContent').value = note.content;
             document.getElementById('noteDate').value = note.date;
             document.getElementById('noteResultTitle').textContent = note.title;
-            document.getElementById('noteResultContent').textContent = note.content;
+            document.getElementById('noteResultContent').innerHTML = note.content;
             document.getElementById('noteResultDate').textContent = `📅 ${note.date} - 🕐 ${note.time} | الأسبوع: ${note.week}`;
             document.getElementById('noteResult').style.display = 'block';
             showToast('📄 تم تحميل المذكرة');
@@ -472,8 +488,8 @@ async function deleteNote(noteId) {
         }
         
         showToast('✅ تم حذف المذكرة');
-        loadNotesByWeek();
-        loadLatestNote();
+        await loadNotesByWeek();
+        await loadLatestNote();
         
     } catch(error) {
         showToast('❌ خطأ في الحذف: ' + error.message, true);
@@ -483,7 +499,7 @@ async function deleteNote(noteId) {
 // ===== تصدير PDF =====
 function exportNotePDF() {
     const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteResultContent').textContent || document.getElementById('noteContent').value.trim();
+    const content = document.getElementById('noteResultContent').innerHTML || document.getElementById('noteContent').value;
     const date = document.getElementById('noteDate').value || getCurrentDate();
     const time = getCurrentTime();
     
@@ -514,7 +530,7 @@ function exportNotePDF() {
             .header .sub { font-size: 14px; color: #6c757d; margin-top: 2px; }
             .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
             .note-title { font-size: 20px; font-weight: 700; color: #0d6efd; border-right: 5px solid #0d6efd; padding-right: 15px; margin: 20px 0 15px 0; }
-            .note-content { font-size: 15px; line-height: 2.2; padding: 15px 5px; background: #fafbfc; border-radius: 6px; min-height: 200px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+            .note-content { font-size: 15px; line-height: 2.2; padding: 15px 5px; background: #fafbfc; border-radius: 6px; min-height: 200px; word-wrap: break-word; margin-bottom: 20px; }
             .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
             .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; flex-wrap: wrap; gap: 10px; }
             .footer .signature { text-align: left; font-weight: 600; }
@@ -556,7 +572,7 @@ function exportNotePDF() {
 // ===== تصدير Word =====
 function exportNoteWord() {
     const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteResultContent').textContent || document.getElementById('noteContent').value.trim();
+    const content = document.getElementById('noteResultContent').innerHTML || document.getElementById('noteContent').value;
     const date = document.getElementById('noteDate').value || getCurrentDate();
     const time = getCurrentTime();
     
@@ -581,7 +597,7 @@ function exportNoteWord() {
             .header .sub { font-size: 13px; color: #6c757d; margin-top: 2px; }
             .header .ref { font-size: 12px; color: #6c757d; margin-top: 5px; }
             .note-title { font-size: 18px; font-weight: 700; color: #0d6efd; border-right: 4px solid #0d6efd; padding-right: 12px; margin: 20px 0 15px 0; }
-            .note-content { font-size: 14px; line-height: 2; padding: 15px 5px; background: #f8f9fa; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
+            .note-content { font-size: 14px; line-height: 2; padding: 15px 5px; background: #f8f9fa; border-radius: 4px; word-wrap: break-word; margin-bottom: 20px; }
             .note-content img { max-width: 100%; max-height: 400px; border-radius: 8px; margin: 10px 0; }
             .footer { margin-top: 30px; padding-top: 15px; border-top: 2px solid #dee2e6; display: flex; justify-content: space-between; font-size: 12px; color: #6c757d; }
             .footer .signature { text-align: left; font-weight: 600; }
@@ -619,6 +635,7 @@ function clearNote() {
     document.getElementById('noteResult').style.display = 'none';
     document.getElementById('noteFileInput').value = '';
     document.getElementById('noteType').value = 'text';
+    document.getElementById('noteAttachment').value = '';
     showToast('🗑️ تم مسح المذكرة');
 }
 
