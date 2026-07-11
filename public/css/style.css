@@ -1,4 +1,460 @@
 /* ============================================================
+   ===== تحميل الخطوط العربية =====
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&display=swap');
+
+/* ============================================================
+   ===== إعدادات عامة =====
+   ============================================================ */
+:root {
+    --primary: #0d6efd;
+    --primary-dark: #0a58ca;
+    --secondary: #6c757d;
+    --success: #198754;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #0dcaf0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --white: #ffffff;
+    --gradient-primary: linear-gradient(135deg, #1a3a5c, #0d6efd);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.2);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --transition: all 0.3s ease;
+    --font: 'Cairo', 'Almarai', 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* ============================================================
+   ===== إصلاح الاتجاه العام (RTL) =====
+   ============================================================ */
+
+/* إجبار كل العناصر على الاتجاه من اليمين لليسار */
+*,
+*::before,
+*::after {
+    direction: rtl !important;
+    unicode-bidi: embed !important;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* إجبار النصوص العربية على الظهور بشكل صحيح */
+html {
+    direction: rtl !important;
+    scroll-behavior: smooth;
+}
+
+body {
+    direction: rtl !important;
+    text-align: right !important;
+    font-family: var(--font) !important;
+    background: linear-gradient(160deg, #e8f0fe, #d4e4f7);
+    color: var(--dark);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================================
+   ===== شاشة الدخول =====
+   ============================================================ */
+#loginOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0d3b7a, #1a5fb4, #3584e4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    direction: rtl !important;
+}
+
+.login-box {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 50px 40px;
+    border-radius: var(--radius);
+    width: 420px;
+    max-width: 92%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: fadeInUp 0.6s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 1;
+    direction: rtl !important;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.login-box .logo {
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.login-box h2 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.login-box .subtitle {
+    color: var(--secondary);
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.login-box .location-hint {
+    background: #e8f0fe;
+    color: var(--primary);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-bottom: 20px;
+    border-right: 4px solid var(--primary);
+}
+
+.login-box input {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    border: 2px solid #e9ecef;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: var(--font);
+    transition: var(--transition);
+    background: #f8f9fa;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(26, 95, 180, 0.1);
+}
+
+.login-box .login-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #1a5fb4, #3584e4);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.login-box .login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(26, 95, 180, 0.35);
+}
+
+.login-box .error-msg {
+    color: var(--danger);
+    margin-top: 12px;
+    font-size: 14px;
+    display: none;
+    padding: 10px;
+    background: #fde8e0;
+    border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   ===== الحاوية الرئيسية =====
+   ============================================================ */
+.container {
+    max-width: 1550px;
+    margin: 20px auto;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 25px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: none;
+    animation: fadeIn 0.5s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    z-index: 1;
+    direction: rtl !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   ===== الهيدر =====
+   ============================================================ */
+header {
+    background: linear-gradient(135deg, #0d3b7a, #1a5fb4, #3584e4);
+    color: #fff;
+    padding: 22px 28px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    direction: rtl !important;
+}
+
+header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    position: relative;
+    z-index: 1;
+}
+
+header .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.developer-info {
+    background: rgba(255, 255, 255, 0.12);
+    padding: 6px 18px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.role-badge {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 5px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   ===== الأزرار =====
+   ============================================================ */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    direction: rtl !important;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a5fb4, #3584e4);
+    color: #fff;
+}
+
+.btn-success {
+    background: var(--success);
+    color: #fff;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.btn-warning {
+    background: var(--warning);
+    color: var(--dark);
+}
+
+.btn-info {
+    background: var(--info);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: var(--secondary);
+    color: #fff;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+.btn-outline-white {
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+}
+
+.btn-outline-white:hover {
+    background: #fff;
+    color: var(--primary);
+}
+
+/* ============================================================
+   ===== شريط التنقل =====
+   ============================================================ */
+.nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    direction: rtl !important;
+}
+
+.nav .btn {
+    flex: 0 0 auto;
+}
+
+/* ============================================================
+   ===== فلتر البحث =====
+   ============================================================ */
+.filter-bar {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    direction: rtl !important;
+}
+
+.filter-bar label {
+    font-weight: 600;
+    color: var(--secondary);
+    font-size: 13px;
+}
+
+.filter-bar input,
+.filter-bar select {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ced4da;
+    font-family: var(--font);
+    font-size: 14px;
+    background: #fff;
+    transition: var(--transition);
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.filter-bar input:focus,
+.filter-bar select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 95, 180, 0.08);
+}
+
+.search-input {
+    flex: 1;
+    min-width: 180px;
+}
+
+.search-input input {
+    width: 100%;
+    padding: 8px 16px;
+    border-radius: 30px;
+    border: 1px solid #ced4da;
+}
+
+/* ============================================================
+   ===== نموذج الإدخال =====
+   ============================================================ */
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 18px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    margin-bottom: 20px;
+    direction: rtl !important;
+}
+
+.input-grid input,
+.input-grid select {
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #ced4da;
+    font-family: var(--font);
+    font-size: 14px;
+    width: 100%;
+    transition: var(--transition);
+    background: #fff;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.input-grid input:focus,
+.input-grid select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 95, 180, 0.08);
+}
+
+/* ============================================================
    ===== الجداول - التصميم الاحترافي الفاخر =====
    ============================================================ */
 
@@ -7,7 +463,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 20px;
-    overflow: hidden;
+    overflow: visible !important;
     box-shadow: 
         0 1px 3px rgba(0, 0, 0, 0.02),
         0 8px 32px rgba(0, 0, 0, 0.06),
@@ -15,6 +471,7 @@
     margin-bottom: 30px;
     border: 1px solid rgba(255, 255, 255, 0.5);
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    direction: rtl !important;
 }
 
 .region-table-card:hover {
@@ -38,13 +495,14 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
     overflow: hidden;
+    direction: rtl !important;
 }
 
 .region-table-header::after {
     content: '';
     position: absolute;
     top: -50%;
-    right: -20%;
+    left: -20%;
     width: 200px;
     height: 200px;
     background: rgba(255, 255, 255, 0.03);
@@ -54,7 +512,7 @@
 
 .region-table-header .header-icon {
     font-size: 22px;
-    margin-left: 12px;
+    margin-right: 12px;
 }
 
 .region-table-header .header-actions-small {
@@ -91,6 +549,7 @@
     -webkit-overflow-scrolling: touch;
     position: relative;
     padding: 0 4px;
+    direction: rtl !important;
 }
 
 /* ===== شريط التمرير الجميل ===== */
@@ -122,6 +581,7 @@ table {
     font-size: 14px;
     table-layout: auto !important;
     font-family: var(--font);
+    direction: rtl !important;
 }
 
 /* ===== خلايا الرأس ===== */
@@ -141,6 +601,7 @@ table th {
     top: 0;
     z-index: 20;
     transition: all 0.3s ease;
+    direction: rtl !important;
 }
 
 table th:first-child {
@@ -182,6 +643,7 @@ table td {
     background: rgba(255, 255, 255, 0.5);
     transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     position: relative;
+    direction: rtl !important;
 }
 
 /* ===== صفوف الجدول الأنيقة ===== */
@@ -207,13 +669,13 @@ table tbody tr:last-child td {
 table tbody tr::before {
     content: '';
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
     width: 3px;
     height: 100%;
     background: transparent;
     transition: all 0.3s ease;
-    border-radius: 0 3px 3px 0;
+    border-radius: 3px 0 0 3px;
 }
 
 table tbody tr:hover::before {
@@ -246,12 +708,15 @@ table th:last-child {
     white-space: nowrap !important;
     overflow: visible !important;
     position: sticky !important;
-    right: 0 !important;
+    left: 0 !important;
+    right: auto !important;
     z-index: 15 !important;
-    border-left: 1px solid rgba(0, 0, 0, 0.03) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.03) !important;
+    border-left: none !important;
     background: rgba(255, 255, 255, 0.9) !important;
     backdrop-filter: blur(10px) !important;
     padding: 8px 12px !important;
+    direction: rtl !important;
 }
 
 table tbody tr:nth-child(even) td:last-child {
@@ -269,6 +734,7 @@ table tbody tr:hover td:last-child {
     justify-content: center;
     gap: 4px;
     flex-wrap: nowrap;
+    direction: rtl !important;
 }
 
 /* === تصميم الأزرار الصغيرة === */
@@ -302,6 +768,7 @@ table td a.btn {
     background: transparent !important;
     color: #1e293b !important;
     border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    direction: rtl !important;
 }
 
 table td .btn-sm:hover {
@@ -448,38 +915,355 @@ table td .btn-sm:active {
 /* ===== تمييز الصفوف ===== */
 .high-eff {
     background: linear-gradient(90deg, rgba(26, 122, 74, 0.04), rgba(26, 122, 74, 0.01)) !important;
-    border-right: 3px solid #27ae60 !important;
+    border-left: 3px solid #27ae60 !important;
+    border-right: none !important;
 }
 .mid-eff {
     background: linear-gradient(90deg, rgba(230, 126, 34, 0.04), rgba(230, 126, 34, 0.01)) !important;
-    border-right: 3px solid #f39c12 !important;
+    border-left: 3px solid #f39c12 !important;
+    border-right: none !important;
 }
 .low-eff {
     background: linear-gradient(90deg, rgba(192, 57, 43, 0.04), rgba(192, 57, 43, 0.01)) !important;
-    border-right: 3px solid #e74c3c !important;
+    border-left: 3px solid #e74c3c !important;
+    border-right: none !important;
 }
 
 /* ============================================================
-   ===== العدادات والباقات =====
+   ===== بطاقات الإحصائيات =====
    ============================================================ */
-.badge-count {
-    display: inline-flex;
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+    direction: rtl !important;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: var(--radius);
+    padding: 18px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: var(--transition);
+    direction: rtl !important;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+}
+
+.stat-card .number {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.stat-card .label {
+    font-size: 13px;
+    color: var(--secondary);
+    margin-top: 4px;
+}
+
+/* ============================================================
+   ===== الخريطة =====
+   ============================================================ */
+.map-container {
+    height: 500px !important;
+    width: 100% !important;
+    border-radius: var(--radius) !important;
+    overflow: hidden !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+#trackMap {
+    height: 100% !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 1 !important;
+}
+
+.leaflet-control-zoom {
+    z-index: 100 !important;
+}
+
+/* ============================================================
+   ===== الرسوم البيانية =====
+   ============================================================ */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+    direction: rtl !important;
+}
+
+.chart-box {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    direction: rtl !important;
+}
+
+.chart-box h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--dark);
+}
+
+.chart-switch {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 15px 0;
+    direction: rtl !important;
+}
+
+.chart-switch button {
+    padding: 6px 18px;
+    border-radius: 30px;
+    border: 1px solid #ced4da;
+    background: #fff;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    transition: var(--transition);
+    direction: rtl !important;
+}
+
+.chart-switch button.active {
+    background: var(--gradient-primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.chart-switch button:hover:not(.active) {
+    background: rgba(26, 95, 180, 0.05);
+}
+
+/* ============================================================
+   ===== النوافذ المنبثقة =====
+   ============================================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+    direction: rtl !important;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: var(--radius);
+    width: 440px;
+    max-width: 92%;
+    box-shadow: var(--shadow-hover);
+    animation: scaleIn 0.3s ease;
+    direction: rtl !important;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-content h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 10px 0;
+    border: 2px solid #e9ecef;
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 15px;
+    transition: var(--transition);
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-content .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.modal-content .modal-actions .btn {
+    flex: 1;
+}
+
+/* ============================================================
+   ===== الإشعارات =====
+   ============================================================ */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--dark);
+    color: #fff;
+    padding: 12px 28px;
+    border-radius: var(--radius-sm);
+    z-index: 10001;
+    box-shadow: var(--shadow-hover);
+    animation: slideUp 0.4s ease, fadeOut 0.4s ease 4s forwards;
+    font-family: var(--font);
+    font-size: 14px;
+    max-width: 92%;
+    text-align: center;
+    direction: rtl !important;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+        visibility: hidden;
+    }
+}
+
+/* ============================================================
+   ===== أزرار التمرير =====
+   ============================================================ */
+.scroll-buttons {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    right: auto !important;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 999;
+}
+
+.scroll-btn {
+    background: linear-gradient(135deg, #1a5fb4, #3584e4);
+    color: #fff;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(13, 110, 253, 0.08);
-    color: #1a5fb4;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 30px;
-    min-width: 24px;
-    height: 24px;
+}
+
+.scroll-btn:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-hover);
 }
 
 /* ============================================================
-   ===== التوافق مع الشاشات الصغيرة =====
+   ===== الأدوات المساعدة =====
+   ============================================================ */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.gap-10 {
+    gap: 10px;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================================
+   ===== التجاوب =====
    ============================================================ */
 @media (max-width: 992px) {
+    .container {
+        padding: 20px;
+    }
+    .login-box {
+        padding: 35px 25px;
+    }
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+    .map-container {
+        height: 400px !important;
+    }
+    .scrollable-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    table {
+        min-width: unset !important;
+        font-size: 13px;
+    }
     table th {
         font-size: 11px;
         padding: 10px 8px;
@@ -504,12 +1288,65 @@ table td .btn-sm:active {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 12px;
+        margin: 10px;
+    }
     .region-table-card {
         border-radius: 14px;
     }
     .region-table-header {
         padding: 14px 18px;
         font-size: 14px;
+    }
+    header h1 {
+        font-size: 18px;
+    }
+    .login-box {
+        padding: 30px 20px;
+    }
+    .input-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .nav {
+        justify-content: center;
+    }
+    .nav .btn {
+        flex: 1;
+        min-width: 70px;
+        font-size: 12px;
+        padding: 7px 10px;
+    }
+    .map-container {
+        height: 300px !important;
+    }
+    .scroll-buttons {
+        bottom: 15px;
+        left: 15px;
+        right: auto !important;
+    }
+    .scroll-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+    .scrollable-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    table {
+        min-width: unset !important;
+        font-size: 12px;
     }
     table th {
         font-size: 10px;
@@ -543,11 +1380,32 @@ table td .btn-sm:active {
 }
 
 @media (max-width: 480px) {
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+    .stats-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+    .stat-card .number {
+        font-size: 22px;
+    }
     .region-table-header {
         padding: 10px 14px;
         font-size: 13px;
         flex-wrap: wrap;
         gap: 8px;
+    }
+    header h1 {
+        font-size: 16px;
+    }
+    .login-box .logo {
+        font-size: 40px;
+    }
+    .login-box h2 {
+        font-size: 20px;
+    }
+    .map-container {
+        height: 250px !important;
     }
     table td .btn-sm {
         padding: 2px 6px !important;
@@ -568,6 +1426,30 @@ table td .btn-sm:active {
    ===== الطباعة =====
    ============================================================ */
 @media print {
+    .nav,
+    .filter-bar,
+    .btn,
+    .btn-sm,
+    .scroll-buttons,
+    .map-container,
+    #inputArea,
+    .chart-switch,
+    .watermark {
+        display: none !important;
+    }
+    @page {
+        size: landscape;
+        margin: 1cm;
+    }
+    body {
+        background: #fff;
+        padding: 0;
+    }
+    .container {
+        box-shadow: none;
+        border: none;
+        background: #fff;
+    }
     table {
         border-collapse: collapse !important;
     }
