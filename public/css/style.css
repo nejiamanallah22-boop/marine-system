@@ -1,5 +1,5 @@
 /* ============================================================ */
-/* ===== 🚢 منظومة الوسائل البحرية - تصميم عصرية احترافي ===== */
+/* ===== 🚢 منظومة الوسائل البحرية - التصميم الاحترافي الكامل ===== */
 /* ============================================================ */
 
 /* ============================================================ */
@@ -23,6 +23,16 @@
     --btn-info-hover: #13707d;
     --btn-secondary: #6c757d;
     --btn-secondary-hover: #5a6268;
+    
+    /* ===== ألوان الحالات ===== */
+    --status-success: #2e7d32;
+    --status-success-bg: #e8f5e9;
+    --status-danger: #c62828;
+    --status-danger-bg: #fbe9e7;
+    --status-warning: #e65100;
+    --status-warning-bg: #fff8e1;
+    --status-info: #0d47a1;
+    --status-info-bg: #e3f2fd;
     
     /* ===== الألوان النصية ===== */
     --text-primary: #1a1a2e;
@@ -64,12 +74,17 @@
     box-sizing: border-box;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: var(--font);
     background: var(--bg-body);
     color: var(--text-primary);
     min-height: 100vh;
     direction: rtl;
+    line-height: 1.6;
 }
 
 /* ============================================================ */
@@ -86,7 +101,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary);
+    background: var(--primary-gradient);
     border-radius: 10px;
 }
 
@@ -95,7 +110,7 @@ body {
 }
 
 /* ============================================================ */
-/* ===== 4. الأزرار الاحترافية ===== */
+/* ===== 4. الأزرار الرئيسية ===== */
 /* ============================================================ */
 .btn {
     padding: 10px 22px;
@@ -253,13 +268,13 @@ body {
 }
 
 /* ============================================================ */
-/* ===== 5. الأزرار المصغرة (في الجداول) ===== */
+/* ===== 5. أزرار الجداول (التعديل، الحذف، العرض) ===== */
 /* ============================================================ */
-.btn-action {
-    padding: 6px 12px;
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 12px;
     border: none;
     border-radius: var(--radius-xs);
-    font-size: 12px;
     font-weight: 600;
     font-family: var(--font);
     cursor: pointer;
@@ -270,53 +285,112 @@ body {
     text-decoration: none;
 }
 
-.btn-action:hover {
+.btn-sm:hover {
     transform: translateY(-1px);
 }
 
-.btn-action-edit {
-    background: #e8f5e9;
-    color: #2e7d32;
+/* ===== ألوان الأزرار الصغيرة ===== */
+.btn-orange {
+    background: #fff3e0;
+    color: #e65100;
 }
-.btn-action-edit:hover {
-    background: #c8e6c9;
-    box-shadow: 0 2px 10px rgba(46, 125, 50, 0.2);
+.btn-orange:hover {
+    background: #ffe0b2;
+    box-shadow: 0 2px 10px rgba(230, 81, 0, 0.2);
 }
 
-.btn-action-delete {
+.btn-red {
     background: #fbe9e7;
     color: #c62828;
 }
-.btn-action-delete:hover {
+.btn-red:hover {
     background: #ffccbc;
     box-shadow: 0 2px 10px rgba(198, 40, 40, 0.2);
 }
 
-.btn-action-view {
+.btn-green {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+.btn-green:hover {
+    background: #c8e6c9;
+    box-shadow: 0 2px 10px rgba(46, 125, 50, 0.2);
+}
+
+.btn-blue {
     background: #e3f2fd;
     color: #0d47a1;
 }
-.btn-action-view:hover {
+.btn-blue:hover {
     background: #bbdefb;
     box-shadow: 0 2px 10px rgba(13, 71, 161, 0.2);
 }
 
-.btn-action-reply {
+.btn-cyan {
     background: #e0f7fa;
     color: #00695c;
 }
-.btn-action-reply:hover {
+.btn-cyan:hover {
     background: #b2dfdb;
     box-shadow: 0 2px 10px rgba(0, 105, 92, 0.2);
 }
 
-.btn-action-close {
-    background: #fce4ec;
-    color: #880e4f;
+.btn-purple {
+    background: #f3e5f5;
+    color: #6a1b9a;
 }
-.btn-action-close:hover {
-    background: #f8bbd0;
-    box-shadow: 0 2px 10px rgba(136, 14, 79, 0.2);
+.btn-purple:hover {
+    background: #e1bee7;
+    box-shadow: 0 2px 10px rgba(106, 27, 154, 0.2);
+}
+
+/* ===== أزرار التنقل ===== */
+.btn-blue {
+    background: var(--primary);
+    color: white;
+}
+.btn-blue:hover {
+    background: var(--primary-dark);
+}
+
+.btn-orange {
+    background: var(--btn-warning);
+    color: var(--text-primary);
+}
+.btn-orange:hover {
+    background: var(--btn-warning-hover);
+}
+
+.btn-green {
+    background: var(--btn-success);
+    color: white;
+}
+.btn-green:hover {
+    background: var(--btn-success-hover);
+}
+
+.btn-red {
+    background: var(--btn-danger);
+    color: white;
+}
+.btn-red:hover {
+    background: var(--btn-danger-hover);
+}
+
+.btn-cyan {
+    background: var(--btn-info);
+    color: white;
+}
+.btn-cyan:hover {
+    background: var(--btn-info-hover);
+}
+
+.btn-purple {
+    background: #6f42c1;
+    color: white;
+}
+.btn-purple:hover {
+    background: #5a32a3;
 }
 
 /* ============================================================ */
@@ -427,6 +501,21 @@ tbody tr:nth-child(even):hover {
     background: rgba(26, 95, 180, 0.04);
 }
 
+/* ===== أزرار الجداول ===== */
+td .btn-sm {
+    margin: 2px;
+    padding: 5px 12px;
+    font-size: 11px;
+}
+
+td .btn-sm:hover {
+    transform: translateY(-1px);
+}
+
+td .btn-sm + .btn-sm {
+    margin-right: 4px;
+}
+
 /* ============================================================ */
 /* ===== 8. الحالات ===== */
 /* ============================================================ */
@@ -449,35 +538,61 @@ tbody tr:nth-child(even):hover {
 }
 
 .status-success {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--status-success-bg);
+    color: var(--status-success);
 }
 .status-success::before {
-    background: #2e7d32;
+    background: var(--status-success);
 }
 
 .status-danger {
-    background: #fbe9e7;
-    color: #c62828;
+    background: var(--status-danger-bg);
+    color: var(--status-danger);
 }
 .status-danger::before {
-    background: #c62828;
+    background: var(--status-danger);
 }
 
 .status-warning {
-    background: #fff8e1;
-    color: #e65100;
+    background: var(--status-warning-bg);
+    color: var(--status-warning);
 }
 .status-warning::before {
-    background: #e65100;
+    background: var(--status-warning);
 }
 
 .status-info {
-    background: #e3f2fd;
-    color: #0d47a1;
+    background: var(--status-info-bg);
+    color: var(--status-info);
 }
 .status-info::before {
-    background: #0d47a1;
+    background: var(--status-info);
+}
+
+/* ===== الحالات القديمة (للتوافق) ===== */
+.status-صالح {
+    color: var(--btn-success);
+    font-weight: 700;
+}
+
+.status-معطب {
+    color: var(--btn-danger);
+    font-weight: 700;
+}
+
+.status-صيانة {
+    color: var(--btn-warning);
+    font-weight: 700;
+}
+
+.high-eff {
+    background-color: #d1e7dd !important;
+}
+.mid-eff {
+    background-color: #fff3cd !important;
+}
+.low-eff {
+    background-color: #f8d7da !important;
 }
 
 /* ============================================================ */
@@ -1078,6 +1193,7 @@ header h1 {
     opacity: 0.03;
     z-index: 0;
     pointer-events: none;
+    user-select: none;
 }
 
 /* ============================================================ */
@@ -1247,12 +1363,59 @@ textarea:focus {
     box-shadow: 0 0 0 3px rgba(26, 95, 180, 0.1);
 }
 
-/* ===== تحسين الأزرار في الجداول ===== */
-td .btn-action {
-    margin: 2px;
+/* ============================================================ */
+/* ===== 27. أزرار مخصصة للصفحات ===== */
+/* ============================================================ */
+
+/* ===== أزرار التصدير والاستيراد ===== */
+.btn-export {
+    background: #1a8e9e;
+    color: white;
+}
+.btn-export:hover {
+    background: #13707d;
 }
 
-/* ===== تحسين الجداول في الهواتف ===== */
+.btn-import {
+    background: #e9ad0c;
+    color: #1a1a2e;
+}
+.btn-import:hover {
+    background: #d49a0a;
+}
+
+/* ===== أزرار التحديث ===== */
+.btn-refresh {
+    background: #3584e4;
+    color: white;
+}
+.btn-refresh:hover {
+    background: #1a5fb4;
+}
+
+/* ===== أزرار الطباعة ===== */
+.btn-print {
+    background: #6c757d;
+    color: white;
+}
+.btn-print:hover {
+    background: #5a6268;
+}
+
+/* ============================================================ */
+/* ===== 28. أزرار التنقل في الهواتف ===== */
+/* ============================================================ */
+@media (max-width: 768px) {
+    .nav .btn {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-width: 60px;
+    }
+}
+
+/* ============================================================ */
+/* ===== 29. تحسين الجداول في الهواتف ===== */
+/* ============================================================ */
 @media (max-width: 768px) {
     table {
         font-size: 12px;
@@ -1260,11 +1423,25 @@ td .btn-action {
     th, td {
         padding: 8px 10px;
     }
+    .region-table-header {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
 }
 
-/* ===== تحسين العلامة المائية ===== */
-.watermark {
-    user-select: none;
+/* ============================================================ */
+/* ===== 30. تحسين الأزرار في الجداول ===== */
+/* ============================================================ */
+td .btn-sm {
+    font-size: 11px;
+    padding: 4px 10px;
+}
+
+@media (max-width: 480px) {
+    td .btn-sm {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
 }
 
 /* ============================================================ */
