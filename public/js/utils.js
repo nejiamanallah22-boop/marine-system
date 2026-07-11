@@ -113,6 +113,26 @@ const REGION_NAMES = {
 // ===== Note Verbale (الكامل المصحح) =====
 // ============================================================
 
+// ===== حساب رقم الأسبوع =====
+function getWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+// ===== تحميل مكتبة خارجية =====
+function loadScript(url, callback) {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = callback;
+    script.onerror = function() {
+        showToast('❌ فشل تحميل المكتبة، تأكد من الاتصال بالإنترنت', true);
+    };
+    document.head.appendChild(script);
+}
+
 // ===== استيراد ملف =====
 function importNoteFile() {
     const input = document.getElementById('noteFileInput');
@@ -135,15 +155,22 @@ function importNoteFile() {
             try {
                 const imageData = e.target.result;
                 const imgHtml = `<img src="${imageData}" style="max-width:100%; max-height:400px; border-radius:8px; margin:10px 0;" alt="${fileName}">`;
-                document.getElementById('noteContent').value = imgHtml;
-                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
-                document.getElementById('noteType').value = 'image';
                 
-                document.getElementById('noteAttachment').value = JSON.stringify({
-                    name: fileName,
-                    type: 'image',
-                    data: imageData
-                });
+                const contentEl = document.getElementById('noteContent');
+                const titleEl = document.getElementById('noteTitle');
+                const typeEl = document.getElementById('noteType');
+                const attachmentEl = document.getElementById('noteAttachment');
+                
+                if (contentEl) contentEl.value = imgHtml;
+                if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
+                if (typeEl) typeEl.value = 'image';
+                if (attachmentEl) {
+                    attachmentEl.value = JSON.stringify({
+                        name: fileName,
+                        type: 'image',
+                        data: imageData
+                    });
+                }
                 
                 showToast('✅ تم استيراد الصورة بنجاح!');
             } catch(err) {
@@ -164,15 +191,22 @@ function importNoteFile() {
                     <a href="${pdfData}" target="_blank" style="margin-right:10px; color:#0d6efd;">📄 ${fileName}</a>
                     <small style="color:#6c757d;">(اضغط للتحميل)</small>
                 </div>`;
-                document.getElementById('noteContent').value = pdfHtml;
-                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
-                document.getElementById('noteType').value = 'document';
                 
-                document.getElementById('noteAttachment').value = JSON.stringify({
-                    name: fileName,
-                    type: 'pdf',
-                    data: pdfData
-                });
+                const contentEl = document.getElementById('noteContent');
+                const titleEl = document.getElementById('noteTitle');
+                const typeEl = document.getElementById('noteType');
+                const attachmentEl = document.getElementById('noteAttachment');
+                
+                if (contentEl) contentEl.value = pdfHtml;
+                if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
+                if (typeEl) typeEl.value = 'document';
+                if (attachmentEl) {
+                    attachmentEl.value = JSON.stringify({
+                        name: fileName,
+                        type: 'pdf',
+                        data: pdfData
+                    });
+                }
                 
                 showToast('✅ تم استيراد PDF بنجاح!');
             } catch(err) {
@@ -199,9 +233,14 @@ function importNoteFile() {
                 mammoth.extractRawText({ arrayBuffer: arrayBuffer })
                     .then(function(result) {
                         const text = result.value;
-                        document.getElementById('noteContent').value = text;
-                        document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
-                        document.getElementById('noteType').value = 'text';
+                        const contentEl = document.getElementById('noteContent');
+                        const titleEl = document.getElementById('noteTitle');
+                        const typeEl = document.getElementById('noteType');
+                        
+                        if (contentEl) contentEl.value = text;
+                        if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
+                        if (typeEl) typeEl.value = 'text';
+                        
                         showToast('✅ تم استيراد DOCX بنجاح!');
                     })
                     .catch(function(err) {
@@ -220,9 +259,14 @@ function importNoteFile() {
         reader.onload = function(e) {
             try {
                 const text = e.target.result;
-                document.getElementById('noteContent').value = text;
-                document.getElementById('noteTitle').value = fileName.replace(/\.[^/.]+$/, '');
-                document.getElementById('noteType').value = 'text';
+                const contentEl = document.getElementById('noteContent');
+                const titleEl = document.getElementById('noteTitle');
+                const typeEl = document.getElementById('noteType');
+                
+                if (contentEl) contentEl.value = text;
+                if (titleEl) titleEl.value = fileName.replace(/\.[^/.]+$/, '');
+                if (typeEl) typeEl.value = 'text';
+                
                 showToast('✅ تم استيراد الملف بنجاح!');
             } catch(err) {
                 showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
@@ -234,33 +278,24 @@ function importNoteFile() {
     showToast('⚠️ صيغة ملف غير مدعومة: ' + fileType, true);
 }
 
-// ===== تحميل مكتبة خارجية =====
-function loadScript(url, callback) {
-    const script = document.createElement('script');
-    script.src = url;
-    script.onload = callback;
-    script.onerror = function() {
-        showToast('❌ فشل تحميل المكتبة، تأكد من الاتصال بالإنترنت', true);
-    };
-    document.head.appendChild(script);
-}
-
-// ===== حساب رقم الأسبوع =====
-function getWeekNumber(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-    const week1 = new Date(d.getFullYear(), 0, 4);
-    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-}
-
 // ===== حفظ المذكرة في MongoDB =====
 async function saveNote() {
-    const title = document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteContent').value;
-    const date = document.getElementById('noteDate').value;
-    const type = document.getElementById('noteType').value || 'text';
-    const attachmentData = document.getElementById('noteAttachment').value;
+    const titleEl = document.getElementById('noteTitle');
+    const contentEl = document.getElementById('noteContent');
+    const dateEl = document.getElementById('noteDate');
+    const typeEl = document.getElementById('noteType');
+    const attachmentEl = document.getElementById('noteAttachment');
+    
+    if (!titleEl || !contentEl || !dateEl) {
+        showToast('⚠️ خطأ في تحميل نموذج المذكرة', true);
+        return;
+    }
+    
+    const title = titleEl.value.trim();
+    const content = contentEl.value;
+    const date = dateEl.value;
+    const type = typeEl ? typeEl.value : 'text';
+    const attachmentData = attachmentEl ? attachmentEl.value : '';
     
     if (!title || !content) {
         showToast('⚠️ يرجى إدخال عنوان ونص المذكرة', true);
@@ -311,16 +346,22 @@ async function saveNote() {
         const savedNote = await response.json();
         showToast('✅ تم حفظ المذكرة في قاعدة البيانات!');
         
-        document.getElementById('noteResultTitle').textContent = title;
-        document.getElementById('noteResultContent').innerHTML = content;
-        document.getElementById('noteResultDate').textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
-        document.getElementById('noteResult').style.display = 'block';
+        const resultTitle = document.getElementById('noteResultTitle');
+        const resultContent = document.getElementById('noteResultContent');
+        const resultDate = document.getElementById('noteResultDate');
+        const resultContainer = document.getElementById('noteResult');
+        
+        if (resultTitle) resultTitle.textContent = title;
+        if (resultContent) resultContent.innerHTML = content;
+        if (resultDate) resultDate.textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
+        if (resultContainer) resultContainer.style.display = 'block';
         
         await loadLatestNote();
         await loadNotesByWeek();
         
-        document.getElementById('noteAttachment').value = '';
-        document.getElementById('noteFileInput').value = '';
+        if (attachmentEl) attachmentEl.value = '';
+        const fileInput = document.getElementById('noteFileInput');
+        if (fileInput) fileInput.value = '';
         
     } catch(error) {
         showToast('❌ خطأ في الحفظ: ' + error.message, true);
@@ -347,13 +388,17 @@ async function loadLatestNote() {
         if (!container) return;
         
         if (note && note._id) {
-            document.getElementById('latestNoteTitle').textContent = note.title;
-            document.getElementById('latestNoteContent').innerHTML = note.content;
-            document.getElementById('latestNoteDate').textContent = `📅 ${note.date} | الأسبوع: ${note.week} | 👤 ${note.createdBy}`;
+            const titleEl = document.getElementById('latestNoteTitle');
+            const contentEl = document.getElementById('latestNoteContent');
+            const dateEl = document.getElementById('latestNoteDate');
+            const attachmentsEl = document.getElementById('latestNoteAttachments');
+            
+            if (titleEl) titleEl.textContent = note.title;
+            if (contentEl) contentEl.innerHTML = note.content;
+            if (dateEl) dateEl.textContent = `📅 ${note.date} | الأسبوع: ${note.week} | 👤 ${note.createdBy}`;
             container.style.display = 'block';
             
-            const attachmentsContainer = document.getElementById('latestNoteAttachments');
-            if (attachmentsContainer && note.attachments && note.attachments.length > 0) {
+            if (attachmentsEl && note.attachments && note.attachments.length > 0) {
                 let attHtml = '<div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">';
                 note.attachments.forEach(att => {
                     if (att.type === 'image') {
@@ -365,10 +410,10 @@ async function loadLatestNote() {
                     }
                 });
                 attHtml += '</div>';
-                attachmentsContainer.innerHTML = attHtml;
-                attachmentsContainer.style.display = 'block';
-            } else if (attachmentsContainer) {
-                attachmentsContainer.style.display = 'none';
+                attachmentsEl.innerHTML = attHtml;
+                attachmentsEl.style.display = 'block';
+            } else if (attachmentsEl) {
+                attachmentsEl.style.display = 'none';
             }
         } else {
             container.style.display = 'none';
@@ -457,13 +502,22 @@ async function viewNote(noteId) {
         const note = notes.find(n => n._id === noteId);
         
         if (note) {
-            document.getElementById('noteTitle').value = note.title;
-            document.getElementById('noteContent').value = note.content;
-            document.getElementById('noteDate').value = note.date;
-            document.getElementById('noteResultTitle').textContent = note.title;
-            document.getElementById('noteResultContent').innerHTML = note.content;
-            document.getElementById('noteResultDate').textContent = `📅 ${note.date} - 🕐 ${note.time} | الأسبوع: ${note.week}`;
-            document.getElementById('noteResult').style.display = 'block';
+            const titleEl = document.getElementById('noteTitle');
+            const contentEl = document.getElementById('noteContent');
+            const dateEl = document.getElementById('noteDate');
+            const resultTitle = document.getElementById('noteResultTitle');
+            const resultContent = document.getElementById('noteResultContent');
+            const resultDate = document.getElementById('noteResultDate');
+            const resultContainer = document.getElementById('noteResult');
+            
+            if (titleEl) titleEl.value = note.title;
+            if (contentEl) contentEl.value = note.content;
+            if (dateEl) dateEl.value = note.date;
+            if (resultTitle) resultTitle.textContent = note.title;
+            if (resultContent) resultContent.innerHTML = note.content;
+            if (resultDate) resultDate.textContent = `📅 ${note.date} - 🕐 ${note.time} | الأسبوع: ${note.week}`;
+            if (resultContainer) resultContainer.style.display = 'block';
+            
             showToast('📄 تم تحميل المذكرة');
         }
     } catch(error) {
@@ -498,9 +552,13 @@ async function deleteNote(noteId) {
 
 // ===== تصدير PDF =====
 function exportNotePDF() {
-    const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteResultContent').innerHTML || document.getElementById('noteContent').value;
-    const date = document.getElementById('noteDate').value || getCurrentDate();
+    const titleEl = document.getElementById('noteResultTitle');
+    const contentEl = document.getElementById('noteResultContent');
+    const dateEl = document.getElementById('noteDate');
+    
+    const title = titleEl ? titleEl.textContent : document.getElementById('noteTitle').value.trim();
+    const content = contentEl ? contentEl.innerHTML : document.getElementById('noteContent').value;
+    const date = dateEl ? dateEl.value : getCurrentDate();
     const time = getCurrentTime();
     
     if (!title || !content) {
@@ -571,9 +629,13 @@ function exportNotePDF() {
 
 // ===== تصدير Word =====
 function exportNoteWord() {
-    const title = document.getElementById('noteResultTitle').textContent || document.getElementById('noteTitle').value.trim();
-    const content = document.getElementById('noteResultContent').innerHTML || document.getElementById('noteContent').value;
-    const date = document.getElementById('noteDate').value || getCurrentDate();
+    const titleEl = document.getElementById('noteResultTitle');
+    const contentEl = document.getElementById('noteResultContent');
+    const dateEl = document.getElementById('noteDate');
+    
+    const title = titleEl ? titleEl.textContent : document.getElementById('noteTitle').value.trim();
+    const content = contentEl ? contentEl.innerHTML : document.getElementById('noteContent').value;
+    const date = dateEl ? dateEl.value : getCurrentDate();
     const time = getCurrentTime();
     
     if (!title || !content) {
@@ -629,13 +691,22 @@ function exportNoteWord() {
 
 // ===== مسح المذكرة =====
 function clearNote() {
-    document.getElementById('noteTitle').value = '';
-    document.getElementById('noteContent').value = '';
-    document.getElementById('noteDate').value = '';
-    document.getElementById('noteResult').style.display = 'none';
-    document.getElementById('noteFileInput').value = '';
-    document.getElementById('noteType').value = 'text';
-    document.getElementById('noteAttachment').value = '';
+    const titleEl = document.getElementById('noteTitle');
+    const contentEl = document.getElementById('noteContent');
+    const dateEl = document.getElementById('noteDate');
+    const resultEl = document.getElementById('noteResult');
+    const fileInput = document.getElementById('noteFileInput');
+    const typeEl = document.getElementById('noteType');
+    const attachmentEl = document.getElementById('noteAttachment');
+    
+    if (titleEl) titleEl.value = '';
+    if (contentEl) contentEl.value = '';
+    if (dateEl) dateEl.value = '';
+    if (resultEl) resultEl.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    if (typeEl) typeEl.value = 'text';
+    if (attachmentEl) attachmentEl.value = '';
+    
     showToast('🗑️ تم مسح المذكرة');
 }
 
