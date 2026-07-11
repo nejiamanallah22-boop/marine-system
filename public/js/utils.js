@@ -113,7 +113,7 @@ const REGION_NAMES = {
 // ===== Note Verbale (نسخة احترافية) =====
 // ============================================================
 
-// ===== استيراد ملف =====
+// ===== استيراد ملف (يدعم TXT و DOCX) =====
 function importNoteFile() {
     const input = document.getElementById('noteFileInput');
     if (!input || !input.files || !input.files[0]) {
@@ -122,37 +122,103 @@ function importNoteFile() {
     }
     
     const file = input.files[0];
-    const reader = new FileReader();
-    reader.readAsText(file, 'UTF-8');
+    const fileName = file.name.toLowerCase();
+    const fileType = fileName.split('.').pop();
     
-    reader.onload = function(e) {
-        try {
-            let text = e.target.result;
-            text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
-            
-            const lines = text.split('\n').filter(line => line.trim());
-            let title = '';
-            let content = '';
-            
-            if (lines.length > 0) {
-                title = lines[0].trim();
-                content = lines.slice(1).join('\n').trim();
+    // ===== ملفات TXT =====
+    if (fileType === 'txt') {
+        const reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        reader.onload = function(e) {
+            try {
+                const text = e.target.result;
+                extractTextFromFile(text);
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
             }
-            
-            if (title) document.getElementById('noteTitle').value = title;
-            if (content) document.getElementById('noteContent').value = content;
-            
-            showToast('✅ تم استيراد الملف بنجاح!');
-            setTimeout(() => saveNote(), 500);
-            
-        } catch(err) {
-            showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
-        }
-    };
+        };
+        reader.onerror = function() {
+            showToast('❌ خطأ في تحميل الملف', true);
+        };
+        return;
+    }
     
-    reader.onerror = function() {
-        showToast('❌ خطأ في تحميل الملف', true);
-    };
+    // ===== ملفات DOCX =====
+    if (fileType === 'docx') {
+        // التحقق من وجود المكتبة
+        if (typeof mammoth === 'undefined') {
+            showToast('⏳ جاري تحميل مكتبة DOCX...', false);
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+            script.onload = function() {
+                showToast('✅ تم تحميل المكتبة، حاول مرة أخرى', false);
+                // إعادة المحاولة بعد تحميل المكتبة
+                setTimeout(() => importNoteFile(), 500);
+            };
+            script.onerror = function() {
+                showToast('❌ فشل تحميل مكتبة DOCX، تأكد من الاتصال بالإنترنت', true);
+            };
+            document.head.appendChild(script);
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function(e) {
+            try {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        const text = result.value;
+                        extractTextFromFile(text);
+                    })
+                    .catch(function(err) {
+                        showToast('❌ خطأ في قراءة DOCX: ' + err.message, true);
+                    });
+            } catch(err) {
+                showToast('❌ خطأ في قراءة الملف: ' + err.message, true);
+            }
+        };
+        reader.onerror = function() {
+            showToast('❌ خطأ في تحميل الملف', true);
+        };
+        return;
+    }
+    
+    // ===== ملفات DOC (قديمة) =====
+    if (fileType === 'doc') {
+        showToast('⚠️ ملفات DOC غير مدعومة. يرجى تحويل الملف إلى DOCX أو TXT', true);
+        return;
+    }
+    
+    // ===== ملفات PDF =====
+    if (fileType === 'pdf') {
+        showToast('⚠️ ملفات PDF غير مدعومة. يرجى استخدام ملف TXT أو DOCX', true);
+        return;
+    }
+    
+    showToast('⚠️ صيغة ملف غير مدعومة: ' + fileType, true);
+}
+
+// ===== استخراج النص من الملف =====
+function extractTextFromFile(text) {
+    // تنظيف النص من الأحرف الغريبة
+    text = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
+    
+    const lines = text.split('\n').filter(line => line.trim());
+    let title = '';
+    let content = '';
+    
+    if (lines.length > 0) {
+        title = lines[0].trim();
+        content = lines.slice(1).join('\n').trim();
+    }
+    
+    if (title) document.getElementById('noteTitle').value = title;
+    if (content) document.getElementById('noteContent').value = content;
+    
+    showToast('✅ تم استيراد الملف بنجاح!');
+    setTimeout(() => saveNote(), 500);
 }
 
 // ===== حفظ المذكرة =====
