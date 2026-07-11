@@ -110,7 +110,7 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// ===== Note Verbale (الكامل المصحح) =====
+// ===== Note Verbale (الكامل النهائي) =====
 // ============================================================
 
 // ===== حساب رقم الأسبوع =====
@@ -307,7 +307,6 @@ async function saveNote() {
         return;
     }
     
-    // ✅ حساب الأسبوع تلقائياً من التاريخ
     const selectedDate = new Date(date);
     const week = getWeekNumber(selectedDate);
     const time = getCurrentTime();
@@ -347,7 +346,6 @@ async function saveNote() {
         const savedNote = await response.json();
         showToast('✅ تم حفظ المذكرة في قاعدة البيانات!');
         
-        // ✅ عرض النتيجة في نفس الصفحة
         const resultTitle = document.getElementById('noteResultTitle');
         const resultContent = document.getElementById('noteResultContent');
         const resultDate = document.getElementById('noteResultDate');
@@ -358,13 +356,19 @@ async function saveNote() {
         if (resultDate) resultDate.textContent = `📅 ${date} - 🕐 ${time} | الأسبوع: ${week}`;
         if (resultContainer) resultContainer.style.display = 'block';
         
-        // ✅ تحديث صفحة النجاعة (آخر Note Verbale)
         await loadLatestNote();
         await loadNotesByWeek();
         
+        // ✅ تصفير النموذج بعد الحفظ
+        if (titleEl) titleEl.value = '';
+        if (contentEl) contentEl.value = '';
+        if (dateEl) dateEl.value = '';
         if (attachmentEl) attachmentEl.value = '';
+        if (typeEl) typeEl.value = 'text';
         const fileInput = document.getElementById('noteFileInput');
         if (fileInput) fileInput.value = '';
+        
+        showToast('📝 تم تصفير النموذج، يمكنك إضافة مذكرة جديدة');
         
     } catch(error) {
         showToast('❌ خطأ في الحفظ: ' + error.message, true);
@@ -426,18 +430,19 @@ async function loadLatestNote() {
     }
 }
 
-// ===== تحميل المذكرات حسب الفلتر =====
+// ===== تحميل المذكرات (بدون طلب أسبوع إجباري) =====
 async function loadNotesByWeek() {
     const week = document.getElementById('filterWeek').value;
     const limit = document.getElementById('filterLimit').value || 10;
     
-    if (!week) {
-        showToast('⚠️ يرجى تحديد الأسبوع للبحث', true);
-        return;
+    // ✅ بناء الرابط: إذا كان هناك أسبوع محدد، نضيفه للفلتر
+    let url = `/api/notes?limit=${limit}`;
+    if (week) {
+        url = `/api/notes?week=${week}&limit=${limit}`;
     }
     
     try {
-        const response = await fetch(`/api/notes?week=${week}&limit=${limit}`, {
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${currentUser.token}`
             }
@@ -450,6 +455,15 @@ async function loadNotesByWeek() {
         const notes = await response.json();
         renderNotesList(notes);
         
+        // ✅ رسائل توضيحية
+        if (week && notes.length === 0) {
+            showToast(`📭 لا توجد مذكرات في الأسبوع ${week}`, false);
+        } else if (!week && notes.length > 0) {
+            showToast(`✅ تم تحميل ${notes.length} مذكرة`);
+        } else if (!week && notes.length === 0) {
+            showToast('📭 لا توجد مذكرات محفوظة', false);
+        }
+        
     } catch(error) {
         showToast('❌ خطأ في تحميل المذكرات: ' + error.message, true);
     }
@@ -461,7 +475,7 @@ function renderNotesList(notes) {
     if (!container) return;
     
     if (notes.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#6c757d; padding:20px;">لا توجد مذكرات في هذا الأسبوع</p>';
+        container.innerHTML = '<p style="text-align:center; color:#6c757d; padding:20px;">لا توجد مذكرات</p>';
         return;
     }
     
