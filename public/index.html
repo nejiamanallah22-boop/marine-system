@@ -5,17 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
     
-    <!-- ===== الخطوط والأيقونات ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ===== المكتبات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- Leaflet -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -24,14 +19,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
     
-    <!-- ===== ملفات المشروع ===== -->
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-<!-- ============================================================ -->
 <!-- ===== شاشة الدخول ===== -->
-<!-- ============================================================ -->
 <div id="loginOverlay">
     <div class="login-box">
         <span class="logo">⚓</span>
@@ -50,9 +42,7 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- ===== التطبيق الرئيسي ===== -->
-<!-- ============================================================ -->
 <div id="mainApp" class="container">
 
     <!-- ====== الهيدر ====== -->
@@ -211,7 +201,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ====== صفحة الجاهزية ====== -->
+    <!-- ====== صفحة الجاهزية (مع آخر Note Verbale) ====== -->
     <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
         <div class="filter-bar">
@@ -236,6 +226,17 @@
                 <i class="fas fa-file-pdf"></i> تصدير النجاعة
             </button>
         </div>
+        
+        <!-- ===== آخر Note Verbale ===== -->
+        <div id="latestNoteContainer" style="display:none; background:white; border-radius:8px; padding:15px; margin-bottom:20px; border-right:4px solid #0d6efd; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <h4 style="color:#0d6efd; margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
+                <small style="color:#6c757d;" id="latestNoteDate"></small>
+            </div>
+            <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
+            <p id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></p>
+        </div>
+        
         <div class="stats-cards" id="statsCards"></div>
         <div id="generalEffTableContainer"></div>
         <div id="regionTables"></div>
@@ -416,17 +417,27 @@
                 
                 <hr style="margin:15px 0; border-color:#e9ecef;">
                 
-                <!-- ===== عنوان ونص ===== -->
+                <!-- ===== التاريخ ===== -->
+                <div style="margin-bottom:15px;">
+                    <label style="font-weight:bold;">📅 تاريخ المذكرة:</label>
+                    <input type="date" id="noteDate" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
+                </div>
+                
+                <!-- ===== عنوان ===== -->
                 <div style="margin-bottom:15px;">
                     <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
                     <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
                 </div>
+                
+                <!-- ===== نص ===== -->
                 <div style="margin-bottom:15px;">
                     <label style="font-weight:bold;">📄 نص المذكرة:</label>
                     <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
                 </div>
                 
-                <!-- ===== أزرار التصدير ===== -->
+                <input type="hidden" id="noteType" value="text">
+                
+                <!-- ===== أزرار ===== -->
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="btn btn-success" onclick="saveNote()">
                         <i class="fas fa-save"></i> حفظ
@@ -449,15 +460,34 @@
                     <small style="color:#6c757d;" id="noteResultDate"></small>
                 </div>
                 
+                <hr style="margin:20px 0; border-color:#e9ecef;">
+                
+                <!-- ===== فلتر المذكرات ===== -->
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:15px; border-radius:8px;">
+                    <label style="font-weight:bold;">🔍 فلتر حسب الأسبوع:</label>
+                    <input type="week" id="filterWeek" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                    <label style="font-weight:bold;">عدد:</label>
+                    <select id="filterLimit" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="loadNotesByWeek()">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+                
+                <!-- ===== قائمة المذكرات ===== -->
+                <div id="notesListContainer" style="margin-top:15px;"></div>
+                
             </div>
         </div>
     </div>
 
 </div>
 
-<!-- ============================================================ -->
 <!-- ===== النوافذ المنبثقة ===== -->
-<!-- ============================================================ -->
 <div id="passwordModal" class="modal">
     <div class="modal-content">
         <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
@@ -475,9 +505,7 @@
     </div>
 </div>
 
-<!-- ============================================================ -->
 <!-- ===== أزرار التمرير ===== -->
-<!-- ============================================================ -->
 <div class="scroll-buttons">
     <button class="scroll-btn" onclick="scrollToTop()" title="أعلى">
         <i class="fas fa-chevron-up"></i>
@@ -487,9 +515,7 @@
     </button>
 </div>
 
-<!-- ============================================================ -->
 <!-- ===== ملفات الجافاسكريبت ===== -->
-<!-- ============================================================ -->
 <script src="/js/utils.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/vessels.js"></script>
