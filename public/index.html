@@ -5,15 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
     
+    <!-- ===== الخطوط والأيقونات ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- ===== المكتبات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- ===== ملفات المشروع ===== -->
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -389,6 +395,20 @@
                 <i class="fas fa-file-alt"></i> Note Verbale
             </div>
             <div style="padding:20px;">
+                
+                <!-- ===== استيراد ملف ===== -->
+                <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <label style="font-weight:bold;">📂 استيراد ملف:</label>
+                    <input type="file" id="noteFileInput" accept=".txt,.doc,.docx,.pdf" style="flex:1; padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                    <button class="btn btn-info" onclick="importNoteFile()">
+                        <i class="fas fa-upload"></i> استيراد
+                    </button>
+                    <small style="color:#6c757d;">(يدعم TXT, DOC, DOCX, PDF)</small>
+                </div>
+                
+                <hr style="margin:15px 0; border-color:#e9ecef;">
+                
+                <!-- ===== عنوان ونص ===== -->
                 <div style="margin-bottom:15px;">
                     <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
                     <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
@@ -397,22 +417,30 @@
                     <label style="font-weight:bold;">📄 نص المذكرة:</label>
                     <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
                 </div>
+                
+                <!-- ===== أزرار التصدير ===== -->
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="btn btn-success" onclick="saveNote()">
-                        <i class="fas fa-save"></i> حفظ المذكرة
+                        <i class="fas fa-save"></i> حفظ
                     </button>
                     <button class="btn btn-primary" onclick="exportNotePDF()">
-                        <i class="fas fa-file-pdf"></i> تصدير PDF
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn btn-primary" onclick="exportNoteWord()" style="background:#2b5797;">
+                        <i class="fas fa-file-word"></i> Word
                     </button>
                     <button class="btn btn-secondary" onclick="clearNote()">
                         <i class="fas fa-eraser"></i> مسح
                     </button>
                 </div>
+                
+                <!-- ===== عرض النتيجة ===== -->
                 <div id="noteResult" style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px; display:none; border-right:4px solid var(--primary);">
                     <h4 id="noteResultTitle" style="margin-bottom:10px;"></h4>
                     <p id="noteResultContent"></p>
                     <small style="color:#6c757d;" id="noteResultDate"></small>
                 </div>
+                
             </div>
         </div>
     </div>
