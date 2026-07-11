@@ -9,7 +9,6 @@ const socketIO = require('socket.io');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const PDFDocument = require('pdfkit');
 
 const app = express();
 const server = http.createServer(app);
@@ -38,8 +37,8 @@ app.use(helmet({
 }));
 
 app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' })); // زيادة للصور
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -134,22 +133,35 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', LocationSchema);
 
-// ===== نموذج الإشعارات =====
-const NotificationSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+// ===== نموذج Note Verbale =====
+const NoteVerbaleSchema = new mongoose.Schema({
+    title: { type: String, required: true, trim: true },
+    content: { type: String, required: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    week: { type: String, required: true },
+    createdBy: { type: String, required: true },
     userRole: { type: String, required: true },
-    title: { type: String, required: true },
-    message: { type: String, required: true },
-    type: { type: String, enum: ['info', 'warning', 'success', 'error'], default: 'info' },
-    read: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now },
-    link: { type: String, default: '' },
-    data: { type: Object, default: {} }
-});
+    type: { type: String, default: 'text' },
+    imageData: { type: String }
+}, { timestamps: true });
 
-const Notification = mongoose.model('Notification', NotificationSchema);
+const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
 
 // ==================== دوال مساعدة ====================
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
 function extractDevice(userAgent) {
     if (!userAgent) return 'غير معروف';
     if (userAgent.includes('Android')) return 'Android';
@@ -222,12 +234,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        res.json({ 
-            token, 
-            id: user._id, 
-            name: user.name, 
-            role: user.role
-        });
+        res.json({ token, id: user._id, name: user.name, role: user.role });
     } catch (error) {
         res.status(500).json({ error: 'خطأ في السيرفر' });
     }
@@ -467,8 +474,6 @@ app.post('/api/locations', authenticate, async (req, res) => {
 });
 
 // ===== المستخدمين المتصلين =====
-const connectedUsers = {};
-
 app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const onlineUsers = Object.values(connectedUsers).map(user => ({
@@ -494,244 +499,75 @@ app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, 
 });
 
 // ============================================================
-// ===== نظام الإشعارات =====
+// ===== Note Verbale Routes =====
 // ============================================================
 
-// ===== الحصول على الإشعارات =====
-app.get('/api/notifications', authenticate, async (req, res) => {
+// ===== حفظ مذكرة جديدة =====
+app.post('/api/notes', authenticate, async (req, res) => {
     try {
-        const notifications = await Notification.find({
-            $or: [
-                { userId: req.user.name },
-                { userId: 'all' }
-            ]
-        }).sort({ createdAt: -1 }).limit(50);
+        const { title, content, date, time, week, type, imageData } = req.body;
         
-        const unreadCount = await Notification.countDocuments({
-            $or: [
-                { userId: req.user.name },
-                { userId: 'all' }
-            ],
-            read: false
-        });
+        if (!title || !content || !date) {
+            return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
+        }
         
-        res.json({
-            notifications,
-            unreadCount,
-            total: notifications.length
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== إنشاء إشعار جديد =====
-app.post('/api/notifications', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { userId, title, message, type, link, data } = req.body;
-        
-        const notification = new Notification({
-            userId: userId || 'all',
-            userRole: req.user.role,
+        const note = new NoteVerbale({
             title,
-            message,
-            type: type || 'info',
-            link: link || '',
-            data: data || {}
+            content,
+            date,
+            time: time || getCurrentTime(),
+            week: week || getWeekNumber(date).toString(),
+            createdBy: req.user.name,
+            userRole: req.user.role,
+            type: type || 'text',
+            imageData: imageData || null
         });
         
-        await notification.save();
-        
-        // بث الإشعار عبر Socket.IO
-        io.emit('new-notification', notification);
-        
-        res.status(201).json(notification);
+        await note.save();
+        res.status(201).json(note);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
 
-// ===== تحديد الإشعار كمقروء =====
-app.put('/api/notifications/:id/read', authenticate, async (req, res) => {
+// ===== جلب المذكرات =====
+app.get('/api/notes', authenticate, async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
-        if (!notification) {
-            return res.status(404).json({ error: 'الإشعار غير موجود' });
+        const { week, limit } = req.query;
+        let query = {};
+        
+        if (week) {
+            query.week = week;
         }
         
-        notification.read = true;
-        await notification.save();
+        let notesQuery = NoteVerbale.find(query).sort({ createdAt: -1 });
         
-        res.json({ message: 'تم تحديث الإشعار' });
+        if (limit) {
+            notesQuery = notesQuery.limit(parseInt(limit));
+        }
+        
+        const notes = await notesQuery.exec();
+        res.json(notes);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ===== حذف جميع الإشعارات =====
-app.delete('/api/notifications/clear', authenticate, async (req, res) => {
+// ===== جلب آخر مذكرة =====
+app.get('/api/notes/latest', authenticate, async (req, res) => {
     try {
-        await Notification.deleteMany({
-            $or: [
-                { userId: req.user.name },
-                { userId: 'all' }
-            ]
-        });
-        
-        res.json({ message: 'تم حذف جميع الإشعارات' });
+        const note = await NoteVerbale.findOne().sort({ createdAt: -1 });
+        res.json(note || null);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// ============================================================
-// ===== نظام Note Verbale (المذكرات الرسمية) =====
-// ============================================================
-
-app.post('/api/reports/note-verbale/:id', authenticate, authorize('مسؤول'), async (req, res) => {
+// ===== حذف مذكرة =====
+app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
-        const vesselId = req.params.id;
-        const { unit, ref, notes } = req.body;
-        
-        const vessel = await Vessel.findById(vesselId);
-        if (!vessel) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
-        }
-
-        const doc = new PDFDocument({
-            size: 'A4',
-            margins: { top: 50, bottom: 50, left: 50, right: 50 }
-        });
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Note_Verbale_${vessel.name}_${Date.now()}.pdf`);
-
-        doc.pipe(res);
-
-        // ===== الهيدر =====
-        doc.fontSize(20)
-           .font('Helvetica-Bold')
-           .text('الجمهورية التونسية', { align: 'center' })
-           .fontSize(16)
-           .text('وزارة الداخلية', { align: 'center' })
-           .fontSize(14)
-           .text('الحرس البحري التونسي', { align: 'center' })
-           .moveDown(2);
-
-        doc.moveTo(50, 150)
-           .lineTo(550, 150)
-           .stroke();
-
-        // ===== عنوان المذكرة =====
-        doc.fontSize(18)
-           .font('Helvetica-Bold')
-           .text('مذكرة إدارية', { align: 'center' })
-           .moveDown(1);
-
-        // ===== التاريخ والمرجع =====
-        doc.fontSize(12)
-           .font('Helvetica')
-           .text(`التاريخ: ${new Date().toLocaleDateString('ar-TN')}`, { align: 'right' })
-           .text(`المرجع: ${ref || vessel.ref || 'غير محدد'}`, { align: 'right' })
-           .text(`الوحدة: ${unit || 'غير محدد'}`, { align: 'right' })
-           .moveDown(2);
-
-        // ===== الموضوع =====
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .text('الموضوع:', { underline: true })
-           .fontSize(12)
-           .font('Helvetica')
-           .text(`حالة الوسيلة البحرية "${vessel.name}"`, { align: 'right' })
-           .moveDown(2);
-
-        // ===== المحتوى =====
-        doc.fontSize(12)
-           .font('Helvetica')
-           .text('تعلن إدارة الحرس البحري التونسي ما يلي:', { align: 'right' })
-           .moveDown(1);
-
-        const info = [
-            ['الاسم', vessel.name],
-            ['الرقم', vessel.num || 'غير محدد'],
-            ['الطول', vessel.len ? `${vessel.len} متر` : 'غير محدد'],
-            ['الفئة', vessel.cat || 'غير محدد'],
-            ['الإقليم', vessel.reg || 'غير محدد'],
-            ['المنطقة', vessel.zone || 'غير محدد'],
-            ['الميناء', vessel.port || 'غير محدد'],
-            ['الحالة', vessel.stat || 'غير محدد'],
-            ['نوع العطب', vessel.break || 'لا يوجد'],
-            ['تاريخ العطب', vessel.fDate ? new Date(vessel.fDate).toLocaleDateString('ar-TN') : 'لا يوجد'],
-            ['تاريخ الانتهاء', vessel.eDate ? new Date(vessel.eDate).toLocaleDateString('ar-TN') : 'لا يوجد'],
-        ];
-
-        info.forEach(([label, value]) => {
-            doc.text(`• ${label}: ${value}`, { align: 'right' });
-        });
-
-        if (notes) {
-            doc.moveDown(1)
-               .text(`ملاحظات: ${notes}`, { align: 'right' });
-        }
-
-        doc.moveDown(2);
-
-        // ===== توقيع =====
-        doc.text('و الله ولي التوفيق', { align: 'center' })
-           .moveDown(2)
-           .text('............................', { align: 'center' })
-           .fontSize(10)
-           .text('توقيع القائد', { align: 'center' });
-
-        doc.moveDown(3)
-           .fontSize(8)
-           .text('الجمهورية التونسية - وزارة الداخلية - الحرس البحري', { align: 'center' })
-           .text('المقر العام - تونس العاصمة');
-
-        doc.end();
-
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== تصدير جميع المراكب كـ PDF =====
-app.get('/api/reports/all-vessels-pdf', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        
-        const doc = new PDFDocument({
-            size: 'A4',
-            margins: { top: 50, bottom: 50, left: 50, right: 50 }
-        });
-
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=Liste_Vessels_${Date.now()}.pdf`);
-
-        doc.pipe(res);
-
-        doc.fontSize(20)
-           .font('Helvetica-Bold')
-           .text('قائمة الوسائل البحرية', { align: 'center' })
-           .moveDown(1)
-           .fontSize(12)
-           .font('Helvetica')
-           .text(`التاريخ: ${new Date().toLocaleDateString('ar-TN')}`, { align: 'right' })
-           .text(`عدد المراكب: ${vessels.length}`, { align: 'right' })
-           .moveDown(2);
-
-        vessels.forEach((v, index) => {
-            doc.fontSize(11)
-               .font('Helvetica-Bold')
-               .text(`${index + 1}. ${v.name}`, { align: 'right' })
-               .font('Helvetica')
-               .text(`   الرقم: ${v.num || 'غير محدد'} | الفئة: ${v.cat || 'غير محدد'} | الحالة: ${v.stat || 'غير محدد'}`, { align: 'right' })
-               .text(`   الإقليم: ${v.reg || 'غير محدد'} | الميناء: ${v.port || 'غير محدد'}`, { align: 'right' })
-               .moveDown(0.5);
-        });
-
-        doc.end();
-
+        await NoteVerbale.findByIdAndDelete(req.params.id);
+        res.json({ message: 'تم حذف المذكرة' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -745,7 +581,8 @@ app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, re
         const tickets = await Ticket.find();
         const logs = await Log.find();
         const locations = await Location.find();
-        res.json({ vessels, users, tickets, logs, locations });
+        const notes = await NoteVerbale.find();
+        res.json({ vessels, users, tickets, logs, locations, notes });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -753,7 +590,7 @@ app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, re
 
 app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
-        const { vessels, users, tickets, logs, locations } = req.body;
+        const { vessels, users, tickets, logs, locations, notes } = req.body;
         
         if (vessels) await Vessel.deleteMany({});
         if (users) {
@@ -769,6 +606,7 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
         if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
         if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
         if (locations) { await Location.deleteMany({}); await Location.insertMany(locations); }
+        if (notes) { await NoteVerbale.deleteMany({}); await NoteVerbale.insertMany(notes); }
         
         res.json({ message: 'تم استيراد البيانات بنجاح' });
     } catch (error) {
@@ -798,6 +636,8 @@ app.get('*', (req, res) => {
 // ===== Socket.IO =====
 // ============================================================
 
+const connectedUsers = {};
+
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
@@ -814,8 +654,12 @@ io.on('connection', (socket) => {
                 connectedAt: new Date().toISOString(),
                 lastUpdate: new Date().toISOString(),
                 ip: socket.handshake.address || 'غير معروف',
-                device: extractDevice(ua),
-                browser: extractBrowser(ua)
+                device: ua.includes('Android') ? 'Android' : 
+                         ua.includes('iPhone') ? 'iOS' : 
+                         ua.includes('Windows') ? 'Windows' : 'غير معروف',
+                browser: ua.includes('Chrome') ? 'Chrome' : 
+                          ua.includes('Firefox') ? 'Firefox' : 
+                          ua.includes('Safari') ? 'Safari' : 'غير معروف'
             };
             console.log('👥 مستخدم متصل:', data.userName);
             io.emit('user-list', Object.values(connectedUsers));
