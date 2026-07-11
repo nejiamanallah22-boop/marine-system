@@ -415,13 +415,13 @@ header .header-content {
 }
 
 /* ============================================================
-   ===== الجداول (المعدلة بالكامل) =====
+   ===== الجداول (المعدلة بالكامل - إصلاح ظهور الأزرار) =====
    ============================================================ */
 .region-table-card {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow: visible !important; /* إصلاح: إظهار كل المحتوى */
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     margin-bottom: 25px;
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -440,18 +440,20 @@ header .header-content {
 
 .scrollable-table {
     overflow-x: auto;
-    overflow-y: visible;
+    overflow-y: visible !important; /* إصلاح: إظهار الأزرار */
     max-height: none;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+    position: relative;
 }
 
+/* ===== الجدول الرئيسي - إصلاح العرض ===== */
 table {
     width: 100%;
-    min-width: 1200px;
+    min-width: unset !important; /* إصلاح: إلغاء العرض الثابت */
     border-collapse: collapse;
     font-size: 14px;
-    table-layout: fixed;
+    table-layout: auto !important; /* إصلاح: جعل الأعمدة مرنة */
 }
 
 table th,
@@ -462,6 +464,7 @@ table td {
     word-wrap: break-word;
     overflow-wrap: break-word;
     vertical-align: middle;
+    overflow: visible !important; /* إصلاح: إظهار الأزرار */
 }
 
 table th {
@@ -491,7 +494,7 @@ table tbody tr:nth-child(even) {
     background-color: #f8f9fa;
 }
 
-/* ===== عرض الأعمدة ===== */
+/* ===== عرض الأعمدة - مرن ===== */
 table th:nth-child(1) { width: 10%; }
 table th:nth-child(2) { width: 8%; }
 table th:nth-child(3) { width: 8%; }
@@ -506,31 +509,129 @@ table th:nth-child(11) { width: 10%; }
 table th:nth-child(12) { width: 10%; }
 table th:nth-child(13) { width: 12%; }
 
-/* ===== تحسين عرض الأزرار في الجدول ===== */
+/* ============================================================
+   ===== إصلاح الأزرار في الجدول (الحل الجذري) =====
+   ============================================================ */
+
+/* 1. إظهار الأزرار في كل الأحوال */
+table td .btn-sm,
+table td .btn,
+table td button,
+table td a.btn {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    margin: 2px 3px !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+/* 2. إصلاح عمود الإجراءات (Actions) */
+table td:last-child,
+table th:last-child {
+    min-width: 160px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    position: sticky !important;
+    right: 0 !important;
+    background: inherit !important;
+    z-index: 5 !important;
+    border-left: 2px solid #dee2e6 !important;
+}
+
+/* 3. تثبيت عمود الإجراءات عند التمرير */
+table td:last-child {
+    background: #fff !important;
+}
+
+table tbody tr:nth-child(even) td:last-child {
+    background: #f8f9fa !important;
+}
+
+table tbody tr:hover td:last-child {
+    background: rgba(13, 110, 253, 0.05) !important;
+}
+
+/* 4. تحسين مظهر الأزرار داخل الجدول */
 table td .btn-sm {
-    margin: 2px 4px;
-    padding: 4px 10px;
-    font-size: 11px;
-    white-space: nowrap;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-block;
+    padding: 5px 12px !important;
+    font-size: 12px !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    line-height: 1.5 !important;
+    text-decoration: none !important;
 }
 
 table td .btn-sm:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
-.btn-sm.btn-orange {
-    background: #ffc107;
-    color: #212529;
+table td .btn-sm:active {
+    transform: scale(0.95) !important;
 }
+
+/* ألوان الأزرار الخاصة */
+.btn-sm.btn-orange {
+    background: #ffc107 !important;
+    color: #212529 !important;
+}
+.btn-sm.btn-orange:hover {
+    background: #e0a800 !important;
+}
+
 .btn-sm.btn-red {
-    background: #dc3545;
-    color: white;
+    background: #dc3545 !important;
+    color: white !important;
+}
+.btn-sm.btn-red:hover {
+    background: #c82333 !important;
+}
+
+.btn-sm.btn-success {
+    background: #198754 !important;
+    color: white !important;
+}
+.btn-sm.btn-success:hover {
+    background: #157347 !important;
+}
+
+.btn-sm.btn-primary {
+    background: #0d6efd !important;
+    color: white !important;
+}
+.btn-sm.btn-primary:hover {
+    background: #0a58ca !important;
+}
+
+.btn-sm.btn-info {
+    background: #0dcaf0 !important;
+    color: #000 !important;
+}
+.btn-sm.btn-info:hover {
+    background: #0bb5d6 !important;
+}
+
+.btn-sm.btn-warning {
+    background: #ffc107 !important;
+    color: #000 !important;
+}
+.btn-sm.btn-warning:hover {
+    background: #e0a800 !important;
+}
+
+.btn-sm.btn-secondary {
+    background: #6c757d !important;
+    color: white !important;
+}
+.btn-sm.btn-secondary:hover {
+    background: #5a6268 !important;
 }
 
 /* ===== الحالات ===== */
@@ -875,7 +976,7 @@ table td .btn-sm:hover {
         -webkit-overflow-scrolling: touch;
     }
     table {
-        min-width: 900px;
+        min-width: unset !important;
         font-size: 13px;
     }
     table th,
@@ -884,8 +985,11 @@ table td .btn-sm:hover {
         font-size: 12px;
     }
     table td .btn-sm {
-        padding: 3px 8px;
-        font-size: 10px;
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+    }
+    table td:last-child {
+        min-width: 140px !important;
     }
 }
 
@@ -939,7 +1043,7 @@ table td .btn-sm:hover {
         -webkit-overflow-scrolling: touch;
     }
     table {
-        min-width: 700px;
+        min-width: unset !important;
         font-size: 12px;
     }
     table th,
@@ -948,9 +1052,12 @@ table td .btn-sm:hover {
         font-size: 11px;
     }
     table td .btn-sm {
-        padding: 2px 6px;
-        font-size: 9px;
-        margin: 1px 2px;
+        padding: 3px 6px !important;
+        font-size: 10px !important;
+        margin: 1px 2px !important;
+    }
+    table td:last-child {
+        min-width: 120px !important;
     }
 }
 
@@ -975,6 +1082,14 @@ table td .btn-sm:hover {
     }
     .map-container {
         height: 250px !important;
+    }
+    table td .btn-sm {
+        padding: 2px 4px !important;
+        font-size: 9px !important;
+        min-width: 20px !important;
+    }
+    table td:last-child {
+        min-width: 100px !important;
     }
 }
 
@@ -1005,5 +1120,9 @@ table td .btn-sm:hover {
         box-shadow: none;
         border: none;
         background: #fff;
+    }
+    table td:last-child {
+        position: static !important;
+        background: transparent !important;
     }
 }
