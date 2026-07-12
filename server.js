@@ -133,7 +133,6 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', LocationSchema);
 
-// ===== نموذج Note Verbale (معدل) =====
 const NoteVerbaleSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
@@ -269,6 +268,106 @@ app.get('/api/create-admin', async (req, res) => {
     }
 });
 
+// ============================================================
+// ===== 🟢 المستخدمين (مع إصلاح إضافة المستخدم) =====
+// ============================================================
+
+// ===== جلب جميع المستخدمين =====
+app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const users = await User.find().select('-pass');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ===== ✅ إضافة مستخدم جديد (مُصلحة) =====
+app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const { name, pass, role } = req.body;
+        
+        // 1. التحقق من الحقول
+        if (!name || !pass) {
+            return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
+        }
+        
+        // 2. التحقق من طول كلمة المرور
+        if (pass.length < 4) {
+            return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 4 أحرف على الأقل' });
+        }
+        
+        // 3. التحقق من وجود المستخدم
+        const existing = await User.findOne({ name });
+        if (existing) {
+            return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+        }
+        
+        // 4. تشفير كلمة المرور
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(pass, salt);
+        
+        // 5. إنشاء المستخدم الجديد
+        const user = new User({
+            name: name,
+            pass: hashedPassword,
+            role: role || 'مشاهد',
+            enabled: true
+        });
+        
+        // 6. حفظ في قاعدة البيانات
+        await user.save();
+        
+        // 7. إرجاع المستخدم (بدون كلمة المرور)
+        const userData = user.toObject();
+        delete userData.pass;
+        
+        res.status(201).json({ 
+            message: '✅ تم إضافة المستخدم بنجاح', 
+            user: userData 
+        });
+        
+    } catch (error) {
+        console.error('❌ خطأ في إضافة المستخدم:', error);
+        res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message });
+    }
+});
+
+// ===== تحديث مستخدم =====
+app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const { pass, ...updateData } = req.body;
+        if (pass) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.pass = await bcrypt.hash(pass, salt);
+        }
+        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+        res.json({ message: 'تم تحديث المستخدم' });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// ===== حذف مستخدم =====
+app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
+        if (user.name === 'admin') {
+            return res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
+        }
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: 'تم حذف المستخدم' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================================
+// ===== بقية Routes =====
+// ============================================================
+
 // ===== المراكب =====
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
@@ -320,57 +419,6 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
         if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
         res.json({ message: 'تم حذف المركب بنجاح' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== المستخدمين =====
-app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const users = await User.find().select('-pass');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { name, pass, role } = req.body;
-        const existing = await User.findOne({ name });
-        if (existing) return res.status(400).json({ error: 'اسم المستخدم موجود' });
-        
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(pass, salt);
-        
-        const user = new User({ name, pass: hashedPassword, role, enabled: true });
-        await user.save();
-        res.status(201).json({ message: 'تم إضافة المستخدم' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { pass, ...updateData } = req.body;
-        if (pass) {
-            const salt = await bcrypt.genSalt(10);
-            updateData.pass = await bcrypt.hash(pass, salt);
-        }
-        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-        res.json({ message: 'تم تحديث المستخدم' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ message: 'تم حذف المستخدم' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -479,6 +527,8 @@ app.post('/api/locations', authenticate, async (req, res) => {
 });
 
 // ===== المستخدمين المتصلين =====
+const connectedUsers = {};
+
 app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const onlineUsers = Object.values(connectedUsers).map(user => ({
@@ -503,11 +553,7 @@ app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, 
     }
 });
 
-// ============================================================
-// ===== Note Verbale Routes =====
-// ============================================================
-
-// ===== حفظ مذكرة جديدة (مع دعم الصور) =====
+// ===== Note Verbale =====
 app.post('/api/notes', authenticate, async (req, res) => {
     try {
         const { title, content, date, time, week, type, imageData, attachments } = req.body;
@@ -537,22 +583,13 @@ app.post('/api/notes', authenticate, async (req, res) => {
     }
 });
 
-// ===== جلب المذكرات =====
 app.get('/api/notes', authenticate, async (req, res) => {
     try {
         const { week, limit } = req.query;
         let query = {};
-        
-        if (week) {
-            query.week = week;
-        }
-        
+        if (week) query.week = week;
         let notesQuery = NoteVerbale.find(query).sort({ createdAt: -1 });
-        
-        if (limit) {
-            notesQuery = notesQuery.limit(parseInt(limit));
-        }
-        
+        if (limit) notesQuery = notesQuery.limit(parseInt(limit));
         const notes = await notesQuery.exec();
         res.json(notes);
     } catch (error) {
@@ -560,7 +597,6 @@ app.get('/api/notes', authenticate, async (req, res) => {
     }
 });
 
-// ===== جلب آخر مذكرة =====
 app.get('/api/notes/latest', authenticate, async (req, res) => {
     try {
         const note = await NoteVerbale.findOne().sort({ createdAt: -1 });
@@ -570,7 +606,6 @@ app.get('/api/notes/latest', authenticate, async (req, res) => {
     }
 });
 
-// ===== حذف مذكرة =====
 app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         await NoteVerbale.findByIdAndDelete(req.params.id);
@@ -626,9 +661,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ============================================================
 // ===== تقديم الملفات الثابتة =====
-// ============================================================
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
@@ -642,8 +675,6 @@ app.get('*', (req, res) => {
 // ============================================================
 // ===== Socket.IO =====
 // ============================================================
-
-const connectedUsers = {};
 
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
@@ -704,14 +735,14 @@ const initializeDefaultUsers = async () => {
         const adminExists = await User.findOne({ name: 'admin' });
         if (!adminExists) {
             const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash('1234', salt);
+            const hashedPassword = await bcrypt.hash('123456', salt);
             await User.create({
                 name: 'admin',
                 pass: hashedPassword,
                 role: 'مسؤول',
                 enabled: true
             });
-            console.log('✅ تم إنشاء المستخدم الافتراضي: admin / 1234');
+            console.log('✅ تم إنشاء المستخدم الافتراضي: admin / 123456');
         } else {
             console.log('✅ المستخدم admin موجود بالفعل');
         }
@@ -728,7 +759,7 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin');
-    console.log('   🔑 1234');
+    console.log('   🔑 123456');
     console.log('========================================');
 });
 
