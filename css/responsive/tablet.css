@@ -1,0 +1,65 @@
+/* ============================================================
+   ===== شاشات التابلت (768px - 1024px) =====
+   ============================================================ */
+
+@media (max-width: 1024px) and (min-width: 769px) {
+    /* ===== التخطيط ===== */
+    .container {
+        padding: var(--spacing-4);
+    }
+
+    /* ===== الهيدر ===== */
+    header h1 {
+        font-size: var(--font-size-lg);
+    }
+
+    /* ===== شريط التنقل ===== */
+    .nav .btn {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-1) var(--spacing-3);
+    }
+
+    /* ===== الإحصائيات ===== */
+    .stats-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* ===== الجداول ===== */
+    table {
+        font-size: var(--font-size-xs);
+    }
+
+    table th,
+    table td {
+        padding: var(--spacing-2) var(--spacing-2);
+    }
+
+    /* ===== النماذج ===== */
+    .input-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .input-grid textarea {
+        grid-column: span 1;
+    }
+
+    /* ===== لوحة التحكم ===== */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* ===== الخريطة ===== */
+    .map-container {
+        height: 350px !important;
+    }
+
+    /* ===== المذكرات ===== */
+    .note-item {
+        padding: var(--spacing-3);
+    }
+
+    /* ===== البطاقات ===== */
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
