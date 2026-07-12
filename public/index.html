@@ -4,218 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
-    
+
     <!-- ===== الخطوط والأيقونات ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- ===== المكتبات ===== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- ===== مكتبات قراءة الملفات ===== -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-    
-    <!-- ===== ملفات المشروع ===== -->
-    <link rel="stylesheet" href="/css/style.css">
+    <!-- ✅ تم حذف pdf.worker.min.js من هنا -->
+
+    <!-- ===== ملفات المشروع (بترتيب صحيح) ===== -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* أنماط إضافية مؤقتة */
+        .hidden {
+            display: none !important;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 8px;
+            z-index: 99999;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            max-width: 92%;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- ===== شاشة الدخول ===== -->
-<!-- ============================================================ -->
-<div id="loginOverlay">
-    <div class="login-box">
-        <span class="logo">⚓</span>
-        <h2>منظومة الوسائل البحرية</h2>
-        <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-        <div class="location-hint">
-            <i class="fas fa-map-marker-alt"></i>
-            لتسجيل الدخول، يرجى السماح بالوصول إلى موقعك
-        </div>
-        <input type="text" id="username" placeholder="👤 اسم المستخدم">
-        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-        <button class="login-btn" onclick="doLogin()">
-            <i class="fas fa-sign-in-alt"></i> دخول
-        </button>
-        <div id="loginError" class="error-msg"></div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- ===== التطبيق الرئيسي ===== -->
-<!-- ============================================================ -->
-<div id="mainApp" class="container">
-
-    <!-- ====== الهيدر ====== -->
-    <header>
-        <h1><i class="fas fa-ship"></i> منظومة متابعة الوسائل البحرية</h1>
-        <div class="header-content">
-            <div class="developer-info">
-                <i class="fas fa-code"></i> المطور: أمان الله ناجي <i class="fas fa-rocket"></i>
+    <!-- ===== شاشة الدخول ===== -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <span class="logo">⚓</span>
+            <h2>منظومة الوسائل البحرية</h2>
+            <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
+            <div class="location-hint">
+                <i class="fas fa-map-marker-alt"></i>
+                لتسجيل الدخول، يرجى السماح بالوصول إلى موقعك
             </div>
-            <div class="header-actions">
-                <span id="userRoleDisplay" class="role-badge">
-                    <i class="fas fa-user"></i> 👤
-                </span>
-                <button class="btn btn-sm btn-outline-white" onclick="exportAllData()">
-                    <i class="fas fa-file-export"></i> تصدير
-                </button>
-                <label class="btn btn-sm btn-outline-white" style="cursor:pointer;">
-                    <i class="fas fa-file-import"></i> استيراد
-                    <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importAllData(this)">
-                </label>
-                <button class="btn btn-sm btn-outline-white" onclick="refreshAllPages()">
-                    <i class="fas fa-sync-alt"></i> تحديث
-                </button>
-                <button class="btn btn-sm btn-outline-white" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> خروج
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- ====== شريط التنقل ====== -->
-    <div class="nav">
-        <button class="btn btn-primary" onclick="showPage('main')"><i class="fas fa-ship"></i> الأسطول</button>
-        <button class="btn btn-warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> الصيانة</button>
-        <button class="btn btn-success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> الجاهزية</button>
-        <button class="btn btn-info" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم</button>
-        <button id="trackBtn" class="btn btn-secondary" onclick="showPage('track')"><i class="fas fa-map-marked-alt"></i> التتبع</button>
-        <button id="mapNavBtn" class="btn btn-secondary" onclick="showPage('map')"><i class="fas fa-map"></i> الخريطة</button>
-        <button id="admBtn" class="btn btn-danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> المستخدمين</button>
-        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-        <button class="btn btn-primary" onclick="showPage('note')"><i class="fas fa-file-alt"></i> Note Verbale</button>
-    </div>
-
-    <!-- ====== نموذج الإدخال ====== -->
-    <div id="inputArea" class="input-grid">
-        <input type="text" id="iName" placeholder="🚢 اسم المركب">
-        <input type="text" id="iNum" placeholder="# الرقم">
-        <input type="number" id="iLen" placeholder="📏 الطول (م)">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">🗺️ الإقليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
-        <select id="iZone"><option value="">📍 المنطقة</option></select>
-        <input type="text" id="iPort" placeholder="⚓ الميناء">
-        <input type="text" id="iSupp" placeholder="🔧 مكان التعزيز">
-        <select id="iStat">
-            <option value="صالح">✅ صالح</option>
-            <option value="معطب">❌ معطب</option>
-            <option value="صيانة">🔧 صيانة</option>
-        </select>
-        <input type="text" id="iBreak" placeholder="🛠️ نوع العطب">
-        <input type="date" id="iDate" placeholder="📅 تاريخ العطب">
-        <input type="date" id="iEnd" placeholder="📅 تاريخ الانتهاء">
-        <input type="text" id="iRef" placeholder="📄 المرجع">
-        <button class="btn btn-success" onclick="addItem()">
-            <i class="fas fa-save"></i> حفظ
-        </button>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الأسطول ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMain">
-        <div class="filter-bar">
-            <div class="search-input">
-                <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="renderMain()">
-            </div>
-            <label><i class="fas fa-tag"></i> الفئة:</label>
-            <select id="fCatMain" onchange="renderMain()">
-                <option value="الكل">الكل</option>
-            </select>
-            <label><i class="fas fa-map"></i> الإقليم:</label>
-            <select id="fRegMain" onchange="renderMain()">
-                <option value="الكل">الكل</option>
-            </select>
-            <button class="btn btn-sm btn-secondary" onclick="clearMainSearch()">
-                <i class="fas fa-eraser"></i> مسح
+            <input type="text" id="username" placeholder="👤 اسم المستخدم" value="admin">
+            <input type="password" id="password" placeholder="🔑 كلمة المرور" value="123456">
+            <button class="login-btn" onclick="doLogin()">
+                <i class="fas fa-sign-in-alt"></i> دخول
             </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-ship"></i> الأسطول البحري
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الرقم</th><th>الطول</th>
-                            <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
-                            <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
-                            <th>العطب</th><th>التاريخ</th><th>الانتهاء</th>
-                            <th>إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mainBody"></tbody>
-                </table>
-            </div>
+            <div id="loginError" class="error-msg"></div>
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الصيانة ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMaint" class="hidden">
-        <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="🔍 بحث في الصيانة" onkeyup="renderMaint()">
-            <label><i class="fas fa-map"></i> الإقليم:</label>
-            <select id="fRegMaint" onchange="renderMaint()">
-                <option value="الكل">الكل</option>
-            </select>
-            <label><i class="fas fa-calendar-alt"></i> من تاريخ:</label>
-            <input type="date" id="fDateStart" onchange="renderMaint()">
-            <label><i class="fas fa-calendar-alt"></i> إلى تاريخ:</label>
-            <input type="date" id="fDateEnd" onchange="renderMaint()">
-            <button class="btn btn-sm btn-secondary" onclick="resetMaintFilters()">
-                <i class="fas fa-undo"></i> إعادة ضبط
-            </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-tools"></i> سجل الصيانة
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الرقم</th><th>الإقليم</th>
-                            <th>المنطقة</th><th>الحالة</th>
-                            <th class="damage-column">العطب</th>
-                            <th>تاريخ العطب</th><th>الانتهاء</th>
-                            <th>المرجع</th><th>إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="maintBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <!-- ===== التطبيق الرئيسي ===== -->
+    <div id="mainApp" class="container" style="display:none;">
 
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الجاهزية ====== -->
-    <!-- ============================================================ -->
-    <div id="pageEff" class="hidden">
-        <div class="filter-bar">
-            <label><i class="fas fa-filter"></i> تصفية الإقليم:</label>
-            <select id="fRegEff" onchange="renderEff()">
-                <option value="الكل">الكل</option>
-                <option value="نجاعة عامة">📊 نجاعة عامة</option>
+        <!-- ===== الهيدر ===== -->
+        <header>
+            <h1><i class="fas fa-ship"></i> منظومة متابعة الوسائل البحرية</h1>
+            <div class="header-content">
+                <div class="developer-info">
+                    <i class="fas fa-code"></i> المطور: أمان الله ناجي <i class="fas fa-rocket"></i>
+                </div>
+                <div class="header-actions">
+                    <span id="userRoleDisplay" class="role-badge">
+                        <i class="fas fa-user"></i> 👤 admin
+                    </span>
+                    <button class="btn btn-sm btn-primary" onclick="exportAllData()">
+                        <i class="fas fa-file-export"></i> تصدير
+                    </button>
+                    <label class="btn btn-sm btn-primary" style="cursor:pointer;">
+                        <i class="fas fa-file-import"></i> استيراد
+                        <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importAllData(this)">
+                    </label>
+                    <button class="btn btn-sm btn-warning" onclick="refreshAllPages()">
+                        <i class="fas fa-sync-alt"></i> تحديث
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> خروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== شريط التنقل ===== -->
+        <div class="nav">
+            <button class="btn btn-primary" onclick="showPage('main')"><i class="fas fa-ship"></i> الأسطول</button>
+            <button class="btn btn-warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> الصيانة</button>
+            <button class="btn btn-success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> الجاهزية</button>
+            <button class="btn btn-info" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم</button>
+            <button class="btn btn-secondary" onclick="showPage('track')"><i class="fas fa-map-marked-alt"></i> التتبع</button>
+            <button class="btn btn-secondary" onclick="showPage('map')"><i class="fas fa-map"></i> الخريطة</button>
+            <button class="btn btn-danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> المستخدمين</button>
+            <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+            <button class="btn btn-primary" onclick="showPage('note')"><i class="fas fa-file-alt"></i> Note Verbale</button>
+        </div>
+
+        <!-- ===== نموذج الإدخال ===== -->
+        <div id="inputArea" class="input-grid">
+            <input type="text" id="iName" placeholder="🚢 اسم المركب">
+            <input type="text" id="iNum" placeholder="# الرقم">
+            <input type="number" id="iLen" placeholder="📏 الطول (م)">
+            <select id="iReg" onchange="updateZones()">
+                <option value="">🗺️ الإقليم</option>
                 <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
                 <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
                 <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
@@ -226,318 +142,408 @@
                 <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
                 <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             </select>
-            <button class="btn btn-sm btn-success" onclick="refreshEff()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-sm btn-primary" onclick="exportEfficiencyReport()" style="background:#0d6efd; color:white; font-weight:bold;">
-                <i class="fas fa-file-pdf"></i> تصدير النجاعة
-            </button>
-        </div>
-        
-        <!-- ===== آخر Note Verbale ===== -->
-        <div id="latestNoteContainer" style="display:none; background:white; border-radius:8px; padding:15px; margin-bottom:20px; border-right:4px solid #0d6efd; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                <h4 style="color:#0d6efd; margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
-                <small style="color:#6c757d;" id="latestNoteDate"></small>
-            </div>
-            <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
-            <div id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></div>
-            <div id="latestNoteAttachments" style="margin-top:10px;"></div>
-        </div>
-        
-        <div class="stats-cards" id="statsCards"></div>
-        <div id="generalEffTableContainer"></div>
-        <div id="regionTables"></div>
-        <div class="chart-switch">
-            <button class="active" onclick="switchChartType('doughnut', this)">
-                <i class="fas fa-chart-pie"></i> دائري
-            </button>
-            <button onclick="switchChartType('bar', this)">
-                <i class="fas fa-chart-bar"></i> شريطي
-            </button>
-            <button onclick="switchChartType('line', this)">
-                <i class="fas fa-chart-line"></i> خطي
-            </button>
-        </div>
-        <div id="chartsArea"></div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الدعم ====== -->
-    <!-- ============================================================ -->
-    <div id="pageSupport" class="hidden">
-        <div class="region-table-card" style="padding:25px;">
-            <h3><i class="fas fa-headset"></i> نظام التذاكر - الدعم الفني</h3>
-            <p style="color:var(--secondary); margin:8px 0 15px;">
-                <i class="fas fa-envelope"></i> support@marine.gov.tn &nbsp;|&nbsp;
-                <i class="fas fa-phone"></i> 29659945
-            </p>
-            <hr style="margin:15px 0; border-color:#e9ecef;">
-            <h4><i class="fas fa-paper-plane"></i> إرسال طلب دعم جديد</h4>
-            <input type="text" id="ticketSubject" placeholder="📌 عنوان الطلب" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-            <textarea id="ticketMessage" rows="4" placeholder="📝 شرح المشكلة بالتفصيل..." style="width:100%; padding:12px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
-            <button class="btn btn-primary" onclick="sendTicket()">
-                <i class="fas fa-paper-plane"></i> إرسال الطلب
-            </button>
-            <button class="btn btn-sm btn-secondary" onclick="refreshTickets()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <div id="ticketResponse" style="margin-top:12px; color:var(--success); font-weight:600;"></div>
-            <hr style="margin:20px 0; border-color:#e9ecef;">
-            <h4><i class="fas fa-list"></i> قائمة التذاكر</h4>
-            <div id="ticketsList"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة التتبع ====== -->
-    <!-- ============================================================ -->
-    <div id="pageTrack" class="hidden">
-        <div class="filter-bar">
-            <span style="font-weight:700; color:var(--primary);">
-                <i class="fas fa-map-marker-alt"></i> تتبع المستخدمين المباشر
-            </span>
-            <span id="trackUsersCount" style="background:var(--primary); color:white; padding:4px 14px; border-radius:20px; font-size:13px;">0 متصل</span>
-            <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
-                <i class="fas fa-eraser"></i> مسح الكل
-            </button>
-        </div>
-        <div class="map-container">
-            <div id="trackMap" style="height:500px; width:100%;"></div>
-        </div>
-        <div class="region-table-card" style="margin-top:20px;">
-            <div class="region-table-header">
-                <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th><th>المستخدم</th><th>الصلاحية</th>
-                            <th>ID</th><th>الجهاز</th><th>المتصفح</th>
-                            <th>IP</th><th>الموقع</th><th>آخر تحديث</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trackUsersBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الخريطة ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMap" class="hidden">
-        <div class="filter-bar">
-            <span style="font-weight:700; color:var(--primary);">
-                <i class="fas fa-map-marker-alt"></i> تتبع GPS المباشر
-            </span>
-            <span id="gpsStatusIndicator">
-                <span class="gps-status gps-inactive" id="gpsDot"></span>
-                <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
-            </span>
-            <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">
-                <i class="fas fa-play"></i> بدء التتبع المباشر
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">
-                <i class="fas fa-stop"></i> إيقاف التتبع
-            </button>
-            <button class="btn btn-sm btn-success" onclick="loadLocations()">
-                <i class="fas fa-sync-alt"></i> تحديث الخريطة
-            </button>
-            <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">
-                <i class="fas fa-crosshairs"></i> مركز موقعي
-            </button>
-            <button class="btn btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800; color:white;">
-                <i class="fas fa-lock-open"></i> طلب إذن الموقع
-            </button>
-        </div>
-        <div id="mapStatus" style="text-align:center; margin:10px; color:var(--secondary); padding:12px; background:#f8f9fa; border-radius:var(--radius-sm);">
-            <i class="fas fa-info-circle"></i> اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي
-        </div>
-        <div class="map-container">
-            <div id="trackMap" style="height:500px; width:100%;"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة المستخدمين ====== -->
-    <!-- ============================================================ -->
-    <div id="pageUsers" class="hidden">
-        <div class="input-grid">
-            <input type="text" id="un" placeholder="👤 اسم المستخدم">
-            <input type="password" id="up" placeholder="🔑 كلمة السر">
-            <select id="ur">
-                <option value="مسؤول">👑 مسؤول</option>
-                <option value="محرر">✏️ محرر</option>
-                <option value="مشاهد">👁️ مشاهد</option>
+            <select id="iZone"><option value="">📍 المنطقة</option></select>
+            <input type="text" id="iPort" placeholder="⚓ الميناء">
+            <input type="text" id="iSupp" placeholder="🔧 مكان التعزيز">
+            <select id="iStat">
+                <option value="صالح">✅ صالح</option>
+                <option value="معطب">❌ معطب</option>
+                <option value="صيانة">🔧 صيانة</option>
             </select>
-            <button class="btn btn-primary" onclick="addUser()">
-                <i class="fas fa-user-plus"></i> إضافة
-            </button>
-            <button class="btn btn-sm btn-success" onclick="refreshUsers()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-users"></i> إدارة المستخدمين
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الصلاحية</th>
-                            <th>الحالة</th>
-                            <th>تغيير كلمة المرور</th>
-                            <th>تعطيل/تفعيل</th>
-                            <th>حذف</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة Note Verbale ====== -->
-    <!-- ============================================================ -->
-    <div id="pageNote" class="hidden">
-        <div class="region-table-card" style="padding:25px;">
-            <div class="region-table-header">
-                <i class="fas fa-file-alt"></i> Note Verbale
-            </div>
-            <div style="padding:20px;">
-                
-                <!-- ===== استيراد ملف ===== -->
-                <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <label style="font-weight:bold;">📂 استيراد ملف:</label>
-                    <input type="file" id="noteFileInput" accept=".txt,.docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.html,.htm" style="flex:1; padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                    <button class="btn btn-info" onclick="importNoteFile()">
-                        <i class="fas fa-upload"></i> استيراد
-                    </button>
-                    <small style="color:#6c757d;">(يدعم: TXT, DOCX, PDF, JPEG, PNG, GIF, BMP, WEBP, SVG, HTML)</small>
-                </div>
-                
-                <hr style="margin:15px 0; border-color:#e9ecef;">
-                
-                <!-- ===== التاريخ ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📅 تاريخ المذكرة:</label>
-                    <input type="date" id="noteDate" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-                </div>
-                
-                <!-- ===== عنوان ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
-                    <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-                </div>
-                
-                <!-- ===== نص ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📄 نص المذكرة:</label>
-                    <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
-                </div>
-                
-                <input type="hidden" id="noteType" value="text">
-                
-                <!-- ===== أزرار ===== -->
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn btn-success" onclick="saveNote()">
-                        <i class="fas fa-save"></i> حفظ
-                    </button>
-                    <button class="btn btn-primary" onclick="exportNotePDF()">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                    <button class="btn btn-primary" onclick="exportNoteWord()" style="background:#2b5797;">
-                        <i class="fas fa-file-word"></i> Word
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearNote()">
-                        <i class="fas fa-eraser"></i> مسح
-                    </button>
-                </div>
-                
-                <!-- ===== عرض النتيجة ===== -->
-                <div id="noteResult" style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px; display:none; border-right:4px solid var(--primary);">
-                    <h4 id="noteResultTitle" style="margin-bottom:10px;"></h4>
-                    <p id="noteResultContent"></p>
-                    <small style="color:#6c757d;" id="noteResultDate"></small>
-                </div>
-                
-                <hr style="margin:20px 0; border-color:#e9ecef;">
-                
-                <!-- ===== فلتر المذكرات ===== -->
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:15px; border-radius:8px;">
-                    <label style="font-weight:bold;">🔍 فلتر حسب الأسبوع:</label>
-                    <input type="week" id="filterWeek" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                    <label style="font-weight:bold;">عدد:</label>
-                    <select id="filterLimit" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="loadNotesByWeek()">
-                        <i class="fas fa-search"></i> بحث
-                    </button>
-                </div>
-                
-                <!-- ===== قائمة المذكرات ===== -->
-                <div id="notesListContainer" style="margin-top:15px;"></div>
-                
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- ============================================================ -->
-<!-- ===== النوافذ المنبثقة ===== -->
-<!-- ============================================================ -->
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
-        <p id="modalUserName" style="color:var(--secondary); margin-bottom:15px;"></p>
-        <input type="password" id="newPassword" placeholder="🔑 كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="✅ تأكيد كلمة المرور">
-        <div class="modal-actions">
-            <button class="btn btn-success" onclick="saveNewPassword()">
+            <input type="text" id="iBreak" placeholder="🛠️ نوع العطب">
+            <input type="date" id="iDate">
+            <input type="date" id="iEnd">
+            <input type="text" id="iRef" placeholder="📄 المرجع">
+            <button class="btn btn-success" onclick="addItem()">
                 <i class="fas fa-save"></i> حفظ
             </button>
-            <button class="btn btn-danger" onclick="closePasswordModal()">
-                <i class="fas fa-times"></i> إلغاء
-            </button>
+        </div>
+
+        <!-- ===== صفحة الأسطول ===== -->
+        <div id="pageMain" class="page-content active">
+            <div class="filter-bar">
+                <div class="search-input">
+                    <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="renderMain()">
+                </div>
+                <label><i class="fas fa-tag"></i> الفئة:</label>
+                <select id="fCatMain" onchange="renderMain()">
+                    <option value="الكل">الكل</option>
+                </select>
+                <label><i class="fas fa-map"></i> الإقليم:</label>
+                <select id="fRegMain" onchange="renderMain()">
+                    <option value="الكل">الكل</option>
+                </select>
+                <button class="btn btn-sm btn-secondary" onclick="clearMainSearch()">
+                    <i class="fas fa-eraser"></i> مسح
+                </button>
+            </div>
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <i class="fas fa-ship"></i> الأسطول البحري
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th><th>الرقم</th><th>الطول</th>
+                                <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
+                                <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
+                                <th>العطب</th><th>التاريخ</th><th>الانتهاء</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mainBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة الصيانة ===== -->
+        <div id="pageMaint" class="page-content hidden">
+            <div class="filter-bar">
+                <input type="text" id="searchMaint" placeholder="🔍 بحث في الصيانة" onkeyup="renderMaint()">
+                <label><i class="fas fa-map"></i> الإقليم:</label>
+                <select id="fRegMaint" onchange="renderMaint()">
+                    <option value="الكل">الكل</option>
+                </select>
+                <label><i class="fas fa-calendar-alt"></i> من تاريخ:</label>
+                <input type="date" id="fDateStart" onchange="renderMaint()">
+                <label><i class="fas fa-calendar-alt"></i> إلى تاريخ:</label>
+                <input type="date" id="fDateEnd" onchange="renderMaint()">
+                <button class="btn btn-sm btn-secondary" onclick="resetMaintFilters()">
+                    <i class="fas fa-undo"></i> إعادة ضبط
+                </button>
+            </div>
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <i class="fas fa-tools"></i> سجل الصيانة
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th><th>الرقم</th><th>الإقليم</th>
+                                <th>المنطقة</th><th>الحالة</th>
+                                <th>العطب</th>
+                                <th>تاريخ العطب</th><th>الانتهاء</th>
+                                <th>المرجع</th><th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة الجاهزية ===== -->
+        <div id="pageEff" class="page-content hidden">
+            <div class="filter-bar">
+                <label><i class="fas fa-filter"></i> تصفية الإقليم:</label>
+                <select id="fRegEff" onchange="renderEff()">
+                    <option value="الكل">الكل</option>
+                    <option value="نجاعة عامة">📊 نجاعة عامة</option>
+                    <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+                    <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+                    <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+                    <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                    <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                </select>
+                <button class="btn btn-sm btn-success" onclick="refreshEff()">
+                    <i class="fas fa-sync-alt"></i> تحديث
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="exportEfficiencyReport()" style="background:#0d6efd; color:white; font-weight:bold;">
+                    <i class="fas fa-file-pdf"></i> تصدير النجاعة
+                </button>
+            </div>
+
+            <div id="latestNoteContainer" style="display:none; background:white; border-radius:8px; padding:15px; margin-bottom:20px; border-right:4px solid #0d6efd; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                    <h4 style="color:#0d6efd; margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
+                    <small style="color:#6c757d;" id="latestNoteDate"></small>
+                </div>
+                <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
+                <div id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></div>
+                <div id="latestNoteAttachments" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="stats-cards" id="statsCards"></div>
+            <div id="generalEffTableContainer"></div>
+            <div id="regionTables"></div>
+            <div class="chart-switch">
+                <button class="active" onclick="switchChartType('doughnut', this)">
+                    <i class="fas fa-chart-pie"></i> دائري
+                </button>
+                <button onclick="switchChartType('bar', this)">
+                    <i class="fas fa-chart-bar"></i> شريطي
+                </button>
+                <button onclick="switchChartType('line', this)">
+                    <i class="fas fa-chart-line"></i> خطي
+                </button>
+            </div>
+            <div id="chartsArea"></div>
+        </div>
+
+        <!-- ===== صفحة الدعم ===== -->
+        <div id="pageSupport" class="page-content hidden">
+            <div class="region-table-card" style="padding:25px;">
+                <h3><i class="fas fa-headset"></i> نظام التذاكر - الدعم الفني</h3>
+                <p style="color:var(--gray-500); margin:8px 0 15px;">
+                    <i class="fas fa-envelope"></i> <span id="supportEmail">support@marine.gov.tn</span> &nbsp;|&nbsp;
+                    <i class="fas fa-phone"></i> <span id="supportPhone">29659945</span>
+                </p>
+                <hr style="margin:15px 0; border-color:#e9ecef;">
+                <h4><i class="fas fa-paper-plane"></i> إرسال طلب دعم جديد</h4>
+                <input type="text" id="ticketSubject" placeholder="📌 عنوان الطلب" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
+                <textarea id="ticketMessage" rows="4" placeholder="📝 شرح المشكلة بالتفصيل..." style="width:100%; padding:12px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
+                <button class="btn btn-primary" onclick="sendTicket()">
+                    <i class="fas fa-paper-plane"></i> إرسال الطلب
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="refreshTickets()">
+                    <i class="fas fa-sync-alt"></i> تحديث
+                </button>
+                <div id="ticketResponse" style="margin-top:12px; color:var(--success); font-weight:600;"></div>
+                <hr style="margin:20px 0; border-color:#e9ecef;">
+                <h4><i class="fas fa-list"></i> قائمة التذاكر</h4>
+                <div id="ticketsList"></div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة التتبع (الخريطة الأولى) ===== -->
+        <div id="pageTrack" class="page-content hidden">
+            <div class="filter-bar">
+                <span style="font-weight:700; color:var(--primary);">
+                    <i class="fas fa-map-marker-alt"></i> تتبع المستخدمين المباشر
+                </span>
+                <span id="trackUsersCount" style="background:var(--primary); color:white; padding:4px 14px; border-radius:20px; font-size:13px;">0 متصل</span>
+                <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">
+                    <i class="fas fa-sync-alt"></i> تحديث
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
+                    <i class="fas fa-eraser"></i> مسح الكل
+                </button>
+            </div>
+            <div class="map-container">
+                <!-- ✅ تم تغيير id إلى trackUsersMap -->
+                <div id="trackUsersMap" style="height:500px; width:100%;"></div>
+            </div>
+            <div class="region-table-card" style="margin-top:20px;">
+                <div class="region-table-header">
+                    <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th><th>المستخدم</th><th>الصلاحية</th>
+                                <th>ID</th><th>الجهاز</th><th>المتصفح</th>
+                                <th>IP</th><th>الموقع</th><th>آخر تحديث</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackUsersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة الخريطة (الخريطة الثانية) ===== -->
+        <div id="pageMap" class="page-content hidden">
+            <div class="filter-bar">
+                <span style="font-weight:700; color:var(--primary);">
+                    <i class="fas fa-map-marker-alt"></i> تتبع GPS المباشر
+                </span>
+                <span id="gpsStatusIndicator">
+                    <span class="gps-status gps-inactive" id="gpsDot"></span>
+                    <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
+                </span>
+                <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">
+                    <i class="fas fa-play"></i> بدء التتبع المباشر
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">
+                    <i class="fas fa-stop"></i> إيقاف التتبع
+                </button>
+                <button class="btn btn-sm btn-success" onclick="loadLocations()">
+                    <i class="fas fa-sync-alt"></i> تحديث الخريطة
+                </button>
+                <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">
+                    <i class="fas fa-crosshairs"></i> مركز موقعي
+                </button>
+                <button class="btn btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800; color:white;">
+                    <i class="fas fa-lock-open"></i> طلب إذن الموقع
+                </button>
+            </div>
+            <div id="mapStatus" style="text-align:center; margin:10px; color:var(--gray-500); padding:12px; background:#f8f9fa; border-radius:var(--radius-sm);">
+                <i class="fas fa-info-circle"></i> اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي
+            </div>
+            <div class="map-container">
+                <!-- ✅ تم تغيير id إلى gpsMap -->
+                <div id="gpsMap" style="height:500px; width:100%;"></div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة المستخدمين ===== -->
+        <div id="pageUsers" class="page-content hidden">
+            <div class="input-grid">
+                <input type="text" id="un" placeholder="👤 اسم المستخدم">
+                <input type="password" id="up" placeholder="🔑 كلمة السر">
+                <select id="ur">
+                    <option value="مسؤول">👑 مسؤول</option>
+                    <option value="محرر">✏️ محرر</option>
+                    <option value="مشاهد">👁️ مشاهد</option>
+                </select>
+                <button class="btn btn-primary" onclick="addUser()">
+                    <i class="fas fa-user-plus"></i> إضافة
+                </button>
+                <button class="btn btn-sm btn-success" onclick="refreshUsers()">
+                    <i class="fas fa-sync-alt"></i> تحديث
+                </button>
+            </div>
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <i class="fas fa-users"></i> إدارة المستخدمين
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th><th>الصلاحية</th>
+                                <th>الحالة</th>
+                                <th>تغيير كلمة المرور</th>
+                                <th>تعطيل/تفعيل</th>
+                                <th>حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== صفحة Note Verbale ===== -->
+        <div id="pageNote" class="page-content hidden">
+            <div class="region-table-card" style="padding:25px;">
+                <div class="region-table-header">
+                    <i class="fas fa-file-alt"></i> Note Verbale
+                </div>
+                <div style="padding:20px;">
+
+                    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <label style="font-weight:bold;">📂 استيراد ملف:</label>
+                        <input type="file" id="noteFileInput" accept=".txt,.docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.html,.htm" style="flex:1; padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                        <button class="btn btn-info" onclick="importNoteFile()">
+                            <i class="fas fa-upload"></i> استيراد
+                        </button>
+                        <small style="color:#6c757d;">(يدعم: TXT, DOCX, PDF, JPEG, PNG, GIF, BMP, WEBP, SVG, HTML)</small>
+                    </div>
+
+                    <hr style="margin:15px 0; border-color:#e9ecef;">
+
+                    <div style="margin-bottom:15px;">
+                        <label style="font-weight:bold;">📅 تاريخ المذكرة:</label>
+                        <input type="date" id="noteDate" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
+                        <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="font-weight:bold;">📄 نص المذكرة:</label>
+                        <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
+                    </div>
+
+                    <input type="hidden" id="noteType" value="text">
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-success" onclick="saveNote()">
+                            <i class="fas fa-save"></i> حفظ
+                        </button>
+                        <button class="btn btn-primary" onclick="exportNotePDF()">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button class="btn btn-primary" onclick="exportNoteWord()" style="background:#2b5797;">
+                            <i class="fas fa-file-word"></i> Word
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearNote()">
+                            <i class="fas fa-eraser"></i> مسح
+                        </button>
+                    </div>
+
+                    <div id="noteResult" style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px; display:none; border-right:4px solid var(--primary);">
+                        <h4 id="noteResultTitle" style="margin-bottom:10px;"></h4>
+                        <p id="noteResultContent"></p>
+                        <small style="color:#6c757d;" id="noteResultDate"></small>
+                    </div>
+
+                    <hr style="margin:20px 0; border-color:#e9ecef;">
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:15px; border-radius:8px;">
+                        <label style="font-weight:bold;">🔍 فلتر حسب الأسبوع:</label>
+                        <input type="week" id="filterWeek" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                        <label style="font-weight:bold;">عدد:</label>
+                        <select id="filterLimit" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadNotesByWeek()">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                    </div>
+
+                    <div id="notesListContainer" style="margin-top:15px;"></div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== النوافذ المنبثقة ===== -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
+            <p id="modalUserName" style="color:var(--gray-500); margin-bottom:15px;"></p>
+            <input type="password" id="newPassword" placeholder="🔑 كلمة المرور الجديدة">
+            <input type="password" id="confirmPassword" placeholder="✅ تأكيد كلمة المرور">
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="saveNewPassword()">
+                    <i class="fas fa-save"></i> حفظ
+                </button>
+                <button class="btn btn-danger" onclick="closePasswordModal()">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- ============================================================ -->
-<!-- ===== أزرار التمرير ===== -->
-<!-- ============================================================ -->
-<div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()" title="أعلى">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-    <button class="scroll-btn" onclick="scrollToBottom()" title="أسفل">
-        <i class="fas fa-chevron-down"></i>
-    </button>
-</div>
+    <!-- ===== أزرار التمرير ===== -->
+    <div class="scroll-buttons">
+        <button class="scroll-btn" onclick="scrollToTop()" title="أعلى">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+        <button class="scroll-btn" onclick="scrollToBottom()" title="أسفل">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
 
-<!-- ============================================================ -->
-<!-- ===== ملفات الجافاسكريبت ===== -->
-<!-- ============================================================ -->
-<script src="/js/utils.js"></script>
-<script src="/js/api.js"></script>
-<script src="/js/vessels.js"></script>
-<script src="/js/tickets.js"></script>
-<script src="/js/dashboard.js"></script>
-<script src="/js/map.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/app.js"></script>
+    <!-- ===== ملفات الجافاسكريبت (بترتيب صحيح) ===== -->
+    <!-- ✅ auth.js أولاً لأنه يحتوي على دوال المصادقة -->
+    <script src="js/auth.js"></script>
+    <!-- ✅ ثم map.js لأنه يعتمد على auth.js -->
+    <script src="js/map.js"></script>
+    <!-- ✅ ثم باقي الملفات -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/vessels.js"></script>
+    <script src="js/tickets.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/app.js"></script>
 
 </body>
 </html>
