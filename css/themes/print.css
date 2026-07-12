@@ -1,0 +1,220 @@
+/* ============================================================
+   ===== أنماط الطباعة =====
+   ============================================================ */
+
+@media print {
+    /* ===== إخفاء العناصر غير الضرورية ===== */
+    .nav,
+    .filter-bar,
+    .btn,
+    .btn-sm,
+    .scroll-buttons,
+    .map-container,
+    #inputArea,
+    .chart-switch,
+    .theme-toggle,
+    .header-actions,
+    .scrollable-table::-webkit-scrollbar,
+    .modal-overlay,
+    .toast-container,
+    footer .footer-links,
+    footer .footer-social,
+    .export-buttons,
+    .report-options {
+        display: none !important;
+    }
+
+    /* ===== إعدادات الصفحة ===== */
+    @page {
+        size: landscape;
+        margin: 0.8cm;
+    }
+
+    @page :first {
+        margin-top: 1.5cm;
+    }
+
+    /* ===== إعدادات الجسم ===== */
+    body {
+        background: #fff !important;
+        padding: 0 !important;
+        color: #000 !important;
+    }
+
+    /* ===== الحاوية ===== */
+    .container {
+        box-shadow: none !important;
+        border: none !important;
+        background: #fff !important;
+        padding: 10px !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        display: block !important;
+    }
+
+    /* ===== الهيدر ===== */
+    header {
+        background: #fff !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+        margin-bottom: 15px !important;
+    }
+
+    header h1 {
+        color: #000 !important;
+        font-size: 18px !important;
+    }
+
+    header h1 i {
+        -webkit-text-fill-color: var(--primary) !important;
+    }
+
+    .developer-info {
+        background: #f5f5f5 !important;
+        border: 1px solid #ddd !important;
+        color: #333 !important;
+    }
+
+    /* ===== البطاقات ===== */
+    .stat-card {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        transform: none !important;
+    }
+
+    .stat-card::before {
+        display: none !important;
+    }
+
+    .stat-card .number {
+        color: #000 !important;
+    }
+
+    /* ===== الجداول ===== */
+    .region-table-card {
+        border: 1px solid #ddd !important;
+        background: #fff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        overflow: visible !important;
+    }
+
+    .region-table-header {
+        background: #f5f5f5 !important;
+        border-bottom: 2px solid #ddd !important;
+        color: #000 !important;
+    }
+
+    table {
+        font-size: 11px !important;
+        width: 100% !important;
+    }
+
+    table th {
+        background: #1a3a5c !important;
+        color: #fff !important;
+        border-bottom: 2px solid #000 !important;
+        padding: 6px 8px !important;
+    }
+
+    table td {
+        padding: 6px 8px !important;
+        border-bottom: 1px solid #ddd !important;
+        color: #000 !important;
+    }
+
+    table tbody tr:hover {
+        transform: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    table td:last-child {
+        position: static !important;
+        background: #fff !important;
+        border-right: none !important;
+        border-left: 1px solid #ddd !important;
+        min-width: auto !important;
+    }
+
+    table tbody tr:hover td:last-child {
+        background: #fff !important;
+    }
+
+    /* ===== أزرار الجدول في الطباعة ===== */
+    table td .btn-sm {
+        display: none !important;
+    }
+
+    /* ===== الحالات ===== */
+    .status-صالح,
+    .status-معطب,
+    .status-صيانة {
+        border: 1px solid #ddd !important;
+        background: #f5f5f5 !important;
+        color: #000 !important;
+        padding: 2px 10px !important;
+    }
+
+    /* ===== التذييل ===== */
+    footer {
+        background: #fff !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        padding: 10px !important;
+        margin-top: 15px !important;
+    }
+
+    footer .footer-copy {
+        color: #000 !important;
+    }
+
+    /* ===== الأدوات المساعدة ===== */
+    .text-gray-500,
+    .text-gray-600,
+    .text-gray-700,
+    .text-muted {
+        color: #000 !important;
+    }
+
+    /* ===== إجبار الفصل بين الصفحات ===== */
+    .page-break {
+        page-break-after: always;
+    }
+
+    .page-break-inside {
+        page-break-inside: avoid;
+    }
+
+    /* ===== إظهار الروابط ===== */
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 10px;
+        color: #555;
+    }
+
+    a[href^="#"]:after {
+        content: "";
+    }
+
+    /* ===== إزالة الخلفيات الزجاجية ===== */
+    .glass,
+    .card-glass,
+    .modal {
+        background: #fff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: 1px solid #ddd !important;
+    }
+
+    /* ===== إحصائيات ===== */
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+}
