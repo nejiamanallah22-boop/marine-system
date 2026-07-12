@@ -3,12 +3,15 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+
+// استيراد الملفات
+const connectDB = require('./config/database');
+const { authenticate, authorize } = require('./middleware/auth');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -20,18 +23,15 @@ const io = socketIO(server, {
 // ==================== التحقق من البيئة ====================
 // ============================================================
 
-// ✅ الإصلاح 4: التحقق من JWT_SECRET
 if (!process.env.JWT_SECRET) {
     console.warn('⚠️ JWT_SECRET غير موجود في .env، استخدم المفتاح الافتراضي (غير آمن للإنتاج)');
-    // في الإنتاج يجب إيقاف التطبيق
-    // throw new Error("JWT_SECRET is missing");
 }
 
 // ============================================================
 // ==================== Middleware ====================
 // ============================================================
 
-// ✅ الإصلاح 5: CORS محدود
+// ✅ CORS محدود
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',') 
     : ['http://localhost:3000', 'https://yourdomain.com'];
@@ -47,7 +47,7 @@ app.use(cors({
     credentials: true
 }));
 
-// ✅ الإصلاح 6: Helmet مع CSP متوافق
+// ✅ Helmet مع CSP متوافق
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -112,33 +112,13 @@ app.use('/api', rateLimit({
 // ==================== قاعدة البيانات ====================
 // ============================================================
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
-
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-});
-
-// ✅ الإصلاح 10: معالجة أخطاء MongoDB
-mongoose.connection.on('connected', () => {
-    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
-    initializeDefaultUsers();
-});
-
-mongoose.connection.on('error', (err) => {
-    console.error('❌ خطأ في MongoDB:', err.message);
-});
-
-mongoose.connection.on('disconnected', () => {
-    console.warn('⚠️ تم فقدان الاتصال بقاعدة البيانات');
-});
+connectDB();
 
 // ============================================================
 // ==================== نماذج البيانات ====================
 // ============================================================
 
+// ===== نموذج المراكب =====
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -157,15 +137,7 @@ const VesselSchema = new mongoose.Schema({
 
 const Vessel = mongoose.model('Vessel', VesselSchema);
 
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true, trim: true },
-    pass: { type: String, required: true },
-    role: { type: String, enum: ['مسؤول', 'محرر', 'مشاهد'], default: 'مشاهد' },
-    enabled: { type: Boolean, default: true }
-}, { timestamps: true });
-
-const User = mongoose.model('User', UserSchema);
-
+// ===== نموذج التذاكر =====
 const ReplySchema = new mongoose.Schema({
     adminName: { type: String, required: true },
     reply: { type: String, required: true },
@@ -186,8 +158,8 @@ const TicketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model('Ticket', TicketSchema);
 
+// ===== نموذج السجلات =====
 const LogSchema = new mongoose.Schema({
-    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     userName: { type: String, required: true },
     userRole: { type: String, required: true },
     action: { type: String, required: true },
@@ -198,6 +170,7 @@ const LogSchema = new mongoose.Schema({
 
 const Log = mongoose.model('Log', LogSchema);
 
+// ===== نموذج المواقع =====
 const LocationSchema = new mongoose.Schema({
     userName: { type: String, required: true },
     userRole: { type: String, required: true },
@@ -213,6 +186,7 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model('Location', LocationSchema);
 
+// ===== نموذج Note Verbale =====
 const NoteVerbaleSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
@@ -259,10 +233,8 @@ function extractDevice(userAgent) {
     return 'غير معروف';
 }
 
-// ✅ الإصلاح 9: ترتيب فحص المتصفح
 function extractBrowser(userAgent) {
     if (!userAgent) return 'غير معروف';
-    // Edge أولاً (يحتوي على Chrome)
     if (userAgent.includes('Edg') || userAgent.includes('Edge')) return 'Edge';
     if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
     if (userAgent.includes('Chrome')) return 'Chrome';
@@ -272,180 +244,13 @@ function extractBrowser(userAgent) {
 }
 
 // ============================================================
-// ==================== المصادقة ====================
+// ==================== Routes API ====================
 // ============================================================
 
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
+// ===== Routes المصادقة =====
+app.use('/api/auth', authRoutes);
 
-const authenticate = async (req, res, next) => {
-    try {
-        const token = req.headers.authorization?.split(' ')[1];
-        if (!token) return res.status(401).json({ error: 'غير مصرح به - الرجاء تسجيل الدخول' });
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (!user || !user.enabled) return res.status(401).json({ error: 'المستخدم غير موجود أو معطل' });
-        req.user = user;
-        next();
-    } catch (error) {
-        return res.status(401).json({ error: 'رمز مصادقة غير صالح' });
-    }
-};
-
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ error: 'غير مصرح به - صلاحية غير كافية' });
-        }
-        next();
-    };
-};
-
-// ============================================================
-// ==================== API Routes ====================
-// ============================================================
-
-// ===== تسجيل الدخول =====
-app.post('/api/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (!username || !password) {
-            return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
-        }
-
-        const user = await User.findOne({ name: username });
-        if (!user || !user.enabled) {
-            return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.pass);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-
-        const token = jwt.sign(
-            { id: user._id, name: user.name, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        res.json({ token, id: user._id, name: user.name, role: user.role });
-    } catch (error) {
-        res.status(500).json({ error: 'خطأ في السيرفر' });
-    }
-});
-
-// ===== إنشاء مستخدم admin (موحد) =====
-app.get('/api/create-admin', async (req, res) => {
-    try {
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (adminExists) {
-            return res.json({ message: 'المستخدم admin موجود بالفعل', user: adminExists });
-        }
-        
-        // ✅ الإصلاح 7: استخدام نفس كلمة المرور 123456
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('123456', salt);
-        
-        const newAdmin = new User({
-            name: 'admin',
-            pass: hashedPassword,
-            role: 'مسؤول',
-            enabled: true
-        });
-        await newAdmin.save();
-        res.json({ message: '✅ تم إنشاء المستخدم admin بنجاح!', user: newAdmin });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== ✅ إضافة مستخدم جديد (مُصلحة) =====
-app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { name, pass, role } = req.body;
-        
-        if (!name || !pass) {
-            return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
-        }
-        
-        if (pass.length < 4) {
-            return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 4 أحرف على الأقل' });
-        }
-        
-        const existing = await User.findOne({ name });
-        if (existing) {
-            return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
-        }
-        
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(pass, salt);
-        
-        const user = new User({
-            name: name,
-            pass: hashedPassword,
-            role: role || 'مشاهد',
-            enabled: true
-        });
-        
-        await user.save();
-        
-        const userData = user.toObject();
-        delete userData.pass;
-        
-        res.status(201).json({ 
-            success: true,
-            message: '✅ تم إضافة المستخدم بنجاح', 
-            user: userData 
-        });
-        
-    } catch (error) {
-        console.error('❌ خطأ في إضافة المستخدم:', error);
-        res.status(500).json({ error: 'خطأ في السيرفر: ' + error.message });
-    }
-});
-
-// ===== جلب جميع المستخدمين =====
-app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const users = await User.find().select('-pass');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== تحديث مستخدم =====
-app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { pass, ...updateData } = req.body;
-        if (pass) {
-            const salt = await bcrypt.genSalt(10);
-            updateData.pass = await bcrypt.hash(pass, salt);
-        }
-        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-        res.json({ message: 'تم تحديث المستخدم' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== حذف مستخدم =====
-app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-        if (user.name === 'admin') {
-            return res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
-        }
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ message: 'تم حذف المستخدم' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== المراكب =====
+// ===== Routes المراكب =====
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -501,7 +306,7 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
     }
 });
 
-// ===== التذاكر =====
+// ===== Routes التذاكر =====
 app.get('/api/tickets', authenticate, async (req, res) => {
     try {
         const tickets = await Ticket.find().sort({ createdAt: -1 });
@@ -513,7 +318,11 @@ app.get('/api/tickets', authenticate, async (req, res) => {
 
 app.post('/api/tickets', authenticate, async (req, res) => {
     try {
-        const ticket = new Ticket(req.body);
+        const ticket = new Ticket({
+            ...req.body,
+            userName: req.user.name,
+            userRole: req.user.role
+        });
         await ticket.save();
         res.status(201).json(ticket);
     } catch (error) {
@@ -525,7 +334,13 @@ app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (
     try {
         const ticket = await Ticket.findById(req.params.id);
         if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        ticket.replies.push(req.body.reply);
+        
+        ticket.replies.push({
+            adminName: req.user.name,
+            reply: req.body.reply,
+            date: new Date().toISOString().split('T')[0],
+            time: getCurrentTime()
+        });
         ticket.status = 'تم الرد';
         await ticket.save();
         res.json(ticket);
@@ -546,7 +361,7 @@ app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (
     }
 });
 
-// ===== السجلات =====
+// ===== Routes السجلات =====
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const logs = await Log.find().sort({ createdAt: -1 });
@@ -558,7 +373,11 @@ app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => 
 
 app.post('/api/logs', authenticate, async (req, res) => {
     try {
-        const log = new Log(req.body);
+        const log = new Log({
+            ...req.body,
+            date: new Date().toISOString().split('T')[0],
+            time: getCurrentTime()
+        });
         await log.save();
         res.status(201).json(log);
     } catch (error) {
@@ -566,7 +385,7 @@ app.post('/api/logs', authenticate, async (req, res) => {
     }
 });
 
-// ===== المواقع =====
+// ===== Routes المواقع =====
 app.get('/api/locations', authenticate, async (req, res) => {
     try {
         const locations = await Location.find().sort({ timestamp: -1 });
@@ -576,12 +395,11 @@ app.get('/api/locations', authenticate, async (req, res) => {
     }
 });
 
-// ✅ الإصلاح 3: التحقق من الإحداثيات بشكل صحيح
 app.post('/api/locations', authenticate, async (req, res) => {
     try {
         const { lat, lng, action } = req.body;
         
-        // التحقق من القيم
+        // ✅ التحقق من الإحداثيات بشكل صحيح
         if (
             lat == null ||
             lng == null ||
@@ -610,34 +428,7 @@ app.post('/api/locations', authenticate, async (req, res) => {
     }
 });
 
-// ===== المستخدمين المتصلين =====
-const connectedUsers = {};
-
-app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const onlineUsers = Object.values(connectedUsers).map(user => ({
-            id: user.socketId,
-            userName: user.userName,
-            userRole: user.userRole,
-            lat: user.lat,
-            lng: user.lng,
-            connectedAt: user.connectedAt,
-            lastUpdate: user.lastUpdate || user.connectedAt,
-            ip: user.ip || 'غير معروف',
-            device: user.device || 'غير معروف',
-            browser: user.browser || 'غير معروف'
-        }));
-        
-        res.json({
-            online: onlineUsers,
-            total: onlineUsers.length
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== Note Verbale =====
+// ===== Routes Note Verbale =====
 app.post('/api/notes', authenticate, async (req, res) => {
     try {
         const { title, content, date, time, week, type, imageData, attachments } = req.body;
@@ -699,11 +490,11 @@ app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, 
     }
 });
 
-// ===== ✅ الإصلاح 1: تصدير واستيراد البيانات =====
+// ===== Routes تصدير واستيراد =====
 app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const vessels = await Vessel.find();
-        const users = await User.find().select('-pass');
+        const users = require('./models/User').find().select('-pass');
         const tickets = await Ticket.find();
         const logs = await Log.find();
         const locations = await Location.find();
@@ -717,6 +508,8 @@ app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, re
 app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const { vessels, users, tickets, logs, locations, notes } = req.body;
+        const bcrypt = require('bcryptjs');
+        const User = require('./models/User');
         
         // ✅ الإصلاح: إعادة إدخال البيانات بعد الحذف
         if (vessels && Array.isArray(vessels)) {
@@ -777,7 +570,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ الإصلاح 8: جميع Routes الأخرى قبل هذا السطر
+// ✅ جميع Routes الأخرى قبل هذا السطر
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -786,12 +579,13 @@ app.get('*', (req, res) => {
 // ==================== Socket.IO ====================
 // ============================================================
 
-// ✅ الإصلاح 2: التحقق من الإحداثيات بشكل صحيح
+const connectedUsers = {};
+
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
     socket.on('user-connected', (data) => {
-        // التحقق من الإحداثيات بشكل صحيح
+        // ✅ التحقق من الإحداثيات بشكل صحيح
         if (data.lat != null && data.lng != null && !isNaN(data.lat) && !isNaN(data.lng)) {
             const ua = socket.handshake.headers['user-agent'] || '';
             
@@ -813,7 +607,7 @@ io.on('connection', (socket) => {
     });
     
     socket.on('update-location', (data) => {
-        // التحقق من الإحداثيات بشكل صحيح
+        // ✅ التحقق من الإحداثيات بشكل صحيح
         if (connectedUsers[socket.id] && data.lat != null && data.lng != null && !isNaN(data.lat) && !isNaN(data.lng)) {
             connectedUsers[socket.id].lat = data.lat;
             connectedUsers[socket.id].lng = data.lng;
@@ -837,32 +631,6 @@ io.on('connection', (socket) => {
         }
     });
 });
-
-// ============================================================
-// ==================== إنشاء المستخدم الافتراضي ====================
-// ============================================================
-
-// ✅ الإصلاح 7: استخدام كلمة مرور موحدة 123456
-const initializeDefaultUsers = async () => {
-    try {
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (!adminExists) {
-            const salt = await bcrypt.genSalt(10);
-            const hashedPassword = await bcrypt.hash('123456', salt);
-            await User.create({
-                name: 'admin',
-                pass: hashedPassword,
-                role: 'مسؤول',
-                enabled: true
-            });
-            console.log('✅ تم إنشاء المستخدم الافتراضي: admin / 123456');
-        } else {
-            console.log('✅ المستخدم admin موجود بالفعل');
-        }
-    } catch (error) {
-        console.error('❌ خطأ في إنشاء المستخدم الافتراضي:', error.message);
-    }
-};
 
 // ============================================================
 // ==================== تشغيل السيرفر ====================
