@@ -1,0 +1,159 @@
+/* ============================================================
+   ===== إعادة تعيين الأنماط =====
+   ============================================================ */
+
+/* ===== إعادة تعيين جميع العناصر ===== */
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ===== إعدادات HTML ===== */
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== إعدادات الجسم ===== */
+body {
+    min-height: 100vh;
+    text-rendering: optimizeSpeed;
+    line-height: 1.6;
+}
+
+/* ===== العناصر الوسائطية ===== */
+img,
+picture,
+video,
+canvas,
+svg {
+    display: block;
+    max-width: 100%;
+}
+
+/* ===== عناصر النماذج ===== */
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+/* ===== النصوص ===== */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    overflow-wrap: break-word;
+}
+
+/* ===== الروابط ===== */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ===== القوائم ===== */
+ul,
+ol {
+    list-style: none;
+}
+
+/* ===== الجداول ===== */
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/* ===== الأزرار ===== */
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* ===== حقول الإدخال ===== */
+input,
+textarea,
+select {
+    outline: none;
+}
+
+/* ===== إزالة سهم الإدخال الرقمي ===== */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ===== إزالة علامة X من البحث ===== */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+}
+
+/* ===== RTL ===== */
+* {
+    direction: rtl !important;
+}
+
+/* ===== إزالة التحديد ===== */
+::selection {
+    background: var(--primary);
+    color: #fff;
+}
+
+/* ===== إخفاء التمرير في IE ===== */
+::-ms-reveal {
+    display: none;
+}
+
+/* ===== إعادة تعيين iframe ===== */
+iframe {
+    border: 0;
+}
+
+/* ===== إعادة تعيين hr ===== */
+hr {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: var(--spacing-4) 0;
+}
+
+/* ===== إعادة تعيين التفاصيل ===== */
+details {
+    cursor: pointer;
+}
+
+summary {
+    cursor: pointer;
+}
+
+/* ===== إعادة تعيين الجدول في Outlook ===== */
+table {
+    mso-table-lspace: 0;
+    mso-table-rspace: 0;
+}
+
+/* ===== إعادة تعيين الأزرار في Safari ===== */
+button {
+    -webkit-appearance: none;
+}
+
+/* ===== إعادة تعيين الحقول في IE ===== */
+input::-ms-clear {
+    display: none;
+}
