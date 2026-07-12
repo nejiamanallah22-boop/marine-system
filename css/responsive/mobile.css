@@ -1,0 +1,464 @@
+/* ============================================================
+   ===== شاشات الجوال (أقل من 768px) =====
+   ============================================================ */
+
+@media (max-width: 768px) {
+    /* ===== عام ===== */
+    body {
+        padding: var(--spacing-2);
+    }
+
+    .container {
+        padding: var(--spacing-3);
+        border-radius: var(--radius-sm);
+    }
+
+    /* ===== الهيدر ===== */
+    header {
+        padding: var(--spacing-3);
+    }
+
+    header h1 {
+        font-size: var(--font-size-md);
+    }
+
+    header .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-2);
+    }
+
+    .header-actions {
+        justify-content: center;
+    }
+
+    .developer-info {
+        font-size: var(--font-size-xs);
+        text-align: center;
+    }
+
+    /* ===== شريط التنقل ===== */
+    .nav {
+        justify-content: center;
+        padding: var(--spacing-2);
+        gap: var(--spacing-1);
+    }
+
+    .nav .btn {
+        flex: 1;
+        min-width: 50px;
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-1) var(--spacing-2);
+    }
+
+    /* ===== الفلتر ===== */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: var(--spacing-3);
+    }
+
+    .filter-bar label {
+        font-size: var(--font-size-xs);
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+
+    .search-input {
+        min-width: auto;
+    }
+
+    /* ===== النماذج ===== */
+    .input-grid {
+        grid-template-columns: 1fr;
+        padding: var(--spacing-3);
+        gap: var(--spacing-2);
+    }
+
+    .input-grid textarea {
+        grid-column: span 1;
+        min-height: 60px;
+    }
+
+    .input-grid input,
+    .input-grid select,
+    .input-grid textarea {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    /* ===== الإحصائيات ===== */
+    .stats-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-2);
+    }
+
+    .stat-card {
+        padding: var(--spacing-3);
+    }
+
+    .stat-card .number {
+        font-size: var(--font-size-xl);
+    }
+
+    .stat-card .label {
+        font-size: var(--font-size-xs);
+    }
+
+    /* ===== الجداول ===== */
+    .region-table-card {
+        margin-bottom: var(--spacing-3);
+    }
+
+    .region-table-header {
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-xs);
+        flex-wrap: wrap;
+        gap: var(--spacing-2);
+    }
+
+    table {
+        font-size: var(--font-size-xs);
+        min-width: 600px !important;
+    }
+
+    table th,
+    table td {
+        padding: var(--spacing-2) var(--spacing-1);
+        font-size: var(--font-size-xs);
+    }
+
+    table th {
+        font-size: 9px;
+        letter-spacing: 0;
+    }
+
+    table td:last-child {
+        min-width: 80px !important;
+        position: sticky !important;
+        left: 0 !important;
+        right: auto !important;
+    }
+
+    table td .btn-sm {
+        font-size: 8px !important;
+        padding: var(--spacing-1) var(--spacing-2) !important;
+        min-height: 20px !important;
+        min-width: 20px !important;
+    }
+
+    .table-actions-group {
+        gap: var(--spacing-1);
+    }
+
+    /* ===== الأزرار ===== */
+    .btn {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-1) var(--spacing-3);
+        min-height: 32px;
+    }
+
+    .btn-sm {
+        font-size: 10px !important;
+        padding: var(--spacing-1) var(--spacing-2) !important;
+        min-height: 24px !important;
+    }
+
+    .btn-lg {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-2) var(--spacing-4);
+        min-height: 38px;
+    }
+
+    /* ===== الخريطة ===== */
+    .map-container {
+        height: 300px !important;
+    }
+
+    .map-controls .btn {
+        width: 34px;
+        height: 34px;
+        font-size: var(--font-size-md);
+    }
+
+    .map-location-info {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-1) var(--spacing-3);
+        white-space: normal;
+        max-width: 90%;
+    }
+
+    /* ===== النوافذ المنبثقة ===== */
+    .modal {
+        padding: var(--spacing-4);
+        width: 95%;
+    }
+
+    .modal-sm,
+    .modal-lg,
+    .modal-xl {
+        width: 95%;
+    }
+
+    .modal-header h2 {
+        font-size: var(--font-size-lg);
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ===== المذكرات ===== */
+    .note-item {
+        padding: var(--spacing-3);
+    }
+
+    .note-item .note-title {
+        font-size: var(--font-size-md);
+    }
+
+    .note-item .note-content {
+        font-size: var(--font-size-xs);
+    }
+
+    .note-item .note-meta {
+        font-size: 10px;
+        gap: var(--spacing-2);
+    }
+
+    #pageNote .region-table-card {
+        padding: var(--spacing-3);
+    }
+
+    /* ===== شاشة الدخول ===== */
+    .login-box {
+        padding: var(--spacing-6) var(--spacing-4);
+        width: 95%;
+    }
+
+    .login-box .logo {
+        font-size: 48px;
+    }
+
+    .login-box h2 {
+        font-size: var(--font-size-xl);
+    }
+
+    .login-box input {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+
+    .login-box .login-btn {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-2);
+    }
+
+    /* ===== التذييل ===== */
+    footer {
+        padding: var(--spacing-3);
+    }
+
+    footer .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    footer .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    /* ===== البطاقات ===== */
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* ===== لوحة التحكم ===== */
+    .dashboard-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-2);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container .chart-body {
+        height: 200px;
+    }
+
+    /* ===== المستخدمين ===== */
+    .users-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-card {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        padding: var(--spacing-3);
+    }
+
+    .user-card .user-info {
+        width: 100%;
+    }
+
+    /* ===== التقارير ===== */
+    .report-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .report-options {
+        flex-direction: column;
+    }
+
+    .report-options select,
+    .report-options input {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .export-buttons {
+        justify-content: center;
+    }
+
+    /* ===== الإشعارات ===== */
+    .toast-container {
+        width: 92%;
+        bottom: var(--spacing-4);
+    }
+
+    .toast {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+
+    /* ===== أزرار التمرير ===== */
+    .scroll-buttons {
+        bottom: var(--spacing-3);
+        left: var(--spacing-3);
+    }
+
+    .scroll-btn {
+        width: 34px;
+        height: 34px;
+        font-size: var(--font-size-sm);
+    }
+
+    /* ===== الأدوات المساعدة ===== */
+    .text-center-mobile {
+        text-align: center;
+    }
+
+    .flex-col-mobile {
+        flex-direction: column;
+    }
+
+    .w-full-mobile {
+        width: 100%;
+    }
+}
+
+/* ===== شاشات صغيرة جداً (أقل من 480px) ===== */
+@media (max-width: 480px) {
+    /* ===== الهيدر ===== */
+    header h1 {
+        font-size: var(--font-size-sm);
+    }
+
+    /* ===== الإحصائيات ===== */
+    .stats-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-1);
+    }
+
+    .stat-card {
+        padding: var(--spacing-2);
+    }
+
+    .stat-card .number {
+        font-size: var(--font-size-lg);
+    }
+
+    .stat-card .label {
+        font-size: 9px;
+    }
+
+    /* ===== شريط التنقل ===== */
+    .nav .btn {
+        font-size: 9px;
+        padding: var(--spacing-1) var(--spacing-1);
+        min-width: 40px;
+    }
+
+    /* ===== الجداول ===== */
+    table {
+        font-size: 10px;
+        min-width: 500px !important;
+    }
+
+    table th,
+    table td {
+        padding: var(--spacing-1) var(--spacing-1);
+        font-size: 9px;
+    }
+
+    table td:last-child {
+        min-width: 60px !important;
+    }
+
+    table td .btn-sm {
+        font-size: 7px !important;
+        padding: 1px var(--spacing-1) !important;
+        min-height: 16px !important;
+        min-width: 16px !important;
+    }
+
+    /* ===== الخريطة ===== */
+    .map-container {
+        height: 250px !important;
+    }
+
+    /* ===== النوافذ المنبثقة ===== */
+    .modal {
+        padding: var(--spacing-3);
+    }
+
+    /* ===== شاشة الدخول ===== */
+    .login-box {
+        padding: var(--spacing-4) var(--spacing-3);
+    }
+
+    .login-box .logo {
+        font-size: 40px;
+    }
+
+    .login-box h2 {
+        font-size: var(--font-size-lg);
+    }
+
+    /* ===== لوحة التحكم ===== */
+    .dashboard-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* ===== الإشعارات ===== */
+    .toast {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-2);
+    }
+}
