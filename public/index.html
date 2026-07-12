@@ -962,6 +962,50 @@
             display: none !important;
         }
         
+        /* ===== تتبع المستخدمين ===== */
+        .tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .tracking-card {
+            background: var(--glass);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        .tracking-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        .tracking-card .user-avatar {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .tracking-card .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .tracking-card .user-status {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+        .tracking-card .user-location {
+            font-size: 12px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+        .tracking-card .last-seen {
+            font-size: 11px;
+            color: var(--gray-400);
+            margin-top: 4px;
+        }
+        
         /* ===== الوضع الليلي ===== */
         body.dark-mode {
             --gray-50: #0f172a;
@@ -1001,6 +1045,10 @@
         }
         body.dark-mode .note-item .note-content {
             color: var(--gray-600);
+        }
+        body.dark-mode .tracking-card {
+            background: var(--glass);
+            border-color: var(--glass-border);
         }
         
         /* ===== التوافق ===== */
@@ -1069,6 +1117,9 @@
             .login-box h2 {
                 font-size: 20px;
             }
+            .tracking-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
         @media (max-width: 480px) {
             .input-grid {
@@ -1103,6 +1154,9 @@
             }
             .map-container {
                 height: 250px !important;
+            }
+            .tracking-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
@@ -1510,65 +1564,43 @@
         </div>
 
         <!-- ============================================================
-        ===== صفحة التتبع =====
+        ===== صفحة التتبع (تتبع المستخدمين) =====
         ============================================================ -->
         <div id="page-tracking" class="page-content">
-            <h3 style="margin-bottom:16px;"><i class="fas fa-map-marked-alt"></i> تتبع الوسائل البحرية</h3>
+            <h3 style="margin-bottom:16px;"><i class="fas fa-map-marked-alt"></i> تتبع المستخدمين</h3>
 
-            <div class="stats-cards" style="grid-template-columns:repeat(3,1fr);">
-                <div class="stat-card stat-card-success">
-                    <div class="number"><span class="status-dot green" style="width:14px;height:14px;"></span> 12</div>
-                    <div class="label">وسائل نشطة</div>
-                </div>
-                <div class="stat-card stat-card-warning">
-                    <div class="number"><span class="status-dot yellow" style="width:14px;height:14px;"></span> 3</div>
-                    <div class="label">قيد التتبع</div>
-                </div>
-                <div class="stat-card stat-card-danger">
-                    <div class="number"><span class="status-dot red" style="width:14px;height:14px;"></span> 2</div>
-                    <div class="label">متوقفة</div>
-                </div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                <button class="btn btn-sm btn-primary" onclick="refreshTracking()">
+                    <i class="fas fa-sync"></i> تحديث
+                </button>
+                <button class="btn btn-sm btn-success" onclick="addUserTracking()">
+                    <i class="fas fa-user-plus"></i> إضافة مستخدم للتتبع
+                </button>
+                <span style="font-size:12px; color:var(--gray-500);">
+                    <i class="fas fa-info-circle"></i> <span id="trackingCount">0</span> مستخدم قيد التتبع
+                </span>
             </div>
 
-            <div class="region-table-card" style="padding:16px;">
+            <div class="tracking-grid" id="trackingGrid">
+                <!-- سيتم تعبئتها بواسطة JavaScript -->
+            </div>
+
+            <div class="region-table-card" style="padding:16px; margin-top:16px;">
                 <div class="region-table-header">
-                    <span><i class="fas fa-satellite"></i> مواقع الوسائل</span>
+                    <span><i class="fas fa-history"></i> سجل التتبع</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <i class="fas fa-sync fa-spin"></i> تحديث لحظي
+                        <i class="fas fa-clock"></i> تحديث لحظي
                     </span>
                 </div>
-                <div style="padding:12px; background:rgba(255,255,255,0.2); border-radius:8px; min-height:100px;">
-                    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;">
-                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
-                            <span style="font-size:24px;">🚢</span>
-                            <div style="font-weight:600;">المركب 1</div>
-                            <div style="font-size:12px; color:var(--gray-500);">36.8°N, 10.2°E</div>
-                            <span class="status-dot green"></span> نشط
-                        </div>
-                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
-                            <span style="font-size:24px;">🚢</span>
-                            <div style="font-weight:600;">المركب 2</div>
-                            <div style="font-size:12px; color:var(--gray-500);">34.5°N, 9.8°E</div>
-                            <span class="status-dot yellow"></span> قيد التتبع
-                        </div>
-                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
-                            <span style="font-size:24px;">🚢</span>
-                            <div style="font-weight:600;">المركب 3</div>
-                            <div style="font-size:12px; color:var(--gray-500);">37.2°N, 10.5°E</div>
-                            <span class="status-dot green"></span> نشط
-                        </div>
-                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
-                            <span style="font-size:24px;">🚢</span>
-                            <div style="font-weight:600;">المركب 4</div>
-                            <div style="font-size:12px; color:var(--gray-500);">33.9°N, 9.4°E</div>
-                            <span class="status-dot red"></span> متوقفة
-                        </div>
-                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
-                            <span style="font-size:24px;">🚢</span>
-                            <div style="font-weight:600;">المركب 5</div>
-                            <div style="font-size:12px; color:var(--gray-500);">36.4°N, 10.8°E</div>
-                            <span class="status-dot green"></span> نشط
-                        </div>
+                <div style="padding:12px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; font-size:12px; font-weight:600; color:var(--gray-500); padding-bottom:8px; border-bottom:1px solid var(--glass-border);">
+                        <span>المستخدم</span>
+                        <span>الموقع</span>
+                        <span>الحالة</span>
+                        <span>آخر تحديث</span>
+                    </div>
+                    <div id="trackingLog">
+                        <!-- سيتم تعبئتها بواسطة JavaScript -->
                     </div>
                 </div>
             </div>
@@ -1774,6 +1806,22 @@
         let nextNoteId = 4;
         let noteAttachmentData = null;
 
+        // ===== بيانات تتبع المستخدمين =====
+        let trackingData = [
+            { id: 1, name: 'أحمد محمد', avatar: '👨‍💼', status: 'نشط', location: 'تونس - حلق الوادي', lastSeen: 'الآن',
+                lat: 36.8, lng: 10.2 },
+            { id: 2, name: 'سارة علي', avatar: '👩‍💼', status: 'نشط', location: 'صفاقس - الميناء', lastSeen: 'منذ 5 دقائق',
+                lat: 34.5, lng: 9.8 },
+            { id: 3, name: 'محمد خالد', avatar: '👨‍💻', status: 'غير نشط', location: 'سوسة', lastSeen: 'منذ ساعة', lat: 37.2,
+                lng: 10.5 },
+            { id: 4, name: 'نورة حسن', avatar: '👩‍💻', status: 'نشط', location: 'بنزرت', lastSeen: 'منذ 2 دقائق', lat: 33.9,
+                lng: 9.4 },
+            { id: 5, name: 'علي رضا', avatar: '👨‍🔧', status: 'نشط', location: 'تونس - المركز', lastSeen: 'منذ دقيقة', lat: 36.4,
+                lng: 10.8 },
+        ];
+
+        let nextTrackingId = 6;
+
         // ============================================================
         // ===== شاشة الدخول =====
         // ============================================================
@@ -1852,6 +1900,7 @@
             renderTickets();
             renderUsersTable();
             renderNotes();
+            renderTracking();
             updateStats();
 
             const today = new Date().toISOString().split('T')[0];
@@ -2409,6 +2458,96 @@
         }
 
         // ============================================================
+        // ===== تتبع المستخدمين =====
+        // ============================================================
+
+        function renderTracking() {
+            const grid = document.getElementById('trackingGrid');
+            const log = document.getElementById('trackingLog');
+
+            if (trackingData.length === 0) {
+                grid.innerHTML =
+                    `<div class="empty-state" style="grid-column:1/-1;"><div class="icon"><i class="fas fa-map-marked-alt"></i></div><p>لا يوجد مستخدمين للتتبع</p></div>`;
+                document.getElementById('trackingCount').textContent = 0;
+                log.innerHTML =
+                    `<div class="empty-state" style="padding:20px;"><p style="font-size:13px;">لا توجد سجلات تتبع</p></div>`;
+                return;
+            }
+
+            // عرض البطاقات
+            let gridHtml = '';
+            trackingData.forEach(t => {
+                const statusColor = t.status === 'نشط' ? 'green' : 'red';
+                gridHtml += `
+                            <div class="tracking-card">
+                                <span class="user-avatar">${t.avatar}</span>
+                                <div class="user-name">${t.name}</div>
+                                <div class="user-status">
+                                    <span class="status-dot ${statusColor}"></span> ${t.status}
+                                </div>
+                                <div class="user-location">
+                                    <i class="fas fa-map-pin"></i> ${t.location}
+                                </div>
+                                <div class="last-seen">
+                                    <i class="fas fa-clock"></i> ${t.lastSeen}
+                                </div>
+                            </div>
+                        `;
+            });
+            grid.innerHTML = gridHtml;
+            document.getElementById('trackingCount').textContent = trackingData.length;
+
+            // عرض سجل التتبع
+            let logHtml = '';
+            trackingData.forEach(t => {
+                const statusColor = t.status === 'نشط' ? '🟢' : '🔴';
+                logHtml += `
+                            <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; padding:8px 0; border-bottom:1px solid var(--glass-border); font-size:13px;">
+                                <span><strong>${t.name}</strong></span>
+                                <span>${t.location}</span>
+                                <span>${statusColor} ${t.status}</span>
+                                <span style="color:var(--gray-500);">${t.lastSeen}</span>
+                            </div>
+                        `;
+            });
+            log.innerHTML = logHtml;
+        }
+
+        function refreshTracking() {
+            // تحديث عشوائي للمواقع
+            trackingData.forEach(t => {
+                t.lat = 36 + (Math.random() - 0.5) * 3;
+                t.lng = 10 + (Math.random() - 0.5) * 2;
+                t.lastSeen = 'الآن';
+                t.status = Math.random() > 0.3 ? 'نشط' : 'غير نشط';
+                t.location = `${['تونس', 'صفاقس', 'سوسة', 'بنزرت', 'نابل'][Math.floor(Math.random() * 5)]} - ${['المركز', 'الميناء', 'الضاحية', 'المنطقة الصناعية'][Math.floor(Math.random() * 4)]}`;
+            });
+            renderTracking();
+            showToast('تم تحديث بيانات التتبع', 'info');
+        }
+
+        function addUserTracking() {
+            const name = prompt('أدخل اسم المستخدم للتتبع:');
+            if (!name) return;
+
+            const avatar = ['👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '👨‍🔧', '👩‍🔧', '👨‍✈️', '👩‍✈️'][Math.floor(Math.random() * 8)];
+
+            trackingData.push({
+                id: nextTrackingId++,
+                name,
+                avatar,
+                status: 'نشط',
+                location: 'تونس - المركز',
+                lastSeen: 'الآن',
+                lat: 36.8 + (Math.random() - 0.5) * 0.5,
+                lng: 10.2 + (Math.random() - 0.5) * 0.5
+            });
+
+            renderTracking();
+            showToast(`تم إضافة ${name} للتتبع`, 'success');
+        }
+
+        // ============================================================
         // ===== الخريطة =====
         // ============================================================
 
@@ -2429,24 +2568,22 @@
                     attribution: '© OpenStreetMap'
                 }).addTo(map);
 
-                const positions = [
-                    { lat: 36.8, lng: 10.2, name: 'المركب 1' },
-                    { lat: 34.5, lng: 9.8, name: 'المركب 2' },
-                    { lat: 37.2, lng: 10.5, name: 'المركب 3' },
-                    { lat: 33.9, lng: 9.4, name: 'المركب 4' },
-                    { lat: 36.4, lng: 10.8, name: 'المركب 5' },
-                ];
-
-                positions.forEach(pos => {
-                    const marker = L.marker([pos.lat, pos.lng], {
+                // إضافة علامات المستخدمين المتتبعين
+                trackingData.forEach(t => {
+                    const marker = L.marker([t.lat, t.lng], {
                         icon: L.divIcon({
-                            className: 'custom-marker',
+                            className: 'custom-marker custom-marker-active',
                             html: '',
                             iconSize: [30, 30],
                             iconAnchor: [15, 30]
                         })
                     }).addTo(map);
-                    marker.bindPopup(`<strong>${pos.name}</strong><br />${pos.lat}°N, ${pos.lng}°E`);
+                    marker.bindPopup(`
+                                <strong>${t.name}</strong><br />
+                                📍 ${t.location}<br />
+                                🟢 ${t.status}<br />
+                                🕐 ${t.lastSeen}
+                            `);
                     markers.push(marker);
                 });
 
@@ -2460,7 +2597,7 @@
                     if (name) {
                         const marker = L.marker([lat, lng], {
                             icon: L.divIcon({
-                                className: 'custom-marker custom-marker-active',
+                                className: 'custom-marker',
                                 html: '',
                                 iconSize: [30, 30],
                                 iconAnchor: [15, 30]
@@ -2576,6 +2713,9 @@
         window.addMarker = addMarker;
         window.clearMarkers = clearMarkers;
         window.showToast = showToast;
+        window.renderTracking = renderTracking;
+        window.refreshTracking = refreshTracking;
+        window.addUserTracking = addUserTracking;
     </script>
 
 </body>
