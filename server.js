@@ -16,27 +16,89 @@ const io = socketIO(server, {
     cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }
 });
 
+// ============================================================
+// ==================== التحقق من البيئة ====================
+// ============================================================
+
+// ✅ الإصلاح 4: التحقق من JWT_SECRET
+if (!process.env.JWT_SECRET) {
+    console.warn('⚠️ JWT_SECRET غير موجود في .env، استخدم المفتاح الافتراضي (غير آمن للإنتاج)');
+    // في الإنتاج يجب إيقاف التطبيق
+    // throw new Error("JWT_SECRET is missing");
+}
+
+// ============================================================
 // ==================== Middleware ====================
+// ============================================================
+
+// ✅ الإصلاح 5: CORS محدود
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',') 
+    : ['http://localhost:3000', 'https://yourdomain.com'];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('❌ غير مصرح به بواسطة CORS'));
+        }
+    },
+    credentials: true
+}));
+
+// ✅ الإصلاح 6: Helmet مع CSP متوافق
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "'unsafe-eval'",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "https://*.tile.openstreetmap.org"
+            ],
             scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net",
-                "https://unpkg.com", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https://unpkg.com", "https://cdn.jsdelivr.net",
-                "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com"],
-            connectSrc: ["'self'", "https://*.tile.openstreetmap.org",
-                "https://*.basemaps.cartocdn.com", "https://cdn.jsdelivr.net",
-                "https://unpkg.com", "https://cdnjs.cloudflare.com"]
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com",
+                "https://fonts.googleapis.com",
+                "https://cdnjs.cloudflare.com",
+                "https://*.tile.openstreetmap.org"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://fonts.gstatic.com",
+                "https://cdnjs.cloudflare.com"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net",
+                "https://*.tile.openstreetmap.org",
+                "https://*.basemaps.cartocdn.com"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://*.tile.openstreetmap.org",
+                "https://*.basemaps.cartocdn.com",
+                "https://cdn.jsdelivr.net",
+                "https://unpkg.com",
+                "https://cdnjs.cloudflare.com",
+                "wss://*.onrender.com",
+                "https://api.ipify.org",
+                "https://nominatim.openstreetmap.org"
+            ]
         }
     }
 }));
 
-app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -46,7 +108,10 @@ app.use('/api', rateLimit({
     message: '⚠️ تجاوزت الحد المسموح'
 }));
 
+// ============================================================
 // ==================== قاعدة البيانات ====================
+// ============================================================
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
 
 mongoose.connect(MONGODB_URI, {
@@ -54,11 +119,26 @@ mongoose.connect(MONGODB_URI, {
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-})
-.then(() => { console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!'); initializeDefaultUsers(); })
-.catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message));
+});
 
+// ✅ الإصلاح 10: معالجة أخطاء MongoDB
+mongoose.connection.on('connected', () => {
+    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
+    initializeDefaultUsers();
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('❌ خطأ في MongoDB:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn('⚠️ تم فقدان الاتصال بقاعدة البيانات');
+});
+
+// ============================================================
 // ==================== نماذج البيانات ====================
+// ============================================================
+
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -152,7 +232,10 @@ const NoteVerbaleSchema = new mongoose.Schema({
 
 const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
 
+// ============================================================
 // ==================== دوال مساعدة ====================
+// ============================================================
+
 function getCurrentTime() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -176,17 +259,22 @@ function extractDevice(userAgent) {
     return 'غير معروف';
 }
 
+// ✅ الإصلاح 9: ترتيب فحص المتصفح
 function extractBrowser(userAgent) {
     if (!userAgent) return 'غير معروف';
+    // Edge أولاً (يحتوي على Chrome)
+    if (userAgent.includes('Edg') || userAgent.includes('Edge')) return 'Edge';
+    if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
     if (userAgent.includes('Chrome')) return 'Chrome';
     if (userAgent.includes('Firefox')) return 'Firefox';
     if (userAgent.includes('Safari')) return 'Safari';
-    if (userAgent.includes('Edge')) return 'Edge';
-    if (userAgent.includes('Opera')) return 'Opera';
     return 'غير معروف';
 }
 
+// ============================================================
 // ==================== المصادقة ====================
+// ============================================================
+
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
 
 const authenticate = async (req, res, next) => {
@@ -212,7 +300,9 @@ const authorize = (...roles) => {
     };
 };
 
+// ============================================================
 // ==================== API Routes ====================
+// ============================================================
 
 // ===== تسجيل الدخول =====
 app.post('/api/login', async (req, res) => {
@@ -244,7 +334,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ===== إنشاء مستخدم admin =====
+// ===== إنشاء مستخدم admin (موحد) =====
 app.get('/api/create-admin', async (req, res) => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -252,8 +342,9 @@ app.get('/api/create-admin', async (req, res) => {
             return res.json({ message: 'المستخدم admin موجود بالفعل', user: adminExists });
         }
         
+        // ✅ الإصلاح 7: استخدام نفس كلمة المرور 123456
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('1234', salt);
+        const hashedPassword = await bcrypt.hash('123456', salt);
         
         const newAdmin = new User({
             name: 'admin',
@@ -268,14 +359,11 @@ app.get('/api/create-admin', async (req, res) => {
     }
 });
 
-// ===== ✅ إضافة مستخدم جديد (مُصلحة بالكامل) =====
+// ===== ✅ إضافة مستخدم جديد (مُصلحة) =====
 app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const { name, pass, role } = req.body;
         
-        console.log('📝 محاولة إضافة مستخدم:', name, role);
-        
-        // 1. التحقق من الحقول
         if (!name || !pass) {
             return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
         }
@@ -284,17 +372,14 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
             return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 4 أحرف على الأقل' });
         }
         
-        // 2. التحقق من وجود المستخدم
         const existing = await User.findOne({ name });
         if (existing) {
             return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
         }
         
-        // 3. تشفير كلمة المرور
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(pass, salt);
         
-        // 4. إنشاء المستخدم
         const user = new User({
             name: name,
             pass: hashedPassword,
@@ -302,11 +387,8 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
             enabled: true
         });
         
-        // 5. حفظ في قاعدة البيانات
         await user.save();
-        console.log('✅ تم إضافة المستخدم:', name);
         
-        // 6. إرجاع المستخدم (بدون كلمة المرور)
         const userData = user.toObject();
         delete userData.pass;
         
@@ -494,11 +576,18 @@ app.get('/api/locations', authenticate, async (req, res) => {
     }
 });
 
+// ✅ الإصلاح 3: التحقق من الإحداثيات بشكل صحيح
 app.post('/api/locations', authenticate, async (req, res) => {
     try {
         const { lat, lng, action } = req.body;
         
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        // التحقق من القيم
+        if (
+            lat == null ||
+            lng == null ||
+            isNaN(Number(lat)) ||
+            isNaN(Number(lng))
+        ) {
             return res.status(400).json({ error: 'إحداثيات غير صالحة' });
         }
         
@@ -610,7 +699,7 @@ app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, 
     }
 });
 
-// ===== تصدير واستيراد =====
+// ===== ✅ الإصلاح 1: تصدير واستيراد البيانات =====
 app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const vessels = await Vessel.find();
@@ -629,8 +718,13 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
     try {
         const { vessels, users, tickets, logs, locations, notes } = req.body;
         
-        if (vessels) await Vessel.deleteMany({});
-        if (users) {
+        // ✅ الإصلاح: إعادة إدخال البيانات بعد الحذف
+        if (vessels && Array.isArray(vessels)) {
+            await Vessel.deleteMany({});
+            await Vessel.insertMany(vessels);
+        }
+        
+        if (users && Array.isArray(users)) {
             for (const user of users) {
                 if (user.pass && !user.pass.startsWith('$2')) {
                     const salt = await bcrypt.genSalt(10);
@@ -640,14 +734,31 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
             await User.deleteMany({});
             await User.insertMany(users);
         }
-        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
-        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
-        if (locations) { await Location.deleteMany({}); await Location.insertMany(locations); }
-        if (notes) { await NoteVerbale.deleteMany({}); await NoteVerbale.insertMany(notes); }
         
-        res.json({ message: 'تم استيراد البيانات بنجاح' });
+        if (tickets && Array.isArray(tickets)) {
+            await Ticket.deleteMany({});
+            await Ticket.insertMany(tickets);
+        }
+        
+        if (logs && Array.isArray(logs)) {
+            await Log.deleteMany({});
+            await Log.insertMany(logs);
+        }
+        
+        if (locations && Array.isArray(locations)) {
+            await Location.deleteMany({});
+            await Location.insertMany(locations);
+        }
+        
+        if (notes && Array.isArray(notes)) {
+            await NoteVerbale.deleteMany({});
+            await NoteVerbale.insertMany(notes);
+        }
+        
+        res.json({ message: '✅ تم استيراد البيانات بنجاح' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('❌ خطأ في استيراد البيانات:', error);
+        res.status(500).json({ error: 'خطأ في استيراد البيانات: ' + error.message });
     }
 });
 
@@ -656,26 +767,32 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ===== تقديم الملفات الثابتة =====
+// ============================================================
+// ==================== تقديم الملفات الثابتة ====================
+// ============================================================
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ✅ الإصلاح 8: جميع Routes الأخرى قبل هذا السطر
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ============================================================
-// ===== Socket.IO =====
+// ==================== Socket.IO ====================
 // ============================================================
 
+// ✅ الإصلاح 2: التحقق من الإحداثيات بشكل صحيح
 io.on('connection', (socket) => {
     console.log('📡 مستخدم متصل:', socket.id);
     
     socket.on('user-connected', (data) => {
-        if (data.lat && data.lng) {
+        // التحقق من الإحداثيات بشكل صحيح
+        if (data.lat != null && data.lng != null && !isNaN(data.lat) && !isNaN(data.lng)) {
             const ua = socket.handshake.headers['user-agent'] || '';
             
             connectedUsers[socket.id] = {
@@ -687,12 +804,8 @@ io.on('connection', (socket) => {
                 connectedAt: new Date().toISOString(),
                 lastUpdate: new Date().toISOString(),
                 ip: socket.handshake.address || 'غير معروف',
-                device: ua.includes('Android') ? 'Android' : 
-                         ua.includes('iPhone') ? 'iOS' : 
-                         ua.includes('Windows') ? 'Windows' : 'غير معروف',
-                browser: ua.includes('Chrome') ? 'Chrome' : 
-                          ua.includes('Firefox') ? 'Firefox' : 
-                          ua.includes('Safari') ? 'Safari' : 'غير معروف'
+                device: extractDevice(ua),
+                browser: extractBrowser(ua)
             };
             console.log('👥 مستخدم متصل:', data.userName);
             io.emit('user-list', Object.values(connectedUsers));
@@ -700,7 +813,8 @@ io.on('connection', (socket) => {
     });
     
     socket.on('update-location', (data) => {
-        if (connectedUsers[socket.id] && data.lat && data.lng) {
+        // التحقق من الإحداثيات بشكل صحيح
+        if (connectedUsers[socket.id] && data.lat != null && data.lng != null && !isNaN(data.lat) && !isNaN(data.lng)) {
             connectedUsers[socket.id].lat = data.lat;
             connectedUsers[socket.id].lng = data.lng;
             connectedUsers[socket.id].lastUpdate = new Date().toISOString();
@@ -724,7 +838,11 @@ io.on('connection', (socket) => {
     });
 });
 
+// ============================================================
 // ==================== إنشاء المستخدم الافتراضي ====================
+// ============================================================
+
+// ✅ الإصلاح 7: استخدام كلمة مرور موحدة 123456
 const initializeDefaultUsers = async () => {
     try {
         const adminExists = await User.findOne({ name: 'admin' });
@@ -746,7 +864,10 @@ const initializeDefaultUsers = async () => {
     }
 };
 
+// ============================================================
 // ==================== تشغيل السيرفر ====================
+// ============================================================
+
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', () => {
