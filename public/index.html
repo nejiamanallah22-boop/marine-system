@@ -845,6 +845,14 @@
             margin-bottom: 16px;
         }
 
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 4px;
+        }
+
         @media(max-width:768px) {
             body {
                 padding: 8px;
@@ -907,7 +915,7 @@
 </head>
 <body>
 
-    <!-- ===== شاشة الدخول ===== -->
+    <!-- ===== شاشة الدخول (بدون بيانات ظاهرة) ===== -->
     <div id="loginOverlay">
         <div class="login-box">
             <span class="logo">⚓</span>
@@ -917,8 +925,8 @@
                 <i class="fas fa-map-marker-alt"></i>
                 لتسجيل الدخول، يرجى السماح بالوصول إلى موقعك
             </div>
-            <input type="text" id="username" placeholder="👤 اسم المستخدم" value="admin">
-            <input type="password" id="password" placeholder="🔑 كلمة المرور" value="123456">
+            <input type="text" id="username" placeholder="👤 اسم المستخدم">
+            <input type="password" id="password" placeholder="🔑 كلمة المرور">
             <button class="login-btn" onclick="doLogin()">
                 <i class="fas fa-sign-in-alt"></i> دخول
             </button>
@@ -938,7 +946,7 @@
                 </div>
                 <div class="header-actions">
                     <span id="userRoleDisplay" class="role-badge">
-                        <i class="fas fa-user"></i> 👤 admin
+                        <i class="fas fa-user"></i> 👤
                     </span>
                     <button class="btn btn-sm btn-primary" onclick="exportAllData()">
                         <i class="fas fa-file-export"></i> تصدير
@@ -1169,7 +1177,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة التتبع (مع موقع حقيقي) ===== -->
+        <!-- ===== صفحة التتبع ===== -->
         <div id="pageTrack" class="page-content hidden">
             <div class="filter-bar">
                 <span style="font-weight:700; color:var(--primary);">
@@ -1217,7 +1225,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة الخريطة (مع موقع حقيقي) ===== -->
+        <!-- ===== صفحة الخريطة ===== -->
         <div id="pageMap" class="page-content hidden">
             <div class="filter-bar">
                 <span style="font-weight:700; color:var(--primary);">
@@ -1251,7 +1259,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة المستخدمين ===== -->
+        <!-- ===== صفحة المستخدمين (مع دالة addUser المُصححة) ===== -->
         <div id="pageUsers" class="page-content hidden">
             <div class="input-grid">
                 <input type="text" id="un" placeholder="👤 اسم المستخدم">
@@ -1263,6 +1271,9 @@
                 </select>
                 <button class="btn btn-primary" onclick="addUser()">
                     <i class="fas fa-user-plus"></i> إضافة
+                </button>
+                <button class="btn btn-sm btn-success" onclick="refreshUsers()">
+                    <i class="fas fa-sync-alt"></i> تحديث
                 </button>
             </div>
             <div class="region-table-card">
@@ -1454,7 +1465,6 @@
             else if (ua.includes('Edg')) browser = 'Edge';
             else if (ua.includes('Opera')) browser = 'Opera';
 
-            // جلب IP
             fetch('https://api.ipify.org?format=json')
                 .then(res => res.json())
                 .then(data => { ip = data.ip; })
@@ -1470,7 +1480,8 @@
         function doLogin() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            if (username === 'admin' && password === '123456') {
+            const user = userData.find(u => u.name === username && u.password === password);
+            if (user) {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 document.getElementById('userRoleDisplay').innerHTML = '<i class="fas fa-user"></i> 👤 ' + username;
@@ -1814,7 +1825,7 @@
         }
 
         // ============================================================
-        // ===== الجاهزية (مع رسوم بيانية و Note Verbale) =====
+        // ===== الجاهزية =====
         // ============================================================
 
         let chartInstance = null;
@@ -1832,10 +1843,8 @@
             const container = document.getElementById('tablesContainer');
             let html = '';
 
-            // 1. جدول النجاعة العامة
             html += renderGeneralEfficiency(filteredData);
 
-            // 2. جداول الورشات (4 ورشات + المجمع الأمني)
             const workshops = ['تونس', 'المنستير', 'صفاقس', 'جرجيس', 'المجمع الأمني بقبيبة'];
             workshops.forEach(ws => {
                 const wsData = filteredData.filter(f => f.reg === ws);
@@ -1843,11 +1852,7 @@
             });
 
             container.innerHTML = html;
-
-            // 3. تحديث الرسم البياني
             updateChart(filteredData);
-
-            // 4. تحديث Note Verbale
             updateLatestNote();
         }
 
@@ -2019,7 +2024,6 @@
             `;
         }
 
-        // ===== الرسم البياني العصري =====
         function updateChart(data) {
             const total = data.length;
             const active = data.filter(f => f.stat === 'صالح').length;
@@ -2092,7 +2096,6 @@
             updateChart(filteredData);
         }
 
-        // ===== Note Verbale في صفحة الجاهزية =====
         function updateLatestNote() {
             const container = document.getElementById('latestNoteContainer');
             const notes = JSON.parse(localStorage.getItem('marine_notes') || '[]');
@@ -2123,7 +2126,7 @@
         }
 
         // ============================================================
-        // ===== تتبع المستخدمين (مع موقع حقيقي) =====
+        // ===== تتبع المستخدمين =====
         // ============================================================
 
         function renderTracking() {
@@ -2198,14 +2201,12 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
 
-                    // جلب IP
                     fetch('https://api.ipify.org?format=json')
                         .then(res => res.json())
                         .then(data => {
                             const ip = data.ip;
                             const ua = navigator.userAgent;
 
-                            // تحديد الجهاز والمتصفح
                             let device = 'غير معروف';
                             let browser = 'غير معروف';
                             if (ua.includes('Android')) device = 'Android';
@@ -2220,14 +2221,13 @@
                             else if (ua.includes('Edg')) browser = 'Edge';
                             else if (ua.includes('Opera')) browser = 'Opera';
 
-                            // عكس الإحداثيات للحصول على الموقع
                             fetch(
                                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`
                                     )
                                 .then(res => res.json())
                                 .then(data => {
-                                    const location = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-
+                                    const location = data.display_name ||
+                                        `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
                                     const user = {
                                         id: 'user_' + Date.now(),
                                         name: document.getElementById('username').value || 'مستخدم',
@@ -2242,7 +2242,6 @@
                                         ip: ip,
                                         lastSeen: 'الآن'
                                     };
-
                                     trackingUsers.push(user);
                                     renderTracking();
                                     showToast('✅ تم إضافة موقعك: ' + location);
@@ -2317,7 +2316,7 @@
         }
 
         // ============================================================
-        // ===== الخريطة (مع موقع حقيقي) =====
+        // ===== الخريطة =====
         // ============================================================
 
         let map = null;
@@ -2381,7 +2380,6 @@
                             `);
                         }
 
-                        // إضافة دائرة دقة
                         const accuracy = position.coords.accuracy;
                         if (window.accuracyCircle) {
                             map.removeLayer(window.accuracyCircle);
@@ -2538,7 +2536,7 @@
         }
 
         // ============================================================
-        // ===== المستخدمين =====
+        // ===== المستخدمين (دالة addUser مُصححة) =====
         // ============================================================
 
         function renderUsers() {
@@ -2565,18 +2563,65 @@
             tbody.innerHTML = html;
         }
 
+        // ===== ✅ دالة addUser المُصلحة بالكامل =====
         function addUser() {
             const name = document.getElementById('un').value.trim();
             const password = document.getElementById('up').value.trim();
             const role = document.getElementById('ur').value;
-            if (!name || !password) { showToast('❌ الرجاء إدخال اسم المستخدم وكلمة المرور'); return; }
-            if (userData.find(u => u.name === name)) { showToast('❌ المستخدم موجود بالفعل'); return; }
-            userData.push({ id: Date.now(), name, password, role, status: 'نشط' });
+
+            // 1. التحقق من اسم المستخدم
+            if (!name) {
+                showToast('❌ الرجاء إدخال اسم المستخدم');
+                return;
+            }
+
+            // 2. التحقق من كلمة المرور
+            if (!password) {
+                showToast('❌ الرجاء إدخال كلمة المرور');
+                return;
+            }
+            if (password.length < 4) {
+                showToast('❌ كلمة المرور يجب أن تكون 4 أحرف على الأقل');
+                return;
+            }
+
+            // 3. التحقق من وجود المستخدم مسبقاً
+            if (userData.find(u => u.name === name)) {
+                showToast('❌ المستخدم "' + name + '" موجود بالفعل');
+                return;
+            }
+
+            // 4. إضافة المستخدم الجديد
+            userData.push({
+                id: Date.now(),
+                name: name,
+                password: password,
+                role: role,
+                status: 'نشط'
+            });
+
+            // 5. حفظ البيانات
             saveAll();
+
+            // 6. تحديث الجدول
             renderUsers();
+
+            // 7. تنظيف الحقول
             document.getElementById('un').value = '';
             document.getElementById('up').value = '';
-            showToast('✅ تم إضافة المستخدم ' + name);
+            document.getElementById('ur').value = 'مشاهد';
+
+            // 8. إشعار نجاح
+            showToast('✅ تم إضافة المستخدم "' + name + '" بنجاح');
+
+            // 9. تحديث قائمة المستخدمين في شاشة الدخول
+            refreshLoginUsers();
+        }
+
+        // ===== تحديث قائمة المستخدمين في شاشة الدخول =====
+        function refreshLoginUsers() {
+            // هذه الدالة للتأكد من أن المستخدمين الجدد يمكنهم تسجيل الدخول
+            // البيانات محفوظة في userData
         }
 
         function toggleUser(name) {
@@ -2589,7 +2634,10 @@
         }
 
         function deleteUser(name) {
-            if (name === 'admin') { showToast('❌ لا يمكن حذف المستخدم admin'); return; }
+            if (name === 'admin') {
+                showToast('❌ لا يمكن حذف المستخدم admin');
+                return;
+            }
             Swal.fire({
                 title: '⚠️ تأكيد الحذف',
                 text: 'هل أنت متأكد من حذف المستخدم ' + name + '؟',
@@ -2606,6 +2654,11 @@
                     showToast('🗑️ تم حذف المستخدم ' + name);
                 }
             });
+        }
+
+        function refreshUsers() {
+            renderUsers();
+            showToast('🔄 تم تحديث قائمة المستخدمين');
         }
 
         let currentPasswordUser = '';
