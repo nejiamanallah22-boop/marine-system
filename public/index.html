@@ -1,543 +1,1936 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
-    
-    <!-- ===== الخطوط والأيقونات ===== -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- ===== المكتبات ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- ===== مكتبات قراءة الملفات ===== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-    
-    <!-- ===== ملفات المشروع ===== -->
-    <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>منظومة الوسائل البحرية</title>
+
+    <!-- ===== أيقونات Font Awesome ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- ===== Leaflet للخرائط ===== -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- ===== ملفات CSS ===== -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <style>
+        /* ===== أنماط إضافية مؤقتة ===== */
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+
+        /* ===== تحسينات الجدول ===== */
+        .status-badge {
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .status-badge.success { background: #dcfce7; color: #15803d; }
+        .status-badge.danger { background: #fee2e2; color: #dc2626; }
+        .status-badge.warning { background: #fef3c7; color: #b45309; }
+        .status-badge.info { background: #e0f2fe; color: #0284c7; }
+
+        /* ===== أيقونات الحالة ===== */
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        .status-dot.green { background: #22c55e; }
+        .status-dot.red { background: #ef4444; }
+        .status-dot.yellow { background: #f59e0b; }
+        .status-dot.blue { background: #0ea5e9; }
+
+        /* ===== رسوم بيانية ===== */
+        .chart-placeholder {
+            height: 250px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+        }
+        .chart-bar {
+            width: 40px;
+            background: var(--primary-gradient);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.5s ease;
+            min-height: 20px;
+            position: relative;
+        }
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: scaleY(1.02);
+        }
+        .chart-bar .bar-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--gray-500);
+            white-space: nowrap;
+        }
+        .chart-bar .bar-value {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        /* ===== تذاكر الدعم ===== */
+        .ticket-card {
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: 0.3s;
+        }
+        .ticket-card:hover {
+            transform: translateX(-3px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        .ticket-card .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .ticket-card .ticket-title {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .ticket-card .ticket-meta {
+            font-size: 12px;
+            color: var(--gray-500);
+        }
+        .ticket-card .ticket-body {
+            font-size: 13px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+        .ticket-card .ticket-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ===== تحسينات ===== */
+        .marine-logo {
+            font-size: 28px;
+        }
+        .marine-logo i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-icon-large {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .action-buttons-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-section {
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .filter-section .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-section .filter-row label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .filter-section .filter-row input,
+        .filter-section .filter-row select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--gray-200);
+            font-family: var(--font);
+            font-size: 13px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .filter-section .filter-row input:focus,
+        .filter-section .filter-row select:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
+        }
+
+        /* ===== زر تبديل الوضع ===== */
+        .theme-toggle-btn {
+            background: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 16px;
+        }
+        .theme-toggle-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: rotate(30deg);
+        }
+
+        /* ===== رسالة فارغة ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-500);
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* ===== علامات التبويب ===== */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- ===== شاشة الدخول ===== -->
-<!-- ============================================================ -->
-<div id="loginOverlay">
-    <div class="login-box">
-        <span class="logo">⚓</span>
-        <h2>منظومة الوسائل البحرية</h2>
-        <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-        <div class="location-hint">
-            <i class="fas fa-map-marker-alt"></i>
-            لتسجيل الدخول، يرجى السماح بالوصول إلى موقعك
-        </div>
-        <input type="text" id="username" placeholder="👤 اسم المستخدم">
-        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-        <button class="login-btn" onclick="doLogin()">
-            <i class="fas fa-sign-in-alt"></i> دخول
-        </button>
-        <div id="loginError" class="error-msg"></div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- ===== التطبيق الرئيسي ===== -->
-<!-- ============================================================ -->
-<div id="mainApp" class="container">
-
-    <!-- ====== الهيدر ====== -->
-    <header>
-        <h1><i class="fas fa-ship"></i> منظومة متابعة الوسائل البحرية</h1>
-        <div class="header-content">
-            <div class="developer-info">
-                <i class="fas fa-code"></i> المطور: أمان الله ناجي <i class="fas fa-rocket"></i>
+    <!-- ============================================================
+    ===== شاشة الدخول =====
+    ============================================================ -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <span class="logo">⚓</span>
+            <h2>منظومة الوسائل البحرية</h2>
+            <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
+            <div class="location-hint">
+                <i class="fas fa-map-marker-alt"></i>
+                لتسجيل الدخول، يرجى السماح بالوصول إلى موقعك
             </div>
-            <div class="header-actions">
-                <span id="userRoleDisplay" class="role-badge">
-                    <i class="fas fa-user"></i> 👤
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> اسم المستخدم</label>
+                <input type="text" id="loginUser" placeholder="أدخل اسم المستخدم" value="admin" />
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> كلمة المرور</label>
+                <input type="password" id="loginPass" placeholder="أدخل كلمة المرور" value="admin123" />
+            </div>
+            <button class="login-btn" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> دخول
+            </button>
+            <div id="loginError" class="error-msg">
+                <i class="fas fa-exclamation-circle"></i> اسم المستخدم أو كلمة المرور غير صحيحة
+            </div>
+            <div class="login-footer">
+                منظومة متابعة الوسائل البحرية
+                <br />
+                <small>المطور: أمان الله ناجي</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    ===== الحاوية الرئيسية =====
+    ============================================================ -->
+    <div class="container" id="mainApp">
+
+        <!-- ===== الهيدر ===== -->
+        <header>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <h1>
+                    <i class="fas fa-ship"></i>
+                    منظومة الوسائل البحرية
+                </h1>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="تبديل الوضع">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <span class="role-badge">
+                        <i class="fas fa-user-shield"></i> مدير النظام
+                    </span>
+                    <button class="btn btn-sm btn-danger" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> خروج
+                    </button>
+                </div>
+            </div>
+            <div class="header-content">
+                <span class="developer-info">
+                    <i class="fas fa-code"></i> المطور: أمان الله ناجي
                 </span>
-                <button class="btn btn-sm btn-outline-white" onclick="exportAllData()">
-                    <i class="fas fa-file-export"></i> تصدير
+                <div class="header-actions">
+                    <button class="btn btn-sm btn-success"><i class="fas fa-file-export"></i> تصدير</button>
+                    <button class="btn btn-sm btn-primary"><i class="fas fa-file-import"></i> استيراد</button>
+                    <button class="btn btn-sm btn-warning"><i class="fas fa-sync"></i> تحديث</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ===== شريط التنقل ===== -->
+        <nav class="nav" id="mainNav">
+            <button class="btn btn-primary" onclick="showPage('fleet')">
+                <i class="fas fa-ship"></i> الأسطول
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('maintenance')">
+                <i class="fas fa-tools"></i> الصيانة
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('readiness')">
+                <i class="fas fa-check-circle"></i> الجاهزية
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('support')">
+                <i class="fas fa-headset"></i> الدعم
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('tracking')">
+                <i class="fas fa-map-marked-alt"></i> التتبع
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('map')">
+                <i class="fas fa-map"></i> الخريطة
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('users')">
+                <i class="fas fa-users"></i> المستخدمين
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <button class="btn btn-secondary" onclick="showPage('notes')">
+                <i class="fas fa-sticky-note"></i> Note Verbale
+            </button>
+        </nav>
+
+        <!-- ============================================================
+        ===== صفحة الأسطول =====
+        ============================================================ -->
+        <div id="page-fleet" class="page-content active">
+
+            <!-- ===== الإحصائيات ===== -->
+            <div class="stats-cards">
+                <div class="stat-card stat-card-primary">
+                    <span class="stat-icon-large">🚢</span>
+                    <div class="number">24</div>
+                    <div class="label">إجمالي الوسائل</div>
+                </div>
+                <div class="stat-card stat-card-success">
+                    <span class="stat-icon-large">✅</span>
+                    <div class="number">18</div>
+                    <div class="label">صالح للخدمة</div>
+                </div>
+                <div class="stat-card stat-card-danger">
+                    <span class="stat-icon-large">🔧</span>
+                    <div class="number">4</div>
+                    <div class="label">تحت الصيانة</div>
+                </div>
+                <div class="stat-card stat-card-warning">
+                    <span class="stat-icon-large">⚠️</span>
+                    <div class="number">2</div>
+                    <div class="label">معطوب</div>
+                </div>
+            </div>
+
+            <!-- ===== نموذج الإدخال ===== -->
+            <div class="input-grid" id="fleetForm">
+                <input type="text" placeholder="🚢 اسم المركب" id="fleetName" />
+                <input type="text" placeholder="# الرقم" id="fleetNumber" />
+                <input type="number" placeholder="📏 الطول (م)" id="fleetLength" />
+                <select id="fleetCategory">
+                    <option value="">🗺️ الإقليم</option>
+                    <option value="شمال">شمال</option>
+                    <option value="جنوب">جنوب</option>
+                    <option value="شرق">شرق</option>
+                    <option value="غرب">غرب</option>
+                </select>
+                <input type="text" placeholder="📍 المنطقة" id="fleetRegion" />
+                <input type="text" placeholder="⚓ الميناء" id="fleetPort" />
+                <input type="text" placeholder="🔧 مكان التعزيز" id="fleetReinforce" />
+                <select id="fleetStatus">
+                    <option value="صالح">✅ صالح</option>
+                    <option value="معطب">❌ معطب</option>
+                    <option value="صيانة">🔧 صيانة</option>
+                </select>
+                <input type="text" placeholder="🛠️ نوع العطب" id="fleetDamage" />
+                <input type="date" id="fleetDate" />
+                <input type="date" id="fleetEndDate" />
+                <input type="text" placeholder="📄 المرجع" id="fleetReference" />
+                <button class="btn btn-success" onclick="saveFleet()">
+                    <i class="fas fa-save"></i> حفظ
                 </button>
-                <label class="btn btn-sm btn-outline-white" style="cursor:pointer;">
-                    <i class="fas fa-file-import"></i> استيراد
-                    <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="importAllData(this)">
-                </label>
-                <button class="btn btn-sm btn-outline-white" onclick="refreshAllPages()">
-                    <i class="fas fa-sync-alt"></i> تحديث
-                </button>
-                <button class="btn btn-sm btn-outline-white" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> خروج
-                </button>
             </div>
-        </div>
-    </header>
 
-    <!-- ====== شريط التنقل ====== -->
-    <div class="nav">
-        <button class="btn btn-primary" onclick="showPage('main')"><i class="fas fa-ship"></i> الأسطول</button>
-        <button class="btn btn-warning" onclick="showPage('maint')"><i class="fas fa-tools"></i> الصيانة</button>
-        <button class="btn btn-success" onclick="showPage('eff')"><i class="fas fa-chart-line"></i> الجاهزية</button>
-        <button class="btn btn-info" onclick="showPage('support')"><i class="fas fa-headset"></i> الدعم</button>
-        <button id="trackBtn" class="btn btn-secondary" onclick="showPage('track')"><i class="fas fa-map-marked-alt"></i> التتبع</button>
-        <button id="mapNavBtn" class="btn btn-secondary" onclick="showPage('map')"><i class="fas fa-map"></i> الخريطة</button>
-        <button id="admBtn" class="btn btn-danger" onclick="showPage('users')"><i class="fas fa-users-cog"></i> المستخدمين</button>
-        <button class="btn btn-secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
-        <button class="btn btn-primary" onclick="showPage('note')"><i class="fas fa-file-alt"></i> Note Verbale</button>
-    </div>
-
-    <!-- ====== نموذج الإدخال ====== -->
-    <div id="inputArea" class="input-grid">
-        <input type="text" id="iName" placeholder="🚢 اسم المركب">
-        <input type="text" id="iNum" placeholder="# الرقم">
-        <input type="number" id="iLen" placeholder="📏 الطول (م)">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">🗺️ الإقليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
-        <select id="iZone"><option value="">📍 المنطقة</option></select>
-        <input type="text" id="iPort" placeholder="⚓ الميناء">
-        <input type="text" id="iSupp" placeholder="🔧 مكان التعزيز">
-        <select id="iStat">
-            <option value="صالح">✅ صالح</option>
-            <option value="معطب">❌ معطب</option>
-            <option value="صيانة">🔧 صيانة</option>
-        </select>
-        <input type="text" id="iBreak" placeholder="🛠️ نوع العطب">
-        <input type="date" id="iDate" placeholder="📅 تاريخ العطب">
-        <input type="date" id="iEnd" placeholder="📅 تاريخ الانتهاء">
-        <input type="text" id="iRef" placeholder="📄 المرجع">
-        <button class="btn btn-success" onclick="addItem()">
-            <i class="fas fa-save"></i> حفظ
-        </button>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الأسطول ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMain">
-        <div class="filter-bar">
-            <div class="search-input">
-                <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="renderMain()">
-            </div>
-            <label><i class="fas fa-tag"></i> الفئة:</label>
-            <select id="fCatMain" onchange="renderMain()">
-                <option value="الكل">الكل</option>
-            </select>
-            <label><i class="fas fa-map"></i> الإقليم:</label>
-            <select id="fRegMain" onchange="renderMain()">
-                <option value="الكل">الكل</option>
-            </select>
-            <button class="btn btn-sm btn-secondary" onclick="clearMainSearch()">
-                <i class="fas fa-eraser"></i> مسح
-            </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-ship"></i> الأسطول البحري
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الرقم</th><th>الطول</th>
-                            <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
-                            <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
-                            <th>العطب</th><th>التاريخ</th><th>الانتهاء</th>
-                            <th>إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mainBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الصيانة ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMaint" class="hidden">
-        <div class="filter-bar">
-            <input type="text" id="searchMaint" placeholder="🔍 بحث في الصيانة" onkeyup="renderMaint()">
-            <label><i class="fas fa-map"></i> الإقليم:</label>
-            <select id="fRegMaint" onchange="renderMaint()">
-                <option value="الكل">الكل</option>
-            </select>
-            <label><i class="fas fa-calendar-alt"></i> من تاريخ:</label>
-            <input type="date" id="fDateStart" onchange="renderMaint()">
-            <label><i class="fas fa-calendar-alt"></i> إلى تاريخ:</label>
-            <input type="date" id="fDateEnd" onchange="renderMaint()">
-            <button class="btn btn-sm btn-secondary" onclick="resetMaintFilters()">
-                <i class="fas fa-undo"></i> إعادة ضبط
-            </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-tools"></i> سجل الصيانة
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الرقم</th><th>الإقليم</th>
-                            <th>المنطقة</th><th>الحالة</th>
-                            <th class="damage-column">العطب</th>
-                            <th>تاريخ العطب</th><th>الانتهاء</th>
-                            <th>المرجع</th><th>إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="maintBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الجاهزية ====== -->
-    <!-- ============================================================ -->
-    <div id="pageEff" class="hidden">
-        <div class="filter-bar">
-            <label><i class="fas fa-filter"></i> تصفية الإقليم:</label>
-            <select id="fRegEff" onchange="renderEff()">
-                <option value="الكل">الكل</option>
-                <option value="نجاعة عامة">📊 نجاعة عامة</option>
-                <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-                <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-                <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-                <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-            </select>
-            <button class="btn btn-sm btn-success" onclick="refreshEff()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-sm btn-primary" onclick="exportEfficiencyReport()" style="background:#0d6efd; color:white; font-weight:bold;">
-                <i class="fas fa-file-pdf"></i> تصدير النجاعة
-            </button>
-        </div>
-        
-        <!-- ===== آخر Note Verbale ===== -->
-        <div id="latestNoteContainer" style="display:none; background:white; border-radius:8px; padding:15px; margin-bottom:20px; border-right:4px solid #0d6efd; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                <h4 style="color:#0d6efd; margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
-                <small style="color:#6c757d;" id="latestNoteDate"></small>
-            </div>
-            <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
-            <div id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></div>
-            <div id="latestNoteAttachments" style="margin-top:10px;"></div>
-        </div>
-        
-        <div class="stats-cards" id="statsCards"></div>
-        <div id="generalEffTableContainer"></div>
-        <div id="regionTables"></div>
-        <div class="chart-switch">
-            <button class="active" onclick="switchChartType('doughnut', this)">
-                <i class="fas fa-chart-pie"></i> دائري
-            </button>
-            <button onclick="switchChartType('bar', this)">
-                <i class="fas fa-chart-bar"></i> شريطي
-            </button>
-            <button onclick="switchChartType('line', this)">
-                <i class="fas fa-chart-line"></i> خطي
-            </button>
-        </div>
-        <div id="chartsArea"></div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الدعم ====== -->
-    <!-- ============================================================ -->
-    <div id="pageSupport" class="hidden">
-        <div class="region-table-card" style="padding:25px;">
-            <h3><i class="fas fa-headset"></i> نظام التذاكر - الدعم الفني</h3>
-            <p style="color:var(--secondary); margin:8px 0 15px;">
-                <i class="fas fa-envelope"></i> support@marine.gov.tn &nbsp;|&nbsp;
-                <i class="fas fa-phone"></i> 29659945
-            </p>
-            <hr style="margin:15px 0; border-color:#e9ecef;">
-            <h4><i class="fas fa-paper-plane"></i> إرسال طلب دعم جديد</h4>
-            <input type="text" id="ticketSubject" placeholder="📌 عنوان الطلب" style="width:100%; padding:12px; margin:10px 0; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-            <textarea id="ticketMessage" rows="4" placeholder="📝 شرح المشكلة بالتفصيل..." style="width:100%; padding:12px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
-            <button class="btn btn-primary" onclick="sendTicket()">
-                <i class="fas fa-paper-plane"></i> إرسال الطلب
-            </button>
-            <button class="btn btn-sm btn-secondary" onclick="refreshTickets()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <div id="ticketResponse" style="margin-top:12px; color:var(--success); font-weight:600;"></div>
-            <hr style="margin:20px 0; border-color:#e9ecef;">
-            <h4><i class="fas fa-list"></i> قائمة التذاكر</h4>
-            <div id="ticketsList"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة التتبع ====== -->
-    <!-- ============================================================ -->
-    <div id="pageTrack" class="hidden">
-        <div class="filter-bar">
-            <span style="font-weight:700; color:var(--primary);">
-                <i class="fas fa-map-marker-alt"></i> تتبع المستخدمين المباشر
-            </span>
-            <span id="trackUsersCount" style="background:var(--primary); color:white; padding:4px 14px; border-radius:20px; font-size:13px;">0 متصل</span>
-            <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
-                <i class="fas fa-eraser"></i> مسح الكل
-            </button>
-        </div>
-        <div class="map-container">
-            <div id="trackMap" style="height:500px; width:100%;"></div>
-        </div>
-        <div class="region-table-card" style="margin-top:20px;">
-            <div class="region-table-header">
-                <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th><th>المستخدم</th><th>الصلاحية</th>
-                            <th>ID</th><th>الجهاز</th><th>المتصفح</th>
-                            <th>IP</th><th>الموقع</th><th>آخر تحديث</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trackUsersBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة الخريطة ====== -->
-    <!-- ============================================================ -->
-    <div id="pageMap" class="hidden">
-        <div class="filter-bar">
-            <span style="font-weight:700; color:var(--primary);">
-                <i class="fas fa-map-marker-alt"></i> تتبع GPS المباشر
-            </span>
-            <span id="gpsStatusIndicator">
-                <span class="gps-status gps-inactive" id="gpsDot"></span>
-                <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
-            </span>
-            <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">
-                <i class="fas fa-play"></i> بدء التتبع المباشر
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">
-                <i class="fas fa-stop"></i> إيقاف التتبع
-            </button>
-            <button class="btn btn-sm btn-success" onclick="loadLocations()">
-                <i class="fas fa-sync-alt"></i> تحديث الخريطة
-            </button>
-            <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">
-                <i class="fas fa-crosshairs"></i> مركز موقعي
-            </button>
-            <button class="btn btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800; color:white;">
-                <i class="fas fa-lock-open"></i> طلب إذن الموقع
-            </button>
-        </div>
-        <div id="mapStatus" style="text-align:center; margin:10px; color:var(--secondary); padding:12px; background:#f8f9fa; border-radius:var(--radius-sm);">
-            <i class="fas fa-info-circle"></i> اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي
-        </div>
-        <div class="map-container">
-            <div id="trackMap" style="height:500px; width:100%;"></div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة المستخدمين ====== -->
-    <!-- ============================================================ -->
-    <div id="pageUsers" class="hidden">
-        <div class="input-grid">
-            <input type="text" id="un" placeholder="👤 اسم المستخدم">
-            <input type="password" id="up" placeholder="🔑 كلمة السر">
-            <select id="ur">
-                <option value="مسؤول">👑 مسؤول</option>
-                <option value="محرر">✏️ محرر</option>
-                <option value="مشاهد">👁️ مشاهد</option>
-            </select>
-            <button class="btn btn-primary" onclick="addUser()">
-                <i class="fas fa-user-plus"></i> إضافة
-            </button>
-            <button class="btn btn-sm btn-success" onclick="refreshUsers()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-        </div>
-        <div class="region-table-card">
-            <div class="region-table-header">
-                <i class="fas fa-users"></i> إدارة المستخدمين
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>الاسم</th><th>الصلاحية</th>
-                            <th>الحالة</th>
-                            <th>تغيير كلمة المرور</th>
-                            <th>تعطيل/تفعيل</th>
-                            <th>حذف</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- ====== صفحة Note Verbale ====== -->
-    <!-- ============================================================ -->
-    <div id="pageNote" class="hidden">
-        <div class="region-table-card" style="padding:25px;">
-            <div class="region-table-header">
-                <i class="fas fa-file-alt"></i> Note Verbale
-            </div>
-            <div style="padding:20px;">
-                
-                <!-- ===== استيراد ملف ===== -->
-                <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <label style="font-weight:bold;">📂 استيراد ملف:</label>
-                    <input type="file" id="noteFileInput" accept=".txt,.docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.html,.htm" style="flex:1; padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                    <button class="btn btn-info" onclick="importNoteFile()">
-                        <i class="fas fa-upload"></i> استيراد
-                    </button>
-                    <small style="color:#6c757d;">(يدعم: TXT, DOCX, PDF, JPEG, PNG, GIF, BMP, WEBP, SVG, HTML)</small>
-                </div>
-                
-                <hr style="margin:15px 0; border-color:#e9ecef;">
-                
-                <!-- ===== التاريخ ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📅 تاريخ المذكرة:</label>
-                    <input type="date" id="noteDate" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-                </div>
-                
-                <!-- ===== عنوان ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
-                    <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
-                </div>
-                
-                <!-- ===== نص ===== -->
-                <div style="margin-bottom:15px;">
-                    <label style="font-weight:bold;">📄 نص المذكرة:</label>
-                    <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
-                </div>
-                
-                <input type="hidden" id="noteType" value="text">
-                
-                <!-- ===== أزرار ===== -->
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button class="btn btn-success" onclick="saveNote()">
-                        <i class="fas fa-save"></i> حفظ
-                    </button>
-                    <button class="btn btn-primary" onclick="exportNotePDF()">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                    <button class="btn btn-primary" onclick="exportNoteWord()" style="background:#2b5797;">
-                        <i class="fas fa-file-word"></i> Word
-                    </button>
-                    <button class="btn btn-secondary" onclick="clearNote()">
-                        <i class="fas fa-eraser"></i> مسح
-                    </button>
-                </div>
-                
-                <!-- ===== عرض النتيجة ===== -->
-                <div id="noteResult" style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px; display:none; border-right:4px solid var(--primary);">
-                    <h4 id="noteResultTitle" style="margin-bottom:10px;"></h4>
-                    <p id="noteResultContent"></p>
-                    <small style="color:#6c757d;" id="noteResultDate"></small>
-                </div>
-                
-                <hr style="margin:20px 0; border-color:#e9ecef;">
-                
-                <!-- ===== فلتر المذكرات ===== -->
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:15px; border-radius:8px;">
-                    <label style="font-weight:bold;">🔍 فلتر حسب الأسبوع:</label>
-                    <input type="week" id="filterWeek" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                    <label style="font-weight:bold;">عدد:</label>
-                    <select id="filterLimit" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="20">20</option>
-                        <option value="50">50</option>
+            <!-- ===== فلتر ===== -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="🔍 بحث في الأسطول" id="fleetSearch" oninput="filterFleet()" />
+                    <label>الفئة:</label>
+                    <select id="fleetFilterCategory" onchange="filterFleet()">
+                        <option value="">الكل</option>
+                        <option value="شمال">شمال</option>
+                        <option value="جنوب">جنوب</option>
+                        <option value="شرق">شرق</option>
+                        <option value="غرب">غرب</option>
                     </select>
-                    <button class="btn btn-primary" onclick="loadNotesByWeek()">
-                        <i class="fas fa-search"></i> بحث
+                    <label>الإقليم:</label>
+                    <select id="fleetFilterRegion" onchange="filterFleet()">
+                        <option value="">الكل</option>
+                        <option value="تونس">تونس</option>
+                        <option value="صفاقس">صفاقس</option>
+                        <option value="سوسة">سوسة</option>
+                        <option value="بنزرت">بنزرت</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="resetFleetFilters()">
+                        <i class="fas fa-undo"></i> مسح
                     </button>
                 </div>
-                
-                <!-- ===== قائمة المذكرات ===== -->
-                <div id="notesListContainer" style="margin-top:15px;"></div>
-                
+            </div>
+
+            <!-- ===== جدول الأسطول ===== -->
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <span><i class="fas fa-list"></i> الأسطول البحري</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <span id="fleetCount">24</span> وسيلة
+                    </span>
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الرقم</th>
+                                <th>الطول</th>
+                                <th>الفئة</th>
+                                <th>الإقليم</th>
+                                <th>المنطقة</th>
+                                <th>الميناء</th>
+                                <th>التعزيز</th>
+                                <th>الحالة</th>
+                                <th>العطب</th>
+                                <th>التاريخ</th>
+                                <th>الانتهاء</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fleetTableBody">
+                            <!-- سيتم تعبئتها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
 
-</div>
+        <!-- ============================================================
+        ===== صفحة الصيانة =====
+        ============================================================ -->
+        <div id="page-maintenance" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-tools"></i> سجل الصيانة</h3>
 
-<!-- ============================================================ -->
-<!-- ===== النوافذ المنبثقة ===== -->
-<!-- ============================================================ -->
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
-        <p id="modalUserName" style="color:var(--secondary); margin-bottom:15px;"></p>
-        <input type="password" id="newPassword" placeholder="🔑 كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="✅ تأكيد كلمة المرور">
-        <div class="modal-actions">
-            <button class="btn btn-success" onclick="saveNewPassword()">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button class="btn btn-danger" onclick="closePasswordModal()">
-                <i class="fas fa-times"></i> إلغاء
-            </button>
+            <!-- ===== فلتر الصيانة ===== -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="🔍 بحث في الصيانة" id="maintenanceSearch" oninput="filterMaintenance()" />
+                    <label>الإقليم:</label>
+                    <select id="maintenanceFilterRegion" onchange="filterMaintenance()">
+                        <option value="">الكل</option>
+                        <option value="تونس">تونس</option>
+                        <option value="صفاقس">صفاقس</option>
+                        <option value="سوسة">سوسة</option>
+                        <option value="بنزرت">بنزرت</option>
+                    </select>
+                    <label>من تاريخ:</label>
+                    <input type="date" id="maintenanceDateFrom" onchange="filterMaintenance()" />
+                    <label>إلى تاريخ:</label>
+                    <input type="date" id="maintenanceDateTo" onchange="filterMaintenance()" />
+                    <button class="btn btn-sm btn-secondary" onclick="resetMaintenanceFilters()">
+                        <i class="fas fa-undo"></i> إعادة ضبط
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== جدول الصيانة ===== -->
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <span><i class="fas fa-clipboard-list"></i> سجل الصيانة</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <span id="maintenanceCount">8</span> سجل
+                    </span>
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الرقم</th>
+                                <th>الإقليم</th>
+                                <th>المنطقة</th>
+                                <th>الحالة</th>
+                                <th>العطب</th>
+                                <th>تاريخ العطب</th>
+                                <th>الانتهاء</th>
+                                <th>المرجع</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenanceTableBody">
+                            <!-- سيتم تعبئتها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <!-- ============================================================
+        ===== صفحة الجاهزية =====
+        ============================================================ -->
+        <div id="page-readiness" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-check-circle"></i> تقرير الجاهزية</h3>
+
+            <!-- ===== فلتر الجاهزية ===== -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <label>تصفية الإقليم:</label>
+                    <select id="readinessFilter" onchange="updateReadiness()">
+                        <option value="">الكل</option>
+                        <option value="تونس">تونس</option>
+                        <option value="صفاقس">صفاقس</option>
+                        <option value="سوسة">سوسة</option>
+                        <option value="بنزرت">بنزرت</option>
+                    </select>
+                    <button class="btn btn-sm btn-primary" onclick="updateReadiness()">
+                        <i class="fas fa-sync"></i> تحديث
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="exportReadiness()">
+                        <i class="fas fa-file-excel"></i> تصدير النجاعة
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== الرسوم البيانية ===== -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+                <div class="region-table-card" style="padding:16px;">
+                    <h4 style="margin-bottom:12px;"><i class="fas fa-chart-pie"></i> توزيع الحالة</h4>
+                    <div class="chart-placeholder" id="readinessPie">
+                        <div style="width:60px; height:60px; border-radius:50%; background:conic-gradient(#22c55e 0% 75%, #f59e0b 75% 92%, #ef4444 92% 100%);"></div>
+                        <div style="font-size:13px; color:var(--gray-600);">
+                            <div><span class="status-dot green"></span> صالح: 75%</div>
+                            <div><span class="status-dot yellow"></span> صيانة: 17%</div>
+                            <div><span class="status-dot red"></span> معطب: 8%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="region-table-card" style="padding:16px;">
+                    <h4 style="margin-bottom:12px;">
+                        <i class="fas fa-chart-bar"></i> النجاعة
+                        <span style="font-size:12px; font-weight:400; color:var(--gray-500);">(دائري | شريطي | خطي)</span>
+                    </h4>
+                    <div class="chart-placeholder" style="height:150px; gap:8px; padding:10px;" id="readinessChart">
+                        <div class="chart-bar" style="height:40%; background:var(--primary-gradient);">
+                            <span class="bar-value">75%</span>
+                            <span class="bar-label">الجاهزية</span>
+                        </div>
+                        <div class="chart-bar" style="height:65%; background:var(--success-gradient);">
+                            <span class="bar-value">85%</span>
+                            <span class="bar-label">الفاعلية</span>
+                        </div>
+                        <div class="chart-bar" style="height:30%; background:var(--danger-gradient);">
+                            <span class="bar-value">45%</span>
+                            <span class="bar-label">العطب</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== جدول الجاهزية ===== -->
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <span><i class="fas fa-chart-line"></i> تفاصيل الجاهزية</span>
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المركب</th>
+                                <th>الرقم</th>
+                                <th>الإقليم</th>
+                                <th>الحالة</th>
+                                <th>الجاهزية</th>
+                                <th>الفاعلية</th>
+                                <th>آخر صيانة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="readinessTableBody">
+                            <!-- سيتم تعبئتها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ===== صفحة الدعم =====
+        ============================================================ -->
+        <div id="page-support" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-headset"></i> نظام التذاكر - الدعم الفني</h3>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                <span style="font-size:13px; color:var(--gray-600);">
+                    <i class="fas fa-envelope"></i> support@marine.gov.tn
+                </span>
+                <span style="font-size:13px; color:var(--gray-600);">
+                    <i class="fas fa-phone"></i> 29659945
+                </span>
+            </div>
+
+            <!-- ===== نموذج طلب الدعم ===== -->
+            <div class="region-table-card" style="padding:20px; margin-bottom:16px;">
+                <h4 style="margin-bottom:12px;"><i class="fas fa-plus-circle"></i> إرسال طلب دعم جديد</h4>
+                <div class="input-grid" style="grid-template-columns:1fr 1fr;">
+                    <input type="text" placeholder="📌 عنوان الطلب" id="ticketTitle" />
+                    <select id="ticketPriority">
+                        <option value="عادي">🟢 عادي</option>
+                        <option value="متوسط">🟡 متوسط</option>
+                        <option value="عاجل">🔴 عاجل</option>
+                    </select>
+                    <textarea placeholder="📝 شرح المشكلة بالتفصيل..." id="ticketDescription" style="grid-column:span 2; min-height:80px;"></textarea>
+                    <div style="grid-column:span 2; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="submitTicket()">
+                            <i class="fas fa-paper-plane"></i> إرسال الطلب
+                        </button>
+                        <button class="btn btn-secondary" onclick="updateTickets()">
+                            <i class="fas fa-sync"></i> تحديث
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== قائمة التذاكر ===== -->
+            <div class="region-table-card" style="padding:20px;">
+                <div class="region-table-header">
+                    <span><i class="fas fa-ticket-alt"></i> قائمة التذاكر</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <span id="ticketCount">5</span> تذكرة
+                    </span>
+                </div>
+                <div id="ticketList">
+                    <!-- سيتم تعبئتها بواسطة JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ===== صفحة التتبع =====
+        ============================================================ -->
+        <div id="page-tracking" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-map-marked-alt"></i> تتبع الوسائل البحرية</h3>
+
+            <div class="stats-cards" style="grid-template-columns:repeat(3,1fr);">
+                <div class="stat-card stat-card-success">
+                    <div class="number"><span class="status-dot green" style="width:14px;height:14px;"></span> 12</div>
+                    <div class="label">وسائل نشطة</div>
+                </div>
+                <div class="stat-card stat-card-warning">
+                    <div class="number"><span class="status-dot yellow" style="width:14px;height:14px;"></span> 3</div>
+                    <div class="label">قيد التتبع</div>
+                </div>
+                <div class="stat-card stat-card-danger">
+                    <div class="number"><span class="status-dot red" style="width:14px;height:14px;"></span> 2</div>
+                    <div class="label">متوقفة</div>
+                </div>
+            </div>
+
+            <div class="region-table-card" style="padding:16px;">
+                <div class="region-table-header">
+                    <span><i class="fas fa-satellite"></i> مواقع الوسائل</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <i class="fas fa-sync fa-spin"></i> تحديث لحظي
+                    </span>
+                </div>
+                <div style="padding:12px; background:rgba(255,255,255,0.2); border-radius:8px; min-height:100px;">
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px;">
+                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
+                            <span style="font-size:24px;">🚢</span>
+                            <div style="font-weight:600;">المركب 1</div>
+                            <div style="font-size:12px; color:var(--gray-500);">36.8°N, 10.2°E</div>
+                            <span class="status-dot green"></span> نشط
+                        </div>
+                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
+                            <span style="font-size:24px;">🚢</span>
+                            <div style="font-weight:600;">المركب 2</div>
+                            <div style="font-size:12px; color:var(--gray-500);">34.5°N, 9.8°E</div>
+                            <span class="status-dot yellow"></span> قيد التتبع
+                        </div>
+                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
+                            <span style="font-size:24px;">🚢</span>
+                            <div style="font-weight:600;">المركب 3</div>
+                            <div style="font-size:12px; color:var(--gray-500);">37.2°N, 10.5°E</div>
+                            <span class="status-dot green"></span> نشط
+                        </div>
+                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
+                            <span style="font-size:24px;">🚢</span>
+                            <div style="font-weight:600;">المركب 4</div>
+                            <div style="font-size:12px; color:var(--gray-500);">33.9°N, 9.4°E</div>
+                            <span class="status-dot red"></span> متوقفة
+                        </div>
+                        <div style="background:rgba(255,255,255,0.3); padding:12px; border-radius:8px; text-align:center;">
+                            <span style="font-size:24px;">🚢</span>
+                            <div style="font-weight:600;">المركب 5</div>
+                            <div style="font-size:12px; color:var(--gray-500);">36.4°N, 10.8°E</div>
+                            <span class="status-dot green"></span> نشط
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ===== صفحة الخريطة =====
+        ============================================================ -->
+        <div id="page-map" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-map"></i> خريطة الأسطول</h3>
+
+            <div class="map-container" id="mapContainer">
+                <div id="trackMap" style="height:100%; width:100%;"></div>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+                <button class="btn btn-sm btn-primary" onclick="centerMap()">
+                    <i class="fas fa-crosshairs"></i> تمركز
+                </button>
+                <button class="btn btn-sm btn-success" onclick="addMarker()">
+                    <i class="fas fa-plus-circle"></i> إضافة علامة
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="clearMarkers()">
+                    <i class="fas fa-eraser"></i> مسح العلامات
+                </button>
+                <span style="font-size:12px; color:var(--gray-500);">
+                    <i class="fas fa-info-circle"></i> انقر على الخريطة لإضافة علامة
+                </span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ===== صفحة المستخدمين =====
+        ============================================================ -->
+        <div id="page-users" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-users"></i> إدارة المستخدمين</h3>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                <button class="btn btn-primary" onclick="addUser()">
+                    <i class="fas fa-user-plus"></i> إضافة مستخدم
+                </button>
+                <button class="btn btn-secondary" onclick="refreshUsers()">
+                    <i class="fas fa-sync"></i> تحديث
+                </button>
+            </div>
+
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    <span><i class="fas fa-list"></i> قائمة المستخدمين</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <span id="userCount">6</span> مستخدم
+                    </span>
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المستخدم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>الدور</th>
+                                <th>الحالة</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- سيتم تعبئتها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        ===== صفحة Note Verbale =====
+        ============================================================ -->
+        <div id="page-notes" class="page-content">
+            <h3 style="margin-bottom:16px;"><i class="fas fa-sticky-note"></i> Note Verbale</h3>
+
+            <div class="region-table-card" style="padding:20px; margin-bottom:16px;">
+                <h4 style="margin-bottom:12px;"><i class="fas fa-plus-circle"></i> إضافة مذكرة جديدة</h4>
+                <div class="input-grid" style="grid-template-columns:1fr 1fr;">
+                    <input type="text" placeholder="📌 عنوان المذكرة" id="noteTitle" />
+                    <select id="noteCategory">
+                        <option value="رسمية">📄 رسمية</option>
+                        <option value="داخلية">📁 داخلية</option>
+                        <option value="عاجلة">🚨 عاجلة</option>
+                    </select>
+                    <textarea placeholder="📝 محتوى المذكرة..." id="noteContent" style="grid-column:span 2; min-height:100px;"></textarea>
+                    <div style="grid-column:span 2; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <button class="btn btn-primary" onclick="addNote()">
+                            <i class="fas fa-save"></i> حفظ المذكرة
+                        </button>
+                        <label style="font-size:13px; color:var(--gray-600); cursor:pointer;">
+                            <i class="fas fa-paperclip"></i> إرفاق ملف
+                            <input type="file" id="noteAttachment" style="display:none;" onchange="previewNoteAttachment()" />
+                        </label>
+                        <div id="notePreviewContainer">
+                            <img id="notePreviewImage" src="#" alt="معاينة" />
+                            <button class="remove-note-image" onclick="removeNoteAttachment()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="region-table-card" style="padding:20px;">
+                <div class="region-table-header">
+                    <span><i class="fas fa-list"></i> قائمة المذكرات</span>
+                    <span style="font-size:12px; color:var(--gray-500);">
+                        <span id="noteCount">4</span> مذكرة
+                    </span>
+                </div>
+                <div id="noteList">
+                    <!-- سيتم تعبئتها بواسطة JavaScript -->
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
 
-<!-- ============================================================ -->
-<!-- ===== أزرار التمرير ===== -->
-<!-- ============================================================ -->
-<div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()" title="أعلى">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-    <button class="scroll-btn" onclick="scrollToBottom()" title="أسفل">
-        <i class="fas fa-chevron-down"></i>
-    </button>
-</div>
+    <!-- ============================================================
+    ===== JavaScript =====
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // ===== بيانات التطبيق =====
+        // ============================================================
 
-<!-- ============================================================ -->
-<!-- ===== ملفات الجافاسكريبت ===== -->
-<!-- ============================================================ -->
-<script src="/js/utils.js"></script>
-<script src="/js/api.js"></script>
-<script src="/js/vessels.js"></script>
-<script src="/js/tickets.js"></script>
-<script src="/js/dashboard.js"></script>
-<script src="/js/map.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/app.js"></script>
+        // ===== بيانات الأسطول =====
+        let fleetData = [
+            { id: 1, name: 'المركب 1', number: 'M-001', length: 25, category: 'شمال', region: 'تونس', port: 'حلق الوادي',
+                reinforce: 'تعزيز 1', status: 'صالح', damage: '-', date: '2024-01-15', endDate: '2025-01-15',
+                reference: 'REF-001' },
+            { id: 2, name: 'المركب 2', number: 'M-002', length: 30, category: 'جنوب', region: 'صفاقس', port: 'صفاقس',
+                reinforce: 'تعزيز 2', status: 'صيانة', damage: 'محرك', date: '2024-02-01', endDate: '2024-03-01',
+                reference: 'REF-002' },
+            { id: 3, name: 'المركب 3', number: 'M-003', length: 18, category: 'شرق', region: 'سوسة', port: 'سوسة',
+                reinforce: 'تعزيز 3', status: 'معطب', damage: 'بدن', date: '2024-03-10', endDate: '2024-04-10',
+                reference: 'REF-003' },
+            { id: 4, name: 'المركب 4', number: 'M-004', length: 40, category: 'غرب', region: 'بنزرت', port: 'بنزرت',
+                reinforce: 'تعزيز 4', status: 'صالح', damage: '-', date: '2024-01-20', endDate: '2025-01-20',
+                reference: 'REF-004' },
+            { id: 5, name: 'المركب 5', number: 'M-005', length: 22, category: 'شمال', region: 'تونس', port: 'حلق الوادي',
+                reinforce: 'تعزيز 5', status: 'صيانة', damage: 'كهرباء', date: '2024-02-15', endDate: '2024-03-15',
+                reference: 'REF-005' },
+        ];
 
+        let nextFleetId = 6;
+
+        // ===== بيانات الصيانة =====
+        let maintenanceData = [
+            { id: 1, name: 'المركب 2', number: 'M-002', region: 'صفاقس', area: 'الميناء', status: 'صيانة', damage: 'محرك',
+                damageDate: '2024-02-01', endDate: '2024-03-01', reference: 'REF-002' },
+            { id: 2, name: 'المركب 5', number: 'M-005', region: 'تونس', area: 'حلق الوادي', status: 'صيانة', damage: 'كهرباء',
+                damageDate: '2024-02-15', endDate: '2024-03-15', reference: 'REF-005' },
+            { id: 3, name: 'المركب 3', number: 'M-003', region: 'سوسة', area: 'سوسة', status: 'معطب', damage: 'بدن',
+                damageDate: '2024-03-10', endDate: '2024-04-10', reference: 'REF-003' },
+        ];
+
+        let nextMaintenanceId = 4;
+
+        // ===== بيانات الجاهزية =====
+        let readinessData = [
+            { name: 'المركب 1', number: 'M-001', region: 'تونس', status: 'صالح', readiness: 95, effectiveness: 90,
+                lastMaintenance: '2024-01-15' },
+            { name: 'المركب 2', number: 'M-002', region: 'صفاقس', status: 'صيانة', readiness: 60, effectiveness: 55,
+                lastMaintenance: '2024-02-01' },
+            { name: 'المركب 3', number: 'M-003', region: 'سوسة', status: 'معطب', readiness: 20, effectiveness: 15,
+                lastMaintenance: '2024-03-10' },
+            { name: 'المركب 4', number: 'M-004', region: 'بنزرت', status: 'صالح', readiness: 90, effectiveness: 88,
+                lastMaintenance: '2024-01-20' },
+            { name: 'المركب 5', number: 'M-005', region: 'تونس', status: 'صيانة', readiness: 55, effectiveness: 50,
+                lastMaintenance: '2024-02-15' },
+        ];
+
+        // ===== بيانات التذاكر =====
+        let ticketData = [
+            { id: 1, title: 'عطل في نظام الملاحة', priority: 'عاجل', description: 'تعطل نظام GPS في المركب 2',
+                status: 'مفتوحة', date: '2024-03-01' },
+            { id: 2, title: 'طلب صيانة دورية', priority: 'عادي', description: 'صيانة دورية للمركب 5', status: 'قيد المعالجة',
+                date: '2024-03-05' },
+            { id: 3, title: 'مشكلة في المحرك', priority: 'متوسط', description: 'ارتفاع حرارة المحرك في المركب 3',
+                status: 'مغلقة', date: '2024-02-28' },
+        ];
+
+        let nextTicketId = 4;
+
+        // ===== بيانات المستخدمين =====
+        let userData = [
+            { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.gov.tn', role: 'مدير النظام', status: 'نشط',
+                date: '2024-01-01' },
+            { id: 2, name: 'سارة علي', email: 'sara@marine.gov.tn', role: 'مشرف', status: 'نشط', date: '2024-01-15' },
+            { id: 3, name: 'محمد خالد', email: 'mohamed@marine.gov.tn', role: 'مستخدم', status: 'غير نشط',
+                date: '2024-02-01' },
+            { id: 4, name: 'نورة حسن', email: 'nora@marine.gov.tn', role: 'مشرف', status: 'نشط', date: '2024-02-10' },
+            { id: 5, name: 'علي رضا', email: 'ali@marine.gov.tn', role: 'مستخدم', status: 'نشط', date: '2024-02-20' },
+        ];
+
+        let nextUserId = 6;
+
+        // ===== بيانات المذكرات =====
+        let noteData = [
+            { id: 1, title: 'تقرير اجتماع الأسطول', category: 'رسمية', content: 'تم مناقشة خطة الصيانة للربع الأول',
+                date: '2024-03-01', attachment: null },
+            { id: 2, title: 'طلب تعزيزات', category: 'داخلية', content: 'طلب توفير قطع غيار إضافية للأسطول',
+                date: '2024-03-05', attachment: null },
+            { id: 3, title: 'تنبيه عاجل', category: 'عاجلة', content: 'تحذير من سوء الأحوال الجوية قرب سواحل تونس',
+                date: '2024-03-08', attachment: null },
+        ];
+
+        let nextNoteId = 4;
+
+        // ============================================================
+        // ===== وظائف شاشة الدخول =====
+        // ============================================================
+
+        function handleLogin() {
+            const user = document.getElementById('loginUser').value;
+            const pass = document.getElementById('loginPass').value;
+            const error = document.getElementById('loginError');
+
+            if (user === 'admin' && pass === 'admin123') {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                initializeApp();
+            } else {
+                error.style.display = 'block';
+                setTimeout(() => { error.style.display = 'none'; }, 3000);
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('هل أنت متأكد من الخروج؟')) {
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('loginPass').value = '';
+                document.getElementById('loginUser').focus();
+            }
+        }
+
+        // ============================================================
+        // ===== وظائف تبديل الوضع (داكن/فاتح) =====
+        // ============================================================
+
+        let isDarkMode = false;
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            const icon = document.querySelector('.theme-toggle-btn i');
+            icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // ============================================================
+        // ===== وظائف التنقل بين الصفحات =====
+        // ============================================================
+
+        function showPage(page) {
+            // إخفاء جميع الصفحات
+            document.querySelectorAll('.page-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // إظهار الصفحة المطلوبة
+            const target = document.getElementById('page-' + page);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // تحديث الأزرار
+            document.querySelectorAll('#mainNav .btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+
+            // تمييز الزر النشط
+            const buttons = document.querySelectorAll('#mainNav .btn');
+            const pageMap = {
+                'fleet': 0,
+                'maintenance': 1,
+                'readiness': 2,
+                'support': 3,
+                'tracking': 4,
+                'map': 5,
+                'users': 6,
+                'notes': 8
+            };
+            const index = pageMap[page];
+            if (index !== undefined && buttons[index]) {
+                buttons[index].classList.remove('btn-secondary');
+                buttons[index].classList.add('btn-primary');
+            }
+
+            // تهيئة الخريطة إذا كانت الصفحة المطلوبة
+            if (page === 'map') {
+                setTimeout(initMap, 300);
+            }
+        }
+
+        // ============================================================
+        // ===== تهيئة التطبيق =====
+        // ============================================================
+
+        function initializeApp() {
+            renderFleetTable();
+            renderMaintenanceTable();
+            renderReadinessTable();
+            renderTickets();
+            renderUsersTable();
+            renderNotes();
+            updateReadiness();
+
+            // تعيين التاريخ الحالي
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(el => {
+                if (!el.value) el.value = today;
+            });
+        }
+
+        // ============================================================
+        // ===== وظائف الأسطول =====
+        // ============================================================
+
+        function renderFleetTable(data) {
+            const tbody = document.getElementById('fleetTableBody');
+            const list = data || fleetData;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                            <tr>
+                                <td colspan="13">
+                                    <div class="empty-state">
+                                        <div class="icon"><i class="fas fa-ship"></i></div>
+                                        <p>لا توجد وسائل بحرية مسجلة</p>
+                                        <span style="font-size:12px;">أضف وسيلة جديدة من خلال النموذج أعلاه</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                document.getElementById('fleetCount').textContent = 0;
+                return;
+            }
+
+            let html = '';
+            list.forEach(item => {
+                const statusClass = item.status === 'صالح' ? 'success' :
+                    item.status === 'معطب' ? 'danger' : 'warning';
+                html += `
+                            <tr>
+                                <td><strong>${item.name}</strong></td>
+                                <td>${item.number}</td>
+                                <td>${item.length} م</td>
+                                <td>${item.category}</td>
+                                <td>${item.region}</td>
+                                <td>${item.port}</td>
+                                <td>${item.reinforce}</td>
+                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                                <td>${item.damage}</td>
+                                <td>${item.date}</td>
+                                <td>${item.endDate}</td>
+                                <td>${item.reference}</td>
+                                <td>
+                                    <div class="action-buttons-group">
+                                        <button class="btn btn-sm btn-primary" onclick="editFleet(${item.id})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteFleet(${item.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('fleetCount').textContent = list.length;
+        }
+
+        function saveFleet() {
+            const name = document.getElementById('fleetName').value.trim();
+            const number = document.getElementById('fleetNumber').value.trim();
+            const length = document.getElementById('fleetLength').value;
+            const category = document.getElementById('fleetCategory').value;
+            const region = document.getElementById('fleetRegion').value.trim();
+            const port = document.getElementById('fleetPort').value.trim();
+            const reinforce = document.getElementById('fleetReinforce').value.trim();
+            const status = document.getElementById('fleetStatus').value;
+            const damage = document.getElementById('fleetDamage').value.trim();
+            const date = document.getElementById('fleetDate').value;
+            const endDate = document.getElementById('fleetEndDate').value;
+            const reference = document.getElementById('fleetReference').value.trim();
+
+            if (!name || !number) {
+                showToast('يرجى إدخال اسم المركب والرقم', 'warning');
+                return;
+            }
+
+            const newFleet = {
+                id: nextFleetId++,
+                name,
+                number,
+                length: length || 0,
+                category: category || 'غير محدد',
+                region: region || 'غير محدد',
+                port: port || 'غير محدد',
+                reinforce: reinforce || '-',
+                status,
+                damage: damage || '-',
+                date: date || new Date().toISOString().split('T')[0],
+                endDate: endDate || '-',
+                reference: reference || '-'
+            };
+
+            fleetData.push(newFleet);
+
+            // إضافة إلى سجل الصيانة إذا كانت الحالة صيانة أو معطب
+            if (status === 'صيانة' || status === 'معطب') {
+                maintenanceData.push({
+                    id: nextMaintenanceId++,
+                    name,
+                    number,
+                    region: region || 'غير محدد',
+                    area: port || 'غير محدد',
+                    status,
+                    damage: damage || '-',
+                    damageDate: date || new Date().toISOString().split('T')[0],
+                    endDate: endDate || '-',
+                    reference: reference || '-'
+                });
+            }
+
+            renderFleetTable();
+            renderMaintenanceTable();
+            showToast(`تم إضافة المركب ${name} بنجاح`, 'success');
+            clearFleetForm();
+        }
+
+        function clearFleetForm() {
+            document.getElementById('fleetName').value = '';
+            document.getElementById('fleetNumber').value = '';
+            document.getElementById('fleetLength').value = '';
+            document.getElementById('fleetCategory').value = '';
+            document.getElementById('fleetRegion').value = '';
+            document.getElementById('fleetPort').value = '';
+            document.getElementById('fleetReinforce').value = '';
+            document.getElementById('fleetDamage').value = '';
+            document.getElementById('fleetReference').value = '';
+        }
+
+        function deleteFleet(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه الوسيلة؟')) return;
+            fleetData = fleetData.filter(item => item.id !== id);
+            renderFleetTable();
+            showToast('تم الحذف بنجاح', 'success');
+        }
+
+        function editFleet(id) {
+            const item = fleetData.find(f => f.id === id);
+            if (!item) return;
+
+            document.getElementById('fleetName').value = item.name;
+            document.getElementById('fleetNumber').value = item.number;
+            document.getElementById('fleetLength').value = item.length;
+            document.getElementById('fleetCategory').value = item.category;
+            document.getElementById('fleetRegion').value = item.region;
+            document.getElementById('fleetPort').value = item.port;
+            document.getElementById('fleetReinforce').value = item.reinforce;
+            document.getElementById('fleetStatus').value = item.status;
+            document.getElementById('fleetDamage').value = item.damage;
+            document.getElementById('fleetDate').value = item.date;
+            document.getElementById('fleetEndDate').value = item.endDate;
+            document.getElementById('fleetReference').value = item.reference;
+
+            // حذف العنصر القديم
+            fleetData = fleetData.filter(f => f.id !== id);
+            renderFleetTable();
+            showToast('يمكنك تعديل البيانات ثم حفظها', 'info');
+        }
+
+        function filterFleet() {
+            const search = document.getElementById('fleetSearch').value.toLowerCase();
+            const category = document.getElementById('fleetFilterCategory').value;
+            const region = document.getElementById('fleetFilterRegion').value;
+
+            let filtered = fleetData;
+
+            if (search) {
+                filtered = filtered.filter(item =>
+                    item.name.toLowerCase().includes(search) ||
+                    item.number.toLowerCase().includes(search) ||
+                    item.port.toLowerCase().includes(search)
+                );
+            }
+
+            if (category) {
+                filtered = filtered.filter(item => item.category === category);
+            }
+
+            if (region) {
+                filtered = filtered.filter(item => item.region === region);
+            }
+
+            renderFleetTable(filtered);
+        }
+
+        function resetFleetFilters() {
+            document.getElementById('fleetSearch').value = '';
+            document.getElementById('fleetFilterCategory').value = '';
+            document.getElementById('fleetFilterRegion').value = '';
+            renderFleetTable();
+        }
+
+        // ============================================================
+        // ===== وظائف الصيانة =====
+        // ============================================================
+
+        function renderMaintenanceTable(data) {
+            const tbody = document.getElementById('maintenanceTableBody');
+            const list = data || maintenanceData;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                            <tr>
+                                <td colspan="10">
+                                    <div class="empty-state">
+                                        <div class="icon"><i class="fas fa-tools"></i></div>
+                                        <p>لا توجد سجلات صيانة</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                document.getElementById('maintenanceCount').textContent = 0;
+                return;
+            }
+
+            let html = '';
+            list.forEach(item => {
+                const statusClass = item.status === 'صالح' ? 'success' :
+                    item.status === 'معطب' ? 'danger' : 'warning';
+                html += `
+                            <tr>
+                                <td><strong>${item.name}</strong></td>
+                                <td>${item.number}</td>
+                                <td>${item.region}</td>
+                                <td>${item.area}</td>
+                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                                <td>${item.damage}</td>
+                                <td>${item.damageDate}</td>
+                                <td>${item.endDate}</td>
+                                <td>${item.reference}</td>
+                                <td>
+                                    <div class="action-buttons-group">
+                                        <button class="btn btn-sm btn-success" onclick="completeMaintenance(${item.id})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${item.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('maintenanceCount').textContent = list.length;
+        }
+
+        function completeMaintenance(id) {
+            const item = maintenanceData.find(m => m.id === id);
+            if (!item) return;
+
+            if (confirm(`هل تريد إنهاء الصيانة للمركب ${item.name}؟`)) {
+                // تحديث حالة المركب في الأسطول
+                const fleetItem = fleetData.find(f => f.number === item.number);
+                if (fleetItem) {
+                    fleetItem.status = 'صالح';
+                    fleetItem.damage = '-';
+                }
+
+                maintenanceData = maintenanceData.filter(m => m.id !== id);
+                renderMaintenanceTable();
+                renderFleetTable();
+                showToast(`تم إنهاء صيانة ${item.name}`, 'success');
+            }
+        }
+
+        function deleteMaintenance(id) {
+            if (!confirm('هل أنت متأكد من حذف سجل الصيانة؟')) return;
+            maintenanceData = maintenanceData.filter(m => m.id !== id);
+            renderMaintenanceTable();
+            showToast('تم الحذف بنجاح', 'success');
+        }
+
+        function filterMaintenance() {
+            const search = document.getElementById('maintenanceSearch').value.toLowerCase();
+            const region = document.getElementById('maintenanceFilterRegion').value;
+            const from = document.getElementById('maintenanceDateFrom').value;
+            const to = document.getElementById('maintenanceDateTo').value;
+
+            let filtered = maintenanceData;
+
+            if (search) {
+                filtered = filtered.filter(item =>
+                    item.name.toLowerCase().includes(search) ||
+                    item.number.toLowerCase().includes(search) ||
+                    item.damage.toLowerCase().includes(search)
+                );
+            }
+
+            if (region) {
+                filtered = filtered.filter(item => item.region === region);
+            }
+
+            if (from) {
+                filtered = filtered.filter(item => item.damageDate >= from);
+            }
+
+            if (to) {
+                filtered = filtered.filter(item => item.damageDate <= to);
+            }
+
+            renderMaintenanceTable(filtered);
+        }
+
+        function resetMaintenanceFilters() {
+            document.getElementById('maintenanceSearch').value = '';
+            document.getElementById('maintenanceFilterRegion').value = '';
+            document.getElementById('maintenanceDateFrom').value = '';
+            document.getElementById('maintenanceDateTo').value = '';
+            renderMaintenanceTable();
+        }
+
+        // ============================================================
+        // ===== وظائف الجاهزية =====
+        // ============================================================
+
+        function renderReadinessTable(data) {
+            const tbody = document.getElementById('readinessTableBody');
+            const list = data || readinessData;
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <div class="icon"><i class="fas fa-chart-line"></i></div>
+                                        <p>لا توجد بيانات جاهزية</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                return;
+            }
+
+            let html = '';
+            list.forEach(item => {
+                const statusClass = item.status === 'صالح' ? 'success' :
+                    item.status === 'معطب' ? 'danger' : 'warning';
+                const readinessColor = item.readiness > 70 ? 'success' :
+                    item.readiness > 40 ? 'warning' : 'danger';
+                html += `
+                            <tr>
+                                <td><strong>${item.name}</strong></td>
+                                <td>${item.number}</td>
+                                <td>${item.region}</td>
+                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                                <td>
+                                    <span style="color:${item.readiness > 70 ? '#22c55e' : item.readiness > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">
+                                        ${item.readiness}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span style="color:${item.effectiveness > 70 ? '#22c55e' : item.effectiveness > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">
+                                        ${item.effectiveness}%
+                                    </span>
+                                </td>
+                                <td>${item.lastMaintenance}</td>
+                            </tr>
+                        `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function updateReadiness() {
+            const filter = document.getElementById('readinessFilter').value;
+            let data = readinessData;
+
+            if (filter) {
+                data = data.filter(item => item.region === filter);
+            }
+
+            renderReadinessTable(data);
+            showToast('تم تحديث بيانات الجاهزية', 'info');
+        }
+
+        function exportReadiness() {
+            showToast('جاري تصدير بيانات النجاعة...', 'info');
+            setTimeout(() => {
+                showToast('تم تصدير البيانات بنجاح', 'success');
+            }, 1500);
+        }
+
+        // ============================================================
+        // ===== وظائف الدعم =====
+        // ============================================================
+
+        function renderTickets() {
+            const container = document.getElementById('ticketList');
+
+            if (ticketData.length === 0) {
+                container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon"><i class="fas fa-ticket-alt"></i></div>
+                                <p>لا توجد تذاكر</p>
+                            </div>
+                        `;
+                document.getElementById('ticketCount').textContent = 0;
+                return;
+            }
+
+            let html = '';
+            ticketData.forEach(ticket => {
+                const priorityColor = ticket.priority === 'عاجل' ? '#ef4444' :
+                    ticket.priority === 'متوسط' ? '#f59e0b' : '#22c55e';
+                const statusColor = ticket.status === 'مفتوحة' ? '#22c55e' :
+                    ticket.status === 'قيد المعالجة' ? '#f59e0b' : '#64748b';
+                html += `
+                            <div class="ticket-card">
+                                <div class="ticket-header">
+                                    <span class="ticket-title">${ticket.title}</span>
+                                    <span style="color:${priorityColor}; font-weight:600; font-size:12px;">
+                                        <i class="fas fa-circle" style="font-size:8px;"></i> ${ticket.priority}
+                                    </span>
+                                </div>
+                                <div class="ticket-body">${ticket.description}</div>
+                                <div class="ticket-footer">
+                                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                        <span style="font-size:12px; color:var(--gray-500);">
+                                            <i class="fas fa-calendar"></i> ${ticket.date}
+                                        </span>
+                                        <span style="color:${statusColor}; font-size:12px; font-weight:600;">
+                                            <i class="fas fa-circle" style="font-size:8px;"></i> ${ticket.status}
+                                        </span>
+                                    </div>
+                                    <div class="action-buttons-group">
+                                        <button class="btn btn-sm btn-success" onclick="updateTicketStatus(${ticket.id})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteTicket(${ticket.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+            });
+            container.innerHTML = html;
+            document.getElementById('ticketCount').textContent = ticketData.length;
+        }
+
+        function submitTicket() {
+            const title = document.getElementById('ticketTitle').value.trim();
+            const priority = document.getElementById('ticketPriority').value;
+            const description = document.getElementById('ticketDescription').value.trim();
+
+            if (!title || !description) {
+                showToast('يرجى ملء جميع الحقول', 'warning');
+                return;
+            }
+
+            ticketData.push({
+                id: nextTicketId++,
+                title,
+                priority,
+                description,
+                status: 'مفتوحة',
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            document.getElementById('ticketTitle').value = '';
+            document.getElementById('ticketDescription').value = '';
+            renderTickets();
+            showToast('تم إرسال الطلب بنجاح', 'success');
+        }
+
+        function updateTicketStatus(id) {
+            const ticket = ticketData.find(t => t.id === id);
+            if (!ticket) return;
+
+            const statuses = ['مفتوحة', 'قيد المعالجة', 'مغلقة'];
+            const currentIndex = statuses.indexOf(ticket.status);
+            ticket.status = statuses[(currentIndex + 1) % statuses.length];
+
+            renderTickets();
+            showToast(`تم تحديث الحالة إلى: ${ticket.status}`, 'info');
+        }
+
+        function deleteTicket(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه التذكرة؟')) return;
+            ticketData = ticketData.filter(t => t.id !== id);
+            renderTickets();
+            showToast('تم الحذف بنجاح', 'success');
+        }
+
+        function updateTickets() {
+            renderTickets();
+            showToast('تم تحديث قائمة التذاكر', 'info');
+        }
+
+        // ============================================================
+        // ===== وظائف المستخدمين =====
+        // ============================================================
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+
+            if (userData.length === 0) {
+                tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <div class="icon"><i class="fas fa-users"></i></div>
+                                        <p>لا يوجد مستخدمين</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                document.getElementById('userCount').textContent = 0;
+                return;
+            }
+
+            let html = '';
+            userData.forEach(user => {
+                const statusClass = user.status === 'نشط' ? 'success' : 'danger';
+                html += `
+                            <tr>
+                                <td><strong>${user.name}</strong></td>
+                                <td>${user.email}</td>
+                                <td><span class="status-badge info">${user.role}</span></td>
+                                <td><span class="status-badge ${statusClass}">${user.status}</span></td>
+                                <td>${user.date}</td>
+                                <td>
+                                    <div class="action-buttons-group">
+                                        <button class="btn btn-sm btn-warning" onclick="toggleUserStatus(${user.id})">
+                                            <i class="fas ${user.status === 'نشط' ? 'fa-pause' : 'fa-play'}"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('userCount').textContent = userData.length;
+        }
+
+        function addUser() {
+            const name = prompt('أدخل اسم المستخدم:');
+            if (!name) return;
+
+            const email = prompt('أدخل البريد الإلكتروني:');
+            if (!email) return;
+
+            const role = prompt('أدخل الدور (مدير النظام / مشرف / مستخدم):', 'مستخدم') || 'مستخدم';
+
+            userData.push({
+                id: nextUserId++,
+                name,
+                email,
+                role,
+                status: 'نشط',
+                date: new Date().toISOString().split('T')[0]
+            });
+
+            renderUsersTable();
+            showToast(`تم إضافة المستخدم ${name}`, 'success');
+        }
+
+        function toggleUserStatus(id) {
+            const user = userData.find(u => u.id === id);
+            if (!user) return;
+            user.status = user.status === 'نشط' ? 'غير نشط' : 'نشط';
+            renderUsersTable();
+            showToast(`تم تغيير حالة المستخدم ${user.name}`, 'info');
+        }
+
+        function deleteUser(id) {
+            const user = userData.find(u => u.id === id);
+            if (!user) return;
+            if (!confirm(`هل أنت متأكد من حذف المستخدم ${user.name}؟`)) return;
+            userData = userData.filter(u => u.id !== id);
+            renderUsersTable();
+            showToast('تم الحذف بنجاح', 'success');
+        }
+
+        function refreshUsers() {
+            renderUsersTable();
+            showToast('تم تحديث قائمة المستخدمين', 'info');
+        }
+
+        // ============================================================
+        // ===== وظائف المذكرات (Note Verbale) =====
+        // ============================================================
+
+        let noteAttachmentData = null;
+
+        function renderNotes() {
+            const container = document.getElementById('noteList');
+
+            if (noteData.length === 0) {
+                container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="icon"><i class="fas fa-sticky-note"></i></div>
+                                <p>لا توجد مذكرات</p>
+                            </div>
+                        `;
+                document.getElementById('noteCount').textContent = 0;
+                return;
+            }
+
+            let html = '';
+            noteData.forEach(note => {
+                const categoryColors = {
+                    'رسمية': 'primary',
+                    'داخلية': 'info',
+                    'عاجلة': 'danger'
+                };
+                html += `
+                            <div class="note-item">
+                                <div class="note-title">${note.title}</div>
+                                <div class="note-meta">
+                                    <span><i class="fas fa-tag"></i> ${note.category}</span>
+                                    <span><i class="fas fa-calendar"></i> ${note.date}</span>
+                                </div>
+                                <div class="note-content">${note.content}</div>
+                                ${note.attachment ? `<div class="note-attachment">
+                                    <img src="${note.attachment}" alt="مرفق" />
+                                </div>` : ''}
+                                <div class="note-actions">
+                                    <button class="btn btn-sm btn-danger" onclick="deleteNote(${note.id})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+            });
+            container.innerHTML = html;
+            document.getElementById('noteCount').textContent = noteData.length;
+        }
+
+        function addNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const category = document.getElementById('noteCategory').value;
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                showToast('يرجى ملء جميع الحقول', 'warning');
+                return;
+            }
+
+            noteData.push({
+                id: nextNoteId++,
+                title,
+                category,
+                content,
+                date: new Date().toISOString().split('T')[0],
+                attachment: noteAttachmentData
+            });
+
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            noteAttachmentData = null;
+            document.getElementById('notePreviewContainer').style.display = 'none';
+
+            renderNotes();
+            showToast('تم حفظ المذكرة بنجاح', 'success');
+        }
+
+        function deleteNote(id) {
+            if (!confirm('هل أنت متأكد من حذف هذه المذكرة؟')) return;
+            noteData = noteData.filter(n => n.id !== id);
+            renderNotes();
+            showToast('تم الحذف بنجاح', 'success');
+        }
+
+        function previewNoteAttachment() {
+            const file = document.getElementById('noteAttachment').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                noteAttachmentData = e.target.result;
+                document.getElementById('notePreviewImage').src = noteAttachmentData;
+                document.getElementById('notePreviewContainer').style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeNoteAttachment() {
+            noteAttachmentData = null;
+            document.getElementById('notePreviewContainer').style.display = 'none';
+            document.getElementById('noteAttachment').value = '';
+        }
+
+        // ============================================================
+        // ===== وظائف الخريطة =====
+        // ============================================================
+
+        let map = null;
+        let markers = [];
+        let mapInitialized = false;
+
+        function initMap() {
+            if (mapInitialized) return;
+
+            const container = document.getElementById('trackMap');
+            if (!container) return;
+
+            try {
+                map = L.map('trackMap', {
+                    center: [36.8, 10.2],
+                    zoom: 8,
+                    zoomControl: true
+                });
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // إضافة علامات أولية
+                const vesselPositions = [
+                    { lat: 36.8, lng: 10.2, name: 'المركب 1' },
+                    { lat: 34.5, lng: 9.8, name: 'المركب 2' },
+                    { lat: 37.2, lng: 10.5, name: 'المركب 3' },
+                    { lat: 33.9, lng: 9.4, name: 'المركب 4' },
+                    { lat: 36.4, lng: 10.8, name: 'المركب 5' },
+                ];
+
+                vesselPositions.forEach(pos => {
+                    const marker = L.marker([pos.lat, pos.lng], {
+                        icon: L.divIcon({
+                            className: 'custom-marker',
+                            html: '',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 30]
+                        })
+                    }).addTo(map);
+
+                    marker.bindPopup(`
+                                <strong>${pos.name}</strong><br />
+                                الموقع: ${pos.lat}°N, ${pos.lng}°E
+                            `);
+
+                    markers.push(marker);
+                });
+
+                mapInitialized = true;
+
+                // إضافة حدث النقر على الخريطة
+                map.on('click', function(e) {
+                    const lat = e.latlng.lat.toFixed(4);
+                    const lng = e.latlng.lng.toFixed(4);
+                    const name = prompt('أدخل اسم الموقع:', `موقع ${markers.length + 1}`);
+
+                    if (name) {
+                        const marker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'custom-marker custom-marker-active',
+                                html: '',
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 30]
+                            })
+                        }).addTo(map);
+
+                        marker.bindPopup(`
+                                    <strong>${name}</strong><br />
+                                    الموقع: ${lat}°N, ${lng}°E
+                                `);
+
+                        markers.push(marker);
+                        showToast(`تم إضافة علامة ${name}`, 'success');
+                    }
+                });
+
+            } catch (e) {
+                console.error('خطأ في تهيئة الخريطة:', e);
+            }
+        }
+
+        function centerMap() {
+            if (map) {
+                map.setView([36.8, 10.2], 8);
+                showToast('تم تمركز الخريطة', 'info');
+            }
+        }
+
+        function addMarker() {
+            if (map) {
+                const center = map.getCenter();
+                const lat = center.lat + (Math.random() - 0.5) * 0.5;
+                const lng = center.lng + (Math.random() - 0.5) * 0.5;
+
+                const marker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker custom-marker-active',
+                        html: '',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 30]
+                    })
+                }).addTo(map);
+
+                marker.bindPopup(`
+                            <strong>موقع جديد</strong><br />
+                            ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E
+                        `);
+
+                markers.push(marker);
+                showToast('تم إضافة علامة جديدة', 'success');
+            }
+        }
+
+        function clearMarkers() {
+            if (map && markers.length > 0) {
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+                showToast('تم مسح جميع العلامات', 'info');
+            }
+        }
+
+        // ============================================================
+        // ===== وظائف الإشعارات =====
+        // ============================================================
+
+        function showToast(message, type = 'info') {
+            // إزالة الإشعارات القديمة
+            const oldToasts = document.querySelectorAll('.toast');
+            oldToasts.forEach(t => t.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                        <span>${message}</span>
+                        <button class="toast-close" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+
+            document.body.appendChild(toast);
+
+            // إزالة تلقائية بعد 3 ثواني
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 3000);
+        }
+
+        // ============================================================
+        // ===== تشغيل عند تحميل الصفحة =====
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // تعيين حدث Enter في شاشة الدخول
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const loginOverlay = document.getElementById('loginOverlay');
+                    if (loginOverlay.style.display !== 'none') {
+                        handleLogin();
+                    }
+                }
+            });
+
+            // تحميل البيانات
+            initializeApp();
+        });
+
+        // ===== جعل الوظائف عامة للاستخدام في HTML =====
+        window.showPage = showPage;
+        window.handleLogin = handleLogin;
+        window.handleLogout = handleLogout;
+        window.toggleTheme = toggleTheme;
+        window.saveFleet = saveFleet;
+        window.deleteFleet = deleteFleet;
+        window.editFleet = editFleet;
+        window.filterFleet = filterFleet;
+        window.resetFleetFilters = resetFleetFilters;
+        window.filterMaintenance = filterMaintenance;
+        window.resetMaintenanceFilters = resetMaintenanceFilters;
+        window.completeMaintenance = completeMaintenance;
+        window.deleteMaintenance = deleteMaintenance;
+        window.updateReadiness = updateReadiness;
+        window.exportReadiness = exportReadiness;
+        window.submitTicket = submitTicket;
+        window.updateTickets = updateTickets;
+        window.updateTicketStatus = updateTicketStatus;
+        window.deleteTicket = deleteTicket;
+        window.addUser = addUser;
+        window.refreshUsers = refreshUsers;
+        window.toggleUserStatus = toggleUserStatus;
+        window.deleteUser = deleteUser;
+        window.addNote = addNote;
+        window.deleteNote = deleteNote;
+        window.previewNoteAttachment = previewNoteAttachment;
+        window.removeNoteAttachment = removeNoteAttachment;
+        window.initMap = initMap;
+        window.centerMap = centerMap;
+        window.addMarker = addMarker;
+        window.clearMarkers = clearMarkers;
+        window.showToast = showToast;
+    </script>
 </body>
 </html>
