@@ -1,0 +1,63 @@
+/* ============================================================
+   ===== الملف الرئيسي - استيراد جميع الملفات =====
+   ============================================================ */
+
+/* 1. المتغيرات الأساسية */
+@import url('variables.css');
+
+/* 2. إعادة تعيين الأنماط */
+@import url('reset.css');
+
+/* 3. أنماط النصوص */
+@import url('typography.css');
+
+/* 4. التخطيط العام */
+@import url('layout.css');
+
+/* 5. الهيدر */
+@import url('header.css');
+
+/* 6. شريط التنقل */
+@import url('navigation.css');
+
+/* 7. الأزرار */
+@import url('buttons.css');
+
+/* 8. النماذج */
+@import url('forms.css');
+
+/* 9. الجداول */
+@import url('tables.css');
+
+/* 10. البطاقات */
+@import url('cards.css');
+
+/* 11. الإحصائيات */
+@import url('stats.css');
+
+/* 12. الخريطة */
+@import url('map.css');
+
+/* 13. شاشة الدخول */
+@import url('login.css');
+
+/* 14. النوافذ المنبثقة */
+@import url('modal.css');
+
+/* 15. المذكرات */
+@import url('notes.css');
+
+/* 16. الحركات */
+@import url('animations.css');
+
+/* 17. الأدوات المساعدة */
+@import url('utilities.css');
+
+/* 18. التوافق مع الشاشات */
+@import url('responsive.css');
+
+/* 19. الوضع الليلي */
+@import url('darkmode.css');
+
+/* 20. الطباعة */
+@import url('print.css');
