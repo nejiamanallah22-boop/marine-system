@@ -1,0 +1,181 @@
+/* ============================================================
+   ===== المستخدمين =====
+   ============================================================ */
+
+/* ===== بطاقة المستخدم ===== */
+.user-card {
+    background: var(--glass);
+    backdrop-filter: var(--blur-light);
+    -webkit-backdrop-filter: var(--blur-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: var(--spacing-4);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    transition: var(--transition);
+    margin-bottom: var(--spacing-3);
+}
+
+.user-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(-2px);
+}
+
+.user-card .user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-full);
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    color: #fff;
+    flex-shrink: 0;
+    font-weight: 700;
+}
+
+.user-card .user-avatar-sm {
+    width: 36px;
+    height: 36px;
+    font-size: var(--font-size-md);
+}
+
+.user-card .user-avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: var(--font-size-2xl);
+}
+
+.user-card .user-info {
+    flex: 1;
+}
+
+.user-card .user-info .user-name {
+    font-weight: 600;
+    font-size: var(--font-size-md);
+    color: var(--gray-900);
+}
+
+.user-card .user-info .user-email {
+    font-size: var(--font-size-sm);
+    color: var(--gray-500);
+}
+
+.user-card .user-info .user-role {
+    font-size: var(--font-size-xs);
+    color: var(--gray-400);
+}
+
+.user-card .user-status {
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+
+.user-status-active {
+    background: var(--success-light);
+    color: #15803d;
+}
+
+.user-status-inactive {
+    background: var(--danger-light);
+    color: #dc2626;
+}
+
+.user-status-pending {
+    background: var(--warning-light);
+    color: #b45309;
+}
+
+/* ===== شبكة المستخدمين ===== */
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-4);
+}
+
+/* ===== جدول المستخدمين ===== */
+.users-table td:first-child {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    justify-content: flex-start;
+}
+
+.users-table .user-avatar-mini {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ===== نموذج إضافة مستخدم ===== */
+.user-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-4);
+}
+
+.user-form .avatar-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-4);
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.user-form .avatar-upload:hover {
+    border-color: var(--primary);
+    background: var(--info-light);
+}
+
+.user-form .avatar-upload .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    background: var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-2xl);
+    color: var(--gray-500);
+}
+
+.user-form .avatar-upload input[type="file"] {
+    display: none;
+}
+
+/* ===== إصدار الجوال ===== */
+@media (max-width: 768px) {
+    .users-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .user-form .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .user-card {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .user-card .user-info {
+        width: 100%;
+    }
+}
