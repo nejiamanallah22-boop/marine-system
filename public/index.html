@@ -16,13 +16,9 @@
     <link rel="stylesheet" href="css/style.css" />
 
     <style>
-        /* ===== أنماط إضافية مؤقتة ===== */
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
-        }
+        /* ===== أنماط إضافية ===== */
+        .page-content { display: none; }
+        .page-content.active { display: block; }
 
         .status-badge {
             padding: 2px 12px;
@@ -66,10 +62,7 @@
             min-height: 20px;
             position: relative;
         }
-        .chart-bar:hover {
-            opacity: 0.8;
-            transform: scaleY(1.02);
-        }
+        .chart-bar:hover { opacity: 0.8; transform: scaleY(1.02); }
         .chart-bar .bar-label {
             position: absolute;
             bottom: -22px;
@@ -98,29 +91,16 @@
             margin-bottom: 12px;
             transition: 0.3s;
         }
-        .ticket-card:hover {
-            transform: translateX(-3px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-        }
+        .ticket-card:hover { transform: translateX(-3px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
         .ticket-card .ticket-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 6px;
         }
-        .ticket-card .ticket-title {
-            font-weight: 600;
-            font-size: 15px;
-        }
-        .ticket-card .ticket-meta {
-            font-size: 12px;
-            color: var(--gray-500);
-        }
-        .ticket-card .ticket-body {
-            font-size: 13px;
-            color: var(--gray-600);
-            margin-bottom: 8px;
-        }
+        .ticket-card .ticket-title { font-weight: 600; font-size: 15px; }
+        .ticket-card .ticket-meta { font-size: 12px; color: var(--gray-500); }
+        .ticket-card .ticket-body { font-size: 13px; color: var(--gray-600); margin-bottom: 8px; }
         .ticket-card .ticket-footer {
             display: flex;
             justify-content: space-between;
@@ -129,18 +109,8 @@
             gap: 8px;
         }
 
-        .stat-icon-large {
-            font-size: 32px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        .action-buttons-group {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+        .stat-icon-large { font-size: 32px; display: block; margin-bottom: 4px; }
+        .action-buttons-group { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
 
         .filter-section {
             background: rgba(255,255,255,0.3);
@@ -150,20 +120,13 @@
             margin-bottom: 16px;
             border: 1px solid rgba(255,255,255,0.2);
         }
-
         .filter-section .filter-row {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
         }
-
-        .filter-section .filter-row label {
-            font-weight: 600;
-            font-size: 13px;
-            color: var(--gray-600);
-        }
-
+        .filter-section .filter-row label { font-weight: 600; font-size: 13px; color: var(--gray-600); }
         .filter-section .filter-row input,
         .filter-section .filter-row select {
             padding: 6px 12px;
@@ -173,7 +136,6 @@
             font-size: 13px;
             background: rgba(255,255,255,0.5);
         }
-
         .filter-section .filter-row input:focus,
         .filter-section .filter-row select:focus {
             outline: none;
@@ -194,21 +156,10 @@
             transition: 0.3s;
             font-size: 16px;
         }
-        .theme-toggle-btn:hover {
-            background: rgba(255,255,255,0.5);
-            transform: rotate(30deg);
-        }
+        .theme-toggle-btn:hover { background: rgba(255,255,255,0.5); transform: rotate(30deg); }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--gray-500);
-        }
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
-            opacity: 0.5;
-        }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-500); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -323,22 +274,22 @@
             <div class="stats-cards">
                 <div class="stat-card stat-card-primary">
                     <span class="stat-icon-large">🚢</span>
-                    <div class="number" id="statTotal">24</div>
+                    <div class="number" id="statTotal">0</div>
                     <div class="label">إجمالي الوسائل</div>
                 </div>
                 <div class="stat-card stat-card-success">
                     <span class="stat-icon-large">✅</span>
-                    <div class="number" id="statActive">18</div>
+                    <div class="number" id="statActive">0</div>
                     <div class="label">صالح للخدمة</div>
                 </div>
                 <div class="stat-card stat-card-danger">
                     <span class="stat-icon-large">🔧</span>
-                    <div class="number" id="statMaintenance">4</div>
+                    <div class="number" id="statMaintenance">0</div>
                     <div class="label">تحت الصيانة</div>
                 </div>
                 <div class="stat-card stat-card-warning">
                     <span class="stat-icon-large">⚠️</span>
-                    <div class="number" id="statDamage">2</div>
+                    <div class="number" id="statDamage">0</div>
                     <div class="label">معطوب</div>
                 </div>
             </div>
@@ -438,7 +389,6 @@
         <div id="page-maintenance" class="page-content">
             <h3 style="margin-bottom:16px;"><i class="fas fa-tools"></i> سجل الصيانة</h3>
 
-            <!-- ===== فلتر الصيانة ===== -->
             <div class="filter-section">
                 <div class="filter-row">
                     <i class="fas fa-search"></i>
@@ -461,7 +411,6 @@
                 </div>
             </div>
 
-            <!-- ===== جدول الصيانة ===== -->
             <div class="region-table-card">
                 <div class="region-table-header">
                     <span><i class="fas fa-clipboard-list"></i> سجل الصيانة</span>
@@ -497,7 +446,6 @@
         <div id="page-readiness" class="page-content">
             <h3 style="margin-bottom:16px;"><i class="fas fa-check-circle"></i> تقرير الجاهزية</h3>
 
-            <!-- ===== فلتر الجاهزية ===== -->
             <div class="filter-section">
                 <div class="filter-row">
                     <label>تصفية الإقليم:</label>
@@ -517,7 +465,6 @@
                 </div>
             </div>
 
-            <!-- ===== الرسوم البيانية ===== -->
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
                 <div class="region-table-card" style="padding:16px;">
                     <h4 style="margin-bottom:12px;"><i class="fas fa-chart-pie"></i> توزيع الحالة</h4>
@@ -552,7 +499,6 @@
                 </div>
             </div>
 
-            <!-- ===== جدول الجاهزية ===== -->
             <div class="region-table-card">
                 <div class="region-table-header">
                     <span><i class="fas fa-chart-line"></i> تفاصيل الجاهزية</span>
@@ -591,7 +537,6 @@
                 </span>
             </div>
 
-            <!-- ===== نموذج طلب الدعم ===== -->
             <div class="region-table-card" style="padding:20px; margin-bottom:16px;">
                 <h4 style="margin-bottom:12px;"><i class="fas fa-plus-circle"></i> إرسال طلب دعم جديد</h4>
                 <div class="input-grid" style="grid-template-columns:1fr 1fr;">
@@ -613,7 +558,6 @@
                 </div>
             </div>
 
-            <!-- ===== قائمة التذاكر ===== -->
             <div class="region-table-card" style="padding:20px;">
                 <div class="region-table-header">
                     <span><i class="fas fa-ticket-alt"></i> قائمة التذاكر</span>
