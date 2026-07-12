@@ -24,7 +24,6 @@
             display: block;
         }
 
-        /* ===== تحسينات الجدول ===== */
         .status-badge {
             padding: 2px 12px;
             border-radius: 20px;
@@ -37,7 +36,6 @@
         .status-badge.warning { background: #fef3c7; color: #b45309; }
         .status-badge.info { background: #e0f2fe; color: #0284c7; }
 
-        /* ===== أيقونات الحالة ===== */
         .status-dot {
             display: inline-block;
             width: 10px;
@@ -50,7 +48,6 @@
         .status-dot.yellow { background: #f59e0b; }
         .status-dot.blue { background: #0ea5e9; }
 
-        /* ===== رسوم بيانية ===== */
         .chart-placeholder {
             height: 250px;
             display: flex;
@@ -92,7 +89,6 @@
             color: var(--gray-700);
         }
 
-        /* ===== تذاكر الدعم ===== */
         .ticket-card {
             background: rgba(255,255,255,0.5);
             backdrop-filter: blur(4px);
@@ -131,16 +127,6 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 8px;
-        }
-
-        /* ===== تحسينات ===== */
-        .marine-logo {
-            font-size: 28px;
-        }
-        .marine-logo i {
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .stat-icon-large {
@@ -195,7 +181,6 @@
             box-shadow: 0 0 0 3px rgba(37,99,235,0.06);
         }
 
-        /* ===== زر تبديل الوضع ===== */
         .theme-toggle-btn {
             background: rgba(255,255,255,0.3);
             border: 1px solid rgba(255,255,255,0.2);
@@ -214,7 +199,6 @@
             transform: rotate(30deg);
         }
 
-        /* ===== رسالة فارغة ===== */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -224,14 +208,6 @@
             font-size: 48px;
             margin-bottom: 12px;
             opacity: 0.5;
-        }
-
-        /* ===== علامات التبويب ===== */
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
         }
     </style>
 </head>
@@ -347,22 +323,22 @@
             <div class="stats-cards">
                 <div class="stat-card stat-card-primary">
                     <span class="stat-icon-large">🚢</span>
-                    <div class="number">24</div>
+                    <div class="number" id="statTotal">24</div>
                     <div class="label">إجمالي الوسائل</div>
                 </div>
                 <div class="stat-card stat-card-success">
                     <span class="stat-icon-large">✅</span>
-                    <div class="number">18</div>
+                    <div class="number" id="statActive">18</div>
                     <div class="label">صالح للخدمة</div>
                 </div>
                 <div class="stat-card stat-card-danger">
                     <span class="stat-icon-large">🔧</span>
-                    <div class="number">4</div>
+                    <div class="number" id="statMaintenance">4</div>
                     <div class="label">تحت الصيانة</div>
                 </div>
                 <div class="stat-card stat-card-warning">
                     <span class="stat-icon-large">⚠️</span>
-                    <div class="number">2</div>
+                    <div class="number" id="statDamage">2</div>
                     <div class="label">معطوب</div>
                 </div>
             </div>
@@ -428,7 +404,7 @@
                 <div class="region-table-header">
                     <span><i class="fas fa-list"></i> الأسطول البحري</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <span id="fleetCount">24</span> وسيلة
+                        <span id="fleetCount">0</span> وسيلة
                     </span>
                 </div>
                 <div class="scrollable-table">
@@ -450,9 +426,7 @@
                                 <th>إجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="fleetTableBody">
-                            <!-- سيتم تعبئتها بواسطة JavaScript -->
-                        </tbody>
+                        <tbody id="fleetTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -492,7 +466,7 @@
                 <div class="region-table-header">
                     <span><i class="fas fa-clipboard-list"></i> سجل الصيانة</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <span id="maintenanceCount">8</span> سجل
+                        <span id="maintenanceCount">0</span> سجل
                     </span>
                 </div>
                 <div class="scrollable-table">
@@ -511,9 +485,7 @@
                                 <th>إجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="maintenanceTableBody">
-                            <!-- سيتم تعبئتها بواسطة JavaScript -->
-                        </tbody>
+                        <tbody id="maintenanceTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -598,9 +570,7 @@
                                 <th>آخر صيانة</th>
                             </tr>
                         </thead>
-                        <tbody id="readinessTableBody">
-                            <!-- سيتم تعبئتها بواسطة JavaScript -->
-                        </tbody>
+                        <tbody id="readinessTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -648,12 +618,10 @@
                 <div class="region-table-header">
                     <span><i class="fas fa-ticket-alt"></i> قائمة التذاكر</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <span id="ticketCount">5</span> تذكرة
+                        <span id="ticketCount">0</span> تذكرة
                     </span>
                 </div>
-                <div id="ticketList">
-                    <!-- سيتم تعبئتها بواسطة JavaScript -->
-                </div>
+                <div id="ticketList"></div>
             </div>
         </div>
 
@@ -767,7 +735,7 @@
                 <div class="region-table-header">
                     <span><i class="fas fa-list"></i> قائمة المستخدمين</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <span id="userCount">6</span> مستخدم
+                        <span id="userCount">0</span> مستخدم
                     </span>
                 </div>
                 <div class="scrollable-table">
@@ -782,9 +750,7 @@
                                 <th>إجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="usersTableBody">
-                            <!-- سيتم تعبئتها بواسطة JavaScript -->
-                        </tbody>
+                        <tbody id="usersTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -814,8 +780,8 @@
                             <i class="fas fa-paperclip"></i> إرفاق ملف
                             <input type="file" id="noteAttachment" style="display:none;" onchange="previewNoteAttachment()" />
                         </label>
-                        <div id="notePreviewContainer">
-                            <img id="notePreviewImage" src="#" alt="معاينة" />
+                        <div id="notePreviewContainer" style="display:none; align-items:center; gap:10px; padding:10px; background:rgba(255,255,255,0.3); border-radius:6px; border:1px solid rgba(255,255,255,0.2);">
+                            <img id="notePreviewImage" src="#" alt="معاينة" style="max-width:120px; max-height:80px; border-radius:6px; border:1px solid var(--gray-200); object-fit:cover;" />
                             <button class="remove-note-image" onclick="removeNoteAttachment()">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -828,12 +794,10 @@
                 <div class="region-table-header">
                     <span><i class="fas fa-list"></i> قائمة المذكرات</span>
                     <span style="font-size:12px; color:var(--gray-500);">
-                        <span id="noteCount">4</span> مذكرة
+                        <span id="noteCount">0</span> مذكرة
                     </span>
                 </div>
-                <div id="noteList">
-                    <!-- سيتم تعبئتها بواسطة JavaScript -->
-                </div>
+                <div id="noteList"></div>
             </div>
         </div>
 
@@ -847,7 +811,6 @@
         // ===== بيانات التطبيق =====
         // ============================================================
 
-        // ===== بيانات الأسطول =====
         let fleetData = [
             { id: 1, name: 'المركب 1', number: 'M-001', length: 25, category: 'شمال', region: 'تونس', port: 'حلق الوادي',
                 reinforce: 'تعزيز 1', status: 'صالح', damage: '-', date: '2024-01-15', endDate: '2025-01-15',
@@ -868,7 +831,6 @@
 
         let nextFleetId = 6;
 
-        // ===== بيانات الصيانة =====
         let maintenanceData = [
             { id: 1, name: 'المركب 2', number: 'M-002', region: 'صفاقس', area: 'الميناء', status: 'صيانة', damage: 'محرك',
                 damageDate: '2024-02-01', endDate: '2024-03-01', reference: 'REF-002' },
@@ -880,7 +842,6 @@
 
         let nextMaintenanceId = 4;
 
-        // ===== بيانات الجاهزية =====
         let readinessData = [
             { name: 'المركب 1', number: 'M-001', region: 'تونس', status: 'صالح', readiness: 95, effectiveness: 90,
                 lastMaintenance: '2024-01-15' },
@@ -894,7 +855,6 @@
                 lastMaintenance: '2024-02-15' },
         ];
 
-        // ===== بيانات التذاكر =====
         let ticketData = [
             { id: 1, title: 'عطل في نظام الملاحة', priority: 'عاجل', description: 'تعطل نظام GPS في المركب 2',
                 status: 'مفتوحة', date: '2024-03-01' },
@@ -906,7 +866,6 @@
 
         let nextTicketId = 4;
 
-        // ===== بيانات المستخدمين =====
         let userData = [
             { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.gov.tn', role: 'مدير النظام', status: 'نشط',
                 date: '2024-01-01' },
@@ -919,7 +878,6 @@
 
         let nextUserId = 6;
 
-        // ===== بيانات المذكرات =====
         let noteData = [
             { id: 1, title: 'تقرير اجتماع الأسطول', category: 'رسمية', content: 'تم مناقشة خطة الصيانة للربع الأول',
                 date: '2024-03-01', attachment: null },
@@ -930,9 +888,10 @@
         ];
 
         let nextNoteId = 4;
+        let noteAttachmentData = null;
 
         // ============================================================
-        // ===== وظائف شاشة الدخول =====
+        // ===== شاشة الدخول =====
         // ============================================================
 
         function handleLogin() {
@@ -960,7 +919,7 @@
         }
 
         // ============================================================
-        // ===== وظائف تبديل الوضع (داكن/فاتح) =====
+        // ===== تبديل الوضع =====
         // ============================================================
 
         let isDarkMode = false;
@@ -973,49 +932,29 @@
         }
 
         // ============================================================
-        // ===== وظائف التنقل بين الصفحات =====
+        // ===== التنقل =====
         // ============================================================
 
         function showPage(page) {
-            // إخفاء جميع الصفحات
-            document.querySelectorAll('.page-content').forEach(el => {
-                el.classList.remove('active');
-            });
-
-            // إظهار الصفحة المطلوبة
+            document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
             const target = document.getElementById('page-' + page);
-            if (target) {
-                target.classList.add('active');
-            }
+            if (target) target.classList.add('active');
 
-            // تحديث الأزرار
             document.querySelectorAll('#mainNav .btn').forEach(btn => {
                 btn.classList.remove('btn-primary');
                 btn.classList.add('btn-secondary');
             });
 
-            // تمييز الزر النشط
             const buttons = document.querySelectorAll('#mainNav .btn');
-            const pageMap = {
-                'fleet': 0,
-                'maintenance': 1,
-                'readiness': 2,
-                'support': 3,
-                'tracking': 4,
-                'map': 5,
-                'users': 6,
-                'notes': 8
-            };
+            const pageMap = { 'fleet': 0, 'maintenance': 1, 'readiness': 2, 'support': 3, 'tracking': 4, 'map': 5,
+                'users': 6, 'notes': 8 };
             const index = pageMap[page];
             if (index !== undefined && buttons[index]) {
                 buttons[index].classList.remove('btn-secondary');
                 buttons[index].classList.add('btn-primary');
             }
 
-            // تهيئة الخريطة إذا كانت الصفحة المطلوبة
-            if (page === 'map') {
-                setTimeout(initMap, 300);
-            }
+            if (page === 'map') setTimeout(initMap, 300);
         }
 
         // ============================================================
@@ -1029,9 +968,8 @@
             renderTickets();
             renderUsersTable();
             renderNotes();
-            updateReadiness();
+            updateStats();
 
-            // تعيين التاريخ الحالي
             const today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input[type="date"]').forEach(el => {
                 if (!el.value) el.value = today;
@@ -1039,7 +977,23 @@
         }
 
         // ============================================================
-        // ===== وظائف الأسطول =====
+        // ===== الإحصائيات =====
+        // ============================================================
+
+        function updateStats() {
+            const total = fleetData.length;
+            const active = fleetData.filter(f => f.status === 'صالح').length;
+            const maintenance = fleetData.filter(f => f.status === 'صيانة').length;
+            const damage = fleetData.filter(f => f.status === 'معطب').length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statMaintenance').textContent = maintenance;
+            document.getElementById('statDamage').textContent = damage;
+        }
+
+        // ============================================================
+        // ===== الأسطول =====
         // ============================================================
 
         function renderFleetTable(data) {
@@ -1047,69 +1001,45 @@
             const list = data || fleetData;
 
             if (list.length === 0) {
-                tbody.innerHTML = `
-                            <tr>
-                                <td colspan="13">
-                                    <div class="empty-state">
-                                        <div class="icon"><i class="fas fa-ship"></i></div>
-                                        <p>لا توجد وسائل بحرية مسجلة</p>
-                                        <span style="font-size:12px;">أضف وسيلة جديدة من خلال النموذج أعلاه</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                tbody.innerHTML =
+                    `<tr><td colspan="13"><div class="empty-state"><div class="icon"><i class="fas fa-ship"></i></div><p>لا توجد وسائل بحرية مسجلة</p></div></td></tr>`;
                 document.getElementById('fleetCount').textContent = 0;
                 return;
             }
 
             let html = '';
             list.forEach(item => {
-                const statusClass = item.status === 'صالح' ? 'success' :
-                    item.status === 'معطب' ? 'danger' : 'warning';
-                html += `
-                            <tr>
-                                <td><strong>${item.name}</strong></td>
-                                <td>${item.number}</td>
-                                <td>${item.length} م</td>
-                                <td>${item.category}</td>
-                                <td>${item.region}</td>
-                                <td>${item.port}</td>
-                                <td>${item.reinforce}</td>
-                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
-                                <td>${item.damage}</td>
-                                <td>${item.date}</td>
-                                <td>${item.endDate}</td>
-                                <td>${item.reference}</td>
-                                <td>
-                                    <div class="action-buttons-group">
-                                        <button class="btn btn-sm btn-primary" onclick="editFleet(${item.id})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteFleet(${item.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                const statusClass = item.status === 'صالح' ? 'success' : item.status === 'معطب' ? 'danger' :
+                'warning';
+                html += `<tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.number}</td>
+                            <td>${item.length} م</td>
+                            <td>${item.category}</td>
+                            <td>${item.region}</td>
+                            <td>${item.port}</td>
+                            <td>${item.reinforce}</td>
+                            <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                            <td>${item.damage}</td>
+                            <td>${item.date}</td>
+                            <td>${item.endDate}</td>
+                            <td>${item.reference}</td>
+                            <td>
+                                <div class="action-buttons-group">
+                                    <button class="btn btn-sm btn-primary" onclick="editFleet(${item.id})"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteFleet(${item.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
             });
             tbody.innerHTML = html;
             document.getElementById('fleetCount').textContent = list.length;
+            updateStats();
         }
 
         function saveFleet() {
             const name = document.getElementById('fleetName').value.trim();
             const number = document.getElementById('fleetNumber').value.trim();
-            const length = document.getElementById('fleetLength').value;
-            const category = document.getElementById('fleetCategory').value;
-            const region = document.getElementById('fleetRegion').value.trim();
-            const port = document.getElementById('fleetPort').value.trim();
-            const reinforce = document.getElementById('fleetReinforce').value.trim();
-            const status = document.getElementById('fleetStatus').value;
-            const damage = document.getElementById('fleetDamage').value.trim();
-            const date = document.getElementById('fleetDate').value;
-            const endDate = document.getElementById('fleetEndDate').value;
-            const reference = document.getElementById('fleetReference').value.trim();
 
             if (!name || !number) {
                 showToast('يرجى إدخال اسم المركب والرقم', 'warning');
@@ -1120,33 +1050,32 @@
                 id: nextFleetId++,
                 name,
                 number,
-                length: length || 0,
-                category: category || 'غير محدد',
-                region: region || 'غير محدد',
-                port: port || 'غير محدد',
-                reinforce: reinforce || '-',
-                status,
-                damage: damage || '-',
-                date: date || new Date().toISOString().split('T')[0],
-                endDate: endDate || '-',
-                reference: reference || '-'
+                length: document.getElementById('fleetLength').value || 0,
+                category: document.getElementById('fleetCategory').value || 'غير محدد',
+                region: document.getElementById('fleetRegion').value.trim() || 'غير محدد',
+                port: document.getElementById('fleetPort').value.trim() || 'غير محدد',
+                reinforce: document.getElementById('fleetReinforce').value.trim() || '-',
+                status: document.getElementById('fleetStatus').value,
+                damage: document.getElementById('fleetDamage').value.trim() || '-',
+                date: document.getElementById('fleetDate').value || new Date().toISOString().split('T')[0],
+                endDate: document.getElementById('fleetEndDate').value || '-',
+                reference: document.getElementById('fleetReference').value.trim() || '-'
             };
 
             fleetData.push(newFleet);
 
-            // إضافة إلى سجل الصيانة إذا كانت الحالة صيانة أو معطب
-            if (status === 'صيانة' || status === 'معطب') {
+            if (newFleet.status === 'صيانة' || newFleet.status === 'معطب') {
                 maintenanceData.push({
                     id: nextMaintenanceId++,
                     name,
                     number,
-                    region: region || 'غير محدد',
-                    area: port || 'غير محدد',
-                    status,
-                    damage: damage || '-',
-                    damageDate: date || new Date().toISOString().split('T')[0],
-                    endDate: endDate || '-',
-                    reference: reference || '-'
+                    region: newFleet.region,
+                    area: newFleet.port,
+                    status: newFleet.status,
+                    damage: newFleet.damage,
+                    damageDate: newFleet.date,
+                    endDate: newFleet.endDate,
+                    reference: newFleet.reference
                 });
             }
 
@@ -1157,20 +1086,16 @@
         }
 
         function clearFleetForm() {
-            document.getElementById('fleetName').value = '';
-            document.getElementById('fleetNumber').value = '';
-            document.getElementById('fleetLength').value = '';
+            ['fleetName', 'fleetNumber', 'fleetLength', 'fleetRegion', 'fleetPort', 'fleetReinforce', 'fleetDamage',
+                'fleetReference'
+            ].forEach(id => document.getElementById(id).value = '');
             document.getElementById('fleetCategory').value = '';
-            document.getElementById('fleetRegion').value = '';
-            document.getElementById('fleetPort').value = '';
-            document.getElementById('fleetReinforce').value = '';
-            document.getElementById('fleetDamage').value = '';
-            document.getElementById('fleetReference').value = '';
+            document.getElementById('fleetStatus').value = 'صالح';
         }
 
         function deleteFleet(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه الوسيلة؟')) return;
-            fleetData = fleetData.filter(item => item.id !== id);
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
+            fleetData = fleetData.filter(f => f.id !== id);
             renderFleetTable();
             showToast('تم الحذف بنجاح', 'success');
         }
@@ -1192,7 +1117,6 @@
             document.getElementById('fleetEndDate').value = item.endDate;
             document.getElementById('fleetReference').value = item.reference;
 
-            // حذف العنصر القديم
             fleetData = fleetData.filter(f => f.id !== id);
             renderFleetTable();
             showToast('يمكنك تعديل البيانات ثم حفظها', 'info');
@@ -1204,23 +1128,10 @@
             const region = document.getElementById('fleetFilterRegion').value;
 
             let filtered = fleetData;
-
-            if (search) {
-                filtered = filtered.filter(item =>
-                    item.name.toLowerCase().includes(search) ||
-                    item.number.toLowerCase().includes(search) ||
-                    item.port.toLowerCase().includes(search)
-                );
-            }
-
-            if (category) {
-                filtered = filtered.filter(item => item.category === category);
-            }
-
-            if (region) {
-                filtered = filtered.filter(item => item.region === region);
-            }
-
+            if (search) filtered = filtered.filter(f => f.name.toLowerCase().includes(search) || f.number.toLowerCase()
+                .includes(search));
+            if (category) filtered = filtered.filter(f => f.category === category);
+            if (region) filtered = filtered.filter(f => f.region === region);
             renderFleetTable(filtered);
         }
 
@@ -1232,7 +1143,7 @@
         }
 
         // ============================================================
-        // ===== وظائف الصيانة =====
+        // ===== الصيانة =====
         // ============================================================
 
         function renderMaintenanceTable(data) {
@@ -1240,47 +1151,33 @@
             const list = data || maintenanceData;
 
             if (list.length === 0) {
-                tbody.innerHTML = `
-                            <tr>
-                                <td colspan="10">
-                                    <div class="empty-state">
-                                        <div class="icon"><i class="fas fa-tools"></i></div>
-                                        <p>لا توجد سجلات صيانة</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                tbody.innerHTML =
+                    `<tr><td colspan="10"><div class="empty-state"><div class="icon"><i class="fas fa-tools"></i></div><p>لا توجد سجلات صيانة</p></div></td></tr>`;
                 document.getElementById('maintenanceCount').textContent = 0;
                 return;
             }
 
             let html = '';
             list.forEach(item => {
-                const statusClass = item.status === 'صالح' ? 'success' :
-                    item.status === 'معطب' ? 'danger' : 'warning';
-                html += `
-                            <tr>
-                                <td><strong>${item.name}</strong></td>
-                                <td>${item.number}</td>
-                                <td>${item.region}</td>
-                                <td>${item.area}</td>
-                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
-                                <td>${item.damage}</td>
-                                <td>${item.damageDate}</td>
-                                <td>${item.endDate}</td>
-                                <td>${item.reference}</td>
-                                <td>
-                                    <div class="action-buttons-group">
-                                        <button class="btn btn-sm btn-success" onclick="completeMaintenance(${item.id})">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${item.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                const statusClass = item.status === 'صالح' ? 'success' : item.status === 'معطب' ? 'danger' :
+                'warning';
+                html += `<tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.number}</td>
+                            <td>${item.region}</td>
+                            <td>${item.area}</td>
+                            <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                            <td>${item.damage}</td>
+                            <td>${item.damageDate}</td>
+                            <td>${item.endDate}</td>
+                            <td>${item.reference}</td>
+                            <td>
+                                <div class="action-buttons-group">
+                                    <button class="btn btn-sm btn-success" onclick="completeMaintenance(${item.id})"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${item.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
             });
             tbody.innerHTML = html;
             document.getElementById('maintenanceCount').textContent = list.length;
@@ -1290,14 +1187,10 @@
             const item = maintenanceData.find(m => m.id === id);
             if (!item) return;
 
-            if (confirm(`هل تريد إنهاء الصيانة للمركب ${item.name}؟`)) {
-                // تحديث حالة المركب في الأسطول
+            if (confirm(`هل تريد إنهاء صيانة ${item.name}؟`)) {
                 const fleetItem = fleetData.find(f => f.number === item.number);
-                if (fleetItem) {
-                    fleetItem.status = 'صالح';
-                    fleetItem.damage = '-';
-                }
-
+                if (fleetItem) { fleetItem.status = 'صالح';
+                    fleetItem.damage = '-'; }
                 maintenanceData = maintenanceData.filter(m => m.id !== id);
                 renderMaintenanceTable();
                 renderFleetTable();
@@ -1306,10 +1199,10 @@
         }
 
         function deleteMaintenance(id) {
-            if (!confirm('هل أنت متأكد من حذف سجل الصيانة؟')) return;
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
             maintenanceData = maintenanceData.filter(m => m.id !== id);
             renderMaintenanceTable();
-            showToast('تم الحذف بنجاح', 'success');
+            showToast('تم الحذف', 'success');
         }
 
         function filterMaintenance() {
@@ -1319,27 +1212,11 @@
             const to = document.getElementById('maintenanceDateTo').value;
 
             let filtered = maintenanceData;
-
-            if (search) {
-                filtered = filtered.filter(item =>
-                    item.name.toLowerCase().includes(search) ||
-                    item.number.toLowerCase().includes(search) ||
-                    item.damage.toLowerCase().includes(search)
-                );
-            }
-
-            if (region) {
-                filtered = filtered.filter(item => item.region === region);
-            }
-
-            if (from) {
-                filtered = filtered.filter(item => item.damageDate >= from);
-            }
-
-            if (to) {
-                filtered = filtered.filter(item => item.damageDate <= to);
-            }
-
+            if (search) filtered = filtered.filter(m => m.name.toLowerCase().includes(search) || m.number.toLowerCase()
+                .includes(search));
+            if (region) filtered = filtered.filter(m => m.region === region);
+            if (from) filtered = filtered.filter(m => m.damageDate >= from);
+            if (to) filtered = filtered.filter(m => m.damageDate <= to);
             renderMaintenanceTable(filtered);
         }
 
@@ -1352,7 +1229,7 @@
         }
 
         // ============================================================
-        // ===== وظائف الجاهزية =====
+        // ===== الجاهزية =====
         // ============================================================
 
         function renderReadinessTable(data) {
@@ -1360,120 +1237,79 @@
             const list = data || readinessData;
 
             if (list.length === 0) {
-                tbody.innerHTML = `
-                            <tr>
-                                <td colspan="7">
-                                    <div class="empty-state">
-                                        <div class="icon"><i class="fas fa-chart-line"></i></div>
-                                        <p>لا توجد بيانات جاهزية</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                tbody.innerHTML =
+                    `<tr><td colspan="7"><div class="empty-state"><div class="icon"><i class="fas fa-chart-line"></i></div><p>لا توجد بيانات</p></div></td></tr>`;
                 return;
             }
 
             let html = '';
             list.forEach(item => {
-                const statusClass = item.status === 'صالح' ? 'success' :
-                    item.status === 'معطب' ? 'danger' : 'warning';
-                const readinessColor = item.readiness > 70 ? 'success' :
-                    item.readiness > 40 ? 'warning' : 'danger';
-                html += `
-                            <tr>
-                                <td><strong>${item.name}</strong></td>
-                                <td>${item.number}</td>
-                                <td>${item.region}</td>
-                                <td><span class="status-badge ${statusClass}">${item.status}</span></td>
-                                <td>
-                                    <span style="color:${item.readiness > 70 ? '#22c55e' : item.readiness > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">
-                                        ${item.readiness}%
-                                    </span>
-                                </td>
-                                <td>
-                                    <span style="color:${item.effectiveness > 70 ? '#22c55e' : item.effectiveness > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">
-                                        ${item.effectiveness}%
-                                    </span>
-                                </td>
-                                <td>${item.lastMaintenance}</td>
-                            </tr>
-                        `;
+                const statusClass = item.status === 'صالح' ? 'success' : item.status === 'معطب' ? 'danger' :
+                'warning';
+                const color = item.readiness > 70 ? '#22c55e' : item.readiness > 40 ? '#f59e0b' : '#ef4444';
+                const color2 = item.effectiveness > 70 ? '#22c55e' : item.effectiveness > 40 ? '#f59e0b' : '#ef4444';
+                html += `<tr>
+                            <td><strong>${item.name}</strong></td>
+                            <td>${item.number}</td>
+                            <td>${item.region}</td>
+                            <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                            <td><span style="color:${color}; font-weight:700;">${item.readiness}%</span></td>
+                            <td><span style="color:${color2}; font-weight:700;">${item.effectiveness}%</span></td>
+                            <td>${item.lastMaintenance}</td>
+                        </tr>`;
             });
             tbody.innerHTML = html;
         }
 
         function updateReadiness() {
             const filter = document.getElementById('readinessFilter').value;
-            let data = readinessData;
-
-            if (filter) {
-                data = data.filter(item => item.region === filter);
-            }
-
+            const data = filter ? readinessData.filter(r => r.region === filter) : readinessData;
             renderReadinessTable(data);
             showToast('تم تحديث بيانات الجاهزية', 'info');
         }
 
         function exportReadiness() {
-            showToast('جاري تصدير بيانات النجاعة...', 'info');
-            setTimeout(() => {
-                showToast('تم تصدير البيانات بنجاح', 'success');
-            }, 1500);
+            showToast('جاري تصدير البيانات...', 'info');
+            setTimeout(() => showToast('تم التصدير بنجاح', 'success'), 1500);
         }
 
         // ============================================================
-        // ===== وظائف الدعم =====
+        // ===== الدعم =====
         // ============================================================
 
         function renderTickets() {
             const container = document.getElementById('ticketList');
 
             if (ticketData.length === 0) {
-                container.innerHTML = `
-                            <div class="empty-state">
-                                <div class="icon"><i class="fas fa-ticket-alt"></i></div>
-                                <p>لا توجد تذاكر</p>
-                            </div>
-                        `;
+                container.innerHTML =
+                    `<div class="empty-state"><div class="icon"><i class="fas fa-ticket-alt"></i></div><p>لا توجد تذاكر</p></div>`;
                 document.getElementById('ticketCount').textContent = 0;
                 return;
             }
 
             let html = '';
-            ticketData.forEach(ticket => {
-                const priorityColor = ticket.priority === 'عاجل' ? '#ef4444' :
-                    ticket.priority === 'متوسط' ? '#f59e0b' : '#22c55e';
-                const statusColor = ticket.status === 'مفتوحة' ? '#22c55e' :
-                    ticket.status === 'قيد المعالجة' ? '#f59e0b' : '#64748b';
-                html += `
-                            <div class="ticket-card">
-                                <div class="ticket-header">
-                                    <span class="ticket-title">${ticket.title}</span>
-                                    <span style="color:${priorityColor}; font-weight:600; font-size:12px;">
-                                        <i class="fas fa-circle" style="font-size:8px;"></i> ${ticket.priority}
-                                    </span>
+            ticketData.forEach(t => {
+                const priorityColor = t.priority === 'عاجل' ? '#ef4444' : t.priority === 'متوسط' ? '#f59e0b' :
+                    '#22c55e';
+                const statusColor = t.status === 'مفتوحة' ? '#22c55e' : t.status === 'قيد المعالجة' ? '#f59e0b' :
+                    '#64748b';
+                html += `<div class="ticket-card">
+                            <div class="ticket-header">
+                                <span class="ticket-title">${t.title}</span>
+                                <span style="color:${priorityColor}; font-weight:600; font-size:12px;"><i class="fas fa-circle" style="font-size:8px;"></i> ${t.priority}</span>
+                            </div>
+                            <div class="ticket-body">${t.description}</div>
+                            <div class="ticket-footer">
+                                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                                    <span style="font-size:12px; color:var(--gray-500);"><i class="fas fa-calendar"></i> ${t.date}</span>
+                                    <span style="color:${statusColor}; font-size:12px; font-weight:600;"><i class="fas fa-circle" style="font-size:8px;"></i> ${t.status}</span>
                                 </div>
-                                <div class="ticket-body">${ticket.description}</div>
-                                <div class="ticket-footer">
-                                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                                        <span style="font-size:12px; color:var(--gray-500);">
-                                            <i class="fas fa-calendar"></i> ${ticket.date}
-                                        </span>
-                                        <span style="color:${statusColor}; font-size:12px; font-weight:600;">
-                                            <i class="fas fa-circle" style="font-size:8px;"></i> ${ticket.status}
-                                        </span>
-                                    </div>
-                                    <div class="action-buttons-group">
-                                        <button class="btn btn-sm btn-success" onclick="updateTicketStatus(${ticket.id})">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteTicket(${ticket.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                                <div class="action-buttons-group">
+                                    <button class="btn btn-sm btn-success" onclick="updateTicketStatus(${t.id})"><i class="fas fa-check"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteTicket(${t.id})"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
-                        `;
+                        </div>`;
             });
             container.innerHTML = html;
             document.getElementById('ticketCount').textContent = ticketData.length;
@@ -1481,7 +1317,6 @@
 
         function submitTicket() {
             const title = document.getElementById('ticketTitle').value.trim();
-            const priority = document.getElementById('ticketPriority').value;
             const description = document.getElementById('ticketDescription').value.trim();
 
             if (!title || !description) {
@@ -1492,7 +1327,7 @@
             ticketData.push({
                 id: nextTicketId++,
                 title,
-                priority,
+                priority: document.getElementById('ticketPriority').value,
                 description,
                 status: 'مفتوحة',
                 date: new Date().toISOString().split('T')[0]
@@ -1501,77 +1336,61 @@
             document.getElementById('ticketTitle').value = '';
             document.getElementById('ticketDescription').value = '';
             renderTickets();
-            showToast('تم إرسال الطلب بنجاح', 'success');
+            showToast('تم إرسال الطلب', 'success');
         }
 
         function updateTicketStatus(id) {
             const ticket = ticketData.find(t => t.id === id);
             if (!ticket) return;
-
             const statuses = ['مفتوحة', 'قيد المعالجة', 'مغلقة'];
             const currentIndex = statuses.indexOf(ticket.status);
             ticket.status = statuses[(currentIndex + 1) % statuses.length];
-
             renderTickets();
-            showToast(`تم تحديث الحالة إلى: ${ticket.status}`, 'info');
+            showToast(`تم التحديث إلى: ${ticket.status}`, 'info');
         }
 
         function deleteTicket(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه التذكرة؟')) return;
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
             ticketData = ticketData.filter(t => t.id !== id);
             renderTickets();
-            showToast('تم الحذف بنجاح', 'success');
+            showToast('تم الحذف', 'success');
         }
 
         function updateTickets() {
             renderTickets();
-            showToast('تم تحديث قائمة التذاكر', 'info');
+            showToast('تم تحديث القائمة', 'info');
         }
 
         // ============================================================
-        // ===== وظائف المستخدمين =====
+        // ===== المستخدمين =====
         // ============================================================
 
         function renderUsersTable() {
             const tbody = document.getElementById('usersTableBody');
 
             if (userData.length === 0) {
-                tbody.innerHTML = `
-                            <tr>
-                                <td colspan="6">
-                                    <div class="empty-state">
-                                        <div class="icon"><i class="fas fa-users"></i></div>
-                                        <p>لا يوجد مستخدمين</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+                tbody.innerHTML =
+                    `<tr><td colspan="6"><div class="empty-state"><div class="icon"><i class="fas fa-users"></i></div><p>لا يوجد مستخدمين</p></div></td></tr>`;
                 document.getElementById('userCount').textContent = 0;
                 return;
             }
 
             let html = '';
-            userData.forEach(user => {
-                const statusClass = user.status === 'نشط' ? 'success' : 'danger';
-                html += `
-                            <tr>
-                                <td><strong>${user.name}</strong></td>
-                                <td>${user.email}</td>
-                                <td><span class="status-badge info">${user.role}</span></td>
-                                <td><span class="status-badge ${statusClass}">${user.status}</span></td>
-                                <td>${user.date}</td>
-                                <td>
-                                    <div class="action-buttons-group">
-                                        <button class="btn btn-sm btn-warning" onclick="toggleUserStatus(${user.id})">
-                                            <i class="fas ${user.status === 'نشط' ? 'fa-pause' : 'fa-play'}"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `;
+            userData.forEach(u => {
+                const statusClass = u.status === 'نشط' ? 'success' : 'danger';
+                html += `<tr>
+                            <td><strong>${u.name}</strong></td>
+                            <td>${u.email}</td>
+                            <td><span class="status-badge info">${u.role}</span></td>
+                            <td><span class="status-badge ${statusClass}">${u.status}</span></td>
+                            <td>${u.date}</td>
+                            <td>
+                                <div class="action-buttons-group">
+                                    <button class="btn btn-sm btn-warning" onclick="toggleUserStatus(${u.id})"><i class="fas ${u.status === 'نشط' ? 'fa-pause' : 'fa-play'}"></i></button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
             });
             tbody.innerHTML = html;
             document.getElementById('userCount').textContent = userData.length;
@@ -1580,10 +1399,8 @@
         function addUser() {
             const name = prompt('أدخل اسم المستخدم:');
             if (!name) return;
-
             const email = prompt('أدخل البريد الإلكتروني:');
             if (!email) return;
-
             const role = prompt('أدخل الدور (مدير النظام / مشرف / مستخدم):', 'مستخدم') || 'مستخدم';
 
             userData.push({
@@ -1596,7 +1413,7 @@
             });
 
             renderUsersTable();
-            showToast(`تم إضافة المستخدم ${name}`, 'success');
+            showToast(`تم إضافة ${name}`, 'success');
         }
 
         function toggleUserStatus(id) {
@@ -1604,68 +1421,51 @@
             if (!user) return;
             user.status = user.status === 'نشط' ? 'غير نشط' : 'نشط';
             renderUsersTable();
-            showToast(`تم تغيير حالة المستخدم ${user.name}`, 'info');
+            showToast(`تم تغيير حالة ${user.name}`, 'info');
         }
 
         function deleteUser(id) {
             const user = userData.find(u => u.id === id);
             if (!user) return;
-            if (!confirm(`هل أنت متأكد من حذف المستخدم ${user.name}؟`)) return;
+            if (!confirm(`حذف ${user.name}؟`)) return;
             userData = userData.filter(u => u.id !== id);
             renderUsersTable();
-            showToast('تم الحذف بنجاح', 'success');
+            showToast('تم الحذف', 'success');
         }
 
         function refreshUsers() {
             renderUsersTable();
-            showToast('تم تحديث قائمة المستخدمين', 'info');
+            showToast('تم التحديث', 'info');
         }
 
         // ============================================================
-        // ===== وظائف المذكرات (Note Verbale) =====
+        // ===== المذكرات =====
         // ============================================================
-
-        let noteAttachmentData = null;
 
         function renderNotes() {
             const container = document.getElementById('noteList');
 
             if (noteData.length === 0) {
-                container.innerHTML = `
-                            <div class="empty-state">
-                                <div class="icon"><i class="fas fa-sticky-note"></i></div>
-                                <p>لا توجد مذكرات</p>
-                            </div>
-                        `;
+                container.innerHTML =
+                    `<div class="empty-state"><div class="icon"><i class="fas fa-sticky-note"></i></div><p>لا توجد مذكرات</p></div>`;
                 document.getElementById('noteCount').textContent = 0;
                 return;
             }
 
             let html = '';
-            noteData.forEach(note => {
-                const categoryColors = {
-                    'رسمية': 'primary',
-                    'داخلية': 'info',
-                    'عاجلة': 'danger'
-                };
-                html += `
-                            <div class="note-item">
-                                <div class="note-title">${note.title}</div>
-                                <div class="note-meta">
-                                    <span><i class="fas fa-tag"></i> ${note.category}</span>
-                                    <span><i class="fas fa-calendar"></i> ${note.date}</span>
-                                </div>
-                                <div class="note-content">${note.content}</div>
-                                ${note.attachment ? `<div class="note-attachment">
-                                    <img src="${note.attachment}" alt="مرفق" />
-                                </div>` : ''}
-                                <div class="note-actions">
-                                    <button class="btn btn-sm btn-danger" onclick="deleteNote(${note.id})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
+            noteData.forEach(n => {
+                html += `<div class="note-item">
+                            <div class="note-title">${n.title}</div>
+                            <div class="note-meta">
+                                <span><i class="fas fa-tag"></i> ${n.category}</span>
+                                <span><i class="fas fa-calendar"></i> ${n.date}</span>
                             </div>
-                        `;
+                            <div class="note-content">${n.content}</div>
+                            ${n.attachment ? `<div class="note-attachment"><img src="${n.attachment}" alt="مرفق" /></div>` : ''}
+                            <div class="note-actions">
+                                <button class="btn btn-sm btn-danger" onclick="deleteNote(${n.id})"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>`;
             });
             container.innerHTML = html;
             document.getElementById('noteCount').textContent = noteData.length;
@@ -1673,7 +1473,6 @@
 
         function addNote() {
             const title = document.getElementById('noteTitle').value.trim();
-            const category = document.getElementById('noteCategory').value;
             const content = document.getElementById('noteContent').value.trim();
 
             if (!title || !content) {
@@ -1684,7 +1483,7 @@
             noteData.push({
                 id: nextNoteId++,
                 title,
-                category,
+                category: document.getElementById('noteCategory').value,
                 content,
                 date: new Date().toISOString().split('T')[0],
                 attachment: noteAttachmentData
@@ -1696,14 +1495,14 @@
             document.getElementById('notePreviewContainer').style.display = 'none';
 
             renderNotes();
-            showToast('تم حفظ المذكرة بنجاح', 'success');
+            showToast('تم حفظ المذكرة', 'success');
         }
 
         function deleteNote(id) {
-            if (!confirm('هل أنت متأكد من حذف هذه المذكرة؟')) return;
+            if (!confirm('هل أنت متأكد من الحذف؟')) return;
             noteData = noteData.filter(n => n.id !== id);
             renderNotes();
-            showToast('تم الحذف بنجاح', 'success');
+            showToast('تم الحذف', 'success');
         }
 
         function previewNoteAttachment() {
@@ -1726,7 +1525,7 @@
         }
 
         // ============================================================
-        // ===== وظائف الخريطة =====
+        // ===== الخريطة =====
         // ============================================================
 
         let map = null;
@@ -1740,18 +1539,13 @@
             if (!container) return;
 
             try {
-                map = L.map('trackMap', {
-                    center: [36.8, 10.2],
-                    zoom: 8,
-                    zoomControl: true
-                });
+                map = L.map('trackMap', { center: [36.8, 10.2], zoom: 8, zoomControl: true });
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
+                    attribution: '© OpenStreetMap'
                 }).addTo(map);
 
-                // إضافة علامات أولية
-                const vesselPositions = [
+                const positions = [
                     { lat: 36.8, lng: 10.2, name: 'المركب 1' },
                     { lat: 34.5, lng: 9.8, name: 'المركب 2' },
                     { lat: 37.2, lng: 10.5, name: 'المركب 3' },
@@ -1759,7 +1553,7 @@
                     { lat: 36.4, lng: 10.8, name: 'المركب 5' },
                 ];
 
-                vesselPositions.forEach(pos => {
+                positions.forEach(pos => {
                     const marker = L.marker([pos.lat, pos.lng], {
                         icon: L.divIcon({
                             className: 'custom-marker',
@@ -1768,22 +1562,16 @@
                             iconAnchor: [15, 30]
                         })
                     }).addTo(map);
-
-                    marker.bindPopup(`
-                                <strong>${pos.name}</strong><br />
-                                الموقع: ${pos.lat}°N, ${pos.lng}°E
-                            `);
-
+                    marker.bindPopup(`<strong>${pos.name}</strong><br />${pos.lat}°N, ${pos.lng}°E`);
                     markers.push(marker);
                 });
 
                 mapInitialized = true;
 
-                // إضافة حدث النقر على الخريطة
                 map.on('click', function(e) {
                     const lat = e.latlng.lat.toFixed(4);
                     const lng = e.latlng.lng.toFixed(4);
-                    const name = prompt('أدخل اسم الموقع:', `موقع ${markers.length + 1}`);
+                    const name = prompt('اسم الموقع:', `موقع ${markers.length + 1}`);
 
                     if (name) {
                         const marker = L.marker([lat, lng], {
@@ -1794,83 +1582,62 @@
                                 iconAnchor: [15, 30]
                             })
                         }).addTo(map);
-
-                        marker.bindPopup(`
-                                    <strong>${name}</strong><br />
-                                    الموقع: ${lat}°N, ${lng}°E
-                                `);
-
+                        marker.bindPopup(`<strong>${name}</strong><br />${lat}°N, ${lng}°E`);
                         markers.push(marker);
-                        showToast(`تم إضافة علامة ${name}`, 'success');
+                        showToast(`تم إضافة ${name}`, 'success');
                     }
                 });
 
             } catch (e) {
-                console.error('خطأ في تهيئة الخريطة:', e);
+                console.error('خطأ في الخريطة:', e);
             }
         }
 
         function centerMap() {
-            if (map) {
-                map.setView([36.8, 10.2], 8);
-                showToast('تم تمركز الخريطة', 'info');
-            }
+            if (map) { map.setView([36.8, 10.2], 8);
+                showToast('تم تمركز الخريطة', 'info'); }
         }
 
         function addMarker() {
-            if (map) {
-                const center = map.getCenter();
-                const lat = center.lat + (Math.random() - 0.5) * 0.5;
-                const lng = center.lng + (Math.random() - 0.5) * 0.5;
+            if (!map) return;
+            const center = map.getCenter();
+            const lat = center.lat + (Math.random() - 0.5) * 0.5;
+            const lng = center.lng + (Math.random() - 0.5) * 0.5;
 
-                const marker = L.marker([lat, lng], {
-                    icon: L.divIcon({
-                        className: 'custom-marker custom-marker-active',
-                        html: '',
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 30]
-                    })
-                }).addTo(map);
-
-                marker.bindPopup(`
-                            <strong>موقع جديد</strong><br />
-                            ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E
-                        `);
-
-                markers.push(marker);
-                showToast('تم إضافة علامة جديدة', 'success');
-            }
+            const marker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'custom-marker custom-marker-active',
+                    html: '',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 30]
+                })
+            }).addTo(map);
+            marker.bindPopup(`<strong>موقع جديد</strong><br />${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`);
+            markers.push(marker);
+            showToast('تم إضافة علامة', 'success');
         }
 
         function clearMarkers() {
             if (map && markers.length > 0) {
                 markers.forEach(m => map.removeLayer(m));
                 markers = [];
-                showToast('تم مسح جميع العلامات', 'info');
+                showToast('تم مسح العلامات', 'info');
             }
         }
 
         // ============================================================
-        // ===== وظائف الإشعارات =====
+        // ===== الإشعارات =====
         // ============================================================
 
         function showToast(message, type = 'info') {
-            // إزالة الإشعارات القديمة
-            const oldToasts = document.querySelectorAll('.toast');
-            oldToasts.forEach(t => t.remove());
+            document.querySelectorAll('.toast').forEach(t => t.remove());
 
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
-            toast.innerHTML = `
-                        <span>${message}</span>
-                        <button class="toast-close" onclick="this.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-
+            toast.innerHTML =
+                `<span>${message}</span><button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>`;
             document.body.appendChild(toast);
 
-            // إزالة تلقائية بعد 3 ثواني
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.classList.add('hide');
@@ -1880,25 +1647,19 @@
         }
 
         // ============================================================
-        // ===== تشغيل عند تحميل الصفحة =====
+        // ===== التشغيل =====
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            // تعيين حدث Enter في شاشة الدخول
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
-                    const loginOverlay = document.getElementById('loginOverlay');
-                    if (loginOverlay.style.display !== 'none') {
-                        handleLogin();
-                    }
+                    const overlay = document.getElementById('loginOverlay');
+                    if (overlay.style.display !== 'none') handleLogin();
                 }
             });
-
-            // تحميل البيانات
-            initializeApp();
         });
 
-        // ===== جعل الوظائف عامة للاستخدام في HTML =====
+        // ===== جعل الدوال عامة =====
         window.showPage = showPage;
         window.handleLogin = handleLogin;
         window.handleLogout = handleLogout;
