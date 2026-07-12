@@ -1,0 +1,143 @@
+/* ============================================================
+   ===== التقارير =====
+   ============================================================ */
+
+/* ===== خيارات التقرير ===== */
+.report-options {
+    display: flex;
+    gap: var(--spacing-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-4);
+    padding: var(--spacing-4);
+    background: var(--glass);
+    backdrop-filter: var(--blur-light);
+    -webkit-backdrop-filter: var(--blur-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+}
+
+.report-options select,
+.report-options input {
+    padding: var(--spacing-2) var(--spacing-3);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: var(--font-size-sm);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: var(--transition);
+    min-width: 150px;
+}
+
+.report-options select:focus,
+.report-options input:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+}
+
+.report-options select:hover,
+.report-options input:hover {
+    border-color: #60a5fa;
+}
+
+/* ===== ملخص التقرير ===== */
+.report-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-3);
+    margin-bottom: var(--spacing-4);
+}
+
+.report-summary-item {
+    background: var(--glass);
+    backdrop-filter: var(--blur-light);
+    -webkit-backdrop-filter: var(--blur-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: var(--spacing-3);
+    text-align: center;
+}
+
+.report-summary-item .label {
+    font-size: var(--font-size-xs);
+    color: var(--gray-500);
+}
+
+.report-summary-item .value {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+/* ===== جدول التقرير ===== */
+.report-table {
+    background: var(--glass);
+    backdrop-filter: var(--blur-light);
+    -webkit-backdrop-filter: var(--blur-light);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.report-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table table th {
+    background: rgba(255, 255, 255, 0.3);
+    padding: var(--spacing-3);
+    text-align: center;
+    font-weight: 600;
+    font-size: var(--font-size-xs);
+    color: var(--gray-500);
+    border-bottom: 2px solid var(--glass-border);
+    text-transform: uppercase;
+}
+
+.report-table table td {
+    padding: var(--spacing-3);
+    text-align: center;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--gray-700);
+}
+
+.report-table table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ===== أزرار التصدير ===== */
+.export-buttons {
+    display: flex;
+    gap: var(--spacing-2);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-4);
+}
+
+.export-buttons .btn {
+    padding: var(--spacing-2) var(--spacing-4);
+    font-size: var(--font-size-sm);
+}
+
+/* ===== إصدار الجوال ===== */
+@media (max-width: 768px) {
+    .report-options {
+        flex-direction: column;
+    }
+
+    .report-options select,
+    .report-options input {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .report-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .report-table {
+        overflow-x: auto;
+    }
+}
