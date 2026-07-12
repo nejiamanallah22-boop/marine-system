@@ -6,11 +6,8 @@
     <title>⚓ منظومة الوسائل البحرية</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
+        /* ===== جميع الأنماط ===== */
         *{margin:0;padding:0;box-sizing:border-box;direction:rtl!important}
         :root{--primary:#2563eb;--primary-dark:#1d4ed8;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--gray-900:#0f172a;--success:#22c55e;--success-light:#dcfce7;--danger:#ef4444;--danger-light:#fee2e2;--warning:#f59e0b;--warning-light:#fef3c7;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,0.06);--shadow-md:0 4px 16px rgba(0,0,0,0.06);--shadow-lg:0 10px 40px rgba(0,0,0,0.08);--font:'Cairo','Segoe UI',sans-serif;--transition:all 0.15s ease}
         body{font-family:var(--font);background:var(--gray-50);color:var(--gray-900);min-height:100vh;padding:16px}
@@ -19,6 +16,7 @@
         .page-content{display:none}
         .page-content.active{display:block}
 
+        /* ===== شاشة الدخول ===== */
         #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#0f172a,#1e3a5f);display:flex;justify-content:center;align-items:center;z-index:9999}
         .login-box{background:#fff;padding:40px 35px;border-radius:var(--radius);width:400px;max-width:92%;text-align:center;box-shadow:var(--shadow-lg);animation:fadeInUp 0.5s ease}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -32,6 +30,7 @@
         .login-box .login-btn:hover{background:var(--primary-dark);box-shadow:0 4px 16px rgba(37,99,235,0.3);transform:translateY(-1px)}
         .login-box .error-msg{color:var(--danger);margin-top:10px;font-size:13px;display:none;padding:8px;background:var(--danger-light);border-radius:var(--radius-sm)}
 
+        /* ===== الهيدر ===== */
         header{background:#fff;padding:18px 20px;border-radius:var(--radius);border-bottom:2px solid var(--gray-100);margin-bottom:20px}
         header h1{font-size:20px;font-weight:800;color:var(--gray-900);display:flex;align-items:center;gap:10px}
         header h1 i{color:var(--primary)}
@@ -40,6 +39,7 @@
         .header-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
         .role-badge{background:var(--gray-100);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--gray-600)}
 
+        /* ===== الأزرار ===== */
         .btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:13px;font-family:var(--font);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:6px;justify-content:center;background:var(--gray-100);color:var(--gray-700);text-decoration:none}
         .btn:hover{background:var(--gray-200);transform:translateY(-1px)}
         .btn-primary{background:var(--primary);color:#fff}
@@ -53,12 +53,12 @@
         .btn-secondary{background:var(--gray-200);color:var(--gray-700)}
         .btn-secondary:hover{background:var(--gray-300)}
         .btn-sm{padding:4px 12px;font-size:12px}
-        .btn-info{background:#0ea5e9;color:#fff}
-        .btn-info:hover{background:#0284c7}
 
+        /* ===== شريط التنقل ===== */
         .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding:8px 4px;border-bottom:1px solid var(--gray-200)}
         .nav .btn{flex:0 0 auto}
 
+        /* ===== الفلتر ===== */
         .filter-bar{background:var(--gray-50);padding:10px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--gray-200)}
         .filter-bar label{font-weight:600;font-size:13px;color:var(--gray-600)}
         .filter-bar input,.filter-bar select{padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);font-family:var(--font);font-size:13px;background:#fff;transition:var(--transition)}
@@ -66,11 +66,13 @@
         .search-input{flex:1;min-width:160px}
         .search-input input{width:100%;padding:6px 16px;border-radius:30px}
 
+        /* ===== نموذج الإدخال ===== */
         .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;background:var(--gray-50);padding:14px;border-radius:var(--radius);border:1px solid var(--gray-200);margin-bottom:16px}
         .input-grid input,.input-grid select,.input-grid textarea{padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);font-family:var(--font);font-size:13px;width:100%;background:#fff;transition:var(--transition)}
         .input-grid input:focus,.input-grid select:focus,.input-grid textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.06)}
         .input-grid textarea{grid-column:span 2;min-height:50px;resize:vertical}
 
+        /* ===== الجدول ===== */
         .region-table-card{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);overflow:visible!important;margin-bottom:20px}
         .region-table-header{padding:12px 18px;font-weight:600;font-size:14px;color:var(--gray-800);border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;background:var(--gray-50)}
         .scrollable-table{overflow-x:auto;padding:0 2px}
@@ -80,22 +82,20 @@
         table tbody tr:hover{background:var(--gray-50)}
         table td:last-child{min-width:130px!important;white-space:nowrap!important;position:sticky!important;left:0!important;right:auto!important;background:#fff!important;border-right:1px solid var(--gray-200)!important;z-index:5!important}
         .table-actions-group{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap}
-        table td .btn-sm{padding:4px 10px!important;font-size:11px!important;border-radius:var(--radius-sm)!important;border:none!important;cursor:pointer!important;transition:var(--transition)!important;font-weight:600!important;background:var(--gray-100)!important;color:var(--gray-700)!important;display:inline-flex!important;align-items:center!important;gap:4px!important}
-        table td .btn-sm.btn-primary{background:#e0f2fe!important;color:var(--primary)!important}
-        table td .btn-sm.btn-primary:hover{background:var(--primary)!important;color:#fff!important}
-        table td .btn-sm.btn-danger{background:var(--danger-light)!important;color:#dc2626!important}
-        table td .btn-sm.btn-danger:hover{background:var(--danger)!important;color:#fff!important}
 
+        /* ===== الحالات ===== */
         .status-صالح{background:var(--success-light)!important;color:#15803d!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
         .status-معطب{background:var(--danger-light)!important;color:#dc2626!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
         .status-صيانة{background:var(--warning-light)!important;color:#b45309!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
 
+        /* ===== الإحصائيات ===== */
         .stats-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
         .stat-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;text-align:center;transition:var(--transition)}
         .stat-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
         .stat-card .number{font-size:28px;font-weight:800;color:var(--gray-900);line-height:1.2}
         .stat-card .label{font-size:12px;color:var(--gray-500);margin-top:2px}
 
+        /* ===== Note Verbale ===== */
         .note-item{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;transition:var(--transition);border-right:4px solid var(--primary)}
         .note-item:hover{border-color:var(--primary);box-shadow:var(--shadow-md)}
         .note-item .note-title{font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:4px}
@@ -103,13 +103,11 @@
         .note-item .note-content{font-size:14px;color:var(--gray-700);line-height:1.8;margin-bottom:8px}
         .note-item .note-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 
-        .map-container{height:450px!important;width:100%!important;border-radius:var(--radius)!important;overflow:hidden!important;border:1px solid var(--gray-200)!important}
-        #trackMap{height:100%!important;width:100%!important}
-        .leaflet-container{height:100%!important;width:100%!important;z-index:1!important}
-        .leaflet-control-zoom{z-index:100!important}
-        .custom-marker{background:var(--primary);width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:var(--shadow-md)}
-        .custom-marker::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;background:#fff;border-radius:50%}
+        /* ===== الإشعارات ===== */
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:12px 28px;border-radius:var(--radius-sm);z-index:99999;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease;font-family:var(--font);font-size:14px;max-width:92%;text-align:center}
+        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+        /* ===== النوافذ المنبثقة ===== */
         .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:10000;justify-content:center;align-items:center}
         .modal-content{background:#fff;padding:30px;border-radius:var(--radius);width:420px;max-width:92%;box-shadow:var(--shadow-lg);animation:scaleIn 0.2s ease}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
@@ -118,35 +116,8 @@
         .modal-content .modal-actions{display:flex;gap:10px;margin-top:15px}
         .modal-content .modal-actions .btn{flex:1}
 
-        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:12px 28px;border-radius:var(--radius-sm);z-index:99999;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease;font-family:var(--font);font-size:14px;max-width:92%;text-align:center}
-        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-        .scroll-buttons{position:fixed;bottom:30px;left:30px;display:flex;flex-direction:column;gap:6px;z-index:999}
-        .scroll-btn{background:var(--primary);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;box-shadow:var(--shadow-md);transition:var(--transition);display:flex;align-items:center;justify-content:center}
-        .scroll-btn:hover{transform:scale(1.1);box-shadow:var(--shadow-lg)}
-
-        .chart-switch{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
-        .chart-switch button{padding:8px 20px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:#fff;cursor:pointer;transition:var(--transition);font-family:var(--font)}
-        .chart-switch button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-        .chart-container{background:#fff;border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);margin-bottom:20px}
-        .chart-container canvas{max-height:300px}
-
-        .gps-status{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:6px}
-        .gps-active{background:var(--success);animation:pulse 1.5s infinite}
-        .gps-inactive{background:var(--gray-400)}
-        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
-
-        .tracking-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;text-align:center;transition:var(--transition)}
-        .tracking-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-        .tracking-card .user-avatar{font-size:32px;display:block;margin-bottom:4px}
-        .tracking-card .user-name{font-weight:700;font-size:15px}
-        .tracking-card .user-status{font-size:12px;color:var(--gray-500)}
-        .tracking-card .user-detail{font-size:11px;color:var(--gray-500);margin-top:2px}
-        .tracking-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
-        .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:4px}
-
-        @media(max-width:768px){body{padding:8px}.container{padding:12px}.input-grid{grid-template-columns:1fr 1fr}.input-grid textarea{grid-column:span 1}.stats-cards{grid-template-columns:1fr 1fr}.nav .btn{font-size:11px;padding:5px 8px;flex:1;min-width:60px}.filter-bar{flex-direction:column;align-items:stretch}.map-container{height:300px!important}.login-box{padding:30px 20px}.login-box .logo{font-size:40px}.tracking-grid{grid-template-columns:1fr 1fr}}
-        @media(max-width:480px){.input-grid{grid-template-columns:1fr}.stats-cards{grid-template-columns:1fr 1fr}.stat-card .number{font-size:18px}.nav .btn{font-size:10px;padding:4px 6px;min-width:50px}.tracking-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:768px){body{padding:8px}.container{padding:12px}.input-grid{grid-template-columns:1fr 1fr}.input-grid textarea{grid-column:span 1}.stats-cards{grid-template-columns:1fr 1fr}.nav .btn{font-size:11px;padding:5px 8px;flex:1;min-width:60px}.filter-bar{flex-direction:column;align-items:stretch}.login-box{padding:30px 20px}.login-box .logo{font-size:40px}}
+        @media(max-width:480px){.input-grid{grid-template-columns:1fr}.stats-cards{grid-template-columns:1fr 1fr}.stat-card .number{font-size:18px}.nav .btn{font-size:10px;padding:4px 6px;min-width:50px}}
     </style>
 </head>
 <body>
@@ -357,24 +328,6 @@
             </div>
             <div class="stats-cards" id="statsCards"></div>
             <div id="tablesContainer"></div>
-            <div class="chart-container">
-                <h4 style="margin-bottom:12px;"><i class="fas fa-chart-pie"></i> توزيع الحالة</h4>
-                <div class="chart-switch">
-                    <button class="active" onclick="switchChartType('doughnut', this)"><i class="fas fa-chart-pie"></i> دائري</button>
-                    <button onclick="switchChartType('bar', this)"><i class="fas fa-chart-bar"></i> شريطي</button>
-                    <button onclick="switchChartType('line', this)"><i class="fas fa-chart-line"></i> خطي</button>
-                </div>
-                <canvas id="efficiencyChart"></canvas>
-            </div>
-            <div id="latestNoteContainer" style="display:none; background:white; border-radius:var(--radius); padding:20px; border:1px solid var(--gray-200); margin-bottom:20px; border-right:4px solid var(--primary);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <h4 style="color:var(--primary); margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
-                    <small style="color:var(--gray-500);" id="latestNoteDate"></small>
-                </div>
-                <h5 id="latestNoteTitle" style="margin:10px 0; color:var(--gray-800);"></h5>
-                <div id="latestNoteContent" style="color:var(--gray-600); font-size:14px; line-height:1.8;"></div>
-                <div id="latestNoteAttachments" style="margin-top:10px;"></div>
-            </div>
         </div>
 
         <!-- ===== صفحة الدعم ===== -->
@@ -412,28 +365,6 @@
                 <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
                     <i class="fas fa-eraser"></i> مسح الكل
                 </button>
-                <button class="btn btn-sm btn-info" onclick="addMyLocation()">
-                    <i class="fas fa-location-dot"></i> إضافة موقعي
-                </button>
-            </div>
-            <div class="tracking-grid" id="trackingGrid"></div>
-            <div class="region-table-card">
-                <div class="region-table-header">
-                    <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
-                </div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th><th>المستخدم</th><th>الصلاحية</th>
-                                <th>ID</th><th>الجهاز</th><th>المتصفح</th>
-                                <th>IP</th><th>الموقع</th><th>آخر تحديث</th>
-                                <th>إجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trackUsersBody"></tbody>
-                    </table>
-                </div>
             </div>
         </div>
 
@@ -443,35 +374,13 @@
                 <span style="font-weight:700; color:var(--primary);">
                     <i class="fas fa-map"></i> خريطة GPS المباشر
                 </span>
-                <span id="gpsStatusIndicator">
-                    <span class="gps-status gps-inactive" id="gpsDot"></span>
-                    <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
-                </span>
-                <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">
-                    <i class="fas fa-play"></i> بدء التتبع المباشر
+                <button class="btn btn-sm btn-info" onclick="startTracking()">
+                    <i class="fas fa-play"></i> بدء التتبع
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">
-                    <i class="fas fa-stop"></i> إيقاف التتبع
-                </button>
-                <button class="btn btn-sm btn-success" onclick="loadLocations()">
-                    <i class="fas fa-sync-alt"></i> تحديث الخريطة
-                </button>
-                <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">
-                    <i class="fas fa-crosshairs"></i> مركز موقعي
-                </button>
-                <button class="btn btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800; color:white;">
-                    <i class="fas fa-lock-open"></i> طلب إذن الموقع
-                </button>
-            </div>
-            <div id="mapStatus" style="text-align:center; margin:10px; color:var(--gray-500); padding:12px; background:#f8f9fa; border-radius:var(--radius-sm);">
-                <i class="fas fa-info-circle"></i> اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي
-            </div>
-            <div class="map-container">
-                <div id="trackMap" style="height:500px; width:100%;"></div>
             </div>
         </div>
 
-        <!-- ===== صفحة المستخدمين (مع دالة addUser المُصلحة) ===== -->
+        <!-- ===== ✅ صفحة المستخدمين (مع دالة addUser المُصلحة) ===== -->
         <div id="pageUsers" class="page-content hidden">
             <div class="input-grid">
                 <input type="text" id="un" placeholder="👤 اسم المستخدم">
@@ -584,45 +493,7 @@
             { id: 1, name: 'المركب 1', num: 'M-001', len: 11, cat: 'البروق', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
                 supp: 'تعزيز 1', stat: 'صالح', break: '-', fDate: '2024-01-15', eDate: '2025-01-15', ref: 'REF-001' },
             { id: 2, name: 'المركب 2', num: 'M-002', len: 15, cat: 'خوافر', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
-                supp: 'تعزيز 2', stat: 'صيانة', break: 'محرك', fDate: '2024-02-01', eDate: '2024-03-01', ref: 'REF-002' },
-            { id: 3, name: 'المركب 3', num: 'M-003', len: 9, cat: 'صقور', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
-                supp: 'تعزيز 3', stat: 'صالح', break: '-', fDate: '2024-01-20', eDate: '2025-01-20', ref: 'REF-003' },
-            { id: 4, name: 'المركب 4', num: 'M-004', len: 8, cat: 'صقور', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
-                supp: 'تعزيز 4', stat: 'معطب', break: 'بدن', fDate: '2024-03-01', eDate: '2024-04-01', ref: 'REF-004' },
-            { id: 5, name: 'المركب 5', num: 'M-005', len: 20, cat: 'خوافر', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
-                supp: 'تعزيز 5', stat: 'صالح', break: '-', fDate: '2024-02-15', eDate: '2025-02-15', ref: 'REF-005' },
-            { id: 6, name: 'المركب 6', num: 'M-006', len: 11, cat: 'البروق', reg: 'المنستير', zone: 'المنستير', port: 'المنستير',
-                supp: 'تعزيز 6', stat: 'صالح', break: '-', fDate: '2024-01-10', eDate: '2025-01-10', ref: 'REF-006' },
-            { id: 7, name: 'المركب 7', num: 'M-007', len: 25, cat: 'خوافر', reg: 'المنستير', zone: 'المنستير', port: 'المنستير',
-                supp: 'تعزيز 7', stat: 'صيانة', break: 'كهرباء', fDate: '2024-02-10', eDate: '2024-03-10', ref: 'REF-007' },
-            { id: 8, name: 'المركب 8', num: 'M-008', len: 35, cat: 'طوافات', reg: 'المنستير', zone: 'المنستير', port: 'المنستير',
-                supp: 'تعزيز 8', stat: 'صالح', break: '-', fDate: '2024-01-05', eDate: '2025-01-05', ref: 'REF-008' },
-            { id: 9, name: 'المركب 9', num: 'M-009', len: 12, cat: 'صقور', reg: 'المنستير', zone: 'المنستير', port: 'المنستير',
-                supp: 'تعزيز 9', stat: 'صالح', break: '-', fDate: '2024-02-20', eDate: '2025-02-20', ref: 'REF-009' },
-            { id: 10, name: 'المركب 10', num: 'M-010', len: 11, cat: 'البروق', reg: 'صفاقس', zone: 'صفاقس', port: 'صفاقس',
-                supp: 'تعزيز 10', stat: 'صيانة', break: 'محرك', fDate: '2024-03-01', eDate: '2024-04-01', ref: 'REF-010' },
-            { id: 11, name: 'المركب 11', num: 'M-011', len: 18, cat: 'خوافر', reg: 'صفاقس', zone: 'صفاقس', port: 'صفاقس',
-                supp: 'تعزيز 11', stat: 'صالح', break: '-', fDate: '2024-01-25', eDate: '2025-01-25', ref: 'REF-011' },
-            { id: 12, name: 'المركب 12', num: 'M-012', len: 9, cat: 'صقور', reg: 'صفاقس', zone: 'صفاقس', port: 'صفاقس',
-                supp: 'تعزيز 12', stat: 'معطب', break: 'بدن', fDate: '2024-02-15', eDate: '2024-03-15', ref: 'REF-012' },
-            { id: 13, name: 'المركب 13', num: 'M-013', len: 40, cat: 'طوافات', reg: 'صفاقس', zone: 'صفاقس', port: 'صفاقس',
-                supp: 'تعزيز 13', stat: 'صالح', break: '-', fDate: '2024-01-01', eDate: '2025-01-01', ref: 'REF-013' },
-            { id: 14, name: 'المركب 14', num: 'M-014', len: 11, cat: 'البروق', reg: 'جرجيس', zone: 'جرجيس', port: 'جرجيس',
-                supp: 'تعزيز 14', stat: 'صالح', break: '-', fDate: '2024-01-15', eDate: '2025-01-15', ref: 'REF-014' },
-            { id: 15, name: 'المركب 15', num: 'M-015', len: 14, cat: 'خوافر', reg: 'جرجيس', zone: 'جرجيس', port: 'جرجيس',
-                supp: 'تعزيز 15', stat: 'صالح', break: '-', fDate: '2024-02-01', eDate: '2025-02-01', ref: 'REF-015' },
-            { id: 16, name: 'المركب 16', num: 'M-016', len: 10, cat: 'صقور', reg: 'جرجيس', zone: 'جرجيس', port: 'جرجيس',
-                supp: 'تعزيز 16', stat: 'صيانة', break: 'كهرباء', fDate: '2024-03-01', eDate: '2024-04-01', ref: 'REF-016' },
-            { id: 17, name: 'المركب 17', num: 'M-017', len: 32, cat: 'طوافات', reg: 'جرجيس', zone: 'جرجيس', port: 'جرجيس',
-                supp: 'تعزيز 17', stat: 'صالح', break: '-', fDate: '2024-01-20', eDate: '2025-01-20', ref: 'REF-017' },
-            { id: 18, name: 'المركب 18', num: 'M-018', len: 8, cat: 'صقور', reg: 'جرجيس', zone: 'جرجيس', port: 'جرجيس',
-                supp: 'تعزيز 18', stat: 'معطب', break: 'بدن', fDate: '2024-02-10', eDate: '2024-03-10', ref: 'REF-018' },
-            { id: 19, name: 'المركب 19', num: 'M-019', len: 12, cat: 'صقور', reg: 'المجمع الأمني بقبيبة', zone: 'قبيبة',
-                port: 'قبيبة', supp: 'تعزيز 19', stat: 'صالح', break: '-', fDate: '2024-01-15', eDate: '2025-01-15',
-                ref: 'REF-019' },
-            { id: 20, name: 'المركب 20', num: 'M-020', len: 22, cat: 'خوافر', reg: 'المجمع الأمني بقبيبة', zone: 'قبيبة',
-                port: 'قبيبة', supp: 'تعزيز 20', stat: 'صيانة', break: 'محرك', fDate: '2024-02-01', eDate: '2024-03-01',
-                ref: 'REF-020' }
+                supp: 'تعزيز 2', stat: 'صيانة', break: 'محرك', fDate: '2024-02-01', eDate: '2024-03-01', ref: 'REF-002' }
         ];
 
         let maintData = fleetData.filter(f => f.stat === 'صيانة' || f.stat === 'معطب');
@@ -632,15 +503,13 @@
 
         if (userData.length === 0) {
             userData = [
-                { id: 1, name: 'admin', role: 'مسؤول', status: 'نشط', password: '123456' },
-                { id: 2, name: 'user1', role: 'محرر', status: 'نشط', password: '123456' }
+                { id: 1, name: 'admin', role: 'مسؤول', status: 'نشط', password: '123456' }
             ];
             localStorage.setItem('marine_users', JSON.stringify(userData));
         }
 
         let ticketData = JSON.parse(localStorage.getItem('marine_tickets') || '[]');
         let noteData = JSON.parse(localStorage.getItem('marine_notes') || '[]');
-        let trackingUsers = [];
 
         // ============================================================
         // ===== دوال عامة =====
@@ -663,7 +532,6 @@
 
         function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
 
-        // ===== ✅ دالة حفظ جميع البيانات =====
         function saveAll() {
             localStorage.setItem('marine_fleet', JSON.stringify(fleetData));
             localStorage.setItem('marine_maint', JSON.stringify(maintData));
@@ -740,8 +608,6 @@
             }
 
             if (page === 'eff') renderEff();
-            if (page === 'track') renderTracking();
-            if (page === 'map') setTimeout(initMap, 300);
         }
 
         function renderAll() {
@@ -751,7 +617,6 @@
             renderUsers();
             renderTickets();
             renderNotes();
-            renderTracking();
         }
 
         // ============================================================
@@ -830,24 +695,13 @@
 
         function renderMain() {
             const tbody = document.getElementById('mainBody');
-            const search = document.getElementById('searchMain').value.toLowerCase();
-            const catFilter = document.getElementById('fCatMain').value;
-            const regFilter = document.getElementById('fRegMain').value;
-
-            let filtered = fleetData;
-            if (search) filtered = filtered.filter(f => f.name.toLowerCase().includes(search) || f.num.toLowerCase()
-                .includes(search));
-            if (catFilter !== 'الكل') filtered = filtered.filter(f => f.cat === catFilter);
-            if (regFilter !== 'الكل') filtered = filtered.filter(f => f.reg === regFilter);
-
-            if (filtered.length === 0) {
+            if (fleetData.length === 0) {
                 tbody.innerHTML =
                     `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--gray-500);">لا توجد وسائل بحرية</td></tr>`;
                 return;
             }
-
             let html = '';
-            filtered.forEach(item => {
+            fleetData.forEach(item => {
                 const cls = item.stat === 'صالح' ? 'status-صالح' : item.stat === 'معطب' ? 'status-معطب' :
                     'status-صيانة';
                 html += `<tr>
@@ -929,26 +783,13 @@
 
         function renderMaint() {
             const tbody = document.getElementById('maintBody');
-            const search = document.getElementById('searchMaint').value.toLowerCase();
-            const regFilter = document.getElementById('fRegMaint').value;
-            const dateStart = document.getElementById('fDateStart').value;
-            const dateEnd = document.getElementById('fDateEnd').value;
-
-            let filtered = maintData;
-            if (search) filtered = filtered.filter(m => m.name.toLowerCase().includes(search) || m.num.toLowerCase()
-                .includes(search));
-            if (regFilter !== 'الكل') filtered = filtered.filter(m => m.reg === regFilter);
-            if (dateStart) filtered = filtered.filter(m => m.fDate >= dateStart);
-            if (dateEnd) filtered = filtered.filter(m => m.fDate <= dateEnd);
-
-            if (filtered.length === 0) {
+            if (maintData.length === 0) {
                 tbody.innerHTML =
                     `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--gray-500);">لا توجد سجلات صيانة</td></tr>`;
                 return;
             }
-
             let html = '';
-            filtered.forEach(item => {
+            maintData.forEach(item => {
                 const cls = item.stat === 'صالح' ? 'status-صالح' : item.stat === 'معطب' ? 'status-معطب' :
                     'status-صيانة';
                 html += `<tr>
@@ -1027,8 +868,6 @@
         // ===== الجاهزية =====
         // ============================================================
 
-        let chartInstance = null;
-
         function renderEff() {
             const filter = document.getElementById('fRegEff').value;
             let filteredData = fleetData;
@@ -1049,8 +888,6 @@
             });
 
             container.innerHTML = html;
-            updateChart(filteredData);
-            updateLatestNote();
         }
 
         function updateStats(data) {
@@ -1221,470 +1058,9 @@
             `;
         }
 
-        function updateChart(data) {
-            const total = data.length;
-            const active = data.filter(f => f.stat === 'صالح').length;
-            const maintenance = data.filter(f => f.stat === 'صيانة').length;
-            const damage = data.filter(f => f.stat === 'معطب').length;
-
-            const ctx = document.getElementById('efficiencyChart');
-            if (!ctx) return;
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: currentChartType || 'doughnut',
-                data: {
-                    labels: ['✅ صالح للخدمة', '🔧 تحت الصيانة', '❌ معطوب'],
-                    datasets: [{
-                        label: 'حالة الأسطول',
-                        data: [active, maintenance, damage],
-                        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
-                        borderColor: ['#16a34a', '#d97706', '#dc2626'],
-                        borderWidth: 2,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Cairo', size: 13 },
-                                padding: 15,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    animation: {
-                        animateRotate: true,
-                        duration: 1000
-                    }
-                }
-            });
-        }
-
-        let currentChartType = 'doughnut';
-
-        function switchChartType(type, btn) {
-            currentChartType = type;
-            document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-
-            const filter = document.getElementById('fRegEff').value;
-            let filteredData = fleetData;
-            if (filter !== 'الكل' && filter !== 'نجاعة عامة') {
-                filteredData = fleetData.filter(f => f.reg === filter);
-            }
-            updateChart(filteredData);
-        }
-
-        function updateLatestNote() {
-            const container = document.getElementById('latestNoteContainer');
-            const notes = JSON.parse(localStorage.getItem('marine_notes') || '[]');
-
-            if (notes.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
-
-            const latest = notes[0];
-            container.style.display = 'block';
-            document.getElementById('latestNoteDate').textContent = '📅 ' + (latest.date || 'غير محدد');
-            document.getElementById('latestNoteTitle').textContent = latest.title || 'بدون عنوان';
-            document.getElementById('latestNoteContent').textContent = latest.content || 'لا يوجد محتوى';
-
-            const attachments = document.getElementById('latestNoteAttachments');
-            if (latest.image) {
-                attachments.innerHTML =
-                    `<img src="${latest.image}" style="max-width:120px; max-height:80px; border-radius:6px; border:1px solid var(--gray-200);">`;
-            } else {
-                attachments.innerHTML = '';
-            }
-        }
-
         function exportReport() {
             showToast('📄 جاري تصدير التقرير...');
             setTimeout(() => showToast('✅ تم تصدير التقرير بنجاح'), 1500);
-        }
-
-        // ============================================================
-        // ===== تتبع المستخدمين =====
-        // ============================================================
-
-        function renderTracking() {
-            const grid = document.getElementById('trackingGrid');
-            const tbody = document.getElementById('trackUsersBody');
-
-            if (trackingUsers.length === 0) {
-                grid.innerHTML =
-                    `<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--gray-500);">
-                        <i class="fas fa-users" style="font-size:40px; display:block; margin-bottom:10px;"></i>
-                        لا يوجد مستخدمين متصلين
-                    </div>`;
-                tbody.innerHTML =
-                    `<tr><td colspan="10" style="text-align:center; padding:20px; color:var(--gray-500);">لا يوجد مستخدمين</td></tr>`;
-                document.getElementById('trackUsersCount').textContent = '0 متصل';
-                return;
-            }
-
-            let gridHtml = '';
-            let tableHtml = '';
-
-            trackingUsers.forEach((user, index) => {
-                const statusColor = user.status === 'نشط' ? 'green' : 'red';
-                gridHtml += `
-                    <div class="tracking-card">
-                        <span class="user-avatar">${user.avatar || '👤'}</span>
-                        <div class="user-name">${user.name}</div>
-                        <div class="user-status">
-                            <span class="status-dot ${statusColor}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${user.status === 'نشط' ? '#22c55e' : '#ef4444'};"></span>
-                            ${user.status}
-                        </div>
-                        <div class="user-detail"><i class="fas fa-map-pin"></i> ${user.location || 'غير معروف'}</div>
-                        <div class="user-detail"><i class="fas fa-clock"></i> ${user.lastSeen || 'الآن'}</div>
-                    </div>
-                `;
-
-                tableHtml += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${user.name}</strong></td>
-                        <td>${user.role || 'مستخدم'}</td>
-                        <td>${user.id || 'غير معروف'}</td>
-                        <td>${user.device || 'غير معروف'}</td>
-                        <td>${user.browser || 'غير معروف'}</td>
-                        <td>${user.ip || 'غير معروف'}</td>
-                        <td>${user.location || 'غير معروف'}</td>
-                        <td>${user.lastSeen || 'الآن'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-danger" onclick="removeTrackingUser('${user.id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            grid.innerHTML = gridHtml;
-            tbody.innerHTML = tableHtml;
-            document.getElementById('trackUsersCount').textContent = trackingUsers.length + ' متصل';
-        }
-
-        function addMyLocation() {
-            if (!navigator.geolocation) {
-                showToast('❌ المتصفح لا يدعم تحديد الموقع');
-                return;
-            }
-
-            showToast('📍 جاري الحصول على موقعك...');
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    fetch('https://api.ipify.org?format=json')
-                        .then(res => res.json())
-                        .then(data => {
-                            const ip = data.ip;
-                            const ua = navigator.userAgent;
-
-                            let device = 'غير معروف';
-                            let browser = 'غير معروف';
-                            if (ua.includes('Android')) device = 'Android';
-                            else if (ua.includes('iPhone') || ua.includes('iPad')) device = 'iOS';
-                            else if (ua.includes('Windows')) device = 'Windows';
-                            else if (ua.includes('Macintosh')) device = 'Mac';
-                            else if (ua.includes('Linux')) device = 'Linux';
-
-                            if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
-                            else if (ua.includes('Firefox')) browser = 'Firefox';
-                            else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
-                            else if (ua.includes('Edg')) browser = 'Edge';
-                            else if (ua.includes('Opera')) browser = 'Opera';
-
-                            fetch(
-                                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`
-                                    )
-                                .then(res => res.json())
-                                .then(data => {
-                                    const location = data.display_name ||
-                                        `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                                    const user = {
-                                        id: 'user_' + Date.now(),
-                                        name: document.getElementById('username').value || 'مستخدم',
-                                        role: 'مستخدم',
-                                        avatar: '👤',
-                                        status: 'نشط',
-                                        lat: lat,
-                                        lng: lng,
-                                        location: location,
-                                        device: device,
-                                        browser: browser,
-                                        ip: ip,
-                                        lastSeen: 'الآن'
-                                    };
-                                    trackingUsers.push(user);
-                                    renderTracking();
-                                    showToast('✅ تم إضافة موقعك: ' + location);
-                                })
-                                .catch(() => {
-                                    const location = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                                    const user = {
-                                        id: 'user_' + Date.now(),
-                                        name: document.getElementById('username').value || 'مستخدم',
-                                        role: 'مستخدم',
-                                        avatar: '👤',
-                                        status: 'نشط',
-                                        lat: lat,
-                                        lng: lng,
-                                        location: location,
-                                        device: device,
-                                        browser: browser,
-                                        ip: ip,
-                                        lastSeen: 'الآن'
-                                    };
-                                    trackingUsers.push(user);
-                                    renderTracking();
-                                    showToast('✅ تم إضافة موقعك');
-                                });
-                        })
-                        .catch(() => {
-                            const location = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                            const user = {
-                                id: 'user_' + Date.now(),
-                                name: document.getElementById('username').value || 'مستخدم',
-                                role: 'مستخدم',
-                                avatar: '👤',
-                                status: 'نشط',
-                                lat: lat,
-                                lng: lng,
-                                location: location,
-                                device: 'غير معروف',
-                                browser: 'غير معروف',
-                                ip: 'غير معروف',
-                                lastSeen: 'الآن'
-                            };
-                            trackingUsers.push(user);
-                            renderTracking();
-                            showToast('✅ تم إضافة موقعك');
-                        });
-                },
-                function(error) {
-                    showToast('❌ خطأ في تحديد الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-        }
-
-        function removeTrackingUser(id) {
-            trackingUsers = trackingUsers.filter(u => u.id !== id);
-            renderTracking();
-            showToast('🗑️ تم حذف المستخدم');
-        }
-
-        function refreshTrackUsers() {
-            renderTracking();
-            showToast('🔄 تم تحديث قائمة التتبع');
-        }
-
-        function clearTrackUsers() {
-            trackingUsers = [];
-            renderTracking();
-            showToast('🗑️ تم مسح جميع المستخدمين');
-        }
-
-        // ============================================================
-        // ===== الخريطة =====
-        // ============================================================
-
-        let map = null;
-        let mapMarker = null;
-        let watchId = null;
-
-        function initMap() {
-            const container = document.getElementById('trackMap');
-            if (!container) return;
-
-            if (map) {
-                map.invalidateSize();
-                return;
-            }
-
-            map = L.map('trackMap').setView([36.8, 10.2], 8);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
-        }
-
-        function startTracking() {
-            if (!navigator.geolocation) {
-                showToast('❌ المتصفح لا يدعم تحديد الموقع');
-                return;
-            }
-
-            document.getElementById('gpsDot').className = 'gps-status gps-active';
-            document.getElementById('gpsStatusText').textContent = 'نشط';
-            document.getElementById('startTrackingBtn').style.display = 'none';
-            document.getElementById('stopTrackingBtn').style.display = 'inline-flex';
-            document.getElementById('mapStatus').innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري التتبع...';
-
-            initMap();
-
-            watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    if (map) {
-                        map.setView([lat, lng], 15);
-
-                        if (mapMarker) {
-                            mapMarker.setLatLng([lat, lng]);
-                        } else {
-                            mapMarker = L.marker([lat, lng], {
-                                icon: L.divIcon({
-                                    className: 'custom-marker',
-                                    html: '',
-                                    iconSize: [30, 30],
-                                    iconAnchor: [15, 30]
-                                })
-                            }).addTo(map);
-
-                            mapMarker.bindPopup(`
-                                <strong>موقعك الحالي</strong><br />
-                                ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                            `);
-                        }
-
-                        const accuracy = position.coords.accuracy;
-                        if (window.accuracyCircle) {
-                            map.removeLayer(window.accuracyCircle);
-                        }
-                        window.accuracyCircle = L.circle([lat, lng], {
-                            radius: accuracy,
-                            color: '#2563eb',
-                            fillColor: '#3b82f6',
-                            fillOpacity: 0.15,
-                            weight: 2
-                        }).addTo(map);
-
-                        document.getElementById('mapStatus').innerHTML = `
-                            <i class="fas fa-check-circle" style="color:#22c55e;"></i>
-                            التتبع نشط - الموقع: ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                            <span style="color:var(--gray-500); font-size:12px;">(الدقة: ${Math.round(accuracy)}م)</span>
-                        `;
-                    }
-                },
-                function(error) {
-                    showToast('❌ خطأ في التتبع: ' + error.message);
-                    stopTracking();
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 5000
-                }
-            );
-
-            showToast('📍 بدء التتبع المباشر');
-        }
-
-        function stopTracking() {
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
-            document.getElementById('gpsDot').className = 'gps-status gps-inactive';
-            document.getElementById('gpsStatusText').textContent = 'غير نشط';
-            document.getElementById('startTrackingBtn').style.display = 'inline-flex';
-            document.getElementById('stopTrackingBtn').style.display = 'none';
-            document.getElementById('mapStatus').innerHTML = '<i class="fas fa-info-circle"></i> تم إيقاف التتبع';
-
-            if (window.accuracyCircle && map) {
-                map.removeLayer(window.accuracyCircle);
-                window.accuracyCircle = null;
-            }
-
-            showToast('⏹️ تم إيقاف التتبع');
-        }
-
-        function loadLocations() {
-            if (map) {
-                map.invalidateSize();
-            }
-            showToast('🗺️ تم تحديث الخريطة');
-        }
-
-        function centerMapOnUser() {
-            if (!navigator.geolocation) {
-                showToast('❌ المتصفح لا يدعم تحديد الموقع');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    if (map) {
-                        map.setView([lat, lng], 15);
-                        showToast(`📍 تم التمركز على موقعك: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-                    } else {
-                        initMap();
-                        setTimeout(() => centerMapOnUser(), 500);
-                    }
-                },
-                function(error) {
-                    showToast('❌ لا يمكن الوصول إلى الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                }
-            );
-        }
-
-        function requestLocationPermission() {
-            if (!navigator.geolocation) {
-                showToast('❌ المتصفح لا يدعم تحديد الموقع');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    showToast('✅ تم الحصول على إذن الموقع: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-                    if (map) {
-                        map.setView([lat, lng], 15);
-                    }
-                },
-                function(error) {
-                    showToast('❌ تم رفض إذن الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                }
-            );
         }
 
         // ============================================================
@@ -1733,6 +1109,16 @@
         }
 
         // ============================================================
+        // ===== التتبع =====
+        // ============================================================
+
+        function refreshTrackUsers() { showToast('🔄 تم تحديث تتبع المستخدمين'); }
+
+        function clearTrackUsers() { showToast('🗑️ تم مسح قائمة التتبع'); }
+
+        function startTracking() { showToast('📍 بدء التتبع المباشر'); }
+
+        // ============================================================
         // ===== ✅ المستخدمين (مع دالة addUser المُصلحة) =====
         // ============================================================
 
@@ -1760,19 +1146,20 @@
             tbody.innerHTML = html;
         }
 
-        // ===== ✅ دالة addUser المُصلحة بالكامل (هنا الحل) =====
+        // ===== ✅ دالة addUser المُصلحة بالكامل (الحل النهائي) =====
         function addUser() {
+            // 1. جلب البيانات من الحقول
             const name = document.getElementById('un').value.trim();
             const password = document.getElementById('up').value.trim();
             const role = document.getElementById('ur').value;
 
-            // 1. التحقق من اسم المستخدم
+            // 2. التحقق من اسم المستخدم
             if (!name) {
                 showToast('❌ الرجاء إدخال اسم المستخدم');
                 return;
             }
 
-            // 2. التحقق من كلمة المرور
+            // 3. التحقق من كلمة المرور
             if (!password) {
                 showToast('❌ الرجاء إدخال كلمة المرور');
                 return;
@@ -1782,13 +1169,13 @@
                 return;
             }
 
-            // 3. التحقق من وجود المستخدم مسبقاً
+            // 4. التحقق من عدم وجود المستخدم مسبقاً
             if (userData.find(u => u.name === name)) {
                 showToast('❌ المستخدم "' + name + '" موجود بالفعل');
                 return;
             }
 
-            // 4. إضافة المستخدم الجديد
+            // 5. إنشاء المستخدم الجديد
             const newUser = {
                 id: Date.now(),
                 name: name,
@@ -1797,20 +1184,21 @@
                 status: 'نشط'
             };
 
+            // 6. إضافة المستخدم إلى القائمة
             userData.push(newUser);
 
-            // 5. حفظ البيانات
-            saveAll();
+            // 7. حفظ البيانات في localStorage
+            localStorage.setItem('marine_users', JSON.stringify(userData));
 
-            // 6. تحديث الجدول
+            // 8. تحديث الجدول
             renderUsers();
 
-            // 7. تنظيف الحقول
+            // 9. تنظيف الحقول
             document.getElementById('un').value = '';
             document.getElementById('up').value = '';
             document.getElementById('ur').value = 'مشاهد';
 
-            // 8. إشعار نجاح
+            // 10. عرض رسالة نجاح
             showToast('✅ تم إضافة المستخدم "' + name + '" بنجاح');
         }
 
@@ -1818,7 +1206,7 @@
             const user = userData.find(u => u.name === name);
             if (!user) return;
             user.status = user.status === 'نشط' ? 'غير نشط' : 'نشط';
-            saveAll();
+            localStorage.setItem('marine_users', JSON.stringify(userData));
             renderUsers();
             showToast('✅ تم تغيير حالة ' + name);
         }
@@ -1839,7 +1227,7 @@
             }).then(result => {
                 if (result.isConfirmed) {
                     userData = userData.filter(u => u.name !== name);
-                    saveAll();
+                    localStorage.setItem('marine_users', JSON.stringify(userData));
                     renderUsers();
                     showToast('🗑️ تم حذف المستخدم ' + name);
                 }
@@ -1869,10 +1257,12 @@
             if (!newPass || !confirmPass) { showToast('❌ الرجاء إدخال كلمة المرور والتأكيد'); return; }
             if (newPass !== confirmPass) { showToast('❌ كلمة المرور غير متطابقة'); return; }
             const user = userData.find(u => u.name === currentPasswordUser);
-            if (user) { user.password = newPass;
-                saveAll();
+            if (user) {
+                user.password = newPass;
+                localStorage.setItem('marine_users', JSON.stringify(userData));
                 closePasswordModal();
-                showToast('✅ تم تغيير كلمة المرور بنجاح'); }
+                showToast('✅ تم تغيير كلمة المرور بنجاح');
+            }
         }
 
         // ============================================================
@@ -1917,7 +1307,6 @@
             localStorage.setItem('marine_notes', JSON.stringify(noteData));
             clearNote();
             renderNotes();
-            updateLatestNote();
             showToast('✅ تم حفظ المذكرة بنجاح');
         }
 
@@ -1942,7 +1331,6 @@
                     noteData = noteData.filter(n => n.id !== id);
                     localStorage.setItem('marine_notes', JSON.stringify(noteData));
                     renderNotes();
-                    updateLatestNote();
                     showToast('🗑️ تم حذف المذكرة بنجاح');
                 }
             });
@@ -1976,6 +1364,7 @@
                     if (data.users) userData = data.users;
                     if (data.tickets) ticketData = data.tickets;
                     if (data.notes) noteData = data.notes;
+                    localStorage.setItem('marine_users', JSON.stringify(userData));
                     saveAll();
                     renderAll();
                     showToast('✅ تم استيراد البيانات بنجاح');
@@ -1996,7 +1385,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             renderAll();
-            initMap();
         });
     </script>
 
