@@ -86,106 +86,6 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-const ReplySchema = new mongoose.Schema({
-    adminName: { type: String, required: true },
-    reply: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true }
-});
-
-const TicketSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    subject: { type: String, required: true, trim: true },
-    message: { type: String, required: true, trim: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true },
-    status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
-    replies: [ReplySchema]
-}, { timestamps: true });
-
-const Ticket = mongoose.model('Ticket', TicketSchema);
-
-const LogSchema = new mongoose.Schema({
-    _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    action: { type: String, required: true },
-    details: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true }
-}, { timestamps: true });
-
-const Log = mongoose.model('Log', LogSchema);
-
-const LocationSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
-    timestamp: { type: Date, default: Date.now },
-    action: { type: String, default: 'تحديث موقع' },
-    ip: { type: String },
-    userAgent: { type: String },
-    device: { type: String },
-    browser: { type: String }
-}, { timestamps: true });
-
-const Location = mongoose.model('Location', LocationSchema);
-
-const NoteVerbaleSchema = new mongoose.Schema({
-    title: { type: String, required: true, trim: true },
-    content: { type: String, required: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true },
-    week: { type: String, required: true },
-    createdBy: { type: String, required: true },
-    userRole: { type: String, required: true },
-    type: { type: String, default: 'text' },
-    imageData: { type: String, default: '' },
-    attachments: [{ 
-        name: String,
-        type: String,
-        data: String
-    }]
-}, { timestamps: true });
-
-const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
-
-// ==================== دوال مساعدة ====================
-function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-}
-
-function getWeekNumber(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-    const week1 = new Date(d.getFullYear(), 0, 4);
-    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-}
-
-function extractDevice(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Android')) return 'Android';
-    if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
-    if (userAgent.includes('Windows')) return 'Windows';
-    if (userAgent.includes('Macintosh')) return 'Mac';
-    if (userAgent.includes('Linux')) return 'Linux';
-    return 'غير معروف';
-}
-
-function extractBrowser(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Chrome')) return 'Chrome';
-    if (userAgent.includes('Firefox')) return 'Firefox';
-    if (userAgent.includes('Safari')) return 'Safari';
-    if (userAgent.includes('Edge')) return 'Edge';
-    if (userAgent.includes('Opera')) return 'Opera';
-    return 'غير معروف';
-}
-
 // ==================== المصادقة ====================
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
 
@@ -212,7 +112,7 @@ const authorize = (...roles) => {
     };
 };
 
-// ==================== API Routes ====================
+// ==================== Routes ====================
 
 // ===== تسجيل الدخول =====
 app.post('/api/login', async (req, res) => {
@@ -244,70 +144,31 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// ===== إنشاء مستخدم admin =====
-app.get('/api/create-admin', async (req, res) => {
-    try {
-        const adminExists = await User.findOne({ name: 'admin' });
-        if (adminExists) {
-            return res.json({ message: 'المستخدم admin موجود بالفعل', user: adminExists });
-        }
-        
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('1234', salt);
-        
-        const newAdmin = new User({
-            name: 'admin',
-            pass: hashedPassword,
-            role: 'مسؤول',
-            enabled: true
-        });
-        await newAdmin.save();
-        res.json({ message: '✅ تم إنشاء المستخدم admin بنجاح!', user: newAdmin });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ============================================================
-// ===== 🟢 المستخدمين (مع إصلاح إضافة المستخدم) =====
-// ============================================================
-
-// ===== جلب جميع المستخدمين =====
-app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const users = await User.find().select('-pass');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // ===== ✅ إضافة مستخدم جديد (مُصلحة) =====
 app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         const { name, pass, role } = req.body;
         
-        // 1. التحقق من الحقول
+        // التحقق من الحقول
         if (!name || !pass) {
             return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
         }
         
-        // 2. التحقق من طول كلمة المرور
         if (pass.length < 4) {
             return res.status(400).json({ error: 'كلمة المرور يجب أن تكون 4 أحرف على الأقل' });
         }
         
-        // 3. التحقق من وجود المستخدم
+        // التحقق من وجود المستخدم
         const existing = await User.findOne({ name });
         if (existing) {
             return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
         }
         
-        // 4. تشفير كلمة المرور
+        // تشفير كلمة المرور
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(pass, salt);
         
-        // 5. إنشاء المستخدم الجديد
+        // إنشاء المستخدم
         const user = new User({
             name: name,
             pass: hashedPassword,
@@ -315,10 +176,9 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
             enabled: true
         });
         
-        // 6. حفظ في قاعدة البيانات
         await user.save();
         
-        // 7. إرجاع المستخدم (بدون كلمة المرور)
+        // إرجاع المستخدم (بدون كلمة المرور)
         const userData = user.toObject();
         delete userData.pass;
         
@@ -333,40 +193,15 @@ app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) =
     }
 });
 
-// ===== تحديث مستخدم =====
-app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
+// ===== جلب جميع المستخدمين =====
+app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
-        const { pass, ...updateData } = req.body;
-        if (pass) {
-            const salt = await bcrypt.genSalt(10);
-            updateData.pass = await bcrypt.hash(pass, salt);
-        }
-        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
-        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-        res.json({ message: 'تم تحديث المستخدم' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== حذف مستخدم =====
-app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-        if (user.name === 'admin') {
-            return res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
-        }
-        await User.findByIdAndDelete(req.params.id);
-        res.json({ message: 'تم حذف المستخدم' });
+        const users = await User.find().select('-pass');
+        res.json(users);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-
-// ============================================================
-// ===== بقية Routes =====
-// ============================================================
 
 // ===== المراكب =====
 app.get('/api/vessels', authenticate, async (req, res) => {
@@ -396,271 +231,6 @@ app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), asyn
     }
 });
 
-app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
-    try {
-        const data = req.body;
-        const n = parseFloat(data.len);
-        if (n === 11) data.cat = 'البروق';
-        else if (n >= 8 && n <= 12) data.cat = 'صقور';
-        else if (n > 12 && n <= 25) data.cat = 'خوافر';
-        else if (n > 30) data.cat = 'طوافات';
-        else data.cat = 'زوارق مزدوجة';
-        
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-        if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-        res.json(vessel);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-        res.json({ message: 'تم حذف المركب بنجاح' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== التذاكر =====
-app.get('/api/tickets', authenticate, async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json(tickets);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/tickets', authenticate, async (req, res) => {
-    try {
-        const ticket = new Ticket(req.body);
-        await ticket.save();
-        res.status(201).json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        ticket.replies.push(req.body.reply);
-        ticket.status = 'تم الرد';
-        await ticket.save();
-        res.json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const ticket = await Ticket.findById(req.params.id);
-        if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        ticket.status = 'مغلقة';
-        await ticket.save();
-        res.json(ticket);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== السجلات =====
-app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const logs = await Log.find().sort({ createdAt: -1 });
-        res.json(logs);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/logs', authenticate, async (req, res) => {
-    try {
-        const log = new Log(req.body);
-        await log.save();
-        res.status(201).json(log);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== المواقع =====
-app.get('/api/locations', authenticate, async (req, res) => {
-    try {
-        const locations = await Location.find().sort({ timestamp: -1 });
-        res.json(locations);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/locations', authenticate, async (req, res) => {
-    try {
-        const { lat, lng, action } = req.body;
-        
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-            return res.status(400).json({ error: 'إحداثيات غير صالحة' });
-        }
-        
-        const userAgent = req.headers['user-agent'] || 'غير معروف';
-        const location = new Location({
-            userName: req.user.name,
-            userRole: req.user.role,
-            lat: parseFloat(lat),
-            lng: parseFloat(lng),
-            action: action || 'تحديث موقع',
-            ip: req.ip || req.connection.remoteAddress,
-            userAgent: userAgent,
-            device: extractDevice(userAgent),
-            browser: extractBrowser(userAgent)
-        });
-        await location.save();
-        res.status(201).json(location);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// ===== المستخدمين المتصلين =====
-const connectedUsers = {};
-
-app.get('/api/online-users', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const onlineUsers = Object.values(connectedUsers).map(user => ({
-            id: user.socketId,
-            userName: user.userName,
-            userRole: user.userRole,
-            lat: user.lat,
-            lng: user.lng,
-            connectedAt: user.connectedAt,
-            lastUpdate: user.lastUpdate || user.connectedAt,
-            ip: user.ip || 'غير معروف',
-            device: user.device || 'غير معروف',
-            browser: user.browser || 'غير معروف'
-        }));
-        
-        res.json({
-            online: onlineUsers,
-            total: onlineUsers.length
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== Note Verbale =====
-app.post('/api/notes', authenticate, async (req, res) => {
-    try {
-        const { title, content, date, time, week, type, imageData, attachments } = req.body;
-        
-        if (!title || !content || !date) {
-            return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
-        }
-        
-        const note = new NoteVerbale({
-            title,
-            content,
-            date,
-            time: time || getCurrentTime(),
-            week: week || getWeekNumber(date).toString(),
-            createdBy: req.user.name,
-            userRole: req.user.role,
-            type: type || 'text',
-            imageData: imageData || '',
-            attachments: attachments || []
-        });
-        
-        await note.save();
-        res.status(201).json(note);
-    } catch (error) {
-        console.error('❌ خطأ في حفظ المذكرة:', error);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.get('/api/notes', authenticate, async (req, res) => {
-    try {
-        const { week, limit } = req.query;
-        let query = {};
-        if (week) query.week = week;
-        let notesQuery = NoteVerbale.find(query).sort({ createdAt: -1 });
-        if (limit) notesQuery = notesQuery.limit(parseInt(limit));
-        const notes = await notesQuery.exec();
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/notes/latest', authenticate, async (req, res) => {
-    try {
-        const note = await NoteVerbale.findOne().sort({ createdAt: -1 });
-        res.json(note || null);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        await NoteVerbale.findByIdAndDelete(req.params.id);
-        res.json({ message: 'تم حذف المذكرة' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== تصدير واستيراد =====
-app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const vessels = await Vessel.find();
-        const users = await User.find().select('-pass');
-        const tickets = await Ticket.find();
-        const logs = await Log.find();
-        const locations = await Location.find();
-        const notes = await NoteVerbale.find();
-        res.json({ vessels, users, tickets, logs, locations, notes });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const { vessels, users, tickets, logs, locations, notes } = req.body;
-        
-        if (vessels) await Vessel.deleteMany({});
-        if (users) {
-            for (const user of users) {
-                if (user.pass && !user.pass.startsWith('$2')) {
-                    const salt = await bcrypt.genSalt(10);
-                    user.pass = await bcrypt.hash(user.pass, salt);
-                }
-            }
-            await User.deleteMany({});
-            await User.insertMany(users);
-        }
-        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
-        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
-        if (locations) { await Location.deleteMany({}); await Location.insertMany(locations); }
-        if (notes) { await NoteVerbale.deleteMany({}); await NoteVerbale.insertMany(notes); }
-        
-        res.json({ message: 'تم استيراد البيانات بنجاح' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ===== مسار الصحة =====
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // ===== تقديم الملفات الثابتة =====
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -670,63 +240,6 @@ app.get('/', (req, res) => {
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// ============================================================
-// ===== Socket.IO =====
-// ============================================================
-
-io.on('connection', (socket) => {
-    console.log('📡 مستخدم متصل:', socket.id);
-    
-    socket.on('user-connected', (data) => {
-        if (data.lat && data.lng) {
-            const ua = socket.handshake.headers['user-agent'] || '';
-            
-            connectedUsers[socket.id] = {
-                id: socket.id,
-                userName: data.userName,
-                userRole: data.userRole,
-                lat: data.lat,
-                lng: data.lng,
-                connectedAt: new Date().toISOString(),
-                lastUpdate: new Date().toISOString(),
-                ip: socket.handshake.address || 'غير معروف',
-                device: ua.includes('Android') ? 'Android' : 
-                         ua.includes('iPhone') ? 'iOS' : 
-                         ua.includes('Windows') ? 'Windows' : 'غير معروف',
-                browser: ua.includes('Chrome') ? 'Chrome' : 
-                          ua.includes('Firefox') ? 'Firefox' : 
-                          ua.includes('Safari') ? 'Safari' : 'غير معروف'
-            };
-            console.log('👥 مستخدم متصل:', data.userName);
-            io.emit('user-list', Object.values(connectedUsers));
-        }
-    });
-    
-    socket.on('update-location', (data) => {
-        if (connectedUsers[socket.id] && data.lat && data.lng) {
-            connectedUsers[socket.id].lat = data.lat;
-            connectedUsers[socket.id].lng = data.lng;
-            connectedUsers[socket.id].lastUpdate = new Date().toISOString();
-            socket.broadcast.emit('receive-location', {
-                userName: data.userName,
-                userRole: data.userRole,
-                lat: data.lat,
-                lng: data.lng,
-                time: new Date().toISOString()
-            });
-        }
-    });
-    
-    socket.on('disconnect', () => {
-        const user = connectedUsers[socket.id];
-        if (user) {
-            console.log('📡 مستخدم غير متصل:', user.userName);
-            delete connectedUsers[socket.id];
-            io.emit('user-list', Object.values(connectedUsers));
-        }
-    });
 });
 
 // ==================== إنشاء المستخدم الافتراضي ====================
