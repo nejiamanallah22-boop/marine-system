@@ -4,21 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
-    
-    <!-- ===== الخطوط والأيقونات ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- ===== المكتبات ===== -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <!-- ===== مكتبات قراءة الملفات ===== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    
     <style>
         /* ===== جميع الأنماط ===== */
         *{margin:0;padding:0;box-sizing:border-box;direction:rtl!important}
@@ -29,7 +16,6 @@
         .page-content{display:none}
         .page-content.active{display:block}
 
-        /* ===== شاشة الدخول ===== */
         #loginOverlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(145deg,#0f172a,#1e3a5f);display:flex;justify-content:center;align-items:center;z-index:9999}
         .login-box{background:#fff;padding:40px 35px;border-radius:var(--radius);width:400px;max-width:92%;text-align:center;box-shadow:var(--shadow-lg);animation:fadeInUp 0.5s ease}
         @keyframes fadeInUp{from{opacity:0;transform:translateY(20px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -43,7 +29,6 @@
         .login-box .login-btn:hover{background:var(--primary-dark);box-shadow:0 4px 16px rgba(37,99,235,0.3);transform:translateY(-1px)}
         .login-box .error-msg{color:var(--danger);margin-top:10px;font-size:13px;display:none;padding:8px;background:var(--danger-light);border-radius:var(--radius-sm)}
 
-        /* ===== الهيدر ===== */
         header{background:#fff;padding:18px 20px;border-radius:var(--radius);border-bottom:2px solid var(--gray-100);margin-bottom:20px}
         header h1{font-size:20px;font-weight:800;color:var(--gray-900);display:flex;align-items:center;gap:10px}
         header h1 i{color:var(--primary)}
@@ -52,7 +37,6 @@
         .header-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
         .role-badge{background:var(--gray-100);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;color:var(--gray-600)}
 
-        /* ===== الأزرار ===== */
         .btn{padding:8px 18px;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:13px;font-family:var(--font);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;gap:6px;justify-content:center;background:var(--gray-100);color:var(--gray-700);text-decoration:none}
         .btn:hover{background:var(--gray-200);transform:translateY(-1px)}
         .btn-primary{background:var(--primary);color:#fff}
@@ -66,16 +50,10 @@
         .btn-secondary{background:var(--gray-200);color:var(--gray-700)}
         .btn-secondary:hover{background:var(--gray-300)}
         .btn-sm{padding:4px 12px;font-size:12px}
-        .btn-info{background:#0ea5e9;color:#fff}
-        .btn-info:hover{background:#0284c7}
-        .btn-outline-white{background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff}
-        .btn-outline-white:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.4)}
 
-        /* ===== شريط التنقل ===== */
         .nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding:8px 4px;border-bottom:1px solid var(--gray-200)}
         .nav .btn{flex:0 0 auto}
 
-        /* ===== الفلتر ===== */
         .filter-bar{background:var(--gray-50);padding:10px 16px;border-radius:var(--radius);margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--gray-200)}
         .filter-bar label{font-weight:600;font-size:13px;color:var(--gray-600)}
         .filter-bar input,.filter-bar select{padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);font-family:var(--font);font-size:13px;background:#fff;transition:var(--transition)}
@@ -83,13 +61,11 @@
         .search-input{flex:1;min-width:160px}
         .search-input input{width:100%;padding:6px 16px;border-radius:30px}
 
-        /* ===== نموذج الإدخال ===== */
         .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;background:var(--gray-50);padding:14px;border-radius:var(--radius);border:1px solid var(--gray-200);margin-bottom:16px}
         .input-grid input,.input-grid select,.input-grid textarea{padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--gray-200);font-family:var(--font);font-size:13px;width:100%;background:#fff;transition:var(--transition)}
         .input-grid input:focus,.input-grid select:focus,.input-grid textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,0.06)}
         .input-grid textarea{grid-column:span 2;min-height:50px;resize:vertical}
 
-        /* ===== الجدول ===== */
         .region-table-card{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);overflow:visible!important;margin-bottom:20px}
         .region-table-header{padding:12px 18px;font-weight:600;font-size:14px;color:var(--gray-800);border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;background:var(--gray-50)}
         .scrollable-table{overflow-x:auto;padding:0 2px}
@@ -100,19 +76,16 @@
         table td:last-child{min-width:130px!important;white-space:nowrap!important;position:sticky!important;left:0!important;right:auto!important;background:#fff!important;border-right:1px solid var(--gray-200)!important;z-index:5!important}
         .table-actions-group{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap}
 
-        /* ===== الحالات ===== */
         .status-صالح{background:var(--success-light)!important;color:#15803d!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
         .status-معطب{background:var(--danger-light)!important;color:#dc2626!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
         .status-صيانة{background:var(--warning-light)!important;color:#b45309!important;padding:2px 12px!important;border-radius:20px!important;font-size:12px!important;font-weight:600!important;display:inline-block!important}
 
-        /* ===== الإحصائيات ===== */
         .stats-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
         .stat-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;text-align:center;transition:var(--transition)}
         .stat-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
         .stat-card .number{font-size:28px;font-weight:800;color:var(--gray-900);line-height:1.2}
         .stat-card .label{font-size:12px;color:var(--gray-500);margin-top:2px}
 
-        /* ===== Note Verbale ===== */
         .note-item{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px 20px;margin-bottom:12px;transition:var(--transition);border-right:4px solid var(--primary)}
         .note-item:hover{border-color:var(--primary);box-shadow:var(--shadow-md)}
         .note-item .note-title{font-size:16px;font-weight:700;color:var(--gray-900);margin-bottom:4px}
@@ -120,19 +93,9 @@
         .note-item .note-content{font-size:14px;color:var(--gray-700);line-height:1.8;margin-bottom:8px}
         .note-item .note-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 
-        /* ===== الخريطة ===== */
-        .map-container{height:450px!important;width:100%!important;border-radius:var(--radius)!important;overflow:hidden!important;border:1px solid var(--gray-200)!important}
-        #trackMap{height:100%!important;width:100%!important}
-        .leaflet-container{height:100%!important;width:100%!important;z-index:1!important}
-        .leaflet-control-zoom{z-index:100!important}
-        .custom-marker{background:var(--primary);width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:var(--shadow-md)}
-        .custom-marker::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;background:#fff;border-radius:50%}
-        .gps-status{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:6px}
-        .gps-active{background:var(--success);animation:pulse 1.5s infinite}
-        .gps-inactive{background:var(--gray-400)}
-        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:12px 28px;border-radius:var(--radius-sm);z-index:99999;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease;font-family:var(--font);font-size:14px;max-width:92%;text-align:center}
+        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-        /* ===== النوافذ المنبثقة ===== */
         .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);backdrop-filter:blur(6px);z-index:10000;justify-content:center;align-items:center}
         .modal-content{background:#fff;padding:30px;border-radius:var(--radius);width:420px;max-width:92%;box-shadow:var(--shadow-lg);animation:scaleIn 0.2s ease}
         @keyframes scaleIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
@@ -141,34 +104,12 @@
         .modal-content .modal-actions{display:flex;gap:10px;margin-top:15px}
         .modal-content .modal-actions .btn{flex:1}
 
-        /* ===== الإشعارات ===== */
-        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:12px 28px;border-radius:var(--radius-sm);z-index:99999;box-shadow:var(--shadow-lg);animation:slideUp 0.3s ease;font-family:var(--font);font-size:14px;max-width:92%;text-align:center}
-        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-        /* ===== أزرار التمرير ===== */
         .scroll-buttons{position:fixed;bottom:30px;left:30px;display:flex;flex-direction:column;gap:6px;z-index:999}
         .scroll-btn{background:var(--primary);color:#fff;border:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;box-shadow:var(--shadow-md);transition:var(--transition);display:flex;align-items:center;justify-content:center}
         .scroll-btn:hover{transform:scale(1.1);box-shadow:var(--shadow-lg)}
 
-        /* ===== الرسوم البيانية ===== */
-        .chart-switch{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap}
-        .chart-switch button{padding:8px 20px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);background:#fff;cursor:pointer;transition:var(--transition);font-family:var(--font)}
-        .chart-switch button.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-        .chart-container{background:#fff;border-radius:var(--radius);padding:20px;border:1px solid var(--gray-200);margin-bottom:20px}
-        .chart-container canvas{max-height:300px}
-
-        /* ===== تتبع المستخدمين ===== */
-        .tracking-card{background:#fff;border:1px solid var(--gray-200);border-radius:var(--radius);padding:16px;text-align:center;transition:var(--transition)}
-        .tracking-card:hover{border-color:var(--primary);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-        .tracking-card .user-avatar{font-size:32px;display:block;margin-bottom:4px}
-        .tracking-card .user-name{font-weight:700;font-size:15px}
-        .tracking-card .user-status{font-size:12px;color:var(--gray-500)}
-        .tracking-card .user-detail{font-size:11px;color:var(--gray-500);margin-top:2px}
-        .tracking-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
-        .status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:4px}
-
-        @media(max-width:768px){body{padding:8px}.container{padding:12px}.input-grid{grid-template-columns:1fr 1fr}.input-grid textarea{grid-column:span 1}.stats-cards{grid-template-columns:1fr 1fr}.nav .btn{font-size:11px;padding:5px 8px;flex:1;min-width:60px}.filter-bar{flex-direction:column;align-items:stretch}.map-container{height:300px!important}.login-box{padding:30px 20px}.login-box .logo{font-size:40px}.tracking-grid{grid-template-columns:1fr 1fr}}
-        @media(max-width:480px){.input-grid{grid-template-columns:1fr}.stats-cards{grid-template-columns:1fr 1fr}.stat-card .number{font-size:18px}.nav .btn{font-size:10px;padding:4px 6px;min-width:50px}.tracking-grid{grid-template-columns:1fr 1fr}}
+        @media(max-width:768px){body{padding:8px}.container{padding:12px}.input-grid{grid-template-columns:1fr 1fr}.input-grid textarea{grid-column:span 1}.stats-cards{grid-template-columns:1fr 1fr}.nav .btn{font-size:11px;padding:5px 8px;flex:1;min-width:60px}.filter-bar{flex-direction:column;align-items:stretch}.login-box{padding:30px 20px}.login-box .logo{font-size:40px}}
+        @media(max-width:480px){.input-grid{grid-template-columns:1fr}.stats-cards{grid-template-columns:1fr 1fr}.stat-card .number{font-size:18px}.nav .btn{font-size:10px;padding:4px 6px;min-width:50px}}
     </style>
 </head>
 <body>
@@ -361,21 +302,17 @@
             </div>
         </div>
 
-        <!-- ===== صفحة الجاهزية (مع الرسوم البيانية) ===== -->
+        <!-- ===== صفحة الجاهزية ===== -->
         <div id="pageEff" class="page-content hidden">
             <div class="filter-bar">
                 <label><i class="fas fa-filter"></i> تصفية الإقليم:</label>
                 <select id="fRegEff" onchange="renderEff()">
                     <option value="الكل">الكل</option>
                     <option value="نجاعة عامة">📊 نجاعة عامة</option>
-                    <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-                    <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-                    <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-                    <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                    <option value="تونس">🛠️ ورشة تونس</option>
+                    <option value="المنستير">🛠️ ورشة المنستير</option>
+                    <option value="صفاقس">🛠️ ورشة صفاقس</option>
+                    <option value="جرجيس">🛠️ ورشة جرجيس</option>
                     <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
                 </select>
                 <button class="btn btn-sm btn-success" onclick="refreshEff()">
@@ -385,37 +322,9 @@
                     <i class="fas fa-file-pdf"></i> تصدير النجاعة
                 </button>
             </div>
-
-            <!-- آخر Note Verbale -->
-            <div id="latestNoteContainer" style="display:none; background:white; border-radius:8px; padding:15px; margin-bottom:20px; border-right:4px solid #0d6efd; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-                    <h4 style="color:#0d6efd; margin:0;"><i class="fas fa-file-alt"></i> آخر Note Verbale</h4>
-                    <small style="color:#6c757d;" id="latestNoteDate"></small>
-                </div>
-                <h5 id="latestNoteTitle" style="margin:10px 0; color:#1a3a5c;"></h5>
-                <div id="latestNoteContent" style="color:#495057; font-size:14px; line-height:1.8;"></div>
-                <div id="latestNoteAttachments" style="margin-top:10px;"></div>
-            </div>
-
             <div class="stats-cards" id="statsCards"></div>
             <div id="generalEffTableContainer"></div>
             <div id="regionTables"></div>
-
-            <!-- الرسوم البيانية -->
-            <div class="chart-container">
-                <div class="chart-switch">
-                    <button class="active" onclick="switchChartType('doughnut', this)">
-                        <i class="fas fa-chart-pie"></i> دائري
-                    </button>
-                    <button onclick="switchChartType('bar', this)">
-                        <i class="fas fa-chart-bar"></i> شريطي
-                    </button>
-                    <button onclick="switchChartType('line', this)">
-                        <i class="fas fa-chart-line"></i> خطي
-                    </button>
-                </div>
-                <canvas id="efficiencyChart"></canvas>
-            </div>
         </div>
 
         <!-- ===== صفحة الدعم ===== -->
@@ -433,9 +342,6 @@
                 <button class="btn btn-primary" onclick="sendTicket()">
                     <i class="fas fa-paper-plane"></i> إرسال الطلب
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="refreshTickets()">
-                    <i class="fas fa-sync-alt"></i> تحديث
-                </button>
                 <div id="ticketResponse" style="margin-top:12px; color:var(--success); font-weight:600;"></div>
                 <hr style="margin:20px 0; border-color:#e9ecef;">
                 <h4><i class="fas fa-list"></i> قائمة التذاكر</h4>
@@ -443,7 +349,7 @@
             </div>
         </div>
 
-        <!-- ===== صفحة التتبع (مع خريطة) ===== -->
+        <!-- ===== صفحة التتبع ===== -->
         <div id="pageTrack" class="page-content hidden">
             <div class="filter-bar">
                 <span style="font-weight:700; color:var(--primary);">
@@ -456,72 +362,18 @@
                 <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">
                     <i class="fas fa-eraser"></i> مسح الكل
                 </button>
-                <button class="btn btn-sm btn-info" onclick="addMyLocation()">
-                    <i class="fas fa-location-dot"></i> إضافة موقعي
-                </button>
-            </div>
-
-            <!-- بطاقات المستخدمين -->
-            <div class="tracking-grid" id="trackingGrid"></div>
-
-            <!-- خريطة التتبع -->
-            <div class="map-container">
-                <div id="trackUsersMap" style="height:400px; width:100%;"></div>
-            </div>
-
-            <!-- جدول تفاصيل المستخدمين -->
-            <div class="region-table-card" style="margin-top:20px;">
-                <div class="region-table-header">
-                    <i class="fas fa-users"></i> تفاصيل المستخدمين المتصلين
-                </div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th><th>المستخدم</th><th>الصلاحية</th>
-                                <th>ID</th><th>الجهاز</th><th>المتصفح</th>
-                                <th>IP</th>
-                                <th>الموقع</th>
-                                <th>آخر تحديث</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trackUsersBody"></tbody>
-                    </table>
-                </div>
             </div>
         </div>
 
-        <!-- ===== صفحة الخريطة (مع GPS) ===== -->
+        <!-- ===== صفحة الخريطة ===== -->
         <div id="pageMap" class="page-content hidden">
             <div class="filter-bar">
                 <span style="font-weight:700; color:var(--primary);">
                     <i class="fas fa-map"></i> خريطة GPS المباشر
                 </span>
-                <span id="gpsStatusIndicator">
-                    <span class="gps-status gps-inactive" id="gpsDot"></span>
-                    <span id="gpsStatusText" style="font-size:0.9em;">غير نشط</span>
-                </span>
-                <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">
-                    <i class="fas fa-play"></i> بدء التتبع المباشر
+                <button class="btn btn-sm btn-info" onclick="startTracking()">
+                    <i class="fas fa-play"></i> بدء التتبع
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">
-                    <i class="fas fa-stop"></i> إيقاف التتبع
-                </button>
-                <button class="btn btn-sm btn-success" onclick="loadLocations()">
-                    <i class="fas fa-sync-alt"></i> تحديث الخريطة
-                </button>
-                <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">
-                    <i class="fas fa-crosshairs"></i> مركز موقعي
-                </button>
-                <button class="btn btn-sm btn-warning" onclick="requestLocationPermission()" style="background:#ff9800; color:white;">
-                    <i class="fas fa-lock-open"></i> طلب إذن الموقع
-                </button>
-            </div>
-            <div id="mapStatus" style="text-align:center; margin:10px; color:var(--gray-500); padding:12px; background:#f8f9fa; border-radius:var(--radius-sm);">
-                <i class="fas fa-info-circle"></i> اضغط "بدء التتبع المباشر" لمشاركة موقعك الحقيقي
-            </div>
-            <div class="map-container">
-                <div id="gpsMap" style="height:450px; width:100%;"></div>
             </div>
         </div>
 
@@ -563,84 +415,35 @@
             </div>
         </div>
 
-        <!-- ===== صفحة Note Verbale (مع استيراد الملفات) ===== -->
+        <!-- ===== صفحة Note Verbale ===== -->
         <div id="pageNote" class="page-content hidden">
             <div class="region-table-card" style="padding:25px;">
                 <div class="region-table-header">
                     <i class="fas fa-file-alt"></i> Note Verbale
                 </div>
                 <div style="padding:20px;">
-
-                    <!-- استيراد ملف -->
-                    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                        <label style="font-weight:bold;">📂 استيراد ملف:</label>
-                        <input type="file" id="noteFileInput" accept=".txt,.docx,.pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.svg,.html,.htm" style="flex:1; padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                        <button class="btn btn-info" onclick="importNoteFile()">
-                            <i class="fas fa-upload"></i> استيراد
-                        </button>
-                        <small style="color:#6c757d;">(يدعم: TXT, DOCX, PDF, JPEG, PNG, GIF, BMP, WEBP, SVG, HTML)</small>
-                    </div>
-
-                    <hr style="margin:15px 0; border-color:#e9ecef;">
-
                     <div style="margin-bottom:15px;">
                         <label style="font-weight:bold;">📅 تاريخ المذكرة:</label>
                         <input type="date" id="noteDate" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
                     </div>
-
                     <div style="margin-bottom:15px;">
                         <label style="font-weight:bold;">📝 عنوان المذكرة:</label>
                         <input type="text" id="noteTitle" placeholder="أدخل عنوان المذكرة" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit;">
                     </div>
-
                     <div style="margin-bottom:15px;">
                         <label style="font-weight:bold;">📄 نص المذكرة:</label>
                         <textarea id="noteContent" rows="6" placeholder="أدخل نص المذكرة..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #ced4da; border-radius:8px; font-family:inherit; resize:vertical;"></textarea>
                     </div>
-
-                    <input type="hidden" id="noteType" value="text">
-
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <button class="btn btn-success" onclick="saveNote()">
                             <i class="fas fa-save"></i> حفظ
-                        </button>
-                        <button class="btn btn-primary" onclick="exportNotePDF()">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
-                        <button class="btn btn-primary" onclick="exportNoteWord()" style="background:#2b5797;">
-                            <i class="fas fa-file-word"></i> Word
                         </button>
                         <button class="btn btn-secondary" onclick="clearNote()">
                             <i class="fas fa-eraser"></i> مسح
                         </button>
                     </div>
-
-                    <div id="noteResult" style="margin-top:15px; padding:15px; background:#f8f9fa; border-radius:8px; display:none; border-right:4px solid var(--primary);">
-                        <h4 id="noteResultTitle" style="margin-bottom:10px;"></h4>
-                        <p id="noteResultContent"></p>
-                        <small style="color:#6c757d;" id="noteResultDate"></small>
-                    </div>
-
                     <hr style="margin:20px 0; border-color:#e9ecef;">
-
-                    <!-- فلتر المذكرات -->
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#f8f9fa; padding:15px; border-radius:8px;">
-                        <label style="font-weight:bold;">🔍 فلتر حسب الأسبوع:</label>
-                        <input type="week" id="filterWeek" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                        <label style="font-weight:bold;">عدد:</label>
-                        <select id="filterLimit" style="padding:8px; border:1px solid #ced4da; border-radius:8px;">
-                            <option value="5">5</option>
-                            <option value="10" selected>10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="loadNotesByWeek()">
-                            <i class="fas fa-search"></i> بحث
-                        </button>
-                    </div>
-
-                    <div id="notesListContainer" style="margin-top:15px;"></div>
-
+                    <div id="notesListContainer"></div>
                 </div>
             </div>
         </div>
@@ -678,10 +481,9 @@
     <!-- ===== جافاسكريبت ===== -->
     <script>
         // ============================================================
-        // ===== جميع الدوال مدمجة هنا =====
+        // ===== البيانات =====
         // ============================================================
 
-        // ===== البيانات =====
         let fleetData = [
             { id: 1, name: 'المركب 1', num: 'M-001', len: 11, cat: 'البروق', reg: 'تونس', zone: 'تونس', port: 'حلق الوادي',
                 supp: 'تعزيز 1', stat: 'صالح', break: '-', fDate: '2024-01-15', eDate: '2025-01-15', ref: 'REF-001' },
@@ -693,7 +495,6 @@
         let userData = JSON.parse(localStorage.getItem('marine_users') || '[]');
         let ticketData = JSON.parse(localStorage.getItem('marine_tickets') || '[]');
         let noteData = JSON.parse(localStorage.getItem('marine_notes') || '[]');
-        let trackingUsers = [];
 
         if (userData.length === 0) {
             userData = [
@@ -702,7 +503,10 @@
             localStorage.setItem('marine_users', JSON.stringify(userData));
         }
 
+        // ============================================================
         // ===== دوال عامة =====
+        // ============================================================
+
         function showToast(message) {
             document.querySelectorAll('.toast').forEach(t => t.remove());
             const toast = document.createElement('div');
@@ -728,7 +532,10 @@
             localStorage.setItem('marine_notes', JSON.stringify(noteData));
         }
 
+        // ============================================================
         // ===== شاشة الدخول =====
+        // ============================================================
+
         function doLogin() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
@@ -752,7 +559,10 @@
             document.getElementById('mainApp').style.display = 'none';
         }
 
+        // ============================================================
         // ===== التنقل =====
+        // ============================================================
+
         function showPage(page) {
             document.querySelectorAll('.page-content').forEach(el => {
                 el.classList.remove('active');
@@ -790,8 +600,6 @@
             }
 
             if (page === 'eff') renderEff();
-            if (page === 'map') setTimeout(initGPSMap, 300);
-            if (page === 'track') setTimeout(initTrackMap, 300);
         }
 
         function renderAll() {
@@ -801,11 +609,10 @@
             renderUsers();
             renderTickets();
             renderNotes();
-            renderTracking();
         }
 
         // ============================================================
-        // ===== الأسطول والصيانة =====
+        // ===== الأسطول =====
         // ============================================================
 
         function updateZones() {
@@ -884,24 +691,13 @@
 
         function renderMain() {
             const tbody = document.getElementById('mainBody');
-            const search = document.getElementById('searchMain').value.toLowerCase();
-            const catFilter = document.getElementById('fCatMain').value;
-            const regFilter = document.getElementById('fRegMain').value;
-
-            let filtered = fleetData;
-            if (search) filtered = filtered.filter(f => f.name.toLowerCase().includes(search) || f.num.toLowerCase()
-                .includes(search));
-            if (catFilter !== 'الكل') filtered = filtered.filter(f => f.cat === catFilter);
-            if (regFilter !== 'الكل') filtered = filtered.filter(f => f.reg === regFilter);
-
-            if (filtered.length === 0) {
+            if (fleetData.length === 0) {
                 tbody.innerHTML =
                     `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--gray-500);">لا توجد وسائل بحرية</td></tr>`;
                 return;
             }
-
             let html = '';
-            filtered.forEach(item => {
+            fleetData.forEach(item => {
                 const cls = item.stat === 'صالح' ? 'status-صالح' : item.stat === 'معطب' ? 'status-معطب' :
                     'status-صيانة';
                 html += `<tr>
@@ -976,6 +772,10 @@
             document.getElementById('fRegMain').value = 'الكل';
             renderMain();
         }
+
+        // ============================================================
+        // ===== الصيانة =====
+        // ============================================================
 
         function renderMaint() {
             const tbody = document.getElementById('maintBody');
@@ -1061,11 +861,8 @@
         }
 
         // ============================================================
-        // ===== الجاهزية (مع الرسوم البيانية) =====
+        // ===== الجاهزية =====
         // ============================================================
-
-        let chartInstance = null;
-        let currentChartType = 'doughnut';
 
         function renderEff() {
             const filter = document.getElementById('fRegEff').value;
@@ -1087,8 +884,6 @@
             });
 
             container.innerHTML = html;
-            updateChart(filteredData);
-            updateLatestNote();
         }
 
         function updateStats(data) {
@@ -1259,70 +1054,6 @@
             `;
         }
 
-        function updateChart(data) {
-            const total = data.length;
-            const active = data.filter(f => f.stat === 'صالح').length;
-            const maintenance = data.filter(f => f.stat === 'صيانة').length;
-            const damage = data.filter(f => f.stat === 'معطب').length;
-
-            const ctx = document.getElementById('efficiencyChart');
-            if (!ctx) return;
-
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: currentChartType,
-                data: {
-                    labels: ['✅ صالح للخدمة', '🔧 تحت الصيانة', '❌ معطوب'],
-                    datasets: [{
-                        label: 'حالة الأسطول',
-                        data: [active, maintenance, damage],
-                        backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
-                        borderColor: ['#16a34a', '#d97706', '#dc2626'],
-                        borderWidth: 2,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { family: 'Cairo', size: 13 },
-                                padding: 15,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
-                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
-                                }
-                            }
-                        }
-                    },
-                    animation: {
-                        animateRotate: true,
-                        duration: 1000
-                    }
-                }
-            });
-        }
-
-        function switchChartType(type, btn) {
-            currentChartType = type;
-            document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderEff();
-        }
-
         function refreshEff() { renderEff();
             showToast('🔄 تم تحديث بيانات الجاهزية'); }
 
@@ -1331,23 +1062,8 @@
             setTimeout(() => showToast('✅ تم تصدير التقرير بنجاح'), 1500);
         }
 
-        function updateLatestNote() {
-            const container = document.getElementById('latestNoteContainer');
-            const notes = JSON.parse(localStorage.getItem('marine_notes') || '[]');
-            if (notes.length === 0) {
-                container.style.display = 'none';
-                return;
-            }
-            const latest = notes[0];
-            container.style.display = 'block';
-            document.getElementById('latestNoteDate').textContent = '📅 ' + (latest.date || 'غير محدد');
-            document.getElementById('latestNoteTitle').textContent = latest.title || 'بدون عنوان';
-            document.getElementById('latestNoteContent').textContent = latest.content || 'لا يوجد محتوى';
-            document.getElementById('latestNoteAttachments').innerHTML = '';
-        }
-
         // ============================================================
-        // ===== الدعم (تذاكر) =====
+        // ===== الدعم =====
         // ============================================================
 
         function sendTicket() {
@@ -1393,6 +1109,16 @@
 
         function refreshTickets() { renderTickets();
             showToast('🔄 تم تحديث قائمة التذاكر'); }
+
+        // ============================================================
+        // ===== التتبع =====
+        // ============================================================
+
+        function refreshTrackUsers() { showToast('🔄 تم تحديث تتبع المستخدمين'); }
+
+        function clearTrackUsers() { showToast('🗑️ تم مسح قائمة التتبع'); }
+
+        function startTracking() { showToast('📍 بدء التتبع المباشر'); }
 
         // ============================================================
         // ===== المستخدمين =====
@@ -1532,8 +1258,6 @@
             container.innerHTML = html;
         }
 
-        function loadNotesByWeek() { renderNotes(); }
-
         function saveNote() {
             const title = document.getElementById('noteTitle').value.trim();
             const content = document.getElementById('noteContent').value.trim();
@@ -1543,7 +1267,6 @@
             localStorage.setItem('marine_notes', JSON.stringify(noteData));
             clearNote();
             renderNotes();
-            updateLatestNote();
             showToast('✅ تم حفظ المذكرة بنجاح');
         }
 
@@ -1568,378 +1291,9 @@
                     noteData = noteData.filter(n => n.id !== id);
                     localStorage.setItem('marine_notes', JSON.stringify(noteData));
                     renderNotes();
-                    updateLatestNote();
                     showToast('🗑️ تم حذف المذكرة بنجاح');
                 }
             });
-        }
-
-        function importNoteFile() {
-            const input = document.getElementById('noteFileInput');
-            if (!input.files || !input.files[0]) { showToast('❌ الرجاء اختيار ملف'); return; }
-            const file = input.files[0];
-            const reader = new FileReader();
-            if (file.type.startsWith('image/')) {
-                reader.onload = function(e) {
-                    document.getElementById('noteContent').value = '📷 صورة مرفقة: ' + file.name;
-                    showToast('✅ تم استيراد الصورة بنجاح');
-                };
-                reader.readAsDataURL(file);
-                return;
-            }
-            reader.onload = function(e) {
-                document.getElementById('noteContent').value = e.target.result;
-                showToast('✅ تم استيراد الملف بنجاح');
-            };
-            reader.readAsText(file, 'UTF-8');
-        }
-
-        function exportNotePDF() { showToast('📄 جاري تصدير PDF...');
-            setTimeout(() => showToast('✅ تم تصدير PDF بنجاح'), 1500); }
-
-        function exportNoteWord() { showToast('📄 جاري تصدير Word...');
-            setTimeout(() => showToast('✅ تم تصدير Word بنجاح'), 1500); }
-
-        // ============================================================
-        // ===== تتبع المستخدمين =====
-        // ============================================================
-
-        let trackMap = null;
-
-        function initTrackMap() {
-            const container = document.getElementById('trackUsersMap');
-            if (!container) return;
-            if (trackMap) { trackMap.invalidateSize(); return; }
-
-            trackMap = L.map('trackUsersMap').setView([36.8, 10.2], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(trackMap);
-        }
-
-        function renderTracking() {
-            const grid = document.getElementById('trackingGrid');
-            const tbody = document.getElementById('trackUsersBody');
-
-            if (trackingUsers.length === 0) {
-                grid.innerHTML =
-                    `<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--gray-500);">
-                        <i class="fas fa-users" style="font-size:40px; display:block; margin-bottom:10px;"></i>
-                        لا يوجد مستخدمين متصلين
-                    </div>`;
-                tbody.innerHTML =
-                    `<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--gray-500);">لا يوجد مستخدمين</td></tr>`;
-                document.getElementById('trackUsersCount').textContent = '0 متصل';
-                return;
-            }
-
-            let gridHtml = '';
-            let tableHtml = '';
-
-            trackingUsers.forEach((user, index) => {
-                gridHtml += `
-                    <div class="tracking-card">
-                        <span class="user-avatar">${user.avatar || '👤'}</span>
-                        <div class="user-name">${user.name}</div>
-                        <div class="user-status">
-                            <span class="status-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${user.status === 'نشط' ? '#22c55e' : '#ef4444'};"></span>
-                            ${user.status}
-                        </div>
-                        <div class="user-detail"><i class="fas fa-map-pin"></i> ${user.location || 'غير معروف'}</div>
-                        <div class="user-detail"><i class="fas fa-clock"></i> ${user.lastSeen || 'الآن'}</div>
-                    </div>
-                `;
-
-                tableHtml += `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td><strong>${user.name}</strong></td>
-                        <td>${user.role || 'مستخدم'}</td>
-                        <td>${user.id || 'غير معروف'}</td>
-                        <td>${user.device || 'غير معروف'}</td>
-                        <td>${user.browser || 'غير معروف'}</td>
-                        <td>${user.ip || 'غير معروف'}</td>
-                        <td>${user.location || 'غير معروف'}</td>
-                        <td>${user.lastSeen || 'الآن'}</td>
-                    </tr>
-                `;
-            });
-
-            grid.innerHTML = gridHtml;
-            tbody.innerHTML = tableHtml;
-            document.getElementById('trackUsersCount').textContent = trackingUsers.length + ' متصل';
-        }
-
-        function refreshTrackUsers() { renderTracking();
-            showToast('🔄 تم تحديث تتبع المستخدمين'); }
-
-        function clearTrackUsers() { trackingUsers = [];
-            renderTracking();
-            showToast('🗑️ تم مسح جميع المستخدمين'); }
-
-        function addMyLocation() {
-            if (!navigator.geolocation) { showToast('❌ المتصفح لا يدعم تحديد الموقع'); return; }
-
-            showToast('📍 جاري الحصول على موقعك...');
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    fetch('https://api.ipify.org?format=json')
-                        .then(res => res.json())
-                        .then(data => {
-                            const ip = data.ip;
-                            const ua = navigator.userAgent;
-
-                            let device = 'غير معروف';
-                            let browser = 'غير معروف';
-                            if (ua.includes('Android')) device = 'Android';
-                            else if (ua.includes('iPhone') || ua.includes('iPad')) device = 'iOS';
-                            else if (ua.includes('Windows')) device = 'Windows';
-                            else if (ua.includes('Macintosh')) device = 'Mac';
-                            else if (ua.includes('Linux')) device = 'Linux';
-
-                            if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'Chrome';
-                            else if (ua.includes('Firefox')) browser = 'Firefox';
-                            else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
-                            else if (ua.includes('Edg')) browser = 'Edge';
-                            else if (ua.includes('Opera')) browser = 'Opera';
-
-                            fetch(
-                                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`
-                                    )
-                                .then(res => res.json())
-                                .then(data => {
-                                    const location = data.display_name ||
-                                        `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                                    const user = {
-                                        id: 'user_' + Date.now(),
-                                        name: document.getElementById('username').value || 'مستخدم',
-                                        role: 'مستخدم',
-                                        avatar: '👤',
-                                        status: 'نشط',
-                                        lat: lat,
-                                        lng: lng,
-                                        location: location,
-                                        device: device,
-                                        browser: browser,
-                                        ip: ip,
-                                        lastSeen: 'الآن'
-                                    };
-                                    trackingUsers.push(user);
-                                    renderTracking();
-                                    showToast('✅ تم إضافة موقعك: ' + location);
-                                })
-                                .catch(() => {
-                                    const location = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                                    const user = {
-                                        id: 'user_' + Date.now(),
-                                        name: document.getElementById('username').value || 'مستخدم',
-                                        role: 'مستخدم',
-                                        avatar: '👤',
-                                        status: 'نشط',
-                                        lat: lat,
-                                        lng: lng,
-                                        location: location,
-                                        device: device,
-                                        browser: browser,
-                                        ip: ip,
-                                        lastSeen: 'الآن'
-                                    };
-                                    trackingUsers.push(user);
-                                    renderTracking();
-                                    showToast('✅ تم إضافة موقعك');
-                                });
-                        })
-                        .catch(() => {
-                            const location = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-                            const user = {
-                                id: 'user_' + Date.now(),
-                                name: document.getElementById('username').value || 'مستخدم',
-                                role: 'مستخدم',
-                                avatar: '👤',
-                                status: 'نشط',
-                                lat: lat,
-                                lng: lng,
-                                location: location,
-                                device: 'غير معروف',
-                                browser: 'غير معروف',
-                                ip: 'غير معروف',
-                                lastSeen: 'الآن'
-                            };
-                            trackingUsers.push(user);
-                            renderTracking();
-                            showToast('✅ تم إضافة موقعك');
-                        });
-                },
-                function(error) {
-                    showToast('❌ خطأ في تحديد الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-        }
-
-        // ============================================================
-        // ===== الخريطة (GPS) =====
-        // ============================================================
-
-        let gpsMap = null;
-        let gpsMarker = null;
-        let watchId = null;
-
-        function initGPSMap() {
-            const container = document.getElementById('gpsMap');
-            if (!container) return;
-            if (gpsMap) { gpsMap.invalidateSize(); return; }
-
-            gpsMap = L.map('gpsMap').setView([36.8, 10.2], 8);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap'
-            }).addTo(gpsMap);
-        }
-
-        function startTracking() {
-            if (!navigator.geolocation) { showToast('❌ المتصفح لا يدعم تحديد الموقع'); return; }
-
-            document.getElementById('gpsDot').className = 'gps-status gps-active';
-            document.getElementById('gpsStatusText').textContent = 'نشط';
-            document.getElementById('startTrackingBtn').style.display = 'none';
-            document.getElementById('stopTrackingBtn').style.display = 'inline-flex';
-            document.getElementById('mapStatus').innerHTML = '<i class="fas fa-sync fa-spin"></i> جاري التتبع...';
-
-            initGPSMap();
-
-            watchId = navigator.geolocation.watchPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-
-                    if (gpsMap) {
-                        gpsMap.setView([lat, lng], 15);
-
-                        if (gpsMarker) {
-                            gpsMarker.setLatLng([lat, lng]);
-                        } else {
-                            gpsMarker = L.marker([lat, lng], {
-                                icon: L.divIcon({
-                                    className: 'custom-marker',
-                                    html: '',
-                                    iconSize: [30, 30],
-                                    iconAnchor: [15, 30]
-                                })
-                            }).addTo(gpsMap);
-
-                            gpsMarker.bindPopup(`
-                                <strong>موقعك الحالي</strong><br />
-                                ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                            `);
-                        }
-
-                        const accuracy = position.coords.accuracy;
-                        if (window.accuracyCircle) {
-                            gpsMap.removeLayer(window.accuracyCircle);
-                        }
-                        window.accuracyCircle = L.circle([lat, lng], {
-                            radius: accuracy,
-                            color: '#2563eb',
-                            fillColor: '#3b82f6',
-                            fillOpacity: 0.15,
-                            weight: 2
-                        }).addTo(gpsMap);
-
-                        document.getElementById('mapStatus').innerHTML = `
-                            <i class="fas fa-check-circle" style="color:#22c55e;"></i>
-                            التتبع نشط - الموقع: ${lat.toFixed(6)}, ${lng.toFixed(6)}
-                            <span style="color:var(--gray-500); font-size:12px;">(الدقة: ${Math.round(accuracy)}م)</span>
-                        `;
-                    }
-                },
-                function(error) {
-                    showToast('❌ خطأ في التتبع: ' + error.message);
-                    stopTracking();
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 5000
-                }
-            );
-
-            showToast('📍 بدء التتبع المباشر');
-        }
-
-        function stopTracking() {
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
-            document.getElementById('gpsDot').className = 'gps-status gps-inactive';
-            document.getElementById('gpsStatusText').textContent = 'غير نشط';
-            document.getElementById('startTrackingBtn').style.display = 'inline-flex';
-            document.getElementById('stopTrackingBtn').style.display = 'none';
-            document.getElementById('mapStatus').innerHTML = '<i class="fas fa-info-circle"></i> تم إيقاف التتبع';
-
-            if (window.accuracyCircle && gpsMap) {
-                gpsMap.removeLayer(window.accuracyCircle);
-                window.accuracyCircle = null;
-            }
-
-            showToast('⏹️ تم إيقاف التتبع');
-        }
-
-        function loadLocations() {
-            if (gpsMap) { gpsMap.invalidateSize(); }
-            showToast('🗺️ تم تحديث الخريطة');
-        }
-
-        function centerMapOnUser() {
-            if (!navigator.geolocation) { showToast('❌ المتصفح لا يدعم تحديد الموقع'); return; }
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    if (gpsMap) {
-                        gpsMap.setView([lat, lng], 15);
-                        showToast(`📍 تم التمركز على موقعك: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-                    } else {
-                        initGPSMap();
-                        setTimeout(() => centerMapOnUser(), 500);
-                    }
-                },
-                function(error) {
-                    showToast('❌ لا يمكن الوصول إلى الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                }
-            );
-        }
-
-        function requestLocationPermission() {
-            if (!navigator.geolocation) { showToast('❌ المتصفح لا يدعم تحديد الموقع'); return; }
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    showToast('✅ تم الحصول على إذن الموقع: ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-                    if (gpsMap) {
-                        gpsMap.setView([lat, lng], 15);
-                    }
-                },
-                function(error) {
-                    showToast('❌ تم رفض إذن الموقع: ' + error.message);
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                }
-            );
         }
 
         // ============================================================
@@ -1989,8 +1343,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             renderAll();
-            initGPSMap();
-            initTrackMap();
         });
     </script>
 
