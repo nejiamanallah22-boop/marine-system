@@ -1,281 +1,296 @@
-// ==================== دوال المراكب ====================
+// ============================================================
+// ===== الأسطول والصيانة =====
+// ============================================================
 
-async function addItem() {
-    if(!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
-    const name = document.getElementById('iName').value.trim();
-    if(!name) return showToast("الاسم مطلوب", true);
-    
-    const stat = document.getElementById('iStat').value;
-    const fDate = document.getElementById('iDate').value;
-    
-    if((stat === 'معطب' || stat === 'صيانة') && !fDate) {
-        showToast("تاريخ العطب إلزامي للمراكب المعطوبة أو التي تحت الصيانة!", true);
-        return;
-    }
-    
-    const newItem = {
-        name: name,
-        num: document.getElementById('iNum').value,
-        len: parseFloat(document.getElementById('iLen').value) || 0,
-        reg: document.getElementById('iReg').value,
-        zone: document.getElementById('iZone').value,
-        port: document.getElementById('iPort').value,
-        supp: document.getElementById('iSupp').value,
-        stat: stat,
-        break: document.getElementById('iBreak').value,
-        fDate: fDate,
-        eDate: document.getElementById('iEnd').value,
-        ref: document.getElementById('iRef').value,
-        cat: getCat(document.getElementById('iLen').value)
-    };
-    
+let fleetData = [];
+let maintData = [];
+
+async function loadVessels() {
     try {
-        await saveVessel(newItem);
-        await logActivity("إضافة مركب", `قام بإضافة مركب "${name}" رقم ${newItem.num || 'غير محدد'} في ${getCurrentTime()}`);
-        
-        ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) el.value = "";
-        });
-        document.getElementById('iReg').value = "";
-        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-        
-        await renderMain();
-        await renderMaint();
-        await renderEff();
-        showToast(`✅ تم حفظ المركب بنجاح`);
-    } catch(error) {
-        showToast("خطأ في حفظ المركب: " + error.message, true);
-    }
-}
-
-async function editItem(id, name) {
-    if(!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
-    let data = await loadVessels();
-    let item = data.find(x => (x._id || x.id).toString() === id.toString());
-    if(item) {
-        document.getElementById('iName').value = item.name;
-        document.getElementById('iNum').value = item.num || '';
-        document.getElementById('iLen').value = item.len || '';
-        document.getElementById('iReg').value = item.reg || '';
-        updateZones();
-        setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
-        document.getElementById('iPort').value = item.port || '';
-        document.getElementById('iSupp').value = item.supp || '';
-        document.getElementById('iStat').value = item.stat;
-        document.getElementById('iBreak').value = item.break || '';
-        document.getElementById('iDate').value = item.fDate || '';
-        document.getElementById('iEnd').value = item.eDate || '';
-        document.getElementById('iRef').value = item.ref || '';
-        window.scrollTo(0,0);
-        
-        const oldName = item.name;
-        const saveBtn = document.querySelector('#inputArea .btn-green');
-        const originalClick = saveBtn.onclick;
-        saveBtn.onclick = async () => {
-            const updatedItem = {
-                name: document.getElementById('iName').value.trim(),
-                num: document.getElementById('iNum').value,
-                len: parseFloat(document.getElementById('iLen').value) || 0,
-                reg: document.getElementById('iReg').value,
-                zone: document.getElementById('iZone').value,
-                port: document.getElementById('iPort').value,
-                supp: document.getElementById('iSupp').value,
-                stat: document.getElementById('iStat').value,
-                break: document.getElementById('iBreak').value,
-                fDate: document.getElementById('iDate').value,
-                eDate: document.getElementById('iEnd').value,
-                ref: document.getElementById('iRef').value,
-                cat: getCat(document.getElementById('iLen').value)
-            };
-            try {
-                await updateVessel(item._id || item.id, updatedItem);
-                await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}" إلى "${updatedItem.name}"`);
-                await renderMain();
-                await renderMaint();
-                await renderEff();
-                showToast("✅ تم تحديث المركب بنجاح");
-                saveBtn.onclick = originalClick;
-                ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if(el) el.value = "";
-                });
-                document.getElementById('iReg').value = "";
-                document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-            } catch(error) {
-                showToast("خطأ في التحديث: " + error.message, true);
-            }
-        };
-        showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
-    }
-}
-
-async function delItem(id, name) {
-    if(!canDelete()) { showToast("ليس لديك صلاحية للحذف!", true); return; }
-    if(confirm(`هل أنت متأكد من حذف المركب "${name}"؟`)) {
-        try {
-            await deleteVessel(id);
-            await logActivity("حذف مركب", `قام بحذف مركب "${name}"`);
-            await renderMain();
-            await renderMaint();
-            await renderEff();
-            showToast("✅ تم حذف المركب بنجاح");
-        } catch(error) {
-            showToast("خطأ في الحذف: " + error.message, true);
-        }
+        fleetData = await getVessels();
+        maintData = fleetData.filter(f => f.stat === 'صيانة' || f.stat === 'معطب');
+        renderMain();
+        renderMaint();
+        renderEff();
+        updateStats(fleetData);
+    } catch (error) {
+        showToast('❌ خطأ في تحميل الأسطول: ' + error.message, 'error');
     }
 }
 
 function updateZones() {
     const reg = document.getElementById('iReg').value;
-    const zoneSel = document.getElementById('iZone');
-    zoneSel.innerHTML = '<option value="">المنطقة</option>';
-    if(ZONES_DATA[reg]) {
-        ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`);
+    const zoneSelect = document.getElementById('iZone');
+    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    
+    const zones = {
+        'تونس': ['تونس', 'بنزرت', 'نابل'],
+        'المنستير': ['المنستير', 'المهدية'],
+        'صفاقس': ['صفاقس', 'قابس'],
+        'جرجيس': ['جرجيس', 'مدنين'],
+        'المجمع الأمني بقبيبة': ['قبيبة', 'تونس']
+    };
+    
+    if (zones[reg]) {
+        zones[reg].forEach(z => {
+            const opt = document.createElement('option');
+            opt.value = z;
+            opt.textContent = z;
+            zoneSelect.appendChild(opt);
+        });
     }
 }
 
-async function renderMain() {
+async function addItem() {
+    const name = document.getElementById('iName').value.trim();
+    const num = document.getElementById('iNum').value.trim();
+    
+    if (!name || !num) {
+        showToast('❌ الرجاء إدخال اسم المركب والرقم', 'warning');
+        return;
+    }
+    
+    const len = parseFloat(document.getElementById('iLen').value) || 0;
+    let cat = 'زوارق مزدوجة';
+    if (len === 11) cat = 'البروق';
+    else if (len >= 8 && len <= 12) cat = 'صقور';
+    else if (len > 12 && len <= 25) cat = 'خوافر';
+    else if (len > 30) cat = 'طوافات';
+    
+    const data = {
+        name,
+        num,
+        len,
+        cat,
+        reg: document.getElementById('iReg').value || 'غير محدد',
+        zone: document.getElementById('iZone').value || 'غير محدد',
+        port: document.getElementById('iPort').value.trim() || 'غير محدد',
+        supp: document.getElementById('iSupp').value.trim() || '-',
+        stat: document.getElementById('iStat').value,
+        break: document.getElementById('iBreak').value.trim() || '-',
+        fDate: document.getElementById('iDate').value || new Date().toISOString().split('T')[0],
+        eDate: document.getElementById('iEnd').value || '-',
+        ref: document.getElementById('iRef').value.trim() || '-'
+    };
+    
     try {
-        console.log('🔄 جاري تحميل بيانات المراكب...');
-        let data = await loadVessels();
-        console.log(`✅ تم تحميل ${data.length} مركب`);
-        
-        const fCat = document.getElementById('fCatMain').value;
-        const fReg = document.getElementById('fRegMain').value;
-        const searchText = document.getElementById('searchMain').value.toLowerCase();
-        
-        let filtered = data.filter(x => {
-            let matchCat = (fCat === "الكل" || (x.cat && x.cat === fCat));
-            let matchReg = (fReg === "الكل" || (x.reg && x.reg === fReg));
-            let matchSearch = !searchText || 
-                (x.name && x.name.toLowerCase().includes(searchText)) ||
-                (x.num && x.num.toLowerCase().includes(searchText)) ||
-                (x.reg && x.reg.toLowerCase().includes(searchText)) ||
-                (x.zone && x.zone.toLowerCase().includes(searchText)) ||
-                (x.port && x.port.toLowerCase().includes(searchText));
-            return matchCat && matchReg && matchSearch;
-        });
-        
-        let html = "";
-        const isAdmin = currentUser?.role === "مسؤول";
-        
-        if(filtered.length === 0) {
-            html = '<tr><td colspan="13" style="text-align:center;">⚠️ لا توجد مراكب مسجلة</td></tr>';
-        } else {
-            filtered.forEach(x => {
-                let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-                html += `<tr>
-                    <td><b>${x.name}</b></td>
-                    <td>${x.num || '-'}</td>
-                    <td>${x.len || '-'}</td>
-                    <td>${x.cat || '-'}</td>
-                    <td>${regionDisplay}</td>
-                    <td>${x.zone || '-'}</td>
-                    <td>${x.port || '-'}</td>
-                    <td>${x.supp || '-'}</td>
-                    <td class="status-${x.stat}">${x.stat}</td>
-                    <td>${x.break || '-'}</td>
-                    <td>${formatDate(x.fDate)}</td>
-                    <td>${formatDate(x.eDate)}</td>
-                    <td>
-                        ${canEdit() ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                        ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
-                    </td>
-                </tr>`;
-            });
+        await addVessel(data);
+        await loadVessels();
+        clearForm();
+        showToast('✅ تم إضافة ' + name, 'success');
+    } catch (error) {
+        showToast('❌ ' + error.message, 'error');
+    }
+}
+
+function clearForm() {
+    ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iRef'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+    document.getElementById('iReg').value = '';
+    document.getElementById('iZone').innerHTML = '<option value="">📍 المنطقة</option>';
+    document.getElementById('iStat').value = 'صالح';
+    document.getElementById('iDate').value = '';
+    document.getElementById('iEnd').value = '';
+}
+
+function renderMain() {
+    const tbody = document.getElementById('mainBody');
+    const search = document.getElementById('searchMain').value.toLowerCase();
+    const catFilter = document.getElementById('fCatMain').value;
+    const regFilter = document.getElementById('fRegMain').value;
+    
+    let filtered = fleetData;
+    if (search) filtered = filtered.filter(f => f.name?.toLowerCase().includes(search) || f.num?.toLowerCase().includes(search));
+    if (catFilter !== 'الكل') filtered = filtered.filter(f => f.cat === catFilter);
+    if (regFilter !== 'الكل') filtered = filtered.filter(f => f.reg === regFilter);
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px; color:var(--gray-500);">لا توجد وسائل بحرية</td></tr>`;
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(item => {
+        const cls = item.stat === 'صالح' ? 'status-صالح' : item.stat === 'معطب' ? 'status-معطب' : 'status-صيانة';
+        html += `
+            <tr>
+                <td><strong>${item.name || '-'}</strong></td>
+                <td>${item.num || '-'}</td>
+                <td>${item.len || 0} م</td>
+                <td>${item.cat || '-'}</td>
+                <td>${item.reg || '-'}</td>
+                <td>${item.zone || '-'}</td>
+                <td>${item.port || '-'}</td>
+                <td>${item.supp || '-'}</td>
+                <td><span class="${cls}">${item.stat || '-'}</span></td>
+                <td>${item.break || '-'}</td>
+                <td>${item.fDate || '-'}</td>
+                <td>${item.eDate || '-'}</td>
+                <td>
+                    <div class="table-actions-group">
+                        <button class="btn btn-sm btn-primary" onclick="editItem('${item._id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteItem('${item._id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+async function editItem(id) {
+    const item = fleetData.find(f => f._id === id);
+    if (!item) return;
+    
+    document.getElementById('iName').value = item.name || '';
+    document.getElementById('iNum').value = item.num || '';
+    document.getElementById('iLen').value = item.len || 0;
+    document.getElementById('iReg').value = item.reg || '';
+    updateZones();
+    setTimeout(() => document.getElementById('iZone').value = item.zone || '', 100);
+    document.getElementById('iPort').value = item.port || '';
+    document.getElementById('iSupp').value = item.supp || '';
+    document.getElementById('iStat').value = item.stat || 'صالح';
+    document.getElementById('iBreak').value = item.break || '';
+    document.getElementById('iDate').value = item.fDate || '';
+    document.getElementById('iEnd').value = item.eDate || '';
+    document.getElementById('iRef').value = item.ref || '';
+    
+    try {
+        await deleteVessel(id);
+        await loadVessels();
+        showToast('✏️ جارٍ تعديل: ' + item.name, 'info');
+    } catch (error) {
+        showToast('❌ ' + error.message, 'error');
+    }
+}
+
+async function deleteItem(id) {
+    const result = await Swal.fire({
+        title: '⚠️ تأكيد الحذف',
+        text: 'هل أنت متأكد من حذف هذه الوسيلة؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#ef4444'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            await deleteVessel(id);
+            await loadVessels();
+            showToast('🗑️ تم الحذف بنجاح', 'success');
+        } catch (error) {
+            showToast('❌ ' + error.message, 'error');
         }
-        document.getElementById('mainBody').innerHTML = html;
-        console.log('✅ تم عرض البيانات في الجدول');
-    } catch(error) {
-        console.error('خطأ في renderMain:', error);
-        document.getElementById('mainBody').innerHTML = '<tr><td colspan="13">❌ خطأ في تحميل البيانات</td></tr>';
     }
 }
 
 function clearMainSearch() {
     document.getElementById('searchMain').value = '';
+    document.getElementById('fCatMain').value = 'الكل';
+    document.getElementById('fRegMain').value = 'الكل';
     renderMain();
 }
 
-async function renderMaint() {
-    try {
-        console.log('🔄 جاري تحميل بيانات الصيانة...');
-        let data = await loadVessels();
-        const fReg = document.getElementById('fRegMaint').value;
-        const dStart = document.getElementById('fDateStart').value;
-        const dEnd = document.getElementById('fDateEnd').value;
-        const searchText = document.getElementById('searchMaint').value.toLowerCase();
-        
-        let filtered = data.filter(x => x.stat === 'معطب' || x.stat === 'صيانة');
-        
-        if(fReg !== "الكل") filtered = filtered.filter(x => x.reg === fReg);
-        
-        if(dStart || dEnd) {
-            const start = dStart ? new Date(dStart) : null;
-            const end = dEnd ? new Date(dEnd) : null;
-            filtered = filtered.filter(x => {
-                if(!x.fDate) return false;
-                const itemDate = new Date(x.fDate);
-                if(start && itemDate < start) return false;
-                if(end && itemDate > end) return false;
-                return true;
-            });
+function renderMaint() {
+    const tbody = document.getElementById('maintBody');
+    const search = document.getElementById('searchMaint').value.toLowerCase();
+    const regFilter = document.getElementById('fRegMaint').value;
+    const dateStart = document.getElementById('fDateStart').value;
+    const dateEnd = document.getElementById('fDateEnd').value;
+    
+    let filtered = maintData;
+    if (search) filtered = filtered.filter(m => m.name?.toLowerCase().includes(search) || m.num?.toLowerCase().includes(search));
+    if (regFilter !== 'الكل') filtered = filtered.filter(m => m.reg === regFilter);
+    if (dateStart) filtered = filtered.filter(m => m.fDate >= dateStart);
+    if (dateEnd) filtered = filtered.filter(m => m.fDate <= dateEnd);
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--gray-500);">لا توجد سجلات صيانة</td></tr>`;
+        return;
+    }
+    
+    let html = '';
+    filtered.forEach(item => {
+        const cls = item.stat === 'صالح' ? 'status-صالح' : item.stat === 'معطب' ? 'status-معطب' : 'status-صيانة';
+        html += `
+            <tr>
+                <td><strong>${item.name || '-'}</strong></td>
+                <td>${item.num || '-'}</td>
+                <td>${item.reg || '-'}</td>
+                <td>${item.zone || '-'}</td>
+                <td><span class="${cls}">${item.stat || '-'}</span></td>
+                <td>${item.break || '-'}</td>
+                <td>${item.fDate || '-'}</td>
+                <td>${item.eDate || '-'}</td>
+                <td>${item.ref || '-'}</td>
+                <td>
+                    <div class="table-actions-group">
+                        <button class="btn btn-sm btn-success" onclick="completeMaint('${item._id}')"><i class="fas fa-check"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMaint('${item._id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+async function completeMaint(id) {
+    const item = maintData.find(m => m._id === id);
+    if (!item) return;
+    
+    const result = await Swal.fire({
+        title: '✅ إنهاء الصيانة',
+        text: `هل تريد إنهاء صيانة "${item.name}"؟`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، إنهاء',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#22c55e'
+    });
+    
+    if (result.isConfirmed) {
+        try {
+            const fleetItem = fleetData.find(f => f.num === item.num);
+            if (fleetItem) {
+                fleetItem.stat = 'صالح';
+                fleetItem.break = '-';
+                await updateVessel(fleetItem._id, fleetItem);
+            }
+            await loadVessels();
+            showToast(`✅ تم إنهاء صيانة ${item.name}`, 'success');
+        } catch (error) {
+            showToast('❌ ' + error.message, 'error');
         }
-        
-        if(searchText) {
-            filtered = filtered.filter(x => 
-                (x.name && x.name.toLowerCase().includes(searchText)) ||
-                (x.break && x.break.toLowerCase().includes(searchText)) ||
-                (x.ref && x.ref.toLowerCase().includes(searchText)) ||
-                (x.num && x.num.toLowerCase().includes(searchText))
-            );
-        }
-        
-        filtered.sort((a, b) => {
-            if(!a.fDate) return 1;
-            if(!b.fDate) return -1;
-            return new Date(b.fDate) - new Date(a.fDate);
-        });
-        
-        let html = "";
-        const isAdmin = currentUser?.role === "مسؤول";
-        
-        if(filtered.length === 0) {
-            html = '<tr><td colspan="10" style="text-align:center;">⚠️ لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>';
-        } else {
-            filtered.forEach(x => {
-                let regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-                html += `<tr>
-                    <td><b>${x.name}</b></td>
-                    <td>${x.num || '-'}</td>
-                    <td>${regionDisplay}</td>
-                    <td>${x.zone || '-'}</td>
-                    <td class="status-${x.stat}">${x.stat}</td>
-                    <td class="damage-column" style="text-align:right;">${x.break || '-'}</td>
-                    <td>${formatDate(x.fDate)}</td>
-                    <td>${formatDate(x.eDate)}</td>
-                    <td>${x.ref || '-'}</td>
-                    <td>
-                        ${isAdmin ? `<button class="btn-sm btn-orange" onclick="editItem('${x._id || x.id}', '${x.name}')">تعديل</button>` : ''}
-                        ${isAdmin ? `<button class="btn-sm btn-red" onclick="delItem('${x._id || x.id}', '${x.name}')">حذف</button>` : ''}
-                    </td>
-                </tr>`;
-            });
-        }
-        document.getElementById('maintBody').innerHTML = html;
-        console.log('✅ تم عرض بيانات الصيانة');
-    } catch(error) {
-        console.error('خطأ في renderMaint:', error);
-        document.getElementById('maintBody').innerHTML = '<tr><td colspan="10">❌ خطأ في تحميل البيانات</td></tr>';
+    }
+}
+
+async function deleteMaint(id) {
+    const result = await Swal.fire({
+        title: '⚠️ تأكيد الحذف',
+        text: 'هل أنت متأكد من حذف سجل الصيانة؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، احذف',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#ef4444'
+    });
+    
+    if (result.isConfirmed) {
+        maintData = maintData.filter(m => m._id !== id);
+        renderMaint();
+        showToast('🗑️ تم الحذف بنجاح', 'success');
     }
 }
 
 function resetMaintFilters() {
-    document.getElementById('fRegMaint').value = "الكل";
-    document.getElementById('fDateStart').value = "";
-    document.getElementById('fDateEnd').value = "";
-    document.getElementById('searchMaint').value = "";
+    document.getElementById('searchMaint').value = '';
+    document.getElementById('fRegMaint').value = 'الكل';
+    document.getElementById('fDateStart').value = '';
+    document.getElementById('fDateEnd').value = '';
     renderMaint();
-    showToast("✅ تم إعادة ضبط الفلاتر");
 }
