@@ -35,7 +35,6 @@
     --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== إعدادات RTL ===== */
 * {
     direction: rtl !important;
     box-sizing: border-box;
@@ -51,9 +50,7 @@ body {
     padding: 16px;
 }
 
-/* ============================================================
-   ===== شاشة الدخول =====
-   ============================================================ */
+/* ===== شاشة الدخول ===== */
 #loginOverlay {
     position: fixed;
     top: 0;
@@ -161,9 +158,7 @@ body {
     border-radius: var(--radius-sm);
 }
 
-/* ============================================================
-   ===== الحاوية الرئيسية =====
-   ============================================================ */
+/* ===== الحاوية الرئيسية ===== */
 .container {
     max-width: 1500px;
     margin: 0 auto;
@@ -174,9 +169,7 @@ body {
     display: none;
 }
 
-/* ============================================================
-   ===== الهيدر =====
-   ============================================================ */
+/* ===== الهيدر ===== */
 header {
     background: #fff;
     padding: 18px 20px;
@@ -231,9 +224,7 @@ header .header-content {
     color: var(--gray-600);
 }
 
-/* ============================================================
-   ===== الأزرار =====
-   ============================================================ */
+/* ===== الأزرار ===== */
 .btn {
     padding: 8px 18px;
     border: none;
@@ -330,9 +321,7 @@ header .header-content {
     border-color: rgba(255,255,255,0.4);
 }
 
-/* ============================================================
-   ===== شريط التنقل =====
-   ============================================================ */
+/* ===== شريط التنقل ===== */
 .nav {
     display: flex;
     gap: 6px;
@@ -346,9 +335,7 @@ header .header-content {
     flex: 0 0 auto;
 }
 
-/* ============================================================
-   ===== فلتر =====
-   ============================================================ */
+/* ===== فلتر ===== */
 .filter-bar {
     background: var(--gray-50);
     padding: 10px 16px;
@@ -396,9 +383,7 @@ header .header-content {
     border-radius: 30px;
 }
 
-/* ============================================================
-   ===== نموذج الإدخال =====
-   ============================================================ */
+/* ===== نموذج الإدخال ===== */
 .input-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -449,9 +434,7 @@ header .header-content {
     background: var(--info-light);
 }
 
-/* ============================================================
-   ===== الجدول =====
-   ============================================================ */
+/* ===== الجدول ===== */
 .region-table-card {
     background: #fff;
     border-radius: var(--radius);
@@ -478,7 +461,6 @@ header .header-content {
     -webkit-overflow-scrolling: touch;
 }
 
-/* ===== الجدول ===== */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -524,7 +506,6 @@ table tbody tr:last-child td {
     border-bottom: none;
 }
 
-/* ===== عمود الإجراءات ===== */
 table td:last-child {
     min-width: 130px !important;
     white-space: nowrap !important;
@@ -540,7 +521,6 @@ table tbody tr:hover td:last-child {
     background: var(--gray-50) !important;
 }
 
-/* ===== أزرار الجدول ===== */
 .table-actions-group {
     display: flex;
     align-items: center;
@@ -609,9 +589,7 @@ table td .btn-sm.btn-success:hover {
     color: #fff !important;
 }
 
-/* ============================================================
-   ===== الحالات =====
-   ============================================================ */
+/* ===== الحالات ===== */
 .status-صالح {
     background: var(--success-light) !important;
     color: #15803d !important;
@@ -642,9 +620,7 @@ table td .btn-sm.btn-success:hover {
     display: inline-block !important;
 }
 
-/* ============================================================
-   ===== الإحصائيات =====
-   ============================================================ */
+/* ===== الإحصائيات ===== */
 .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
@@ -680,79 +656,7 @@ table td .btn-sm.btn-success:hover {
     margin-top: 2px;
 }
 
-/* ============================================================
-   ===== Note Verbale =====
-   ============================================================ */
-#pageNote .region-table-card {
-    padding: 20px;
-}
-
-#pageNote .region-table-card input,
-#pageNote .region-table-card textarea,
-#pageNote .region-table-card select {
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
-    font-family: var(--font);
-    font-size: 13px;
-    transition: var(--transition);
-    width: 100%;
-    background: #fff;
-}
-
-#pageNote .region-table-card input:focus,
-#pageNote .region-table-card textarea:focus,
-#pageNote .region-table-card select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
-}
-
-#pageNote .region-table-card textarea {
-    min-height: 120px;
-    resize: vertical;
-}
-
-/* ===== معاينة الصورة في Note ===== */
-#notePreviewContainer {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    padding: 10px;
-    background: var(--gray-50);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--gray-200);
-}
-
-#notePreviewContainer img {
-    max-width: 120px;
-    max-height: 80px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--gray-200);
-    object-fit: cover;
-}
-
-.remove-note-image {
-    background: var(--danger);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: var(--transition);
-}
-
-.remove-note-image:hover {
-    transform: scale(1.1);
-}
-
-/* ===== قائمة المذكرات ===== */
+/* ===== Note Verbale ===== */
 .note-item {
     background: #fff;
     border: 1px solid var(--gray-200);
@@ -810,9 +714,7 @@ table td .btn-sm.btn-success:hover {
     flex-wrap: wrap;
 }
 
-/* ============================================================
-   ===== الخريطة =====
-   ============================================================ */
+/* ===== الخريطة ===== */
 .map-container {
     height: 450px !important;
     width: 100% !important;
@@ -821,7 +723,8 @@ table td .btn-sm.btn-success:hover {
     border: 1px solid var(--gray-200) !important;
 }
 
-#trackMap {
+#trackUsersMap,
+#gpsMap {
     height: 100% !important;
     width: 100% !important;
 }
@@ -834,6 +737,39 @@ table td .btn-sm.btn-success:hover {
 
 .leaflet-control-zoom {
     z-index: 100 !important;
+}
+
+.custom-marker {
+    background: var(--primary);
+    width: 30px;
+    height: 30px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border: 3px solid #fff;
+    box-shadow: var(--shadow-md);
+}
+
+.custom-marker::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+}
+
+.custom-marker-active {
+    background: var(--success);
+    animation: markerPulse 2s infinite;
+}
+
+@keyframes markerPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
 /* ===== حالة GPS ===== */
@@ -860,9 +796,7 @@ table td .btn-sm.btn-success:hover {
     100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
-/* ============================================================
-   ===== النوافذ المنبثقة =====
-   ============================================================ */
+/* ===== النوافذ المنبثقة ===== */
 .modal {
     display: none;
     position: fixed;
@@ -924,9 +858,7 @@ table td .btn-sm.btn-success:hover {
     flex: 1;
 }
 
-/* ============================================================
-   ===== الإشعارات =====
-   ============================================================ */
+/* ===== الإشعارات ===== */
 .toast {
     position: fixed;
     bottom: 30px;
@@ -950,9 +882,7 @@ table td .btn-sm.btn-success:hover {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ============================================================
-   ===== أزرار التمرير =====
-   ============================================================ */
+/* ===== أزرار التمرير ===== */
 .scroll-buttons {
     position: fixed;
     bottom: 30px;
@@ -984,51 +914,96 @@ table td .btn-sm.btn-success:hover {
     box-shadow: var(--shadow-lg);
 }
 
-/* ============================================================
-   ===== أدوات مساعدة =====
-   ============================================================ */
-.hidden {
-    display: none !important;
-}
-
-.text-center {
+/* ===== تتبع المستخدمين ===== */
+.tracking-card {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 16px;
     text-align: center;
+    transition: var(--transition);
 }
 
-.mt-10 {
-    margin-top: 10px;
+.tracking-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 }
 
-.mb-10 {
-    margin-bottom: 10px;
+.tracking-card .user-avatar {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 4px;
 }
 
-.gap-10 {
-    gap: 10px;
+.tracking-card .user-name {
+    font-weight: 700;
+    font-size: 15px;
 }
 
-.flex-wrap {
+.tracking-card .user-status {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+.tracking-card .user-detail {
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-top: 2px;
+}
+
+.tracking-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 4px;
+}
+
+/* ===== الرسوم البيانية ===== */
+.chart-switch {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0;
     flex-wrap: wrap;
 }
 
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.chart-switch button {
+    padding: 8px 20px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: var(--font);
 }
 
-/* ============================================================
-   ===== التوافق =====
-   ============================================================ */
-@media (max-width: 992px) {
-    body { padding: 12px; }
-    .container { padding: 16px; }
-    .input-grid { grid-template-columns: 1fr 1fr; }
-    .input-grid textarea { grid-column: span 1; }
-    .stats-cards { grid-template-columns: repeat(2, 1fr); }
-    .nav .btn { font-size: 12px; padding: 6px 12px; }
+.chart-switch button.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
 }
 
+.chart-container {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1px solid var(--gray-200);
+    margin-bottom: 20px;
+}
+
+.chart-container canvas {
+    max-height: 300px;
+}
+
+/* ===== التوافق ===== */
 @media (max-width: 768px) {
     body { padding: 8px; }
     .container { padding: 12px; border-radius: var(--radius-sm); }
@@ -1044,14 +1019,12 @@ table td .btn-sm.btn-success:hover {
     table { font-size: 12px; }
     table th, table td { padding: 6px 4px; font-size: 11px; }
     table td:last-child { min-width: 100px !important; }
-    table td .btn-sm { font-size: 9px !important; padding: 2px 6px !important; min-height: 20px !important; min-width: 20px !important; }
     .map-container { height: 300px !important; }
-    .scroll-buttons { bottom: 15px; left: 15px; }
-    .scroll-btn { width: 34px; height: 34px; font-size: 14px; }
     .login-box { padding: 30px 20px; }
     .login-box .logo { font-size: 40px; }
     .login-box h2 { font-size: 20px; }
     .modal-content { padding: 20px; }
+    .tracking-grid { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1066,13 +1039,11 @@ table td .btn-sm.btn-success:hover {
     .btn { font-size: 12px; padding: 6px 12px; }
     .nav .btn { font-size: 10px; padding: 4px 6px; min-width: 50px; }
     table td:last-child { min-width: 80px !important; }
-    table td .btn-sm { font-size: 8px !important; padding: 1px 4px !important; min-height: 18px !important; min-width: 18px !important; }
     .map-container { height: 250px !important; }
+    .tracking-grid { grid-template-columns: 1fr 1fr; }
 }
 
-/* ============================================================
-   ===== الطباعة =====
-   ============================================================ */
+/* ===== الطباعة ===== */
 @media print {
     .nav, .filter-bar, .btn, .btn-sm, .scroll-buttons,
     .map-container, #inputArea, .chart-switch,
