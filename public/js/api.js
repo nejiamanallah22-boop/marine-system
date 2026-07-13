@@ -1,64 +1,148 @@
-// ==================== دوال الاتصال بالسيرفر ====================
+// ============================================================
+// ===== دوال API =====
+// ============================================================
 
-let currentUser = null;
-let selectedUserId = null;
-let isEditing = false;
+const API_BASE = '/api';
 
-async function apiCall(url, method = 'GET', body = null) {
-    const options = { 
-        method, 
-        headers: { 'Content-Type': 'application/json' } 
+let authToken = localStorage.getItem('authToken');
+
+function setAuthToken(token) {
+    authToken = token;
+    if (token) {
+        localStorage.setItem('authToken', token);
+    } else {
+        localStorage.removeItem('authToken');
+    }
+}
+
+function getHeaders() {
+    const headers = {
+        'Content-Type': 'application/json'
     };
-    if (body) options.body = JSON.stringify(body);
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    return headers;
+}
+
+async function apiRequest(endpoint, method = 'GET', data = null) {
+    const url = `${API_BASE}${endpoint}`;
+    const options = {
+        method,
+        headers: getHeaders()
+    };
     
-    if (currentUser && currentUser.token) {
-        options.headers['Authorization'] = `Bearer ${currentUser.token}`;
+    if (data) {
+        options.body = JSON.stringify(data);
     }
     
-    const response = await fetch(url, options);
-    if (!response.ok) throw new Error(await response.text());
-    return response.json();
-}
-
-async function loadVessels() { return apiCall('/api/vessels'); }
-async function saveVessel(vessel) { return apiCall('/api/vessels', 'POST', vessel); }
-async function updateVessel(id, vessel) { return apiCall(`/api/vessels/${id}`, 'PUT', vessel); }
-async function deleteVessel(id) { return apiCall(`/api/vessels/${id}`, 'DELETE'); }
-
-async function loadUsers() { return apiCall('/api/users'); }
-async function saveUser(user) { return apiCall('/api/users', 'POST', user); }
-async function updateUser(id, user) { return apiCall(`/api/users/${id}`, 'PUT', user); }
-async function deleteUserAPI(id) { return apiCall(`/api/users/${id}`, 'DELETE'); }
-
-async function loadTickets() { return apiCall('/api/tickets'); }
-async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
-
-async function loadLogs() { return apiCall('/api/logs'); }
-async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
-
-async function loginAPI(username, password) { 
-    return apiCall('/api/login', 'POST', { username, password }); 
-}
-
-async function exportAllDataAPI() { return apiCall('/api/export-all'); }
-async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
-
-async function logActivity(action, details) { 
-    if(!currentUser || !currentUser.name) return; 
     try {
-        await saveLog({
-            userName: currentUser.name,
-            userRole: currentUser.role,
-            action: action,
-            details: details,
-            date: getCurrentDate(),
-            time: getCurrentTime()
-        });
-    } catch(e) { console.error('Log error:', e); }
+        const response = await fetch(url, options);
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || 'حدث خطأ في الطلب');
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('❌ خطأ في API:', error);
+        throw error;
+    }
 }
 
-function getCurrentUser() {
-    return currentUser;
+// ===== المصادقة =====
+async function login(username, password) {
+    const result = await apiRequest('/auth/login', 'POST', { username, password });
+    if (result.token) {
+        setAuthToken(result.token);
+    }
+    return result;
 }
 
-console.log('✅ api.js تم تحميله بنجاح');
+function logout() {
+    setAuthToken(null);
+}
+
+// ===== المستخدمين =====
+async function getUsers() {
+    return apiRequest('/auth/users');
+}
+
+async function addUser(name, pass, role) {
+    return apiRequest('/auth/users', 'POST', { name, pass, role });
+}
+
+async function updateUser(id, data) {
+    return apiRequest(`/auth/users/${id}`, 'PUT', data);
+}
+
+async function deleteUser(id) {
+    return apiRequest(`/auth/users/${id}`, 'DELETE');
+}
+
+// ===== المراكب =====
+async function getVessels() {
+    return apiRequest('/vessels');
+}
+
+async function addVessel(data) {
+    return apiRequest('/vessels', 'POST', data);
+}
+
+async function updateVessel(id, data) {
+    return apiRequest(`/vessels/${id}`, 'PUT', data);
+}
+
+async function deleteVessel(id) {
+    return apiRequest(`/vessels/${id}`, 'DELETE');
+}
+
+// ===== التذاكر =====
+async function getTickets() {
+    return apiRequest('/tickets');
+}
+
+async function addTicket(data) {
+    return apiRequest('/tickets', 'POST', data);
+}
+
+async function replyTicket(id, reply) {
+    return apiRequest(`/tickets/${id}/reply`, 'PUT', { reply });
+}
+
+async function closeTicket(id) {
+    return apiRequest(`/tickets/${id}/close`, 'PUT');
+}
+
+// ===== المذكرات =====
+async function getNotes(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/notes?${query}`);
+}
+
+async function addNote(data) {
+    return apiRequest('/notes', 'POST', data);
+}
+
+async function deleteNote(id) {
+    return apiRequest(`/notes/${id}`, 'DELETE');
+}
+
+// ===== المواقع =====
+async function getLocations() {
+    return apiRequest('/locations');
+}
+
+async function addLocation(lat, lng, action = 'تحديث موقع') {
+    return apiRequest('/locations', 'POST', { lat, lng, action });
+}
+
+// ===== تصدير واستيراد =====
+async function exportAllData() {
+    return apiRequest('/export-all');
+}
+
+async function importAllData(data) {
+    return apiRequest('/import-all', 'POST', data);
+}
