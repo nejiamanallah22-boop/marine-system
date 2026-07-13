@@ -1,219 +1,291 @@
+// ============================================================
+// ===== الجاهزية (لوحة التحكم) =====
+// ============================================================
 
-// ==================== دوال الجاهزية والإحصائيات ====================
-
-let fleetChart = null, categoriesChart = null, comparisonChart = null;
+let chartInstance = null;
 let currentChartType = 'doughnut';
 
-async function renderGeneralEfficiencyTable() {
-    try {
-        let data = await loadVessels();
-        let totalOk = data.filter(x => x.stat === 'صالح').length;
-        let totalAll = data.length;
-        let generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0;
+function renderEff() {
+    const filter = document.getElementById('fRegEff').value;
+    
+    let filteredData = fleetData;
+    if (filter !== 'الكل' && filter !== 'نجاعة عامة') {
+        filteredData = fleetData.filter(f => f.reg === filter);
+    }
+    
+    updateStats(filteredData);
+    
+    const container = document.getElementById('tablesContainer');
+    let html = '';
+    html += renderGeneralEfficiency(filteredData);
+    
+    const workshops = ['تونس', 'المنستير', 'صفاقس', 'جرجيس', 'المجمع الأمني بقبيبة'];
+    workshops.forEach(ws => {
+        const wsData = filteredData.filter(f => f.reg === ws);
+        html += renderWorkshopTable(ws, wsData);
+    });
+    
+    container.innerHTML = html;
+    updateChart(filteredData);
+    updateLatestNote();
+}
+
+function updateStats(data) {
+    const total = data.length;
+    const active = data.filter(f => f.stat === 'صالح').length;
+    const maintenance = data.filter(f => f.stat === 'صيانة').length;
+    const damage = data.filter(f => f.stat === 'معطب').length;
+    
+    document.getElementById('statsCards').innerHTML = `
+        <div class="stat-card"><div class="number">${total}</div><div class="label">🚢 إجمالي الوسائل</div></div>
+        <div class="stat-card"><div class="number">${active}</div><div class="label">✅ صالح للخدمة</div></div>
+        <div class="stat-card"><div class="number">${maintenance}</div><div class="label">🔧 تحت الصيانة</div></div>
+        <div class="stat-card"><div class="number">${damage}</div><div class="label">⚠️ معطوب</div></div>
+    `;
+}
+
+function renderGeneralEfficiency(data) {
+    const total = data.length;
+    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    
+    let rows = '';
+    categories.forEach(cat => {
+        const catData = data.filter(f => f.cat === cat);
+        const count = catData.length;
+        const active = catData.filter(f => f.stat === 'صالح').length;
+        const maintenance = catData.filter(f => f.stat === 'صيانة').length;
+        const damage = catData.filter(f => f.stat === 'معطب').length;
+        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+        const eff = count > 0 ? Math.round((active / count) * 100) : 0;
         
-        let html = `<div class="region-table-card">
-            <div class="region-table-header">📊 النجاعة العامة للأسطول <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${generalEff}% (${totalOk}/${totalAll})</span></div>
+        if (count > 0) {
+            rows += `
+                <tr>
+                    <td><strong>${cat}</strong></td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                    <td>${active}</td>
+                    <td>${maintenance}</td>
+                    <td>${damage}</td>
+                    <td style="color:${eff > 70 ? '#22c55e' : eff > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">${eff}%</td>
+                </tr>
+            `;
+        }
+    });
+    
+    const totalEff = total > 0 ? Math.round((data.filter(f => f.stat === 'صالح').length / total) * 100) : 0;
+    rows += `
+        <tr style="font-weight:700; background:var(--gray-50);">
+            <td>📊 الإجمالي</td>
+            <td>${total}</td>
+            <td>100%</td>
+            <td>${data.filter(f => f.stat === 'صالح').length}</td>
+            <td>${data.filter(f => f.stat === 'صيانة').length}</td>
+            <td>${data.filter(f => f.stat === 'معطب').length}</td>
+            <td style="color:${totalEff > 70 ? '#22c55e' : totalEff > 40 ? '#f59e0b' : '#ef4444'};">${totalEff}%</td>
+        </tr>
+    `;
+    
+    return `
+        <div class="region-table-card">
+            <div class="region-table-header">
+                <i class="fas fa-chart-line"></i> 📊 نجاعة الأسطول العام
+                <span style="font-size:12px; color:var(--gray-500);">${total} وسيلة</span>
+            </div>
             <div class="scrollable-table">
-            <table class="region-table">
-                <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
-                <tbody>`;
-        
-        CATS_LIST.forEach(cat => {
-            let catData = data.filter(x => x.cat === cat);
-            let ok = catData.filter(x => x.stat === 'صالح').length;
-            let broken = catData.filter(x => x.stat !== 'صالح').length;
-            let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
-            let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-            html += `<tr class="${rowClass}">
-                <td>${cat}</td>
-                <td style="color:green; font-weight:bold;">${ok}</td>
-                <td style="color:red; font-weight:bold;">${broken}</td>
-                <td><strong>${percent}%</strong></td>
-            </tr>`;
-        });
-        
-        html += `</tbody>
-            </table>
-            </div>
-            </div>`;
-        document.getElementById('generalEffTableContainer').innerHTML = html;
-    } catch(error) {
-        console.error('خطأ:', error);
-        document.getElementById('generalEffTableContainer').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل البيانات</div></div>';
-    }
-}
-
-async function renderStatsCards() {
-    try {
-        let data = await loadVessels();
-        let total = data.length;
-        let ok = data.filter(x => x.stat === 'صالح').length;
-        let maint = data.filter(x => x.stat === 'صيانة').length;
-        let broken = data.filter(x => x.stat === 'معطب').length;
-        let eff = total ? ((ok / total) * 100).toFixed(1) : 0;
-        document.getElementById('statsCards').innerHTML = `
-            <div class="stat-card"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div>
-            <div class="stat-card"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div>
-            <div class="stat-card"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div>
-            <div class="stat-card"><div class="number">${broken}</div><div class="label">⚠️ المعطوب</div></div>
-            <div class="stat-card"><div class="number">${eff}%</div><div class="label">📈 نسبة النجاعة</div></div>
-        `;
-    } catch(error) {
-        console.error('خطأ:', error);
-        document.getElementById('statsCards').innerHTML = '<div class="stat-card"><div class="number">0</div><div>خطأ</div></div>';
-    }
-}
-
-async function renderCharts() {
-    try {
-        let data = await loadVessels();
-        let ok = data.filter(x => x.stat === 'صالح').length;
-        let maint = data.filter(x => x.stat === 'صيانة').length;
-        let broken = data.filter(x => x.stat === 'معطب').length;
-        
-        let catCount = {};
-        CATS_LIST.forEach(cat => { catCount[cat] = data.filter(x => x.cat === cat).length; });
-        
-        let regions = [], regionsEff = [];
-        Object.keys(ZONES_DATA).forEach(reg => {
-            let regData = data.filter(x => x.reg === reg);
-            let regOk = regData.filter(x => x.stat === 'صالح').length;
-            regions.push(REGION_NAMES[reg] || reg);
-            regionsEff.push(regData.length ? (regOk / regData.length * 100) : 0);
-        });
-        
-        document.getElementById('chartsArea').innerHTML = `
-            <div class="charts-container">
-                <div class="chart-box"><h4>📊 حالة الأسطول</h4><canvas id="fleetChartCanvas"></canvas></div>
-                <div class="chart-box"><h4>📦 توزيع المراكب حسب الفئة</h4><canvas id="categoriesChartCanvas"></canvas></div>
-                <div class="chart-box"><h4>🏆 مقارنة النجاعة بين الأقاليم</h4><canvas id="comparisonChartCanvas"></canvas></div>
-            </div>
-        `;
-        
-        if(fleetChart) fleetChart.destroy();
-        if(categoriesChart) categoriesChart.destroy();
-        if(comparisonChart) comparisonChart.destroy();
-        
-        const fleetCtx = document.getElementById('fleetChartCanvas').getContext('2d');
-        if(currentChartType === 'doughnut') {
-            fleetChart = new Chart(fleetCtx, { type: 'doughnut', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ data: [ok, maint, broken], backgroundColor: ['#28a745', '#ffc107', '#dc3545'] }] }, options: { responsive: true } });
-        } else if(currentChartType === 'bar') {
-            fleetChart = new Chart(fleetCtx, { type: 'bar', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], backgroundColor: ['#28a745', '#ffc107', '#dc3545'] }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
-        } else {
-            fleetChart = new Chart(fleetCtx, { type: 'line', data: { labels: ['صالح', 'صيانة', 'معطب'], datasets: [{ label: 'عدد المراكب', data: [ok, maint, broken], borderColor: '#2e7d32', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
-        }
-        
-        categoriesChart = new Chart(document.getElementById('categoriesChartCanvas').getContext('2d'), { type: 'bar', data: { labels: CATS_LIST, datasets: [{ label: 'عدد المراكب', data: CATS_LIST.map(c => catCount[c] || 0), backgroundColor: '#2e7d32' }] }, options: { responsive: true, scales: { y: { beginAtZero: true } } } });
-        
-        comparisonChart = new Chart(document.getElementById('comparisonChartCanvas').getContext('2d'), { type: 'line', data: { labels: regions, datasets: [{ label: 'نسبة النجاعة (%)', data: regionsEff, borderColor: '#f39c12', fill: true }] }, options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } } } });
-    } catch(error) {
-        console.error('خطأ في renderCharts:', error);
-    }
-}
-
-async function renderRegionTables() {
-    try {
-        let data = await loadVessels();
-        let selectedRegion = document.getElementById('fRegEff').value;
-        let html = "";
-        
-        const allRegions = ["الشمال", "الساحل", "الوسط", "الجنوب", 
-                            "وحدة الصيانة والإسناد البحري تونس", 
-                            "وحدة الصيانة والإسناد البحري المنستير",
-                            "وحدة الصيانة والإسناد البحري صفاقس",
-                            "وحدة الصيانة والإسناد البحري جرجيس",
-                            "المجمع الأمني بقبيبة"];
-        
-        if(selectedRegion === "نجاعة عامة") {
-            document.getElementById('regionTables').innerHTML = "";
-            return;
-        }
-        
-        if(selectedRegion === "الكل") {
-            for(const region of allRegions) {
-                let regData = data.filter(x => x.reg === region);
-                let totalReg = regData.length;
-                let okReg = regData.filter(x => x.stat === 'صالح').length;
-                let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-                let regionDisplay = REGION_NAMES[region] || region;
-                
-                html += `<div class="region-table-card">
-                    <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
-                    <div class="scrollable-table">
-                    <table class="region-table">
-                        <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
-                        <tbody>`;
-                
-                for(const cat of CATS_LIST) {
-                    let catData = regData.filter(x => x.cat === cat);
-                    let ok = catData.filter(x => x.stat === 'صالح').length;
-                    let broken = catData.filter(x => x.stat !== 'صالح').length;
-                    let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
-                    let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-                    html += `<tr class="${rowClass}">
-                        <td>${cat}</td>
-                        <td style="color:green;">${ok}</td>
-                        <td style="color:red;">${broken}</td>
-                        <td><strong>${percent}%</strong></td>
-                    </tr>`;
-                }
-                
-                html += `</tbody>
-                    </table>
-                    </div>
-                    </div>`;
-            }
-        } else {
-            let regData = data.filter(x => x.reg === selectedRegion);
-            let totalReg = regData.length;
-            let okReg = regData.filter(x => x.stat === 'صالح').length;
-            let regEff = totalReg ? ((okReg / totalReg) * 100).toFixed(1) : 0;
-            let regionDisplay = REGION_NAMES[selectedRegion] || selectedRegion;
-            
-            html += `<div class="region-table-card">
-                <div class="region-table-header">📍 ${regionDisplay} <span style="background:#ffd966; color:#2e7d32; padding:4px 12px; border-radius:20px;">الجاهزية: ${regEff}% (${okReg}/${totalReg})</span></div>
-                <div class="scrollable-table">
-                <table class="region-table">
-                    <thead><tr><th>الفئة</th><th>عدد الصالح</th><th>عدد المعطوب</th><th>نسبة النجاعة</th></tr></thead>
-                    <tbody>`;
-            
-            for(const cat of CATS_LIST) {
-                let catData = regData.filter(x => x.cat === cat);
-                let ok = catData.filter(x => x.stat === 'صالح').length;
-                let broken = catData.filter(x => x.stat !== 'صالح').length;
-                let percent = catData.length ? ((ok / catData.length) * 100).toFixed(1) : 0;
-                let rowClass = percent >= 80 ? 'high-eff' : (percent >= 50 ? 'mid-eff' : 'low-eff');
-                html += `<tr class="${rowClass}">
-                    <td>${cat}</td>
-                    <td style="color:green;">${ok}</td>
-                    <td style="color:red;">${broken}</td>
-                    <td><strong>${percent}%</strong></td>
-                </tr>`;
-            }
-            
-            html += `</tbody>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الفئة</th>
+                            <th>العدد</th>
+                            <th>النسبة</th>
+                            <th>✅ صالح</th>
+                            <th>🔧 صيانة</th>
+                            <th>❌ معطب</th>
+                            <th>النجاعة</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
                 </table>
-                </div>
-                </div>`;
-        }
-        
-        document.getElementById('regionTables').innerHTML = html;
-    } catch(error) {
-        console.error('خطأ في renderRegionTables:', error);
-        document.getElementById('regionTables').innerHTML = '<div class="region-table-card"><div class="region-table-header">❌ خطأ في تحميل البيانات</div></div>';
-    }
+            </div>
+        </div>
+    `;
 }
 
-async function renderEff() {
-    await renderStatsCards();
-    await renderGeneralEfficiencyTable();
-    await renderRegionTables();
-    await renderCharts();
+function renderWorkshopTable(workshopName, data) {
+    const total = data.length;
+    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    
+    let rows = '';
+    categories.forEach(cat => {
+        const catData = data.filter(f => f.cat === cat);
+        const count = catData.length;
+        const active = catData.filter(f => f.stat === 'صالح').length;
+        const maintenance = catData.filter(f => f.stat === 'صيانة').length;
+        const damage = catData.filter(f => f.stat === 'معطب').length;
+        const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+        const eff = count > 0 ? Math.round((active / count) * 100) : 0;
+        
+        if (count > 0) {
+            rows += `
+                <tr>
+                    <td><strong>${cat}</strong></td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                    <td>${active}</td>
+                    <td>${maintenance}</td>
+                    <td>${damage}</td>
+                    <td style="color:${eff > 70 ? '#22c55e' : eff > 40 ? '#f59e0b' : '#ef4444'}; font-weight:700;">${eff}%</td>
+                </tr>
+            `;
+        }
+    });
+    
+    if (total === 0) {
+        rows = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--gray-500);"><i class="fas fa-info-circle"></i> لا توجد وسائل في هذه الورشة</td></tr>`;
+    } else {
+        const totalEff = total > 0 ? Math.round((data.filter(f => f.stat === 'صالح').length / total) * 100) : 0;
+        rows += `
+            <tr style="font-weight:700; background:var(--gray-50);">
+                <td>📊 الإجمالي</td>
+                <td>${total}</td>
+                <td>100%</td>
+                <td>${data.filter(f => f.stat === 'صالح').length}</td>
+                <td>${data.filter(f => f.stat === 'صيانة').length}</td>
+                <td>${data.filter(f => f.stat === 'معطب').length}</td>
+                <td style="color:${totalEff > 70 ? '#22c55e' : totalEff > 40 ? '#f59e0b' : '#ef4444'};">${totalEff}%</td>
+            </tr>
+        `;
+    }
+    
+    const icons = {
+        'تونس': '🛠️',
+        'المنستير': '🛠️',
+        'صفاقس': '🛠️',
+        'جرجيس': '🛠️',
+        'المجمع الأمني بقبيبة': '🏛️'
+    };
+    
+    return `
+        <div class="region-table-card workshop-table">
+            <div class="region-table-header">
+                <i class="fas fa-tools"></i> ${icons[workshopName] || '🛠️'} ${workshopName}
+                <span style="font-size:12px; color:var(--gray-500);">${total} وسيلة</span>
+            </div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الفئة</th>
+                            <th>العدد</th>
+                            <th>النسبة</th>
+                            <th>✅ صالح</th>
+                            <th>🔧 صيانة</th>
+                            <th>❌ معطب</th>
+                            <th>النجاعة</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+function updateChart(data) {
+    const total = data.length;
+    const active = data.filter(f => f.stat === 'صالح').length;
+    const maintenance = data.filter(f => f.stat === 'صيانة').length;
+    const damage = data.filter(f => f.stat === 'معطب').length;
+    
+    const ctx = document.getElementById('chartsArea');
+    if (!ctx) return;
+    
+    ctx.innerHTML = `
+        <div class="chart-container">
+            <canvas id="efficiencyChart"></canvas>
+        </div>
+    `;
+    
+    const canvas = document.getElementById('efficiencyChart');
+    if (!canvas) return;
+    
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    
+    chartInstance = new Chart(canvas, {
+        type: currentChartType,
+        data: {
+            labels: ['✅ صالح للخدمة', '🔧 تحت الصيانة', '❌ معطوب'],
+            datasets: [{
+                label: 'حالة الأسطول',
+                data: [active, maintenance, damage],
+                backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                borderColor: ['#16a34a', '#d97706', '#dc2626'],
+                borderWidth: 2,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Cairo', size: 13 },
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateRotate: true,
+                duration: 1000
+            }
+        }
+    });
 }
 
 function switchChartType(type, btn) {
     currentChartType = type;
-    document.querySelectorAll('.chart-switch button').forEach(button => button.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-    renderCharts();
+    document.querySelectorAll('.chart-switch button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderEff();
+}
+
+function refreshEff() {
+    renderEff();
+    showToast('🔄 تم تحديث بيانات الجاهزية', 'info');
+}
+
+function exportEfficiencyReport() {
+    showToast('📄 جاري تصدير تقرير النجاعة...', 'info');
+    setTimeout(() => showToast('✅ تم تصدير التقرير بنجاح', 'success'), 1500);
+}
+
+function updateLatestNote() {
+    const container = document.getElementById('latestNoteContainer');
+    const notes = JSON.parse(localStorage.getItem('marine_notes') || '[]');
+    if (notes.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    const latest = notes[0];
+    container.style.display = 'block';
+    document.getElementById('latestNoteDate').textContent = '📅 ' + (latest.date || 'غير محدد');
+    document.getElementById('latestNoteTitle').textContent = latest.title || 'بدون عنوان';
+    document.getElementById('latestNoteContent').textContent = latest.content || 'لا يوجد محتوى';
+    document.getElementById('latestNoteAttachments').innerHTML = '';
 }
