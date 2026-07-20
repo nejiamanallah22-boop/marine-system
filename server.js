@@ -1,7 +1,3 @@
-// ============================================================
-// 🚀 server.js - الملف الوحيد (يعمل 100%)
-// ============================================================
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -15,40 +11,26 @@ const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
-// ============================================================
-// 🚀 التطبيق
-// ============================================================
 const app = express();
 const server = http.createServer(app);
 
-// ============================================================
-// 📡 Socket.IO
-// ============================================================
 const io = socketIO(server, {
   cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }
 });
 
-// ============================================================
-// 🛡️ Middlewares
-// ============================================================
 app.use(cors());
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============================================================
-// 🗄️ قاعدة البيانات
-// ============================================================
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
 
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Error:', err.message));
 
-// ============================================================
-// 📊 النماذج
-// ============================================================
+// ==================== النماذج ====================
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
@@ -121,9 +103,8 @@ const Log = mongoose.model('Log', LogSchema);
 const Location = mongoose.model('Location', LocationSchema);
 const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
 
-// ============================================================
-// 🛠️ دوال مساعدة
-// ============================================================
+// ==================== دوال مساعدة ====================
+
 function getCurrentTime() {
   const now = new Date();
   return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -141,26 +122,6 @@ function getWeekNumber(date) {
   return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
 
-function extractDevice(ua) {
-  if (!ua) return 'غير معروف';
-  ua = ua.toLowerCase();
-  if (ua.includes('android')) return 'Android';
-  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
-  if (ua.includes('windows')) return 'Windows';
-  if (ua.includes('macintosh')) return 'Mac';
-  return 'غير معروف';
-}
-
-function extractBrowser(ua) {
-  if (!ua) return 'غير معروف';
-  ua = ua.toLowerCase();
-  if (ua.includes('edg') || ua.includes('edge')) return 'Edge';
-  if (ua.includes('chrome')) return 'Chrome';
-  if (ua.includes('firefox')) return 'Firefox';
-  if (ua.includes('safari')) return 'Safari';
-  return 'غير معروف';
-}
-
 function determineCategory(len) {
   const n = parseFloat(len);
   if (n === 11) return 'البروق';
@@ -170,9 +131,8 @@ function determineCategory(len) {
   return 'زوارق مزدوجة';
 }
 
-// ============================================================
-// 🔐 Middleware المصادقة
-// ============================================================
+// ==================== Middleware ====================
+
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -207,11 +167,8 @@ const authorize = (...allowedRoles) => {
   };
 };
 
-// ============================================================
-// 🚪 API Routes
-// ============================================================
+// ==================== Routes ====================
 
-// ---- تسجيل الدخول ----
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -254,7 +211,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ---- المراكب ----
 app.get('/api/vessels', authenticate, async (req, res) => {
   try {
     const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -298,7 +254,6 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
   }
 });
 
-// ---- التذاكر ----
 app.get('/api/tickets', authenticate, async (req, res) => {
   try {
     const tickets = await Ticket.find().sort({ createdAt: -1 });
@@ -355,7 +310,6 @@ app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (
   }
 });
 
-// ---- السجلات ----
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const logs = await Log.find().sort({ createdAt: -1 });
@@ -381,7 +335,6 @@ app.post('/api/logs', authenticate, async (req, res) => {
   }
 });
 
-// ---- المواقع ----
 app.get('/api/locations', authenticate, async (req, res) => {
   try {
     const locations = await Location.find().sort({ timestamp: -1 });
@@ -399,15 +352,12 @@ app.post('/api/locations', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'إحداثيات غير صالحة' });
     }
     
-    const userAgent = req.headers['user-agent'] || '';
     const location = new Location({
       userName: req.user.name,
       userRole: req.user.role,
       lat: parseFloat(lat),
       lng: parseFloat(lng),
-      action: action || 'تحديث موقع',
-      device: extractDevice(userAgent),
-      browser: extractBrowser(userAgent)
+      action: action || 'تحديث موقع'
     });
     await location.save();
     res.status(201).json(location);
@@ -416,7 +366,6 @@ app.post('/api/locations', authenticate, async (req, res) => {
   }
 });
 
-// ---- Note Verbale ----
 app.post('/api/notes', authenticate, async (req, res) => {
   try {
     const { title, content, date, time, week, type, imageData } = req.body;
@@ -469,7 +418,6 @@ app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, 
   }
 });
 
-// ---- تصدير واستيراد ----
 app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const [vessels, users, tickets, logs, locations, notes] = await Promise.all([
@@ -532,7 +480,6 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
   }
 });
 
-// ---- الصحة ----
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -541,14 +488,12 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ---- الصفحة الرئيسية ----
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ============================================================
-// 📡 Socket.IO
-// ============================================================
+// ==================== Socket.IO ====================
+
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
@@ -591,9 +536,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// ============================================================
-// 🔑 إنشاء Admin
-// ============================================================
+// ==================== إنشاء Admin ====================
+
 async function createAdmin() {
   try {
     const adminExists = await User.findOne({ role: 'مسؤول' });
@@ -617,9 +561,8 @@ async function createAdmin() {
   }
 }
 
-// ============================================================
-// 🚀 تشغيل السيرفر
-// ============================================================
+// ==================== تشغيل السيرفر ====================
+
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', async () => {
