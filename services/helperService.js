@@ -157,4 +157,43 @@ const timeAgo = (date) => {
   };
   
   for (const [unit, value] of Object.entries(intervals)) {
-    const count = Math.floor(
+    const count = Math.floor(seconds / value);
+    if (count >= 1) {
+      return `منذ ${count} ${unit}${count > 1 ? 'ات' : ''}`;
+    }
+  }
+  
+  return 'الآن';
+};
+
+/**
+ * ✅ تنظيف النص من الـ XSS
+ */
+const sanitizeText = (text) => {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+};
+
+module.exports = {
+  getCurrentTime,
+  getCurrentDate,
+  getWeekNumber,
+  extractDevice,
+  extractBrowser,
+  getClientIP,
+  generateId,
+  generateSecureToken,
+  encryptText,
+  decryptText,
+  isValidEmail,
+  isStrongPassword,
+  formatDate,
+  timeAgo,
+  sanitizeText
+};
