@@ -1,24 +1,10 @@
 // ============================================================
-// 📊 dashboard.js - لوحة التحكم (بدون require)
+// 📊 dashboard.js - لوحة التحكم
 // ============================================================
 
 // ============================================================
 // 📊 دوال الجاهزية
 // ============================================================
-
-function renderEff() {
-  if (typeof renderEfficiency === 'function') {
-    renderEfficiency();
-  } else {
-    console.log('📊 renderEfficiency not loaded yet');
-  }
-}
-
-function refreshEff() {
-  loadVessels();
-  loadNotes();
-  showNotification('✅ تم تحديث بيانات الجاهزية', 'success');
-}
 
 function renderEfficiency() {
   const container = document.getElementById('statsCards');
@@ -50,6 +36,16 @@ function renderEfficiency() {
     </div>
   `;
 }
+
+function refreshEff() {
+  loadVessels();
+  loadNotes();
+  showNotification('✅ تم تحديث بيانات الجاهزية', 'success');
+}
+
+// ============================================================
+// 📝 دوال Note Verbale
+// ============================================================
 
 function loadLatestNoteData() {
   const container = document.getElementById('latestNoteContainer');
@@ -207,17 +203,14 @@ function clearNote() {
 
 function exportNotePDF() {
   showNotification('📄 جاري تصدير PDF...', 'info');
-  // سيتم تنفيذها في الملفات المستقبلية
 }
 
 function exportNoteWord() {
   showNotification('📄 جاري تصدير Word...', 'info');
-  // سيتم تنفيذها في الملفات المستقبلية
 }
 
 function importNoteFile() {
   showNotification('📂 جاري استيراد الملف...', 'info');
-  // سيتم تنفيذها في الملفات المستقبلية
 }
 
 function loadNotesByWeek() {
@@ -225,7 +218,7 @@ function loadNotesByWeek() {
 }
 
 // ============================================================
-// 📊 دوال المستخدمين
+// 👥 دوال المستخدمين
 // ============================================================
 
 function addUser() {
@@ -397,9 +390,8 @@ function deleteUser(id) {
 // 🔄 تصدير للاستخدام العالمي
 // ============================================================
 
-window.renderEff = renderEff;
-window.refreshEff = refreshEff;
 window.renderEfficiency = renderEfficiency;
+window.refreshEff = refreshEff;
 window.loadLatestNoteData = loadLatestNoteData;
 window.loadNotesData = loadNotesData;
 window.saveNote = saveNote;
