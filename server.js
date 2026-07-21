@@ -23,14 +23,10 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ============================================================
-// ✅ حل مشكلة MIME types - الأهم!
-// ============================================================
-
-// تعيين MIME types الصحيحة للملفات
+// ✅ حل مشكلة MIME types
 app.use((req, res, next) => {
   const url = req.url;
   if (url.endsWith('.css')) {
@@ -45,13 +41,11 @@ app.use((req, res, next) => {
     res.setHeader('Content-Type', 'image/jpeg');
   } else if (url.endsWith('.svg')) {
     res.setHeader('Content-Type', 'image/svg+xml');
-  } else if (url.endsWith('.html')) {
-    res.setHeader('Content-Type', 'text/html');
   }
   next();
 });
 
-// خدمة الملفات الثابتة
+// ✅ خدمة الملفات الثابتة
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.css')) {
@@ -65,7 +59,6 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // ============================================================
 // 🗄️ قاعدة البيانات
 // ============================================================
-
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
 
@@ -76,54 +69,59 @@ mongoose.connect(MONGODB_URI)
 // ============================================================
 // 📊 النماذج
 // ============================================================
-
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  pass: String,
-  role: { type: String, default: 'مستخدم' }
-});
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  pass: { type: String, required: true, select: false },
+  role: { type: String, enum: ['مسؤول', 'محرر', 'مستخدم'], default: 'مستخدم' },
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
 
 const VesselSchema = new mongoose.Schema({
-  name: String,
-  num: String,
-  len: Number,
-  cat: String,
-  stat: { type: String, default: 'صالح' }
+  name: { type: String, required: true },
+  num: { type: String },
+  len: { type: Number, default: 0 },
+  cat: { type: String, default: 'زوارق مزدوجة' },
+  stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' }
 }, { timestamps: true });
 
 const TicketSchema = new mongoose.Schema({
-  userName: String,
-  subject: String,
-  message: String,
-  date: String,
-  time: String,
-  status: { type: String, default: 'قيد المعالجة' },
-  replies: Array
+  userName: { type: String, required: true },
+  subject: { type: String, required: true },
+  message: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
+  replies: [{
+    adminName: String,
+    reply: String,
+    date: String,
+    time: String
+  }]
 }, { timestamps: true });
 
 const LogSchema = new mongoose.Schema({
-  userName: String,
-  action: String,
-  details: String,
-  date: String,
-  time: String
+  userName: { type: String, required: true },
+  action: { type: String, required: true },
+  details: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true }
 }, { timestamps: true });
 
 const LocationSchema = new mongoose.Schema({
-  userName: String,
-  lat: Number,
-  lng: Number,
+  userName: { type: String, required: true },
+  lat: { type: Number, required: true },
+  lng: { type: Number, required: true },
   timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 const NoteVerbaleSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  date: String,
-  time: String,
-  week: String,
-  createdBy: String
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  week: { type: String, required: true },
+  createdBy: { type: String, required: true }
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
@@ -134,9 +132,8 @@ const Location = mongoose.model('Location', LocationSchema);
 const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
 
 // ============================================================
-// 🛠️ دوال
+// 🛠️ دوال مساعدة
 // ============================================================
-
 function getCurrentTime() {
   const now = new Date();
   return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -166,7 +163,6 @@ function determineCategory(len) {
 // ============================================================
 // 🔐 Middleware
 // ============================================================
-
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -203,6 +199,7 @@ const authorize = (...allowedRoles) => {
 // 🚪 Routes
 // ============================================================
 
+// ----- المصادقة -----
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -238,6 +235,43 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ error: 'البريد الإلكتروني موجود' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      pass: hashedPassword,
+      role: role || 'مستخدم'
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'تم إنشاء الحساب',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ----- المراكب -----
 app.get('/api/vessels', authenticate, async (req, res) => {
   try {
     const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -281,6 +315,7 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
   }
 });
 
+// ----- التذاكر -----
 app.get('/api/tickets', authenticate, async (req, res) => {
   try {
     const tickets = await Ticket.find().sort({ createdAt: -1 });
@@ -336,6 +371,7 @@ app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (
   }
 });
 
+// ----- السجلات -----
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const logs = await Log.find().sort({ createdAt: -1 });
@@ -360,6 +396,7 @@ app.post('/api/logs', authenticate, async (req, res) => {
   }
 });
 
+// ----- المواقع -----
 app.get('/api/locations', authenticate, async (req, res) => {
   try {
     const locations = await Location.find().sort({ timestamp: -1 });
@@ -387,6 +424,7 @@ app.post('/api/locations', authenticate, async (req, res) => {
   }
 });
 
+// ----- Note Verbale -----
 app.post('/api/notes', authenticate, async (req, res) => {
   try {
     const { title, content, date } = req.body;
@@ -426,11 +464,72 @@ app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, 
   }
 });
 
+app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
+  try {
+    const [vessels, users, tickets, logs, locations, notes] = await Promise.all([
+      Vessel.find(),
+      User.find().select('-pass'),
+      Ticket.find(),
+      Log.find(),
+      Location.find(),
+      NoteVerbale.find()
+    ]);
+    res.json({ vessels, users, tickets, logs, locations, notes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
+  try {
+    const { vessels, users, tickets, logs, locations, notes } = req.body;
+    
+    if (vessels && Array.isArray(vessels)) {
+      await Vessel.deleteMany({});
+      await Vessel.insertMany(vessels);
+    }
+    
+    if (users && Array.isArray(users)) {
+      for (const user of users) {
+        if (user.pass && !user.pass.startsWith('$2')) {
+          const salt = await bcrypt.genSalt(10);
+          user.pass = await bcrypt.hash(user.pass, salt);
+        }
+      }
+      await User.deleteMany({});
+      await User.insertMany(users);
+    }
+    
+    if (tickets && Array.isArray(tickets)) {
+      await Ticket.deleteMany({});
+      await Ticket.insertMany(tickets);
+    }
+    
+    if (logs && Array.isArray(logs)) {
+      await Log.deleteMany({});
+      await Log.insertMany(logs);
+    }
+    
+    if (locations && Array.isArray(locations)) {
+      await Location.deleteMany({});
+      await Location.insertMany(locations);
+    }
+    
+    if (notes && Array.isArray(notes)) {
+      await NoteVerbale.deleteMany({});
+      await NoteVerbale.insertMany(notes);
+    }
+    
+    res.json({ message: '✅ تم استيراد البيانات' });
+  } catch (error) {
+    res.status(500).json({ error: 'خطأ في الاستيراد: ' + error.message });
+  }
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ✅ صفحة البداية - يجب أن تكون في النهاية
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -438,7 +537,6 @@ app.get('/', (req, res) => {
 // ============================================================
 // 📡 Socket.IO
 // ============================================================
-
 const connectedUsers = {};
 
 io.on('connection', (socket) => {
@@ -465,7 +563,6 @@ io.on('connection', (socket) => {
 // ============================================================
 // 🔑 إنشاء Admin
 // ============================================================
-
 async function createAdmin() {
   try {
     const adminExists = await User.findOne({ role: 'مسؤول' });
@@ -477,7 +574,8 @@ async function createAdmin() {
         name: 'Admin',
         email: 'admin',
         pass: hashedPassword,
-        role: 'مسؤول'
+        role: 'مسؤول',
+        isActive: true
       });
       
       await admin.save();
@@ -491,11 +589,16 @@ async function createAdmin() {
 // ============================================================
 // 🚀 تشغيل السيرفر
 // ============================================================
-
 const PORT = process.env.PORT || 3000;
 
 server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server: http://localhost:${PORT}`);
   await createAdmin();
   console.log('📧 admin / 🔑 123456');
+});
+
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Shutting down...');
+  await mongoose.connection.close();
+  process.exit(0);
 });
