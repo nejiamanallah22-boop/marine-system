@@ -19,12 +19,53 @@ const io = socketIO(server, {
 });
 
 app.use(cors());
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({ 
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ استخدم متغيرات البيئة مباشرة
+// ============================================================
+// ✅ حل مشكلة MIME types - الأهم!
+// ============================================================
+
+// تعيين MIME types الصحيحة للملفات
+app.use((req, res, next) => {
+  const url = req.url;
+  if (url.endsWith('.css')) {
+    res.setHeader('Content-Type', 'text/css');
+  } else if (url.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  } else if (url.endsWith('.json')) {
+    res.setHeader('Content-Type', 'application/json');
+  } else if (url.endsWith('.png')) {
+    res.setHeader('Content-Type', 'image/png');
+  } else if (url.endsWith('.jpg') || url.endsWith('.jpeg')) {
+    res.setHeader('Content-Type', 'image/jpeg');
+  } else if (url.endsWith('.svg')) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+  } else if (url.endsWith('.html')) {
+    res.setHeader('Content-Type', 'text/html');
+  }
+  next();
+});
+
+// خدمة الملفات الثابتة
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    } else if (filePath.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
+
+// ============================================================
+// 🗄️ قاعدة البيانات
+// ============================================================
+
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
 const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
 
@@ -32,7 +73,9 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('❌ MongoDB Error:', err.message));
 
-// ==================== النماذج ====================
+// ============================================================
+// 📊 النماذج
+// ============================================================
 
 const UserSchema = new mongoose.Schema({
   name: String,
@@ -90,7 +133,9 @@ const Log = mongoose.model('Log', LogSchema);
 const Location = mongoose.model('Location', LocationSchema);
 const NoteVerbale = mongoose.model('NoteVerbale', NoteVerbaleSchema);
 
-// ==================== دوال ====================
+// ============================================================
+// 🛠️ دوال
+// ============================================================
 
 function getCurrentTime() {
   const now = new Date();
@@ -118,7 +163,9 @@ function determineCategory(len) {
   return 'زوارق مزدوجة';
 }
 
-// ==================== Middleware ====================
+// ============================================================
+// 🔐 Middleware
+// ============================================================
 
 const authenticate = async (req, res, next) => {
   try {
@@ -152,7 +199,9 @@ const authorize = (...allowedRoles) => {
   };
 };
 
-// ==================== Routes ====================
+// ============================================================
+// 🚪 Routes
+// ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -381,11 +430,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ✅ صفحة البداية - يجب أن تكون في النهاية
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================== Socket.IO ====================
+// ============================================================
+// 📡 Socket.IO
+// ============================================================
 
 const connectedUsers = {};
 
@@ -410,7 +462,9 @@ io.on('connection', (socket) => {
   });
 });
 
-// ==================== إنشاء Admin ====================
+// ============================================================
+// 🔑 إنشاء Admin
+// ============================================================
 
 async function createAdmin() {
   try {
@@ -434,7 +488,9 @@ async function createAdmin() {
   }
 }
 
-// ==================== تشغيل السيرفر ====================
+// ============================================================
+// 🚀 تشغيل السيرفر
+// ============================================================
 
 const PORT = process.env.PORT || 3000;
 
