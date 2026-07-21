@@ -1,293 +1,248 @@
 // ============================================================
-// ===== التحكم الرئيسي =====
+// 📦 api.js - دوال API (بدون require)
 // ============================================================
 
-function showPage(page) {
-    document.querySelectorAll('.page-content').forEach(el => {
-        el.classList.remove('active');
-        el.classList.add('hidden');
-    });
-    
-    const map = {
-        'main': 'pageMain',
-        'maint': 'pageMaint',
-        'eff': 'pageEff',
-        'support': 'pageSupport',
-        'track': 'pageTrack',
-        'map': 'pageMap',
-        'users': 'pageUsers',
-        'note': 'pageNote'
-    };
-    
-    const target = document.getElementById(map[page]);
-    if (target) {
-        target.classList.remove('hidden');
-        target.classList.add('active');
+const API_URL = window.location.origin + '/api';
+
+// ============================================================
+// 🔧 دوال API العامة
+// ============================================================
+
+function apiRequest(endpoint, options = {}) {
+  const token = localStorage.getItem('token');
+  
+  return fetch(API_URL + endpoint, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
+      ...(options.headers || {})
     }
-    
-    document.querySelectorAll('.nav .btn').forEach(btn => {
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-secondary');
-    });
-    
-    const navMap = {
-        'main': 0,
-        'maint': 1,
-        'eff': 2,
-        'support': 3,
-        'track': 4,
-        'map': 5,
-        'users': 6,
-        'note': 8
-    };
-    
-    const index = navMap[page];
-    const navBtns = document.querySelectorAll('.nav .btn');
-    if (navBtns[index]) {
-        navBtns[index].classList.remove('btn-secondary');
-        navBtns[index].classList.add('btn-primary');
+  })
+  .then(res => {
+    if (!res.ok) {
+      return res.json().then(err => { throw new Error(err.error || 'API Error'); });
     }
-    
-    if (page === 'eff') renderEff();
-    if (page === 'map') setTimeout(initGPSMap, 300);
-    if (page === 'track') setTimeout(initTrackMap, 300);
-    if (page === 'users') loadUsers();
-    if (page === 'support') loadTickets();
-    if (page === 'note') loadNotes();
+    return res.json();
+  })
+  .catch(err => {
+    console.error('API Error:', err);
+    throw err;
+  });
 }
 
-async function renderAll() {
-    try {
-        await Promise.all([
-            loadVessels(),
-            loadUsers().catch(() => {}),
-            loadTickets().catch(() => {}),
-            loadNotes().catch(() => {})
-        ]);
-        renderEff();
-        showToast('✅ تم تحميل البيانات بنجاح', 'success');
-    } catch (error) {
-        console.error('❌ خطأ في تحميل البيانات:', error);
-    }
+// ============================================================
+// 🔐 المصادقة
+// ============================================================
+
+function authLogin(email, password) {
+  return apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
 }
 
-async function refreshAllPages() {
-    try {
-        await Promise.all([
-            loadVessels(),
-            loadUsers().catch(() => {}),
-            loadTickets().catch(() => {}),
-            loadNotes().catch(() => {})
-        ]);
-        renderEff();
-        showToast('🔄 تم تحديث جميع الصفحات', 'info');
-    } catch (error) {
-        showToast('❌ خطأ في التحديث: ' + error.message, 'error');
-    }
+function authRegister(name, email, password, role) {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password, role })
+  });
 }
 
-async function exportAllData() {
-    try {
-        const data = await exportAllData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `marine_data_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير البيانات بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ خطأ في التصدير: ' + error.message, 'error');
-    }
+function authMe() {
+  return apiRequest('/auth/me');
 }
 
-async function importAllData(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            await importAllData(data);
-            await renderAll();
-            showToast('✅ تم استيراد البيانات بنجاح', 'success');
-        } catch (error) {
-            showToast('❌ خطأ في استيراد البيانات: ' + error.message, 'error');
-        }
-    };
-    reader.readAsText(file);
-    input.value = '';
+// ============================================================
+// 🚢 المراكب
+// ============================================================
+
+function getVessels() {
+  return apiRequest('/vessels');
 }
 
-// ===== المستخدمين =====
-async function loadUsers() {
-    try {
-        const users = await getUsers();
-        userData = users;
-        renderUsers();
-    } catch (error) {
-        showToast('❌ خطأ في تحميل المستخدمين: ' + error.message, 'error');
-    }
+function createVessel(data) {
+  return apiRequest('/vessels', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 }
 
-function renderUsers() {
-    const tbody = document.getElementById('usersBody');
-    
-    if (!userData || userData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--gray-500);">لا يوجد مستخدمين</td></tr>`;
-        return;
-    }
-    
-    let html = '';
-    userData.forEach(u => {
-        const cls = u.enabled !== false ? 'status-صالح' : 'status-معطب';
-        const statusText = u.enabled !== false ? 'نشط' : 'غير نشط';
-        html += `
-            <tr>
-                <td><strong>${u.name}</strong></td>
-                <td>${u.role}</td>
-                <td><span class="${cls}">${statusText}</span></td>
-                <td><button class="btn btn-sm btn-warning" onclick="openPasswordModal('${u.name}')"><i class="fas fa-key"></i></button></td>
-                <td><button class="btn btn-sm ${u.enabled !== false ? 'btn-danger' : 'btn-success'}" onclick="toggleUser('${u.name}')">
-                    <i class="fas ${u.enabled !== false ? 'fa-pause' : 'fa-play'}"></i>
-                </button></td>
-                <td><button class="btn btn-sm btn-danger" onclick="deleteUserHandler('${u.name}')"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `;
-    });
-    tbody.innerHTML = html;
+function updateVessel(id, data) {
+  return apiRequest('/vessels/' + id, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
 }
 
-async function addUser() {
-    const name = document.getElementById('un').value.trim();
-    const password = document.getElementById('up').value.trim();
-    const role = document.getElementById('ur').value;
-    
-    if (!name) { showToast('❌ الرجاء إدخال اسم المستخدم', 'warning'); return; }
-    if (!password) { showToast('❌ الرجاء إدخال كلمة المرور', 'warning'); return; }
-    if (password.length < 4) { showToast('❌ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning'); return; }
-    
-    try {
-        await addUser(name, password, role);
-        await loadUsers();
-        document.getElementById('un').value = '';
-        document.getElementById('up').value = '';
-        document.getElementById('ur').value = 'مشاهد';
-        showToast('✅ تم إضافة المستخدم "' + name + '" بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
+function deleteVessel(id) {
+  return apiRequest('/vessels/' + id, {
+    method: 'DELETE'
+  });
 }
 
-async function toggleUser(name) {
-    const user = userData.find(u => u.name === name);
-    if (!user) return;
-    
-    try {
-        const newStatus = user.enabled === false ? true : false;
-        await updateUser(user.id, { enabled: newStatus });
-        await loadUsers();
-        showToast(`✅ تم ${newStatus ? 'تفعيل' : 'تعطيل'} المستخدم ${name}`, 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
+// ============================================================
+// 🎫 التذاكر
+// ============================================================
+
+function getTickets() {
+  return apiRequest('/tickets');
 }
 
-async function deleteUserHandler(name) {
-    if (name === 'admin') {
-        showToast('❌ لا يمكن حذف المستخدم admin', 'warning');
-        return;
-    }
-    
-    const result = await Swal.fire({
-        title: '⚠️ تأكيد الحذف',
-        text: `هل أنت متأكد من حذف المستخدم "${name}"؟`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'نعم، احذف',
-        cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#ef4444'
-    });
-    
-    if (result.isConfirmed) {
-        try {
-            const user = userData.find(u => u.name === name);
-            if (user) {
-                await deleteUser(user.id);
-                await loadUsers();
-                showToast(`🗑️ تم حذف المستخدم ${name}`, 'success');
-            }
-        } catch (error) {
-            showToast('❌ ' + error.message, 'error');
-        }
-    }
+function createTicket(data) {
+  return apiRequest('/tickets', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 }
 
-function refreshUsers() {
-    loadUsers();
-    showToast('🔄 تم تحديث قائمة المستخدمين', 'info');
+function replyTicket(id, reply) {
+  return apiRequest('/tickets/' + id + '/reply', {
+    method: 'PUT',
+    body: JSON.stringify({ reply })
+  });
 }
 
-let currentPasswordUser = null;
-
-function openPasswordModal(name) {
-    currentPasswordUser = name;
-    document.getElementById('modalUserName').textContent = `تغيير كلمة المرور للمستخدم: ${name}`;
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    document.getElementById('passwordModal').style.display = 'flex';
+function closeTicket(id) {
+  return apiRequest('/tickets/' + id + '/close', {
+    method: 'PUT'
+  });
 }
 
-function closePasswordModal() {
-    document.getElementById('passwordModal').style.display = 'none';
-    currentPasswordUser = null;
+// ============================================================
+// 📜 السجلات
+// ============================================================
+
+function getLogs() {
+  return apiRequest('/logs');
 }
 
-async function saveNewPassword() {
-    const newPass = document.getElementById('newPassword').value.trim();
-    const confirmPass = document.getElementById('confirmPassword').value.trim();
-    
-    if (!newPass || !confirmPass) {
-        showToast('❌ الرجاء إدخال كلمة المرور والتأكيد', 'warning');
-        return;
-    }
-    
-    if (newPass !== confirmPass) {
-        showToast('❌ كلمة المرور غير متطابقة', 'warning');
-        return;
-    }
-    
-    if (newPass.length < 4) {
-        showToast('❌ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
-        return;
-    }
-    
-    try {
-        const user = userData.find(u => u.name === currentPasswordUser);
-        if (user) {
-            await updateUser(user.id, { pass: newPass });
-            closePasswordModal();
-            showToast('✅ تم تغيير كلمة المرور بنجاح', 'success');
-        }
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
+function createLog(data) {
+  return apiRequest('/logs', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
 }
 
-// ===== Note Verbale =====
-async function deleteNote(id) {
-    try {
-        await deleteNote(id);
-        await loadNotes();
-        showToast('🗑️ تم حذف المذكرة بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
+// ============================================================
+// 📍 المواقع
+// ============================================================
+
+function getLocations() {
+  return apiRequest('/locations');
 }
 
-// ===== تشغيل عند التحميل =====
-document.addEventListener('DOMContentLoaded', function() {
-    renderAll();
-});
+function createLocation(lat, lng, action) {
+  return apiRequest('/locations', {
+    method: 'POST',
+    body: JSON.stringify({ lat, lng, action })
+  });
+}
+
+// ============================================================
+// 📝 Note Verbale
+// ============================================================
+
+function getNotes() {
+  return apiRequest('/notes');
+}
+
+function createNote(data) {
+  return apiRequest('/notes', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+function getNotesByWeek(week, limit) {
+  const query = new URLSearchParams();
+  if (week) query.append('week', week);
+  if (limit) query.append('limit', limit);
+  return apiRequest('/notes?' + query.toString());
+}
+
+function getLatestNote() {
+  return apiRequest('/notes/latest');
+}
+
+function deleteNote(id) {
+  return apiRequest('/notes/' + id, {
+    method: 'DELETE'
+  });
+}
+
+// ============================================================
+// 👥 المستخدمين
+// ============================================================
+
+function getUsers() {
+  return apiRequest('/users');
+}
+
+function createUser(data) {
+  return apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+function updateUser(id, data) {
+  return apiRequest('/users/' + id, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+}
+
+function deleteUser(id) {
+  return apiRequest('/users/' + id, {
+    method: 'DELETE'
+  });
+}
+
+// ============================================================
+// 💾 تصدير واستيراد
+// ============================================================
+
+function exportAll() {
+  return apiRequest('/export-all');
+}
+
+function importAll(data) {
+  return apiRequest('/import-all', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+}
+
+// ============================================================
+// 🔄 تصدير الدوال للاستخدام العالمي
+// ============================================================
+
+window.api = {
+  authLogin,
+  authRegister,
+  authMe,
+  getVessels,
+  createVessel,
+  updateVessel,
+  deleteVessel,
+  getTickets,
+  createTicket,
+  replyTicket,
+  closeTicket,
+  getLogs,
+  createLog,
+  getLocations,
+  createLocation,
+  getNotes,
+  createNote,
+  getNotesByWeek,
+  getLatestNote,
+  deleteNote,
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  exportAll,
+  importAll
+};
