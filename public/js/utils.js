@@ -1,99 +1,178 @@
 // ============================================================
-// ===== دوال مساعدة =====
+// 🛠️ utils.js - دوال مساعدة (بدون require)
 // ============================================================
 
-function showToast(message, type = 'info') {
-    document.querySelectorAll('.toast').forEach(t => t.remove());
-    
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    
-    const colors = {
-        success: '#22c55e',
-        error: '#ef4444',
-        warning: '#f59e0b',
-        info: '#2563eb'
-    };
-    
-    toast.style.borderRight = `4px solid ${colors[type] || colors.info}`;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
-}
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToBottom() {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-function getDeviceInfo() {
-    const ua = navigator.userAgent;
-    let device = 'غير معروف';
-    let browser = 'غير معروف';
-    
-    if (ua.includes('Android')) device = 'Android';
-    else if (ua.includes('iPhone') || ua.includes('iPad')) device = 'iOS';
-    else if (ua.includes('Windows')) device = 'Windows';
-    else if (ua.includes('Macintosh')) device = 'Mac';
-    else if (ua.includes('Linux')) device = 'Linux';
-    
-    if (ua.includes('Edg') || ua.includes('Edge')) browser = 'Edge';
-    else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera';
-    else if (ua.includes('Chrome')) browser = 'Chrome';
-    else if (ua.includes('Firefox')) browser = 'Firefox';
-    else if (ua.includes('Safari')) browser = 'Safari';
-    
-    return { device, browser };
-}
-
-function getIpAddress() {
-    return new Promise((resolve) => {
-        fetch('https://api.ipify.org?format=json')
-            .then(res => res.json())
-            .then(data => resolve(data.ip))
-            .catch(() => resolve('غير معروف'));
-    });
-}
-
-function getLocationFromCoords(lat, lng) {
-    return new Promise((resolve) => {
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`)
-            .then(res => res.json())
-            .then(data => resolve(data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`))
-            .catch(() => resolve(`${lat.toFixed(4)}, ${lng.toFixed(4)}`));
-    });
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('ar-TN');
-}
-
-function formatTime(dateStr) {
-    if (!dateStr) return '-';
-    const d = new Date(dateStr);
-    return d.toLocaleTimeString('ar-TN');
-}
+// ============================================================
+// 📅 دوال التاريخ والوقت
+// ============================================================
 
 function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const now = new Date();
+  return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getCurrentDate() {
+  return new Date().toISOString().split('T')[0];
 }
 
 function getWeekNumber(date) {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
-    const week1 = new Date(d.getFullYear(), 0, 4);
-    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
+
+function formatDate(date, format = 'ar') {
+  if (!date) return '-';
+  const d = new Date(date);
+  if (format === 'ar') {
+    return d.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  return d.toISOString().split('T')[0];
+}
+
+function timeAgo(date) {
+  if (!date) return '-';
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  
+  const intervals = {
+    سنة: 31536000,
+    شهر: 2592000,
+    أسبوع: 604800,
+    يوم: 86400,
+    ساعة: 3600,
+    دقيقة: 60
+  };
+  
+  for (const [unit, value] of Object.entries(intervals)) {
+    const count = Math.floor(seconds / value);
+    if (count >= 1) {
+      return `منذ ${count} ${unit}${count > 1 ? 'ات' : ''}`;
+    }
+  }
+  
+  return 'الآن';
+}
+
+// ============================================================
+// 📱 دوال الجهاز والمتصفح
+// ============================================================
+
+function extractDevice(userAgent) {
+  if (!userAgent) return 'غير معروف';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+  if (ua.includes('windows')) return 'Windows';
+  if (ua.includes('macintosh')) return 'Mac';
+  if (ua.includes('linux')) return 'Linux';
+  return 'غير معروف';
+}
+
+function extractBrowser(userAgent) {
+  if (!userAgent) return 'غير معروف';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('edg') || ua.includes('edge')) return 'Edge';
+  if (ua.includes('opera') || ua.includes('opr')) return 'Opera';
+  if (ua.includes('chrome')) return 'Chrome';
+  if (ua.includes('firefox')) return 'Firefox';
+  if (ua.includes('safari')) return 'Safari';
+  return 'غير معروف';
+}
+
+// ============================================================
+// 🚢 دوال المراكب
+// ============================================================
+
+function determineCategory(length) {
+  const n = parseFloat(length);
+  if (n === 11) return 'البروق';
+  if (n >= 8 && n <= 12) return 'صقور';
+  if (n > 12 && n <= 25) return 'خوافر';
+  if (n > 30) return 'طوافات';
+  return 'زوارق مزدوجة';
+}
+
+function getStatusClass(status) {
+  const map = {
+    'صالح': 'status-good',
+    'معطب': 'status-bad',
+    'صيانة': 'status-maintenance'
+  };
+  return map[status] || 'status-good';
+}
+
+function getStatusIcon(status) {
+  const map = {
+    'صالح': '✅',
+    'معطب': '❌',
+    'صيانة': '🔧'
+  };
+  return map[status] || '✅';
+}
+
+// ============================================================
+// 🎨 دوال التنسيق
+// ============================================================
+
+function truncateText(text, length = 50) {
+  if (!text) return '';
+  if (text.length <= length) return text;
+  return text.substring(0, length) + '...';
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+function debounce(func, wait = 300) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+function getStatusColor(status) {
+  const map = {
+    'صالح': '#28a745',
+    'معطب': '#dc3545',
+    'صيانة': '#ffc107',
+    'قيد المعالجة': '#ffc107',
+    'تم الرد': '#17a2b8',
+    'مغلقة': '#28a745'
+  };
+  return map[status] || '#6c757d';
+}
+
+// ============================================================
+// 🔄 تصدير للاستخدام العالمي
+// ============================================================
+
+window.getCurrentTime = getCurrentTime;
+window.getCurrentDate = getCurrentDate;
+window.getWeekNumber = getWeekNumber;
+window.formatDate = formatDate;
+window.timeAgo = timeAgo;
+window.extractDevice = extractDevice;
+window.extractBrowser = extractBrowser;
+window.determineCategory = determineCategory;
+window.getStatusClass = getStatusClass;
+window.getStatusIcon = getStatusIcon;
+window.truncateText = truncateText;
+window.escapeHtml = escapeHtml;
+window.generateId = generateId;
+window.debounce = debounce;
+window.getStatusColor = getStatusColor;
