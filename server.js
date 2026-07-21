@@ -30,7 +30,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ============================================================
-// ✅ حل مشكلة MIME types - الأهم!!!
+// ✅ حل مشكلة MIME types
 // ============================================================
 app.use((req, res, next) => {
   const url = req.url;
