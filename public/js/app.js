@@ -1,18 +1,18 @@
 // ============================================================
-// 📦 app.js - التطبيق الرئيسي
+// 📦 app.js - التطبيق الرئيسي (كامل)
 // ============================================================
 
-// ✅ بدون require
-const API_URL = window.location.origin + '/api';
+// ✅ تجنب التكرار
+if (typeof API_URL === 'undefined') {
+  var API_URL = window.location.origin + '/api';
+}
 
 // ===== متغيرات عامة =====
 let currentUser = null;
-let currentPage = 'main';
 let allVessels = [];
 let allTickets = [];
 let allNotes = [];
 let allUsers = [];
-let allLogs = [];
 let allLocations = [];
 let socket = null;
 
@@ -164,7 +164,6 @@ function loadAllData() {
   loadTickets();
   loadNotes();
   loadUsers();
-  loadLogs();
   loadLocations();
 }
 
@@ -239,22 +238,6 @@ function loadUsers() {
   .catch(err => console.error('Load users error:', err));
 }
 
-function loadLogs() {
-  const token = getToken();
-  if (!token) return;
-  
-  fetch('/api/logs', {
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (Array.isArray(data)) {
-      allLogs = data;
-    }
-  })
-  .catch(err => console.error('Load logs error:', err));
-}
-
 function loadLocations() {
   const token = getToken();
   if (!token) return;
@@ -277,8 +260,6 @@ function loadLocations() {
 // ============================================================
 
 function showPage(page) {
-  currentPage = page;
-  
   // إخفاء الكل
   document.querySelectorAll('[id^="page"]').forEach(el => {
     el.classList.add('hidden');
@@ -676,7 +657,6 @@ window.loadVessels = loadVessels;
 window.loadTickets = loadTickets;
 window.loadNotes = loadNotes;
 window.loadUsers = loadUsers;
-window.loadLogs = loadLogs;
 window.loadLocations = loadLocations;
 window.renderMain = renderMain;
 window.renderMaint = renderMaint;
