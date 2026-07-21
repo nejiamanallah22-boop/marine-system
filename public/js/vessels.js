@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 vessels.js - إدارة المراكب (بدون require)
+// 🚢 vessels.js - إدارة المراكب
 // ============================================================
 
 // ============================================================
@@ -88,14 +88,12 @@ function deleteVessel(id) {
 }
 
 function editVessel(id) {
-  // العثور على المركب
   const vessel = allVessels.find(v => v._id === id);
   if (!vessel) {
     showNotification('⚠️ المركب غير موجود', 'warning');
     return;
   }
   
-  // ملء النموذج
   document.getElementById('iName').value = vessel.name || '';
   document.getElementById('iNum').value = vessel.num || '';
   document.getElementById('iLen').value = vessel.len || 0;
@@ -109,7 +107,6 @@ function editVessel(id) {
   document.getElementById('iEnd').value = vessel.eDate || '';
   document.getElementById('iRef').value = vessel.ref || '';
   
-  // تغيير زر الحفظ
   const saveBtn = document.querySelector('#inputArea .btn-success');
   if (saveBtn) {
     saveBtn.textContent = '✏️ تحديث';
@@ -159,7 +156,6 @@ function updateVessel(id) {
       showNotification('✅ تم تحديث المركب بنجاح', 'success');
       clearInputs();
       loadVessels();
-      // إعادة زر الحفظ
       const saveBtn = document.querySelector('#inputArea .btn-success');
       if (saveBtn) {
         saveBtn.textContent = '💾 حفظ';
@@ -187,7 +183,6 @@ function clearInputs() {
   document.getElementById('iEnd').value = '';
   document.getElementById('iRef').value = '';
   
-  // إعادة زر الحفظ
   const saveBtn = document.querySelector('#inputArea .btn-success');
   if (saveBtn) {
     saveBtn.textContent = '💾 حفظ';
