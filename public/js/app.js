@@ -1,8 +1,10 @@
 // ============================================================
-// 📦 app.js - نسخة بسيطة جداً
+// 📦 app.js - النسخة الكاملة التي تعمل
 // ============================================================
 
 console.log('✅ App loaded');
+
+let allVessels = [];
 
 // ============================================================
 // 🔐 المصادقة
@@ -52,7 +54,7 @@ function getToken() {
 }
 
 // ============================================================
-// 🚢 المراكب
+// 🚢 تحميل وعرض المراكب
 // ============================================================
 
 function loadVessels() {
@@ -64,14 +66,121 @@ function loadVessels() {
     })
     .then(res => res.json())
     .then(data => {
-        renderTable(data);
-        renderStats(data);
+        allVessels = data;
+        renderMainTable();
+        renderStats();
+        renderMaintTable();
     })
     .catch(err => console.error('Load error:', err));
 }
 
 // ============================================================
-// ✅ دالة إضافة مركب - هذه هي التي يناديها الزر
+// ✅ عرض الجدول الرئيسي
+// ============================================================
+
+function renderMainTable() {
+    const tbody = document.getElementById('mainBody');
+    if (!tbody) return;
+    
+    if (!allVessels || allVessels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px;">🚫 لا توجد بيانات. قم بإضافة مركب جديد</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = allVessels.map(v => `
+        <tr>
+            <td>${v.name || '-'}</td>
+            <td>${v.num || '-'}</td>
+            <td>${v.len || 0}</td>
+            <td>${v.cat || '-'}</td>
+            <td>${v.reg || '-'}</td>
+            <td>${v.zone || '-'}</td>
+            <td>${v.port || '-'}</td>
+            <td>${v.supp || '-'}</td>
+            <td><span style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</span></td>
+            <td>${v.break || '-'}</td>
+            <td>${v.fDate || '-'}</td>
+            <td>${v.eDate || '-'}</td>
+            <td>
+                <button onclick="deleteVessel(${v.id})" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================================
+// ✅ عرض جدول الصيانة
+// ============================================================
+
+function renderMaintTable() {
+    const tbody = document.getElementById('maintBody');
+    if (!tbody) return;
+    
+    const maintVessels = allVessels.filter(v => v.stat !== 'صالح');
+    
+    if (maintVessels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px;">🚫 لا توجد بيانات صيانة</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = maintVessels.map(v => `
+        <tr>
+            <td>${v.name || '-'}</td>
+            <td>${v.num || '-'}</td>
+            <td>${v.reg || '-'}</td>
+            <td>${v.zone || '-'}</td>
+            <td><span style="color:${v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat}</span></td>
+            <td>${v.break || '-'}</td>
+            <td>${v.fDate || '-'}</td>
+            <td>${v.eDate || '-'}</td>
+            <td>${v.ref || '-'}</td>
+            <td>
+                <button onclick="alert('تعديل: ${v.name}')" style="background:#ffc107; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================================
+// ✅ عرض الإحصائيات
+// ============================================================
+
+function renderStats() {
+    const container = document.getElementById('statsCards');
+    if (!container) return;
+    
+    const total = allVessels.length;
+    const good = allVessels.filter(v => v.stat === 'صالح').length;
+    const bad = allVessels.filter(v => v.stat === 'معطب').length;
+    const maint = allVessels.filter(v => v.stat === 'صيانة').length;
+    const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+    
+    container.innerHTML = `
+        <div style="background:#28a745; padding:20px; border-radius:10px; text-align:center; color:white;">
+            <h3 style="font-size:32px; margin:0;">${good}</h3>
+            <p style="margin:0;">✅ صالح</p>
+        </div>
+        <div style="background:#dc3545; padding:20px; border-radius:10px; text-align:center; color:white;">
+            <h3 style="font-size:32px; margin:0;">${bad}</h3>
+            <p style="margin:0;">❌ معطب</p>
+        </div>
+        <div style="background:#ffc107; padding:20px; border-radius:10px; text-align:center; color:#333;">
+            <h3 style="font-size:32px; margin:0;">${maint}</h3>
+            <p style="margin:0;">🔧 صيانة</p>
+        </div>
+        <div style="background:#17a2b8; padding:20px; border-radius:10px; text-align:center; color:white;">
+            <h3 style="font-size:32px; margin:0;">${eff}%</h3>
+            <p style="margin:0;">📊 الجاهزية</p>
+        </div>
+    `;
+}
+
+// ============================================================
+// ✅ إضافة مركب جديدة (هذه الدالة التي يناديها الزر)
 // ============================================================
 
 function addItem() {
@@ -102,6 +211,8 @@ function addItem() {
         ref: document.getElementById('iRef')?.value || ''
     };
     
+    console.log('📤 إرسال بيانات:', data);
+    
     fetch('/api/vessels', {
         method: 'POST',
         headers: {
@@ -112,6 +223,7 @@ function addItem() {
     })
     .then(res => res.json())
     .then(data => {
+        console.log('📥 استجابة:', data);
         if (data.success) {
             alert('✅ تم إضافة المركب بنجاح');
             // تفريغ الحقول
@@ -127,7 +239,7 @@ function addItem() {
             document.getElementById('iDate').value = '';
             document.getElementById('iEnd').value = '';
             document.getElementById('iRef').value = '';
-            // إعادة تحميل الجدول
+            // ✅ إعادة تحميل البيانات - هذا هو الحل!
             loadVessels();
         } else {
             alert('❌ ' + (data.error || 'خطأ في الإضافة'));
@@ -140,83 +252,11 @@ function addItem() {
 }
 
 // ============================================================
-// ✅ عرض الجدول
-// ============================================================
-
-function renderTable(vessels) {
-    const tbody = document.getElementById('mainBody');
-    if (!tbody) return;
-    
-    if (!vessels || vessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px;">🚫 لا توجد بيانات. قم بإضافة مركب جديد</td></tr>`;
-        return;
-    }
-    
-    tbody.innerHTML = vessels.map(v => `
-        <tr>
-            <td>${v.name || '-'}</td>
-            <td>${v.num || '-'}</td>
-            <td>${v.len || 0}</td>
-            <td>${v.cat || '-'}</td>
-            <td>${v.reg || '-'}</td>
-            <td>${v.zone || '-'}</td>
-            <td>${v.port || '-'}</td>
-            <td>${v.supp || '-'}</td>
-            <td><span style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</span></td>
-            <td>${v.break || '-'}</td>
-            <td>${v.fDate || '-'}</td>
-            <td>${v.eDate || '-'}</td>
-            <td>
-                <button onclick="deleteVessel(${v.id})" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// ============================================================
-// ✅ عرض الإحصائيات
-// ============================================================
-
-function renderStats(vessels) {
-    const container = document.getElementById('statsCards');
-    if (!container) return;
-    
-    if (!vessels) vessels = [];
-    
-    const total = vessels.length;
-    const good = vessels.filter(v => v.stat === 'صالح').length;
-    const bad = vessels.filter(v => v.stat === 'معطب').length;
-    const maint = vessels.filter(v => v.stat === 'صيانة').length;
-    const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-    
-    container.innerHTML = `
-        <div class="stat-card" style="background:#28a745; padding:20px; border-radius:10px; text-align:center; color:white;">
-            <h3 style="font-size:32px;">${good}</h3>
-            <p>✅ صالح</p>
-        </div>
-        <div class="stat-card" style="background:#dc3545; padding:20px; border-radius:10px; text-align:center; color:white;">
-            <h3 style="font-size:32px;">${bad}</h3>
-            <p>❌ معطب</p>
-        </div>
-        <div class="stat-card" style="background:#ffc107; padding:20px; border-radius:10px; text-align:center; color:#333;">
-            <h3 style="font-size:32px;">${maint}</h3>
-            <p>🔧 صيانة</p>
-        </div>
-        <div class="stat-card" style="background:#17a2b8; padding:20px; border-radius:10px; text-align:center; color:white;">
-            <h3 style="font-size:32px;">${eff}%</h3>
-            <p>📊 الجاهزية</p>
-        </div>
-    `;
-}
-
-// ============================================================
 // ✅ حذف مركب
 // ============================================================
 
 function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المركب؟')) return;
     
     const token = getToken();
     if (!token) {
@@ -231,7 +271,7 @@ function deleteVessel(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم الحذف');
+            alert('✅ تم حذف المركب');
             loadVessels();
         } else {
             alert('❌ ' + (data.error || 'خطأ في الحذف'));
@@ -239,12 +279,12 @@ function deleteVessel(id) {
     })
     .catch(err => {
         console.error('Delete error:', err);
-        alert('❌ خطأ في الحذف');
+        alert('❌ خطأ في حذف المركب');
     });
 }
 
 // ============================================================
-// ✅ تحديث المناطق
+// ✅ تحديث المناطق حسب الإقليم
 // ============================================================
 
 function updateZones() {
@@ -253,10 +293,15 @@ function updateZones() {
     if (!zoneSelect) return;
     
     const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى'],
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'لا جاليت'],
         'الساحل': ['سوسة', 'المنستير', 'المهدية'],
         'الوسط': ['صفاقس', 'قابس', 'جربة'],
-        'الجنوب': ['جرجيس', 'بن قردان']
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذهيبة'],
+        'وحدة الصيانة والإسناد البحري تونس': ['تونس', 'قرطاج'],
+        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير', 'المهدية'],
+        'وحدة الصيانة والإسناد البحري صفاقس': ['صفاقس', 'قابس'],
+        'وحدة الصيانة والإسناد البحري جرجيس': ['جرجيس', 'بن قردان'],
+        'المجمع الأمني بقبيبة': ['قبيبة', 'المرسى']
     };
     
     const options = zones[reg] || [];
@@ -274,6 +319,7 @@ function showPage(page) {
     document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
     const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
     if (target) target.classList.remove('hidden');
+    if (page === 'main') loadVessels();
 }
 
 function refreshAllPages() {
@@ -283,6 +329,14 @@ function refreshAllPages() {
 
 function clearMainSearch() {
     document.getElementById('searchMain').value = '';
+    loadVessels();
+}
+
+function resetMaintFilters() {
+    document.getElementById('searchMaint').value = '';
+    document.getElementById('fRegMaint').value = 'الكل';
+    document.getElementById('fDateStart').value = '';
+    document.getElementById('fDateEnd').value = '';
     loadVessels();
 }
 
@@ -299,7 +353,42 @@ function scrollToBottom() {
 // ============================================================
 
 function sendTicket() {
-    alert('📝 تم إرسال التذكرة (تجريبي)');
+    const subject = document.getElementById('ticketSubject')?.value.trim();
+    const message = document.getElementById('ticketMessage')?.value.trim();
+    
+    if (!subject || !message) {
+        alert('⚠️ الرجاء إدخال العنوان والرسالة');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ subject, message })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم إرسال التذكرة');
+            document.getElementById('ticketSubject').value = '';
+            document.getElementById('ticketMessage').value = '';
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الإرسال'));
+        }
+    })
+    .catch(err => {
+        console.error('Send ticket error:', err);
+        alert('❌ خطأ في إرسال التذكرة');
+    });
 }
 
 function refreshTickets() {
@@ -311,7 +400,44 @@ function refreshTickets() {
 // ============================================================
 
 function saveNote() {
-    alert('📝 تم حفظ المذكرة (تجريبي)');
+    const title = document.getElementById('noteTitle')?.value.trim();
+    const content = document.getElementById('noteContent')?.value.trim();
+    const date = document.getElementById('noteDate')?.value;
+    
+    if (!title || !content || !date) {
+        alert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, content, date })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم حفظ المذكرة');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteDate').value = '';
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الحفظ'));
+        }
+    })
+    .catch(err => {
+        console.error('Save note error:', err);
+        alert('❌ خطأ في حفظ المذكرة');
+    });
 }
 
 function clearNote() {
@@ -362,6 +488,7 @@ window.deleteVessel = deleteVessel;
 window.updateZones = updateZones;
 window.refreshAllPages = refreshAllPages;
 window.clearMainSearch = clearMainSearch;
+window.resetMaintFilters = resetMaintFilters;
 window.scrollToTop = scrollToTop;
 window.scrollToBottom = scrollToBottom;
 window.sendTicket = sendTicket;
