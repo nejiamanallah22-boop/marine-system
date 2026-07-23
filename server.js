@@ -2,12 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const http = require('http');
+const socketIO = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// ============================================================
+// ✅ Socket.IO
+// ============================================================
+const io = socketIO(server, {
+    cors: { origin: '*', methods: ['GET', 'POST'] }
+});
 
 // ============================================================
 // ✅ حل مشكلة CSS
@@ -26,232 +33,197 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// 🗄️ الاتصال بقاعدة البيانات
+// 🗄️ MongoDB
 // ============================================================
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
 
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ MongoDB Connected'))
-    .catch(err => console.error('❌ MongoDB Error:', err.message));
+    .catch(err => console.log('❌ MongoDB Error:', err.message));
 
 // ============================================================
-// 📊 نموذج المراكب
+// 📊 نماذج البيانات
 // ============================================================
-const VesselSchema = new mongoose.Schema({
+
+// نموذج المراكب
+const vesselSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    num: { type: String, default: '' },
-    len: { type: Number, default: 0 },
-    cat: { type: String, default: 'زوارق مزدوجة' },
-    reg: { type: String, default: '' },
-    zone: { type: String, default: '' },
-    port: { type: String, default: '' },
-    supp: { type: String, default: '' },
+    num: String,
+    len: Number,
+    cat: String,
+    reg: String,
+    zone: String,
+    port: String,
+    supp: String,
     stat: { type: String, default: 'صالح' },
-    break: { type: String, default: '' },
-    fDate: { type: String, default: '' },
-    eDate: { type: String, default: '' },
-    ref: { type: String, default: '' }
+    break: String,
+    fDate: String,
+    eDate: String,
+    ref: String
 }, { timestamps: true });
 
-const Vessel = mongoose.model('Vessel', VesselSchema);
+const Vessel = mongoose.model('Vessel', vesselSchema);
+
+// نموذج الإشعارات
+const notificationSchema = new mongoose.Schema({
+    message: { type: String, required: true },
+    type: { type: String, default: 'info' }, // info, success, warning, danger
+    icon: { type: String, default: '🔔' },
+    read: { type: Boolean, default: false },
+    userId: { type: String, default: 'all' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Notification = mongoose.model('Notification', notificationSchema);
 
 // ============================================================
-// 🔐 Routes المصادقة
+// 🔐 Login
 // ============================================================
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     if (email === 'admin' && password === '123456') {
         res.json({
             success: true,
-            token: 'fake-jwt-token-123456',
-            user: {
-                id: 1,
-                name: 'Admin',
-                email: 'admin',
-                role: 'مسؤول'
-            }
+            token: 'fake-token',
+            user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' }
         });
     } else {
-        res.status(401).json({
-            success: false,
-            error: 'بيانات غير صحيحة'
-        });
+        res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
     }
 });
 
 app.get('/api/auth/me', (req, res) => {
-    res.json({
-        success: true,
-        user: {
-            id: 1,
-            name: 'Admin',
-            email: 'admin',
-            role: 'مسؤول'
-        }
-    });
+    res.json({ success: true, user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' } });
 });
 
 // ============================================================
-// 🚢 Routes المراكب (مع MongoDB)
+// 🚢 المراكب - مع إرسال إشعار
 // ============================================================
 
-// ✅ جلب جميع المراكب
 app.get('/api/vessels', async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
-        console.log(`📊 عدد المراكب: ${vessels.length}`);
         res.json(vessels);
     } catch (error) {
-        console.error('❌ خطأ في جلب المراكب:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// ✅ إضافة مركب جديد
 app.post('/api/vessels', async (req, res) => {
     try {
-        console.log('📥 استلام بيانات:', req.body);
+        const vessel = new Vessel(req.body);
+        const saved = await vessel.save();
         
-        const vessel = new Vessel({
-            name: req.body.name,
-            num: req.body.num || '',
-            len: parseFloat(req.body.len) || 0,
-            cat: req.body.cat || 'زوارق مزدوجة',
-            reg: req.body.reg || '',
-            zone: req.body.zone || '',
-            port: req.body.port || '',
-            supp: req.body.supp || '',
-            stat: req.body.stat || 'صالح',
-            break: req.body.break || '',
-            fDate: req.body.fDate || '',
-            eDate: req.body.eDate || '',
-            ref: req.body.ref || ''
+        // ✅ إرسال إشعار عند إضافة مركب
+        const notification = new Notification({
+            message: `🚢 تم إضافة مركب جديد: ${saved.name}`,
+            type: 'success',
+            icon: '🚢'
+        });
+        await notification.save();
+        
+        // ✅ بث الإشعار لجميع المستخدمين عبر Socket.IO
+        io.emit('new-notification', {
+            message: `🚢 تم إضافة مركب جديد: ${saved.name}`,
+            type: 'success',
+            icon: '🚢',
+            time: new Date().toISOString()
         });
         
-        const savedVessel = await vessel.save();
-        console.log('✅ تم إضافة مركب:', savedVessel.name);
-        
-        res.status(201).json({
-            success: true,
-            message: 'تم إضافة المركب بنجاح',
-            data: savedVessel
-        });
+        res.status(201).json({ success: true, data: saved });
     } catch (error) {
-        console.error('❌ خطأ في الإضافة:', error);
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-// ✅ تحديث مركب
-app.put('/api/vessels/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        console.log('✏️ تحديث مركب:', id);
-        
-        const vessel = await Vessel.findByIdAndUpdate(
-            id,
-            {
-                name: req.body.name,
-                num: req.body.num || '',
-                len: parseFloat(req.body.len) || 0,
-                cat: req.body.cat || 'زوارق مزدوجة',
-                reg: req.body.reg || '',
-                zone: req.body.zone || '',
-                port: req.body.port || '',
-                supp: req.body.supp || '',
-                stat: req.body.stat || 'صالح',
-                break: req.body.break || '',
-                fDate: req.body.fDate || '',
-                eDate: req.body.eDate || '',
-                ref: req.body.ref || ''
-            },
-            { new: true, runValidators: true }
-        );
-        
-        if (!vessel) {
-            return res.status(404).json({
-                success: false,
-                error: 'المركب غير موجود'
-            });
-        }
-        
-        console.log('✅ تم تحديث مركب:', vessel.name);
-        res.json({
-            success: true,
-            message: 'تم تحديث المركب بنجاح',
-            data: vessel
-        });
-    } catch (error) {
-        console.error('❌ خطأ في التحديث:', error);
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// ✅ حذف مركب
 app.delete('/api/vessels/:id', async (req, res) => {
     try {
-        const id = req.params.id;
-        console.log('🗑️ حذف مركب:', id);
-        
-        const vessel = await Vessel.findByIdAndDelete(id);
-        
+        const vessel = await Vessel.findByIdAndDelete(req.params.id);
         if (!vessel) {
-            return res.status(404).json({
-                success: false,
-                error: 'المركب غير موجود'
-            });
+            return res.status(404).json({ success: false, error: 'غير موجود' });
         }
         
-        console.log('✅ تم حذف مركب:', vessel.name);
-        res.json({
-            success: true,
-            message: 'تم حذف المركب بنجاح'
+        // ✅ إرسال إشعار عند حذف مركب
+        const notification = new Notification({
+            message: `🗑️ تم حذف مركب: ${vessel.name}`,
+            type: 'danger',
+            icon: '🗑️'
         });
+        await notification.save();
+        
+        io.emit('new-notification', {
+            message: `🗑️ تم حذف مركب: ${vessel.name}`,
+            type: 'danger',
+            icon: '🗑️',
+            time: new Date().toISOString()
+        });
+        
+        res.json({ success: true, message: 'تم الحذف' });
     } catch (error) {
-        console.error('❌ خطأ في الحذف:', error);
-        res.status(400).json({
-            success: false,
-            error: error.message
-        });
+        res.status(400).json({ success: false, error: error.message });
     }
 });
 
-// ✅ بحث في المراكب
-app.get('/api/vessels/search', async (req, res) => {
+// ============================================================
+// 🔔 الإشعارات
+// ============================================================
+
+// جلب جميع الإشعارات
+app.get('/api/notifications', async (req, res) => {
     try {
-        const { q } = req.query;
-        const vessels = await Vessel.find({
-            $or: [
-                { name: { $regex: q, $options: 'i' } },
-                { num: { $regex: q, $options: 'i' } }
-            ]
-        });
-        res.json(vessels);
+        const notifications = await Notification.find()
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json(notifications);
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
+// جلب عدد الإشعارات غير المقروءة
+app.get('/api/notifications/unread-count', async (req, res) => {
+    try {
+        const count = await Notification.countDocuments({ read: false });
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// تحديث حالة الإشعار (قراءة)
+app.put('/api/notifications/:id/read', async (req, res) => {
+    try {
+        await Notification.findByIdAndUpdate(req.params.id, { read: true });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// تحديث جميع الإشعارات كقراءة
+app.put('/api/notifications/read-all', async (req, res) => {
+    try {
+        await Notification.updateMany({ read: false }, { read: true });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================================
-// 🎫 Routes التذاكر (مع MongoDB)
+// 🎫 التذاكر
 // ============================================================
-const TicketSchema = new mongoose.Schema({
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
+const ticketSchema = new mongoose.Schema({
+    subject: String,
+    message: String,
     status: { type: String, default: 'قيد المعالجة' },
-    userName: { type: String, default: 'Admin' },
-    date: { type: String },
-    time: { type: String },
-    replies: { type: Array, default: [] }
+    userName: String,
+    date: String,
+    time: String,
+    replies: Array
 }, { timestamps: true });
 
-const Ticket = mongoose.model('Ticket', TicketSchema);
+const Ticket = mongoose.model('Ticket', ticketSchema);
 
 app.get('/api/tickets', async (req, res) => {
     try {
@@ -264,13 +236,22 @@ app.get('/api/tickets', async (req, res) => {
 
 app.post('/api/tickets', async (req, res) => {
     try {
-        const ticket = new Ticket({
-            subject: req.body.subject,
-            message: req.body.message,
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-        });
+        const ticket = new Ticket(req.body);
         const saved = await ticket.save();
+        
+        const notification = new Notification({
+            message: `🎫 تذكرة جديدة: ${saved.subject}`,
+            type: 'info',
+            icon: '🎫'
+        });
+        await notification.save();
+        io.emit('new-notification', {
+            message: `🎫 تذكرة جديدة: ${saved.subject}`,
+            type: 'info',
+            icon: '🎫',
+            time: new Date().toISOString()
+        });
+        
         res.status(201).json({ success: true, data: saved });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
@@ -278,18 +259,18 @@ app.post('/api/tickets', async (req, res) => {
 });
 
 // ============================================================
-// 📝 Routes المذكرات (مع MongoDB)
+// 📝 المذكرات
 // ============================================================
-const NoteSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    date: { type: String },
-    time: { type: String },
-    week: { type: String },
-    createdBy: { type: String, default: 'Admin' }
+const noteSchema = new mongoose.Schema({
+    title: String,
+    content: String,
+    date: String,
+    time: String,
+    week: String,
+    createdBy: String
 }, { timestamps: true });
 
-const Note = mongoose.model('Note', NoteSchema);
+const Note = mongoose.model('Note', noteSchema);
 
 app.get('/api/notes', async (req, res) => {
     try {
@@ -302,14 +283,22 @@ app.get('/api/notes', async (req, res) => {
 
 app.post('/api/notes', async (req, res) => {
     try {
-        const note = new Note({
-            title: req.body.title,
-            content: req.body.content,
-            date: req.body.date || new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-            week: '1'
-        });
+        const note = new Note(req.body);
         const saved = await note.save();
+        
+        const notification = new Notification({
+            message: `📝 مذكرة جديدة: ${saved.title}`,
+            type: 'info',
+            icon: '📝'
+        });
+        await notification.save();
+        io.emit('new-notification', {
+            message: `📝 مذكرة جديدة: ${saved.title}`,
+            type: 'info',
+            icon: '📝',
+            time: new Date().toISOString()
+        });
+        
         res.status(201).json({ success: true, data: saved });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
@@ -318,55 +307,86 @@ app.post('/api/notes', async (req, res) => {
 
 app.delete('/api/notes/:id', async (req, res) => {
     try {
-        await Note.findByIdAndDelete(req.params.id);
+        const note = await Note.findByIdAndDelete(req.params.id);
+        if (!note) {
+            return res.status(404).json({ success: false, error: 'غير موجود' });
+        }
+        
+        const notification = new Notification({
+            message: `🗑️ تم حذف مذكرة: ${note.title}`,
+            type: 'danger',
+            icon: '🗑️'
+        });
+        await notification.save();
+        io.emit('new-notification', {
+            message: `🗑️ تم حذف مذكرة: ${note.title}`,
+            type: 'danger',
+            icon: '🗑️',
+            time: new Date().toISOString()
+        });
+        
         res.json({ success: true, message: 'تم الحذف' });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
     }
 });
 
-app.get('/api/notes/latest', async (req, res) => {
-    try {
-        const note = await Note.findOne().sort({ createdAt: -1 });
-        res.json(note);
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
 // ============================================================
-// 👥 Routes المستخدمين
+// 👥 المستخدمين
 // ============================================================
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'مستخدم' },
+const userSchema = new mongoose.Schema({
+    name: String,
+    email: String,
+    role: String,
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.model('User', userSchema);
 
 app.get('/api/users', async (req, res) => {
     try {
-        const users = await User.find().select('-password');
+        const users = await User.find();
         res.json(users);
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
+app.post('/api/users', async (req, res) => {
+    try {
+        const user = new User(req.body);
+        const saved = await user.save();
+        
+        const notification = new Notification({
+            message: `👤 مستخدم جديد: ${saved.name}`,
+            type: 'success',
+            icon: '👤'
+        });
+        await notification.save();
+        io.emit('new-notification', {
+            message: `👤 مستخدم جديد: ${saved.name}`,
+            type: 'success',
+            icon: '👤',
+            time: new Date().toISOString()
+        });
+        
+        res.status(201).json({ success: true, data: saved });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
 // ============================================================
-// 📍 Routes المواقع
+// 📍 المواقع
 // ============================================================
-const LocationSchema = new mongoose.Schema({
-    userName: { type: String },
-    lat: { type: Number },
-    lng: { type: Number },
+const locationSchema = new mongoose.Schema({
+    userName: String,
+    lat: Number,
+    lng: Number,
     timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-const Location = mongoose.model('Location', LocationSchema);
+const Location = mongoose.model('Location', locationSchema);
 
 app.get('/api/locations', async (req, res) => {
     try {
@@ -379,11 +399,7 @@ app.get('/api/locations', async (req, res) => {
 
 app.post('/api/locations', async (req, res) => {
     try {
-        const location = new Location({
-            userName: 'Admin',
-            lat: req.body.lat,
-            lng: req.body.lng
-        });
+        const location = new Location(req.body);
         const saved = await location.save();
         res.status(201).json({ success: true, data: saved });
     } catch (error) {
@@ -392,17 +408,17 @@ app.post('/api/locations', async (req, res) => {
 });
 
 // ============================================================
-// 📜 Routes السجلات
+// 📜 السجلات
 // ============================================================
-const LogSchema = new mongoose.Schema({
-    userName: { type: String },
-    action: { type: String },
-    details: { type: String },
-    date: { type: String },
-    time: { type: String }
+const logSchema = new mongoose.Schema({
+    userName: String,
+    action: String,
+    details: String,
+    date: String,
+    time: String
 }, { timestamps: true });
 
-const Log = mongoose.model('Log', LogSchema);
+const Log = mongoose.model('Log', logSchema);
 
 app.get('/api/logs', async (req, res) => {
     try {
@@ -418,15 +434,16 @@ app.get('/api/logs', async (req, res) => {
 // ============================================================
 app.get('/api/export-all', async (req, res) => {
     try {
-        const [vessels, users, tickets, logs, locations, notes] = await Promise.all([
+        const [vessels, users, tickets, logs, locations, notes, notifications] = await Promise.all([
             Vessel.find(),
-            User.find().select('-password'),
+            User.find(),
             Ticket.find(),
             Log.find(),
             Location.find(),
-            Note.find()
+            Note.find(),
+            Notification.find()
         ]);
-        res.json({ vessels, users, tickets, logs, locations, notes });
+        res.json({ vessels, users, tickets, logs, locations, notes, notifications });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -434,54 +451,62 @@ app.get('/api/export-all', async (req, res) => {
 
 app.post('/api/import-all', async (req, res) => {
     try {
-        const { vessels, users, tickets, logs, locations, notes } = req.body;
-        
-        if (vessels) {
-            await Vessel.deleteMany({});
-            await Vessel.insertMany(vessels);
-        }
-        if (tickets) {
-            await Ticket.deleteMany({});
-            await Ticket.insertMany(tickets);
-        }
-        if (notes) {
-            await Note.deleteMany({});
-            await Note.insertMany(notes);
-        }
-        if (locations) {
-            await Location.deleteMany({});
-            await Location.insertMany(locations);
-        }
-        
-        res.json({ success: true, message: '✅ تم استيراد البيانات بنجاح' });
+        const { vessels, users, tickets, logs, locations, notes, notifications } = req.body;
+        if (vessels) { await Vessel.deleteMany({}); await Vessel.insertMany(vessels); }
+        if (users) { await User.deleteMany({}); await User.insertMany(users); }
+        if (tickets) { await Ticket.deleteMany({}); await Ticket.insertMany(tickets); }
+        if (logs) { await Log.deleteMany({}); await Log.insertMany(logs); }
+        if (locations) { await Location.deleteMany({}); await Location.insertMany(locations); }
+        if (notes) { await Note.deleteMany({}); await Note.insertMany(notes); }
+        if (notifications) { await Notification.deleteMany({}); await Notification.insertMany(notifications); }
+        res.json({ success: true, message: '✅ تم الاستيراد' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ============================================================
-// ❤️ Health Check
+// ❤️ Health
 // ============================================================
 app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-    });
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // ============================================================
-// 🏠 الصفحة الرئيسية
+// 🏠 Home
 // ============================================================
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ============================================================
+// 📡 Socket.IO - الاتصالات
+// ============================================================
+io.on('connection', (socket) => {
+    console.log('📡 مستخدم متصل:', socket.id);
+    
+    // إرسال الإشعارات السابقة عند الاتصال
+    socket.on('get-notifications', async () => {
+        try {
+            const notifications = await Notification.find()
+                .sort({ createdAt: -1 })
+                .limit(20);
+            socket.emit('notifications-list', notifications);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('📡 مستخدم غير متصل:', socket.id);
+    });
+});
+
+// ============================================================
 // 🚀 تشغيل السيرفر
 // ============================================================
-app.listen(PORT, '0.0.0.0', async () => {
+server.listen(PORT, '0.0.0.0', async () => {
     console.log(`🚀 Server: http://localhost:${PORT}`);
     console.log('📧 admin / 🔑 123456');
-    console.log('✅ قاعدة البيانات: ' + (mongoose.connection.readyState === 1 ? 'متصلة' : 'غير متصلة'));
+    console.log('✅ Socket.IO جاهز للإشعارات');
 });
