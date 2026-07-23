@@ -353,13 +353,14 @@
     <div class="repair-header">
         <div class="main-title">
             <h2><i class="fas fa-tools"></i> المكلف بالتصليح</h2>
-            <span class="company"><i class="fas fa-building"></i> الشركة الوطنية للصيانة البحرية</span>
+            <span class="company"><i class="fas fa-building"></i> شركة الصيانة البحرية المتخصصة</span>
         </div>
         <div class="units">
-            <span><i class="fas fa-city"></i> وحدة الصيانة تونس</span>
-            <span><i class="fas fa-city"></i> وحدة الصيانة صفاقس</span>
-            <span><i class="fas fa-city"></i> وحدة الصيانة المنستير</span>
-            <span><i class="fas fa-city"></i> وحدة الصيانة جرجيس</span>
+            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري تونس</span>
+            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري صفاقس</span>
+            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري المنستير</span>
+            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري جرجيس</span>
+            <span style="background: rgba(255,215,0,0.25); border-color: #ffd700;"><i class="fas fa-building"></i> شركة خاصة</span>
         </div>
     </div>
 
@@ -410,6 +411,17 @@
         </div>
         
         <input type="text" id="iRef" placeholder="📄 المرجع">
+        
+        <!-- ===== المكلف بالتصليح ===== -->
+        <select id="iRepairer">
+            <option value="">🔧 المكلف بالتصليح</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="شركة خاصة">🏢 شركة خاصة</option>
+        </select>
+        
         <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
     </div>
 
@@ -433,6 +445,7 @@
                         <th>📅 تاريخ العطب</th>
                         <th>📅 انتهاء الأشغال</th>
                         <th>المرجع</th>
+                        <th>🔧 المكلف بالتصليح</th>
                         <th>إجراء</th>
                     </tr></thead>
                     <tbody id="mainBody"></tbody>
@@ -459,6 +472,7 @@
                         <th>📅 تاريخ العطب</th>
                         <th>📅 انتهاء الأشغال</th>
                         <th>المرجع</th>
+                        <th>🔧 المكلف بالتصليح</th>
                         <th>إجراء</th>
                     </tr></thead>
                     <tbody id="maintBody"></tbody>
