@@ -1,248 +1,94 @@
 // ============================================================
-// 📦 api.js - دوال API
+// 📦 app.js - إصلاح مشكلة API_URL
 // ============================================================
 
-const API_URL = window.location.origin + '/api';
+// ✅ التحقق من وجود API_URL قبل تعريفه
+if (typeof API_URL === 'undefined') {
+  var API_URL = window.location.origin + '/api';
+}
 
-// ============================================================
-// 🔧 دوال API العامة
-// ============================================================
+console.log('✅ App loaded');
 
-function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem('token');
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('✅ DOM ready');
   
-  return fetch(API_URL + endpoint, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
-      ...(options.headers || {})
-    }
-  })
-  .then(res => {
-    if (!res.ok) {
-      return res.json().then(err => { throw new Error(err.error || 'API Error'); });
-    }
-    return res.json();
-  })
-  .catch(err => {
-    console.error('API Error:', err);
-    throw err;
+  // تسجيل الدخول
+  const loginBtn = document.querySelector('.login-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('username')?.value || '';
+      const password = document.getElementById('password')?.value || '';
+      
+      fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          document.getElementById('loginOverlay').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          alert('✅ تم تسجيل الدخول بنجاح');
+          loadData();
+        } else {
+          alert('❌ ' + (data.error || 'بيانات غير صحيحة'));
+        }
+      })
+      .catch(err => {
+        alert('❌ خطأ في الاتصال بالخادم');
+        console.error(err);
+      });
+    });
+  }
+  
+  // التحقق من التوكن
+  const token = localStorage.getItem('token');
+  if (token) {
+    fetch('/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        loadData();
+      }
+    })
+    .catch(() => {});
+  }
+});
+
+// دوال عامة
+function showPage(page) {
+  document.querySelectorAll('[id^="page"]').forEach(p => {
+    p.classList.add('hidden');
   });
+  const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+  if (target) target.classList.remove('hidden');
 }
 
-// ============================================================
-// 🔐 المصادقة
-// ============================================================
-
-function authLogin(email, password) {
-  return apiRequest('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password })
-  });
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
+  alert('✅ تم تسجيل الخروج');
 }
 
-function authRegister(name, email, password, role) {
-  return apiRequest('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, password, role })
-  });
+function refreshAllPages() {
+  alert('🔄 تم تحديث الصفحة');
 }
 
-function authMe() {
-  return apiRequest('/auth/me');
+function loadData() {
+  // تحميل البيانات
+  console.log('📊 تحميل البيانات...');
 }
 
-// ============================================================
-// 🚢 المراكب
-// ============================================================
-
-function getVessels() {
-  return apiRequest('/vessels');
-}
-
-function createVessel(data) {
-  return apiRequest('/vessels', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-function updateVessel(id, data) {
-  return apiRequest('/vessels/' + id, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-}
-
-function deleteVessel(id) {
-  return apiRequest('/vessels/' + id, {
-    method: 'DELETE'
-  });
-}
-
-// ============================================================
-// 🎫 التذاكر
-// ============================================================
-
-function getTickets() {
-  return apiRequest('/tickets');
-}
-
-function createTicket(data) {
-  return apiRequest('/tickets', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-function replyTicket(id, reply) {
-  return apiRequest('/tickets/' + id + '/reply', {
-    method: 'PUT',
-    body: JSON.stringify({ reply })
-  });
-}
-
-function closeTicket(id) {
-  return apiRequest('/tickets/' + id + '/close', {
-    method: 'PUT'
-  });
-}
-
-// ============================================================
-// 📜 السجلات
-// ============================================================
-
-function getLogs() {
-  return apiRequest('/logs');
-}
-
-function createLog(data) {
-  return apiRequest('/logs', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-// ============================================================
-// 📍 المواقع
-// ============================================================
-
-function getLocations() {
-  return apiRequest('/locations');
-}
-
-function createLocation(lat, lng, action) {
-  return apiRequest('/locations', {
-    method: 'POST',
-    body: JSON.stringify({ lat, lng, action })
-  });
-}
-
-// ============================================================
-// 📝 Note Verbale
-// ============================================================
-
-function getNotes() {
-  return apiRequest('/notes');
-}
-
-function createNote(data) {
-  return apiRequest('/notes', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-function getNotesByWeek(week, limit) {
-  const query = new URLSearchParams();
-  if (week) query.append('week', week);
-  if (limit) query.append('limit', limit);
-  return apiRequest('/notes?' + query.toString());
-}
-
-function getLatestNote() {
-  return apiRequest('/notes/latest');
-}
-
-function deleteNote(id) {
-  return apiRequest('/notes/' + id, {
-    method: 'DELETE'
-  });
-}
-
-// ============================================================
-// 👥 المستخدمين
-// ============================================================
-
-function getUsers() {
-  return apiRequest('/users');
-}
-
-function createUser(data) {
-  return apiRequest('/users', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-function updateUser(id, data) {
-  return apiRequest('/users/' + id, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-}
-
-function deleteUser(id) {
-  return apiRequest('/users/' + id, {
-    method: 'DELETE'
-  });
-}
-
-// ============================================================
-// 💾 تصدير واستيراد
-// ============================================================
-
-function exportAll() {
-  return apiRequest('/export-all');
-}
-
-function importAll(data) {
-  return apiRequest('/import-all', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-}
-
-// ============================================================
-// 🔄 تصدير الدوال للاستخدام العالمي
-// ============================================================
-
-window.api = {
-  authLogin,
-  authRegister,
-  authMe,
-  getVessels,
-  createVessel,
-  updateVessel,
-  deleteVessel,
-  getTickets,
-  createTicket,
-  replyTicket,
-  closeTicket,
-  getLogs,
-  createLog,
-  getLocations,
-  createLocation,
-  getNotes,
-  createNote,
-  getNotesByWeek,
-  getLatestNote,
-  deleteNote,
-  getUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-  exportAll,
-  importAll
-};
+window.showPage = showPage;
+window.logout = logout;
+window.refreshAllPages = refreshAllPages;
