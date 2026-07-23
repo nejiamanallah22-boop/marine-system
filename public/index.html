@@ -15,14 +15,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <style>
-        /* ============================================================ */
-        /* 🎨 التنسيقات الأساسية */
-        /* ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Cairo', sans-serif; background: #f0f2f5; color: #333; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
-        /* ===== شاشة الدخول ===== */
         #loginOverlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(135deg, #0d6efd, #1a3a5c);
@@ -48,10 +44,8 @@
         .login-btn:hover { background: #0b5ed7; }
         .error-msg { color: #dc3545; margin-top: 10px; display: none; }
         
-        /* ===== التطبيق الرئيسي ===== */
         #mainApp { display: none; }
         
-        /* ===== الهيدر ===== */
         header {
             background: white; padding: 15px 25px; border-radius: 10px;
             display: flex; justify-content: space-between; align-items: center;
@@ -62,7 +56,6 @@
         .header-content { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
         .role-badge { background: #0d6efd; color: white; padding: 5px 15px; border-radius: 20px; font-size: 13px; }
         
-        /* ===== الإشعارات ===== */
         .notification-icon {
             position: relative; cursor: pointer; font-size: 22px; padding: 5px 10px;
         }
@@ -72,7 +65,6 @@
             min-width: 18px; text-align: center; display: none;
         }
         
-        /* ===== الأزرار ===== */
         .btn {
             padding: 8px 18px; border: none; border-radius: 6px;
             cursor: pointer; font-size: 14px; font-weight: 600;
@@ -90,71 +82,9 @@
         .btn-outline-white:hover { background: white; color: #0d6efd; }
         .btn-sm { padding: 4px 12px; font-size: 12px; }
         
-        /* ===== شريط التنقل ===== */
         .nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
         .nav .btn { padding: 10px 20px; border-radius: 6px; }
         
-        /* ===== الشريط العلوي (المكلف بالتصليح) ===== */
-        .repair-header {
-            background: linear-gradient(135deg, #1a3a5c, #0d6efd);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
-        }
-        .repair-header .main-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .repair-header .main-title h2 {
-            font-size: 20px;
-            font-weight: 800;
-        }
-        .repair-header .main-title h2 i {
-            margin-left: 10px;
-        }
-        .repair-header .main-title .company {
-            background: rgba(255,215,0,0.2);
-            padding: 5px 18px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 700;
-            border: 1px solid rgba(255,215,0,0.3);
-        }
-        .repair-header .main-title .company i {
-            margin-left: 8px;
-            color: #ffd700;
-        }
-        .repair-header .units {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.15);
-        }
-        .repair-header .units span {
-            background: rgba(255,255,255,0.12);
-            padding: 5px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.15);
-            transition: all 0.3s;
-        }
-        .repair-header .units span:hover {
-            background: rgba(255,255,255,0.25);
-            transform: scale(1.05);
-        }
-        .repair-header .units span i {
-            margin-left: 5px;
-        }
-        
-        /* ===== نموذج الإدخال ===== */
         .input-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 12px; background: white; padding: 20px;
@@ -169,27 +99,13 @@
             outline: none; border-color: #0d6efd;
         }
         .input-grid label {
-            font-weight: 600;
-            font-size: 13px;
-            color: #495057;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            font-weight: 600; font-size: 13px; color: #495057;
+            display: flex; align-items: center; gap: 5px;
         }
-        .input-grid label i {
-            color: #0d6efd;
-        }
-        .input-grid .date-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .input-grid .date-group label {
-            font-size: 12px;
-            color: #6c757d;
-        }
+        .input-grid label i { color: #0d6efd; }
+        .input-grid .date-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-grid .date-group label { font-size: 12px; color: #6c757d; }
         
-        /* ===== الفلاتر ===== */
         .filter-bar {
             display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
             background: white; padding: 15px 20px; border-radius: 10px;
@@ -206,7 +122,6 @@
             font-family: inherit;
         }
         
-        /* ===== البطاقات والجداول ===== */
         .region-table-card {
             background: white; border-radius: 10px; overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -226,7 +141,6 @@
         
         .hidden { display: none !important; }
         
-        /* ===== الإحصائيات ===== */
         .stats-cards {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 15px; margin-bottom: 20px;
@@ -238,14 +152,11 @@
         .stat-card h3 { font-size: 32px; font-weight: 800; margin: 0; }
         .stat-card p { margin: 5px 0 0; opacity: 0.9; }
         
-        /* ===== الخريطة ===== */
         .map-container {
             background: white; border-radius: 10px; overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        #trackMap, #gpsMap {
-            height: 500px; width: 100%; z-index: 1;
-        }
+        #trackMap, #gpsMap { height: 500px; width: 100%; z-index: 1; }
         
         .gps-status {
             display: inline-block; width: 12px; height: 12px;
@@ -264,7 +175,6 @@
         .status-معطب { color: #dc3545; font-weight: 600; }
         .status-صيانة { color: #ffc107; font-weight: 600; }
         
-        /* ===== النوافذ المنبثقة ===== */
         .modal {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5); justify-content: center; align-items: center;
@@ -280,7 +190,6 @@
         }
         .modal-actions { display: flex; gap: 10px; margin-top: 15px; }
         
-        /* ===== أزرار التمرير ===== */
         .scroll-buttons {
             position: fixed; bottom: 20px; left: 20px;
             display: flex; flex-direction: column; gap: 8px; z-index: 1000;
@@ -291,14 +200,17 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        /* ===== الطباعة ===== */
+        /* ===== صفحة الطباعة ===== */
         @media print {
             .nav, .filter-bar, .input-grid, .scroll-buttons, .header-content,
-            .repair-header, .no-print { display: none !important; }
+            .no-print, #notificationBadge, .notification-icon { display: none !important; }
             .region-table-card { box-shadow: none !important; border: 1px solid #ddd; }
             body { background: white !important; }
             .container { padding: 0 !important; }
+            header { box-shadow: none !important; border-bottom: 2px solid #0d6efd; }
+            .print-title { display: block !important; text-align: center; font-size: 24px; font-weight: 800; color: #0d6efd; margin-bottom: 20px; }
         }
+        .print-title { display: none; }
         
         @media (max-width: 768px) {
             header { flex-direction: column; text-align: center; }
@@ -309,8 +221,6 @@
             .filter-bar { flex-direction: column; align-items: stretch; }
             .stats-cards { grid-template-columns: repeat(2, 1fr); }
             #trackMap, #gpsMap { height: 300px; }
-            .repair-header .main-title { flex-direction: column; text-align: center; }
-            .repair-header .units { justify-content: center; }
         }
         @media (max-width: 480px) {
             .stats-cards { grid-template-columns: 1fr; }
@@ -343,26 +253,12 @@
                 🔔 <span class="notification-badge" id="notificationBadge">0</span>
             </span>
             <span class="role-badge" id="userRoleDisplay">👤</span>
+            <!-- ===== زر الطباعة ===== -->
             <button class="btn btn-sm btn-outline-white" onclick="window.print()">🖨️ طباعة</button>
             <button class="btn btn-sm btn-outline-white" onclick="refreshAllPages()">🔄 تحديث</button>
             <button class="btn btn-sm btn-outline-white" onclick="logout()">🚪 خروج</button>
         </div>
     </header>
-
-    <!-- ===== الشريط العلوي: المكلف بالتصليح ===== -->
-    <div class="repair-header">
-        <div class="main-title">
-            <h2><i class="fas fa-tools"></i> المكلف بالتصليح</h2>
-            <span class="company"><i class="fas fa-building"></i> شركة الصيانة البحرية المتخصصة</span>
-        </div>
-        <div class="units">
-            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري تونس</span>
-            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري صفاقس</span>
-            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري المنستير</span>
-            <span><i class="fas fa-anchor"></i> وحدة الصيانة والإسناد البحري جرجيس</span>
-            <span style="background: rgba(255,215,0,0.25); border-color: #ffd700;"><i class="fas fa-building"></i> شركة خاصة</span>
-        </div>
-    </div>
 
     <!-- ===== شريط التنقل ===== -->
     <div class="nav">
@@ -398,13 +294,11 @@
         </select>
         <input type="text" id="iBreak" placeholder="🛠️ العطب">
         
-        <!-- ===== تاريخ العطب ===== -->
         <div class="date-group">
             <label><i class="fas fa-calendar-alt"></i> 📅 تاريخ العطب</label>
             <input type="date" id="iDate">
         </div>
         
-        <!-- ===== تاريخ انتهاء الأشغال ===== -->
         <div class="date-group">
             <label><i class="fas fa-calendar-check"></i> 📅 تاريخ انتهاء الأشغال</label>
             <input type="date" id="iEnd">
