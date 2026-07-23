@@ -1,13 +1,17 @@
 // ============================================================
-// 📦 app.js - مع الإشعارات وجداول النجاعة
+// 📦 app.js - الملف الرئيسي الكامل (مع التتبع)
 // ============================================================
 
 console.log('✅ App loaded');
 
 let allVessels = [];
+let editingId = null;
 let socket = null;
-let notifications = [];
-let unreadCount = 0;
+let trackMap = null;
+let gpsMap = null;
+let userMarker = null;
+let trackingInterval = null;
+let connectedUsers = {};
 
 // ============================================================
 // 🔐 المصادقة
@@ -59,7 +63,7 @@ function getToken() {
 }
 
 // ============================================================
-// 📡 Socket.IO - الإشعارات الفورية
+// 📡 Socket.IO
 // ============================================================
 
 function initSocket() {
@@ -69,32 +73,34 @@ function initSocket() {
     
     socket.on('connect', () => {
         console.log('✅ Socket متصل');
-        // طلب الإشعارات السابقة
-        socket.emit('get-notifications');
+        const user = getUser();
+        if (user && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    socket.emit('user-connected', {
+                        userName: user.name,
+                        userRole: user.role,
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    });
+                },
+                () => {}
+            );
+        }
     });
     
-    // استقبال إشعار جديد
-    socket.on('new-notification', (data) => {
-        console.log('🔔 إشعار جديد:', data);
-        // إضافة الإشعار للقائمة
-        notifications.unshift({
-            message: data.message,
-            type: data.type || 'info',
-            icon: data.icon || '🔔',
-            createdAt: data.time || new Date().toISOString(),
-            read: false
-        });
-        unreadCount++;
-        updateNotificationBadge();
-        showToastNotification(data.message, data.type);
+    socket.on('user-list', (users) => {
+        connectedUsers = {};
+        users.forEach(u => { connectedUsers[u.id] = u; });
+        updateTrackUsers(users);
+        updateTrackMap(users);
     });
     
-    // استقبال قائمة الإشعارات السابقة
-    socket.on('notifications-list', (data) => {
-        notifications = data || [];
-        unreadCount = notifications.filter(n => !n.read).length;
-        updateNotificationBadge();
-        renderNotifications();
+    socket.on('receive-location', (data) => {
+        console.log('📍 موقع جديد:', data);
+        if (data && data.lat && data.lng) {
+            addMarkerToTrackMap(data);
+        }
     });
     
     socket.on('disconnect', () => {
@@ -102,109 +108,16 @@ function initSocket() {
     });
 }
 
-// ============================================================
-// 🔔 نظام الإشعارات
-// ============================================================
-
-function updateNotificationBadge() {
-    const badge = document.getElementById('notificationBadge');
-    if (badge) {
-        if (unreadCount > 0) {
-            badge.style.display = 'inline-block';
-            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-        } else {
-            badge.style.display = 'none';
-        }
+function getUser() {
+    try {
+        return JSON.parse(localStorage.getItem('user'));
+    } catch {
+        return null;
     }
 }
 
-function showToastNotification(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
-    
-    const colors = {
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#17a2b8'
-    };
-    
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        background: ${colors[type] || '#17a2b8'};
-        color: ${type === 'warning' ? '#333' : 'white'};
-        padding: 12px 20px;
-        margin: 8px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        animation: slideIn 0.3s ease;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 250px;
-        max-width: 400px;
-    `;
-    toast.innerHTML = `<span style="font-size:20px;">🔔</span> ${message}`;
-    
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.5s';
-        setTimeout(() => toast.remove(), 500);
-    }, 5000);
-}
-
-function toggleNotifications() {
-    const panel = document.getElementById('notificationPanel');
-    if (panel) {
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        if (panel.style.display === 'block') {
-            markAllAsRead();
-        }
-    }
-}
-
-function renderNotifications() {
-    const container = document.getElementById('notificationList');
-    if (!container) return;
-    
-    if (notifications.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:#6c757d; padding:20px;">🚫 لا توجد إشعارات</p>';
-        return;
-    }
-    
-    container.innerHTML = notifications.slice(0, 20).map(n => `
-        <div style="padding:10px 15px; border-bottom:1px solid #e9ecef; ${!n.read ? 'background:#e7f3ff; border-right:3px solid #0d6efd;' : ''}">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-size:18px;">${n.icon || '🔔'}</span>
-                <span style="flex:1; font-size:13px;">${n.message}</span>
-                <small style="color:#6c757d; font-size:11px;">${n.createdAt ? new Date(n.createdAt).toLocaleTimeString() : ''}</small>
-            </div>
-        </div>
-    `).join('');
-}
-
-function markAllAsRead() {
-    fetch('/api/notifications/read-all', {
-        method: 'PUT',
-        headers: { 'Authorization': 'Bearer ' + getToken() }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            notifications.forEach(n => n.read = true);
-            unreadCount = 0;
-            updateNotificationBadge();
-            renderNotifications();
-        }
-    })
-    .catch(err => console.error('Mark all read error:', err));
-}
-
 // ============================================================
-// 🚢 المراكب
+// 📊 تحميل البيانات
 // ============================================================
 
 function loadAllData() {
@@ -212,7 +125,6 @@ function loadAllData() {
     loadTickets();
     loadNotes();
     loadUsers();
-    loadLocations();
 }
 
 function loadVessels() {
@@ -233,7 +145,7 @@ function loadVessels() {
 }
 
 // ============================================================
-// ✅ إضافة مركب
+// ✅ إضافة/تعديل مركب
 // ============================================================
 
 function addItem() {
@@ -264,8 +176,11 @@ function addItem() {
         ref: document.getElementById('iRef')?.value || ''
     };
     
-    fetch('/api/vessels', {
-        method: 'POST',
+    const url = editingId ? '/api/vessels/' + editingId : '/api/vessels';
+    const method = editingId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
@@ -275,32 +190,45 @@ function addItem() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إضافة المركب بنجاح');
+            alert(editingId ? '✅ تم تحديث المركب بنجاح' : '✅ تم إضافة المركب بنجاح');
+            editingId = null;
+            document.querySelector('#inputArea .btn-success').textContent = '💾 حفظ';
             clearInputs();
             loadVessels();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
+            alert('❌ ' + (data.error || 'خطأ في العملية'));
         }
     })
     .catch(err => {
-        console.error('Add error:', err);
-        alert('❌ خطأ في إضافة المركب');
+        console.error('Error:', err);
+        alert('❌ خطأ في العملية');
     });
 }
 
-function clearInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
+function editVessel(id) {
+    const vessel = allVessels.find(v => v._id === id || v.id === id);
+    if (!vessel) {
+        alert('⚠️ المركب غير موجود');
+        return;
+    }
+    
+    editingId = vessel._id || vessel.id;
+    
+    document.getElementById('iName').value = vessel.name || '';
+    document.getElementById('iNum').value = vessel.num || '';
+    document.getElementById('iLen').value = vessel.len || 0;
+    document.getElementById('iReg').value = vessel.reg || '';
+    document.getElementById('iZone').value = vessel.zone || '';
+    document.getElementById('iPort').value = vessel.port || '';
+    document.getElementById('iSupp').value = vessel.supp || '';
+    document.getElementById('iStat').value = vessel.stat || 'صالح';
+    document.getElementById('iBreak').value = vessel.break || '';
+    document.getElementById('iDate').value = vessel.fDate || '';
+    document.getElementById('iEnd').value = vessel.eDate || '';
+    document.getElementById('iRef').value = vessel.ref || '';
+    
+    document.querySelector('#inputArea .btn-success').textContent = '✏️ تحديث';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function deleteVessel(id) {
@@ -331,126 +259,38 @@ function deleteVessel(id) {
     });
 }
 
-// ============================================================
-// 📊 عرض جداول النجاعة حسب الفئات
-// ============================================================
+function clearInputs() {
+    document.getElementById('iName').value = '';
+    document.getElementById('iNum').value = '';
+    document.getElementById('iLen').value = '';
+    document.getElementById('iReg').value = '';
+    document.getElementById('iZone').value = '';
+    document.getElementById('iPort').value = '';
+    document.getElementById('iSupp').value = '';
+    document.getElementById('iStat').value = 'صالح';
+    document.getElementById('iBreak').value = '';
+    document.getElementById('iDate').value = '';
+    document.getElementById('iEnd').value = '';
+    document.getElementById('iRef').value = '';
+}
 
-function renderEfficiency() {
-    const vessels = allVessels || [];
+function updateZones() {
+    const reg = document.getElementById('iReg')?.value;
+    const zoneSelect = document.getElementById('iZone');
+    if (!zoneSelect) return;
     
-    // ✅ البطاقات العلوية
-    const statsContainer = document.getElementById('statsCards');
-    if (statsContainer) {
-        const total = vessels.length;
-        const good = vessels.filter(v => v.stat === 'صالح').length;
-        const bad = vessels.filter(v => v.stat === 'معطب').length;
-        const maint = vessels.filter(v => v.stat === 'صيانة').length;
-        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-        
-        statsContainer.innerHTML = `
-            <div style="background:#28a745; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="font-size:28px; margin:0;">${good}</h3>
-                <p style="margin:0;">✅ صالح</p>
-            </div>
-            <div style="background:#dc3545; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="font-size:28px; margin:0;">${bad}</h3>
-                <p style="margin:0;">❌ معطب</p>
-            </div>
-            <div style="background:#ffc107; padding:15px; border-radius:10px; text-align:center; color:#333;">
-                <h3 style="font-size:28px; margin:0;">${maint}</h3>
-                <p style="margin:0;">🔧 صيانة</p>
-            </div>
-            <div style="background:#17a2b8; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="font-size:28px; margin:0;">${eff}%</h3>
-                <p style="margin:0;">📊 الجاهزية</p>
-            </div>
-        `;
-    }
+    const zones = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة'],
+        'الجنوب': ['جرجيس', 'بن قردان']
+    };
     
-    // ✅ جدول النجاعة حسب الفئات
-    const container = document.getElementById('generalEffTableContainer');
-    if (!container) return;
-    
-    // الفئات المطلوبة
-    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
-    let html = `
-        <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); overflow-x:auto;">
-            <h4 style="color:#0d6efd; margin-bottom:15px;">📊 نجاعة الأسطول حسب الفئات</h4>
-            <table style="width:100%; border-collapse:collapse; font-size:14px;">
-                <thead>
-                    <tr style="background:#0d6efd; color:white;">
-                        <th style="padding:12px; text-align:right; border-radius:8px 0 0 0;">الفئة</th>
-                        <th style="padding:12px; text-align:center;">الإجمالي</th>
-                        <th style="padding:12px; text-align:center; background:#28a745;">✅ صالح</th>
-                        <th style="padding:12px; text-align:center; background:#dc3545;">❌ معطب</th>
-                        <th style="padding:12px; text-align:center; background:#ffc107;">🔧 صيانة</th>
-                        <th style="padding:12px; text-align:center; border-radius:0 8px 0 0;">نسبة النجاعة</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
-    
-    categories.forEach(cat => {
-        const catVessels = vessels.filter(v => v.cat === cat);
-        const total = catVessels.length;
-        const good = catVessels.filter(v => v.stat === 'صالح').length;
-        const bad = catVessels.filter(v => v.stat === 'معطب').length;
-        const maint = catVessels.filter(v => v.stat === 'صيانة').length;
-        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-        
-        totalAll += total;
-        goodAll += good;
-        badAll += bad;
-        maintAll += maint;
-        
-        const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
-        
-        html += `
-            <tr style="border-bottom:1px solid #e9ecef;">
-                <td style="padding:10px; text-align:right; font-weight:bold;">${cat}</td>
-                <td style="padding:10px; text-align:center;">${total}</td>
-                <td style="padding:10px; text-align:center; color:#28a745;">${good}</td>
-                <td style="padding:10px; text-align:center; color:#dc3545;">${bad}</td>
-                <td style="padding:10px; text-align:center; color:#ffc107;">${maint}</td>
-                <td style="padding:10px; text-align:center; font-weight:bold; color:${color};">${eff}%</td>
-            </tr>
-        `;
+    const options = zones[reg] || [];
+    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    options.forEach(z => {
+        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
     });
-    
-    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-    
-    html += `
-            <tr style="background:#e7f3ff; font-weight:bold; border-top:2px solid #0d6efd;">
-                <td style="padding:12px; text-align:right;">📊 المجموع الكلي</td>
-                <td style="padding:12px; text-align:center;">${totalAll}</td>
-                <td style="padding:12px; text-align:center; color:#28a745;">${goodAll}</td>
-                <td style="padding:12px; text-align:center; color:#dc3545;">${badAll}</td>
-                <td style="padding:12px; text-align:center; color:#ffc107;">${maintAll}</td>
-                <td style="padding:12px; text-align:center; color:${totalColor};">${totalEff}%</td>
-            </tr>
-        </tbody>
-    </table>
-    `;
-    
-    // ✅ شريط التقدم
-    html += `
-        <div style="margin-top:15px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
-                <span>📈 نسبة النجاعة العامة: <strong>${totalEff}%</strong></span>
-                <span style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
-            </div>
-            <div style="background:#e9ecef; border-radius:10px; height:10px; overflow:hidden;">
-                <div style="background:${totalColor}; height:100%; width:${totalEff}%; transition:width 0.5s;"></div>
-            </div>
-        </div>
-    </div>
-    `;
-    
-    container.innerHTML = html;
 }
 
 // ============================================================
@@ -462,11 +302,13 @@ function renderMainTable() {
     if (!tbody) return;
     
     if (!allVessels || allVessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = allVessels.map(v => `
+    tbody.innerHTML = allVessels.map(v => {
+        const id = v._id || v.id;
+        return `
         <tr>
             <td>${v.name || '-'}</td>
             <td>${v.num || '-'}</td>
@@ -481,13 +323,20 @@ function renderMainTable() {
             <td>${v.fDate || '-'}</td>
             <td>${v.eDate || '-'}</td>
             <td>
-                <button onclick="deleteVessel('${v._id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                <button onclick="editVessel('${id}')" style="background:#ffc107; color:#1a3a5c; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin:2px;">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="deleteVessel('${id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin:2px;">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
+
+// ============================================================
+// ✅ عرض جدول الصيانة
+// ============================================================
 
 function renderMaintTable() {
     const tbody = document.getElementById('maintBody');
@@ -500,7 +349,9 @@ function renderMaintTable() {
         return;
     }
     
-    tbody.innerHTML = vessels.map(v => `
+    tbody.innerHTML = vessels.map(v => {
+        const id = v._id || v.id;
+        return `
         <tr>
             <td>${v.name || '-'}</td>
             <td>${v.num || '-'}</td>
@@ -512,12 +363,161 @@ function renderMaintTable() {
             <td>${v.eDate || '-'}</td>
             <td>${v.ref || '-'}</td>
             <td>
-                <button onclick="alert('تعديل: ${v.name}')" style="background:#ffc107; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                <button onclick="editVessel('${id}')" style="background:#ffc107; color:#1a3a5c; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
                     <i class="fas fa-edit"></i>
                 </button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
+}
+
+// ============================================================
+// ✅ عرض النجاعة
+// ============================================================
+
+function renderEfficiency() {
+    const vessels = allVessels || [];
+    
+    // بطاقات الإحصائيات
+    const statsContainer = document.getElementById('statsCards');
+    if (statsContainer) {
+        const total = vessels.length;
+        const good = vessels.filter(v => v.stat === 'صالح').length;
+        const bad = vessels.filter(v => v.stat === 'معطب').length;
+        const maint = vessels.filter(v => v.stat === 'صيانة').length;
+        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+        
+        statsContainer.innerHTML = `
+            <div class="stat-card" style="background:#28a745;"><h3>${good}</h3><p>✅ صالح</p></div>
+            <div class="stat-card" style="background:#dc3545;"><h3>${bad}</h3><p>❌ معطب</p></div>
+            <div class="stat-card" style="background:#ffc107;"><h3>${maint}</h3><p>🔧 صيانة</p></div>
+            <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
+        `;
+    }
+    
+    // جدول النجاعة العام
+    const generalContainer = document.getElementById('generalEffTableContainer');
+    if (generalContainer) {
+        const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+        let rows = '';
+        let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+        
+        categories.forEach(cat => {
+            const catVessels = vessels.filter(v => v.cat === cat);
+            const t = catVessels.length;
+            const g = catVessels.filter(v => v.stat === 'صالح').length;
+            const b = catVessels.filter(v => v.stat === 'معطب').length;
+            const m = catVessels.filter(v => v.stat === 'صيانة').length;
+            const e = t > 0 ? Math.round((g / t) * 100) : 0;
+            
+            totalAll += t; goodAll += g; badAll += b; maintAll += m;
+            const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
+            
+            rows += `
+                <tr style="border-bottom:1px solid #e9ecef;">
+                    <td style="padding:10px; text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="padding:10px; text-align:center;">${t}</td>
+                    <td style="padding:10px; text-align:center; color:#28a745;">${g}</td>
+                    <td style="padding:10px; text-align:center; color:#dc3545;">${b}</td>
+                    <td style="padding:10px; text-align:center; color:#ffc107;">${m}</td>
+                    <td style="padding:10px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
+                </tr>
+            `;
+        });
+        
+        const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
+        const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+        
+        generalContainer.innerHTML = `
+            <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); overflow-x:auto;">
+                <h4 style="color:#0d6efd; margin-bottom:15px;">📊 النجاعة العامة حسب الفئات</h4>
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr style="background:#0d6efd; color:white;">
+                            <th style="padding:12px; text-align:right;">الفئة</th>
+                            <th style="padding:12px; text-align:center;">الإجمالي</th>
+                            <th style="padding:12px; text-align:center; background:#28a745;">✅ صالح</th>
+                            <th style="padding:12px; text-align:center; background:#dc3545;">❌ معطب</th>
+                            <th style="padding:12px; text-align:center; background:#ffc107;">🔧 صيانة</th>
+                            <th style="padding:12px; text-align:center;">نسبة النجاعة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                        <tr style="background:#e7f3ff; font-weight:bold; border-top:2px solid #0d6efd;">
+                            <td style="padding:12px; text-align:right;">📊 المجموع الكلي</td>
+                            <td style="padding:12px; text-align:center;">${totalAll}</td>
+                            <td style="padding:12px; text-align:center; color:#28a745;">${goodAll}</td>
+                            <td style="padding:12px; text-align:center; color:#dc3545;">${badAll}</td>
+                            <td style="padding:12px; text-align:center; color:#ffc107;">${maintAll}</td>
+                            <td style="padding:12px; text-align:center; color:${totalColor};">${totalEff}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top:15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
+                        <span>📈 نسبة النجاعة العامة: <strong>${totalEff}%</strong></span>
+                        <span style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
+                    </div>
+                    <div style="background:#e9ecef; border-radius:10px; height:10px; overflow:hidden;">
+                        <div style="background:${totalColor}; height:100%; width:${totalEff}%; transition:width 0.5s;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // جداول الوحدات
+    const regionContainer = document.getElementById('regionTables');
+    if (regionContainer) {
+        const units = [
+            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال' },
+            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل' },
+            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط' },
+            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب' }
+        ];
+        
+        let html = '<h4 style="color:#0d6efd; margin:20px 0 15px;">📊 نجاعة الوحدات البحرية</h4>';
+        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">';
+        
+        units.forEach(unit => {
+            const unitVessels = vessels.filter(v => v.reg === unit.key);
+            const total = unitVessels.length;
+            const good = unitVessels.filter(v => v.stat === 'صالح').length;
+            const bad = unitVessels.filter(v => v.stat === 'معطب').length;
+            const maint = unitVessels.filter(v => v.stat === 'صيانة').length;
+            const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+            const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
+            
+            html += `
+                <div style="background:white; border-radius:10px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <h5 style="color:#0d6efd; margin-bottom:10px;">${unit.name}</h5>
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="background:#f8f9fa;">
+                                <th style="padding:6px; text-align:right;">الحالة</th>
+                                <th style="padding:6px; text-align:center;">العدد</th>
+                                <th style="padding:6px; text-align:center;">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">✅ صالح</td><td style="padding:6px; text-align:center;">${good}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((good/total)*100) : 0}%</td></tr>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">❌ معطب</td><td style="padding:6px; text-align:center;">${bad}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((bad/total)*100) : 0}%</td></tr>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">🔧 صيانة</td><td style="padding:6px; text-align:center;">${maint}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((maint/total)*100) : 0}%</td></tr>
+                            <tr style="background:#e7f3ff; font-weight:bold;">
+                                <td style="padding:6px;">📊 النجاعة</td>
+                                <td style="padding:6px; text-align:center;">${total}</td>
+                                <td style="padding:6px; text-align:center; color:${color};">${eff}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        regionContainer.innerHTML = html;
+    }
 }
 
 // ============================================================
@@ -699,7 +699,7 @@ function loadUsers() {
         if (!tbody) return;
         
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
             return;
         }
         
@@ -708,69 +708,318 @@ function loadUsers() {
                 <td>${u.name}</td>
                 <td>${u.role}</td>
                 <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-                <td><button class="btn btn-sm btn-warning" onclick="alert('تغيير كلمة المرور')"><i class="fas fa-key"></i></button></td>
-                <td><button class="btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}" onclick="alert('تغيير الحالة')"><i class="fas ${u.isActive ? 'fa-ban' : 'fa-check'}"></i></button></td>
-                <td><button class="btn btn-sm btn-danger" onclick="alert('حذف المستخدم')"><i class="fas fa-trash"></i></button></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="alert('تغيير كلمة المرور')"><i class="fas fa-key"></i></button>
+                </td>
             </tr>
         `).join('');
     })
     .catch(err => console.error('Load users error:', err));
 }
 
-function addUser() {
-    alert('⚠️ هذه الميزة قيد التطوير');
+// ============================================================
+// 📍 التتبع والخريطة
+// ============================================================
+
+function initTrackMap() {
+    if (trackMap) return;
+    
+    const container = document.getElementById('trackMap');
+    if (!container) return;
+    
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ Leaflet not loaded');
+        return;
+    }
+    
+    trackMap = L.map('trackMap').setView([36.8, 10.18], 8);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(trackMap);
 }
 
-function refreshUsers() {
-    loadUsers();
+function initGpsMap() {
+    if (gpsMap) return;
+    
+    const container = document.getElementById('gpsMap');
+    if (!container) return;
+    
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ Leaflet not loaded');
+        return;
+    }
+    
+    gpsMap = L.map('gpsMap').setView([36.8, 10.18], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(gpsMap);
+}
+
+function updateTrackUsers(users) {
+    const body = document.getElementById('trackUsersBody');
+    const count = document.getElementById('trackUsersCount');
+    
+    if (count) {
+        count.textContent = `${users.length} متصل`;
+    }
+    
+    if (!body) return;
+    
+    if (!users || users.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">🚫 لا يوجد مستخدمين متصلين</td></tr>`;
+        return;
+    }
+    
+    body.innerHTML = users.map((u, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${u.userName || 'مجهول'}</td>
+            <td>${u.userRole || 'مستخدم'}</td>
+            <td>${u.lat && u.lng ? `${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}` : '-'}</td>
+            <td>${u.lastUpdate ? new Date(u.lastUpdate).toLocaleTimeString() : '-'}</td>
+        </tr>
+    `).join('');
+}
+
+function updateTrackMap(users) {
+    if (!trackMap) initTrackMap();
+    if (!trackMap) return;
+    
+    // حذف العلامات القديمة
+    trackMap.eachLayer((layer) => {
+        if (layer instanceof L.Marker) {
+            trackMap.removeLayer(layer);
+        }
+    });
+    
+    users.forEach(u => {
+        if (u.lat && u.lng) {
+            const marker = L.marker([u.lat, u.lng])
+                .addTo(trackMap)
+                .bindPopup(`
+                    <b>${u.userName || 'مجهول'}</b><br>
+                    ${u.userRole || 'مستخدم'}<br>
+                    📍 ${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}
+                `);
+        }
+    });
+}
+
+function addMarkerToTrackMap(data) {
+    if (!trackMap) initTrackMap();
+    if (!trackMap) return;
+    
+    if (data.lat && data.lng) {
+        L.marker([data.lat, data.lng])
+            .addTo(trackMap)
+            .bindPopup(`
+                <b>${data.userName || 'مجهول'}</b><br>
+                📍 ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}
+            `);
+    }
+}
+
+function refreshTrackUsers() {
+    if (socket) {
+        socket.emit('get-users');
+    }
     alert('✅ تم تحديث المستخدمين');
 }
 
+function clearTrackUsers() {
+    const body = document.getElementById('trackUsersBody');
+    if (body) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">🚫 تم مسح القائمة</td></tr>`;
+    }
+}
+
 // ============================================================
-// 📍 المواقع
+// 📍 GPS المباشر
 // ============================================================
+
+function startTracking() {
+    if (!navigator.geolocation) {
+        alert('⚠️ المتصفح لا يدعم تحديد الموقع');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    const user = getUser();
+    if (!user) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    document.getElementById('startTrackingBtn').style.display = 'none';
+    document.getElementById('stopTrackingBtn').style.display = 'inline-block';
+    document.getElementById('gpsStatusText').textContent = 'جاري التتبع...';
+    document.getElementById('gpsDot').className = 'gps-status gps-active';
+    
+    if (!gpsMap) initGpsMap();
+    if (!gpsMap) return;
+    
+    // مركز الخريطة على موقع المستخدم
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            gpsMap.setView([lat, lng], 15);
+            
+            if (!userMarker) {
+                userMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background:#dc3545; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(220,53,69,0.5);"></div>',
+                        iconSize: [20, 20]
+                    })
+                }).addTo(gpsMap).bindPopup('📍 موقعك الحالي');
+            } else {
+                userMarker.setLatLng([lat, lng]);
+            }
+        },
+        () => {},
+        { enableHighAccuracy: true }
+    );
+    
+    // بدء التتبع الدوري
+    trackingInterval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                
+                if (userMarker) {
+                    userMarker.setLatLng([lat, lng]);
+                }
+                
+                // إرسال الموقع إلى الخادم
+                if (socket) {
+                    socket.emit('update-location', {
+                        userName: user.name,
+                        userRole: user.role,
+                        lat: lat,
+                        lng: lng
+                    });
+                }
+                
+                // حفظ الموقع في قاعدة البيانات
+                const token = getToken();
+                if (token) {
+                    fetch('/api/locations', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + token
+                        },
+                        body: JSON.stringify({ lat, lng, action: 'تتبع مباشر' })
+                    }).catch(err => console.error('Save location error:', err));
+                }
+                
+                document.getElementById('gpsStatusText').textContent = '✅ تتبع نشط';
+                document.getElementById('mapStatus').textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+            },
+            (error) => {
+                console.error('GPS error:', error);
+                document.getElementById('gpsStatusText').textContent = '❌ خطأ في GPS';
+            },
+            { enableHighAccuracy: true, maximumAge: 5000 }
+        );
+    }, 5000);
+    
+    alert('✅ بدء التتبع المباشر');
+}
+
+function stopTracking() {
+    if (trackingInterval) {
+        clearInterval(trackingInterval);
+        trackingInterval = null;
+    }
+    
+    document.getElementById('startTrackingBtn').style.display = 'inline-block';
+    document.getElementById('stopTrackingBtn').style.display = 'none';
+    document.getElementById('gpsStatusText').textContent = 'غير نشط';
+    document.getElementById('gpsDot').className = 'gps-status gps-inactive';
+    document.getElementById('mapStatus').textContent = '⏹️ تم إيقاف التتبع';
+    
+    alert('⏹️ تم إيقاف التتبع');
+}
 
 function loadLocations() {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    if (!gpsMap) initGpsMap();
+    if (!gpsMap) return;
     
     fetch('/api/locations', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
-        const container = document.getElementById('locationsContainer');
-        if (!container) return;
-        
         if (!data || data.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#6c757d;">🚫 لا توجد مواقع</p>';
+            alert('🚫 لا توجد مواقع');
             return;
         }
         
-        container.innerHTML = data.slice(0, 50).map(l => `
-            <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
-                <h4>📍 ${l.userName || 'مجهول'}</h4>
-                <p>${l.lat?.toFixed(6) || 0}, ${l.lng?.toFixed(6) || 0}</p>
-                <small>${new Date(l.timestamp).toLocaleString()}</small>
-            </div>
-        `).join('');
+        // حذف العلامات القديمة
+        gpsMap.eachLayer((layer) => {
+            if (layer instanceof L.Marker && layer !== userMarker) {
+                gpsMap.removeLayer(layer);
+            }
+        });
+        
+        data.forEach(loc => {
+            if (loc.lat && loc.lng) {
+                L.marker([loc.lat, loc.lng])
+                    .addTo(gpsMap)
+                    .bindPopup(`
+                        <b>${loc.userName || 'مجهول'}</b><br>
+                        📍 ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}<br>
+                        <small>${new Date(loc.timestamp).toLocaleString()}</small>
+                    `);
+            }
+        });
+        
+        alert(`✅ تم تحميل ${data.length} موقع`);
     })
-    .catch(err => console.error('Load locations error:', err));
+    .catch(err => {
+        console.error('Load locations error:', err);
+        alert('❌ خطأ في تحميل المواقع');
+    });
 }
 
-// ============================================================
-// 🗺️ الخريطة
-// ============================================================
-
-function initMap() { console.log('🗺️ Map'); }
-function initTrackMap() { console.log('🗺️ Track'); }
-function startTracking() { alert('📍 بدء التتبع'); }
-function stopTracking() { alert('⏹️ إيقاف التتبع'); }
-function loadLocationsMap() { loadLocations(); alert('📍 تم تحديث الخريطة'); }
-function centerMapOnUser() { alert('📍 تمركز'); }
-function requestLocationPermission() { alert('📍 إذن الموقع'); }
-function refreshTrackUsers() { alert('🔄 تحديث المستخدمين'); }
-function clearTrackUsers() { alert('🗑️ مسح'); }
+function centerMapOnUser() {
+    if (!navigator.geolocation) {
+        alert('⚠️ المتصفح لا يدعم تحديد الموقع');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            if (gpsMap) {
+                gpsMap.setView([lat, lng], 15);
+            }
+            
+            alert('📍 تم التمركز على موقعك');
+        },
+        (error) => {
+            console.error('GPS error:', error);
+            alert('❌ خطأ في تحديد الموقع');
+        },
+        { enableHighAccuracy: true }
+    );
+}
 
 // ============================================================
 // 🖥️ دوال الصفحات
@@ -784,6 +1033,8 @@ function showPage(page) {
     switch(page) {
         case 'main':
         case 'maint':
+            loadVessels();
+            break;
         case 'eff':
             loadVessels();
             break;
@@ -797,8 +1048,15 @@ function showPage(page) {
             loadUsers();
             break;
         case 'track':
+            setTimeout(() => {
+                initTrackMap();
+                if (socket) socket.emit('get-users');
+            }, 300);
+            break;
         case 'map':
-            loadLocations();
+            setTimeout(() => {
+                initGpsMap();
+            }, 300);
             break;
     }
 }
@@ -806,43 +1064,6 @@ function showPage(page) {
 function refreshAllPages() {
     loadAllData();
     alert('✅ تم تحديث جميع البيانات');
-}
-
-function clearMainSearch() {
-    document.getElementById('searchMain').value = '';
-    loadVessels();
-}
-
-function resetMaintFilters() {
-    document.getElementById('searchMaint').value = '';
-    document.getElementById('fRegMaint').value = 'الكل';
-    document.getElementById('fDateStart').value = '';
-    document.getElementById('fDateEnd').value = '';
-    loadVessels();
-}
-
-function updateZones() {
-    const reg = document.getElementById('iReg')?.value;
-    const zoneSelect = document.getElementById('iZone');
-    if (!zoneSelect) return;
-    
-    const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة'],
-        'الجنوب': ['جرجيس', 'بن قردان'],
-        'وحدة الصيانة والإسناد البحري تونس': ['تونس', 'قرطاج'],
-        'وحدة الصيانة والإسناد البحري المنستير': ['المنستير', 'المهدية'],
-        'وحدة الصيانة والإسناد البحري صفاقس': ['صفاقس', 'قابس'],
-        'وحدة الصيانة والإسناد البحري جرجيس': ['جرجيس', 'بن قردان'],
-        'المجمع الأمني بقبيبة': ['قبيبة', 'المرسى']
-    };
-    
-    const options = zones[reg] || [];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
-    options.forEach(z => {
-        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
-    });
 }
 
 function scrollToTop() {
@@ -854,6 +1075,14 @@ function scrollToBottom() {
 }
 
 // ============================================================
+// 🔔 الإشعارات
+// ============================================================
+
+function toggleNotifications() {
+    alert('🔔 الإشعارات: لا توجد إشعارات جديدة');
+}
+
+// ============================================================
 // 🔄 تصدير الدوال
 // ============================================================
 
@@ -861,11 +1090,10 @@ window.doLogin = doLogin;
 window.logout = logout;
 window.showPage = showPage;
 window.addItem = addItem;
+window.editVessel = editVessel;
 window.deleteVessel = deleteVessel;
 window.updateZones = updateZones;
 window.refreshAllPages = refreshAllPages;
-window.clearMainSearch = clearMainSearch;
-window.resetMaintFilters = resetMaintFilters;
 window.scrollToTop = scrollToTop;
 window.scrollToBottom = scrollToBottom;
 window.sendTicket = sendTicket;
@@ -873,20 +1101,15 @@ window.refreshTickets = refreshTickets;
 window.saveNote = saveNote;
 window.clearNote = clearNote;
 window.loadNotesByWeek = loadNotesByWeek;
-window.addUser = addUser;
-window.refreshUsers = refreshUsers;
-window.initMap = initMap;
-window.initTrackMap = initTrackMap;
+window.toggleNotifications = toggleNotifications;
 window.startTracking = startTracking;
 window.stopTracking = stopTracking;
 window.loadLocations = loadLocations;
-window.loadLocationsMap = loadLocationsMap;
 window.centerMapOnUser = centerMapOnUser;
-window.requestLocationPermission = requestLocationPermission;
 window.refreshTrackUsers = refreshTrackUsers;
 window.clearTrackUsers = clearTrackUsers;
-window.toggleNotifications = toggleNotifications;
-window.markAllAsRead = markAllAsRead;
+window.initTrackMap = initTrackMap;
+window.initGpsMap = initGpsMap;
 
 console.log('✅ جميع الدوال جاهزة');
 
@@ -894,112 +1117,5 @@ console.log('✅ جميع الدوال جاهزة');
 document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem('token')) {
         loadAllData();
-        initSocket();
-    }
-});
-
-// إضافة ستايل للـ Toast
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    #toastContainer {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    #notificationPanel {
-        position: fixed;
-        top: 60px;
-        left: 20px;
-        width: 350px;
-        max-height: 400px;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        z-index: 9998;
-        overflow: hidden;
-        display: none;
-    }
-    #notificationPanel .header {
-        padding: 10px 15px;
-        background: #0d6efd;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    #notificationPanel .header button {
-        background: transparent;
-        border: none;
-        color: white;
-        cursor: pointer;
-    }
-    #notificationList {
-        max-height: 350px;
-        overflow-y: auto;
-    }
-    .notification-icon {
-        position: relative;
-        cursor: pointer;
-        font-size: 20px;
-    }
-    .notification-badge {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background: #dc3545;
-        color: white;
-        border-radius: 50%;
-        padding: 2px 6px;
-        font-size: 10px;
-        min-width: 18px;
-        text-align: center;
-        display: none;
-    }
-`;
-document.head.appendChild(style);
-
-// إضافة عناصر الإشعارات إلى الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    // Toast container
-    if (!document.getElementById('toastContainer')) {
-        const toastContainer = document.createElement('div');
-        toastContainer.id = 'toastContainer';
-        document.body.appendChild(toastContainer);
-    }
-    
-    // Notification panel
-    if (!document.getElementById('notificationPanel')) {
-        const panel = document.createElement('div');
-        panel.id = 'notificationPanel';
-        panel.innerHTML = `
-            <div class="header">
-                <span>🔔 الإشعارات</span>
-                <button onclick="markAllAsRead()">تحديد الكل كمقروء</button>
-                <button onclick="document.getElementById('notificationPanel').style.display='none'">✕</button>
-            </div>
-            <div id="notificationList"></div>
-        `;
-        document.body.appendChild(panel);
-    }
-    
-    // Notification icon in header
-    const headerActions = document.querySelector('.header-actions');
-    if (headerActions) {
-        const notificationIcon = document.createElement('span');
-        notificationIcon.className = 'notification-icon';
-        notificationIcon.innerHTML = `
-            🔔
-            <span class="notification-badge" id="notificationBadge">0</span>
-        `;
-        notificationIcon.onclick = toggleNotifications;
-        headerActions.prepend(notificationIcon);
     }
 });
