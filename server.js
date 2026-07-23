@@ -14,73 +14,36 @@ app.use((req, res, next) => {
         res.setHeader('Content-Type', 'text/css');
     } else if (url.endsWith('.js')) {
         res.setHeader('Content-Type', 'application/javascript');
-    } else if (url.endsWith('.json')) {
-        res.setHeader('Content-Type', 'application/json');
-    } else if (url.endsWith('.png')) {
-        res.setHeader('Content-Type', 'image/png');
-    } else if (url.endsWith('.jpg') || url.endsWith('.jpeg')) {
-        res.setHeader('Content-Type', 'image/jpeg');
-    } else if (url.endsWith('.svg')) {
-        res.setHeader('Content-Type', 'image/svg+xml');
-    } else if (url.endsWith('.ico')) {
-        res.setHeader('Content-Type', 'image/x-icon');
     }
     next();
 });
 
-// ============================================================
-// ✅ Middlewares
-// ============================================================
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ============================================================
-// ✅ خدمة الملفات الثابتة
+// ✅ البيانات (Mock Data)
 // ============================================================
-app.use(express.static(path.join(__dirname, 'public'), {
-    setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript');
-        }
-    }
-}));
-
-// ============================================================
-// ✅ البيانات
-// ============================================================
-let vessels = [];
-let tickets = [];
-let notes = [];
-let users = [
-    { _id: '1', name: 'Admin', email: 'admin', role: 'مسؤول', isActive: true }
+let vessels = [
+    { id: 1, name: 'المركب الأول', num: '001', len: 10, cat: 'صقور', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'تونس', stat: 'صالح', break: '-', fDate: '2024-01-01', eDate: '2024-12-31', ref: 'REF001' },
+    { id: 2, name: 'المركب الثاني', num: '002', len: 15, cat: 'خوافر', reg: 'الوسط', zone: 'سوسة', port: 'سوسة', supp: 'تونس', stat: 'معطب', break: 'محرك', fDate: '2024-01-15', eDate: '2024-06-30', ref: 'REF002' }
 ];
+
+let tickets = [
+    { id: 1, subject: 'مشكلة في المحرك', message: 'المحرك لا يعمل', status: 'قيد المعالجة', userName: 'Admin', date: '2024-01-01', time: '10:00' }
+];
+
+let notes = [
+    { id: 1, title: 'مذكرة مهمة', content: 'هذه مذكرة تجريبية', date: '2024-01-01', time: '10:00', week: '1', createdBy: 'Admin' }
+];
+
+let users = [
+    { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول', isActive: true }
+];
+
 let locations = [];
 let logs = [];
-
-// ============================================================
-// ✅ دوال مساعدة
-// ============================================================
-function getCurrentDate() {
-    return new Date().toISOString().split('T')[0];
-}
-
-function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-}
-
-function determineCategory(len) {
-    const n = parseFloat(len);
-    if (isNaN(n)) return 'زوارق مزدوجة';
-    if (n === 11) return 'البروق';
-    if (n >= 8 && n <= 12) return 'صقور';
-    if (n > 12 && n <= 25) return 'خوافر';
-    if (n > 30) return 'طوافات';
-    return 'زوارق مزدوجة';
-}
 
 // ============================================================
 // ✅ API Routes
@@ -89,168 +52,92 @@ function determineCategory(len) {
 // --- Login ---
 app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
-    
     if (email === 'admin' && password === '123456') {
         res.json({
             success: true,
-            token: 'fake-jwt-token-123456',
-            user: {
-                id: '1',
-                name: 'Admin',
-                email: 'admin',
-                role: 'مسؤول'
-            }
+            token: 'fake-token',
+            user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' }
         });
     } else {
-        res.status(401).json({
-            success: false,
-            error: 'بيانات غير صحيحة'
-        });
+        res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
     }
 });
 
-// --- Me ---
+// --- Auth Me ---
 app.get('/api/auth/me', (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (token === 'fake-jwt-token-123456') {
-        res.json({
-            success: true,
-            user: {
-                id: '1',
-                name: 'Admin',
-                email: 'admin',
-                role: 'مسؤول'
-            }
-        });
-    } else {
-        res.status(401).json({ success: false, error: 'غير مصرح' });
-    }
+    res.json({ success: true, user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' } });
 });
 
 // --- Vessels ---
-app.get('/api/vessels', (req, res) => {
-    res.json(vessels);
-});
+app.get('/api/vessels', (req, res) => res.json(vessels));
 
 app.post('/api/vessels', (req, res) => {
-    try {
-        const data = req.body;
-        const newVessel = {
-            _id: Date.now().toString(),
-            name: data.name || 'مركب جديد',
-            num: data.num || '',
-            len: parseFloat(data.len) || 0,
-            cat: determineCategory(data.len),
-            reg: data.reg || '',
-            zone: data.zone || '',
-            port: data.port || '',
-            supp: data.supp || '',
-            stat: data.stat || 'صالح',
-            break: data.break || '',
-            fDate: data.fDate || '',
-            eDate: data.eDate || '',
-            ref: data.ref || '',
-            createdAt: new Date().toISOString()
-        };
-        vessels.push(newVessel);
-        res.status(201).json({ success: true, data: newVessel });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
+    const data = req.body;
+    const newVessel = {
+        id: Date.now(),
+        name: data.name || 'مركب جديد',
+        num: data.num || '',
+        len: parseFloat(data.len) || 0,
+        cat: data.cat || 'زوارق مزدوجة',
+        reg: data.reg || '',
+        zone: data.zone || '',
+        port: data.port || '',
+        supp: data.supp || '',
+        stat: data.stat || 'صالح',
+        break: data.break || '',
+        fDate: data.fDate || '',
+        eDate: data.eDate || '',
+        ref: data.ref || ''
+    };
+    vessels.push(newVessel);
+    res.status(201).json({ success: true, data: newVessel });
 });
 
 app.put('/api/vessels/:id', (req, res) => {
-    const index = vessels.findIndex(v => v._id === req.params.id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-    }
-    const data = req.body;
-    vessels[index] = {
-        ...vessels[index],
-        name: data.name || vessels[index].name,
-        num: data.num || vessels[index].num,
-        len: parseFloat(data.len) || vessels[index].len,
-        cat: determineCategory(data.len) || vessels[index].cat,
-        reg: data.reg || vessels[index].reg,
-        zone: data.zone || vessels[index].zone,
-        port: data.port || vessels[index].port,
-        supp: data.supp || vessels[index].supp,
-        stat: data.stat || vessels[index].stat,
-        break: data.break || vessels[index].break,
-        fDate: data.fDate || vessels[index].fDate,
-        eDate: data.eDate || vessels[index].eDate,
-        ref: data.ref || vessels[index].ref
-    };
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index === -1) return res.status(404).json({ success: false, error: 'غير موجود' });
+    vessels[index] = { ...vessels[index], ...req.body };
     res.json({ success: true, data: vessels[index] });
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
-    const index = vessels.findIndex(v => v._id === req.params.id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-    }
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index === -1) return res.status(404).json({ success: false, error: 'غير موجود' });
     vessels.splice(index, 1);
     res.json({ success: true, message: 'تم الحذف' });
 });
 
 // --- Tickets ---
-app.get('/api/tickets', (req, res) => {
-    res.json(tickets);
-});
+app.get('/api/tickets', (req, res) => res.json(tickets));
 
 app.post('/api/tickets', (req, res) => {
     const data = req.body;
     const newTicket = {
-        _id: Date.now().toString(),
+        id: Date.now(),
         subject: data.subject || 'موضوع جديد',
         message: data.message || '',
         status: 'قيد المعالجة',
         userName: 'Admin',
-        date: getCurrentDate(),
-        time: getCurrentTime(),
-        replies: []
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
     };
     tickets.push(newTicket);
     res.status(201).json({ success: true, data: newTicket });
 });
 
-app.put('/api/tickets/:id/reply', (req, res) => {
-    const ticket = tickets.find(t => t._id === req.params.id);
-    if (!ticket) {
-        return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
-    }
-    ticket.replies.push({
-        adminName: 'Admin',
-        reply: req.body.reply,
-        date: getCurrentDate(),
-        time: getCurrentTime()
-    });
-    ticket.status = 'تم الرد';
-    res.json({ success: true, data: ticket });
-});
-
-app.put('/api/tickets/:id/close', (req, res) => {
-    const ticket = tickets.find(t => t._id === req.params.id);
-    if (!ticket) {
-        return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
-    }
-    ticket.status = 'مغلقة';
-    res.json({ success: true, data: ticket });
-});
-
 // --- Notes ---
-app.get('/api/notes', (req, res) => {
-    res.json(notes);
-});
+app.get('/api/notes', (req, res) => res.json(notes));
 
 app.post('/api/notes', (req, res) => {
     const data = req.body;
     const newNote = {
-        _id: Date.now().toString(),
+        id: Date.now(),
         title: data.title || 'مذكرة جديدة',
         content: data.content || '',
-        date: data.date || getCurrentDate(),
-        time: getCurrentTime(),
+        date: data.date || new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
         week: '1',
         createdBy: 'Admin'
     };
@@ -259,28 +146,24 @@ app.post('/api/notes', (req, res) => {
 });
 
 app.delete('/api/notes/:id', (req, res) => {
-    const index = notes.findIndex(n => n._id === req.params.id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المذكرة غير موجودة' });
-    }
+    const id = parseInt(req.params.id);
+    const index = notes.findIndex(n => n.id === id);
+    if (index === -1) return res.status(404).json({ success: false, error: 'غير موجود' });
     notes.splice(index, 1);
     res.json({ success: true, message: 'تم الحذف' });
 });
 
 app.get('/api/notes/latest', (req, res) => {
-    const latest = notes.length > 0 ? notes[notes.length - 1] : null;
-    res.json(latest);
+    res.json(notes.length > 0 ? notes[notes.length - 1] : null);
 });
 
 // --- Users ---
-app.get('/api/users', (req, res) => {
-    res.json(users);
-});
+app.get('/api/users', (req, res) => res.json(users));
 
 app.post('/api/users', (req, res) => {
     const data = req.body;
     const newUser = {
-        _id: Date.now().toString(),
+        id: Date.now(),
         name: data.name || 'مستخدم جديد',
         email: data.email || 'user@test.com',
         role: data.role || 'مستخدم',
@@ -291,32 +174,28 @@ app.post('/api/users', (req, res) => {
 });
 
 app.put('/api/users/:id', (req, res) => {
-    const user = users.find(u => u._id === req.params.id);
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
+    const id = parseInt(req.params.id);
+    const user = users.find(u => u.id === id);
+    if (!user) return res.status(404).json({ success: false, error: 'غير موجود' });
     Object.assign(user, req.body);
     res.json({ success: true, data: user });
 });
 
 app.delete('/api/users/:id', (req, res) => {
-    const index = users.findIndex(u => u._id === req.params.id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
+    const id = parseInt(req.params.id);
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) return res.status(404).json({ success: false, error: 'غير موجود' });
     users.splice(index, 1);
     res.json({ success: true, message: 'تم الحذف' });
 });
 
 // --- Locations ---
-app.get('/api/locations', (req, res) => {
-    res.json(locations);
-});
+app.get('/api/locations', (req, res) => res.json(locations));
 
 app.post('/api/locations', (req, res) => {
     const { lat, lng } = req.body;
     const newLocation = {
-        _id: Date.now().toString(),
+        id: Date.now(),
         userName: 'Admin',
         lat: parseFloat(lat) || 0,
         lng: parseFloat(lng) || 0,
@@ -327,34 +206,25 @@ app.post('/api/locations', (req, res) => {
 });
 
 // --- Logs ---
-app.get('/api/logs', (req, res) => {
-    res.json(logs);
-});
+app.get('/api/logs', (req, res) => res.json(logs));
 
 app.post('/api/logs', (req, res) => {
     const data = req.body;
     const newLog = {
-        _id: Date.now().toString(),
+        id: Date.now(),
         userName: 'Admin',
         action: data.action || 'إجراء',
         details: data.details || '',
-        date: getCurrentDate(),
-        time: getCurrentTime()
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
     };
     logs.push(newLog);
     res.status(201).json({ success: true, data: newLog });
 });
 
-// --- Export/Import ---
+// --- Export ---
 app.get('/api/export-all', (req, res) => {
-    res.json({
-        vessels,
-        users,
-        tickets,
-        logs,
-        locations,
-        notes
-    });
+    res.json({ vessels, users, tickets, logs, locations, notes });
 });
 
 app.post('/api/import-all', (req, res) => {
@@ -365,7 +235,7 @@ app.post('/api/import-all', (req, res) => {
     if (l) logs = l;
     if (loc) locations = loc;
     if (n) notes = n;
-    res.json({ success: true, message: '✅ تم استيراد البيانات بنجاح' });
+    res.json({ success: true, message: '✅ تم الاستيراد' });
 });
 
 // --- Health ---
@@ -378,13 +248,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ============================================================
-// 🚀 تشغيل السيرفر
-// ============================================================
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log('========================================');
-    console.log('📧 admin');
-    console.log('🔑 123456');
-    console.log('========================================');
+    console.log(`🚀 Server: http://localhost:${PORT}`);
+    console.log('📧 admin / 🔑 123456');
 });
