@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الرئيسي الكامل (يعمل 100%)
+// 📦 app.js - الملف الرئيسي (يعمل 100%)
 // ============================================================
 
 console.log('✅ App loaded');
@@ -85,16 +85,19 @@ function loadVessels() {
 }
 
 // ============================================================
-// ✅ إضافة مركب
+// ✅ إضافة مركب - هذه هي الدالة التي يناديها الزر
 // ============================================================
 
 function addItem() {
+    console.log('🔄 زر الحفظ تم الضغط عليه!');
+    
     const token = getToken();
     if (!token) {
         alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
+    // جلب البيانات من النموذج
     const name = document.getElementById('iName')?.value;
     if (!name) {
         alert('⚠️ الرجاء إدخال اسم المركب');
@@ -116,7 +119,7 @@ function addItem() {
         ref: document.getElementById('iRef')?.value || ''
     };
     
-    console.log('📤 إرسال:', data);
+    console.log('📤 إرسال البيانات:', data);
     
     fetch('/api/vessels', {
         method: 'POST',
@@ -128,7 +131,7 @@ function addItem() {
     })
     .then(res => res.json())
     .then(data => {
-        console.log('📥 استجابة:', data);
+        console.log('📥 استجابة الخادم:', data);
         if (data.success) {
             alert('✅ تم إضافة المركب بنجاح');
             // تفريغ الحقول
@@ -144,13 +147,14 @@ function addItem() {
             document.getElementById('iDate').value = '';
             document.getElementById('iEnd').value = '';
             document.getElementById('iRef').value = '';
+            // ✅ إعادة تحميل الجدول
             loadVessels();
         } else {
             alert('❌ ' + (data.error || 'خطأ في الإضافة'));
         }
     })
     .catch(err => {
-        console.error('Add error:', err);
+        console.error('❌ خطأ:', err);
         alert('❌ خطأ في إضافة المركب');
     });
 }
@@ -193,12 +197,16 @@ function deleteVessel(id) {
 
 function renderMainTable() {
     const tbody = document.getElementById('mainBody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.log('⚠️ mainBody غير موجود');
+        return;
+    }
     
     const vessels = window.allVessels || [];
+    console.log('📊 عرض المراكب:', vessels.length);
     
     if (vessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:30px;">🚫 لا توجد بيانات. قم بإضافة مركب</td></tr>`;
         return;
     }
     
@@ -265,7 +273,7 @@ function renderMaintTable() {
 // ============================================================
 
 function renderEfficiency() {
-    // ✅ الإحصائيات العامة
+    // الإحصائيات العامة
     const statsContainer = document.getElementById('statsCards');
     if (statsContainer) {
         const vessels = window.allVessels || [];
@@ -295,7 +303,7 @@ function renderEfficiency() {
         `;
     }
     
-    // ✅ جدول النجاعة العام
+    // جدول النجاعة العام
     const generalContainer = document.getElementById('generalEffTableContainer');
     if (generalContainer) {
         const vessels = window.allVessels || [];
@@ -327,13 +335,9 @@ function renderEfficiency() {
         `;
     }
     
-    // ✅ جداول الوحدات (5 وحدات)
+    // جداول الوحدات
     renderUnitTables();
 }
-
-// ============================================================
-// ✅ عرض جداول الوحدات الخمس
-// ============================================================
 
 function renderUnitTables() {
     const container = document.getElementById('regionTables');
@@ -646,7 +650,6 @@ function showPage(page) {
     const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
     if (target) target.classList.remove('hidden');
     
-    // تحديث البيانات حسب الصفحة
     switch(page) {
         case 'main':
         case 'maint':
@@ -726,7 +729,7 @@ function scrollToBottom() {
 window.doLogin = doLogin;
 window.logout = logout;
 window.showPage = showPage;
-window.addItem = addItem;
+window.addItem = addItem;          // ✅ هذا هو المهم!
 window.deleteVessel = deleteVessel;
 window.updateZones = updateZones;
 window.refreshAllPages = refreshAllPages;
@@ -759,6 +762,7 @@ console.log('✅ جميع الدوال جاهزة');
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM جاهز');
     if (localStorage.getItem('token')) {
         loadAllData();
     }
