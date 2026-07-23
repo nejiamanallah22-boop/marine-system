@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const compression = require('compression');
-const morgan = require('morgan');
 const http = require('http');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -10,7 +8,6 @@ const dotenv = require('dotenv');
 const socketIO = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -18,55 +15,15 @@ const app = express();
 const server = http.createServer(app);
 
 // ============================================================
-// ✅ استخدام قيم افتراضية
+// ✅ تعطيل CSP تماماً
 // ============================================================
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key-change-this';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@system.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '123456';
-const PORT = process.env.PORT || 3000;
-
-console.log('========================================');
-console.log('🚀 Starting server...');
-console.log(`📧 Admin: ${ADMIN_EMAIL}`);
-console.log('========================================');
+app.use((req, res, next) => {
+  res.removeHeader('Content-Security-Policy');
+  next();
+});
 
 // ============================================================
-// ✅ CORS
-// ============================================================
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
-
-// ============================================================
-// ✅ Helmet مع CSP مفتوح (للسماح بكل المصادر)
-// ============================================================
-app.use(helmet({
-  contentSecurityPolicy: false, // ✅ تعطيل CSP تماماً
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false
-}));
-
-// ============================================================
-// ✅ Compression
-// ============================================================
-app.use(compression());
-
-// ============================================================
-// ✅ Logging
-// ============================================================
-app.use(morgan('dev'));
-
-// ============================================================
-// ✅ Body Parser
-// ============================================================
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// ============================================================
-// ✅ حل مشكلة MIME types - الأهم!!!
+// ✅ حل مشكلة MIME types
 // ============================================================
 app.use((req, res, next) => {
   const url = req.url;
@@ -91,8 +48,14 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// ✅ Static Files
+// ✅ Middlewares
 // ============================================================
+app.use(cors());
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// ✅ خدمة الملفات الثابتة
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.css')) {
@@ -102,110 +65,71 @@ app.use(express.static(path.join(__dirname, 'public'), {
     } else if (filePath.endsWith('.map')) {
       res.setHeader('Content-Type', 'application/json');
     }
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   }
 }));
 
 // ============================================================
-// ✅ Rate Limiting
+// 🗄️ قاعدة البيانات
 // ============================================================
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: '⚠️ تجاوزت الحد المسموح للطلبات' }
-});
-app.use('/api', limiter);
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
+
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.log('❌ MongoDB Error:', err.message));
 
 // ============================================================
-// 🗄️ MongoDB
-// ============================================================
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  maxPoolSize: 10
-})
-.then(() => console.log('✅ MongoDB Connected'))
-.catch(err => console.log('❌ MongoDB Error:', err.message));
-
-// ============================================================
-// 📊 النماذج
+// 📊 النماذج (مبسطة)
 // ============================================================
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  pass: { type: String, required: true, select: false },
-  role: { type: String, enum: ['مسؤول', 'محرر', 'مستخدم'], default: 'مستخدم' },
-  isActive: { type: Boolean, default: true },
-  lastLogin: { type: Date }
-}, { timestamps: true });
+  name: String,
+  email: { type: String, unique: true },
+  pass: String,
+  role: { type: String, default: 'مستخدم' },
+  isActive: { type: Boolean, default: true }
+});
 
 const VesselSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  num: { type: String, trim: true },
-  len: { type: Number, default: 0 },
-  cat: { type: String, default: 'زوارق مزدوجة' },
-  reg: { type: String, trim: true },
-  zone: { type: String, trim: true },
-  port: { type: String, trim: true },
-  supp: { type: String, trim: true },
-  stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
-  break: { type: String, trim: true },
-  fDate: { type: String },
-  eDate: { type: String },
-  ref: { type: String, trim: true }
+  name: String,
+  num: String,
+  len: Number,
+  cat: String,
+  stat: { type: String, default: 'صالح' }
 }, { timestamps: true });
 
 const TicketSchema = new mongoose.Schema({
-  userName: { type: String, required: true },
-  userRole: { type: String, required: true },
-  subject: { type: String, required: true, trim: true },
-  message: { type: String, required: true, trim: true },
-  date: { type: String, required: true },
-  time: { type: String, required: true },
-  status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
-  replies: [{
-    adminName: String,
-    reply: String,
-    date: String,
-    time: String
-  }]
+  userName: String,
+  subject: String,
+  message: String,
+  date: String,
+  time: String,
+  status: { type: String, default: 'قيد المعالجة' },
+  replies: Array
 }, { timestamps: true });
 
 const LogSchema = new mongoose.Schema({
-  userName: { type: String, required: true },
-  userRole: { type: String, required: true },
-  action: { type: String, required: true },
-  details: { type: String, required: true },
-  date: { type: String, required: true },
-  time: { type: String, required: true }
+  userName: String,
+  action: String,
+  details: String,
+  date: String,
+  time: String
 }, { timestamps: true });
 
 const LocationSchema = new mongoose.Schema({
-  userName: { type: String, required: true },
-  userRole: { type: String, required: true },
-  lat: { type: Number, required: true },
-  lng: { type: Number, required: true },
-  timestamp: { type: Date, default: Date.now },
-  action: { type: String, default: 'تحديث موقع' },
-  device: { type: String },
-  browser: { type: String },
-  ip: { type: String }
+  userName: String,
+  lat: Number,
+  lng: Number,
+  timestamp: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 const NoteVerbaleSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true },
-  content: { type: String, required: true },
-  date: { type: String, required: true },
-  time: { type: String, required: true },
-  week: { type: String, required: true },
-  createdBy: { type: String, required: true },
-  userRole: { type: String, required: true },
-  type: { type: String, default: 'text' },
-  imageData: { type: String, default: '' },
-  attachments: [{
-    name: String,
-    type: String,
-    data: String
-  }]
+  title: String,
+  content: String,
+  date: String,
+  time: String,
+  week: String,
+  createdBy: String
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
@@ -235,36 +159,13 @@ function getWeekNumber(date) {
   return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
 
-function determineCategory(length) {
-  const n = parseFloat(length);
-  if (isNaN(n)) return 'زوارق مزدوجة';
+function determineCategory(len) {
+  const n = parseFloat(len);
   if (n === 11) return 'البروق';
   if (n >= 8 && n <= 12) return 'صقور';
   if (n > 12 && n <= 25) return 'خوافر';
   if (n > 30) return 'طوافات';
   return 'زوارق مزدوجة';
-}
-
-function extractDevice(userAgent) {
-  if (!userAgent) return 'غير معروف';
-  const ua = userAgent.toLowerCase();
-  if (ua.includes('android')) return 'Android';
-  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
-  if (ua.includes('windows')) return 'Windows';
-  if (ua.includes('macintosh')) return 'Mac';
-  if (ua.includes('linux')) return 'Linux';
-  return 'غير معروف';
-}
-
-function extractBrowser(userAgent) {
-  if (!userAgent) return 'غير معروف';
-  const ua = userAgent.toLowerCase();
-  if (ua.includes('edg') || ua.includes('edge')) return 'Edge';
-  if (ua.includes('opera') || ua.includes('opr')) return 'Opera';
-  if (ua.includes('chrome')) return 'Chrome';
-  if (ua.includes('firefox')) return 'Firefox';
-  if (ua.includes('safari')) return 'Safari';
-  return 'غير معروف';
 }
 
 // ============================================================
@@ -285,27 +186,18 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: 'المستخدم غير موجود' });
     }
 
-    if (!user.isActive) {
-      return res.status(403).json({ error: 'الحساب غير مفعل' });
-    }
-
     req.user = user;
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'انتهت صلاحية الجلسة' });
-    }
     res.status(401).json({ error: 'توكن غير صالح' });
   }
 };
 
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'يرجى تسجيل الدخول' });
-    }
+    if (!req.user) return res.status(401).json({ error: 'يرجى تسجيل الدخول' });
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'غير مصرح لك بهذه العملية' });
+      return res.status(403).json({ error: 'غير مصرح' });
     }
     next();
   };
@@ -328,34 +220,16 @@ io.on('connection', (socket) => {
       connectedUsers[socket.id] = {
         id: socket.id,
         userName: data.userName || 'مجهول',
-        userRole: data.userRole || 'مستخدم',
         lat: parseFloat(data.lat),
-        lng: parseFloat(data.lng),
-        connectedAt: new Date().toISOString()
+        lng: parseFloat(data.lng)
       };
       io.emit('user-list', Object.values(connectedUsers));
     }
   });
   
-  socket.on('update-location', (data) => {
-    if (connectedUsers[socket.id] && data && data.lat != null && data.lng != null) {
-      connectedUsers[socket.id].lat = parseFloat(data.lat);
-      connectedUsers[socket.id].lng = parseFloat(data.lng);
-      socket.broadcast.emit('receive-location', {
-        userName: data.userName,
-        lat: parseFloat(data.lat),
-        lng: parseFloat(data.lng),
-        time: new Date().toISOString()
-      });
-    }
-  });
-  
   socket.on('disconnect', () => {
-    const user = connectedUsers[socket.id];
-    if (user) {
-      delete connectedUsers[socket.id];
-      io.emit('user-list', Object.values(connectedUsers));
-    }
+    delete connectedUsers[socket.id];
+    io.emit('user-list', Object.values(connectedUsers));
   });
 });
 
@@ -363,7 +237,7 @@ io.on('connection', (socket) => {
 // 🚪 Routes
 // ============================================================
 
-// ----- Login -----
+// --- Login ---
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -378,9 +252,6 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'بيانات غير صحيحة' });
     }
 
-    user.lastLogin = new Date();
-    await user.save();
-
     const token = jwt.sign(
       { id: user._id, name: user.name, role: user.role },
       JWT_SECRET,
@@ -390,19 +261,14 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ----- Register -----
+// --- Register ---
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -427,24 +293,19 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'تم إنشاء الحساب',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// ----- Get Current User -----
+// --- Me ---
 app.get('/api/auth/me', authenticate, async (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-// ----- Vessels -----
+// --- Vessels ---
 app.get('/api/vessels', authenticate, async (req, res) => {
   try {
     const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -488,7 +349,7 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
   }
 });
 
-// ----- Tickets -----
+// --- Tickets ---
 app.get('/api/tickets', authenticate, async (req, res) => {
   try {
     const tickets = await Ticket.find().sort({ createdAt: -1 });
@@ -503,7 +364,6 @@ app.post('/api/tickets', authenticate, async (req, res) => {
     const ticket = new Ticket({
       ...req.body,
       userName: req.user.name,
-      userRole: req.user.role,
       date: getCurrentDate(),
       time: getCurrentTime()
     });
@@ -545,7 +405,7 @@ app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (
   }
 });
 
-// ----- Logs -----
+// --- Logs ---
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const logs = await Log.find().sort({ createdAt: -1 });
@@ -560,7 +420,6 @@ app.post('/api/logs', authenticate, async (req, res) => {
     const log = new Log({
       ...req.body,
       userName: req.user.name,
-      userRole: req.user.role,
       date: getCurrentDate(),
       time: getCurrentTime()
     });
@@ -571,7 +430,7 @@ app.post('/api/logs', authenticate, async (req, res) => {
   }
 });
 
-// ----- Locations -----
+// --- Locations ---
 app.get('/api/locations', authenticate, async (req, res) => {
   try {
     const locations = await Location.find().sort({ timestamp: -1 });
@@ -583,21 +442,14 @@ app.get('/api/locations', authenticate, async (req, res) => {
 
 app.post('/api/locations', authenticate, async (req, res) => {
   try {
-    const { lat, lng, action } = req.body;
-    
-    if (lat == null || lng == null || isNaN(Number(lat)) || isNaN(Number(lng))) {
+    const { lat, lng } = req.body;
+    if (lat == null || lng == null) {
       return res.status(400).json({ error: 'إحداثيات غير صالحة' });
     }
-    
     const location = new Location({
       userName: req.user.name,
-      userRole: req.user.role,
       lat: parseFloat(lat),
-      lng: parseFloat(lng),
-      action: action || 'تحديث موقع',
-      device: extractDevice(req.headers['user-agent']),
-      browser: extractBrowser(req.headers['user-agent']),
-      ip: req.ip
+      lng: parseFloat(lng)
     });
     await location.save();
     res.status(201).json(location);
@@ -606,28 +458,21 @@ app.post('/api/locations', authenticate, async (req, res) => {
   }
 });
 
-// ----- Notes -----
+// --- Notes ---
 app.post('/api/notes', authenticate, async (req, res) => {
   try {
-    const { title, content, date, time, week, type, imageData, attachments } = req.body;
-    
+    const { title, content, date } = req.body;
     if (!title || !content || !date) {
       return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
     }
-    
     const note = new NoteVerbale({
       title,
       content,
       date,
-      time: time || getCurrentTime(),
-      week: week || getWeekNumber(date).toString(),
-      createdBy: req.user.name,
-      userRole: req.user.role,
-      type: type || 'text',
-      imageData: imageData || '',
-      attachments: attachments || []
+      time: getCurrentTime(),
+      week: getWeekNumber(date).toString(),
+      createdBy: req.user.name
     });
-    
     await note.save();
     res.status(201).json(note);
   } catch (error) {
@@ -637,24 +482,8 @@ app.post('/api/notes', authenticate, async (req, res) => {
 
 app.get('/api/notes', authenticate, async (req, res) => {
   try {
-    const { week, limit } = req.query;
-    let query = {};
-    if (week) query.week = week;
-    
-    let notesQuery = NoteVerbale.find(query).sort({ createdAt: -1 });
-    if (limit) notesQuery = notesQuery.limit(parseInt(limit));
-    
-    const notes = await notesQuery.exec();
+    const notes = await NoteVerbale.find().sort({ createdAt: -1 });
     res.json(notes);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get('/api/notes/latest', authenticate, async (req, res) => {
-  try {
-    const note = await NoteVerbale.findOne().sort({ createdAt: -1 });
-    res.json(note || null);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -669,7 +498,7 @@ app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, 
   }
 });
 
-// ----- Users -----
+// --- Users ---
 app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const users = await User.find().select('-pass');
@@ -683,7 +512,6 @@ app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res
   try {
     const { name, role, isActive, password } = req.body;
     const updateData = {};
-    
     if (name) updateData.name = name;
     if (role) updateData.role = role;
     if (isActive !== undefined) updateData.isActive = isActive;
@@ -711,7 +539,7 @@ app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, 
   }
 });
 
-// ----- Export/Import -----
+// --- Export/Import ---
 app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const [vessels, users, tickets, logs, locations, notes] = await Promise.all([
@@ -774,42 +602,36 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
   }
 });
 
-// ----- Health -----
+// --- Health ---
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(), 
-    uptime: process.uptime()
-  });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ----- Home -----
+// --- Home ---
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ============================================================
-// 🔑 إنشاء ADMIN
+// 🔑 إنشاء Admin
 // ============================================================
 async function createAdmin() {
   try {
     const adminExists = await User.findOne({ role: 'مسؤول' });
     if (!adminExists) {
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
+      const hashedPassword = await bcrypt.hash('123456', salt);
       
       const admin = new User({
         name: 'Admin',
-        email: ADMIN_EMAIL,
+        email: 'admin',
         pass: hashedPassword,
         role: 'مسؤول',
         isActive: true
       });
       
       await admin.save();
-      console.log('✅ تم إنشاء حساب المسؤول');
-      console.log(`📧 البريد: ${ADMIN_EMAIL}`);
-      console.log(`🔑 كلمة المرور: ${ADMIN_PASSWORD}`);
+      console.log('✅ Admin: admin / 123456');
     }
   } catch (error) {
     console.log('⚠️ Admin error:', error.message);
@@ -819,12 +641,14 @@ async function createAdmin() {
 // ============================================================
 // 🚀 تشغيل السيرفر
 // ============================================================
+const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server: http://localhost:${PORT}`);
   await createAdmin();
   console.log('========================================');
-  console.log('📧 البريد: ' + ADMIN_EMAIL);
-  console.log('🔑 كلمة المرور: ' + ADMIN_PASSWORD);
+  console.log('📧 admin');
+  console.log('🔑 123456');
   console.log('========================================');
 });
 
