@@ -15,7 +15,7 @@ const app = express();
 const server = http.createServer(app);
 
 // ============================================================
-// ✅ تعطيل CSP تماماً
+// ✅ تعطيل CSP تماماً لحل مشاكل CSS
 // ============================================================
 app.use((req, res, next) => {
   res.removeHeader('Content-Security-Policy');
@@ -55,7 +55,9 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// ============================================================
 // ✅ خدمة الملفات الثابتة
+// ============================================================
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.css')) {
@@ -73,63 +75,94 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // 🗄️ قاعدة البيانات
 // ============================================================
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/vessel_db';
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key-change-this';
 
-mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.log('❌ MongoDB Error:', err.message));
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ MongoDB Connected'))
+.catch(err => console.log('❌ MongoDB Error:', err.message));
 
 // ============================================================
-// 📊 النماذج (مبسطة)
+// 📊 النماذج
 // ============================================================
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, unique: true },
-  pass: String,
-  role: { type: String, default: 'مستخدم' },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  pass: { type: String, required: true, select: false },
+  role: { type: String, enum: ['مسؤول', 'محرر', 'مستخدم'], default: 'مستخدم' },
   isActive: { type: Boolean, default: true }
-});
+}, { timestamps: true });
 
 const VesselSchema = new mongoose.Schema({
-  name: String,
-  num: String,
-  len: Number,
-  cat: String,
-  stat: { type: String, default: 'صالح' }
+  name: { type: String, required: true },
+  num: { type: String },
+  len: { type: Number, default: 0 },
+  cat: { type: String, default: 'زوارق مزدوجة' },
+  reg: { type: String },
+  zone: { type: String },
+  port: { type: String },
+  supp: { type: String },
+  stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
+  break: { type: String },
+  fDate: { type: String },
+  eDate: { type: String },
+  ref: { type: String }
 }, { timestamps: true });
 
 const TicketSchema = new mongoose.Schema({
-  userName: String,
-  subject: String,
-  message: String,
-  date: String,
-  time: String,
-  status: { type: String, default: 'قيد المعالجة' },
-  replies: Array
+  userName: { type: String, required: true },
+  userRole: { type: String, required: true },
+  subject: { type: String, required: true },
+  message: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  status: { type: String, enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'], default: 'قيد المعالجة' },
+  replies: [{
+    adminName: String,
+    reply: String,
+    date: String,
+    time: String
+  }]
 }, { timestamps: true });
 
 const LogSchema = new mongoose.Schema({
-  userName: String,
-  action: String,
-  details: String,
-  date: String,
-  time: String
+  userName: { type: String, required: true },
+  userRole: { type: String, required: true },
+  action: { type: String, required: true },
+  details: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true }
 }, { timestamps: true });
 
 const LocationSchema = new mongoose.Schema({
-  userName: String,
-  lat: Number,
-  lng: Number,
-  timestamp: { type: Date, default: Date.now }
+  userName: { type: String, required: true },
+  userRole: { type: String, required: true },
+  lat: { type: Number, required: true },
+  lng: { type: Number, required: true },
+  timestamp: { type: Date, default: Date.now },
+  action: { type: String, default: 'تحديث موقع' },
+  device: { type: String },
+  browser: { type: String },
+  ip: { type: String }
 }, { timestamps: true });
 
 const NoteVerbaleSchema = new mongoose.Schema({
-  title: String,
-  content: String,
-  date: String,
-  time: String,
-  week: String,
-  createdBy: String
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  week: { type: String, required: true },
+  createdBy: { type: String, required: true },
+  userRole: { type: String, required: true },
+  type: { type: String, default: 'text' },
+  imageData: { type: String, default: '' },
+  attachments: [{
+    name: String,
+    type: String,
+    data: String
+  }]
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);
@@ -159,8 +192,9 @@ function getWeekNumber(date) {
   return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
 
-function determineCategory(len) {
-  const n = parseFloat(len);
+function determineCategory(length) {
+  const n = parseFloat(length);
+  if (isNaN(n)) return 'زوارق مزدوجة';
   if (n === 11) return 'البروق';
   if (n >= 8 && n <= 12) return 'صقور';
   if (n > 12 && n <= 25) return 'خوافر';
@@ -168,14 +202,36 @@ function determineCategory(len) {
   return 'زوارق مزدوجة';
 }
 
+function extractDevice(userAgent) {
+  if (!userAgent) return 'غير معروف';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad')) return 'iOS';
+  if (ua.includes('windows')) return 'Windows';
+  if (ua.includes('macintosh')) return 'Mac';
+  if (ua.includes('linux')) return 'Linux';
+  return 'غير معروف';
+}
+
+function extractBrowser(userAgent) {
+  if (!userAgent) return 'غير معروف';
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('edg') || ua.includes('edge')) return 'Edge';
+  if (ua.includes('opera') || ua.includes('opr')) return 'Opera';
+  if (ua.includes('chrome')) return 'Chrome';
+  if (ua.includes('firefox')) return 'Firefox';
+  if (ua.includes('safari')) return 'Safari';
+  return 'غير معروف';
+}
+
 // ============================================================
-// 🔐 Middleware
+// 🔐 Middleware المصادقة
 // ============================================================
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'يرجى تسجيل الدخول' });
+      return res.status(401).json({ success: false, error: 'يرجى تسجيل الدخول' });
     }
 
     const token = authHeader.split(' ')[1];
@@ -183,21 +239,30 @@ const authenticate = async (req, res, next) => {
     const user = await User.findById(decoded.id).select('-pass');
     
     if (!user) {
-      return res.status(401).json({ error: 'المستخدم غير موجود' });
+      return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ success: false, error: 'الحساب غير مفعل' });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'توكن غير صالح' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة' });
+    }
+    res.status(401).json({ success: false, error: 'توكن غير صالح' });
   }
 };
 
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ error: 'يرجى تسجيل الدخول' });
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'يرجى تسجيل الدخول' });
+    }
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'غير مصرح' });
+      return res.status(403).json({ success: false, error: 'غير مصرح لك بهذه العملية' });
     }
     next();
   };
@@ -220,36 +285,58 @@ io.on('connection', (socket) => {
       connectedUsers[socket.id] = {
         id: socket.id,
         userName: data.userName || 'مجهول',
+        userRole: data.userRole || 'مستخدم',
         lat: parseFloat(data.lat),
-        lng: parseFloat(data.lng)
+        lng: parseFloat(data.lng),
+        connectedAt: new Date().toISOString()
       };
       io.emit('user-list', Object.values(connectedUsers));
     }
   });
   
+  socket.on('update-location', (data) => {
+    if (connectedUsers[socket.id] && data && data.lat != null && data.lng != null) {
+      connectedUsers[socket.id].lat = parseFloat(data.lat);
+      connectedUsers[socket.id].lng = parseFloat(data.lng);
+      socket.broadcast.emit('receive-location', {
+        userName: data.userName,
+        lat: parseFloat(data.lat),
+        lng: parseFloat(data.lng),
+        time: new Date().toISOString()
+      });
+    }
+  });
+  
   socket.on('disconnect', () => {
-    delete connectedUsers[socket.id];
-    io.emit('user-list', Object.values(connectedUsers));
+    const user = connectedUsers[socket.id];
+    if (user) {
+      delete connectedUsers[socket.id];
+      io.emit('user-list', Object.values(connectedUsers));
+    }
   });
 });
 
 // ============================================================
-// 🚪 Routes
+// 🚪 Routes API
 // ============================================================
 
-// --- Login ---
+// ----- المصادقة -----
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني وكلمة المرور مطلوبان' });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() }).select('+pass');
     if (!user) {
-      return res.status(401).json({ error: 'بيانات غير صحيحة' });
+      return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
     }
 
     const isMatch = await bcrypt.compare(password, user.pass);
     if (!isMatch) {
-      return res.status(401).json({ error: 'بيانات غير صحيحة' });
+      return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
     }
 
     const token = jwt.sign(
@@ -261,21 +348,31 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, error: 'خطأ في تسجيل الدخول' });
   }
 });
 
-// --- Register ---
+// ----- تسجيل مستخدم جديد -----
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: 'الاسم والبريد الإلكتروني وكلمة المرور مطلوبة' });
+    }
+
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ error: 'البريد الإلكتروني موجود' });
+      return res.status(400).json({ success: false, error: 'البريد الإلكتروني موجود بالفعل' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -292,26 +389,34 @@ app.post('/api/auth/register', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'تم إنشاء الحساب',
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      message: 'تم إنشاء الحساب بنجاح',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Register error:', error);
+    res.status(500).json({ success: false, error: 'خطأ في إنشاء الحساب' });
   }
 });
 
-// --- Me ---
+// ----- معلومات المستخدم الحالي -----
 app.get('/api/auth/me', authenticate, async (req, res) => {
   res.json({ success: true, user: req.user });
 });
 
-// --- Vessels ---
+// ============================================================
+// 🚢 المراكب
+// ============================================================
 app.get('/api/vessels', authenticate, async (req, res) => {
   try {
     const vessels = await Vessel.find().sort({ createdAt: -1 });
     res.json(vessels);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -321,9 +426,9 @@ app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), asyn
     data.cat = determineCategory(data.len);
     const vessel = new Vessel(data);
     await vessel.save();
-    res.status(201).json(vessel);
+    res.status(201).json({ success: true, data: vessel });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
@@ -331,31 +436,33 @@ app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), a
   try {
     const data = req.body;
     data.cat = determineCategory(data.len);
-    const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true });
-    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-    res.json(vessel);
+    const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
+    if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+    res.json({ success: true, data: vessel });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const vessel = await Vessel.findByIdAndDelete(req.params.id);
-    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-    res.json({ message: 'تم الحذف' });
+    if (!vessel) return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+    res.json({ success: true, message: 'تم حذف المركب بنجاح' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// --- Tickets ---
+// ============================================================
+// 🎫 التذاكر
+// ============================================================
 app.get('/api/tickets', authenticate, async (req, res) => {
   try {
     const tickets = await Ticket.find().sort({ createdAt: -1 });
     res.json(tickets);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -364,20 +471,21 @@ app.post('/api/tickets', authenticate, async (req, res) => {
     const ticket = new Ticket({
       ...req.body,
       userName: req.user.name,
+      userRole: req.user.role,
       date: getCurrentDate(),
       time: getCurrentTime()
     });
     await ticket.save();
-    res.status(201).json(ticket);
+    res.status(201).json({ success: true, data: ticket });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
-    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    if (!ticket) return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
     
     ticket.replies.push({
       adminName: req.user.name,
@@ -387,31 +495,33 @@ app.put('/api/tickets/:id/reply', authenticate, authorize('مسؤول'), async (
     });
     ticket.status = 'تم الرد';
     await ticket.save();
-    res.json(ticket);
+    res.json({ success: true, data: ticket });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.put('/api/tickets/:id/close', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.id);
-    if (!ticket) return res.status(404).json({ error: 'التذكرة غير موجودة' });
+    if (!ticket) return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
     ticket.status = 'مغلقة';
     await ticket.save();
-    res.json(ticket);
+    res.json({ success: true, data: ticket });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// --- Logs ---
+// ============================================================
+// 📜 السجلات
+// ============================================================
 app.get('/api/logs', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const logs = await Log.find().sort({ createdAt: -1 });
     res.json(logs);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -420,91 +530,129 @@ app.post('/api/logs', authenticate, async (req, res) => {
     const log = new Log({
       ...req.body,
       userName: req.user.name,
+      userRole: req.user.role,
       date: getCurrentDate(),
       time: getCurrentTime()
     });
     await log.save();
-    res.status(201).json(log);
+    res.status(201).json({ success: true, data: log });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// --- Locations ---
+// ============================================================
+// 📍 المواقع
+// ============================================================
 app.get('/api/locations', authenticate, async (req, res) => {
   try {
     const locations = await Location.find().sort({ timestamp: -1 });
     res.json(locations);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/locations', authenticate, async (req, res) => {
   try {
-    const { lat, lng } = req.body;
-    if (lat == null || lng == null) {
-      return res.status(400).json({ error: 'إحداثيات غير صالحة' });
+    const { lat, lng, action } = req.body;
+    
+    if (lat == null || lng == null || isNaN(Number(lat)) || isNaN(Number(lng))) {
+      return res.status(400).json({ success: false, error: 'إحداثيات غير صالحة' });
     }
+    
     const location = new Location({
       userName: req.user.name,
+      userRole: req.user.role,
       lat: parseFloat(lat),
-      lng: parseFloat(lng)
+      lng: parseFloat(lng),
+      action: action || 'تحديث موقع',
+      device: extractDevice(req.headers['user-agent']),
+      browser: extractBrowser(req.headers['user-agent']),
+      ip: req.ip
     });
     await location.save();
-    res.status(201).json(location);
+    res.status(201).json({ success: true, data: location });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
-// --- Notes ---
+// ============================================================
+// 📝 Note Verbale
+// ============================================================
 app.post('/api/notes', authenticate, async (req, res) => {
   try {
-    const { title, content, date } = req.body;
+    const { title, content, date, time, week, type, imageData, attachments } = req.body;
+    
     if (!title || !content || !date) {
-      return res.status(400).json({ error: 'العنوان والمحتوى والتاريخ مطلوبة' });
+      return res.status(400).json({ success: false, error: 'العنوان والمحتوى والتاريخ مطلوبة' });
     }
+    
     const note = new NoteVerbale({
       title,
       content,
       date,
-      time: getCurrentTime(),
-      week: getWeekNumber(date).toString(),
-      createdBy: req.user.name
+      time: time || getCurrentTime(),
+      week: week || getWeekNumber(date).toString(),
+      createdBy: req.user.name,
+      userRole: req.user.role,
+      type: type || 'text',
+      imageData: imageData || '',
+      attachments: attachments || []
     });
+    
     await note.save();
-    res.status(201).json(note);
+    res.status(201).json({ success: true, data: note });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.get('/api/notes', authenticate, async (req, res) => {
   try {
-    const notes = await NoteVerbale.find().sort({ createdAt: -1 });
+    const { week, limit } = req.query;
+    let query = {};
+    if (week) query.week = week;
+    
+    let notesQuery = NoteVerbale.find(query).sort({ createdAt: -1 });
+    if (limit) notesQuery = notesQuery.limit(parseInt(limit) || 50);
+    
+    const notes = await notesQuery.exec();
     res.json(notes);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/notes/latest', authenticate, async (req, res) => {
+  try {
+    const note = await NoteVerbale.findOne().sort({ createdAt: -1 });
+    res.json(note || null);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.delete('/api/notes/:id', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
-    await NoteVerbale.findByIdAndDelete(req.params.id);
-    res.json({ message: 'تم الحذف' });
+    const note = await NoteVerbale.findByIdAndDelete(req.params.id);
+    if (!note) return res.status(404).json({ success: false, error: 'المذكرة غير موجودة' });
+    res.json({ success: true, message: 'تم حذف المذكرة' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// --- Users ---
+// ============================================================
+// 👥 المستخدمين
+// ============================================================
 app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const users = await User.find().select('-pass');
     res.json(users);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -512,6 +660,7 @@ app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res
   try {
     const { name, role, isActive, password } = req.body;
     const updateData = {};
+    
     if (name) updateData.name = name;
     if (role) updateData.role = role;
     if (isActive !== undefined) updateData.isActive = isActive;
@@ -521,25 +670,31 @@ app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res
       updateData.pass = await bcrypt.hash(password, salt);
     }
     
-    const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-pass');
-    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    res.json(user);
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true }).select('-pass');
+    if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    res.json({ success: true, user });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 
 app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
+    if (req.params.id === req.user._id.toString()) {
+      return res.status(400).json({ success: false, error: 'لا يمكنك حذف حسابك الخاص' });
+    }
+    
     const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    res.json({ message: 'تم الحذف' });
+    if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    res.json({ success: true, message: 'تم حذف المستخدم' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// --- Export/Import ---
+// ============================================================
+// 💾 تصدير واستيراد
+// ============================================================
 app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const [vessels, users, tickets, logs, locations, notes] = await Promise.all([
@@ -552,13 +707,17 @@ app.get('/api/export-all', authenticate, authorize('مسؤول'), async (req, re
     ]);
     res.json({ vessels, users, tickets, logs, locations, notes });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, res) => {
   try {
     const { vessels, users, tickets, logs, locations, notes } = req.body;
+    
+    if (!vessels && !users && !tickets && !logs && !locations && !notes) {
+      return res.status(400).json({ success: false, error: 'لا توجد بيانات للاستيراد' });
+    }
     
     if (vessels && Array.isArray(vessels)) {
       await Vessel.deleteMany({});
@@ -596,18 +755,28 @@ app.post('/api/import-all', authenticate, authorize('مسؤول'), async (req, r
       await NoteVerbale.insertMany(notes);
     }
     
-    res.json({ message: '✅ تم استيراد البيانات' });
+    res.json({ success: true, message: '✅ تم استيراد البيانات بنجاح' });
   } catch (error) {
-    res.status(500).json({ error: 'خطأ في الاستيراد: ' + error.message });
+    console.error('Import error:', error);
+    res.status(500).json({ success: false, error: 'خطأ في استيراد البيانات: ' + error.message });
   }
 });
 
-// --- Health ---
+// ============================================================
+// ❤️ الصحة
+// ============================================================
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
 });
 
-// --- Home ---
+// ============================================================
+// 🏠 الصفحة الرئيسية
+// ============================================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -631,7 +800,9 @@ async function createAdmin() {
       });
       
       await admin.save();
-      console.log('✅ Admin: admin / 123456');
+      console.log('✅ تم إنشاء حساب المسؤول');
+      console.log('📧 admin');
+      console.log('🔑 123456');
     }
   } catch (error) {
     console.log('⚠️ Admin error:', error.message);
