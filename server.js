@@ -1,381 +1,322 @@
-// ============================================================
-// 📦 app.js - الملف الرئيسي البسيط
-// ============================================================
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
 
-console.log('✅ App loaded');
-
-let allVessels = [];
-let allUsers = [];
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 // ============================================================
-// 🔐 المصادقة
+// ✅ حل مشكلة CSS
 // ============================================================
-
-function doLogin() {
-    const username = document.getElementById('username')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
-    
-    if (!username || !password) {
-        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
-        return;
+app.use((req, res, next) => {
+    if (req.url.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+    } else if (req.url.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
     }
-    
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, password })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userRoleDisplay').innerHTML = 
-                `<i class="fas fa-user"></i> ${data.user.name} (${data.user.role})`;
-            loadAllData();
-        } else {
-            alert('❌ ' + (data.error || 'بيانات غير صحيحة'));
+    next();
+});
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ خدمة الملفات الثابتة
+app.use(express.static(path.join(__dirname, 'public'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
         }
-    })
-    .catch(err => {
-        console.error('Login error:', err);
-        alert('❌ خطأ في الاتصال بالخادم');
-    });
-}
-
-function logout() {
-    localStorage.clear();
-    location.reload();
-}
-
-function getToken() {
-    return localStorage.getItem('token');
-}
-
-// ============================================================
-// 📊 تحميل البيانات
-// ============================================================
-
-function loadAllData() {
-    loadVessels();
-    loadUsers();
-}
-
-function loadVessels() {
-    const token = getToken();
-    if (!token) return;
-    
-    fetch('/api/vessels', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allVessels = data || [];
-        renderMainTable();
-        renderMaintTable();
-    })
-    .catch(err => console.error('Load vessels error:', err));
-}
-
-function loadUsers() {
-    const token = getToken();
-    if (!token) return;
-    
-    fetch('/api/users', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allUsers = data || [];
-        renderUsersTable();
-    })
-    .catch(err => console.error('Load users error:', err));
-}
-
-// ============================================================
-// ✅ إضافة مركب
-// ============================================================
-
-function addItem() {
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
     }
-    
-    const name = document.getElementById('iName')?.value;
-    if (!name) {
-        alert('⚠️ الرجاء إدخال اسم المركب');
-        return;
+}));
+
+// ============================================================
+// ✅ البيانات (Mock Data)
+// ============================================================
+let vessels = [
+    { id: 1, name: 'المركب الأول', num: '001', len: 10, cat: 'صقور', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'تونس', stat: 'صالح', break: '-', fDate: '2024-01-01', eDate: '2024-12-31', ref: 'REF001', repairer: '' },
+    { id: 2, name: 'المركب الثاني', num: '002', len: 15, cat: 'خوافر', reg: 'الوسط', zone: 'سوسة', port: 'سوسة', supp: 'تونس', stat: 'معطب', break: 'محرك', fDate: '2024-01-15', eDate: '2024-06-30', ref: 'REF002', repairer: 'وحدة الصيانة والإسناد البحري تونس' }
+];
+
+let users = [
+    { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول', isActive: true },
+    { id: 2, name: 'مستخدم', email: 'user', role: 'مشاهد', isActive: true }
+];
+
+let tickets = [];
+let notes = [];
+let locations = [];
+
+// ============================================================
+// ✅ دوال مساعدة
+// ============================================================
+function getCurrentDate() {
+    return new Date().toISOString().split('T')[0];
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function determineCategory(len) {
+    const n = parseFloat(len);
+    if (isNaN(n)) return 'زوارق مزدوجة';
+    if (n === 11) return 'البروق';
+    if (n >= 8 && n <= 12) return 'صقور';
+    if (n > 12 && n <= 25) return 'خوافر';
+    if (n > 30) return 'طوافات';
+    return 'زوارق مزدوجة';
+}
+
+// ============================================================
+// ✅ API Routes (بدون مصادقة)
+// ============================================================
+
+// --- Login ---
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    if (email === 'admin' && password === '123456') {
+        res.json({
+            success: true,
+            token: 'fake-token-123',
+            user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' }
+        });
+    } else {
+        res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
     }
-    
-    const data = {
-        name: name,
-        num: document.getElementById('iNum')?.value || '',
-        len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value || '',
-        zone: document.getElementById('iZone')?.value || '',
-        port: document.getElementById('iPort')?.value || '',
-        supp: document.getElementById('iSupp')?.value || '',
-        stat: document.getElementById('iStat')?.value || 'صالح',
-        break: document.getElementById('iBreak')?.value || '',
-        fDate: document.getElementById('iDate')?.value || '',
-        eDate: document.getElementById('iEnd')?.value || '',
-        ref: document.getElementById('iRef')?.value || '',
-        repairer: document.getElementById('iRepairer')?.value || ''
+});
+
+// --- Me ---
+app.get('/api/auth/me', (req, res) => {
+    res.json({ success: true, user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' } });
+});
+
+// --- Vessels ---
+app.get('/api/vessels', (req, res) => {
+    res.json(vessels);
+});
+
+app.post('/api/vessels', (req, res) => {
+    const data = req.body;
+    const newVessel = {
+        id: Date.now(),
+        name: data.name || 'مركب جديد',
+        num: data.num || '',
+        len: parseFloat(data.len) || 0,
+        cat: determineCategory(data.len),
+        reg: data.reg || '',
+        zone: data.zone || '',
+        port: data.port || '',
+        supp: data.supp || '',
+        stat: data.stat || 'صالح',
+        break: data.break || '',
+        fDate: data.fDate || '',
+        eDate: data.eDate || '',
+        ref: data.ref || '',
+        repairer: data.repairer || ''
     };
-    
-    fetch('/api/vessels', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم إضافة المركب بنجاح');
-            clearInputs();
-            loadVessels();
-        } else {
-            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
-        }
-    })
-    .catch(err => {
-        console.error('Add error:', err);
-        alert('❌ خطأ في إضافة المركب');
-    });
-}
+    vessels.push(newVessel);
+    res.status(201).json({ success: true, data: newVessel });
+});
 
-function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
+app.put('/api/vessels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
     }
-    
-    fetch('/api/vessels/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم الحذف');
-            loadVessels();
-        } else {
-            alert('❌ ' + (data.error || 'خطأ في الحذف'));
-        }
-    })
-    .catch(err => {
-        console.error('Delete error:', err);
-        alert('❌ خطأ في الحذف');
-    });
-}
+    vessels[index] = { ...vessels[index], ...req.body };
+    res.json({ success: true, data: vessels[index] });
+});
 
-function clearInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
-    document.getElementById('iRepairer').value = '';
-}
+app.delete('/api/vessels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+    }
+    vessels.splice(index, 1);
+    res.json({ success: true, message: 'تم الحذف' });
+});
 
-function updateZones() {
-    const reg = document.getElementById('iReg')?.value;
-    const zoneSelect = document.getElementById('iZone');
-    if (!zoneSelect) return;
-    
-    const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة'],
-        'الجنوب': ['جرجيس', 'بن قردان']
+// --- Users ---
+app.get('/api/users', (req, res) => {
+    res.json(users);
+});
+
+app.post('/api/users', (req, res) => {
+    const data = req.body;
+    const newUser = {
+        id: Date.now(),
+        name: data.name || 'مستخدم جديد',
+        email: data.email || 'user@test.com',
+        role: data.role || 'مشاهد',
+        isActive: true
     };
-    
-    const options = zones[reg] || [];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
-    options.forEach(z => {
-        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
+    users.push(newUser);
+    res.status(201).json({ success: true, data: newUser });
+});
+
+app.put('/api/users/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const user = users.find(u => u.id === id);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+    Object.assign(user, req.body);
+    res.json({ success: true, data: user });
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+    users.splice(index, 1);
+    res.json({ success: true, message: 'تم الحذف' });
+});
+
+// --- Tickets ---
+app.get('/api/tickets', (req, res) => {
+    res.json(tickets);
+});
+
+app.post('/api/tickets', (req, res) => {
+    const data = req.body;
+    const newTicket = {
+        id: Date.now(),
+        subject: data.subject || 'موضوع جديد',
+        message: data.message || '',
+        status: 'قيد المعالجة',
+        userName: 'Admin',
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+        replies: []
+    };
+    tickets.push(newTicket);
+    res.status(201).json({ success: true, data: newTicket });
+});
+
+app.put('/api/tickets/:id/reply', (req, res) => {
+    const id = parseInt(req.params.id);
+    const ticket = tickets.find(t => t.id === id);
+    if (!ticket) {
+        return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
+    }
+    ticket.replies.push({
+        adminName: 'Admin',
+        reply: req.body.reply,
+        date: getCurrentDate(),
+        time: getCurrentTime()
     });
-}
+    ticket.status = 'تم الرد';
+    res.json({ success: true, data: ticket });
+});
 
-// ============================================================
-// ✅ عرض الجداول
-// ============================================================
-
-function renderMainTable() {
-    const tbody = document.getElementById('mainBody');
-    if (!tbody) return;
-    
-    if (!allVessels || allVessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
-        return;
+app.put('/api/tickets/:id/close', (req, res) => {
+    const id = parseInt(req.params.id);
+    const ticket = tickets.find(t => t.id === id);
+    if (!ticket) {
+        return res.status(404).json({ success: false, error: 'التذكرة غير موجودة' });
     }
-    
-    tbody.innerHTML = allVessels.map(v => {
-        const id = v._id || v.id;
-        return `
-        <tr>
-            <td>${v.name || '-'}</td>
-            <td>${v.num || '-'}</td>
-            <td>${v.len || 0}</td>
-            <td>${v.cat || '-'}</td>
-            <td>${v.reg || '-'}</td>
-            <td>${v.zone || '-'}</td>
-            <td>${v.port || '-'}</td>
-            <td>${v.supp || '-'}</td>
-            <td><span style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</span></td>
-            <td>${v.break || '-'}</td>
-            <td>${v.fDate || '-'}</td>
-            <td>${v.eDate || '-'}</td>
-            <td>${v.ref || '-'}</td>
-            <td>${v.repairer || '-'}</td>
-            <td>
-                <button onclick="deleteVessel('${id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `}).join('');
-}
+    ticket.status = 'مغلقة';
+    res.json({ success: true, data: ticket });
+});
 
-function renderMaintTable() {
-    const tbody = document.getElementById('maintBody');
-    if (!tbody) return;
-    
-    const vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
-    
-    if (vessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:30px;">🚫 لا توجد بيانات صيانة</td></tr>`;
-        return;
-    }
-    
-    tbody.innerHTML = vessels.map(v => {
-        const id = v._id || v.id;
-        return `
-        <tr>
-            <td>${v.name || '-'}</td>
-            <td>${v.num || '-'}</td>
-            <td>${v.reg || '-'}</td>
-            <td>${v.zone || '-'}</td>
-            <td><span style="color:${v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat}</span></td>
-            <td>${v.break || '-'}</td>
-            <td>${v.fDate || '-'}</td>
-            <td>${v.eDate || '-'}</td>
-            <td>${v.ref || '-'}</td>
-            <td>${v.repairer || '-'}</td>
-            <td>
-                <button onclick="alert('تعديل: ${v.name}')" style="background:#ffc107; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                    <i class="fas fa-edit"></i>
-                </button>
-            </td>
-        </tr>
-    `}).join('');
-}
+// --- Notes ---
+app.get('/api/notes', (req, res) => {
+    res.json(notes);
+});
 
-function renderUsersTable() {
-    const tbody = document.getElementById('usersBody');
-    if (!tbody) return;
-    
-    if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
-        return;
+app.post('/api/notes', (req, res) => {
+    const data = req.body;
+    const newNote = {
+        id: Date.now(),
+        title: data.title || 'مذكرة جديدة',
+        content: data.content || '',
+        date: data.date || getCurrentDate(),
+        time: getCurrentTime(),
+        week: '1',
+        createdBy: 'Admin'
+    };
+    notes.push(newNote);
+    res.status(201).json({ success: true, data: newNote });
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = notes.findIndex(n => n.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'المذكرة غير موجودة' });
     }
-    
-    tbody.innerHTML = allUsers.map(u => {
-        const id = u._id || u.id;
-        return `
-        <tr>
-            <td>${u.name || '-'}</td>
-            <td>${u.role || 'مشاهد'}</td>
-            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="alert('تغيير كلمة المرور')">
-                    <i class="fas fa-key"></i>
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}" onclick="alert('تغيير الحالة')">
-                    <i class="fas ${u.isActive ? 'fa-ban' : 'fa-check'}"></i>
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="alert('حذف المستخدم')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `}).join('');
-}
+    notes.splice(index, 1);
+    res.json({ success: true, message: 'تم الحذف' });
+});
+
+app.get('/api/notes/latest', (req, res) => {
+    res.json(notes.length > 0 ? notes[notes.length - 1] : null);
+});
+
+// --- Locations ---
+app.get('/api/locations', (req, res) => {
+    res.json(locations);
+});
+
+app.post('/api/locations', (req, res) => {
+    const { lat, lng } = req.body;
+    const newLocation = {
+        id: Date.now(),
+        userName: 'Admin',
+        lat: parseFloat(lat) || 0,
+        lng: parseFloat(lng) || 0,
+        timestamp: new Date()
+    };
+    locations.push(newLocation);
+    res.status(201).json({ success: true, data: newLocation });
+});
+
+// --- Logs ---
+app.get('/api/logs', (req, res) => {
+    res.json([]);
+});
+
+app.post('/api/logs', (req, res) => {
+    res.status(201).json({ success: true });
+});
+
+// --- Export/Import ---
+app.get('/api/export-all', (req, res) => {
+    res.json({ vessels, users, tickets, notes, locations });
+});
+
+app.post('/api/import-all', (req, res) => {
+    const { vessels: v, users: u, tickets: t, notes: n, locations: l } = req.body;
+    if (v) vessels = v;
+    if (u) users = u;
+    if (t) tickets = t;
+    if (n) notes = n;
+    if (l) locations = l;
+    res.json({ success: true, message: '✅ تم الاستيراد' });
+});
+
+// --- Health ---
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// --- Home ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // ============================================================
-// 🖥️ دوال الصفحات
+// 🚀 تشغيل السيرفر
 // ============================================================
-
-function showPage(page) {
-    document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
-    if (target) target.classList.remove('hidden');
-    
-    switch(page) {
-        case 'main':
-            loadVessels();
-            break;
-        case 'maint':
-            loadVessels();
-            break;
-        case 'users':
-            loadUsers();
-            break;
-    }
-}
-
-function refreshAllPages() {
-    loadAllData();
-    alert('✅ تم تحديث جميع البيانات');
-}
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToBottom() {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-// ============================================================
-// 🔄 تصدير الدوال
-// ============================================================
-
-window.doLogin = doLogin;
-window.logout = logout;
-window.showPage = showPage;
-window.addItem = addItem;
-window.deleteVessel = deleteVessel;
-window.updateZones = updateZones;
-window.refreshAllPages = refreshAllPages;
-window.scrollToTop = scrollToTop;
-window.scrollToBottom = scrollToBottom;
-
-console.log('✅ جميع الدوال جاهزة');
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem('token')) {
-        loadAllData();
-    }
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server: http://localhost:${PORT}`);
+    console.log('📧 admin / 🔑 123456');
 });
