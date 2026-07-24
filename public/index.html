@@ -218,16 +218,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        .maint-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        .maint-grid .region-table-card {
-            margin-bottom: 0;
-        }
-        
         .action-buttons {
             display: flex;
             gap: 4px;
@@ -265,8 +255,45 @@
             background: #c82333;
         }
         
-        @media (max-width: 992px) {
-            .maint-grid { grid-template-columns: 1fr; }
+        /* ===== نموذج إضافة مستخدم ===== */
+        .user-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            align-items: end;
+        }
+        .user-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .user-form .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #495057;
+        }
+        .user-form input, .user-form select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            background: white;
+        }
+        .user-form input:focus, .user-form select:focus {
+            outline: none;
+            border-color: #0d6efd;
+        }
+        
+        @media (max-width: 768px) {
+            .user-form {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media print {
@@ -288,7 +315,6 @@
             .filter-bar { flex-direction: column; align-items: stretch; }
             .stats-cards { grid-template-columns: repeat(2, 1fr); }
             #trackMap, #gpsMap { height: 250px; }
-            .maint-grid { grid-template-columns: 1fr; }
             table { font-size: 11px; }
             table th, table td { padding: 5px 6px; }
             .action-buttons { flex-direction: row; }
@@ -392,7 +418,7 @@
         <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
     </div>
 
-    <!-- ===== الصفحة الأولى: الأسطول ===== -->
+    <!-- ===== صفحة الأسطول ===== -->
     <div id="pageMain">
         <div class="filter-bar">
             <div class="search-input">
@@ -423,7 +449,7 @@
         </div>
     </div>
 
-    <!-- ===== الصفحة الثانية: الصيانة (جدول عام فقط) ===== -->
+    <!-- ===== صفحة الصيانة ===== -->
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
             <div class="search-input">
@@ -431,8 +457,6 @@
             </div>
             <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
         </div>
-        
-        <!-- ===== جدول الصيانة العام فقط ===== -->
         <div class="region-table-card">
             <div class="region-table-header">🔧 سجل الصيانة العام</div>
             <div class="scrollable-table">
@@ -456,7 +480,7 @@
         </div>
     </div>
 
-    <!-- ===== باقي الصفحات ===== -->
+    <!-- ===== صفحة الجاهزية ===== -->
     <div id="pageEff" class="hidden">
         <div style="margin-bottom:15px;">
             <button class="btn btn-success" onclick="loadVessels()">🔄 تحديث</button>
@@ -466,6 +490,7 @@
         <div id="regionTables"></div>
     </div>
 
+    <!-- ===== صفحة الدعم ===== -->
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px;">
             <h3>🎫 نظام التذاكر</h3>
@@ -477,6 +502,7 @@
         </div>
     </div>
 
+    <!-- ===== صفحة التتبع ===== -->
     <div id="pageTrack" class="hidden">
         <div class="filter-bar">
             <span style="font-weight:700; color:#0d6efd;">📍 تتبع المستخدمين المباشر</span>
@@ -501,6 +527,7 @@
         </div>
     </div>
 
+    <!-- ===== صفحة الخريطة ===== -->
     <div id="pageMap" class="hidden">
         <div class="filter-bar">
             <span style="font-weight:700; color:#0d6efd;">🗺️ تتبع GPS المباشر</span>
@@ -521,22 +548,51 @@
         </div>
     </div>
 
+    <!-- ===== صفحة المستخدمين ===== -->
     <div id="pageUsers" class="hidden">
-        <div class="region-table-card" style="padding:20px;">
-            <h3>👥 إدارة المستخدمين</h3>
+        <!-- ===== نموذج إضافة مستخدم ===== -->
+        <div class="user-form">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> اسم المستخدم</label>
+                <input type="text" id="un" placeholder="اسم المستخدم">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> كلمة المرور</label>
+                <input type="password" id="up" placeholder="كلمة المرور">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-shield"></i> الصلاحية</label>
+                <select id="ur">
+                    <option value="مشاهد">👁️ مشاهد</option>
+                    <option value="محرر">✏️ محرر</option>
+                    <option value="مسؤول">👑 مسؤول</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="addUser()"><i class="fas fa-user-plus"></i> إضافة</button>
+        </div>
+        
+        <!-- ===== جدول المستخدمين ===== -->
+        <div class="region-table-card">
+            <div class="region-table-header">👥 إدارة المستخدمين</div>
             <div class="scrollable-table">
                 <table>
-                    <thead><tr>
-                        <th>الاسم</th><th>الصلاحية</th>
-                        <th>الحالة</th>
-                        <th>إجراء</th>
-                    </tr></thead>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الصلاحية</th>
+                            <th>الحالة</th>
+                            <th>تغيير كلمة المرور</th>
+                            <th>تعطيل/تفعيل</th>
+                            <th>حذف</th>
+                        </tr>
+                    </thead>
                     <tbody id="usersBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <!-- ===== صفحة Note Verbale ===== -->
     <div id="pageNote" class="hidden">
         <div class="region-table-card" style="padding:20px;">
             <h3>📝 Note Verbale</h3>
@@ -555,7 +611,9 @@
 <div id="passwordModal" class="modal">
     <div class="modal-content">
         <h3>🔑 تغيير كلمة المرور</h3>
+        <p id="modalUserName" style="margin-bottom:10px; color:#6c757d;"></p>
         <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
         <div class="modal-actions">
             <button class="btn btn-success" onclick="saveNewPassword()">حفظ</button>
             <button class="btn btn-danger" onclick="closePasswordModal()">إلغاء</button>
