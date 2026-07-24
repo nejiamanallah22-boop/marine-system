@@ -238,6 +238,33 @@
             font-size: 11px;
         }
         
+        /* تنسيق عمود الإجراءات */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        .action-buttons .btn {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        .action-buttons .btn-warning {
+            background: #ffc107;
+            color: #1a3a5c;
+        }
+        .action-buttons .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .action-buttons .btn-warning:hover {
+            background: #e0a800;
+        }
+        .action-buttons .btn-danger:hover {
+            background: #c82333;
+        }
+        
         @media (max-width: 992px) {
             .maint-grid { grid-template-columns: 1fr; }
         }
@@ -264,7 +291,7 @@
             .maint-grid { grid-template-columns: 1fr; }
             table { font-size: 11px; }
             table th, table td { padding: 5px 6px; }
-            .action-buttons { flex-direction: column; gap: 3px; }
+            .action-buttons { flex-direction: row; }
         }
         @media (max-width: 480px) {
             .stats-cards { grid-template-columns: 1fr; }
@@ -377,17 +404,19 @@
             <div class="region-table-header">🚢 الأسطول البحري</div>
             <div class="scrollable-table">
                 <table>
-                    <thead><tr>
-                        <th>الاسم</th><th>الرقم</th><th>الطول</th>
-                        <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
-                        <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
-                        <th>العطب</th>
-                        <th>📅 تاريخ العطب</th>
-                        <th>📅 انتهاء الأشغال</th>
-                        <th>المرجع</th>
-                        <th>🔧 المكلف بالتصليح</th>
-                        <th>إجراء</th>
-                    </tr></thead>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th><th>الرقم</th><th>الطول</th>
+                            <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
+                            <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
+                            <th>العطب</th>
+                            <th>📅 تاريخ العطب</th>
+                            <th>📅 انتهاء الأشغال</th>
+                            <th>المرجع</th>
+                            <th>🔧 المكلف بالتصليح</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
                     <tbody id="mainBody"></tbody>
                 </table>
             </div>
@@ -417,17 +446,19 @@
             <div class="region-table-header">🔧 سجل الصيانة العام</div>
             <div class="scrollable-table">
                 <table>
-                    <thead><tr>
-                        <th>الاسم</th><th>الرقم</th><th>الإقليم</th>
-                        <th>المنطقة</th>
-                        <th>الحالة</th>
-                        <th>العطب</th>
-                        <th>📅 تاريخ العطب</th>
-                        <th>📅 انتهاء الأشغال</th>
-                        <th>المرجع</th>
-                        <th>🔧 المكلف بالتصليح</th>
-                        <th>إجراء</th>
-                    </tr></thead>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th><th>الرقم</th><th>الإقليم</th>
+                            <th>المنطقة</th>
+                            <th>الحالة</th>
+                            <th>العطب</th>
+                            <th>📅 تاريخ العطب</th>
+                            <th>📅 انتهاء الأشغال</th>
+                            <th>المرجع</th>
+                            <th>🔧 المكلف بالتصليح</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
                     <tbody id="maintBody"></tbody>
                 </table>
             </div>
