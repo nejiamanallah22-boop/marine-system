@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الرئيسي الكامل (مع التتبع)
+// 📦 app.js - الملف الرئيسي الكامل
 // ============================================================
 
 console.log('✅ App loaded');
@@ -12,6 +12,7 @@ let gpsMap = null;
 let userMarker = null;
 let trackingInterval = null;
 let connectedUsers = {};
+let currentUser = null;
 
 // ============================================================
 // 🔐 المصادقة
@@ -40,6 +41,7 @@ function doLogin() {
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('userRoleDisplay').innerHTML = 
                 `<i class="fas fa-user"></i> ${data.user.name} (${data.user.role})`;
+            currentUser = data.user;
             loadAllData();
             initSocket();
         } else {
@@ -60,6 +62,14 @@ function logout() {
 
 function getToken() {
     return localStorage.getItem('token');
+}
+
+function getUser() {
+    try {
+        return JSON.parse(localStorage.getItem('user'));
+    } catch {
+        return null;
+    }
 }
 
 // ============================================================
@@ -108,14 +118,6 @@ function initSocket() {
     });
 }
 
-function getUser() {
-    try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch {
-        return null;
-    }
-}
-
 // ============================================================
 // 📊 تحميل البيانات
 // ============================================================
@@ -140,6 +142,7 @@ function loadVessels() {
         renderMainTable();
         renderMaintTable();
         renderEfficiency();
+        renderMaintUnits();
     })
     .catch(err => console.error('Load vessels error:', err));
 }
@@ -173,7 +176,8 @@ function addItem() {
         break: document.getElementById('iBreak')?.value || '',
         fDate: document.getElementById('iDate')?.value || '',
         eDate: document.getElementById('iEnd')?.value || '',
-        ref: document.getElementById('iRef')?.value || ''
+        ref: document.getElementById('iRef')?.value || '',
+        repairer: document.getElementById('iRepairer')?.value || ''
     };
     
     const url = editingId ? '/api/vessels/' + editingId : '/api/vessels';
@@ -226,6 +230,7 @@ function editVessel(id) {
     document.getElementById('iDate').value = vessel.fDate || '';
     document.getElementById('iEnd').value = vessel.eDate || '';
     document.getElementById('iRef').value = vessel.ref || '';
+    document.getElementById('iRepairer').value = vessel.repairer || '';
     
     document.querySelector('#inputArea .btn-success').textContent = '✏️ تحديث';
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -272,6 +277,7 @@ function clearInputs() {
     document.getElementById('iDate').value = '';
     document.getElementById('iEnd').value = '';
     document.getElementById('iRef').value = '';
+    document.getElementById('iRepairer').value = '';
 }
 
 function updateZones() {
@@ -294,19 +300,29 @@ function updateZones() {
 }
 
 // ============================================================
-// ✅ عرض جدول الأسطول
+// ✅ عرض جدول الأسطول (مع أزرار في الإجراءات)
 // ============================================================
 
 function renderMainTable() {
     const tbody = document.getElementById('mainBody');
     if (!tbody) return;
     
-    if (!allVessels || allVessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
+    // فلتر البحث
+    const search = document.getElementById('searchMain')?.value.toLowerCase() || '';
+    let vessels = allVessels;
+    if (search) {
+        vessels = vessels.filter(v => 
+            (v.name || '').toLowerCase().includes(search) ||
+            (v.num || '').toLowerCase().includes(search)
+        );
+    }
+    
+    if (!vessels || vessels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = allVessels.map(v => {
+    tbody.innerHTML = vessels.map(v => {
         const id = v._id || v.id;
         return `
         <tr>
@@ -322,30 +338,49 @@ function renderMainTable() {
             <td>${v.break || '-'}</td>
             <td>${v.fDate || '-'}</td>
             <td>${v.eDate || '-'}</td>
+            <td>${v.ref || '-'}</td>
+            <td>${v.repairer || '-'}</td>
             <td>
-                <button onclick="editVessel('${id}')" style="background:#ffc107; color:#1a3a5c; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin:2px;">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button onclick="deleteVessel('${id}')" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; margin:2px;">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `}).join('');
 }
 
 // ============================================================
-// ✅ عرض جدول الصيانة
+// ✅ عرض جدول الصيانة (مع أزرار في الإجراءات)
 // ============================================================
 
 function renderMaintTable() {
     const tbody = document.getElementById('maintBody');
     if (!tbody) return;
     
-    const vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
+    const search = document.getElementById('searchMaint')?.value.toLowerCase() || '';
+    const repairerFilter = document.getElementById('fRepairer')?.value || 'الكل';
+    
+    let vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
+    
+    if (search) {
+        vessels = vessels.filter(v => 
+            (v.name || '').toLowerCase().includes(search) ||
+            (v.num || '').toLowerCase().includes(search) ||
+            (v.break || '').toLowerCase().includes(search)
+        );
+    }
+    
+    if (repairerFilter !== 'الكل') {
+        vessels = vessels.filter(v => v.repairer === repairerFilter);
+    }
     
     if (vessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px;">🚫 لا توجد بيانات صيانة</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:30px;">🚫 لا توجد بيانات صيانة</td></tr>`;
         return;
     }
     
@@ -362,13 +397,93 @@ function renderMaintTable() {
             <td>${v.fDate || '-'}</td>
             <td>${v.eDate || '-'}</td>
             <td>${v.ref || '-'}</td>
+            <td>${v.repairer || '-'}</td>
             <td>
-                <button onclick="editVessel('${id}')" style="background:#ffc107; color:#1a3a5c; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                    <i class="fas fa-edit"></i>
-                </button>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `}).join('');
+}
+
+// ============================================================
+// ✅ عرض جداول الصيانة التفصيلية للوحدات
+// ============================================================
+
+function renderMaintUnits() {
+    const container = document.getElementById('maintUnitsContainer');
+    if (!container) return;
+    
+    const units = [
+        { name: '🛠️ وحدة الصيانة تونس', key: 'وحدة الصيانة والإسناد البحري تونس' },
+        { name: '🛠️ وحدة الصيانة صفاقس', key: 'وحدة الصيانة والإسناد البحري صفاقس' },
+        { name: '🛠️ وحدة الصيانة المنستير', key: 'وحدة الصيانة والإسناد البحري المنستير' },
+        { name: '🛠️ وحدة الصيانة جرجيس', key: 'وحدة الصيانة والإسناد البحري جرجيس' },
+        { name: '🏢 شركة خاصة', key: 'شركة خاصة' }
+    ];
+    
+    let html = '';
+    
+    units.forEach(unit => {
+        const unitVessels = (allVessels || []).filter(v => 
+            v.stat !== 'صالح' && v.repairer === unit.key
+        );
+        
+        html += `
+            <div class="region-table-card">
+                <div class="region-table-header">${unit.name}</div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>الرقم</th>
+                                <th>العطب</th>
+                                <th>📅 تاريخ العطب</th>
+                                <th>📅 انتهاء الأشغال</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${unitVessels.length === 0 ? 
+                                `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مراكب في هذه الوحدة</td></tr>` :
+                                unitVessels.map(v => {
+                                    const id = v._id || v.id;
+                                    return `
+                                        <tr>
+                                            <td>${v.name || '-'}</td>
+                                            <td>${v.num || '-'}</td>
+                                            <td>${v.break || '-'}</td>
+                                            <td>${v.fDate || '-'}</td>
+                                            <td>${v.eDate || '-'}</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
 }
 
 // ============================================================
@@ -785,7 +900,6 @@ function updateTrackMap(users) {
     if (!trackMap) initTrackMap();
     if (!trackMap) return;
     
-    // حذف العلامات القديمة
     trackMap.eachLayer((layer) => {
         if (layer instanceof L.Marker) {
             trackMap.removeLayer(layer);
@@ -794,7 +908,7 @@ function updateTrackMap(users) {
     
     users.forEach(u => {
         if (u.lat && u.lng) {
-            const marker = L.marker([u.lat, u.lng])
+            L.marker([u.lat, u.lng])
                 .addTo(trackMap)
                 .bindPopup(`
                     <b>${u.userName || 'مجهول'}</b><br>
@@ -863,7 +977,6 @@ function startTracking() {
     if (!gpsMap) initGpsMap();
     if (!gpsMap) return;
     
-    // مركز الخريطة على موقع المستخدم
     navigator.geolocation.getCurrentPosition(
         (pos) => {
             const lat = pos.coords.latitude;
@@ -886,7 +999,6 @@ function startTracking() {
         { enableHighAccuracy: true }
     );
     
-    // بدء التتبع الدوري
     trackingInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
@@ -897,7 +1009,6 @@ function startTracking() {
                     userMarker.setLatLng([lat, lng]);
                 }
                 
-                // إرسال الموقع إلى الخادم
                 if (socket) {
                     socket.emit('update-location', {
                         userName: user.name,
@@ -907,7 +1018,6 @@ function startTracking() {
                     });
                 }
                 
-                // حفظ الموقع في قاعدة البيانات
                 const token = getToken();
                 if (token) {
                     fetch('/api/locations', {
@@ -969,7 +1079,6 @@ function loadLocations() {
             return;
         }
         
-        // حذف العلامات القديمة
         gpsMap.eachLayer((layer) => {
             if (layer instanceof L.Marker && layer !== userMarker) {
                 gpsMap.removeLayer(layer);
@@ -1032,6 +1141,8 @@ function showPage(page) {
     
     switch(page) {
         case 'main':
+            loadVessels();
+            break;
         case 'maint':
             loadVessels();
             break;
@@ -1110,6 +1221,14 @@ window.refreshTrackUsers = refreshTrackUsers;
 window.clearTrackUsers = clearTrackUsers;
 window.initTrackMap = initTrackMap;
 window.initGpsMap = initGpsMap;
+window.loadVessels = loadVessels;
+window.loadTickets = loadTickets;
+window.loadNotes = loadNotes;
+window.loadUsers = loadUsers;
+window.renderMainTable = renderMainTable;
+window.renderMaintTable = renderMaintTable;
+window.renderEfficiency = renderEfficiency;
+window.renderMaintUnits = renderMaintUnits;
 
 console.log('✅ جميع الدوال جاهزة');
 
@@ -1117,5 +1236,6 @@ console.log('✅ جميع الدوال جاهزة');
 document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem('token')) {
         loadAllData();
+        initSocket();
     }
 });
