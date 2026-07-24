@@ -5,7 +5,11 @@
 console.log('✅ App loaded');
 
 let allVessels = [];
+let allUsers = [];
+let allTickets = [];
+let allNotes = [];
 let editingId = null;
+let editingUserId = null;
 let socket = null;
 let trackMap = null;
 let gpsMap = null;
@@ -142,13 +146,312 @@ function loadVessels() {
         renderMainTable();
         renderMaintTable();
         renderEfficiency();
-        renderMaintUnits();
     })
     .catch(err => console.error('Load vessels error:', err));
 }
 
+function loadUsers() {
+    const token = getToken();
+    if (!token) return;
+    
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        allUsers = data || [];
+        renderUsersTable();
+    })
+    .catch(err => console.error('Load users error:', err));
+}
+
 // ============================================================
-// ✅ إضافة/تعديل مركب
+// 👥 دوال المستخدمين
+// ============================================================
+
+function addUser() {
+    console.log('🔄 addUser called');
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    const name = document.getElementById('un')?.value.trim();
+    const password = document.getElementById('up')?.value.trim();
+    const role = document.getElementById('ur')?.value;
+    
+    if (!name || !password) {
+        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
+        password: password,
+        role: role || 'مشاهد'
+    };
+    
+    console.log('📤 إرسال بيانات المستخدم:', data);
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log('📥 استجابة الخادم:', data);
+        if (data.success) {
+            alert('✅ تم إضافة المستخدم بنجاح');
+            document.getElementById('un').value = '';
+            document.getElementById('up').value = '';
+            document.getElementById('ur').value = 'مشاهد';
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        alert('❌ خطأ في إضافة المستخدم');
+    });
+}
+
+function editUser(id) {
+    const user = allUsers.find(u => u._id === id || u.id === id);
+    if (!user) {
+        alert('⚠️ المستخدم غير موجود');
+        return;
+    }
+    
+    editingUserId = user._id || user.id;
+    document.getElementById('un').value = user.name || '';
+    document.getElementById('ur').value = user.role || 'مشاهد';
+    document.getElementById('up').placeholder = 'اترك فارغاً للتعديل';
+    
+    document.querySelector('#pageUsers .btn-primary').textContent = '✏️ تحديث';
+    document.querySelector('#pageUsers .btn-primary').onclick = function() {
+        updateUser(editingUserId);
+    };
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateUser(id) {
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    const name = document.getElementById('un')?.value.trim();
+    const password = document.getElementById('up')?.value.trim();
+    const role = document.getElementById('ur')?.value;
+    
+    if (!name) {
+        alert('⚠️ الرجاء إدخال اسم المستخدم');
+        return;
+    }
+    
+    const data = { name, role };
+    if (password && password.length >= 6) {
+        data.password = password;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم تحديث المستخدم بنجاح');
+            editingUserId = null;
+            document.getElementById('un').value = '';
+            document.getElementById('up').value = '';
+            document.getElementById('ur').value = 'مشاهد';
+            document.querySelector('#pageUsers .btn-primary').textContent = '👤 إضافة';
+            document.querySelector('#pageUsers .btn-primary').onclick = addUser;
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في التحديث'));
+        }
+    })
+    .catch(err => {
+        console.error('Update user error:', err);
+        alert('❌ خطأ في تحديث المستخدم');
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم حذف المستخدم');
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الحذف'));
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        alert('❌ خطأ في حذف المستخدم');
+    });
+}
+
+function toggleUserStatus(id) {
+    const user = allUsers.find(u => u._id === id || u.id === id);
+    if (!user) return;
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ isActive: !user.isActive })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم تحديث حالة المستخدم');
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في التحديث'));
+        }
+    })
+    .catch(err => {
+        console.error('Toggle user status error:', err);
+        alert('❌ خطأ في تحديث حالة المستخدم');
+    });
+}
+
+function changeUserPassword(id, name) {
+    document.getElementById('modalUserName').textContent = `تغيير كلمة المرور لـ: ${name}`;
+    document.getElementById('passwordModal').dataset.userId = id;
+    document.getElementById('passwordModal').style.display = 'flex';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+}
+
+function saveNewPassword() {
+    const password = document.getElementById('newPassword')?.value.trim();
+    const confirm = document.getElementById('confirmPassword')?.value.trim();
+    const userId = document.getElementById('passwordModal')?.dataset.userId;
+    
+    if (!password || password.length < 6) {
+        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    if (password !== confirm) {
+        alert('⚠️ كلمة المرور غير متطابقة');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/users/' + userId, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ password: password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم تغيير كلمة المرور بنجاح');
+            closePasswordModal();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في التغيير'));
+        }
+    })
+    .catch(err => {
+        console.error('Change password error:', err);
+        alert('❌ خطأ في تغيير كلمة المرور');
+    });
+}
+
+function closePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+}
+
+function renderUsersTable() {
+    const tbody = document.getElementById('usersBody');
+    if (!tbody) return;
+    
+    if (!allUsers || allUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = allUsers.map(u => {
+        const id = u._id || u.id;
+        return `
+        <tr>
+            <td>${u.name || '-'}</td>
+            <td>${u.role || 'مشاهد'}</td>
+            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="changeUserPassword('${id}', '${u.name}')">
+                    <i class="fas fa-key"></i>
+                </button>
+            </td>
+            <td>
+                <button class="btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleUserStatus('${id}')">
+                    <i class="fas ${u.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                </button>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `}).join('');
+}
+
+// ============================================================
+// ✅ دوال المراكب
 // ============================================================
 
 function addItem() {
@@ -300,14 +603,13 @@ function updateZones() {
 }
 
 // ============================================================
-// ✅ عرض جدول الأسطول (مع أزرار في الإجراءات)
+// ✅ عرض جداول المراكب
 // ============================================================
 
 function renderMainTable() {
     const tbody = document.getElementById('mainBody');
     if (!tbody) return;
     
-    // فلتر البحث
     const search = document.getElementById('searchMain')?.value.toLowerCase() || '';
     let vessels = allVessels;
     if (search) {
@@ -354,17 +656,11 @@ function renderMainTable() {
     `}).join('');
 }
 
-// ============================================================
-// ✅ عرض جدول الصيانة (مع أزرار في الإجراءات)
-// ============================================================
-
 function renderMaintTable() {
     const tbody = document.getElementById('maintBody');
     if (!tbody) return;
     
     const search = document.getElementById('searchMaint')?.value.toLowerCase() || '';
-    const repairerFilter = document.getElementById('fRepairer')?.value || 'الكل';
-    
     let vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
     
     if (search) {
@@ -373,10 +669,6 @@ function renderMaintTable() {
             (v.num || '').toLowerCase().includes(search) ||
             (v.break || '').toLowerCase().includes(search)
         );
-    }
-    
-    if (repairerFilter !== 'الكل') {
-        vessels = vessels.filter(v => v.repairer === repairerFilter);
     }
     
     if (vessels.length === 0) {
@@ -413,87 +705,12 @@ function renderMaintTable() {
 }
 
 // ============================================================
-// ✅ عرض جداول الصيانة التفصيلية للوحدات
-// ============================================================
-
-function renderMaintUnits() {
-    const container = document.getElementById('maintUnitsContainer');
-    if (!container) return;
-    
-    const units = [
-        { name: '🛠️ وحدة الصيانة تونس', key: 'وحدة الصيانة والإسناد البحري تونس' },
-        { name: '🛠️ وحدة الصيانة صفاقس', key: 'وحدة الصيانة والإسناد البحري صفاقس' },
-        { name: '🛠️ وحدة الصيانة المنستير', key: 'وحدة الصيانة والإسناد البحري المنستير' },
-        { name: '🛠️ وحدة الصيانة جرجيس', key: 'وحدة الصيانة والإسناد البحري جرجيس' },
-        { name: '🏢 شركة خاصة', key: 'شركة خاصة' }
-    ];
-    
-    let html = '';
-    
-    units.forEach(unit => {
-        const unitVessels = (allVessels || []).filter(v => 
-            v.stat !== 'صالح' && v.repairer === unit.key
-        );
-        
-        html += `
-            <div class="region-table-card">
-                <div class="region-table-header">${unit.name}</div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>الاسم</th>
-                                <th>الرقم</th>
-                                <th>العطب</th>
-                                <th>📅 تاريخ العطب</th>
-                                <th>📅 انتهاء الأشغال</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${unitVessels.length === 0 ? 
-                                `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مراكب في هذه الوحدة</td></tr>` :
-                                unitVessels.map(v => {
-                                    const id = v._id || v.id;
-                                    return `
-                                        <tr>
-                                            <td>${v.name || '-'}</td>
-                                            <td>${v.num || '-'}</td>
-                                            <td>${v.break || '-'}</td>
-                                            <td>${v.fDate || '-'}</td>
-                                            <td>${v.eDate || '-'}</td>
-                                            <td>
-                                                <div class="action-buttons">
-                                                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    `;
-                                }).join('')
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-// ============================================================
 // ✅ عرض النجاعة
 // ============================================================
 
 function renderEfficiency() {
     const vessels = allVessels || [];
     
-    // بطاقات الإحصائيات
     const statsContainer = document.getElementById('statsCards');
     if (statsContainer) {
         const total = vessels.length;
@@ -510,7 +727,6 @@ function renderEfficiency() {
         `;
     }
     
-    // جدول النجاعة العام
     const generalContainer = document.getElementById('generalEffTableContainer');
     if (generalContainer) {
         const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
@@ -582,7 +798,6 @@ function renderEfficiency() {
         `;
     }
     
-    // جداول الوحدات
     const regionContainer = document.getElementById('regionTables');
     if (regionContainer) {
         const units = [
@@ -648,15 +863,16 @@ function loadTickets() {
     })
     .then(res => res.json())
     .then(data => {
+        allTickets = data || [];
         const container = document.getElementById('ticketsList');
         if (!container) return;
         
-        if (!data || data.length === 0) {
+        if (!allTickets || allTickets.length === 0) {
             container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد تذاكر</p>';
             return;
         }
         
-        container.innerHTML = data.map(t => `
+        container.innerHTML = allTickets.map(t => `
             <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid ${t.status === 'مغلقة' ? '#28a745' : '#ffc107'}">
                 <h4>${t.subject}</h4>
                 <p>${t.message}</p>
@@ -726,15 +942,16 @@ function loadNotes() {
     })
     .then(res => res.json())
     .then(data => {
+        allNotes = data || [];
         const container = document.getElementById('notesListContainer');
         if (!container) return;
         
-        if (!data || data.length === 0) {
+        if (!allNotes || allNotes.length === 0) {
             container.innerHTML = '<p style="color:#6c757d;">🚫 لا توجد مذكرات</p>';
             return;
         }
         
-        container.innerHTML = data.map(n => `
+        container.innerHTML = allNotes.map(n => `
             <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
                 <h4 style="color:#0d6efd;">${n.title}</h4>
                 <p>${n.content}</p>
@@ -795,41 +1012,6 @@ function clearNote() {
 
 function loadNotesByWeek() {
     loadNotes();
-}
-
-// ============================================================
-// 👥 المستخدمين
-// ============================================================
-
-function loadUsers() {
-    const token = getToken();
-    if (!token) return;
-    
-    fetch('/api/users', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.getElementById('usersBody');
-        if (!tbody) return;
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
-            return;
-        }
-        
-        tbody.innerHTML = data.map(u => `
-            <tr>
-                <td>${u.name}</td>
-                <td>${u.role}</td>
-                <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-                <td>
-                    <button class="btn btn-sm btn-warning" onclick="alert('تغيير كلمة المرور')"><i class="fas fa-key"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    })
-    .catch(err => console.error('Load users error:', err));
 }
 
 // ============================================================
@@ -973,75 +1155,88 @@ function startTracking() {
     document.getElementById('stopTrackingBtn').style.display = 'inline-block';
     document.getElementById('gpsStatusText').textContent = 'جاري التتبع...';
     document.getElementById('gpsDot').className = 'gps-status gps-active';
+    document.getElementById('gpsStatusText2').textContent = '🟢 جاري التتبع...';
     
     if (!gpsMap) initGpsMap();
     if (!gpsMap) return;
     
+    // بدء التتبع الفوري
+    updateGpsPosition();
+    
+    // التتبع الدوري كل 3 ثوان
+    trackingInterval = setInterval(() => {
+        updateGpsPosition();
+    }, 3000);
+    
+    alert('✅ بدء التتبع المباشر');
+}
+
+function updateGpsPosition() {
     navigator.geolocation.getCurrentPosition(
         (pos) => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
-            gpsMap.setView([lat, lng], 15);
+            const accuracy = pos.coords.accuracy;
             
-            if (!userMarker) {
-                userMarker = L.marker([lat, lng], {
-                    icon: L.divIcon({
-                        className: 'custom-marker',
-                        html: '<div style="background:#dc3545; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(220,53,69,0.5);"></div>',
-                        iconSize: [20, 20]
-                    })
-                }).addTo(gpsMap).bindPopup('📍 موقعك الحالي');
-            } else {
-                userMarker.setLatLng([lat, lng]);
-            }
-        },
-        () => {},
-        { enableHighAccuracy: true }
-    );
-    
-    trackingInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
+            // تحديث معلومات GPS
+            document.getElementById('gpsLat').textContent = lat.toFixed(6);
+            document.getElementById('gpsLng').textContent = lng.toFixed(6);
+            document.getElementById('gpsAccuracy').textContent = accuracy ? `${accuracy.toFixed(0)} متر` : '--';
+            document.getElementById('gpsStatusText').textContent = '✅ تتبع نشط';
+            document.getElementById('gpsStatusText2').textContent = '🟢 تتبع نشط';
+            
+            // تحديث الخريطة
+            if (gpsMap) {
+                gpsMap.setView([lat, lng], 15);
                 
-                if (userMarker) {
+                if (!userMarker) {
+                    userMarker = L.marker([lat, lng], {
+                        icon: L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="background:#dc3545; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 15px rgba(220,53,69,0.6);"></div>`,
+                            iconSize: [20, 20]
+                        })
+                    }).addTo(gpsMap).bindPopup('📍 موقعك الحالي');
+                } else {
                     userMarker.setLatLng([lat, lng]);
                 }
-                
-                if (socket) {
-                    socket.emit('update-location', {
-                        userName: user.name,
-                        userRole: user.role,
-                        lat: lat,
-                        lng: lng
-                    });
-                }
-                
-                const token = getToken();
-                if (token) {
-                    fetch('/api/locations', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + token
-                        },
-                        body: JSON.stringify({ lat, lng, action: 'تتبع مباشر' })
-                    }).catch(err => console.error('Save location error:', err));
-                }
-                
-                document.getElementById('gpsStatusText').textContent = '✅ تتبع نشط';
-                document.getElementById('mapStatus').textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-            },
-            (error) => {
-                console.error('GPS error:', error);
-                document.getElementById('gpsStatusText').textContent = '❌ خطأ في GPS';
-            },
-            { enableHighAccuracy: true, maximumAge: 5000 }
-        );
-    }, 5000);
-    
-    alert('✅ بدء التتبع المباشر');
+            }
+            
+            // إرسال الموقع للخادم عبر Socket
+            if (socket) {
+                socket.emit('update-location', {
+                    userName: user.name,
+                    userRole: user.role,
+                    lat: lat,
+                    lng: lng
+                });
+            }
+            
+            // حفظ الموقع في قاعدة البيانات
+            const token = getToken();
+            if (token) {
+                fetch('/api/locations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ lat, lng, action: 'تتبع مباشر' })
+                }).catch(err => console.error('Save location error:', err));
+            }
+            
+            document.getElementById('mapStatus').textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (الدقة: ${accuracy ? accuracy.toFixed(0) : '?'} متر)`;
+        },
+        (error) => {
+            console.error('GPS error:', error);
+            document.getElementById('gpsStatusText').textContent = '❌ خطأ في GPS';
+            document.getElementById('gpsStatusText2').textContent = '❌ خطأ في GPS';
+            document.getElementById('gpsLat').textContent = '--';
+            document.getElementById('gpsLng').textContent = '--';
+            document.getElementById('gpsAccuracy').textContent = '--';
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
 }
 
 function stopTracking() {
@@ -1053,6 +1248,7 @@ function stopTracking() {
     document.getElementById('startTrackingBtn').style.display = 'inline-block';
     document.getElementById('stopTrackingBtn').style.display = 'none';
     document.getElementById('gpsStatusText').textContent = 'غير نشط';
+    document.getElementById('gpsStatusText2').textContent = '⏹️ غير نشط';
     document.getElementById('gpsDot').className = 'gps-status gps-inactive';
     document.getElementById('mapStatus').textContent = '⏹️ تم إيقاف التتبع';
     
@@ -1118,6 +1314,11 @@ function centerMapOnUser() {
             
             if (gpsMap) {
                 gpsMap.setView([lat, lng], 15);
+                if (!userMarker) {
+                    userMarker = L.marker([lat, lng]).addTo(gpsMap);
+                } else {
+                    userMarker.setLatLng([lat, lng]);
+                }
             }
             
             alert('📍 تم التمركز على موقعك');
@@ -1228,7 +1429,15 @@ window.loadUsers = loadUsers;
 window.renderMainTable = renderMainTable;
 window.renderMaintTable = renderMaintTable;
 window.renderEfficiency = renderEfficiency;
-window.renderMaintUnits = renderMaintUnits;
+window.renderUsersTable = renderUsersTable;
+window.addUser = addUser;
+window.editUser = editUser;
+window.updateUser = updateUser;
+window.deleteUser = deleteUser;
+window.toggleUserStatus = toggleUserStatus;
+window.changeUserPassword = changeUserPassword;
+window.saveNewPassword = saveNewPassword;
+window.closePasswordModal = closePasswordModal;
 
 console.log('✅ جميع الدوال جاهزة');
 
