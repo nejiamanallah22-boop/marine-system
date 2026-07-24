@@ -423,25 +423,16 @@
         </div>
     </div>
 
-    <!-- ===== الصفحة الثانية: الصيانة ===== -->
+    <!-- ===== الصفحة الثانية: الصيانة (جدول عام فقط) ===== -->
     <div id="pageMaint" class="hidden">
         <div class="filter-bar">
             <div class="search-input">
                 <input type="text" id="searchMaint" placeholder="🔍 بحث في الصيانة" onkeyup="loadVessels()">
             </div>
-            <label><i class="fas fa-filter"></i> المكلف بالتصليح:</label>
-            <select id="fRepairer" onchange="loadVessels()">
-                <option value="الكل">الكل</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="شركة خاصة">🏢 شركة خاصة</option>
-            </select>
             <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
         </div>
         
-        <!-- ===== جدول الصيانة العام ===== -->
+        <!-- ===== جدول الصيانة العام فقط ===== -->
         <div class="region-table-card">
             <div class="region-table-header">🔧 سجل الصيانة العام</div>
             <div class="scrollable-table">
@@ -462,11 +453,6 @@
                     <tbody id="maintBody"></tbody>
                 </table>
             </div>
-        </div>
-        
-        <!-- ===== الجداول التفصيلية للوحدات ===== -->
-        <div class="maint-grid" id="maintUnitsContainer">
-            <!-- سيتم تعبئتها بواسطة JavaScript -->
         </div>
     </div>
 
