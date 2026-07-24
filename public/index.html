@@ -174,7 +174,7 @@
             background: white; border-radius: 10px; overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        #trackMap, #gpsMap { height: 450px; width: 100%; z-index: 1; }
+        #trackMap, #gpsMap { height: 450px; width: 100%; z-index: 1; border-radius: 10px; }
         
         .gps-status {
             display: inline-block; width: 10px; height: 10px;
@@ -225,18 +225,6 @@
         }
         .action-buttons .btn-sm {
             padding: 3px 8px;
-            font-size: 11px;
-        }
-        
-        /* تنسيق عمود الإجراءات */
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: nowrap;
-            justify-content: center;
-        }
-        .action-buttons .btn {
-            padding: 4px 10px;
             font-size: 11px;
             border-radius: 4px;
         }
@@ -290,10 +278,55 @@
             border-color: #0d6efd;
         }
         
+        /* تنسيق معلومات GPS */
+        .gps-info {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin-top: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .gps-info .label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .gps-info .value {
+            color: #0d6efd;
+            font-weight: 600;
+        }
+        .gps-info .accuracy {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        
+        .leaflet-control-zoom { direction: ltr; }
+        
         @media (max-width: 768px) {
             .user-form {
                 grid-template-columns: 1fr;
             }
+            header { flex-direction: column; text-align: center; }
+            header h1 { font-size: 17px; justify-content: center; }
+            .header-content { justify-content: center; }
+            .nav { justify-content: center; }
+            .login-box { padding: 20px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .stats-cards { grid-template-columns: repeat(2, 1fr); }
+            #trackMap, #gpsMap { height: 300px; }
+            table { font-size: 11px; }
+            table th, table td { padding: 5px 6px; }
+            .gps-info { flex-direction: column; align-items: flex-start; gap: 5px; }
+        }
+        @media (max-width: 480px) {
+            .stats-cards { grid-template-columns: 1fr; }
+            header h1 { font-size: 15px; }
+            .header-content .btn { font-size: 11px; padding: 4px 10px; }
         }
         
         @media print {
@@ -303,26 +336,6 @@
             body { background: white !important; }
             .container { padding: 0 !important; }
             .action-buttons .btn { display: none !important; }
-        }
-        
-        @media (max-width: 768px) {
-            header { flex-direction: column; text-align: center; }
-            header h1 { font-size: 17px; justify-content: center; }
-            .header-content { justify-content: center; }
-            .nav { justify-content: center; }
-            .login-box { padding: 20px; }
-            .input-grid { grid-template-columns: 1fr; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .stats-cards { grid-template-columns: repeat(2, 1fr); }
-            #trackMap, #gpsMap { height: 250px; }
-            table { font-size: 11px; }
-            table th, table td { padding: 5px 6px; }
-            .action-buttons { flex-direction: row; }
-        }
-        @media (max-width: 480px) {
-            .stats-cards { grid-template-columns: 1fr; }
-            header h1 { font-size: 15px; }
-            .header-content .btn { font-size: 11px; padding: 4px 10px; }
         }
     </style>
 </head>
@@ -543,6 +556,15 @@
         <div id="mapStatus" style="text-align:center; margin:8px; color:#6c757d; padding:10px; background:#f8f9fa; border-radius:6px; font-size:13px;">
             ℹ️ اضغط "بدء التتبع" لمشاركة موقعك الحقيقي
         </div>
+        
+        <!-- ===== معلومات GPS ===== -->
+        <div class="gps-info" id="gpsInfo">
+            <span><span class="label">📍 خط العرض:</span> <span class="value" id="gpsLat">--</span></span>
+            <span><span class="label">📍 خط الطول:</span> <span class="value" id="gpsLng">--</span></span>
+            <span><span class="label">🎯 الدقة:</span> <span class="accuracy" id="gpsAccuracy">--</span></span>
+            <span><span class="label">📡 الحالة:</span> <span id="gpsStatusText2">غير نشط</span></span>
+        </div>
+        
         <div class="map-container">
             <div id="gpsMap" style="height:450px; width:100%;"></div>
         </div>
