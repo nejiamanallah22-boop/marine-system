@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الرئيسي الكامل (نسخة 2024)
+// 📦 app.js - الملف الكامل مع زر تعديل الصيانة
 // ============================================================
 
 console.log('✅ App loaded');
@@ -11,6 +11,7 @@ let allNotes = [];
 let allMaintenance = [];
 let editingId = null;
 let editingUserId = null;
+let editingMaintenanceId = null;
 let currentUser = null;
 
 // ============================================================
@@ -97,6 +98,7 @@ function loadVessels() {
         updateMaintenanceFormVessels();
         renderMaintenanceTable();
         updateMaintenanceStats();
+        renderMaintenanceUnits();
     })
     .catch(err => console.error('Load vessels error:', err));
 }
@@ -113,6 +115,7 @@ function loadMaintenance() {
         allMaintenance = data || [];
         renderMaintenanceTable();
         updateMaintenanceStats();
+        renderMaintenanceUnits();
     })
     .catch(err => console.error('Load maintenance error:', err));
 }
@@ -141,21 +144,65 @@ function toggleMaintenanceForm() {
     if (form) {
         form.classList.toggle('active');
         if (form.classList.contains('active')) {
+            if (editingMaintenanceId) {
+                const record = allMaintenance.find(r => r.id === editingMaintenanceId);
+                if (record) {
+                    document.getElementById('mVesselId').value = record.vesselId || '';
+                    document.getElementById('mType').value = record.type || 'عادية';
+                    document.getElementById('mUnit').value = record.unit || '';
+                    document.getElementById('mTechnician').value = record.technician || '';
+                    document.getElementById('mDescription').value = record.description || '';
+                    document.getElementById('mCost').value = record.cost || '';
+                    document.getElementById('mNotes').value = record.notes || '';
+                    
+                    const container = document.getElementById('partsContainer');
+                    container.innerHTML = '';
+                    if (record.parts && record.parts.length > 0) {
+                        record.parts.forEach(p => {
+                            const div = document.createElement('div');
+                            div.className = 'part-item';
+                            div.innerHTML = `
+                                <input type="text" placeholder="اسم القطعة" class="part-name" value="${p.name || ''}">
+                                <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;" value="${p.quantity || 0}">
+                                <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;" value="${p.price || 0}">
+                                <button class="remove-part" onclick="removePart(this)">✕</button>
+                            `;
+                            container.appendChild(div);
+                        });
+                    } else {
+                        const div = document.createElement('div');
+                        div.className = 'part-item';
+                        div.innerHTML = `
+                            <input type="text" placeholder="اسم القطعة" class="part-name">
+                            <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+                            <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+                            <button class="remove-part" onclick="removePart(this)">✕</button>
+                        `;
+                        container.appendChild(div);
+                    }
+                    
+                    document.querySelector('#maintenanceForm .btn-success').textContent = '✏️ تحديث';
+                    document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-edit"></i> تعديل سجل صيانة';
+                }
+            } else {
+                document.getElementById('mVesselId').value = '';
+                document.getElementById('mType').value = 'عادية';
+                document.getElementById('mTechnician').value = '';
+                document.getElementById('mDescription').value = '';
+                document.getElementById('mCost').value = '';
+                document.getElementById('mNotes').value = '';
+                document.getElementById('partsContainer').innerHTML = `
+                    <div class="part-item">
+                        <input type="text" placeholder="اسم القطعة" class="part-name">
+                        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+                        <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+                        <button class="remove-part" onclick="removePart(this)">✕</button>
+                    </div>
+                `;
+                document.querySelector('#maintenanceForm .btn-success').textContent = '💾 حفظ';
+                document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد';
+            }
             updateMaintenanceFormVessels();
-            document.getElementById('mVesselId').value = '';
-            document.getElementById('mType').value = 'عادية';
-            document.getElementById('mTechnician').value = '';
-            document.getElementById('mDescription').value = '';
-            document.getElementById('mCost').value = '';
-            document.getElementById('mNotes').value = '';
-            document.getElementById('partsContainer').innerHTML = `
-                <div class="part-item">
-                    <input type="text" placeholder="اسم القطعة" class="part-name">
-                    <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-                    <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
-                    <button class="remove-part" onclick="removePart(this)">✕</button>
-                </div>
-            `;
         }
     }
 }
@@ -182,7 +229,7 @@ function addPart() {
     div.innerHTML = `
         <input type="text" placeholder="اسم القطعة" class="part-name">
         <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-        <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
+        <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
         <button class="remove-part" onclick="removePart(this)">✕</button>
     `;
     container.appendChild(div);
@@ -251,8 +298,11 @@ function saveMaintenance() {
         createdBy: currentUser?.name || 'Admin'
     };
     
-    fetch('/api/maintenance', {
-        method: 'POST',
+    const url = editingMaintenanceId ? '/api/maintenance/' + editingMaintenanceId : '/api/maintenance';
+    const method = editingMaintenanceId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
@@ -262,17 +312,29 @@ function saveMaintenance() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إضافة سجل الصيانة بنجاح');
+            alert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة بنجاح' : '✅ تم إضافة سجل الصيانة بنجاح');
+            editingMaintenanceId = null;
             toggleMaintenanceForm();
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
+            alert('❌ ' + (data.error || 'خطأ في العملية'));
         }
     })
     .catch(err => {
         console.error('Save maintenance error:', err);
-        alert('❌ خطأ في إضافة سجل الصيانة');
+        alert('❌ خطأ في حفظ سجل الصيانة');
     });
+}
+
+function editMaintenance(id) {
+    const record = allMaintenance.find(r => r.id === id);
+    if (!record) {
+        alert('⚠️ سجل الصيانة غير موجود');
+        return;
+    }
+    
+    editingMaintenanceId = id;
+    toggleMaintenanceForm();
 }
 
 function completeMaintenance(id) {
@@ -460,13 +522,20 @@ function renderMaintenanceTable() {
                 <td>
                     <div class="maintenance-actions">
                         ${r.status === 'قيد الإنجاز' ? `
+                            <button class="btn btn-sm btn-warning" onclick="editMaintenance(${r.id})" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             <button class="btn btn-sm btn-success" onclick="completeMaintenance(${r.id})" title="إكمال">
                                 <i class="fas fa-check"></i>
                             </button>
                             <button class="btn btn-sm btn-danger" onclick="cancelMaintenance(${r.id})" title="إلغاء">
                                 <i class="fas fa-times"></i>
                             </button>
-                        ` : ''}
+                        ` : `
+                            <button class="btn btn-sm btn-warning" onclick="editMaintenance(${r.id})" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        `}
                         <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${r.id})" title="حذف">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -481,6 +550,91 @@ function renderMaintenanceTable() {
             </table>
         </div>
     `;
+    
+    container.innerHTML = html;
+}
+
+function renderMaintenanceUnits() {
+    const container = document.getElementById('maintenanceUnitsContainer');
+    if (!container) return;
+    
+    const units = [
+        'وحدة الصيانة والإسناد البحري تونس',
+        'وحدة الصيانة والإسناد البحري صفاقس',
+        'وحدة الصيانة والإسناد البحري المنستير',
+        'وحدة الصيانة والإسناد البحري جرجيس',
+        'شركة خاصة'
+    ];
+    
+    let html = '';
+    
+    units.forEach(unit => {
+        const records = allMaintenance.filter(r => r.unit === unit);
+        const total = records.length;
+        const completed = records.filter(r => r.status === 'مكتملة').length;
+        const inProgress = records.filter(r => r.status === 'قيد الإنجاز').length;
+        const cancelled = records.filter(r => r.status === 'ملغية').length;
+        
+        html += `
+            <div class="region-table-card">
+                <div class="region-table-header">
+                    🏭 ${unit}
+                    <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
+                        📊 ${total} سجل
+                    </span>
+                </div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المركب</th>
+                                <th>📝 العطل</th>
+                                <th>👨‍🔧 الفني</th>
+                                <th>📊 الحالة</th>
+                                <th>📅 التاريخ</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${records.length === 0 ? `
+                                <tr><td colspan="6" style="text-align:center; padding:15px; color:#6c757d;">🚫 لا توجد سجلات</td></tr>
+                            ` : records.slice().reverse().map(r => {
+                                const statusColors = {
+                                    'قيد الإنجاز': '#ffc107',
+                                    'مكتملة': '#28a745',
+                                    'ملغية': '#dc3545'
+                                };
+                                return `
+                                    <tr>
+                                        <td>${r.vesselName || '-'}</td>
+                                        <td>${r.description || '-'}</td>
+                                        <td>${r.technician || '-'}</td>
+                                        <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || '-'}</span></td>
+                                        <td>${new Date(r.date).toLocaleDateString()}</td>
+                                        <td>
+                                            <div class="maintenance-actions">
+                                                <button class="btn btn-sm btn-warning" onclick="editMaintenance(${r.id})" title="تعديل">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                ${r.status === 'قيد الإنجاز' ? `
+                                                    <button class="btn btn-sm btn-success" onclick="completeMaintenance(${r.id})" title="إكمال">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                ` : ''}
+                                                <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${r.id})" title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
     
     container.innerHTML = html;
 }
@@ -736,6 +890,9 @@ function renderMaintTable() {
                         <i class="fas fa-edit"></i>
                     </button>
                     ${maintenanceRecord ? `
+                        <button class="btn btn-sm btn-warning" onclick="editMaintenance(${maintenanceRecord.id})" title="تعديل الصيانة">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button class="btn btn-sm btn-success" onclick="completeMaintenance(${maintenanceRecord.id})" title="إكمال الصيانة">
                             <i class="fas fa-check"></i>
                         </button>
@@ -760,7 +917,6 @@ function renderMaintTable() {
 function renderEfficiency() {
     const vessels = allVessels || [];
     
-    // ===== بطاقات الإحصائيات =====
     const statsContainer = document.getElementById('statsCards');
     if (statsContainer) {
         const total = vessels.length;
@@ -777,7 +933,6 @@ function renderEfficiency() {
         `;
     }
     
-    // ===== دالة لإنشاء جدول نجاعة =====
     function createEfficiencyTable(data, title, icon = '📊') {
         const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
         let rows = '';
@@ -848,13 +1003,11 @@ function renderEfficiency() {
         `;
     }
     
-    // ===== الجدول العام =====
     const generalContainer = document.getElementById('generalEffTableContainer');
     if (generalContainer) {
         generalContainer.innerHTML = createEfficiencyTable(vessels, 'النجاعة العامة حسب الفئات', 'fa-ship');
     }
     
-    // ===== جداول الأقاليم =====
     const regionsContainer = document.getElementById('regionsEffContainer');
     if (regionsContainer) {
         const regions = [
@@ -1296,7 +1449,7 @@ function scrollToBottom() {
 }
 
 // ============================================================
-// 🔄 تصدير الدوال
+// 🔄 تصدير الدوال للاستخدام العالمي
 // ============================================================
 
 window.doLogin = doLogin;
@@ -1326,6 +1479,7 @@ window.toggleUserStatus = toggleUserStatus;
 window.changeUserPassword = changeUserPassword;
 window.toggleMaintenanceForm = toggleMaintenanceForm;
 window.saveMaintenance = saveMaintenance;
+window.editMaintenance = editMaintenance;  // ✅ هذا هو الحل
 window.completeMaintenance = completeMaintenance;
 window.cancelMaintenance = cancelMaintenance;
 window.deleteMaintenance = deleteMaintenance;
@@ -1333,6 +1487,9 @@ window.viewVesselMaintenance = viewVesselMaintenance;
 window.loadMaintenance = loadMaintenance;
 window.addPart = addPart;
 window.removePart = removePart;
+window.renderMaintenanceUnits = renderMaintenanceUnits;
+window.renderMaintenanceTable = renderMaintenanceTable;
+window.updateMaintenanceStats = updateMaintenanceStats;
 
 console.log('✅ جميع الدوال جاهزة');
 
