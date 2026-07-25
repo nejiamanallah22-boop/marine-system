@@ -42,6 +42,7 @@
             cursor: pointer;
         }
         .login-btn:hover { background: #0b5ed7; }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .error-msg { color: #dc3545; margin-top: 10px; display: none; }
         
         #mainApp { display: none; }
@@ -551,6 +552,83 @@
             padding: 6px 8px;
         }
         
+        /* ===== المرفقات ===== */
+        .note-files-section {
+            border: 2px dashed #0d6efd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+        }
+        .note-files-section .file-upload-group {
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .note-files-section .file-input-wrapper input[type="file"] {
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+        .note-files-section .file-input-wrapper input[type="file"]:hover {
+            border-color: #0d6efd;
+        }
+        .note-files-section #noteImageThumbnail {
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .note-files-section #noteImageThumbnail img {
+            max-width: 100%;
+            max-height: 100px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .note-attachments {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .note-attachment {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #495057;
+            text-decoration: none;
+        }
+        .note-attachment:hover {
+            background: #0d6efd;
+            color: white;
+            text-decoration: none;
+        }
+        .note-attachment .file-icon {
+            font-size: 14px;
+        }
+        .note-attachment .file-size {
+            font-size: 10px;
+            color: #6c757d;
+        }
+        .note-attachment:hover .file-size {
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* ===== الفلترة ===== */
+        .filter-bar select, .filter-bar input {
+            min-width: 120px;
+        }
+        
         @media (max-width: 992px) {
             .unit-tables-grid { grid-template-columns: 1fr; }
             .eff-grid { grid-template-columns: 1fr; }
@@ -574,6 +652,7 @@
             .efficiency-table-wrapper { padding: 10px; }
             .maintenance-stats { grid-template-columns: repeat(2, 1fr); }
             .unit-tables-grid { grid-template-columns: 1fr; }
+            .note-files-section .file-upload-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .stats-cards { grid-template-columns: 1fr; }
@@ -601,9 +680,9 @@
         <span class="logo">⚓</span>
         <h2>منظومة الوسائل البحرية</h2>
         <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-        <input type="text" id="username" placeholder="👤 اسم المستخدم">
-        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-        <button class="login-btn" onclick="doLogin()">دخول</button>
+        <input type="text" id="username" placeholder="👤 اسم المستخدم" value="admin">
+        <input type="password" id="password" placeholder="🔑 كلمة المرور" value="123456">
+        <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
         <div id="loginError" class="error-msg"></div>
     </div>
 </div>
@@ -630,14 +709,13 @@
     <!-- ===== شريط التنقل ===== -->
     <div class="nav">
         <button class="btn btn-primary" onclick="showPage('main')">🚢 الأسطول</button>
-        <button class="btn btn-warning" onclick="showPage('maint')">🔧 الصيانة</button>
+        <button class="btn btn-warning" onclick="showPage('maintenance')">🔧 الصيانة</button>
         <button class="btn btn-success" onclick="showPage('eff')">📊 الجاهزية</button>
         <button class="btn btn-info" onclick="showPage('support')">🎫 الدعم</button>
         <button class="btn btn-secondary" onclick="showPage('track')">📍 التتبع</button>
         <button class="btn btn-secondary" onclick="showPage('map')">🗺️ الخريطة</button>
         <button class="btn btn-secondary" onclick="showPage('users')">👥 المستخدمين</button>
         <button class="btn btn-primary" onclick="showPage('note')">📝 Note Verbale</button>
-        <button class="btn btn-danger" onclick="showPage('maintenance')">🔧 الصيانة</button>
     </div>
 
     <!-- ===== نموذج الإدخال ===== -->
@@ -652,7 +730,9 @@
             <option value="الوسط">الوسط</option>
             <option value="الجنوب">الجنوب</option>
         </select>
-        <select id="iZone"><option value="">📍 المنطقة</option></select>
+        <select id="iZone">
+            <option value="">📍 المنطقة</option>
+        </select>
         <input type="text" id="iPort" placeholder="⚓ الميناء">
         <input type="text" id="iSupp" placeholder="🔧 التعزيز">
         <select id="iStat">
@@ -755,10 +835,7 @@
         </div>
         <div class="stats-cards" id="statsCards"></div>
         
-        <!-- ===== جدول النجاعة العام ===== -->
         <div id="generalEffTableContainer"></div>
-        
-        <!-- ===== جداول النجاعة للأقاليم ===== -->
         <div id="regionsEffContainer"></div>
     </div>
 
@@ -888,16 +965,115 @@
     <div id="pageNote" class="hidden">
         <div class="region-table-card" style="padding:20px;">
             <h3>📝 Note Verbale</h3>
-            <input type="text" id="noteTitle" placeholder="📌 العنوان" style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
-            <textarea id="noteContent" rows="3" placeholder="📝 المحتوى" style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px;"></textarea>
-            <input type="date" id="noteDate" style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
-            <button class="btn btn-success" onclick="saveNote()">💾 حفظ</button>
-            <button class="btn btn-sm btn-secondary" onclick="loadNotes()">🔄 تحديث</button>
+            
+            <!-- نموذج الإدخال -->
+            <div class="note-form">
+                <input type="text" id="noteTitle" placeholder="📌 العنوان" 
+                       style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
+                
+                <textarea id="noteContent" rows="3" placeholder="📝 المحتوى" 
+                          style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px;"></textarea>
+                
+                <input type="date" id="noteDate" 
+                       style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
+                
+                <!-- ===== منطقة رفع الملفات ===== -->
+                <div class="note-files-section">
+                    <h4 style="color:#0d6efd; margin-bottom:10px;">
+                        <i class="fas fa-paperclip"></i> المرفقات
+                    </h4>
+                    
+                    <div class="file-upload-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <!-- 📄 مستند PDF -->
+                        <div class="file-upload-group">
+                            <label style="font-weight:600; font-size:12px; color:#495057;">
+                                <i class="fas fa-file-pdf" style="color:#dc3545;"></i> مستند PDF
+                            </label>
+                            <div class="file-input-wrapper" style="display:flex; gap:8px; align-items:center;">
+                                <input type="file" id="notePdf" accept=".pdf" 
+                                       style="flex:1; padding:5px; border:1px solid #ced4da; border-radius:4px; font-size:12px;" 
+                                       onchange="updateFilePreview('notePdf')">
+                                <button class="btn btn-sm btn-danger" onclick="clearFileInput('notePdf')">✕</button>
+                            </div>
+                            <div id="notePdfPreview" style="font-size:11px; color:#6c757d; margin-top:3px;"></div>
+                        </div>
+                        
+                        <!-- 📷 صورة -->
+                        <div class="file-upload-group">
+                            <label style="font-weight:600; font-size:12px; color:#495057;">
+                                <i class="fas fa-image" style="color:#28a745;"></i> صورة
+                            </label>
+                            <div class="file-input-wrapper" style="display:flex; gap:8px; align-items:center;">
+                                <input type="file" id="noteImage" accept="image/*" 
+                                       style="flex:1; padding:5px; border:1px solid #ced4da; border-radius:4px; font-size:12px;" 
+                                       onchange="updateFilePreview('noteImage')">
+                                <button class="btn btn-sm btn-danger" onclick="clearFileInput('noteImage')">✕</button>
+                            </div>
+                            <div id="noteImagePreview" style="font-size:11px; color:#6c757d; margin-top:3px;"></div>
+                            <div id="noteImageThumbnail" style="margin-top:5px;"></div>
+                        </div>
+                        
+                        <!-- 📊 مستند Excel -->
+                        <div class="file-upload-group">
+                            <label style="font-weight:600; font-size:12px; color:#495057;">
+                                <i class="fas fa-file-excel" style="color:#28a745;"></i> مستند Excel
+                            </label>
+                            <div class="file-input-wrapper" style="display:flex; gap:8px; align-items:center;">
+                                <input type="file" id="noteExcel" accept=".xlsx,.xls" 
+                                       style="flex:1; padding:5px; border:1px solid #ced4da; border-radius:4px; font-size:12px;" 
+                                       onchange="updateFilePreview('noteExcel')">
+                                <button class="btn btn-sm btn-danger" onclick="clearFileInput('noteExcel')">✕</button>
+                            </div>
+                            <div id="noteExcelPreview" style="font-size:11px; color:#6c757d; margin-top:3px;"></div>
+                        </div>
+                        
+                        <!-- 📄 مستند Word -->
+                        <div class="file-upload-group">
+                            <label style="font-weight:600; font-size:12px; color:#495057;">
+                                <i class="fas fa-file-word" style="color:#0d6efd;"></i> مستند Word
+                            </label>
+                            <div class="file-input-wrapper" style="display:flex; gap:8px; align-items:center;">
+                                <input type="file" id="noteWord" accept=".docx,.doc" 
+                                       style="flex:1; padding:5px; border:1px solid #ced4da; border-radius:4px; font-size:12px;" 
+                                       onchange="updateFilePreview('noteWord')">
+                                <button class="btn btn-sm btn-danger" onclick="clearFileInput('noteWord')">✕</button>
+                            </div>
+                            <div id="noteWordPreview" style="font-size:11px; color:#6c757d; margin-top:3px;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-sm btn-info" onclick="attachAllFiles()">
+                            <i class="fas fa-paperclip"></i> إرفاق جميع الملفات
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="clearAllFiles()">
+                            <i class="fas fa-trash"></i> مسح الكل
+                        </button>
+                        <span id="fileCount" style="font-size:12px; color:#6c757d; margin-right:10px;">
+                            📎 0 ملف مرفق
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn btn-success" onclick="saveNote()">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadNotes()">
+                        <i class="fas fa-sync-alt"></i> تحديث
+                    </button>
+                    <button class="btn btn-warning" onclick="clearNote()">
+                        <i class="fas fa-eraser"></i> تفريغ
+                    </button>
+                </div>
+            </div>
+            
+            <!-- ===== عرض المذكرات ===== -->
             <div id="notesListContainer" style="margin-top:15px;"></div>
         </div>
     </div>
 
-    <!-- ===== صفحة الصيانة (الجديدة) ===== -->
+    <!-- ===== صفحة الصيانة (الجديدة مع الفلترة) ===== -->
     <div id="pageMaintenance" class="hidden">
         <div class="filter-bar">
             <span style="font-weight:700; color:#0d6efd;">
@@ -991,20 +1167,6 @@
         <div id="maintenanceUnitsContainer" class="unit-tables-grid"></div>
     </div>
 
-</div>
-
-<!-- ===== النوافذ المنبثقة ===== -->
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3>🔑 تغيير كلمة المرور</h3>
-        <p id="modalUserName" style="margin-bottom:10px; color:#6c757d;"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        <div class="modal-actions">
-            <button class="btn btn-success" onclick="saveNewPassword()">حفظ</button>
-            <button class="btn btn-danger" onclick="closePasswordModal()">إلغاء</button>
-        </div>
-    </div>
 </div>
 
 <!-- ===== أزرار التمرير ===== -->
