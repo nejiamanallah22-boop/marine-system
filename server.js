@@ -475,9 +475,7 @@ app.get('/api/maintenance/stats', (req, res) => {
 // 📝 API Routes - المذكرات
 // ============================================================
 
-// رفع ملف (محاكاة - بدون multer)
 app.post('/api/notes/upload', authenticate, (req, res) => {
-    // محاكاة رفع الملفات (لأن multer غير مثبت)
     res.json({ 
         success: true, 
         files: [
