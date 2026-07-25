@@ -413,6 +413,44 @@
             transition: width 0.5s ease;
         }
         
+        /* ===== نظام الصيانة ===== */
+        .maintenance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .maintenance-stats .stat-box {
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+        .maintenance-stats .stat-box h4 {
+            font-size: 22px;
+            margin: 0;
+        }
+        .maintenance-stats .stat-box p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .stat-total { background: #0d6efd; }
+        .stat-progress { background: #ffc107; color: #1a3a5c; }
+        .stat-completed { background: #28a745; }
+        .stat-cancelled { background: #dc3545; }
+        
+        .maintenance-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: nowrap;
+        }
+        .maintenance-actions .btn-sm {
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        
         @media (max-width: 992px) {
             .eff-grid { grid-template-columns: 1fr; }
         }
@@ -432,11 +470,13 @@
             table th, table td { padding: 5px 6px; }
             .eff-grid { grid-template-columns: 1fr; }
             .efficiency-table-wrapper { padding: 10px; }
+            .maintenance-stats { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 480px) {
             .stats-cards { grid-template-columns: 1fr; }
             header h1 { font-size: 15px; }
             .header-content .btn { font-size: 11px; padding: 4px 10px; }
+            .maintenance-stats { grid-template-columns: 1fr; }
         }
         
         @media print {
@@ -802,4 +842,3 @@
 
 </body>
 </html>
-            
