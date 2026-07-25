@@ -1479,7 +1479,7 @@ window.toggleUserStatus = toggleUserStatus;
 window.changeUserPassword = changeUserPassword;
 window.toggleMaintenanceForm = toggleMaintenanceForm;
 window.saveMaintenance = saveMaintenance;
-window.editMaintenance = editMaintenance;  // ✅ هذا هو الحل
+window.editMaintenance = editMaintenance;
 window.completeMaintenance = completeMaintenance;
 window.cancelMaintenance = cancelMaintenance;
 window.deleteMaintenance = deleteMaintenance;
@@ -1490,6 +1490,10 @@ window.removePart = removePart;
 window.renderMaintenanceUnits = renderMaintenanceUnits;
 window.renderMaintenanceTable = renderMaintenanceTable;
 window.updateMaintenanceStats = updateMaintenanceStats;
+window.loadVessels = loadVessels;
+window.loadUsers = loadUsers;
+window.loadTickets = loadTickets;
+window.loadNotes = loadNotes;
 
 console.log('✅ جميع الدوال جاهزة');
 
