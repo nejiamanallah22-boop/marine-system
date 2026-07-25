@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الكامل مع زر تعديل الصيانة
+// 📦 app.js - الملف الكامل مع جميع الإصلاحات
 // ============================================================
 
 console.log('✅ App loaded');
@@ -13,6 +13,9 @@ let editingId = null;
 let editingUserId = null;
 let editingMaintenanceId = null;
 let currentUser = null;
+let isLoading = false;
+let noteAttachments = [];
+let filteredMaintenance = [];
 
 // ============================================================
 // 🔐 المصادقة
@@ -23,8 +26,14 @@ function doLogin() {
     const password = document.getElementById('password')?.value.trim();
     
     if (!username || !password) {
-        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
         return;
+    }
+    
+    const loginBtn = document.querySelector('#loginOverlay .login-btn');
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
     fetch('/api/auth/login', {
@@ -32,66 +41,166 @@ function doLogin() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: username, password })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('فشل الاتصال');
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('user', JSON.stringify({
+                ...data.user,
+                loginTime: new Date().toISOString()
+            }));
+            
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
-            document.getElementById('userRoleDisplay').innerHTML = 
-                `<i class="fas fa-user"></i> ${data.user.name} (${data.user.role})`;
+            
             currentUser = data.user;
+            updateUserDisplay();
             loadAllData();
+            
+            showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
         } else {
-            alert('❌ ' + (data.error || 'بيانات غير صحيحة'));
+            showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
         }
     })
     .catch(err => {
         console.error('Login error:', err);
-        alert('❌ خطأ في الاتصال بالخادم');
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+    })
+    .finally(() => {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '🚀 دخول';
+        }
     });
 }
 
 function logout() {
-    localStorage.clear();
-    location.reload();
+    if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
+        localStorage.clear();
+        location.reload();
+    }
 }
 
 function getToken() {
-    return localStorage.getItem('token');
-}
-
-function getUser() {
-    try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        redirectToLogin();
         return null;
     }
+    return token;
 }
+
+function redirectToLogin() {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+}
+
+function updateUserDisplay() {
+    const display = document.getElementById('userRoleDisplay');
+    if (display && currentUser) {
+        const roleEmojis = {
+            'مسؤول': '👑',
+            'مشرف': '⭐',
+            'محرر': '✏️',
+            'مشاهد': '👀'
+        };
+        display.innerHTML = `
+            <i class="fas fa-user-circle"></i> 
+            ${currentUser.name} 
+            <span style="font-size:12px; background:#e9ecef; padding:2px 10px; border-radius:10px;">
+                ${roleEmojis[currentUser.role] || '👤'} ${currentUser.role}
+            </span>
+        `;
+    }
+}
+
+function showAlert(message, type = 'info') {
+    const colors = {
+        success: '#28a745',
+        danger: '#dc3545',
+        warning: '#ffc107',
+        info: '#0d6efd'
+    };
+    const alertDiv = document.createElement('div');
+    alertDiv.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 99999;
+        padding: 15px 25px; border-radius: 8px; color: white;
+        background: ${colors[type] || colors.info};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        font-family: 'Cairo', sans-serif;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+    `;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transition = 'opacity 0.3s';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 4000);
+}
+
+// إضافة CSS للتنبيهات
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+`;
+document.head.appendChild(styleSheet);
 
 // ============================================================
 // 📊 تحميل البيانات
 // ============================================================
 
 function loadAllData() {
-    loadVessels();
-    loadMaintenance();
-    loadTickets();
-    loadNotes();
-    loadUsers();
+    if (isLoading) return;
+    isLoading = true;
+    
+    const promises = [
+        loadVessels(),
+        loadMaintenance(),
+        loadTickets(),
+        loadNotes(),
+        loadUsers()
+    ];
+    
+    Promise.all(promises)
+        .catch(err => console.error('Load all data error:', err))
+        .finally(() => {
+            isLoading = false;
+        });
 }
 
-function loadVessels() {
+function loadVessels(filter = '') {
     const token = getToken();
-    if (!token) return;
+    if (!token) return Promise.reject('No token');
     
-    fetch('/api/vessels', {
+    const searchInput = document.getElementById('searchMain') || document.getElementById('searchMaint');
+    const searchTerm = filter || searchInput?.value?.toLowerCase() || '';
+    
+    return fetch('/api/vessels', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to load vessels');
+        return res.json();
+    })
     .then(data => {
-        allVessels = data || [];
+        let filtered = data || [];
+        if (searchTerm) {
+            filtered = filtered.filter(v => 
+                v.name?.toLowerCase().includes(searchTerm) ||
+                v.num?.toString().includes(searchTerm) ||
+                v.reg?.toLowerCase().includes(searchTerm) ||
+                v.zone?.toLowerCase().includes(searchTerm)
+            );
+        }
+        allVessels = filtered;
         renderMainTable();
         renderMaintTable();
         renderEfficiency();
@@ -99,40 +208,104 @@ function loadVessels() {
         renderMaintenanceTable();
         updateMaintenanceStats();
         renderMaintenanceUnits();
+        return allVessels;
     })
-    .catch(err => console.error('Load vessels error:', err));
+    .catch(err => {
+        console.error('Load vessels error:', err);
+        return [];
+    });
 }
 
 function loadMaintenance() {
     const token = getToken();
-    if (!token) return;
+    if (!token) return Promise.reject('No token');
     
-    fetch('/api/maintenance', {
+    return fetch('/api/maintenance', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to load maintenance');
+        return res.json();
+    })
     .then(data => {
         allMaintenance = data || [];
+        filteredMaintenance = [...allMaintenance];
         renderMaintenanceTable();
         updateMaintenanceStats();
         renderMaintenanceUnits();
+        renderMaintenanceFilters();
+        return allMaintenance;
     })
-    .catch(err => console.error('Load maintenance error:', err));
+    .catch(err => {
+        console.error('Load maintenance error:', err);
+        return [];
+    });
 }
 
 function loadUsers() {
     const token = getToken();
-    if (!token) return;
+    if (!token) return Promise.reject('No token');
     
-    fetch('/api/users', {
+    return fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to load users');
+        return res.json();
+    })
     .then(data => {
         allUsers = data || [];
         renderUsersTable();
+        return allUsers;
     })
-    .catch(err => console.error('Load users error:', err));
+    .catch(err => {
+        console.error('Load users error:', err);
+        return [];
+    });
+}
+
+function loadTickets() {
+    const token = getToken();
+    if (!token) return Promise.reject('No token');
+    
+    return fetch('/api/tickets', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to load tickets');
+        return res.json();
+    })
+    .then(data => {
+        allTickets = data || [];
+        renderTickets();
+        return allTickets;
+    })
+    .catch(err => {
+        console.error('Load tickets error:', err);
+        return [];
+    });
+}
+
+function loadNotes() {
+    const token = getToken();
+    if (!token) return Promise.reject('No token');
+    
+    return fetch('/api/notes', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Failed to load notes');
+        return res.json();
+    })
+    .then(data => {
+        allNotes = data || [];
+        renderNotes();
+        return allNotes;
+    })
+    .catch(err => {
+        console.error('Load notes error:', err);
+        return [];
+    });
 }
 
 // ============================================================
@@ -141,69 +314,82 @@ function loadUsers() {
 
 function toggleMaintenanceForm() {
     const form = document.getElementById('maintenanceForm');
-    if (form) {
-        form.classList.toggle('active');
-        if (form.classList.contains('active')) {
-            if (editingMaintenanceId) {
-                const record = allMaintenance.find(r => r.id === editingMaintenanceId);
-                if (record) {
-                    document.getElementById('mVesselId').value = record.vesselId || '';
-                    document.getElementById('mType').value = record.type || 'عادية';
-                    document.getElementById('mUnit').value = record.unit || '';
-                    document.getElementById('mTechnician').value = record.technician || '';
-                    document.getElementById('mDescription').value = record.description || '';
-                    document.getElementById('mCost').value = record.cost || '';
-                    document.getElementById('mNotes').value = record.notes || '';
-                    
-                    const container = document.getElementById('partsContainer');
-                    container.innerHTML = '';
-                    if (record.parts && record.parts.length > 0) {
-                        record.parts.forEach(p => {
-                            const div = document.createElement('div');
-                            div.className = 'part-item';
-                            div.innerHTML = `
-                                <input type="text" placeholder="اسم القطعة" class="part-name" value="${p.name || ''}">
-                                <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;" value="${p.quantity || 0}">
-                                <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;" value="${p.price || 0}">
-                                <button class="remove-part" onclick="removePart(this)">✕</button>
-                            `;
-                            container.appendChild(div);
-                        });
-                    } else {
-                        const div = document.createElement('div');
-                        div.className = 'part-item';
-                        div.innerHTML = `
-                            <input type="text" placeholder="اسم القطعة" class="part-name">
-                            <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-                            <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
-                            <button class="remove-part" onclick="removePart(this)">✕</button>
-                        `;
-                        container.appendChild(div);
-                    }
-                    
-                    document.querySelector('#maintenanceForm .btn-success').textContent = '✏️ تحديث';
-                    document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-edit"></i> تعديل سجل صيانة';
-                }
-            } else {
-                document.getElementById('mVesselId').value = '';
-                document.getElementById('mType').value = 'عادية';
-                document.getElementById('mTechnician').value = '';
-                document.getElementById('mDescription').value = '';
-                document.getElementById('mCost').value = '';
-                document.getElementById('mNotes').value = '';
-                document.getElementById('partsContainer').innerHTML = `
-                    <div class="part-item">
-                        <input type="text" placeholder="اسم القطعة" class="part-name">
-                        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-                        <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
-                        <button class="remove-part" onclick="removePart(this)">✕</button>
-                    </div>
-                `;
-                document.querySelector('#maintenanceForm .btn-success').textContent = '💾 حفظ';
-                document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد';
+    if (!form) return;
+    
+    if (!form.classList.contains('active')) {
+        form.classList.add('active');
+        if (editingMaintenanceId) {
+            const record = allMaintenance.find(r => r.id === editingMaintenanceId);
+            if (record) {
+                fillMaintenanceForm(record);
+                document.querySelector('#maintenanceForm .btn-success').textContent = '✏️ تحديث';
+                document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-edit"></i> تعديل سجل صيانة';
             }
-            updateMaintenanceFormVessels();
+        } else {
+            resetMaintenanceForm();
+            document.querySelector('#maintenanceForm .btn-success').textContent = '💾 حفظ';
+            document.querySelector('#maintenanceForm h4').innerHTML = '<i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد';
         }
+        updateMaintenanceFormVessels();
+    } else {
+        form.classList.remove('active');
+        editingMaintenanceId = null;
+        resetMaintenanceForm();
+    }
+}
+
+function resetMaintenanceForm() {
+    document.getElementById('mVesselId').value = '';
+    document.getElementById('mType').value = 'عادية';
+    document.getElementById('mUnit').value = '';
+    document.getElementById('mTechnician').value = '';
+    document.getElementById('mDescription').value = '';
+    document.getElementById('mCost').value = '';
+    document.getElementById('mNotes').value = '';
+    document.getElementById('partsContainer').innerHTML = `
+        <div class="part-item">
+            <input type="text" placeholder="اسم القطعة" class="part-name">
+            <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+            <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+            <button class="remove-part" onclick="removePart(this)">✕</button>
+        </div>
+    `;
+    editingMaintenanceId = null;
+}
+
+function fillMaintenanceForm(record) {
+    document.getElementById('mVesselId').value = record.vesselId || '';
+    document.getElementById('mType').value = record.type || 'عادية';
+    document.getElementById('mUnit').value = record.unit || '';
+    document.getElementById('mTechnician').value = record.technician || '';
+    document.getElementById('mDescription').value = record.description || '';
+    document.getElementById('mCost').value = record.cost || '';
+    document.getElementById('mNotes').value = record.notes || '';
+    
+    const container = document.getElementById('partsContainer');
+    container.innerHTML = '';
+    if (record.parts && record.parts.length > 0) {
+        record.parts.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'part-item';
+            div.innerHTML = `
+                <input type="text" placeholder="اسم القطعة" class="part-name" value="${p.name || ''}">
+                <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;" value="${p.quantity || 0}">
+                <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;" value="${p.price || 0}">
+                <button class="remove-part" onclick="removePart(this)">✕</button>
+            `;
+            container.appendChild(div);
+        });
+    } else {
+        const div = document.createElement('div');
+        div.className = 'part-item';
+        div.innerHTML = `
+            <input type="text" placeholder="اسم القطعة" class="part-name">
+            <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+            <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+            <button class="remove-part" onclick="removePart(this)">✕</button>
+        `;
+        container.appendChild(div);
     }
 }
 
@@ -240,7 +426,7 @@ function removePart(btn) {
     if (container.children.length > 1) {
         btn.parentElement.remove();
     } else {
-        alert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل');
+        showAlert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
     }
 }
 
@@ -260,7 +446,7 @@ function getPartsData() {
 function saveMaintenance() {
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -274,15 +460,15 @@ function saveMaintenance() {
     const parts = getPartsData();
     
     if (!vesselId) {
-        alert('⚠️ الرجاء اختيار المركب');
+        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
         return;
     }
     if (!description) {
-        alert('⚠️ الرجاء إدخال وصف العطل');
+        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
         return;
     }
     if (!technician) {
-        alert('⚠️ الرجاء إدخال اسم الفني المسؤول');
+        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
         return;
     }
     
@@ -312,27 +498,26 @@ function saveMaintenance() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة بنجاح' : '✅ تم إضافة سجل الصيانة بنجاح');
+            showAlert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة بنجاح' : '✅ تم إضافة سجل الصيانة بنجاح', 'success');
             editingMaintenanceId = null;
             toggleMaintenanceForm();
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في العملية'));
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
         }
     })
     .catch(err => {
         console.error('Save maintenance error:', err);
-        alert('❌ خطأ في حفظ سجل الصيانة');
+        showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
     });
 }
 
 function editMaintenance(id) {
     const record = allMaintenance.find(r => r.id === id);
     if (!record) {
-        alert('⚠️ سجل الصيانة غير موجود');
+        showAlert('⚠️ سجل الصيانة غير موجود', 'warning');
         return;
     }
-    
     editingMaintenanceId = id;
     toggleMaintenanceForm();
 }
@@ -342,7 +527,7 @@ function completeMaintenance(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -364,15 +549,15 @@ function completeMaintenance(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إكمال الصيانة بنجاح');
+            showAlert('✅ تم إكمال الصيانة بنجاح', 'success');
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإكمال'));
+            showAlert('❌ ' + (data.error || 'خطأ في الإكمال'), 'danger');
         }
     })
     .catch(err => {
         console.error('Complete maintenance error:', err);
-        alert('❌ خطأ في إكمال الصيانة');
+        showAlert('❌ خطأ في إكمال الصيانة', 'danger');
     });
 }
 
@@ -381,7 +566,7 @@ function cancelMaintenance(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -392,15 +577,15 @@ function cancelMaintenance(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إلغاء سجل الصيانة');
+            showAlert('✅ تم إلغاء سجل الصيانة', 'success');
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإلغاء'));
+            showAlert('❌ ' + (data.error || 'خطأ في الإلغاء'), 'danger');
         }
     })
     .catch(err => {
         console.error('Cancel maintenance error:', err);
-        alert('❌ خطأ في إلغاء الصيانة');
+        showAlert('❌ خطأ في إلغاء الصيانة', 'danger');
     });
 }
 
@@ -409,7 +594,7 @@ function deleteMaintenance(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -420,54 +605,94 @@ function deleteMaintenance(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم حذف سجل الصيانة');
+            showAlert('✅ تم حذف سجل الصيانة', 'success');
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الحذف'));
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
         }
     })
     .catch(err => {
         console.error('Delete maintenance error:', err);
-        alert('❌ خطأ في حذف سجل الصيانة');
+        showAlert('❌ خطأ في حذف سجل الصيانة', 'danger');
     });
 }
 
-function viewVesselMaintenance(vesselId) {
-    const vessel = allVessels.find(v => v.id == vesselId);
-    if (!vessel) {
-        alert('❌ المركب غير موجود');
-        return;
-    }
-    
-    const records = allMaintenance.filter(r => r.vesselId == vesselId);
-    
-    if (records.length === 0) {
-        alert(`🚫 لا توجد سجلات صيانة للمركب: ${vessel.name}`);
-        return;
-    }
-    
-    let message = `📋 سجل صيانة ${vessel.name}:\n\n`;
-    records.slice().reverse().forEach((r, i) => {
-        message += `${i+1}. 📅 ${new Date(r.date).toLocaleDateString()}\n`;
-        message += `   🔧 ${r.description}\n`;
-        message += `   🏭 ${r.unit || 'غير محدد'}\n`;
-        message += `   👨‍🔧 ${r.technician || 'غير محدد'}\n`;
-        message += `   📊 ${r.status}\n`;
-        if (r.cost) message += `   💰 ${r.cost} د.ت\n`;
-        if (r.parts && r.parts.length) {
-            message += `   🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}\n`;
+// ============================================================
+// 🔍 فلترة الصيانة
+// ============================================================
+
+function renderMaintenanceFilters() {
+    const container = document.getElementById('maintenanceFilters');
+    if (!container) {
+        // إنشاء حاوية الفلترة إذا لم تكن موجودة
+        const tableContainer = document.getElementById('maintenanceTableContainer');
+        if (tableContainer) {
+            const filterDiv = document.createElement('div');
+            filterDiv.id = 'maintenanceFilters';
+            filterDiv.className = 'filter-bar';
+            filterDiv.innerHTML = `
+                <label style="font-weight:600; font-size:13px; color:#6c757d;">
+                    <i class="fas fa-filter"></i> فلترة:
+                </label>
+                <select id="mFilterUnit" onchange="applyMaintenanceFilters()">
+                    <option value="">جميع الوحدات</option>
+                    ${MAINTENANCE_UNITS.map(u => `<option value="${u}">${u}</option>`).join('')}
+                </select>
+                <input type="date" id="mFilterDateFrom" onchange="applyMaintenanceFilters()" placeholder="من تاريخ">
+                <input type="date" id="mFilterDateTo" onchange="applyMaintenanceFilters()" placeholder="إلى تاريخ">
+                <select id="mFilterStatus" onchange="applyMaintenanceFilters()">
+                    <option value="">جميع الحالات</option>
+                    <option value="قيد الإنجاز">قيد الإنجاز</option>
+                    <option value="مكتملة">مكتملة</option>
+                    <option value="ملغية">ملغية</option>
+                </select>
+                <button class="btn btn-sm btn-danger" onclick="resetMaintenanceFilters()">
+                    <i class="fas fa-times"></i> إلغاء الفلترة
+                </button>
+            `;
+            tableContainer.parentNode.insertBefore(filterDiv, tableContainer);
         }
-        message += `   ────────────────\n`;
-    });
-    
-    alert(message);
+    }
 }
 
-function renderMaintenanceTable() {
+function applyMaintenanceFilters() {
+    const unit = document.getElementById('mFilterUnit')?.value || '';
+    const dateFrom = document.getElementById('mFilterDateFrom')?.value || '';
+    const dateTo = document.getElementById('mFilterDateTo')?.value || '';
+    const status = document.getElementById('mFilterStatus')?.value || '';
+    
+    filteredMaintenance = allMaintenance.filter(r => {
+        let match = true;
+        if (unit && r.unit !== unit) match = false;
+        if (status && r.status !== status) match = false;
+        if (dateFrom && r.date < dateFrom) match = false;
+        if (dateTo && r.date > dateTo + 'T23:59:59') match = false;
+        return match;
+    });
+    
+    renderMaintenanceTable(filteredMaintenance);
+}
+
+function resetMaintenanceFilters() {
+    document.getElementById('mFilterUnit').value = '';
+    document.getElementById('mFilterDateFrom').value = '';
+    document.getElementById('mFilterDateTo').value = '';
+    document.getElementById('mFilterStatus').value = '';
+    filteredMaintenance = [...allMaintenance];
+    renderMaintenanceTable(filteredMaintenance);
+}
+
+// ============================================================
+// 🖨️ عرض جداول الصيانة
+// ============================================================
+
+function renderMaintenanceTable(data = null) {
     const container = document.getElementById('maintenanceTableContainer');
     if (!container) return;
     
-    if (!allMaintenance || allMaintenance.length === 0) {
+    const records = data || filteredMaintenance || allMaintenance || [];
+    
+    if (!records || records.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:30px; color:#6c757d;">
                 🚫 لا توجد سجلات صيانة
@@ -500,18 +725,24 @@ function renderMaintenanceTable() {
                 <tbody>
     `;
     
-    allMaintenance.slice().reverse().forEach(r => {
+    records.slice().reverse().forEach(r => {
+        const vesselName = r.vesselName || 
+            allVessels.find(v => v.id === r.vesselId)?.name || '-';
+        const vesselNum = r.vesselNum || 
+            allVessels.find(v => v.id === r.vesselId)?.num || '-';
+            
         const statusColors = {
             'قيد الإنجاز': '#ffc107',
             'مكتملة': '#28a745',
             'ملغية': '#dc3545'
         };
-        const partsText = r.parts && r.parts.length ? r.parts.map(p => p.name).join(', ') : '-';
+        const partsText = r.parts && r.parts.length ? 
+            r.parts.map(p => p.name).join(', ') : '-';
         
         html += `
             <tr>
-                <td>${r.vesselName || '-'}</td>
-                <td>${r.vesselNum || '-'}</td>
+                <td>${vesselName}</td>
+                <td>${vesselNum}</td>
                 <td>${r.unit || '-'}</td>
                 <td>${r.description || '-'}</td>
                 <td>${r.technician || '-'}</td>
@@ -558,7 +789,7 @@ function renderMaintenanceUnits() {
     const container = document.getElementById('maintenanceUnitsContainer');
     if (!container) return;
     
-    const units = [
+    const units = MAINTENANCE_UNITS || [
         'وحدة الصيانة والإسناد البحري تونس',
         'وحدة الصيانة والإسناد البحري صفاقس',
         'وحدة الصيانة والإسناد البحري المنستير',
@@ -581,6 +812,9 @@ function renderMaintenanceUnits() {
                     🏭 ${unit}
                     <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
                         📊 ${total} سجل
+                    </span>
+                    <span style="font-size:11px; font-weight:400; margin-right:5px;">
+                        ✅ ${completed} | 🔄 ${inProgress} | ❌ ${cancelled}
                     </span>
                 </div>
                 <div class="scrollable-table">
@@ -665,13 +899,13 @@ function updateMaintenanceStats() {
 function addItem() {
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
     const name = document.getElementById('iName')?.value;
     if (!name) {
-        alert('⚠️ الرجاء إدخال اسم المركب');
+        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
         return;
     }
     
@@ -705,25 +939,24 @@ function addItem() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert(editingId ? '✅ تم تحديث المركب بنجاح' : '✅ تم إضافة المركب بنجاح');
+            showAlert(editingId ? '✅ تم تحديث المركب بنجاح' : '✅ تم إضافة المركب بنجاح', 'success');
             editingId = null;
-            document.querySelector('#inputArea .btn-success').textContent = '💾 حفظ';
             clearInputs();
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في العملية'));
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
         }
     })
     .catch(err => {
         console.error('Error:', err);
-        alert('❌ خطأ في العملية');
+        showAlert('❌ خطأ في العملية', 'danger');
     });
 }
 
 function editVessel(id) {
     const vessel = allVessels.find(v => v.id === id);
     if (!vessel) {
-        alert('⚠️ المركب غير موجود');
+        showAlert('⚠️ المركب غير موجود', 'warning');
         return;
     }
     
@@ -752,7 +985,7 @@ function deleteVessel(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -763,15 +996,15 @@ function deleteVessel(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم الحذف');
+            showAlert('✅ تم الحذف', 'success');
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الحذف'));
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
         }
     })
     .catch(err => {
         console.error('Delete error:', err);
-        alert('❌ خطأ في الحذف');
+        showAlert('❌ خطأ في الحذف', 'danger');
     });
 }
 
@@ -789,6 +1022,8 @@ function clearInputs() {
     document.getElementById('iEnd').value = '';
     document.getElementById('iRef').value = '';
     document.getElementById('iRepairer').value = '';
+    editingId = null;
+    document.querySelector('#inputArea .btn-success').textContent = '💾 حفظ';
 }
 
 function updateZones() {
@@ -797,17 +1032,81 @@ function updateZones() {
     if (!zoneSelect) return;
     
     const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة'],
-        'الجنوب': ['جرجيس', 'بن قردان']
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
     };
     
-    const options = zones[reg] || [];
+    const options = zones[reg] || ['المنطقة غير محددة'];
     zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
     options.forEach(z => {
         zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
     });
+}
+
+function viewVesselMaintenance(vesselId) {
+    const vessel = allVessels.find(v => v.id == vesselId);
+    if (!vessel) {
+        showAlert('❌ المركب غير موجود', 'danger');
+        return;
+    }
+    
+    const records = allMaintenance.filter(r => r.vesselId == vesselId);
+    
+    if (records.length === 0) {
+        showAlert(`🚫 لا توجد سجلات صيانة للمركب: ${vessel.name}`, 'info');
+        return;
+    }
+    
+    // عرض في نافذة منبثقة
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 99999;
+    `;
+    
+    let html = `
+        <div style="background:white; padding:25px; border-radius:12px; 
+                    max-width:600px; width:95%; max-height:80vh; overflow-y:auto; direction:rtl;">
+            <h3 style="color:#0d6efd; margin-bottom:15px;">
+                📋 سجل صيانة ${vessel.name}
+                <button onclick="this.closest('div[style]').parentElement.remove()" 
+                        style="float:left; background:#dc3545; color:white; border:none; 
+                               padding:5px 15px; border-radius:5px; cursor:pointer;">✕</button>
+            </h3>
+    `;
+    
+    records.slice().reverse().forEach((r, i) => {
+        html += `
+            <div style="border:1px solid #e9ecef; border-radius:8px; padding:12px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+                    <span style="font-weight:600;">#${i+1}</span>
+                    <span style="color:#6c757d; font-size:12px;">${new Date(r.date).toLocaleString()}</span>
+                </div>
+                <div style="margin:8px 0;">
+                    <strong>🔧 ${r.description}</strong>
+                    <span style="color:${r.status === 'مكتملة' ? '#28a745' : r.status === 'قيد الإنجاز' ? '#ffc107' : '#dc3545'}; 
+                           font-weight:600; margin-right:10px;">${r.status}</span>
+                </div>
+                <div style="font-size:13px; color:#495057;">
+                    <div>🏭 ${r.unit || 'غير محدد'}</div>
+                    <div>👨‍🔧 ${r.technician || 'غير محدد'}</div>
+                    ${r.cost ? `<div>💰 ${r.cost} د.ت</div>` : ''}
+                    ${r.parts && r.parts.length ? `
+                        <div style="margin-top:5px;">
+                            🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
 }
 
 // ============================================================
@@ -1031,34 +1330,23 @@ function renderEfficiency() {
 // 🎫 التذاكر
 // ============================================================
 
-function loadTickets() {
-    const token = getToken();
-    if (!token) return;
+function renderTickets() {
+    const container = document.getElementById('ticketsList');
+    if (!container) return;
     
-    fetch('/api/tickets', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allTickets = data || [];
-        const container = document.getElementById('ticketsList');
-        if (!container) return;
-        
-        if (!allTickets || allTickets.length === 0) {
-            container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد تذاكر</p>';
-            return;
-        }
-        
-        container.innerHTML = allTickets.map(t => `
-            <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid ${t.status === 'مغلقة' ? '#28a745' : '#ffc107'}">
-                <h4>${t.subject}</h4>
-                <p>${t.message}</p>
-                <small>${t.date || ''} ${t.time || ''} | ${t.userName || 'مجهول'}</small>
-                <span style="background:#ffc107; padding:2px 10px; border-radius:10px; font-size:12px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
-            </div>
-        `).join('');
-    })
-    .catch(err => console.error('Load tickets error:', err));
+    if (!allTickets || allTickets.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد تذاكر</p>';
+        return;
+    }
+    
+    container.innerHTML = allTickets.map(t => `
+        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid ${t.status === 'مغلقة' ? '#28a745' : '#ffc107'}">
+            <h4>${t.subject}</h4>
+            <p>${t.message}</p>
+            <small>${t.date || ''} ${t.time || ''} | ${t.userName || 'مجهول'}</small>
+            <span style="background:#ffc107; padding:2px 10px; border-radius:10px; font-size:12px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
+        </div>
+    `).join('');
 }
 
 function sendTicket() {
@@ -1066,13 +1354,13 @@ function sendTicket() {
     const message = document.getElementById('ticketMessage')?.value.trim();
     
     if (!subject || !message) {
-        alert('⚠️ الرجاء إدخال العنوان والرسالة');
+        showAlert('⚠️ الرجاء إدخال العنوان والرسالة', 'warning');
         return;
     }
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -1087,56 +1375,237 @@ function sendTicket() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إرسال التذكرة');
+            showAlert('✅ تم إرسال التذكرة', 'success');
             document.getElementById('ticketSubject').value = '';
             document.getElementById('ticketMessage').value = '';
             loadTickets();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإرسال'));
+            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
         }
     })
     .catch(err => {
         console.error('Send ticket error:', err);
-        alert('❌ خطأ في إرسال التذكرة');
+        showAlert('❌ خطأ في إرسال التذكرة', 'danger');
     });
 }
 
 function refreshTickets() {
     loadTickets();
-    alert('✅ تم تحديث التذاكر');
+    showAlert('✅ تم تحديث التذاكر', 'success');
 }
 
 // ============================================================
-// 📝 المذكرات
+// 📝 المذكرات مع المرفقات
 // ============================================================
 
-function loadNotes() {
-    const token = getToken();
-    if (!token) return;
+function renderNotes() {
+    const container = document.getElementById('notesListContainer');
+    if (!container) return;
     
-    fetch('/api/notes', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allNotes = data || [];
-        const container = document.getElementById('notesListContainer');
-        if (!container) return;
-        
-        if (!allNotes || allNotes.length === 0) {
-            container.innerHTML = '<p style="color:#6c757d;">🚫 لا توجد مذكرات</p>';
-            return;
-        }
-        
-        container.innerHTML = allNotes.map(n => `
-            <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
-                <h4 style="color:#0d6efd;">${n.title}</h4>
-                <p>${n.content}</p>
-                <small>${n.date || ''} ${n.time || ''} | ${n.createdBy || 'مجهول'}</small>
+    if (!allNotes || allNotes.length === 0) {
+        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مذكرات</p>';
+        return;
+    }
+    
+    container.innerHTML = allNotes.map(n => `
+        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                <h4 style="color:#0d6efd; margin:0;">${n.title}</h4>
+                <small style="color:#6c757d;">${n.date || ''} ${n.time || ''} | ${n.createdBy || 'مجهول'}</small>
             </div>
-        `).join('');
-    })
-    .catch(err => console.error('Load notes error:', err));
+            <p style="margin:8px 0;">${n.content}</p>
+            
+            ${n.attachments && n.attachments.length ? `
+                <div class="note-attachments">
+                    ${n.attachments.map(a => `
+                        <a href="${a.url}" target="_blank" class="note-attachment" download>
+                            <span class="file-icon">${getFileIcon(a.type)}</span>
+                            ${a.name}
+                            <span class="file-size">(${formatFileSize(a.size)})</span>
+                        </a>
+                    `).join('')}
+                </div>
+            ` : ''}
+            
+            <div style="margin-top:8px;">
+                <button class="btn btn-sm btn-danger" onclick="deleteNote(${n.id})">
+                    <i class="fas fa-trash"></i> حذف
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getFileIcon(type) {
+    const icons = {
+        'application/pdf': '📄',
+        'image/jpeg': '🖼️',
+        'image/png': '🖼️',
+        'image/gif': '🖼️',
+        'image/webp': '🖼️',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '📊',
+        'application/vnd.ms-excel': '📊',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '📝',
+        'application/msword': '📝'
+    };
+    return icons[type] || '📎';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function clearFileInput(id) {
+    const input = document.getElementById(id);
+    if (input) {
+        input.value = '';
+        updateFilePreview(id);
+    }
+}
+
+function clearAllFiles() {
+    const ids = ['notePdf', 'noteImage', 'noteExcel', 'noteWord'];
+    ids.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+        updateFilePreview(id);
+    });
+    document.getElementById('noteImageThumbnail').innerHTML = '';
+    noteAttachments = [];
+    updateFileCount();
+}
+
+function updateFilePreview(inputId) {
+    const input = document.getElementById(inputId);
+    const previewId = inputId + 'Preview';
+    const preview = document.getElementById(previewId);
+    if (!preview) return;
+    
+    if (input && input.files && input.files.length > 0) {
+        const file = input.files[0];
+        preview.textContent = `✅ ${file.name}`;
+        preview.style.color = '#28a745';
+        
+        if (inputId === 'noteImage' && file.type.startsWith('image/')) {
+            const thumbnail = document.getElementById('noteImageThumbnail');
+            if (thumbnail) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    thumbnail.innerHTML = `<img src="${e.target.result}" alt="معاينة الصورة" style="max-width:100%; max-height:100px; border-radius:4px; border:1px solid #e9ecef;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    } else {
+        preview.textContent = '';
+        if (inputId === 'noteImage') {
+            document.getElementById('noteImageThumbnail').innerHTML = '';
+        }
+    }
+}
+
+function updateFileCount() {
+    const count = document.getElementById('fileCount');
+    if (!count) return;
+    const total = noteAttachments.length;
+    count.textContent = `📎 ${total} ملف مرفق`;
+}
+
+async function attachAllFiles() {
+    const fileInputs = ['notePdf', 'noteImage', 'noteExcel', 'noteWord'];
+    const files = [];
+    
+    fileInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input && input.files && input.files.length > 0) {
+            files.push(input.files[0]);
+        }
+    });
+    
+    if (files.length === 0) {
+        showAlert('⚠️ الرجاء اختيار ملفات للإرفاق', 'warning');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    
+    try {
+        const response = await fetch('/api/notes/upload', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            noteAttachments = [...noteAttachments, ...data.files];
+            updateFileCount();
+            showAlert(`✅ تم رفع ${data.files.length} ملف بنجاح`, 'success');
+            
+            // عرض الملفات المرفوعة
+            const container = document.getElementById('uploadedFilesList') || 
+                (() => {
+                    const div = document.createElement('div');
+                    div.id = 'uploadedFilesList';
+                    div.style.cssText = 'margin-top:10px; padding:10px; background:#e7f3ff; border-radius:6px;';
+                    document.querySelector('.note-files-section').appendChild(div);
+                    return div;
+                })();
+            
+            container.innerHTML = `
+                <h5 style="margin-bottom:8px; color:#0d6efd;">
+                    <i class="fas fa-check-circle"></i> الملفات المرفوعة (${noteAttachments.length})
+                </h5>
+                ${noteAttachments.map(a => `
+                    <div style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; 
+                                background:white; border-radius:20px; margin:3px; border:1px solid #0d6efd;">
+                        <span>${getFileIcon(a.type)}</span>
+                        <span style="font-size:12px;">${a.name}</span>
+                        <span style="font-size:10px; color:#6c757d;">(${formatFileSize(a.size)})</span>
+                        <button onclick="removeAttachment('${a.filename}')" 
+                                style="background:transparent; border:none; color:#dc3545; cursor:pointer; font-weight:bold;">✕</button>
+                    </div>
+                `).join('')}
+            `;
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في رفع الملفات'), 'danger');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showAlert('❌ خطأ في رفع الملفات', 'danger');
+    }
+}
+
+function removeAttachment(filename) {
+    noteAttachments = noteAttachments.filter(a => a.filename !== filename);
+    updateFileCount();
+    const container = document.getElementById('uploadedFilesList');
+    if (container) {
+        container.innerHTML = `
+            <h5 style="margin-bottom:8px; color:#0d6efd;">
+                <i class="fas fa-check-circle"></i> الملفات المرفوعة (${noteAttachments.length})
+            </h5>
+            ${noteAttachments.map(a => `
+                <div style="display:inline-flex; align-items:center; gap:5px; padding:4px 12px; 
+                            background:white; border-radius:20px; margin:3px; border:1px solid #0d6efd;">
+                    <span>${getFileIcon(a.type)}</span>
+                    <span style="font-size:12px;">${a.name}</span>
+                    <span style="font-size:10px; color:#6c757d;">(${formatFileSize(a.size)})</span>
+                    <button onclick="removeAttachment('${a.filename}')" 
+                            style="background:transparent; border:none; color:#dc3545; cursor:pointer; font-weight:bold;">✕</button>
+                </div>
+            `).join('')}
+        `;
+    }
 }
 
 function saveNote() {
@@ -1145,15 +1614,22 @@ function saveNote() {
     const date = document.getElementById('noteDate')?.value;
     
     if (!title || !content || !date) {
-        alert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ');
+        showAlert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
         return;
     }
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
+    
+    const data = {
+        title: title,
+        content: content,
+        date: date,
+        attachments: noteAttachments
+    };
     
     fetch('/api/notes', {
         method: 'POST',
@@ -1161,23 +1637,54 @@ function saveNote() {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify({ title, content, date })
+        body: JSON.stringify(data)
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم حفظ المذكرة');
+            showAlert('✅ تم حفظ المذكرة مع المرفقات', 'success');
             document.getElementById('noteTitle').value = '';
             document.getElementById('noteContent').value = '';
             document.getElementById('noteDate').value = '';
+            noteAttachments = [];
+            document.getElementById('uploadedFilesList')?.remove();
+            clearAllFiles();
             loadNotes();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الحفظ'));
+            showAlert('❌ ' + (data.error || 'خطأ في الحفظ'), 'danger');
         }
     })
     .catch(err => {
         console.error('Save note error:', err);
-        alert('❌ خطأ في حفظ المذكرة');
+        showAlert('❌ خطأ في حفظ المذكرة', 'danger');
+    });
+}
+
+function deleteNote(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذه المذكرة؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/notes/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المذكرة', 'success');
+            loadNotes();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete note error:', err);
+        showAlert('❌ خطأ في حذف المذكرة', 'danger');
     });
 }
 
@@ -1185,6 +1692,9 @@ function clearNote() {
     document.getElementById('noteTitle').value = '';
     document.getElementById('noteContent').value = '';
     document.getElementById('noteDate').value = '';
+    noteAttachments = [];
+    document.getElementById('uploadedFilesList')?.remove();
+    clearAllFiles();
 }
 
 function loadNotesByWeek() {
@@ -1198,7 +1708,7 @@ function loadNotesByWeek() {
 function addUser() {
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -1207,7 +1717,7 @@ function addUser() {
     const role = document.getElementById('ur')?.value;
     
     if (!name || !password) {
-        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
         return;
     }
     
@@ -1229,18 +1739,18 @@ function addUser() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إضافة المستخدم بنجاح');
+            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
             document.getElementById('un').value = '';
             document.getElementById('up').value = '';
             document.getElementById('ur').value = 'مشاهد';
             loadUsers();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
         }
     })
     .catch(err => {
         console.error('Add user error:', err);
-        alert('❌ خطأ في إضافة المستخدم');
+        showAlert('❌ خطأ في إضافة المستخدم', 'danger');
     });
 }
 
@@ -1249,7 +1759,7 @@ function deleteUser(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -1260,15 +1770,15 @@ function deleteUser(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم حذف المستخدم');
+            showAlert('✅ تم حذف المستخدم', 'success');
             loadUsers();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الحذف'));
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
         }
     })
     .catch(err => {
         console.error('Delete user error:', err);
-        alert('❌ خطأ في حذف المستخدم');
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
     });
 }
 
@@ -1278,7 +1788,7 @@ function toggleUserStatus(id) {
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -1293,28 +1803,28 @@ function toggleUserStatus(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم تحديث حالة المستخدم');
+            showAlert('✅ تم تحديث حالة المستخدم', 'success');
             loadUsers();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في التحديث'));
+            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
         }
     })
     .catch(err => {
         console.error('Toggle user status error:', err);
-        alert('❌ خطأ في تحديث حالة المستخدم');
+        showAlert('❌ خطأ في تحديث حالة المستخدم', 'danger');
     });
 }
 
 function changeUserPassword(id, name) {
     const newPassword = prompt(`🔑 تغيير كلمة المرور لـ: ${name}\nأدخل كلمة المرور الجديدة (6 أحرف على الأقل):`);
     if (!newPassword || newPassword.length < 6) {
-        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        showAlert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning');
         return;
     }
     
     const token = getToken();
     if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
@@ -1329,14 +1839,14 @@ function changeUserPassword(id, name) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم تغيير كلمة المرور بنجاح');
+            showAlert('✅ تم تغيير كلمة المرور بنجاح', 'success');
         } else {
-            alert('❌ ' + (data.error || 'خطأ في التغيير'));
+            showAlert('❌ ' + (data.error || 'خطأ في التغيير'), 'danger');
         }
     })
     .catch(err => {
         console.error('Change password error:', err);
-        alert('❌ خطأ في تغيير كلمة المرور');
+        showAlert('❌ خطأ في تغيير كلمة المرور', 'danger');
     });
 }
 
@@ -1377,28 +1887,182 @@ function renderUsersTable() {
 // 🗺️ الخريطة
 // ============================================================
 
+let map = null;
+let trackingInterval = null;
+let userMarker = null;
+
 function initMap() {
-    console.log('🗺️ Map initialized');
+    try {
+        if (typeof L !== 'undefined') {
+            const mapContainer = document.getElementById('gpsMap');
+            if (mapContainer) {
+                map = L.map('gpsMap').setView([36.8, 10.18], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(map);
+                console.log('🗺️ Map initialized');
+            }
+            
+            // تتبع المستخدمين
+            const trackContainer = document.getElementById('trackMap');
+            if (trackContainer) {
+                const trackMap = L.map('trackMap').setView([36.8, 10.18], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }).addTo(trackMap);
+                window.trackMap = trackMap;
+                console.log('🗺️ Track map initialized');
+            }
+        }
+    } catch (e) {
+        console.warn('Map initialization error:', e);
+    }
 }
 
 function startTracking() {
-    alert('📍 بدء التتبع المباشر');
+    if (navigator.geolocation) {
+        const statusText = document.getElementById('gpsStatusText');
+        const statusDot = document.getElementById('gpsDot');
+        const statusText2 = document.getElementById('gpsStatusText2');
+        const startBtn = document.getElementById('startTrackingBtn');
+        const stopBtn = document.getElementById('stopTrackingBtn');
+        const mapStatus = document.getElementById('mapStatus');
+        
+        if (statusText) statusText.textContent = 'جاري التتبع...';
+        if (statusDot) { statusDot.className = 'gps-status gps-active'; }
+        if (mapStatus) mapStatus.textContent = '📍 جاري الحصول على الموقع...';
+        
+        navigator.geolocation.watchPosition((position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            document.getElementById('gpsLat').textContent = latitude.toFixed(6);
+            document.getElementById('gpsLng').textContent = longitude.toFixed(6);
+            document.getElementById('gpsAccuracy').textContent = accuracy + ' م';
+            if (statusText2) statusText2.textContent = '✅ نشط';
+            if (mapStatus) mapStatus.textContent = '✅ الموقع محدث';
+            
+            if (map) {
+                map.setView([latitude, longitude], 16);
+                if (userMarker) {
+                    userMarker.setLatLng([latitude, longitude]);
+                } else {
+                    userMarker = L.marker([latitude, longitude], {
+                        icon: L.divIcon({
+                            className: 'custom-marker',
+                            html: '<div style="background:#0d6efd; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 20px rgba(13,110,253,0.5);"></div>',
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        })
+                    }).addTo(map);
+                }
+            }
+            
+            // إرسال الموقع للخادم
+            const token = getToken();
+            if (token) {
+                fetch('/api/locations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ lat: latitude, lng: longitude })
+                }).catch(console.error);
+            }
+            
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'inline-block';
+            
+        }, (error) => {
+            console.warn('Geolocation error:', error);
+            if (statusText) statusText.textContent = '❌ خطأ';
+            if (mapStatus) mapStatus.textContent = '❌ تعذر الحصول على الموقع';
+        }, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+        });
+        
+        showAlert('📍 بدء التتبع المباشر', 'info');
+    } else {
+        showAlert('❌ المتصفح لا يدعم التتبع', 'danger');
+    }
 }
 
 function stopTracking() {
-    alert('⏹️ إيقاف التتبع');
+    const statusText = document.getElementById('gpsStatusText');
+    const statusDot = document.getElementById('gpsDot');
+    const statusText2 = document.getElementById('gpsStatusText2');
+    const startBtn = document.getElementById('startTrackingBtn');
+    const stopBtn = document.getElementById('stopTrackingBtn');
+    const mapStatus = document.getElementById('mapStatus');
+    
+    if (statusText) statusText.textContent = 'متوقف';
+    if (statusDot) { statusDot.className = 'gps-status gps-inactive'; }
+    if (statusText2) statusText2.textContent = '⏹️ متوقف';
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+    if (mapStatus) mapStatus.textContent = '⏹️ تم إيقاف التتبع';
+    
+    showAlert('⏹️ تم إيقاف التتبع', 'info');
 }
 
 function loadLocations() {
-    alert('📍 تحميل المواقع');
+    fetch('/api/locations')
+        .then(res => res.json())
+        .then(data => {
+            if (data.length > 0 && map) {
+                const last = data[data.length - 1];
+                map.setView([last.lat, last.lng], 15);
+                if (userMarker) {
+                    userMarker.setLatLng([last.lat, last.lng]);
+                } else {
+                    userMarker = L.marker([last.lat, last.lng]).addTo(map);
+                }
+                showAlert('📍 تم تحديث الخريطة', 'success');
+            }
+        })
+        .catch(err => console.error('Load locations error:', err));
 }
 
 function centerMapOnUser() {
-    alert('📍 التمركز على موقعك');
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            if (map) {
+                map.setView([latitude, longitude], 16);
+                if (userMarker) {
+                    userMarker.setLatLng([latitude, longitude]);
+                } else {
+                    userMarker = L.marker([latitude, longitude]).addTo(map);
+                }
+                showAlert('🎯 تم التمركز على موقعك', 'success');
+            }
+        }, () => {
+            showAlert('❌ تعذر الحصول على الموقع', 'danger');
+        });
+    } else {
+        showAlert('❌ المتصفح لا يدعم التتبع', 'danger');
+    }
 }
 
 function toggleNotifications() {
-    alert('🔔 الإشعارات: لا توجد إشعارات جديدة');
+    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
+}
+
+function refreshTrackUsers() {
+    loadLocations();
+    showAlert('✅ تم تحديث المستخدمين المتصلين', 'success');
+}
+
+function clearTrackUsers() {
+    if (confirm('⚠️ هل أنت متأكد من مسح جميع مواقع المستخدمين؟')) {
+        fetch('/api/locations', { method: 'DELETE' })
+            .then(() => {
+                showAlert('✅ تم مسح جميع المواقع', 'success');
+            })
+            .catch(err => console.error('Clear locations error:', err));
+    }
 }
 
 // ============================================================
@@ -1431,13 +2095,21 @@ function showPage(page) {
             break;
         case 'maintenance':
             loadMaintenance();
+            renderMaintenanceFilters();
+            break;
+        case 'map':
+            setTimeout(initMap, 100);
+            break;
+        case 'track':
+            setTimeout(initMap, 100);
+            loadLocations();
             break;
     }
 }
 
 function refreshAllPages() {
     loadAllData();
-    alert('✅ تم تحديث جميع البيانات');
+    showAlert('✅ تم تحديث جميع البيانات', 'success');
 }
 
 function scrollToTop() {
@@ -1494,11 +2166,45 @@ window.loadVessels = loadVessels;
 window.loadUsers = loadUsers;
 window.loadTickets = loadTickets;
 window.loadNotes = loadNotes;
+window.applyMaintenanceFilters = applyMaintenanceFilters;
+window.resetMaintenanceFilters = resetMaintenanceFilters;
+window.clearFileInput = clearFileInput;
+window.clearAllFiles = clearAllFiles;
+window.attachAllFiles = attachAllFiles;
+window.removeAttachment = removeAttachment;
+window.deleteNote = deleteNote;
+window.refreshTrackUsers = refreshTrackUsers;
+window.clearTrackUsers = clearTrackUsers;
 
 console.log('✅ جميع الدوال جاهزة');
 
+// ============================================================
+// 🚀 تهيئة التطبيق
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem('token')) {
-        loadAllData();
+        try {
+            currentUser = JSON.parse(localStorage.getItem('user'));
+            if (currentUser) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                updateUserDisplay();
+                loadAllData();
+                setTimeout(initMap, 500);
+            }
+        } catch (e) {
+            localStorage.clear();
+        }
     }
 });
+
+// إضافة MAINTENANCE_UNITS للاستخدام العالمي
+const MAINTENANCE_UNITS = [
+    'وحدة الصيانة والإسناد البحري تونس',
+    'وحدة الصيانة والإسناد البحري صفاقس',
+    'وحدة الصيانة والإسناد البحري المنستير',
+    'وحدة الصيانة والإسناد البحري جرجيس',
+    'شركة خاصة'
+];
+window.MAINTENANCE_UNITS = MAINTENANCE_UNITS;
