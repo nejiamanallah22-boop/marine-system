@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الرئيسي الكامل
+// 📦 app.js - الملف الرئيسي الكامل مع الصيانة
 // ============================================================
 
 console.log('✅ App loaded');
@@ -8,14 +8,9 @@ let allVessels = [];
 let allUsers = [];
 let allTickets = [];
 let allNotes = [];
+let allMaintenance = [];
 let editingId = null;
 let editingUserId = null;
-let socket = null;
-let trackMap = null;
-let gpsMap = null;
-let userMarker = null;
-let trackingInterval = null;
-let connectedUsers = {};
 let currentUser = null;
 
 // ============================================================
@@ -47,7 +42,6 @@ function doLogin() {
                 `<i class="fas fa-user"></i> ${data.user.name} (${data.user.role})`;
             currentUser = data.user;
             loadAllData();
-            initSocket();
         } else {
             alert('❌ ' + (data.error || 'بيانات غير صحيحة'));
         }
@@ -60,7 +54,6 @@ function doLogin() {
 
 function logout() {
     localStorage.clear();
-    if (socket) socket.disconnect();
     location.reload();
 }
 
@@ -77,57 +70,12 @@ function getUser() {
 }
 
 // ============================================================
-// 📡 Socket.IO
-// ============================================================
-
-function initSocket() {
-    if (socket) return;
-    
-    socket = io();
-    
-    socket.on('connect', () => {
-        console.log('✅ Socket متصل');
-        const user = getUser();
-        if (user && navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    socket.emit('user-connected', {
-                        userName: user.name,
-                        userRole: user.role,
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude
-                    });
-                },
-                () => {}
-            );
-        }
-    });
-    
-    socket.on('user-list', (users) => {
-        connectedUsers = {};
-        users.forEach(u => { connectedUsers[u.id] = u; });
-        updateTrackUsers(users);
-        updateTrackMap(users);
-    });
-    
-    socket.on('receive-location', (data) => {
-        console.log('📍 موقع جديد:', data);
-        if (data && data.lat && data.lng) {
-            addMarkerToTrackMap(data);
-        }
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('❌ Socket غير متصل');
-    });
-}
-
-// ============================================================
 // 📊 تحميل البيانات
 // ============================================================
 
 function loadAllData() {
     loadVessels();
+    loadMaintenance();
     loadTickets();
     loadNotes();
     loadUsers();
@@ -146,8 +94,26 @@ function loadVessels() {
         renderMainTable();
         renderMaintTable();
         renderEfficiency();
+        renderMaintenanceTable();
+        updateMaintenanceStats();
     })
     .catch(err => console.error('Load vessels error:', err));
+}
+
+function loadMaintenance() {
+    const token = getToken();
+    if (!token) return;
+    
+    fetch('/api/maintenance', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        allMaintenance = data || [];
+        renderMaintenanceTable();
+        updateMaintenanceStats();
+    })
+    .catch(err => console.error('Load maintenance error:', err));
 }
 
 function loadUsers() {
@@ -166,42 +132,44 @@ function loadUsers() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين
+// 🔧 نظام الصيانة - الوظائف
 // ============================================================
 
-function addUser() {
-    console.log('🔄 addUser called');
-    
+// إنشاء سجل صيانة جديد
+function createMaintenance() {
     const token = getToken();
     if (!token) {
         alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
-    const name = document.getElementById('un')?.value.trim();
-    const password = document.getElementById('up')?.value.trim();
-    const role = document.getElementById('ur')?.value;
+    const vesselId = prompt('🔍 أدخل ID المركب:');
+    if (!vesselId) return;
     
-    if (!name || !password) {
-        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
+    const vessel = allVessels.find(v => v.id == vesselId);
+    if (!vessel) {
+        alert('❌ المركب غير موجود');
         return;
     }
     
-    if (password.length < 6) {
-        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
-        return;
-    }
+    const description = prompt('📝 وصف العطل:');
+    if (!description) return;
+    
+    const unit = prompt('🏭 وحدة الصيانة (تونس/صفاقس/المنستير/جرجيس/شركة خاصة):');
+    if (!unit) return;
+    
+    const technician = prompt('👨‍🔧 اسم الفني المسؤول:');
+    if (!technician) return;
     
     const data = {
-        name: name,
-        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
-        password: password,
-        role: role || 'مشاهد'
+        vesselId: vessel.id,
+        unit: unit,
+        description: description,
+        technician: technician,
+        createdBy: currentUser?.name || 'Admin'
     };
     
-    console.log('📤 إرسال بيانات المستخدم:', data);
-    
-    fetch('/api/users', {
+    fetch('/api/maintenance', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -211,65 +179,37 @@ function addUser() {
     })
     .then(res => res.json())
     .then(data => {
-        console.log('📥 استجابة الخادم:', data);
         if (data.success) {
-            alert('✅ تم إضافة المستخدم بنجاح');
-            document.getElementById('un').value = '';
-            document.getElementById('up').value = '';
-            document.getElementById('ur').value = 'مشاهد';
-            loadUsers();
+            alert('✅ تم إنشاء سجل الصيانة بنجاح');
+            loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
+            alert('❌ ' + (data.error || 'خطأ في الإنشاء'));
         }
     })
     .catch(err => {
-        console.error('Add user error:', err);
-        alert('❌ خطأ في إضافة المستخدم');
+        console.error('Create maintenance error:', err);
+        alert('❌ خطأ في إنشاء سجل الصيانة');
     });
 }
 
-function editUser(id) {
-    const user = allUsers.find(u => u._id === id || u.id === id);
-    if (!user) {
-        alert('⚠️ المستخدم غير موجود');
-        return;
-    }
+// إكمال الصيانة
+function completeMaintenance(id) {
+    if (!confirm('⚠️ هل أنت متأكد من إكمال هذه الصيانة؟ سيتم تغيير حالة المركب إلى "صالح"')) return;
     
-    editingUserId = user._id || user.id;
-    document.getElementById('un').value = user.name || '';
-    document.getElementById('ur').value = user.role || 'مشاهد';
-    document.getElementById('up').placeholder = 'اترك فارغاً للتعديل';
-    
-    document.querySelector('#pageUsers .btn-primary').textContent = '✏️ تحديث';
-    document.querySelector('#pageUsers .btn-primary').onclick = function() {
-        updateUser(editingUserId);
-    };
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateUser(id) {
     const token = getToken();
     if (!token) {
         alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
-    const name = document.getElementById('un')?.value.trim();
-    const password = document.getElementById('up')?.value.trim();
-    const role = document.getElementById('ur')?.value;
+    const cost = prompt('💰 تكلفة الصيانة (بالدينار):');
+    const notes = prompt('📝 ملاحظات إضافية (اختياري):');
     
-    if (!name) {
-        alert('⚠️ الرجاء إدخال اسم المستخدم');
-        return;
-    }
+    const data = {};
+    if (cost) data.cost = parseFloat(cost);
+    if (notes) data.notes = notes;
     
-    const data = { name, role };
-    if (password && password.length >= 6) {
-        data.password = password;
-    }
-    
-    fetch('/api/users/' + id, {
+    fetch('/api/maintenance/' + id + '/complete', {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -280,26 +220,21 @@ function updateUser(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم تحديث المستخدم بنجاح');
-            editingUserId = null;
-            document.getElementById('un').value = '';
-            document.getElementById('up').value = '';
-            document.getElementById('ur').value = 'مشاهد';
-            document.querySelector('#pageUsers .btn-primary').textContent = '👤 إضافة';
-            document.querySelector('#pageUsers .btn-primary').onclick = addUser;
-            loadUsers();
+            alert('✅ تم إكمال الصيانة بنجاح');
+            loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في التحديث'));
+            alert('❌ ' + (data.error || 'خطأ في الإكمال'));
         }
     })
     .catch(err => {
-        console.error('Update user error:', err);
-        alert('❌ خطأ في تحديث المستخدم');
+        console.error('Complete maintenance error:', err);
+        alert('❌ خطأ في إكمال الصيانة');
     });
 }
 
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+// إلغاء سجل صيانة
+function cancelMaintenance(id) {
+    if (!confirm('⚠️ هل أنت متأكد من إلغاء هذه الصيانة؟')) return;
     
     const token = getToken();
     if (!token) {
@@ -307,151 +242,210 @@ function deleteUser(id) {
         return;
     }
     
-    fetch('/api/users/' + id, {
+    fetch('/api/maintenance/' + id + '/cancel', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم إلغاء سجل الصيانة');
+            loadAllData();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الإلغاء'));
+        }
+    })
+    .catch(err => {
+        console.error('Cancel maintenance error:', err);
+        alert('❌ خطأ في إلغاء الصيانة');
+    });
+}
+
+// حذف سجل صيانة
+function deleteMaintenance(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف سجل الصيانة هذا؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/maintenance/' + id, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم حذف المستخدم');
-            loadUsers();
+            alert('✅ تم حذف سجل الصيانة');
+            loadAllData();
         } else {
             alert('❌ ' + (data.error || 'خطأ في الحذف'));
         }
     })
     .catch(err => {
-        console.error('Delete user error:', err);
-        alert('❌ خطأ في حذف المستخدم');
+        console.error('Delete maintenance error:', err);
+        alert('❌ خطأ في حذف سجل الصيانة');
     });
 }
 
-function toggleUserStatus(id) {
-    const user = allUsers.find(u => u._id === id || u.id === id);
-    if (!user) return;
-    
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
+// عرض سجل صيانة مركب
+function viewVesselMaintenance(vesselId) {
+    const vessel = allVessels.find(v => v.id == vesselId);
+    if (!vessel) {
+        alert('❌ المركب غير موجود');
         return;
     }
     
-    fetch('/api/users/' + id, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ isActive: !user.isActive })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم تحديث حالة المستخدم');
-            loadUsers();
-        } else {
-            alert('❌ ' + (data.error || 'خطأ في التحديث'));
-        }
-    })
-    .catch(err => {
-        console.error('Toggle user status error:', err);
-        alert('❌ خطأ في تحديث حالة المستخدم');
+    const records = allMaintenance.filter(r => r.vesselId == vesselId);
+    
+    if (records.length === 0) {
+        alert(`🚫 لا توجد سجلات صيانة للمركب: ${vessel.name}`);
+        return;
+    }
+    
+    let message = `📋 سجل صيانة ${vessel.name}:\n\n`;
+    records.forEach((r, i) => {
+        message += `${i+1}. 📅 ${new Date(r.date).toLocaleDateString()}\n`;
+        message += `   🔧 ${r.description}\n`;
+        message += `   🏭 ${r.unit}\n`;
+        message += `   👨‍🔧 ${r.technician}\n`;
+        message += `   📊 ${r.status}\n`;
+        if (r.cost) message += `   💰 ${r.cost} د.ت\n`;
+        message += `   ────────────────\n`;
     });
+    
+    alert(message);
 }
 
-function changeUserPassword(id, name) {
-    document.getElementById('modalUserName').textContent = `تغيير كلمة المرور لـ: ${name}`;
-    document.getElementById('passwordModal').dataset.userId = id;
-    document.getElementById('passwordModal').style.display = 'flex';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
+// تحديث إحصائيات الصيانة
+function updateMaintenanceStats() {
+    const container = document.getElementById('maintenanceStats');
+    if (!container) return;
+    
+    const total = allMaintenance.length;
+    const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
+    const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
+    const cancelled = allMaintenance.filter(r => r.status === 'ملغية').length;
+    
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin-bottom:15px;">
+            <div style="background:#0d6efd; padding:12px; border-radius:8px; text-align:center; color:white;">
+                <h4>${total}</h4>
+                <p style="margin:0; font-size:12px;">📊 المجموع</p>
+            </div>
+            <div style="background:#ffc107; padding:12px; border-radius:8px; text-align:center; color:#1a3a5c;">
+                <h4>${inProgress}</h4>
+                <p style="margin:0; font-size:12px;">🔄 قيد الإنجاز</p>
+            </div>
+            <div style="background:#28a745; padding:12px; border-radius:8px; text-align:center; color:white;">
+                <h4>${completed}</h4>
+                <p style="margin:0; font-size:12px;">✅ مكتملة</p>
+            </div>
+            <div style="background:#dc3545; padding:12px; border-radius:8px; text-align:center; color:white;">
+                <h4>${cancelled}</h4>
+                <p style="margin:0; font-size:12px;">❌ ملغية</p>
+            </div>
+        </div>
+    `;
 }
 
-function saveNewPassword() {
-    const password = document.getElementById('newPassword')?.value.trim();
-    const confirm = document.getElementById('confirmPassword')?.value.trim();
-    const userId = document.getElementById('passwordModal')?.dataset.userId;
+// عرض جدول الصيانة
+function renderMaintenanceTable() {
+    const container = document.getElementById('maintenanceTableContainer');
+    if (!container) return;
     
-    if (!password || password.length < 6) {
-        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+    if (!allMaintenance || allMaintenance.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:30px; color:#6c757d;">
+                🚫 لا توجد سجلات صيانة
+                <br>
+                <button class="btn btn-primary" onclick="createMaintenance()" style="margin-top:10px;">
+                    <i class="fas fa-plus"></i> إنشاء سجل صيانة
+                </button>
+            </div>
+        `;
         return;
     }
     
-    if (password !== confirm) {
-        alert('⚠️ كلمة المرور غير متطابقة');
-        return;
-    }
+    let html = `
+        <div style="margin-bottom:15px;">
+            <button class="btn btn-primary" onclick="createMaintenance()">
+                <i class="fas fa-plus"></i> سجل صيانة جديد
+            </button>
+            <button class="btn btn-secondary" onclick="loadMaintenance()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>المركب</th>
+                        <th>الرقم</th>
+                        <th>🏭 الوحدة</th>
+                        <th>📝 العطل</th>
+                        <th>👨‍🔧 الفني</th>
+                        <th>💰 التكلفة</th>
+                        <th>📊 الحالة</th>
+                        <th>📅 التاريخ</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
     
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
-    }
-    
-    fetch('/api/users/' + userId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ password: password })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم تغيير كلمة المرور بنجاح');
-            closePasswordModal();
-        } else {
-            alert('❌ ' + (data.error || 'خطأ في التغيير'));
-        }
-    })
-    .catch(err => {
-        console.error('Change password error:', err);
-        alert('❌ خطأ في تغيير كلمة المرور');
+    allMaintenance.slice().reverse().forEach(r => {
+        const statusColors = {
+            'قيد الإنجاز': '#ffc107',
+            'مكتملة': '#28a745',
+            'ملغية': '#dc3545'
+        };
+        
+        html += `
+            <tr>
+                <td>${r.vesselName || '-'}</td>
+                <td>${r.vesselNum || '-'}</td>
+                <td>${r.unit || '-'}</td>
+                <td>${r.description || '-'}</td>
+                <td>${r.technician || '-'}</td>
+                <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
+                <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || '-'}</span></td>
+                <td>${new Date(r.date).toLocaleDateString()}</td>
+                <td>
+                    <div class="action-buttons">
+                        ${r.status === 'قيد الإنجاز' ? `
+                            <button class="btn btn-sm btn-success" onclick="completeMaintenance(${r.id})" title="إكمال">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelMaintenance(${r.id})" title="إلغاء">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${r.id})" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
     });
-}
-
-function closePasswordModal() {
-    document.getElementById('passwordModal').style.display = 'none';
-}
-
-function renderUsersTable() {
-    const tbody = document.getElementById('usersBody');
-    if (!tbody) return;
     
-    if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
-        return;
-    }
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
     
-    tbody.innerHTML = allUsers.map(u => {
-        const id = u._id || u.id;
-        return `
-        <tr>
-            <td>${u.name || '-'}</td>
-            <td>${u.role || 'مشاهد'}</td>
-            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="changeUserPassword('${id}', '${u.name}')">
-                    <i class="fas fa-key"></i>
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleUserStatus('${id}')">
-                    <i class="fas ${u.isActive ? 'fa-ban' : 'fa-check'}"></i>
-                </button>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteUser('${id}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `}).join('');
+    container.innerHTML = html;
 }
 
 // ============================================================
-// ✅ دوال المراكب
+// ✅ دوال المراكب (الإضافة والتعديل والحذف)
 // ============================================================
 
 function addItem() {
@@ -501,7 +495,7 @@ function addItem() {
             editingId = null;
             document.querySelector('#inputArea .btn-success').textContent = '💾 حفظ';
             clearInputs();
-            loadVessels();
+            loadAllData();
         } else {
             alert('❌ ' + (data.error || 'خطأ في العملية'));
         }
@@ -513,13 +507,13 @@ function addItem() {
 }
 
 function editVessel(id) {
-    const vessel = allVessels.find(v => v._id === id || v.id === id);
+    const vessel = allVessels.find(v => v.id === id);
     if (!vessel) {
         alert('⚠️ المركب غير موجود');
         return;
     }
     
-    editingId = vessel._id || vessel.id;
+    editingId = vessel.id;
     
     document.getElementById('iName').value = vessel.name || '';
     document.getElementById('iNum').value = vessel.num || '';
@@ -556,7 +550,7 @@ function deleteVessel(id) {
     .then(data => {
         if (data.success) {
             alert('✅ تم الحذف');
-            loadVessels();
+            loadAllData();
         } else {
             alert('❌ ' + (data.error || 'خطأ في الحذف'));
         }
@@ -603,29 +597,22 @@ function updateZones() {
 }
 
 // ============================================================
-// ✅ عرض جداول المراكب
+// ✅ عرض الجداول
 // ============================================================
 
 function renderMainTable() {
     const tbody = document.getElementById('mainBody');
     if (!tbody) return;
     
-    const search = document.getElementById('searchMain')?.value.toLowerCase() || '';
-    let vessels = allVessels;
-    if (search) {
-        vessels = vessels.filter(v => 
-            (v.name || '').toLowerCase().includes(search) ||
-            (v.num || '').toLowerCase().includes(search)
-        );
-    }
-    
-    if (!vessels || vessels.length === 0) {
+    if (!allVessels || allVessels.length === 0) {
         tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = vessels.map(v => {
-        const id = v._id || v.id;
+    tbody.innerHTML = allVessels.map(v => {
+        const statusColor = v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107';
+        const hasMaintenance = allMaintenance.some(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
+        
         return `
         <tr>
             <td>${v.name || '-'}</td>
@@ -636,7 +623,7 @@ function renderMainTable() {
             <td>${v.zone || '-'}</td>
             <td>${v.port || '-'}</td>
             <td>${v.supp || '-'}</td>
-            <td><span style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</span></td>
+            <td><span style="color:${statusColor}; font-weight:600;">${v.stat || 'صالح'}</span></td>
             <td>${v.break || '-'}</td>
             <td>${v.fDate || '-'}</td>
             <td>${v.eDate || '-'}</td>
@@ -644,12 +631,16 @@ function renderMainTable() {
             <td>${v.repairer || '-'}</td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
+                    <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
+                    <button class="btn btn-sm btn-danger" onclick="deleteVessel(${v.id})" title="حذف">
                         <i class="fas fa-trash"></i>
                     </button>
+                    <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                        <i class="fas fa-clipboard-list"></i>
+                    </button>
+                    ${hasMaintenance ? `<span style="background:#ffc107; padding:2px 8px; border-radius:10px; font-size:10px;">🔧 صيانة</span>` : ''}
                 </div>
             </td>
         </tr>
@@ -660,16 +651,7 @@ function renderMaintTable() {
     const tbody = document.getElementById('maintBody');
     if (!tbody) return;
     
-    const search = document.getElementById('searchMaint')?.value.toLowerCase() || '';
-    let vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
-    
-    if (search) {
-        vessels = vessels.filter(v => 
-            (v.name || '').toLowerCase().includes(search) ||
-            (v.num || '').toLowerCase().includes(search) ||
-            (v.break || '').toLowerCase().includes(search)
-        );
-    }
+    const vessels = (allVessels || []).filter(v => v.stat !== 'صالح');
     
     if (vessels.length === 0) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:30px;">🚫 لا توجد بيانات صيانة</td></tr>`;
@@ -677,7 +659,8 @@ function renderMaintTable() {
     }
     
     tbody.innerHTML = vessels.map(v => {
-        const id = v._id || v.id;
+        const maintenanceRecord = allMaintenance.find(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
+        
         return `
         <tr>
             <td>${v.name || '-'}</td>
@@ -692,138 +675,76 @@ function renderMaintTable() {
             <td>${v.repairer || '-'}</td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-warning" onclick="editVessel('${id}')" title="تعديل">
+                    <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteVessel('${id}')" title="حذف">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${maintenanceRecord ? `
+                        <button class="btn btn-sm btn-success" onclick="completeMaintenance(${maintenanceRecord.id})" title="إكمال الصيانة">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    ` : `
+                        <button class="btn btn-sm btn-primary" onclick="createMaintenanceForVessel(${v.id})" title="إنشاء سجل صيانة">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    `}
                 </div>
             </td>
         </tr>
     `}).join('');
 }
 
-// ============================================================
-// ✅ عرض النجاعة (المعدل)
-// ============================================================
-
-function renderEfficiency() {
-    const vessels = allVessels || [];
-    
-    // ===== 1. بطاقات الإحصائيات =====
-    const statsContainer = document.getElementById('statsCards');
-    if (statsContainer) {
-        const total = vessels.length;
-        const good = vessels.filter(v => v.stat === 'صالح').length;
-        const bad = vessels.filter(v => v.stat === 'معطب').length;
-        const maint = vessels.filter(v => v.stat === 'صيانة').length;
-        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-        
-        statsContainer.innerHTML = `
-            <div class="stat-card" style="background:#28a745;"><h3>${good}</h3><p>✅ صالح</p></div>
-            <div class="stat-card" style="background:#dc3545;"><h3>${bad}</h3><p>❌ معطب</p></div>
-            <div class="stat-card" style="background:#ffc107;"><h3>${maint}</h3><p>🔧 صيانة</p></div>
-            <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
-        `;
+// إنشاء سجل صيانة لمركب معين
+function createMaintenanceForVessel(vesselId) {
+    const vessel = allVessels.find(v => v.id === vesselId);
+    if (!vessel) {
+        alert('❌ المركب غير موجود');
+        return;
     }
     
-    // ===== 2. دالة لإنشاء جدول نجاعة =====
-    function createEfficiencyTable(data, title, icon = '📊') {
-        const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-        let rows = '';
-        let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
-        
-        categories.forEach(cat => {
-            const catVessels = data.filter(v => v.cat === cat);
-            const t = catVessels.length;
-            const g = catVessels.filter(v => v.stat === 'صالح').length;
-            const b = catVessels.filter(v => v.stat === 'معطب').length;
-            const m = catVessels.filter(v => v.stat === 'صيانة').length;
-            const e = t > 0 ? Math.round((g / t) * 100) : 0;
-            
-            totalAll += t; goodAll += g; badAll += b; maintAll += m;
-            const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
-            
-            rows += `
-                <tr style="border-bottom:1px solid #e9ecef;">
-                    <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                    <td style="padding:8px; text-align:center;">${t}</td>
-                    <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
-                    <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
-                    <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
-                </tr>
-            `;
-        });
-        
-        const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-        const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-        
-        return `
-            <div class="efficiency-table-wrapper">
-                <div class="table-title"><i class="fas ${icon}"></i> ${title}</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;">الفئة</th>
-                            <th style="text-align:center;">الإجمالي</th>
-                            <th style="text-align:center; background:#28a745;">✅ صالح</th>
-                            <th style="text-align:center; background:#dc3545;">❌ معطب</th>
-                            <th style="text-align:center; background:#ffc107;">🔧 صيانة</th>
-                            <th style="text-align:center;">نسبة النجاعة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                        <tr class="total-row">
-                            <td style="text-align:right;">📊 المجموع الكلي</td>
-                            <td style="text-align:center;">${totalAll}</td>
-                            <td style="text-align:center; color:#28a745;">${goodAll}</td>
-                            <td style="text-align:center; color:#dc3545;">${badAll}</td>
-                            <td style="text-align:center; color:#ffc107;">${maintAll}</td>
-                            <td style="text-align:center; color:${totalColor};">${totalEff}%</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="progress-section">
-                    <div class="progress-label">
-                        <span>📈 نسبة النجاعة: <strong>${totalEff}%</strong></span>
-                        <span class="status" style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
-                    </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
-                    </div>
-                </div>
-            </div>
-        `;
+    const description = prompt(`📝 وصف العطل للمركب: ${vessel.name}:`);
+    if (!description) return;
+    
+    const unit = prompt('🏭 وحدة الصيانة (تونس/صفاقس/المنستير/جرجيس/شركة خاصة):');
+    if (!unit) return;
+    
+    const technician = prompt('👨‍🔧 اسم الفني المسؤول:');
+    if (!technician) return;
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
     }
     
-    // ===== 3. الجدول العام =====
-    const generalContainer = document.getElementById('generalEffTableContainer');
-    if (generalContainer) {
-        generalContainer.innerHTML = createEfficiencyTable(vessels, 'النجاعة العامة حسب الفئات', 'fa-ship');
-    }
+    const data = {
+        vesselId: vessel.id,
+        unit: unit,
+        description: description,
+        technician: technician,
+        createdBy: currentUser?.name || 'Admin'
+    };
     
-    // ===== 4. جداول الأقاليم =====
-    const regionsContainer = document.getElementById('regionsEffContainer');
-    if (regionsContainer) {
-        const regions = [
-            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال', icon: 'fa-map-marker-alt' },
-            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل', icon: 'fa-map-marker-alt' },
-            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط', icon: 'fa-map-marker-alt' },
-            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب', icon: 'fa-map-marker-alt' },
-            { name: '🏛️ المجمع الأمني بقبيبة', key: 'قبيبة', icon: 'fa-building' }
-        ];
-        
-        let html = '';
-        regions.forEach(region => {
-            const regionVessels = vessels.filter(v => v.reg === region.key);
-            html += createEfficiencyTable(regionVessels, region.name, region.icon);
-        });
-        
-        regionsContainer.innerHTML = html;
-    }
+    fetch('/api/maintenance', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم إنشاء سجل الصيانة بنجاح');
+            loadAllData();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الإنشاء'));
+        }
+    })
+    .catch(err => {
+        console.error('Create maintenance error:', err);
+        alert('❌ خطأ في إنشاء سجل الصيانة');
+    });
 }
 
 // ============================================================
@@ -991,129 +912,60 @@ function loadNotesByWeek() {
 }
 
 // ============================================================
-// 📍 التتبع والخريطة
+// 👥 المستخدمين
 // ============================================================
 
-function initTrackMap() {
-    if (trackMap) return;
-    
-    const container = document.getElementById('trackMap');
-    if (!container) return;
-    
-    if (typeof L === 'undefined') {
-        console.warn('⚠️ Leaflet not loaded');
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
-    trackMap = L.map('trackMap').setView([36.8, 10.18], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(trackMap);
-}
-
-function initGpsMap() {
-    if (gpsMap) return;
+    const name = document.getElementById('un')?.value.trim();
+    const password = document.getElementById('up')?.value.trim();
+    const role = document.getElementById('ur')?.value;
     
-    const container = document.getElementById('gpsMap');
-    if (!container) return;
-    
-    if (typeof L === 'undefined') {
-        console.warn('⚠️ Leaflet not loaded');
+    if (!name || !password) {
+        alert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور');
         return;
     }
     
-    gpsMap = L.map('gpsMap').setView([36.8, 10.18], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(gpsMap);
-}
-
-function updateTrackUsers(users) {
-    const body = document.getElementById('trackUsersBody');
-    const count = document.getElementById('trackUsersCount');
+    const data = {
+        name: name,
+        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
+        password: password,
+        role: role || 'مشاهد'
+    };
     
-    if (count) {
-        count.textContent = `${users.length} متصل`;
-    }
-    
-    if (!body) return;
-    
-    if (!users || users.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">🚫 لا يوجد مستخدمين متصلين</td></tr>`;
-        return;
-    }
-    
-    body.innerHTML = users.map((u, i) => `
-        <tr>
-            <td>${i + 1}</td>
-            <td>${u.userName || 'مجهول'}</td>
-            <td>${u.userRole || 'مستخدم'}</td>
-            <td>${u.lat && u.lng ? `${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}` : '-'}</td>
-            <td>${u.lastUpdate ? new Date(u.lastUpdate).toLocaleTimeString() : '-'}</td>
-        </tr>
-    `).join('');
-}
-
-function updateTrackMap(users) {
-    if (!trackMap) initTrackMap();
-    if (!trackMap) return;
-    
-    trackMap.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
-            trackMap.removeLayer(layer);
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم إضافة المستخدم بنجاح');
+            document.getElementById('un').value = '';
+            document.getElementById('up').value = '';
+            document.getElementById('ur').value = 'مشاهد';
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
         }
-    });
-    
-    users.forEach(u => {
-        if (u.lat && u.lng) {
-            L.marker([u.lat, u.lng])
-                .addTo(trackMap)
-                .bindPopup(`
-                    <b>${u.userName || 'مجهول'}</b><br>
-                    ${u.userRole || 'مستخدم'}<br>
-                    📍 ${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}
-                `);
-        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        alert('❌ خطأ في إضافة المستخدم');
     });
 }
 
-function addMarkerToTrackMap(data) {
-    if (!trackMap) initTrackMap();
-    if (!trackMap) return;
-    
-    if (data.lat && data.lng) {
-        L.marker([data.lat, data.lng])
-            .addTo(trackMap)
-            .bindPopup(`
-                <b>${data.userName || 'مجهول'}</b><br>
-                📍 ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}
-            `);
-    }
-}
-
-function refreshTrackUsers() {
-    if (socket) {
-        socket.emit('get-users');
-    }
-    alert('✅ تم تحديث المستخدمين');
-}
-
-function clearTrackUsers() {
-    const body = document.getElementById('trackUsersBody');
-    if (body) {
-        body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px;">🚫 تم مسح القائمة</td></tr>`;
-    }
-}
-
-// ============================================================
-// 📍 GPS المباشر
-// ============================================================
-
-function startTracking() {
-    if (!navigator.geolocation) {
-        alert('⚠️ المتصفح لا يدعم تحديد الموقع');
-        return;
-    }
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
     
     const token = getToken();
     if (!token) {
@@ -1121,190 +973,302 @@ function startTracking() {
         return;
     }
     
-    const user = getUser();
-    if (!user) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
-    }
-    
-    document.getElementById('startTrackingBtn').style.display = 'none';
-    document.getElementById('stopTrackingBtn').style.display = 'inline-block';
-    document.getElementById('gpsStatusText').textContent = 'جاري التتبع...';
-    document.getElementById('gpsDot').className = 'gps-status gps-active';
-    document.getElementById('gpsStatusText2').textContent = '🟢 جاري التتبع...';
-    
-    if (!gpsMap) initGpsMap();
-    if (!gpsMap) return;
-    
-    // بدء التتبع الفوري
-    updateGpsPosition();
-    
-    // التتبع الدوري كل 3 ثوان
-    trackingInterval = setInterval(() => {
-        updateGpsPosition();
-    }, 3000);
-    
-    alert('✅ بدء التتبع المباشر');
-}
-
-function updateGpsPosition() {
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            const accuracy = pos.coords.accuracy;
-            
-            // تحديث معلومات GPS
-            document.getElementById('gpsLat').textContent = lat.toFixed(6);
-            document.getElementById('gpsLng').textContent = lng.toFixed(6);
-            document.getElementById('gpsAccuracy').textContent = accuracy ? `${accuracy.toFixed(0)} متر` : '--';
-            document.getElementById('gpsStatusText').textContent = '✅ تتبع نشط';
-            document.getElementById('gpsStatusText2').textContent = '🟢 تتبع نشط';
-            
-            // تحديث الخريطة
-            if (gpsMap) {
-                gpsMap.setView([lat, lng], 15);
-                
-                if (!userMarker) {
-                    userMarker = L.marker([lat, lng], {
-                        icon: L.divIcon({
-                            className: 'custom-marker',
-                            html: `<div style="background:#dc3545; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 15px rgba(220,53,69,0.6);"></div>`,
-                            iconSize: [20, 20]
-                        })
-                    }).addTo(gpsMap).bindPopup('📍 موقعك الحالي');
-                } else {
-                    userMarker.setLatLng([lat, lng]);
-                }
-            }
-            
-            // إرسال الموقع للخادم عبر Socket
-            if (socket) {
-                socket.emit('update-location', {
-                    userName: user.name,
-                    userRole: user.role,
-                    lat: lat,
-                    lng: lng
-                });
-            }
-            
-            // حفظ الموقع في قاعدة البيانات
-            const token = getToken();
-            if (token) {
-                fetch('/api/locations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ lat, lng, action: 'تتبع مباشر' })
-                }).catch(err => console.error('Save location error:', err));
-            }
-            
-            document.getElementById('mapStatus').textContent = `📍 ${lat.toFixed(6)}, ${lng.toFixed(6)} (الدقة: ${accuracy ? accuracy.toFixed(0) : '?'} متر)`;
-        },
-        (error) => {
-            console.error('GPS error:', error);
-            document.getElementById('gpsStatusText').textContent = '❌ خطأ في GPS';
-            document.getElementById('gpsStatusText2').textContent = '❌ خطأ في GPS';
-            document.getElementById('gpsLat').textContent = '--';
-            document.getElementById('gpsLng').textContent = '--';
-            document.getElementById('gpsAccuracy').textContent = '--';
-        },
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-    );
-}
-
-function stopTracking() {
-    if (trackingInterval) {
-        clearInterval(trackingInterval);
-        trackingInterval = null;
-    }
-    
-    document.getElementById('startTrackingBtn').style.display = 'inline-block';
-    document.getElementById('stopTrackingBtn').style.display = 'none';
-    document.getElementById('gpsStatusText').textContent = 'غير نشط';
-    document.getElementById('gpsStatusText2').textContent = '⏹️ غير نشط';
-    document.getElementById('gpsDot').className = 'gps-status gps-inactive';
-    document.getElementById('mapStatus').textContent = '⏹️ تم إيقاف التتبع';
-    
-    alert('⏹️ تم إيقاف التتبع');
-}
-
-function loadLocations() {
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
-    }
-    
-    if (!gpsMap) initGpsMap();
-    if (!gpsMap) return;
-    
-    fetch('/api/locations', {
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
-        if (!data || data.length === 0) {
-            alert('🚫 لا توجد مواقع');
-            return;
+        if (data.success) {
+            alert('✅ تم حذف المستخدم');
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في الحذف'));
         }
-        
-        gpsMap.eachLayer((layer) => {
-            if (layer instanceof L.Marker && layer !== userMarker) {
-                gpsMap.removeLayer(layer);
-            }
-        });
-        
-        data.forEach(loc => {
-            if (loc.lat && loc.lng) {
-                L.marker([loc.lat, loc.lng])
-                    .addTo(gpsMap)
-                    .bindPopup(`
-                        <b>${loc.userName || 'مجهول'}</b><br>
-                        📍 ${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}<br>
-                        <small>${new Date(loc.timestamp).toLocaleString()}</small>
-                    `);
-            }
-        });
-        
-        alert(`✅ تم تحميل ${data.length} موقع`);
     })
     .catch(err => {
-        console.error('Load locations error:', err);
-        alert('❌ خطأ في تحميل المواقع');
+        console.error('Delete user error:', err);
+        alert('❌ خطأ في حذف المستخدم');
     });
 }
 
-function centerMapOnUser() {
-    if (!navigator.geolocation) {
-        alert('⚠️ المتصفح لا يدعم تحديد الموقع');
+function toggleUserStatus(id) {
+    const user = allUsers.find(u => u.id === id);
+    if (!user) return;
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
-    navigator.geolocation.getCurrentPosition(
-        (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            
-            if (gpsMap) {
-                gpsMap.setView([lat, lng], 15);
-                if (!userMarker) {
-                    userMarker = L.marker([lat, lng]).addTo(gpsMap);
-                } else {
-                    userMarker.setLatLng([lat, lng]);
-                }
-            }
-            
-            alert('📍 تم التمركز على موقعك');
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
-        (error) => {
-            console.error('GPS error:', error);
-            alert('❌ خطأ في تحديد الموقع');
+        body: JSON.stringify({ isActive: !user.isActive })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم تحديث حالة المستخدم');
+            loadUsers();
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في التحديث'));
+        }
+    })
+    .catch(err => {
+        console.error('Toggle user status error:', err);
+        alert('❌ خطأ في تحديث حالة المستخدم');
+    });
+}
+
+function changeUserPassword(id, name) {
+    const newPassword = prompt(`🔑 تغيير كلمة المرور لـ: ${name}\nأدخل كلمة المرور الجديدة (6 أحرف على الأقل):`);
+    if (!newPassword || newPassword.length < 6) {
+        alert('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        alert('⚠️ يرجى تسجيل الدخول أولاً');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
         },
-        { enableHighAccuracy: true }
-    );
+        body: JSON.stringify({ password: newPassword })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ تم تغيير كلمة المرور بنجاح');
+        } else {
+            alert('❌ ' + (data.error || 'خطأ في التغيير'));
+        }
+    })
+    .catch(err => {
+        console.error('Change password error:', err);
+        alert('❌ خطأ في تغيير كلمة المرور');
+    });
+}
+
+function renderUsersTable() {
+    const tbody = document.getElementById('usersBody');
+    if (!tbody) return;
+    
+    if (!allUsers || allUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = allUsers.map(u => `
+        <tr>
+            <td>${u.name || '-'}</td>
+            <td>${u.role || 'مشاهد'}</td>
+            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="changeUserPassword(${u.id}, '${u.name}')">
+                    <i class="fas fa-key"></i>
+                </button>
+            </td>
+            <td>
+                <button class="btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}" onclick="toggleUserStatus(${u.id})">
+                    <i class="fas ${u.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                </button>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================================
+// 📊 عرض النجاعة
+// ============================================================
+
+function renderEfficiency() {
+    const vessels = allVessels || [];
+    
+    const statsContainer = document.getElementById('statsCards');
+    if (statsContainer) {
+        const total = vessels.length;
+        const good = vessels.filter(v => v.stat === 'صالح').length;
+        const bad = vessels.filter(v => v.stat === 'معطب').length;
+        const maint = vessels.filter(v => v.stat === 'صيانة').length;
+        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+        
+        statsContainer.innerHTML = `
+            <div class="stat-card" style="background:#28a745;"><h3>${good}</h3><p>✅ صالح</p></div>
+            <div class="stat-card" style="background:#dc3545;"><h3>${bad}</h3><p>❌ معطب</p></div>
+            <div class="stat-card" style="background:#ffc107;"><h3>${maint}</h3><p>🔧 صيانة</p></div>
+            <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
+        `;
+    }
+    
+    const generalContainer = document.getElementById('generalEffTableContainer');
+    if (generalContainer) {
+        const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+        let rows = '';
+        let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+        
+        categories.forEach(cat => {
+            const catVessels = vessels.filter(v => v.cat === cat);
+            const t = catVessels.length;
+            const g = catVessels.filter(v => v.stat === 'صالح').length;
+            const b = catVessels.filter(v => v.stat === 'معطب').length;
+            const m = catVessels.filter(v => v.stat === 'صيانة').length;
+            const e = t > 0 ? Math.round((g / t) * 100) : 0;
+            
+            totalAll += t; goodAll += g; badAll += b; maintAll += m;
+            const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
+            
+            rows += `
+                <tr style="border-bottom:1px solid #e9ecef;">
+                    <td style="padding:10px; text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="padding:10px; text-align:center;">${t}</td>
+                    <td style="padding:10px; text-align:center; color:#28a745;">${g}</td>
+                    <td style="padding:10px; text-align:center; color:#dc3545;">${b}</td>
+                    <td style="padding:10px; text-align:center; color:#ffc107;">${m}</td>
+                    <td style="padding:10px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
+                </tr>
+            `;
+        });
+        
+        const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
+        const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+        
+        generalContainer.innerHTML = `
+            <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); overflow-x:auto;">
+                <h4 style="color:#0d6efd; margin-bottom:15px;">📊 النجاعة العامة حسب الفئات</h4>
+                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr style="background:#0d6efd; color:white;">
+                            <th style="padding:12px; text-align:right;">الفئة</th>
+                            <th style="padding:12px; text-align:center;">الإجمالي</th>
+                            <th style="padding:12px; text-align:center; background:#28a745;">✅ صالح</th>
+                            <th style="padding:12px; text-align:center; background:#dc3545;">❌ معطب</th>
+                            <th style="padding:12px; text-align:center; background:#ffc107;">🔧 صيانة</th>
+                            <th style="padding:12px; text-align:center;">نسبة النجاعة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                        <tr style="background:#e7f3ff; font-weight:bold; border-top:2px solid #0d6efd;">
+                            <td style="padding:12px; text-align:right;">📊 المجموع الكلي</td>
+                            <td style="padding:12px; text-align:center;">${totalAll}</td>
+                            <td style="padding:12px; text-align:center; color:#28a745;">${goodAll}</td>
+                            <td style="padding:12px; text-align:center; color:#dc3545;">${badAll}</td>
+                            <td style="padding:12px; text-align:center; color:#ffc107;">${maintAll}</td>
+                            <td style="padding:12px; text-align:center; color:${totalColor};">${totalEff}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top:15px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
+                        <span>📈 نسبة النجاعة العامة: <strong>${totalEff}%</strong></span>
+                        <span style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
+                    </div>
+                    <div style="background:#e9ecef; border-radius:10px; height:10px; overflow:hidden;">
+                        <div style="background:${totalColor}; height:100%; width:${totalEff}%; transition:width 0.5s;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    const regionContainer = document.getElementById('regionTables');
+    if (regionContainer) {
+        const units = [
+            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال' },
+            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل' },
+            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط' },
+            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب' }
+        ];
+        
+        let html = '<h4 style="color:#0d6efd; margin:20px 0 15px;">📊 نجاعة الوحدات البحرية</h4>';
+        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">';
+        
+        units.forEach(unit => {
+            const unitVessels = vessels.filter(v => v.reg === unit.key);
+            const total = unitVessels.length;
+            const good = unitVessels.filter(v => v.stat === 'صالح').length;
+            const bad = unitVessels.filter(v => v.stat === 'معطب').length;
+            const maint = unitVessels.filter(v => v.stat === 'صيانة').length;
+            const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+            const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
+            
+            html += `
+                <div style="background:white; border-radius:10px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                    <h5 style="color:#0d6efd; margin-bottom:10px;">${unit.name}</h5>
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="background:#f8f9fa;">
+                                <th style="padding:6px; text-align:right;">الحالة</th>
+                                <th style="padding:6px; text-align:center;">العدد</th>
+                                <th style="padding:6px; text-align:center;">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">✅ صالح</td><td style="padding:6px; text-align:center;">${good}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((good/total)*100) : 0}%</td></tr>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">❌ معطب</td><td style="padding:6px; text-align:center;">${bad}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((bad/total)*100) : 0}%</td></tr>
+                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">🔧 صيانة</td><td style="padding:6px; text-align:center;">${maint}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((maint/total)*100) : 0}%</td></tr>
+                            <tr style="background:#e7f3ff; font-weight:bold;">
+                                <td style="padding:6px;">📊 النجاعة</td>
+                                <td style="padding:6px; text-align:center;">${total}</td>
+                                <td style="padding:6px; text-align:center; color:${color};">${eff}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        regionContainer.innerHTML = html;
+    }
+}
+
+// ============================================================
+// 🗺️ الخريطة
+// ============================================================
+
+function initMap() {
+    console.log('🗺️ Map initialized');
+}
+
+function startTracking() {
+    alert('📍 بدء التتبع المباشر');
+}
+
+function stopTracking() {
+    alert('⏹️ إيقاف التتبع');
+}
+
+function loadLocations() {
+    alert('📍 تحميل المواقع');
+}
+
+function centerMapOnUser() {
+    alert('📍 التمركز على موقعك');
+}
+
+// ============================================================
+// 🔔 الإشعارات
+// ============================================================
+
+function toggleNotifications() {
+    alert('🔔 الإشعارات: لا توجد إشعارات جديدة');
 }
 
 // ============================================================
@@ -1335,16 +1299,8 @@ function showPage(page) {
         case 'users':
             loadUsers();
             break;
-        case 'track':
-            setTimeout(() => {
-                initTrackMap();
-                if (socket) socket.emit('get-users');
-            }, 300);
-            break;
-        case 'map':
-            setTimeout(() => {
-                initGpsMap();
-            }, 300);
+        case 'maintenance':
+            loadMaintenance();
             break;
     }
 }
@@ -1360,14 +1316,6 @@ function scrollToTop() {
 
 function scrollToBottom() {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-// ============================================================
-// 🔔 الإشعارات
-// ============================================================
-
-function toggleNotifications() {
-    alert('🔔 الإشعارات: لا توجد إشعارات جديدة');
 }
 
 // ============================================================
@@ -1390,37 +1338,27 @@ window.saveNote = saveNote;
 window.clearNote = clearNote;
 window.loadNotesByWeek = loadNotesByWeek;
 window.toggleNotifications = toggleNotifications;
+window.initMap = initMap;
 window.startTracking = startTracking;
 window.stopTracking = stopTracking;
 window.loadLocations = loadLocations;
 window.centerMapOnUser = centerMapOnUser;
-window.refreshTrackUsers = refreshTrackUsers;
-window.clearTrackUsers = clearTrackUsers;
-window.initTrackMap = initTrackMap;
-window.initGpsMap = initGpsMap;
-window.loadVessels = loadVessels;
-window.loadTickets = loadTickets;
-window.loadNotes = loadNotes;
-window.loadUsers = loadUsers;
-window.renderMainTable = renderMainTable;
-window.renderMaintTable = renderMaintTable;
-window.renderEfficiency = renderEfficiency;
-window.renderUsersTable = renderUsersTable;
 window.addUser = addUser;
-window.editUser = editUser;
-window.updateUser = updateUser;
 window.deleteUser = deleteUser;
 window.toggleUserStatus = toggleUserStatus;
 window.changeUserPassword = changeUserPassword;
-window.saveNewPassword = saveNewPassword;
-window.closePasswordModal = closePasswordModal;
+window.createMaintenance = createMaintenance;
+window.completeMaintenance = completeMaintenance;
+window.cancelMaintenance = cancelMaintenance;
+window.deleteMaintenance = deleteMaintenance;
+window.viewVesselMaintenance = viewVesselMaintenance;
+window.createMaintenanceForVessel = createMaintenanceForVessel;
+window.loadMaintenance = loadMaintenance;
 
 console.log('✅ جميع الدوال جاهزة');
 
-// تحميل البيانات تلقائياً
 document.addEventListener('DOMContentLoaded', function() {
     if (localStorage.getItem('token')) {
         loadAllData();
-        initSocket();
     }
 });
