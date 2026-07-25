@@ -347,6 +347,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
         .efficiency-table-wrapper .table-title i {
             font-size: 18px;
@@ -629,9 +630,24 @@
             min-width: 120px;
         }
         
+        #effUnitFilter {
+            min-width: 200px;
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-family: inherit;
+            background: white;
+        }
+        #effUnitFilter:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        }
+        
         @media (max-width: 992px) {
             .unit-tables-grid { grid-template-columns: 1fr; }
             .eff-grid { grid-template-columns: 1fr; }
+            #regionsEffContainer { grid-template-columns: 1fr !important; }
         }
         
         @media (max-width: 768px) {
@@ -653,6 +669,11 @@
             .maintenance-stats { grid-template-columns: repeat(2, 1fr); }
             .unit-tables-grid { grid-template-columns: 1fr; }
             .note-files-section .file-upload-grid { grid-template-columns: 1fr; }
+            .efficiency-table-wrapper table { font-size: 11px; }
+            .efficiency-table-wrapper table th,
+            .efficiency-table-wrapper table td { padding: 5px 8px; }
+            #effUnitFilter { min-width: 150px; }
+            .efficiency-table-wrapper .table-title { font-size: 14px; }
         }
         @media (max-width: 480px) {
             .stats-cards { grid-template-columns: 1fr; }
@@ -830,13 +851,35 @@
 
     <!-- ===== صفحة الجاهزية ===== -->
     <div id="pageEff" class="hidden">
-        <div style="margin-bottom:15px;">
-            <button class="btn btn-success" onclick="loadVessels()">🔄 تحديث</button>
+        <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-success" onclick="loadVessels()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn btn-primary" onclick="showAllEfficiency()">
+                <i class="fas fa-table"></i> عرض الكل
+            </button>
+            <span style="font-weight:600; color:#6c757d; margin-right:10px;">| فلترة حسب الوحدة:</span>
+            <select id="effUnitFilter" onchange="filterEfficiencyByUnit()" style="padding:6px 12px; border:1px solid #ced4da; border-radius:6px; font-family:inherit;">
+                <option value="">جميع الوحدات</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="شركة خاصة">🏢 شركة خاصة</option>
+            </select>
+            <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">
+                📊 0 مركب
+            </span>
         </div>
+        
+        <!-- ===== الإحصائيات ===== -->
         <div class="stats-cards" id="statsCards"></div>
         
+        <!-- ===== الجدول العام لكل المراكب ===== -->
         <div id="generalEffTableContainer"></div>
-        <div id="regionsEffContainer"></div>
+        
+        <!-- ===== جداول الوحدات ===== -->
+        <div id="regionsEffContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;"></div>
     </div>
 
     <!-- ===== صفحة الدعم ===== -->
