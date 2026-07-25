@@ -705,12 +705,13 @@ function renderMaintTable() {
 }
 
 // ============================================================
-// ✅ عرض النجاعة
+// ✅ عرض النجاعة (المعدل)
 // ============================================================
 
 function renderEfficiency() {
     const vessels = allVessels || [];
     
+    // ===== 1. بطاقات الإحصائيات =====
     const statsContainer = document.getElementById('statsCards');
     if (statsContainer) {
         const total = vessels.length;
@@ -727,14 +728,14 @@ function renderEfficiency() {
         `;
     }
     
-    const generalContainer = document.getElementById('generalEffTableContainer');
-    if (generalContainer) {
+    // ===== 2. دالة لإنشاء جدول نجاعة =====
+    function createEfficiencyTable(data, title, icon = '📊') {
         const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
         let rows = '';
         let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
         
         categories.forEach(cat => {
-            const catVessels = vessels.filter(v => v.cat === cat);
+            const catVessels = data.filter(v => v.cat === cat);
             const t = catVessels.length;
             const g = catVessels.filter(v => v.stat === 'صالح').length;
             const b = catVessels.filter(v => v.stat === 'معطب').length;
@@ -746,12 +747,12 @@ function renderEfficiency() {
             
             rows += `
                 <tr style="border-bottom:1px solid #e9ecef;">
-                    <td style="padding:10px; text-align:right; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; text-align:center;">${t}</td>
-                    <td style="padding:10px; text-align:center; color:#28a745;">${g}</td>
-                    <td style="padding:10px; text-align:center; color:#dc3545;">${b}</td>
-                    <td style="padding:10px; text-align:center; color:#ffc107;">${m}</td>
-                    <td style="padding:10px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
+                    <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="padding:8px; text-align:center;">${t}</td>
+                    <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
+                    <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
+                    <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
                 </tr>
             `;
         });
@@ -759,94 +760,69 @@ function renderEfficiency() {
         const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
         const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
         
-        generalContainer.innerHTML = `
-            <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); overflow-x:auto;">
-                <h4 style="color:#0d6efd; margin-bottom:15px;">📊 النجاعة العامة حسب الفئات</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:14px;">
+        return `
+            <div class="efficiency-table-wrapper">
+                <div class="table-title"><i class="fas ${icon}"></i> ${title}</div>
+                <table>
                     <thead>
-                        <tr style="background:#0d6efd; color:white;">
-                            <th style="padding:12px; text-align:right;">الفئة</th>
-                            <th style="padding:12px; text-align:center;">الإجمالي</th>
-                            <th style="padding:12px; text-align:center; background:#28a745;">✅ صالح</th>
-                            <th style="padding:12px; text-align:center; background:#dc3545;">❌ معطب</th>
-                            <th style="padding:12px; text-align:center; background:#ffc107;">🔧 صيانة</th>
-                            <th style="padding:12px; text-align:center;">نسبة النجاعة</th>
+                        <tr>
+                            <th style="text-align:right;">الفئة</th>
+                            <th style="text-align:center;">الإجمالي</th>
+                            <th style="text-align:center; background:#28a745;">✅ صالح</th>
+                            <th style="text-align:center; background:#dc3545;">❌ معطب</th>
+                            <th style="text-align:center; background:#ffc107;">🔧 صيانة</th>
+                            <th style="text-align:center;">نسبة النجاعة</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${rows}
-                        <tr style="background:#e7f3ff; font-weight:bold; border-top:2px solid #0d6efd;">
-                            <td style="padding:12px; text-align:right;">📊 المجموع الكلي</td>
-                            <td style="padding:12px; text-align:center;">${totalAll}</td>
-                            <td style="padding:12px; text-align:center; color:#28a745;">${goodAll}</td>
-                            <td style="padding:12px; text-align:center; color:#dc3545;">${badAll}</td>
-                            <td style="padding:12px; text-align:center; color:#ffc107;">${maintAll}</td>
-                            <td style="padding:12px; text-align:center; color:${totalColor};">${totalEff}%</td>
+                        <tr class="total-row">
+                            <td style="text-align:right;">📊 المجموع الكلي</td>
+                            <td style="text-align:center;">${totalAll}</td>
+                            <td style="text-align:center; color:#28a745;">${goodAll}</td>
+                            <td style="text-align:center; color:#dc3545;">${badAll}</td>
+                            <td style="text-align:center; color:#ffc107;">${maintAll}</td>
+                            <td style="text-align:center; color:${totalColor};">${totalEff}%</td>
                         </tr>
                     </tbody>
                 </table>
-                <div style="margin-top:15px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
-                        <span>📈 نسبة النجاعة العامة: <strong>${totalEff}%</strong></span>
-                        <span style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>📈 نسبة النجاعة: <strong>${totalEff}%</strong></span>
+                        <span class="status" style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
                     </div>
-                    <div style="background:#e9ecef; border-radius:10px; height:10px; overflow:hidden;">
-                        <div style="background:${totalColor}; height:100%; width:${totalEff}%; transition:width 0.5s;"></div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
                     </div>
                 </div>
             </div>
         `;
     }
     
-    const regionContainer = document.getElementById('regionTables');
-    if (regionContainer) {
-        const units = [
-            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال' },
-            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل' },
-            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط' },
-            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب' }
+    // ===== 3. الجدول العام =====
+    const generalContainer = document.getElementById('generalEffTableContainer');
+    if (generalContainer) {
+        generalContainer.innerHTML = createEfficiencyTable(vessels, 'النجاعة العامة حسب الفئات', 'fa-ship');
+    }
+    
+    // ===== 4. جداول الأقاليم =====
+    const regionsContainer = document.getElementById('regionsEffContainer');
+    if (regionsContainer) {
+        const regions = [
+            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب', icon: 'fa-map-marker-alt' },
+            { name: '🏛️ المجمع الأمني بقبيبة', key: 'قبيبة', icon: 'fa-building' }
         ];
         
-        let html = '<h4 style="color:#0d6efd; margin:20px 0 15px;">📊 نجاعة الوحدات البحرية</h4>';
-        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">';
-        
-        units.forEach(unit => {
-            const unitVessels = vessels.filter(v => v.reg === unit.key);
-            const total = unitVessels.length;
-            const good = unitVessels.filter(v => v.stat === 'صالح').length;
-            const bad = unitVessels.filter(v => v.stat === 'معطب').length;
-            const maint = unitVessels.filter(v => v.stat === 'صيانة').length;
-            const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-            const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
-            
-            html += `
-                <div style="background:white; border-radius:10px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-                    <h5 style="color:#0d6efd; margin-bottom:10px;">${unit.name}</h5>
-                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                        <thead>
-                            <tr style="background:#f8f9fa;">
-                                <th style="padding:6px; text-align:right;">الحالة</th>
-                                <th style="padding:6px; text-align:center;">العدد</th>
-                                <th style="padding:6px; text-align:center;">%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">✅ صالح</td><td style="padding:6px; text-align:center;">${good}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((good/total)*100) : 0}%</td></tr>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">❌ معطب</td><td style="padding:6px; text-align:center;">${bad}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((bad/total)*100) : 0}%</td></tr>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">🔧 صيانة</td><td style="padding:6px; text-align:center;">${maint}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((maint/total)*100) : 0}%</td></tr>
-                            <tr style="background:#e7f3ff; font-weight:bold;">
-                                <td style="padding:6px;">📊 النجاعة</td>
-                                <td style="padding:6px; text-align:center;">${total}</td>
-                                <td style="padding:6px; text-align:center; color:${color};">${eff}%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
+        let html = '';
+        regions.forEach(region => {
+            const regionVessels = vessels.filter(v => v.reg === region.key);
+            html += createEfficiencyTable(regionVessels, region.name, region.icon);
         });
         
-        html += '</div>';
-        regionContainer.innerHTML = html;
+        regionsContainer.innerHTML = html;
     }
 }
 
