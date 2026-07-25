@@ -1,5 +1,5 @@
 // ============================================================
-// 📦 app.js - الملف الرئيسي الكامل مع الصيانة
+// 📦 app.js - الملف الرئيسي الكامل (نسخة 2024)
 // ============================================================
 
 console.log('✅ App loaded');
@@ -94,6 +94,7 @@ function loadVessels() {
         renderMainTable();
         renderMaintTable();
         renderEfficiency();
+        updateMaintenanceFormVessels();
         renderMaintenanceTable();
         updateMaintenanceStats();
     })
@@ -132,40 +133,121 @@ function loadUsers() {
 }
 
 // ============================================================
-// 🔧 نظام الصيانة - الوظائف
+// 🔧 نظام الصيانة
 // ============================================================
 
-// إنشاء سجل صيانة جديد
-function createMaintenance() {
+function toggleMaintenanceForm() {
+    const form = document.getElementById('maintenanceForm');
+    if (form) {
+        form.classList.toggle('active');
+        if (form.classList.contains('active')) {
+            updateMaintenanceFormVessels();
+            document.getElementById('mVesselId').value = '';
+            document.getElementById('mType').value = 'عادية';
+            document.getElementById('mTechnician').value = '';
+            document.getElementById('mDescription').value = '';
+            document.getElementById('mCost').value = '';
+            document.getElementById('mNotes').value = '';
+            document.getElementById('partsContainer').innerHTML = `
+                <div class="part-item">
+                    <input type="text" placeholder="اسم القطعة" class="part-name">
+                    <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+                    <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
+                    <button class="remove-part" onclick="removePart(this)">✕</button>
+                </div>
+            `;
+        }
+    }
+}
+
+function updateMaintenanceFormVessels() {
+    const select = document.getElementById('mVesselId');
+    if (!select) return;
+    
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">اختر المركب</option>';
+    allVessels.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.id;
+        option.textContent = `${v.name} (${v.num || 'بدون رقم'})`;
+        if (v.id == currentValue) option.selected = true;
+        select.appendChild(option);
+    });
+}
+
+function addPart() {
+    const container = document.getElementById('partsContainer');
+    const div = document.createElement('div');
+    div.className = 'part-item';
+    div.innerHTML = `
+        <input type="text" placeholder="اسم القطعة" class="part-name">
+        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+        <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
+        <button class="remove-part" onclick="removePart(this)">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function removePart(btn) {
+    const container = document.getElementById('partsContainer');
+    if (container.children.length > 1) {
+        btn.parentElement.remove();
+    } else {
+        alert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل');
+    }
+}
+
+function getPartsData() {
+    const parts = [];
+    document.querySelectorAll('.part-item').forEach(item => {
+        const name = item.querySelector('.part-name')?.value;
+        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
+        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
+        if (name) {
+            parts.push({ name, quantity: qty, price });
+        }
+    });
+    return parts;
+}
+
+function saveMaintenance() {
     const token = getToken();
     if (!token) {
         alert('⚠️ يرجى تسجيل الدخول أولاً');
         return;
     }
     
-    const vesselId = prompt('🔍 أدخل ID المركب:');
-    if (!vesselId) return;
+    const vesselId = document.getElementById('mVesselId')?.value;
+    const type = document.getElementById('mType')?.value;
+    const unit = document.getElementById('mUnit')?.value;
+    const technician = document.getElementById('mTechnician')?.value.trim();
+    const description = document.getElementById('mDescription')?.value.trim();
+    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
+    const notes = document.getElementById('mNotes')?.value.trim();
+    const parts = getPartsData();
     
-    const vessel = allVessels.find(v => v.id == vesselId);
-    if (!vessel) {
-        alert('❌ المركب غير موجود');
+    if (!vesselId) {
+        alert('⚠️ الرجاء اختيار المركب');
+        return;
+    }
+    if (!description) {
+        alert('⚠️ الرجاء إدخال وصف العطل');
+        return;
+    }
+    if (!technician) {
+        alert('⚠️ الرجاء إدخال اسم الفني المسؤول');
         return;
     }
     
-    const description = prompt('📝 وصف العطل:');
-    if (!description) return;
-    
-    const unit = prompt('🏭 وحدة الصيانة (تونس/صفاقس/المنستير/جرجيس/شركة خاصة):');
-    if (!unit) return;
-    
-    const technician = prompt('👨‍🔧 اسم الفني المسؤول:');
-    if (!technician) return;
-    
     const data = {
-        vesselId: vessel.id,
-        unit: unit,
-        description: description,
+        vesselId: parseFloat(vesselId),
+        type: type || 'عادية',
+        unit: unit || 'غير محدد',
         technician: technician,
+        description: description,
+        cost: cost,
+        notes: notes || '',
+        parts: parts,
         createdBy: currentUser?.name || 'Admin'
     };
     
@@ -180,19 +262,19 @@ function createMaintenance() {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            alert('✅ تم إنشاء سجل الصيانة بنجاح');
+            alert('✅ تم إضافة سجل الصيانة بنجاح');
+            toggleMaintenanceForm();
             loadAllData();
         } else {
-            alert('❌ ' + (data.error || 'خطأ في الإنشاء'));
+            alert('❌ ' + (data.error || 'خطأ في الإضافة'));
         }
     })
     .catch(err => {
-        console.error('Create maintenance error:', err);
-        alert('❌ خطأ في إنشاء سجل الصيانة');
+        console.error('Save maintenance error:', err);
+        alert('❌ خطأ في إضافة سجل الصيانة');
     });
 }
 
-// إكمال الصيانة
 function completeMaintenance(id) {
     if (!confirm('⚠️ هل أنت متأكد من إكمال هذه الصيانة؟ سيتم تغيير حالة المركب إلى "صالح"')) return;
     
@@ -202,7 +284,7 @@ function completeMaintenance(id) {
         return;
     }
     
-    const cost = prompt('💰 تكلفة الصيانة (بالدينار):');
+    const cost = prompt('💰 التكلفة الإجمالية للصيانة (بالدينار):');
     const notes = prompt('📝 ملاحظات إضافية (اختياري):');
     
     const data = {};
@@ -232,7 +314,6 @@ function completeMaintenance(id) {
     });
 }
 
-// إلغاء سجل صيانة
 function cancelMaintenance(id) {
     if (!confirm('⚠️ هل أنت متأكد من إلغاء هذه الصيانة؟')) return;
     
@@ -244,10 +325,7 @@ function cancelMaintenance(id) {
     
     fetch('/api/maintenance/' + id + '/cancel', {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        }
+        headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
@@ -264,7 +342,6 @@ function cancelMaintenance(id) {
     });
 }
 
-// حذف سجل صيانة
 function deleteMaintenance(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف سجل الصيانة هذا؟')) return;
     
@@ -293,7 +370,6 @@ function deleteMaintenance(id) {
     });
 }
 
-// عرض سجل صيانة مركب
 function viewVesselMaintenance(vesselId) {
     const vessel = allVessels.find(v => v.id == vesselId);
     if (!vessel) {
@@ -309,52 +385,22 @@ function viewVesselMaintenance(vesselId) {
     }
     
     let message = `📋 سجل صيانة ${vessel.name}:\n\n`;
-    records.forEach((r, i) => {
+    records.slice().reverse().forEach((r, i) => {
         message += `${i+1}. 📅 ${new Date(r.date).toLocaleDateString()}\n`;
         message += `   🔧 ${r.description}\n`;
-        message += `   🏭 ${r.unit}\n`;
-        message += `   👨‍🔧 ${r.technician}\n`;
+        message += `   🏭 ${r.unit || 'غير محدد'}\n`;
+        message += `   👨‍🔧 ${r.technician || 'غير محدد'}\n`;
         message += `   📊 ${r.status}\n`;
         if (r.cost) message += `   💰 ${r.cost} د.ت\n`;
+        if (r.parts && r.parts.length) {
+            message += `   🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}\n`;
+        }
         message += `   ────────────────\n`;
     });
     
     alert(message);
 }
 
-// تحديث إحصائيات الصيانة
-function updateMaintenanceStats() {
-    const container = document.getElementById('maintenanceStats');
-    if (!container) return;
-    
-    const total = allMaintenance.length;
-    const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
-    const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-    const cancelled = allMaintenance.filter(r => r.status === 'ملغية').length;
-    
-    container.innerHTML = `
-        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin-bottom:15px;">
-            <div style="background:#0d6efd; padding:12px; border-radius:8px; text-align:center; color:white;">
-                <h4>${total}</h4>
-                <p style="margin:0; font-size:12px;">📊 المجموع</p>
-            </div>
-            <div style="background:#ffc107; padding:12px; border-radius:8px; text-align:center; color:#1a3a5c;">
-                <h4>${inProgress}</h4>
-                <p style="margin:0; font-size:12px;">🔄 قيد الإنجاز</p>
-            </div>
-            <div style="background:#28a745; padding:12px; border-radius:8px; text-align:center; color:white;">
-                <h4>${completed}</h4>
-                <p style="margin:0; font-size:12px;">✅ مكتملة</p>
-            </div>
-            <div style="background:#dc3545; padding:12px; border-radius:8px; text-align:center; color:white;">
-                <h4>${cancelled}</h4>
-                <p style="margin:0; font-size:12px;">❌ ملغية</p>
-            </div>
-        </div>
-    `;
-}
-
-// عرض جدول الصيانة
 function renderMaintenanceTable() {
     const container = document.getElementById('maintenanceTableContainer');
     if (!container) return;
@@ -364,8 +410,8 @@ function renderMaintenanceTable() {
             <div style="text-align:center; padding:30px; color:#6c757d;">
                 🚫 لا توجد سجلات صيانة
                 <br>
-                <button class="btn btn-primary" onclick="createMaintenance()" style="margin-top:10px;">
-                    <i class="fas fa-plus"></i> إنشاء سجل صيانة
+                <button class="btn btn-primary" onclick="toggleMaintenanceForm()" style="margin-top:10px;">
+                    <i class="fas fa-plus"></i> إضافة سجل صيانة
                 </button>
             </div>
         `;
@@ -373,14 +419,6 @@ function renderMaintenanceTable() {
     }
     
     let html = `
-        <div style="margin-bottom:15px;">
-            <button class="btn btn-primary" onclick="createMaintenance()">
-                <i class="fas fa-plus"></i> سجل صيانة جديد
-            </button>
-            <button class="btn btn-secondary" onclick="loadMaintenance()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-        </div>
         <div class="scrollable-table">
             <table>
                 <thead>
@@ -391,6 +429,7 @@ function renderMaintenanceTable() {
                         <th>📝 العطل</th>
                         <th>👨‍🔧 الفني</th>
                         <th>💰 التكلفة</th>
+                        <th>🔩 القطع</th>
                         <th>📊 الحالة</th>
                         <th>📅 التاريخ</th>
                         <th>إجراءات</th>
@@ -405,6 +444,7 @@ function renderMaintenanceTable() {
             'مكتملة': '#28a745',
             'ملغية': '#dc3545'
         };
+        const partsText = r.parts && r.parts.length ? r.parts.map(p => p.name).join(', ') : '-';
         
         html += `
             <tr>
@@ -414,10 +454,11 @@ function renderMaintenanceTable() {
                 <td>${r.description || '-'}</td>
                 <td>${r.technician || '-'}</td>
                 <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
+                <td style="font-size:11px;">${partsText}</td>
                 <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || '-'}</span></td>
                 <td>${new Date(r.date).toLocaleDateString()}</td>
                 <td>
-                    <div class="action-buttons">
+                    <div class="maintenance-actions">
                         ${r.status === 'قيد الإنجاز' ? `
                             <button class="btn btn-sm btn-success" onclick="completeMaintenance(${r.id})" title="إكمال">
                                 <i class="fas fa-check"></i>
@@ -444,8 +485,27 @@ function renderMaintenanceTable() {
     container.innerHTML = html;
 }
 
+function updateMaintenanceStats() {
+    const container = document.getElementById('maintenanceStats');
+    if (!container) return;
+    
+    const total = allMaintenance.length;
+    const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
+    const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
+    const cancelled = allMaintenance.filter(r => r.status === 'ملغية').length;
+    
+    container.innerHTML = `
+        <div class="maintenance-stats">
+            <div class="stat-box stat-total"><h4>${total}</h4><p>📊 المجموع</p></div>
+            <div class="stat-box stat-progress"><h4>${inProgress}</h4><p>🔄 قيد الإنجاز</p></div>
+            <div class="stat-box stat-completed"><h4>${completed}</h4><p>✅ مكتملة</p></div>
+            <div class="stat-box stat-cancelled"><h4>${cancelled}</h4><p>❌ ملغية</p></div>
+        </div>
+    `;
+}
+
 // ============================================================
-// ✅ دوال المراكب (الإضافة والتعديل والحذف)
+// ✅ دوال المراكب
 // ============================================================
 
 function addItem() {
@@ -610,9 +670,7 @@ function renderMainTable() {
     }
     
     tbody.innerHTML = allVessels.map(v => {
-        const statusColor = v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107';
         const hasMaintenance = allMaintenance.some(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
-        
         return `
         <tr>
             <td>${v.name || '-'}</td>
@@ -623,7 +681,7 @@ function renderMainTable() {
             <td>${v.zone || '-'}</td>
             <td>${v.port || '-'}</td>
             <td>${v.supp || '-'}</td>
-            <td><span style="color:${statusColor}; font-weight:600;">${v.stat || 'صالح'}</span></td>
+            <td><span style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</span></td>
             <td>${v.break || '-'}</td>
             <td>${v.fDate || '-'}</td>
             <td>${v.eDate || '-'}</td>
@@ -640,7 +698,7 @@ function renderMainTable() {
                     <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
                         <i class="fas fa-clipboard-list"></i>
                     </button>
-                    ${hasMaintenance ? `<span style="background:#ffc107; padding:2px 8px; border-radius:10px; font-size:10px;">🔧 صيانة</span>` : ''}
+                    ${hasMaintenance ? `<span style="background:#ffc107; padding:2px 8px; border-radius:10px; font-size:10px;">🔧</span>` : ''}
                 </div>
             </td>
         </tr>
@@ -660,7 +718,6 @@ function renderMaintTable() {
     
     tbody.innerHTML = vessels.map(v => {
         const maintenanceRecord = allMaintenance.find(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
-        
         return `
         <tr>
             <td>${v.name || '-'}</td>
@@ -683,68 +740,138 @@ function renderMaintTable() {
                             <i class="fas fa-check"></i>
                         </button>
                     ` : `
-                        <button class="btn btn-sm btn-primary" onclick="createMaintenanceForVessel(${v.id})" title="إنشاء سجل صيانة">
+                        <button class="btn btn-sm btn-primary" onclick="toggleMaintenanceForm()" title="إنشاء سجل صيانة">
                             <i class="fas fa-plus"></i>
                         </button>
                     `}
+                    <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                        <i class="fas fa-clipboard-list"></i>
+                    </button>
                 </div>
             </td>
         </tr>
     `}).join('');
 }
 
-// إنشاء سجل صيانة لمركب معين
-function createMaintenanceForVessel(vesselId) {
-    const vessel = allVessels.find(v => v.id === vesselId);
-    if (!vessel) {
-        alert('❌ المركب غير موجود');
-        return;
+// ============================================================
+// ✅ عرض النجاعة
+// ============================================================
+
+function renderEfficiency() {
+    const vessels = allVessels || [];
+    
+    // ===== بطاقات الإحصائيات =====
+    const statsContainer = document.getElementById('statsCards');
+    if (statsContainer) {
+        const total = vessels.length;
+        const good = vessels.filter(v => v.stat === 'صالح').length;
+        const bad = vessels.filter(v => v.stat === 'معطب').length;
+        const maint = vessels.filter(v => v.stat === 'صيانة').length;
+        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+        
+        statsContainer.innerHTML = `
+            <div class="stat-card" style="background:#28a745;"><h3>${good}</h3><p>✅ صالح</p></div>
+            <div class="stat-card" style="background:#dc3545;"><h3>${bad}</h3><p>❌ معطب</p></div>
+            <div class="stat-card" style="background:#ffc107;"><h3>${maint}</h3><p>🔧 صيانة</p></div>
+            <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
+        `;
     }
     
-    const description = prompt(`📝 وصف العطل للمركب: ${vessel.name}:`);
-    if (!description) return;
-    
-    const unit = prompt('🏭 وحدة الصيانة (تونس/صفاقس/المنستير/جرجيس/شركة خاصة):');
-    if (!unit) return;
-    
-    const technician = prompt('👨‍🔧 اسم الفني المسؤول:');
-    if (!technician) return;
-    
-    const token = getToken();
-    if (!token) {
-        alert('⚠️ يرجى تسجيل الدخول أولاً');
-        return;
+    // ===== دالة لإنشاء جدول نجاعة =====
+    function createEfficiencyTable(data, title, icon = '📊') {
+        const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+        let rows = '';
+        let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+        
+        categories.forEach(cat => {
+            const catVessels = data.filter(v => v.cat === cat);
+            const t = catVessels.length;
+            const g = catVessels.filter(v => v.stat === 'صالح').length;
+            const b = catVessels.filter(v => v.stat === 'معطب').length;
+            const m = catVessels.filter(v => v.stat === 'صيانة').length;
+            const e = t > 0 ? Math.round((g / t) * 100) : 0;
+            
+            totalAll += t; goodAll += g; badAll += b; maintAll += m;
+            const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
+            
+            rows += `
+                <tr style="border-bottom:1px solid #e9ecef;">
+                    <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="padding:8px; text-align:center;">${t}</td>
+                    <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
+                    <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
+                    <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
+                </tr>
+            `;
+        });
+        
+        const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
+        const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+        
+        return `
+            <div class="efficiency-table-wrapper">
+                <div class="table-title"><i class="fas ${icon}"></i> ${title}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;">الفئة</th>
+                            <th style="text-align:center;">الإجمالي</th>
+                            <th style="text-align:center; background:#28a745;">✅ صالح</th>
+                            <th style="text-align:center; background:#dc3545;">❌ معطب</th>
+                            <th style="text-align:center; background:#ffc107;">🔧 صيانة</th>
+                            <th style="text-align:center;">نسبة النجاعة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                        <tr class="total-row">
+                            <td style="text-align:right;">📊 المجموع الكلي</td>
+                            <td style="text-align:center;">${totalAll}</td>
+                            <td style="text-align:center; color:#28a745;">${goodAll}</td>
+                            <td style="text-align:center; color:#dc3545;">${badAll}</td>
+                            <td style="text-align:center; color:#ffc107;">${maintAll}</td>
+                            <td style="text-align:center; color:${totalColor};">${totalEff}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="progress-section">
+                    <div class="progress-label">
+                        <span>📈 نسبة النجاعة: <strong>${totalEff}%</strong></span>
+                        <span class="status" style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
     
-    const data = {
-        vesselId: vessel.id,
-        unit: unit,
-        description: description,
-        technician: technician,
-        createdBy: currentUser?.name || 'Admin'
-    };
+    // ===== الجدول العام =====
+    const generalContainer = document.getElementById('generalEffTableContainer');
+    if (generalContainer) {
+        generalContainer.innerHTML = createEfficiencyTable(vessels, 'النجاعة العامة حسب الفئات', 'fa-ship');
+    }
     
-    fetch('/api/maintenance', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم إنشاء سجل الصيانة بنجاح');
-            loadAllData();
-        } else {
-            alert('❌ ' + (data.error || 'خطأ في الإنشاء'));
-        }
-    })
-    .catch(err => {
-        console.error('Create maintenance error:', err);
-        alert('❌ خطأ في إنشاء سجل الصيانة');
-    });
+    // ===== جداول الأقاليم =====
+    const regionsContainer = document.getElementById('regionsEffContainer');
+    if (regionsContainer) {
+        const regions = [
+            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط', icon: 'fa-map-marker-alt' },
+            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب', icon: 'fa-map-marker-alt' }
+        ];
+        
+        let html = '';
+        regions.forEach(region => {
+            const regionVessels = vessels.filter(v => v.reg === region.key);
+            html += createEfficiencyTable(regionVessels, region.name, region.icon);
+        });
+        
+        regionsContainer.innerHTML = html;
+    }
 }
 
 // ============================================================
@@ -1094,152 +1221,6 @@ function renderUsersTable() {
 }
 
 // ============================================================
-// 📊 عرض النجاعة
-// ============================================================
-
-function renderEfficiency() {
-    const vessels = allVessels || [];
-    
-    const statsContainer = document.getElementById('statsCards');
-    if (statsContainer) {
-        const total = vessels.length;
-        const good = vessels.filter(v => v.stat === 'صالح').length;
-        const bad = vessels.filter(v => v.stat === 'معطب').length;
-        const maint = vessels.filter(v => v.stat === 'صيانة').length;
-        const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-        
-        statsContainer.innerHTML = `
-            <div class="stat-card" style="background:#28a745;"><h3>${good}</h3><p>✅ صالح</p></div>
-            <div class="stat-card" style="background:#dc3545;"><h3>${bad}</h3><p>❌ معطب</p></div>
-            <div class="stat-card" style="background:#ffc107;"><h3>${maint}</h3><p>🔧 صيانة</p></div>
-            <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
-        `;
-    }
-    
-    const generalContainer = document.getElementById('generalEffTableContainer');
-    if (generalContainer) {
-        const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-        let rows = '';
-        let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
-        
-        categories.forEach(cat => {
-            const catVessels = vessels.filter(v => v.cat === cat);
-            const t = catVessels.length;
-            const g = catVessels.filter(v => v.stat === 'صالح').length;
-            const b = catVessels.filter(v => v.stat === 'معطب').length;
-            const m = catVessels.filter(v => v.stat === 'صيانة').length;
-            const e = t > 0 ? Math.round((g / t) * 100) : 0;
-            
-            totalAll += t; goodAll += g; badAll += b; maintAll += m;
-            const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
-            
-            rows += `
-                <tr style="border-bottom:1px solid #e9ecef;">
-                    <td style="padding:10px; text-align:right; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; text-align:center;">${t}</td>
-                    <td style="padding:10px; text-align:center; color:#28a745;">${g}</td>
-                    <td style="padding:10px; text-align:center; color:#dc3545;">${b}</td>
-                    <td style="padding:10px; text-align:center; color:#ffc107;">${m}</td>
-                    <td style="padding:10px; text-align:center; font-weight:bold; color:${color};">${e}%</td>
-                </tr>
-            `;
-        });
-        
-        const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-        const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-        
-        generalContainer.innerHTML = `
-            <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 10px rgba(0,0,0,0.1); overflow-x:auto;">
-                <h4 style="color:#0d6efd; margin-bottom:15px;">📊 النجاعة العامة حسب الفئات</h4>
-                <table style="width:100%; border-collapse:collapse; font-size:14px;">
-                    <thead>
-                        <tr style="background:#0d6efd; color:white;">
-                            <th style="padding:12px; text-align:right;">الفئة</th>
-                            <th style="padding:12px; text-align:center;">الإجمالي</th>
-                            <th style="padding:12px; text-align:center; background:#28a745;">✅ صالح</th>
-                            <th style="padding:12px; text-align:center; background:#dc3545;">❌ معطب</th>
-                            <th style="padding:12px; text-align:center; background:#ffc107;">🔧 صيانة</th>
-                            <th style="padding:12px; text-align:center;">نسبة النجاعة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows}
-                        <tr style="background:#e7f3ff; font-weight:bold; border-top:2px solid #0d6efd;">
-                            <td style="padding:12px; text-align:right;">📊 المجموع الكلي</td>
-                            <td style="padding:12px; text-align:center;">${totalAll}</td>
-                            <td style="padding:12px; text-align:center; color:#28a745;">${goodAll}</td>
-                            <td style="padding:12px; text-align:center; color:#dc3545;">${badAll}</td>
-                            <td style="padding:12px; text-align:center; color:#ffc107;">${maintAll}</td>
-                            <td style="padding:12px; text-align:center; color:${totalColor};">${totalEff}%</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div style="margin-top:15px;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px;">
-                        <span>📈 نسبة النجاعة العامة: <strong>${totalEff}%</strong></span>
-                        <span style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
-                    </div>
-                    <div style="background:#e9ecef; border-radius:10px; height:10px; overflow:hidden;">
-                        <div style="background:${totalColor}; height:100%; width:${totalEff}%; transition:width 0.5s;"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    const regionContainer = document.getElementById('regionTables');
-    if (regionContainer) {
-        const units = [
-            { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال' },
-            { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل' },
-            { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط' },
-            { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب' }
-        ];
-        
-        let html = '<h4 style="color:#0d6efd; margin:20px 0 15px;">📊 نجاعة الوحدات البحرية</h4>';
-        html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">';
-        
-        units.forEach(unit => {
-            const unitVessels = vessels.filter(v => v.reg === unit.key);
-            const total = unitVessels.length;
-            const good = unitVessels.filter(v => v.stat === 'صالح').length;
-            const bad = unitVessels.filter(v => v.stat === 'معطب').length;
-            const maint = unitVessels.filter(v => v.stat === 'صيانة').length;
-            const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-            const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
-            
-            html += `
-                <div style="background:white; border-radius:10px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-                    <h5 style="color:#0d6efd; margin-bottom:10px;">${unit.name}</h5>
-                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-                        <thead>
-                            <tr style="background:#f8f9fa;">
-                                <th style="padding:6px; text-align:right;">الحالة</th>
-                                <th style="padding:6px; text-align:center;">العدد</th>
-                                <th style="padding:6px; text-align:center;">%</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">✅ صالح</td><td style="padding:6px; text-align:center;">${good}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((good/total)*100) : 0}%</td></tr>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">❌ معطب</td><td style="padding:6px; text-align:center;">${bad}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((bad/total)*100) : 0}%</td></tr>
-                            <tr><td style="padding:6px; border-bottom:1px solid #e9ecef;">🔧 صيانة</td><td style="padding:6px; text-align:center;">${maint}</td><td style="padding:6px; text-align:center;">${total > 0 ? Math.round((maint/total)*100) : 0}%</td></tr>
-                            <tr style="background:#e7f3ff; font-weight:bold;">
-                                <td style="padding:6px;">📊 النجاعة</td>
-                                <td style="padding:6px; text-align:center;">${total}</td>
-                                <td style="padding:6px; text-align:center; color:${color};">${eff}%</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        });
-        
-        html += '</div>';
-        regionContainer.innerHTML = html;
-    }
-}
-
-// ============================================================
 // 🗺️ الخريطة
 // ============================================================
 
@@ -1262,10 +1243,6 @@ function loadLocations() {
 function centerMapOnUser() {
     alert('📍 التمركز على موقعك');
 }
-
-// ============================================================
-// 🔔 الإشعارات
-// ============================================================
 
 function toggleNotifications() {
     alert('🔔 الإشعارات: لا توجد إشعارات جديدة');
@@ -1347,13 +1324,15 @@ window.addUser = addUser;
 window.deleteUser = deleteUser;
 window.toggleUserStatus = toggleUserStatus;
 window.changeUserPassword = changeUserPassword;
-window.createMaintenance = createMaintenance;
+window.toggleMaintenanceForm = toggleMaintenanceForm;
+window.saveMaintenance = saveMaintenance;
 window.completeMaintenance = completeMaintenance;
 window.cancelMaintenance = cancelMaintenance;
 window.deleteMaintenance = deleteMaintenance;
 window.viewVesselMaintenance = viewVesselMaintenance;
-window.createMaintenanceForVessel = createMaintenanceForVessel;
 window.loadMaintenance = loadMaintenance;
+window.addPart = addPart;
+window.removePart = removePart;
 
 console.log('✅ جميع الدوال جاهزة');
 
