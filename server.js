@@ -1,13 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================================
-// ✅ حل مشكلة CSS و JS
+// ✅ حل مشكلة CSS
 // ============================================================
 app.use((req, res, next) => {
     if (req.url.endsWith('.css')) {
@@ -22,29 +21,22 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مجلد الرفع
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 // ============================================================
 // ✅ البيانات (Mock Data)
 // ============================================================
 let vessels = [];
 let users = [
-    { 
-        id: 1, 
-        name: 'Admin', 
-        email: 'admin', 
-        role: 'مسؤول', 
-        isActive: true 
-    }
+    { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول', isActive: true }
 ];
 let tickets = [];
 let notes = [];
 let locations = [];
+
+// ============================================================
+// ✅ نظام الصيانة - البيانات
+// ============================================================
 let maintenanceRecords = [];
+let nextMaintenanceId = 1;
 
 const MAINTENANCE_UNITS = [
     'وحدة الصيانة والإسناد البحري تونس',
@@ -57,10 +49,6 @@ const MAINTENANCE_UNITS = [
 // ============================================================
 // ✅ دوال مساعدة
 // ============================================================
-function getCurrentDateTime() {
-    return new Date().toISOString();
-}
-
 function getCurrentDate() {
     return new Date().toISOString().split('T')[0];
 }
@@ -68,6 +56,10 @@ function getCurrentDate() {
 function getCurrentTime() {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getCurrentDateTime() {
+    return new Date().toISOString();
 }
 
 function determineCategory(len) {
@@ -81,31 +73,7 @@ function determineCategory(len) {
 }
 
 function generateId() {
-    return Math.floor(Date.now() + Math.random() * 10000);
-}
-
-// ============================================================
-// ✅ Middleware للمصادقة
-// ============================================================
-function authenticate(req, res, next) {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ success: false, error: 'غير مصرح به' });
-    }
-    if (!token.startsWith('fake-token-')) {
-        return res.status(401).json({ success: false, error: 'توكن غير صالح' });
-    }
-    req.user = { id: 1, name: 'Admin', role: 'مسؤول' };
-    next();
-}
-
-function requireRole(role) {
-    return (req, res, next) => {
-        if (req.user?.role !== role && req.user?.role !== 'مسؤول') {
-            return res.status(403).json({ success: false, error: 'صلاحيات غير كافية' });
-        }
-        next();
-    };
+    return Date.now() + Math.random() * 1000;
 }
 
 // ============================================================
@@ -125,8 +93,8 @@ app.post('/api/auth/login', (req, res) => {
     }
 });
 
-app.get('/api/auth/me', authenticate, (req, res) => {
-    res.json({ success: true, user: req.user });
+app.get('/api/auth/me', (req, res) => {
+    res.json({ success: true, user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' } });
 });
 
 // ============================================================
@@ -137,7 +105,7 @@ app.get('/api/vessels', (req, res) => {
     res.json(vessels);
 });
 
-app.post('/api/vessels', authenticate, (req, res) => {
+app.post('/api/vessels', (req, res) => {
     const data = req.body;
     
     const newVessel = {
@@ -158,12 +126,12 @@ app.post('/api/vessels', authenticate, (req, res) => {
         repairer: data.repairer || '',
         maintenanceHistory: [],
         lastMaintenance: null,
-        nextMaintenance: null,
-        createdAt: getCurrentDateTime()
+        nextMaintenance: null
     };
     
     vessels.push(newVessel);
     
+    // ✅ إذا كان المركب معطباً، أنشئ سجل صيانة تلقائي
     if (newVessel.stat === 'معطب' || newVessel.stat === 'صيانة') {
         const maintenanceRecord = {
             id: generateId(),
@@ -196,7 +164,7 @@ app.post('/api/vessels', authenticate, (req, res) => {
     res.status(201).json({ success: true, data: newVessel });
 });
 
-app.put('/api/vessels/:id', authenticate, (req, res) => {
+app.put('/api/vessels/:id', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = vessels.findIndex(v => v.id === id);
     
@@ -209,6 +177,7 @@ app.put('/api/vessels/:id', authenticate, (req, res) => {
     
     vessels[index] = { ...vessels[index], ...req.body };
     
+    // ✅ إذا تغيرت الحالة من معطب إلى صالح
     if (oldStat !== 'صالح' && newStat === 'صالح') {
         maintenanceRecords.forEach(record => {
             if (record.vesselId === vessels[index].id && record.status === 'قيد الإنجاز') {
@@ -227,6 +196,7 @@ app.put('/api/vessels/:id', authenticate, (req, res) => {
         vessels[index].lastMaintenance = getCurrentDateTime();
     }
     
+    // ✅ إذا تغيرت الحالة إلى معطب أو صيانة
     if (newStat === 'معطب' || newStat === 'صيانة') {
         const hasOpenRecord = maintenanceRecords.some(r => 
             r.vesselId === vessels[index].id && r.status === 'قيد الإنجاز'
@@ -265,7 +235,7 @@ app.put('/api/vessels/:id', authenticate, (req, res) => {
     res.json({ success: true, data: vessels[index] });
 });
 
-app.delete('/api/vessels/:id', authenticate, requireRole('مسؤول'), (req, res) => {
+app.delete('/api/vessels/:id', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = vessels.findIndex(v => v.id === id);
     
@@ -283,42 +253,27 @@ app.delete('/api/vessels/:id', authenticate, requireRole('مسؤول'), (req, re
 // 🔧 API Routes - نظام الصيانة
 // ============================================================
 
+// جلب جميع سجلات الصيانة
 app.get('/api/maintenance', (req, res) => {
     res.json(maintenanceRecords);
 });
 
-app.get('/api/maintenance/filter', (req, res) => {
-    let filtered = [...maintenanceRecords];
-    
-    if (req.query.unit) {
-        filtered = filtered.filter(r => r.unit === req.query.unit);
-    }
-    if (req.query.dateFrom) {
-        filtered = filtered.filter(r => r.date >= req.query.dateFrom);
-    }
-    if (req.query.dateTo) {
-        filtered = filtered.filter(r => r.date <= req.query.dateTo);
-    }
-    if (req.query.status) {
-        filtered = filtered.filter(r => r.status === req.query.status);
-    }
-    
-    res.json(filtered);
-});
-
+// جلب سجلات صيانة مركب معين
 app.get('/api/maintenance/vessel/:vesselId', (req, res) => {
     const vesselId = parseFloat(req.params.vesselId);
     const records = maintenanceRecords.filter(r => r.vesselId === vesselId);
     res.json(records);
 });
 
+// جلب سجلات صيانة حسب الوحدة
 app.get('/api/maintenance/unit/:unit', (req, res) => {
     const unit = decodeURIComponent(req.params.unit);
     const records = maintenanceRecords.filter(r => r.unit === unit);
     res.json(records);
 });
 
-app.post('/api/maintenance', authenticate, (req, res) => {
+// إنشاء سجل صيانة جديد
+app.post('/api/maintenance', (req, res) => {
     const data = req.body;
     
     const vessel = vessels.find(v => v.id === data.vesselId);
@@ -359,7 +314,8 @@ app.post('/api/maintenance', authenticate, (req, res) => {
     res.status(201).json({ success: true, data: newRecord });
 });
 
-app.put('/api/maintenance/:id', authenticate, (req, res) => {
+// تحديث سجل صيانة (كامل)
+app.put('/api/maintenance/:id', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = maintenanceRecords.findIndex(r => r.id === id);
     
@@ -370,6 +326,7 @@ app.put('/api/maintenance/:id', authenticate, (req, res) => {
     const record = maintenanceRecords[index];
     const data = req.body;
     
+    // تحديث البيانات
     if (data.unit) record.unit = data.unit;
     if (data.type) record.type = data.type;
     if (data.description) record.description = data.description;
@@ -378,6 +335,7 @@ app.put('/api/maintenance/:id', authenticate, (req, res) => {
     if (data.notes) record.notes = data.notes;
     if (data.parts) record.parts = data.parts;
     
+    // تحديث المركب إذا تغيرت الوحدة
     if (data.unit) {
         const vessel = vessels.find(v => v.id === record.vesselId);
         if (vessel) {
@@ -388,7 +346,8 @@ app.put('/api/maintenance/:id', authenticate, (req, res) => {
     res.json({ success: true, data: record });
 });
 
-app.put('/api/maintenance/:id/complete', authenticate, (req, res) => {
+// إكمال الصيانة
+app.put('/api/maintenance/:id/complete', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = maintenanceRecords.findIndex(r => r.id === id);
     
@@ -420,7 +379,8 @@ app.put('/api/maintenance/:id/complete', authenticate, (req, res) => {
     res.json({ success: true, data: record });
 });
 
-app.put('/api/maintenance/:id/cancel', authenticate, (req, res) => {
+// إلغاء سجل صيانة
+app.put('/api/maintenance/:id/cancel', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = maintenanceRecords.findIndex(r => r.id === id);
     
@@ -434,7 +394,8 @@ app.put('/api/maintenance/:id/cancel', authenticate, (req, res) => {
     res.json({ success: true, message: 'تم إلغاء سجل الصيانة' });
 });
 
-app.delete('/api/maintenance/:id', authenticate, requireRole('مسؤول'), (req, res) => {
+// حذف سجل صيانة
+app.delete('/api/maintenance/:id', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = maintenanceRecords.findIndex(r => r.id === id);
     
@@ -446,6 +407,7 @@ app.delete('/api/maintenance/:id', authenticate, requireRole('مسؤول'), (req
     res.json({ success: true, message: 'تم الحذف' });
 });
 
+// إحصائيات الصيانة
 app.get('/api/maintenance/stats', (req, res) => {
     const total = maintenanceRecords.length;
     const inProgress = maintenanceRecords.filter(r => r.status === 'قيد الإنجاز').length;
@@ -472,31 +434,79 @@ app.get('/api/maintenance/stats', (req, res) => {
 });
 
 // ============================================================
-// 📝 API Routes - المذكرات
+// 👥 API Routes - المستخدمين
 // ============================================================
 
-// رفع ملف (محاكاة - بدون multer)
-app.post('/api/notes/upload', authenticate, (req, res) => {
-    // محاكاة رفع الملفات (لأن multer غير مثبت)
-    res.json({ 
-        success: true, 
-        files: [
-            { 
-                name: 'ملف مرفق.pdf', 
-                url: '/uploads/sample.pdf', 
-                type: 'application/pdf', 
-                size: 1024,
-                filename: 'sample.pdf'
-            }
-        ] 
-    });
+app.get('/api/users', (req, res) => {
+    res.json(users);
 });
+
+app.post('/api/users', (req, res) => {
+    const data = req.body;
+    const newUser = {
+        id: generateId(),
+        name: data.name || 'مستخدم جديد',
+        email: data.email || data.name?.toLowerCase().replace(/\s/g, '') + '@test.com',
+        role: data.role || 'مشاهد',
+        isActive: true
+    };
+    users.push(newUser);
+    res.status(201).json({ success: true, data: newUser });
+});
+
+app.put('/api/users/:id', (req, res) => {
+    const id = parseFloat(req.params.id);
+    const user = users.find(u => u.id === id);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+    Object.assign(user, req.body);
+    res.json({ success: true, data: user });
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    const id = parseFloat(req.params.id);
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    }
+    users.splice(index, 1);
+    res.json({ success: true, message: 'تم الحذف' });
+});
+
+// ============================================================
+// 🎫 API Routes - التذاكر
+// ============================================================
+
+app.get('/api/tickets', (req, res) => {
+    res.json(tickets);
+});
+
+app.post('/api/tickets', (req, res) => {
+    const data = req.body;
+    const newTicket = {
+        id: generateId(),
+        subject: data.subject || 'موضوع جديد',
+        message: data.message || '',
+        status: 'قيد المعالجة',
+        userName: 'Admin',
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+        replies: []
+    };
+    tickets.push(newTicket);
+    res.status(201).json({ success: true, data: newTicket });
+});
+
+// ============================================================
+// 📝 API Routes - المذكرات
+// ============================================================
 
 app.get('/api/notes', (req, res) => {
     res.json(notes);
 });
 
-app.post('/api/notes', authenticate, (req, res) => {
+app.post('/api/notes', (req, res) => {
     const data = req.body;
     const newNote = {
         id: generateId(),
@@ -504,16 +514,14 @@ app.post('/api/notes', authenticate, (req, res) => {
         content: data.content || '',
         date: data.date || getCurrentDate(),
         time: getCurrentTime(),
-        week: data.week || '1',
-        createdBy: req.user.name || 'Admin',
-        attachments: data.attachments || [],
-        createdAt: getCurrentDateTime()
+        week: '1',
+        createdBy: 'Admin'
     };
     notes.push(newNote);
     res.status(201).json({ success: true, data: newNote });
 });
 
-app.delete('/api/notes/:id', authenticate, requireRole('مسؤول'), (req, res) => {
+app.delete('/api/notes/:id', (req, res) => {
     const id = parseFloat(req.params.id);
     const index = notes.findIndex(n => n.id === id);
     if (index === -1) {
@@ -528,73 +536,6 @@ app.get('/api/notes/latest', (req, res) => {
 });
 
 // ============================================================
-// 👥 API Routes - المستخدمين
-// ============================================================
-
-app.get('/api/users', authenticate, (req, res) => {
-    res.json(users.map(u => ({ ...u, password: undefined })));
-});
-
-app.post('/api/users', authenticate, requireRole('مسؤول'), (req, res) => {
-    const data = req.body;
-    const newUser = {
-        id: generateId(),
-        name: data.name || 'مستخدم جديد',
-        email: data.email || data.name?.toLowerCase().replace(/\s/g, '') + '@test.com',
-        role: data.role || 'مشاهد',
-        isActive: true,
-        createdAt: getCurrentDateTime()
-    };
-    users.push(newUser);
-    res.status(201).json({ success: true, data: { ...newUser, password: undefined } });
-});
-
-app.put('/api/users/:id', authenticate, (req, res) => {
-    const id = parseFloat(req.params.id);
-    const user = users.find(u => u.id === id);
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
-    Object.assign(user, req.body);
-    res.json({ success: true, data: { ...user, password: undefined } });
-});
-
-app.delete('/api/users/:id', authenticate, requireRole('مسؤول'), (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
-    users.splice(index, 1);
-    res.json({ success: true, message: 'تم الحذف' });
-});
-
-// ============================================================
-// 🎫 API Routes - التذاكر
-// ============================================================
-
-app.get('/api/tickets', authenticate, (req, res) => {
-    res.json(tickets);
-});
-
-app.post('/api/tickets', authenticate, (req, res) => {
-    const data = req.body;
-    const newTicket = {
-        id: generateId(),
-        subject: data.subject || 'موضوع جديد',
-        message: data.message || '',
-        status: 'قيد المعالجة',
-        userName: req.user.name || 'Admin',
-        date: getCurrentDate(),
-        time: getCurrentTime(),
-        replies: [],
-        createdAt: getCurrentDateTime()
-    };
-    tickets.push(newTicket);
-    res.status(201).json({ success: true, data: newTicket });
-});
-
-// ============================================================
 // 📍 API Routes - المواقع
 // ============================================================
 
@@ -602,25 +543,17 @@ app.get('/api/locations', (req, res) => {
     res.json(locations);
 });
 
-app.post('/api/locations', authenticate, (req, res) => {
+app.post('/api/locations', (req, res) => {
     const { lat, lng } = req.body;
     const newLocation = {
         id: generateId(),
-        userName: req.user.name || 'Admin',
+        userName: 'Admin',
         lat: parseFloat(lat) || 0,
         lng: parseFloat(lng) || 0,
-        timestamp: getCurrentDateTime()
+        timestamp: new Date()
     };
     locations.push(newLocation);
-    if (locations.length > 100) {
-        locations = locations.slice(-100);
-    }
     res.status(201).json({ success: true, data: newLocation });
-});
-
-app.delete('/api/locations', authenticate, requireRole('مسؤول'), (req, res) => {
-    locations = [];
-    res.json({ success: true, message: 'تم مسح جميع المواقع' });
 });
 
 // ============================================================
@@ -633,8 +566,7 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         vessels: vessels.length,
         maintenance: maintenanceRecords.length,
-        users: users.length,
-        notes: notes.length
+        users: users.length
     });
 });
 
@@ -653,5 +585,6 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server: http://localhost:${PORT}`);
     console.log(`📧 admin / 🔑 123456`);
-    console.log(`✅ نظام الصيانة متكامل`);
+    console.log(`🔧 وحدات الصيانة المدعومة: ${MAINTENANCE_UNITS.join(', ')}`);
+    console.log(`✅ نظام الصيانة متكامل مع إمكانية التعديل`);
 });
