@@ -53,7 +53,7 @@ function getUser() {
 }
 
 // ============================================================
-// المصادقة
+// المصادقة - تسجيل الدخول
 // ============================================================
 
 function doLogin() {
@@ -230,7 +230,7 @@ function loadNotes() {
 }
 
 // ============================================================
-// عرض الجداول
+// عرض الجداول الأساسية
 // ============================================================
 
 function renderMainTable() {
@@ -325,203 +325,8 @@ function renderNotes() {
 }
 
 // ============================================================
-// الصفحات
+// دوال المراكب (إضافة - تعديل - حذف)
 // ============================================================
-
-function showPage(page) {
-    document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
-    if (target) target.classList.remove('hidden');
-    
-    switch(page) {
-        case 'main':
-            loadVessels();
-            break;
-        case 'maintenance':
-            loadMaintenance();
-            break;
-        case 'eff':
-            loadVessels();
-            break;
-        case 'support':
-            loadTickets();
-            break;
-        case 'track':
-            setTimeout(initMap, 100);
-            break;
-        case 'map':
-            setTimeout(initMap, 100);
-            break;
-        case 'users':
-            loadUsers();
-            break;
-        case 'note':
-            loadNotes();
-            break;
-    }
-}
-
-// ============================================================
-// دوال إضافية
-// ============================================================
-
-function sendTicket() {
-    const subject = document.getElementById('ticketSubject')?.value.trim();
-    const message = document.getElementById('ticketMessage')?.value.trim();
-    
-    if (!subject || !message) {
-        showAlert('⚠️ الرجاء إدخال العنوان والرسالة', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ subject, message })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إرسال التذكرة', 'success');
-            document.getElementById('ticketSubject').value = '';
-            document.getElementById('ticketMessage').value = '';
-            loadTickets();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Send ticket error:', err);
-        showAlert('❌ خطأ في إرسال التذكرة', 'danger');
-    });
-}
-
-function saveNote() {
-    const title = document.getElementById('noteTitle')?.value.trim();
-    const content = document.getElementById('noteContent')?.value.trim();
-    const date = document.getElementById('noteDate')?.value;
-    
-    if (!title || !content || !date) {
-        showAlert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/notes', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ title, content, date })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حفظ المذكرة', 'success');
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
-            document.getElementById('noteDate').value = '';
-            loadNotes();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحفظ'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Save note error:', err);
-        showAlert('❌ خطأ في حفظ المذكرة', 'danger');
-    });
-}
-
-function addUser() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    const name = document.getElementById('un')?.value.trim();
-    const password = document.getElementById('up')?.value.trim();
-    const role = document.getElementById('ur')?.value;
-    
-    if (!name || !password) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
-    }
-    
-    const data = {
-        name: name,
-        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
-        password: password,
-        role: role || 'مشاهد'
-    };
-    
-    fetch('/api/users', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إضافة المستخدم', 'success');
-            document.getElementById('un').value = '';
-            document.getElementById('up').value = '';
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Add user error:', err);
-        showAlert('❌ خطأ في إضافة المستخدم', 'danger');
-    });
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/users/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حذف المستخدم', 'success');
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete user error:', err);
-        showAlert('❌ خطأ في حذف المستخدم', 'danger');
-    });
-}
 
 function addItem() {
     const token = getToken();
@@ -666,8 +471,41 @@ function updateZones() {
     });
 }
 
-function toggleNotifications() {
-    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
+// ============================================================
+// دوال الصفحات
+// ============================================================
+
+function showPage(page) {
+    document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
+    const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+    if (target) target.classList.remove('hidden');
+    
+    switch(page) {
+        case 'main':
+            loadVessels();
+            break;
+        case 'maintenance':
+            loadMaintenance();
+            break;
+        case 'eff':
+            loadVessels();
+            break;
+        case 'support':
+            loadTickets();
+            break;
+        case 'track':
+            setTimeout(initMap, 100);
+            break;
+        case 'map':
+            setTimeout(initMap, 100);
+            break;
+        case 'users':
+            loadUsers();
+            break;
+        case 'note':
+            loadNotes();
+            break;
+    }
 }
 
 function refreshAllPages() {
@@ -681,30 +519,6 @@ function scrollToTop() {
 
 function scrollToBottom() {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-function initMap() {
-    console.log('🗺️ Map initialized');
-}
-
-function startTracking() {
-    showAlert('📍 بدء التتبع المباشر', 'info');
-}
-
-function stopTracking() {
-    showAlert('⏹️ تم إيقاف التتبع', 'info');
-}
-
-function loadLocations() {
-    showAlert('📍 تم تحديث المواقع', 'success');
-}
-
-function centerMapOnUser() {
-    showAlert('🎯 تم التمركز على موقعك', 'success');
-}
-
-function refreshTrackUsers() {
-    showAlert('✅ تم تحديث المستخدمين', 'success');
 }
 
 // ============================================================
@@ -1122,7 +936,197 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - الكود الكامل
+// دوال أخرى (تذاكر - مستخدمين - ملاحظات)
+// ============================================================
+
+function sendTicket() {
+    const subject = document.getElementById('ticketSubject')?.value.trim();
+    const message = document.getElementById('ticketMessage')?.value.trim();
+    
+    if (!subject || !message) {
+        showAlert('⚠️ الرجاء إدخال العنوان والرسالة', 'warning');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ subject, message })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إرسال التذكرة', 'success');
+            document.getElementById('ticketSubject').value = '';
+            document.getElementById('ticketMessage').value = '';
+            loadTickets();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Send ticket error:', err);
+        showAlert('❌ خطأ في إرسال التذكرة', 'danger');
+    });
+}
+
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('un')?.value.trim();
+    const password = document.getElementById('up')?.value.trim();
+    const role = document.getElementById('ur')?.value;
+    
+    if (!name || !password) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
+        password: password,
+        role: role || 'مشاهد'
+    };
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم', 'success');
+            document.getElementById('un').value = '';
+            document.getElementById('up').value = '';
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ خطأ في إضافة المستخدم', 'danger');
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
+}
+
+function saveNote() {
+    const title = document.getElementById('noteTitle')?.value.trim();
+    const content = document.getElementById('noteContent')?.value.trim();
+    const date = document.getElementById('noteDate')?.value;
+    
+    if (!title || !content || !date) {
+        showAlert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, content, date })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حفظ المذكرة', 'success');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteDate').value = '';
+            loadNotes();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحفظ'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Save note error:', err);
+        showAlert('❌ خطأ في حفظ المذكرة', 'danger');
+    });
+}
+
+function toggleNotifications() {
+    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
+}
+
+function initMap() {
+    console.log('🗺️ Map initialized');
+}
+
+function startTracking() {
+    showAlert('📍 بدء التتبع المباشر', 'info');
+}
+
+function stopTracking() {
+    showAlert('⏹️ تم إيقاف التتبع', 'info');
+}
+
+function loadLocations() {
+    showAlert('📍 تم تحديث المواقع', 'success');
+}
+
+function centerMapOnUser() {
+    showAlert('🎯 تم التمركز على موقعك', 'success');
+}
+
+function refreshTrackUsers() {
+    showAlert('✅ تم تحديث المستخدمين', 'success');
+}
+
+// ============================================================
+// 📊 صفحة الجاهزية - الكود الكامل (الجدول العام - الفئات - النسبة المئوية)
 // ============================================================
 
 function renderEfficiency() {
@@ -1130,6 +1134,7 @@ function renderEfficiency() {
     
     updateEfficiencyStats(vessels);
     renderGeneralEfficiencyTable(vessels);
+    renderCategoryEfficiencyTable(vessels);
     renderUnitEfficiencyTables(vessels);
 }
 
@@ -1151,6 +1156,7 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
+// ===== الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
@@ -1247,6 +1253,106 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
+// ===== الجدول حسب الفئات مع النسبة المئوية =====
+function renderCategoryEfficiencyTable(vessels) {
+    const container = document.getElementById('categoryEffContainer');
+    if (!container) {
+        // إنشاء الحاوية إذا لم تكن موجودة
+        const parent = document.getElementById('regionsEffContainer');
+        if (parent) {
+            const div = document.createElement('div');
+            div.id = 'categoryEffContainer';
+            div.style.cssText = 'grid-column: 1 / -1;';
+            parent.parentNode.insertBefore(div, parent);
+        }
+    }
+    
+    const container2 = document.getElementById('categoryEffContainer');
+    if (!container2) return;
+    
+    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    let html = `
+        <div class="efficiency-table-wrapper" style="margin-top:0;">
+            <div class="table-title">
+                <i class="fas fa-chart-pie"></i> 
+                نسبة الجاهزية حسب الفئات
+            </div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;">الفئة</th>
+                            <th style="text-align:center;">الإجمالي</th>
+                            <th style="text-align:center; background:#28a745; color:white;">✅ صالح</th>
+                            <th style="text-align:center; background:#dc3545; color:white;">❌ معطب</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 صيانة</th>
+                            <th style="text-align:center;">نسبة الجاهزية</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+    
+    categories.forEach(cat => {
+        const catVessels = vessels.filter(v => v.cat === cat);
+        const t = catVessels.length;
+        const g = catVessels.filter(v => v.stat === 'صالح').length;
+        const b = catVessels.filter(v => v.stat === 'معطب').length;
+        const m = catVessels.filter(v => v.stat === 'صيانة').length;
+        const e = t > 0 ? Math.round((g / t) * 100) : 0;
+        
+        totalAll += t; goodAll += g; badAll += b; maintAll += m;
+        const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
+        
+        html += `
+            <tr style="border-bottom:1px solid #e9ecef;">
+                <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
+                <td style="padding:8px; text-align:center;">${t}</td>
+                <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
+                <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
+                <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
+                <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
+                    ${e}%
+                </td>
+            </tr>
+        `;
+    });
+    
+    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
+    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+    
+    html += `
+                    <tr class="total-row">
+                        <td style="text-align:right; font-weight:bold;">📊 المجموع الكلي</td>
+                        <td style="text-align:center; font-weight:bold;">${totalAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#28a745;">${goodAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#dc3545;">${badAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#ffc107;">${maintAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:${totalColor}; font-size:16px;">
+                            ${totalEff}%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
+                <span class="status" style="color:${totalColor};">
+                    ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
+                </span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
+            </div>
+        </div>
+    `;
+    
+    container2.innerHTML = html;
+}
+
+// ===== جداول الأقاليم =====
 function renderUnitEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
