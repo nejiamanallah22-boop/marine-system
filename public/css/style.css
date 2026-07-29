@@ -1,0 +1,1058 @@
+/* ============================================================
+   📁 style.css - الملف الرئيسي للأنماط
+   منظومة متابعة الوسائل البحرية
+   ============================================================ */
+
+/* ===== إعادة تعيين الأنماط ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background: #f0f2f5;
+    color: #333;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ============================================================
+   🔐 شاشة الدخول
+   ============================================================ */
+#loginOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #0d6efd, #1a3a5c);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    width: 420px;
+    max-width: 92%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.login-box .logo {
+    font-size: 70px;
+    display: block;
+}
+
+.login-box h2 {
+    color: #1a3a5c;
+    font-weight: 800;
+}
+
+.login-box .subtitle {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    background: #0d6efd;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.login-btn:hover {
+    background: #0b5ed7;
+}
+
+.login-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-msg {
+    color: #dc3545;
+    margin-top: 10px;
+    display: none;
+}
+
+#mainApp {
+    display: none;
+}
+
+/* ============================================================
+   📋 الهيدر
+   ============================================================ */
+header {
+    background: white;
+    padding: 12px 25px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+header h1 {
+    color: #0d6efd;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+header h1 .developer {
+    font-size: 12px;
+    font-weight: 400;
+    color: #6c757d;
+    background: #f8f9fa;
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    background: #0d6efd;
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.notification-icon {
+    position: relative;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px 8px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    min-width: 18px;
+    text-align: center;
+    display: none;
+}
+
+/* ============================================================
+   🔘 الأزرار
+   ============================================================ */
+.btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: #0d6efd;
+    color: white;
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #1a3a5c;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-outline-white {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+}
+
+.btn-outline-white:hover {
+    background: white;
+    color: #0d6efd;
+}
+
+.btn-sm {
+    padding: 3px 10px;
+    font-size: 11px;
+}
+
+/* ============================================================
+   🧭 شريط التنقل
+   ============================================================ */
+.nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.nav .btn {
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* ============================================================
+   📝 نموذج الإدخال
+   ============================================================ */
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-grid input,
+.input-grid select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+}
+
+.input-grid input:focus,
+.input-grid select:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+.input-grid label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.input-grid label i {
+    color: #0d6efd;
+}
+
+.input-grid .date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.input-grid .date-group label {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+/* ============================================================
+   🔍 شريط الفلترة
+   ============================================================ */
+.filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.filter-bar label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.filter-bar input,
+.filter-bar select {
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 180px;
+}
+
+.search-input input {
+    width: 100%;
+    padding: 8px 14px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+/* ============================================================
+   📊 بطاقات الجداول
+   ============================================================ */
+.region-table-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.region-table-header {
+    padding: 12px 18px;
+    background: #f8f9fa;
+    font-weight: 700;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+}
+
+.scrollable-table {
+    overflow-x: auto;
+    padding: 0 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+table th {
+    background: #f8f9fa;
+    padding: 10px;
+    text-align: right;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 12px;
+}
+
+table tr:hover {
+    background: #f8f9fa;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ============================================================
+   📈 بطاقات الإحصائيات
+   ============================================================ */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.stat-card p {
+    margin: 3px 0 0;
+    opacity: 0.9;
+    font-size: 13px;
+}
+
+/* ============================================================
+   🗺️ الخريطة
+   ============================================================ */
+.map-container {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#trackMap,
+#gpsMap {
+    height: 450px;
+    width: 100%;
+    z-index: 1;
+}
+
+/* ============================================================
+   📡 GPS
+   ============================================================ */
+.gps-status {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.gps-active {
+    background: #28a745;
+    animation: pulse 1.5s infinite;
+}
+
+.gps-inactive {
+    background: #dc3545;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+.gps-info {
+    background: white;
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin-top: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.gps-info .label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.gps-info .value {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.gps-info .accuracy {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* ============================================================
+   👥 تفاصيل التتبع
+   ============================================================ */
+.track-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.track-details .item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.track-details .item .label {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+.track-details .item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a3a5c;
+}
+
+/* ============================================================
+   📊 جداول النجاعة
+   ============================================================ */
+.eff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.eff-grid .region-table-card {
+    margin-bottom: 0;
+}
+
+.efficiency-table-wrapper {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+.efficiency-table-wrapper .table-title {
+    color: #0d6efd;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.efficiency-table-wrapper .table-title i {
+    font-size: 18px;
+}
+
+.efficiency-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.efficiency-table-wrapper table th {
+    background: #0d6efd;
+    color: white;
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.efficiency-table-wrapper table td {
+    padding: 8px 12px;
+    text-align: center;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.efficiency-table-wrapper table tr:hover td {
+    background: #f8f9fa;
+}
+
+.efficiency-table-wrapper table .total-row {
+    background: #e7f3ff;
+    font-weight: 700;
+    border-top: 2px solid #0d6efd;
+}
+
+.efficiency-table-wrapper table .total-row td {
+    padding: 10px 12px;
+}
+
+.efficiency-table-wrapper .progress-section {
+    margin-top: 15px;
+}
+
+.efficiency-table-wrapper .progress-section .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+}
+
+.efficiency-table-wrapper .progress-section .progress-label .status {
+    font-weight: 600;
+}
+
+.efficiency-table-wrapper .progress-section .progress-track {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 10px;
+    overflow: hidden;
+}
+
+.efficiency-table-wrapper .progress-section .progress-track .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* ============================================================
+   🔧 نظام الصيانة
+   ============================================================ */
+.maintenance-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.maintenance-stats .stat-box {
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+}
+
+.maintenance-stats .stat-box h4 {
+    font-size: 22px;
+    margin: 0;
+}
+
+.maintenance-stats .stat-box p {
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.9;
+}
+
+.stat-total {
+    background: #0d6efd;
+}
+
+.stat-progress {
+    background: #ffc107;
+    color: #1a3a5c;
+}
+
+.stat-completed {
+    background: #28a745;
+}
+
+.stat-cancelled {
+    background: #dc3545;
+}
+
+.maintenance-actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+.maintenance-actions .btn-sm {
+    padding: 3px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+}
+
+/* ============================================================
+   📝 نموذج الصيانة
+   ============================================================ */
+.maintenance-form {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.maintenance-form.active {
+    display: block;
+}
+
+.maintenance-form .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.maintenance-form .form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.maintenance-form label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #495057;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.maintenance-form label .currency {
+    color: #0d6efd;
+    font-size: 11px;
+}
+
+.maintenance-form input,
+.maintenance-form select,
+.maintenance-form textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.maintenance-form textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.maintenance-form .form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* ============================================================
+   🔩 قطع الغيار
+   ============================================================ */
+.parts-list {
+    margin-top: 10px;
+}
+
+.parts-list .part-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+}
+
+.parts-list .part-item input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.parts-list .part-item .remove-part {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* ============================================================
+   🏭 وحدات الصيانة
+   ============================================================ */
+.unit-tables-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.unit-tables-grid .region-table-card {
+    margin-bottom: 0;
+}
+
+.unit-tables-grid .region-table-card .region-table-header {
+    font-size: 13px;
+    padding: 10px 15px;
+}
+
+.unit-tables-grid table {
+    font-size: 11px;
+}
+
+.unit-tables-grid table th,
+.unit-tables-grid table td {
+    padding: 6px 8px;
+}
+
+/* ============================================================
+   👥 نموذج المستخدمين
+   ============================================================ */
+.user-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    align-items: end;
+}
+
+.user-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-form .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.user-form input,
+.user-form select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+}
+
+.user-form input:focus,
+.user-form select:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+/* ============================================================
+   🪟 النوافذ المنبثقة
+   ============================================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 380px;
+    max-width: 90%;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* ============================================================
+   ⬆️ أزرار التمرير
+   ============================================================ */
+.scroll-buttons {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 1000;
+}
+
+.scroll-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: #0d6efd;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   📱 استجابة للشاشات
+   ============================================================ */
+@media (max-width: 992px) {
+    .unit-tables-grid {
+        grid-template-columns: 1fr;
+    }
+    .eff-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .maintenance-form .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .user-form {
+        grid-template-columns: 1fr;
+    }
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+    header h1 {
+        font-size: 17px;
+        justify-content: center;
+    }
+    .header-content {
+        justify-content: center;
+    }
+    .nav {
+        justify-content: center;
+    }
+    .login-box {
+        padding: 20px;
+    }
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    #trackMap,
+    #gpsMap {
+        height: 300px;
+    }
+    table {
+        font-size: 11px;
+    }
+    table th,
+    table td {
+        padding: 5px 6px;
+    }
+    .eff-grid {
+        grid-template-columns: 1fr;
+    }
+    .efficiency-table-wrapper {
+        padding: 10px;
+    }
+    .maintenance-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .unit-tables-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+    header h1 {
+        font-size: 15px;
+    }
+    .header-content .btn {
+        font-size: 11px;
+        padding: 4px 10px;
+    }
+    .maintenance-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   🖨️ الطباعة
+   ============================================================ */
+@media print {
+    .nav,
+    .filter-bar,
+    .input-grid,
+    .scroll-buttons,
+    .header-content,
+    .no-print {
+        display: none !important;
+    }
+    .region-table-card {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+    body {
+        background: white !important;
+    }
+    .container {
+        padding: 0 !important;
+    }
+    .action-buttons .btn {
+        display: none !important;
+    }
+    .efficiency-table-wrapper {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+}
