@@ -240,31 +240,27 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- 📄 صفحة الجاهزية (eff) -->
+    <!-- 📄 صفحة الجاهزية (eff) - الجدول العام + الفئات + الأقاليم -->
     <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
         <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
             <button class="btn btn-success" onclick="loadVessels()"><i class="fas fa-sync-alt"></i> تحديث</button>
             <button class="btn btn-primary" onclick="showAllEfficiency()"><i class="fas fa-table"></i> عرض الكل</button>
-            <span style="font-weight:600; color:#6c757d; margin-right:10px;">| فلترة حسب الإقليم:</span>
-            <select id="effUnitFilter" onchange="filterEfficiencyByUnit()" style="padding:6px 12px; border:1px solid #ced4da; border-radius:6px; font-family:inherit;">
-                <option value="">جميع الأقاليم</option>
-                <option value="الشمال">🗺️ الشمال</option>
-                <option value="الساحل">🗺️ الساحل</option>
-                <option value="الوسط">🗺️ الوسط</option>
-                <option value="الجنوب">🗺️ الجنوب</option>
-            </select>
             <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">📊 0 مركب</span>
         </div>
 
         <!-- الإحصائيات -->
         <div class="stats-cards" id="statsCards"></div>
 
-        <!-- الجدول العام -->
+        <!-- ===== الجدول العام ===== -->
         <div id="generalEffTableContainer"></div>
 
-        <!-- جداول الأقاليم -->
-        <div id="regionsEffContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;"></div>
+        <!-- ===== جدول الفئات ===== -->
+        <div id="categoryEffContainer" style="margin-top:20px;"></div>
+
+        <!-- ===== جداول الأقاليم ===== -->
+        <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-map-marked-alt"></i> جداول الأقاليم</h4>
+        <div id="regionsEffContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px;"></div>
     </div>
 
     <!-- ============================================================ -->
