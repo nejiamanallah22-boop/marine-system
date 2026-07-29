@@ -325,18 +325,14 @@ function renderNotes() {
 }
 
 // ============================================================
-// دوال الصفحات - ربط جميع الصفحات
+// دوال الصفحات
 // ============================================================
 
 function showPage(page) {
-    // إخفاء جميع الصفحات
     document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
-    
-    // إظهار الصفحة المطلوبة
     const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
     if (target) target.classList.remove('hidden');
     
-    // تحميل البيانات حسب الصفحة
     switch(page) {
         case 'main':
             loadVessels();
@@ -362,8 +358,6 @@ function showPage(page) {
         case 'note':
             loadNotes();
             break;
-        default:
-            console.log('📄 صفحة غير معروفة:', page);
     }
 }
 
@@ -381,7 +375,7 @@ function scrollToBottom() {
 }
 
 // ============================================================
-// دوال المراكب (إضافة - تعديل - حذف)
+// دوال المراكب
 // ============================================================
 
 function addItem() {
@@ -942,7 +936,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية
+// 📊 صفحة الجاهزية - الجدول العام + الأقاليم
 // ============================================================
 
 function renderEfficiency() {
@@ -950,8 +944,7 @@ function renderEfficiency() {
     
     updateEfficiencyStats(vessels);
     renderGeneralEfficiencyTable(vessels);
-    renderCategoryEfficiencyTable(vessels);
-    renderUnitEfficiencyTables(vessels);
+    renderRegionEfficiencyTables(vessels);
 }
 
 function updateEfficiencyStats(vessels) {
@@ -972,6 +965,7 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
+// ===== الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
@@ -1009,7 +1003,6 @@ function renderGeneralEfficiencyTable(vessels) {
                             <th style="text-align:center;">الفئة</th>
                             <th style="text-align:center;">الإقليم</th>
                             <th style="text-align:center;">المنطقة</th>
-                            <th style="text-align:center;">وحدة الصيانة</th>
                             <th style="text-align:center;">الحالة</th>
                             <th style="text-align:center;">آخر صيانة</th>
                             <th style="text-align:center;">الإجراءات</th>
@@ -1027,7 +1020,6 @@ function renderGeneralEfficiencyTable(vessels) {
             .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
         
         const lastMaintDate = lastMaintenance ? new Date(lastMaintenance.date).toLocaleDateString() : '-';
-        const repairer = v.repairer || v.supp || 'غير محدد';
         
         html += `
             <tr>
@@ -1037,7 +1029,6 @@ function renderGeneralEfficiencyTable(vessels) {
                 <td style="text-align:center;">${v.cat || '-'}</td>
                 <td style="text-align:center;">${v.reg || '-'}</td>
                 <td style="text-align:center;">${v.zone || '-'}</td>
-                <td style="text-align:center; font-size:11px;">${repairer}</td>
                 <td style="text-align:center;">
                     <span style="color:${statusColor}; font-weight:600; font-size:13px;">
                         ${statusIcon} ${v.stat}
@@ -1068,116 +1059,27 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-function renderCategoryEfficiencyTable(vessels) {
-    const container = document.getElementById('categoryEffContainer');
-    if (!container) return;
-    
-    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    let html = `
-        <div class="efficiency-table-wrapper" style="margin-top:0;">
-            <div class="table-title">
-                <i class="fas fa-chart-pie"></i> 
-                نسبة الجاهزية حسب الفئات
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;">الفئة</th>
-                            <th style="text-align:center;">الإجمالي</th>
-                            <th style="text-align:center; background:#28a745; color:white;">✅ صالح</th>
-                            <th style="text-align:center; background:#dc3545; color:white;">❌ معطب</th>
-                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 صيانة</th>
-                            <th style="text-align:center;">نسبة الجاهزية</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    `;
-    
-    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
-    
-    categories.forEach(cat => {
-        const catVessels = vessels.filter(v => v.cat === cat);
-        const t = catVessels.length;
-        const g = catVessels.filter(v => v.stat === 'صالح').length;
-        const b = catVessels.filter(v => v.stat === 'معطب').length;
-        const m = catVessels.filter(v => v.stat === 'صيانة').length;
-        const e = t > 0 ? Math.round((g / t) * 100) : 0;
-        
-        totalAll += t; goodAll += g; badAll += b; maintAll += m;
-        const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
-        
-        html += `
-            <tr style="border-bottom:1px solid #e9ecef;">
-                <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                <td style="padding:8px; text-align:center;">${t}</td>
-                <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
-                <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
-                <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
-                    ${e}%
-                </td>
-            </tr>
-        `;
-    });
-    
-    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-    
-    html += `
-                    <tr class="total-row">
-                        <td style="text-align:right; font-weight:bold;">📊 المجموع الكلي</td>
-                        <td style="text-align:center; font-weight:bold;">${totalAll}</td>
-                        <td style="text-align:center; font-weight:bold; color:#28a745;">${goodAll}</td>
-                        <td style="text-align:center; font-weight:bold; color:#dc3545;">${badAll}</td>
-                        <td style="text-align:center; font-weight:bold; color:#ffc107;">${maintAll}</td>
-                        <td style="text-align:center; font-weight:bold; color:${totalColor}; font-size:16px;">
-                            ${totalEff}%
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="progress-section">
-            <div class="progress-label">
-                <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
-                <span class="status" style="color:${totalColor};">
-                    ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
-                </span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
-            </div>
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
-
-function renderUnitEfficiencyTables(vessels) {
+// ===== جداول الأقاليم =====
+function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
     
-    const units = [
-        { name: 'وحدة الصيانة والإسناد البحري تونس', icon: '🏛️' },
-        { name: 'وحدة الصيانة والإسناد البحري صفاقس', icon: '🏛️' },
-        { name: 'وحدة الصيانة والإسناد البحري المنستير', icon: '🏛️' },
-        { name: 'وحدة الصيانة والإسناد البحري جرجيس', icon: '🏛️' },
-        { name: 'شركة خاصة', icon: '🏢' }
+    const regions = [
+        { name: '🗺️ الحرس البحري بالشمال', key: 'الشمال' },
+        { name: '🗺️ الحرس البحري بالساحل', key: 'الساحل' },
+        { name: '🗺️ الحرس البحري بالوسط', key: 'الوسط' },
+        { name: '🗺️ الحرس البحري بالجنوب', key: 'الجنوب' }
     ];
     
     let html = '';
     
-    units.forEach(unit => {
-        const unitVessels = vessels.filter(v => 
-            v.repairer === unit.name || 
-            v.supp === unit.name
-        );
+    regions.forEach(region => {
+        const regionVessels = vessels.filter(v => v.reg === region.key);
         
-        const total = unitVessels.length;
-        const good = unitVessels.filter(v => v.stat === 'صالح').length;
-        const bad = unitVessels.filter(v => v.stat === 'معطب').length;
-        const maint = unitVessels.filter(v => v.stat === 'صيانة').length;
+        const total = regionVessels.length;
+        const good = regionVessels.filter(v => v.stat === 'صالح').length;
+        const bad = regionVessels.filter(v => v.stat === 'معطب').length;
+        const maint = regionVessels.filter(v => v.stat === 'صيانة').length;
         const eff = total > 0 ? Math.round((good / total) * 100) : 0;
         const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
@@ -1185,7 +1087,7 @@ function renderUnitEfficiencyTables(vessels) {
             <div class="region-table-card">
                 <div class="region-table-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
                     <span>
-                        ${unit.icon} ${unit.name}
+                        ${region.name}
                         <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
                             📊 ${total} مركب
                         </span>
@@ -1205,19 +1107,20 @@ function renderUnitEfficiencyTables(vessels) {
                                 <th style="text-align:right;">المركب</th>
                                 <th style="text-align:center;">الرقم</th>
                                 <th style="text-align:center;">الفئة</th>
+                                <th style="text-align:center;">المنطقة</th>
                                 <th style="text-align:center;">الحالة</th>
                                 <th style="text-align:center;">آخر صيانة</th>
                                 <th style="text-align:center;">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${unitVessels.length === 0 ? `
+                            ${regionVessels.length === 0 ? `
                                 <tr>
-                                    <td colspan="7" style="text-align:center; padding:20px; color:#6c757d;">
-                                        🚫 لا توجد مراكب في هذه الوحدة
+                                    <td colspan="8" style="text-align:center; padding:20px; color:#6c757d;">
+                                        🚫 لا توجد مراكب في هذا الإقليم
                                     </td>
                                 </tr>
-                            ` : unitVessels.map((v, i) => {
+                            ` : regionVessels.map((v, i) => {
                                 const statusColor = v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107';
                                 const statusIcon = v.stat === 'صالح' ? '✅' : v.stat === 'معطب' ? '❌' : '🔧';
                                 
@@ -1233,6 +1136,7 @@ function renderUnitEfficiencyTables(vessels) {
                                         <td style="text-align:right; font-weight:600;">${v.name || '-'}</td>
                                         <td style="text-align:center;">${v.num || '-'}</td>
                                         <td style="text-align:center;">${v.cat || '-'}</td>
+                                        <td style="text-align:center;">${v.zone || '-'}</td>
                                         <td style="text-align:center;">
                                             <span style="color:${statusColor}; font-weight:600;">
                                                 ${statusIcon} ${v.stat}
@@ -1344,23 +1248,28 @@ function viewVesselMaintenance(vesselId) {
 
 function showAllEfficiency() {
     renderEfficiency();
-    showAlert('✅ تم عرض جميع الوحدات', 'success');
+    showAlert('✅ تم عرض جميع الأقاليم', 'success');
 }
 
 function filterEfficiencyByUnit() {
     const select = document.getElementById('effUnitFilter');
     if (!select) return;
     const value = select.value;
+    
     if (value) {
-        showAlert(`🔍 عرض وحدة: ${value}`, 'info');
+        const filtered = allVessels.filter(v => v.reg === value);
+        showAlert(`🔍 عرض إقليم: ${value}`, 'info');
+        updateEfficiencyStats(filtered);
+        renderGeneralEfficiencyTable(filtered);
+        renderRegionEfficiencyTables(filtered);
     } else {
-        showAlert('✅ عرض جميع الوحدات', 'success');
+        showAlert('✅ عرض جميع الأقاليم', 'success');
+        renderEfficiency();
     }
-    renderEfficiency();
 }
 
 // ============================================================
-// دوال أخرى (تذاكر - مستخدمين - ملاحظات - خريطة)
+// دوال أخرى
 // ============================================================
 
 function sendTicket() {
