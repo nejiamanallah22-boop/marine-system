@@ -1627,3 +1627,41 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mainApp').style.display = 'none';
     }
 });
+// ============================================================
+// ✅ منع الدخول بدون تسجيل دخول
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. تحقق من وجود توكن ومستخدم
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    // 2. إذا لا يوجد توكن → أظهر شاشة الدخول
+    if (!token || !user) {
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+        return;
+    }
+    
+    // 3. حاول تحميل المستخدم
+    try {
+        currentUser = JSON.parse(user);
+        if (currentUser) {
+            // ✅ يوجد مستخدم → أظهر التطبيق
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            updateUserDisplay();
+            loadAllData();
+        } else {
+            // ❌ المستخدم غير صالح
+            localStorage.clear();
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+        }
+    } catch (e) {
+        // ❌ حدث خطأ
+        localStorage.clear();
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+    }
+});
