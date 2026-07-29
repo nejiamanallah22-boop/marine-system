@@ -1,0 +1,75 @@
+<!-- ===== صفحة الأسطول ===== -->
+<div class="page-fleet">
+    <!-- نموذج الإدخال -->
+    <div id="inputArea" class="input-grid">
+        <input type="text" id="iName" placeholder="🚢 اسم المركب">
+        <input type="text" id="iNum" placeholder="# الرقم">
+        <input type="number" id="iLen" placeholder="📏 الطول (م)">
+        <select id="iReg" onchange="updateZones()">
+            <option value="">🗺️ الإقليم</option>
+            <option value="الشمال">الشمال</option>
+            <option value="الساحل">الساحل</option>
+            <option value="الوسط">الوسط</option>
+            <option value="الجنوب">الجنوب</option>
+        </select>
+        <select id="iZone">
+            <option value="">📍 المنطقة</option>
+        </select>
+        <input type="text" id="iPort" placeholder="⚓ الميناء">
+        <input type="text" id="iSupp" placeholder="🔧 التعزيز">
+        <select id="iStat">
+            <option value="صالح">✅ صالح</option>
+            <option value="معطب">❌ معطب</option>
+            <option value="صيانة">🔧 صيانة</option>
+        </select>
+        <input type="text" id="iBreak" placeholder="🛠️ العطب">
+        <div class="date-group">
+            <label><i class="fas fa-calendar-alt"></i> 📅 تاريخ العطب</label>
+            <input type="date" id="iDate">
+        </div>
+        <div class="date-group">
+            <label><i class="fas fa-calendar-check"></i> 📅 انتهاء الأشغال</label>
+            <input type="date" id="iEnd">
+        </div>
+        <input type="text" id="iRef" placeholder="📄 المرجع">
+        <select id="iRepairer">
+            <option value="">🔧 المكلف بالتصليح</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="شركة خاصة">🏢 شركة خاصة</option>
+        </select>
+        <button class="btn btn-success" onclick="addVessel()">💾 حفظ</button>
+    </div>
+
+    <!-- جدول الأسطول -->
+    <div class="filter-bar">
+        <div class="search-input">
+            <input type="text" id="searchFleet" placeholder="🔍 بحث في الأسطول" onkeyup="filterFleet()">
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
+    </div>
+
+    <div class="region-table-card">
+        <div class="region-table-header">🚢 الأسطول البحري</div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th><th>الرقم</th><th>الطول</th>
+                        <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
+                        <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
+                        <th>العطب</th>
+                        <th>📅 تاريخ العطب</th>
+                        <th>📅 انتهاء الأشغال</th>
+                        <th>المرجع</th>
+                        <th>🔧 المكلف بالتصليح</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="fleetBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
