@@ -936,14 +936,18 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - الجدول العام + الأقاليم
+// 📊 صفحة الجاهزية - الجدول العام + الفئات + الأقاليم
 // ============================================================
 
 function renderEfficiency() {
     const vessels = allVessels || [];
     
+    // تحديث عدد المراكب
+    document.getElementById('effCount').textContent = `📊 ${vessels.length} مركب`;
+    
     updateEfficiencyStats(vessels);
     renderGeneralEfficiencyTable(vessels);
+    renderCategoryEfficiencyTable(vessels);
     renderRegionEfficiencyTables(vessels);
 }
 
@@ -1052,6 +1056,94 @@ function renderGeneralEfficiencyTable(vessels) {
     html += `
                     </tbody>
                 </table>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ===== جدول الفئات مع النسبة المئوية =====
+function renderCategoryEfficiencyTable(vessels) {
+    const container = document.getElementById('categoryEffContainer');
+    if (!container) return;
+    
+    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    
+    let html = `
+        <div class="efficiency-table-wrapper">
+            <div class="table-title">
+                <i class="fas fa-chart-pie"></i> 
+                نسبة الجاهزية حسب الفئات
+            </div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right;">الفئة</th>
+                            <th style="text-align:center;">الإجمالي</th>
+                            <th style="text-align:center; background:#28a745; color:white;">✅ صالح</th>
+                            <th style="text-align:center; background:#dc3545; color:white;">❌ معطب</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 صيانة</th>
+                            <th style="text-align:center;">نسبة الجاهزية</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+    
+    categories.forEach(cat => {
+        const catVessels = vessels.filter(v => v.cat === cat);
+        const t = catVessels.length;
+        const g = catVessels.filter(v => v.stat === 'صالح').length;
+        const b = catVessels.filter(v => v.stat === 'معطب').length;
+        const m = catVessels.filter(v => v.stat === 'صيانة').length;
+        const e = t > 0 ? Math.round((g / t) * 100) : 0;
+        
+        totalAll += t; goodAll += g; badAll += b; maintAll += m;
+        const color = e >= 80 ? '#28a745' : e >= 50 ? '#ffc107' : '#dc3545';
+        
+        html += `
+            <tr style="border-bottom:1px solid #e9ecef;">
+                <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
+                <td style="padding:8px; text-align:center;">${t}</td>
+                <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
+                <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
+                <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
+                <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
+                    ${e}%
+                </td>
+            </tr>
+        `;
+    });
+    
+    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
+    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+    
+    html += `
+                    <tr class="total-row">
+                        <td style="text-align:right; font-weight:bold;">📊 المجموع الكلي</td>
+                        <td style="text-align:center; font-weight:bold;">${totalAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#28a745;">${goodAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#dc3545;">${badAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:#ffc107;">${maintAll}</td>
+                        <td style="text-align:center; font-weight:bold; color:${totalColor}; font-size:16px;">
+                            ${totalEff}%
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
+                <span class="status" style="color:${totalColor};">
+                    ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
+                </span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
             </div>
         </div>
     `;
@@ -1248,24 +1340,12 @@ function viewVesselMaintenance(vesselId) {
 
 function showAllEfficiency() {
     renderEfficiency();
-    showAlert('✅ تم عرض جميع الأقاليم', 'success');
+    showAlert('✅ تم عرض جميع الجداول', 'success');
 }
 
 function filterEfficiencyByUnit() {
-    const select = document.getElementById('effUnitFilter');
-    if (!select) return;
-    const value = select.value;
-    
-    if (value) {
-        const filtered = allVessels.filter(v => v.reg === value);
-        showAlert(`🔍 عرض إقليم: ${value}`, 'info');
-        updateEfficiencyStats(filtered);
-        renderGeneralEfficiencyTable(filtered);
-        renderRegionEfficiencyTables(filtered);
-    } else {
-        showAlert('✅ عرض جميع الأقاليم', 'success');
-        renderEfficiency();
-    }
+    // هذه الدالة للفلترة حسب الحاجة
+    renderEfficiency();
 }
 
 // ============================================================
@@ -1515,7 +1595,9 @@ console.log('✅ جميع الدوال جاهزة');
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem('token')) {
+    // التحقق من وجود توكن في localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
         try {
             currentUser = JSON.parse(localStorage.getItem('user'));
             if (currentUser) {
