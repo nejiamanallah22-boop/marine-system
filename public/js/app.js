@@ -53,14 +53,13 @@ function getUser() {
 }
 
 // ============================================================
-// المصادقة - تسجيل الدخول (مصلح)
+// المصادقة - تسجيل الدخول
 // ============================================================
 
 function doLogin() {
     const username = document.getElementById('username')?.value.trim();
     const password = document.getElementById('password')?.value.trim();
     
-    // ✅ التحقق من وجود اسم المستخدم وكلمة المرور
     if (!username || !password) {
         showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
         return;
@@ -943,7 +942,6 @@ function renderMaintenanceUnits() {
 function renderEfficiency() {
     const vessels = allVessels || [];
     
-    // تحديث عدد المراكب
     const countEl = document.getElementById('effCount');
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
@@ -971,7 +969,7 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
-// ===== الجدول العام =====
+// ===== 1. الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
@@ -1065,7 +1063,7 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== جدول الفئات (نفس خصائص الجدول العام) =====
+// ===== 2. جدول الفئات (نفس خصائص الجدول العام) =====
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
@@ -1156,7 +1154,7 @@ function renderCategoryEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== جداول الأقاليم (نفس خصائص الجدول العام) =====
+// ===== 3. جداول الأقاليم (نفس خصائص الجدول العام) =====
 function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
@@ -1594,11 +1592,10 @@ window.filterEfficiencyByUnit = filterEfficiencyByUnit;
 console.log('✅ جميع الدوال جاهزة');
 
 // ============================================================
-// تهيئة التطبيق (مصلح - لا يدخل بدون كلمة مرور)
+// تهيئة التطبيق
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ التحقق من وجود توكن ومستخدم في localStorage
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     
@@ -1606,24 +1603,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             currentUser = JSON.parse(user);
             if (currentUser) {
-                // ✅ إخفاء شاشة الدخول وإظهار التطبيق
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 updateUserDisplay();
                 loadAllData();
             } else {
-                // ❌ إذا لم يكن هناك مستخدم، أظهر شاشة الدخول
                 document.getElementById('loginOverlay').style.display = 'flex';
                 document.getElementById('mainApp').style.display = 'none';
             }
         } catch (e) {
-            // ❌ في حالة وجود خطأ، امسح localStorage وأظهر شاشة الدخول
             localStorage.clear();
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
         }
     } else {
-        // ❌ لا يوجد توكن، أظهر شاشة الدخول
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
     }
