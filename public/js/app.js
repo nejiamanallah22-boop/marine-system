@@ -325,6 +325,62 @@ function renderNotes() {
 }
 
 // ============================================================
+// دوال الصفحات - ربط جميع الصفحات
+// ============================================================
+
+function showPage(page) {
+    // إخفاء جميع الصفحات
+    document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
+    
+    // إظهار الصفحة المطلوبة
+    const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
+    if (target) target.classList.remove('hidden');
+    
+    // تحميل البيانات حسب الصفحة
+    switch(page) {
+        case 'main':
+            loadVessels();
+            break;
+        case 'maintenance':
+            loadMaintenance();
+            break;
+        case 'eff':
+            loadVessels();
+            break;
+        case 'support':
+            loadTickets();
+            break;
+        case 'track':
+            setTimeout(initMap, 100);
+            break;
+        case 'map':
+            setTimeout(initMap, 100);
+            break;
+        case 'users':
+            loadUsers();
+            break;
+        case 'note':
+            loadNotes();
+            break;
+        default:
+            console.log('📄 صفحة غير معروفة:', page);
+    }
+}
+
+function refreshAllPages() {
+    loadAllData();
+    showAlert('✅ تم تحديث جميع البيانات', 'success');
+}
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToBottom() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+// ============================================================
 // دوال المراكب (إضافة - تعديل - حذف)
 // ============================================================
 
@@ -469,56 +525,6 @@ function updateZones() {
     options.forEach(z => {
         zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
     });
-}
-
-// ============================================================
-// دوال الصفحات
-// ============================================================
-
-function showPage(page) {
-    document.querySelectorAll('[id^="page"]').forEach(el => el.classList.add('hidden'));
-    const target = document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1));
-    if (target) target.classList.remove('hidden');
-    
-    switch(page) {
-        case 'main':
-            loadVessels();
-            break;
-        case 'maintenance':
-            loadMaintenance();
-            break;
-        case 'eff':
-            loadVessels();
-            break;
-        case 'support':
-            loadTickets();
-            break;
-        case 'track':
-            setTimeout(initMap, 100);
-            break;
-        case 'map':
-            setTimeout(initMap, 100);
-            break;
-        case 'users':
-            loadUsers();
-            break;
-        case 'note':
-            loadNotes();
-            break;
-    }
-}
-
-function refreshAllPages() {
-    loadAllData();
-    showAlert('✅ تم تحديث جميع البيانات', 'success');
-}
-
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToBottom() {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
 // ============================================================
@@ -936,197 +942,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// دوال أخرى (تذاكر - مستخدمين - ملاحظات)
-// ============================================================
-
-function sendTicket() {
-    const subject = document.getElementById('ticketSubject')?.value.trim();
-    const message = document.getElementById('ticketMessage')?.value.trim();
-    
-    if (!subject || !message) {
-        showAlert('⚠️ الرجاء إدخال العنوان والرسالة', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ subject, message })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إرسال التذكرة', 'success');
-            document.getElementById('ticketSubject').value = '';
-            document.getElementById('ticketMessage').value = '';
-            loadTickets();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Send ticket error:', err);
-        showAlert('❌ خطأ في إرسال التذكرة', 'danger');
-    });
-}
-
-function addUser() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    const name = document.getElementById('un')?.value.trim();
-    const password = document.getElementById('up')?.value.trim();
-    const role = document.getElementById('ur')?.value;
-    
-    if (!name || !password) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
-    }
-    
-    const data = {
-        name: name,
-        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
-        password: password,
-        role: role || 'مشاهد'
-    };
-    
-    fetch('/api/users', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إضافة المستخدم', 'success');
-            document.getElementById('un').value = '';
-            document.getElementById('up').value = '';
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Add user error:', err);
-        showAlert('❌ خطأ في إضافة المستخدم', 'danger');
-    });
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/users/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حذف المستخدم', 'success');
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete user error:', err);
-        showAlert('❌ خطأ في حذف المستخدم', 'danger');
-    });
-}
-
-function saveNote() {
-    const title = document.getElementById('noteTitle')?.value.trim();
-    const content = document.getElementById('noteContent')?.value.trim();
-    const date = document.getElementById('noteDate')?.value;
-    
-    if (!title || !content || !date) {
-        showAlert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/notes', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ title, content, date })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حفظ المذكرة', 'success');
-            document.getElementById('noteTitle').value = '';
-            document.getElementById('noteContent').value = '';
-            document.getElementById('noteDate').value = '';
-            loadNotes();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحفظ'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Save note error:', err);
-        showAlert('❌ خطأ في حفظ المذكرة', 'danger');
-    });
-}
-
-function toggleNotifications() {
-    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
-}
-
-function initMap() {
-    console.log('🗺️ Map initialized');
-}
-
-function startTracking() {
-    showAlert('📍 بدء التتبع المباشر', 'info');
-}
-
-function stopTracking() {
-    showAlert('⏹️ تم إيقاف التتبع', 'info');
-}
-
-function loadLocations() {
-    showAlert('📍 تم تحديث المواقع', 'success');
-}
-
-function centerMapOnUser() {
-    showAlert('🎯 تم التمركز على موقعك', 'success');
-}
-
-function refreshTrackUsers() {
-    showAlert('✅ تم تحديث المستخدمين', 'success');
-}
-
-// ============================================================
-// 📊 صفحة الجاهزية - الكود الكامل (الجدول العام - الفئات - النسبة المئوية)
+// 📊 صفحة الجاهزية
 // ============================================================
 
 function renderEfficiency() {
@@ -1156,7 +972,6 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
-// ===== الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
@@ -1253,22 +1068,9 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== الجدول حسب الفئات مع النسبة المئوية =====
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
-    if (!container) {
-        // إنشاء الحاوية إذا لم تكن موجودة
-        const parent = document.getElementById('regionsEffContainer');
-        if (parent) {
-            const div = document.createElement('div');
-            div.id = 'categoryEffContainer';
-            div.style.cssText = 'grid-column: 1 / -1;';
-            parent.parentNode.insertBefore(div, parent);
-        }
-    }
-    
-    const container2 = document.getElementById('categoryEffContainer');
-    if (!container2) return;
+    if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     let html = `
@@ -1349,10 +1151,9 @@ function renderCategoryEfficiencyTable(vessels) {
         </div>
     `;
     
-    container2.innerHTML = html;
+    container.innerHTML = html;
 }
 
-// ===== جداول الأقاليم =====
 function renderUnitEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
@@ -1559,6 +1360,202 @@ function filterEfficiencyByUnit() {
 }
 
 // ============================================================
+// دوال أخرى (تذاكر - مستخدمين - ملاحظات - خريطة)
+// ============================================================
+
+function sendTicket() {
+    const subject = document.getElementById('ticketSubject')?.value.trim();
+    const message = document.getElementById('ticketMessage')?.value.trim();
+    
+    if (!subject || !message) {
+        showAlert('⚠️ الرجاء إدخال العنوان والرسالة', 'warning');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ subject, message })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إرسال التذكرة', 'success');
+            document.getElementById('ticketSubject').value = '';
+            document.getElementById('ticketMessage').value = '';
+            loadTickets();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Send ticket error:', err);
+        showAlert('❌ خطأ في إرسال التذكرة', 'danger');
+    });
+}
+
+function saveNote() {
+    const title = document.getElementById('noteTitle')?.value.trim();
+    const content = document.getElementById('noteContent')?.value.trim();
+    const date = document.getElementById('noteDate')?.value;
+    
+    if (!title || !content || !date) {
+        showAlert('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
+        return;
+    }
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, content, date })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حفظ المذكرة', 'success');
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            document.getElementById('noteDate').value = '';
+            loadNotes();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحفظ'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Save note error:', err);
+        showAlert('❌ خطأ في حفظ المذكرة', 'danger');
+    });
+}
+
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('un')?.value.trim();
+    const password = document.getElementById('up')?.value.trim();
+    const role = document.getElementById('ur')?.value;
+    
+    if (!name || !password) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
+        return;
+    }
+    
+    const data = {
+        name: name,
+        email: name.toLowerCase().replace(/\s/g, '') + '@test.com',
+        password: password,
+        role: role || 'مشاهد'
+    };
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم', 'success');
+            document.getElementById('un').value = '';
+            document.getElementById('up').value = '';
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ خطأ في إضافة المستخدم', 'danger');
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
+}
+
+function toggleNotifications() {
+    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
+}
+
+function initMap() {
+    console.log('🗺️ Map initialized');
+}
+
+function startTracking() {
+    showAlert('📍 بدء التتبع المباشر', 'info');
+}
+
+function stopTracking() {
+    showAlert('⏹️ تم إيقاف التتبع', 'info');
+}
+
+function loadLocations() {
+    showAlert('📍 تم تحديث المواقع', 'success');
+}
+
+function centerMapOnUser() {
+    showAlert('🎯 تم التمركز على موقعك', 'success');
+}
+
+function refreshTrackUsers() {
+    showAlert('✅ تم تحديث المستخدمين', 'success');
+}
+
+function clearTrackUsers() {
+    if (confirm('⚠️ هل أنت متأكد من مسح جميع مواقع المستخدمين؟')) {
+        showAlert('✅ تم مسح جميع المواقع', 'success');
+    }
+}
+
+// ============================================================
 // تصدير الدوال
 // ============================================================
 
@@ -1589,6 +1586,7 @@ window.stopTracking = stopTracking;
 window.loadLocations = loadLocations;
 window.centerMapOnUser = centerMapOnUser;
 window.refreshTrackUsers = refreshTrackUsers;
+window.clearTrackUsers = clearTrackUsers;
 window.toggleMaintenanceForm = toggleMaintenanceForm;
 window.saveMaintenance = saveMaintenance;
 window.addPart = addPart;
