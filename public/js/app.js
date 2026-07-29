@@ -936,7 +936,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - الجدول العام + الفئات + الأقاليم
+// 📊 صفحة الجاهزية
 // ============================================================
 
 function renderEfficiency() {
@@ -969,7 +969,6 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
-// ===== 1. الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
@@ -1063,7 +1062,6 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== 2. جدول الفئات =====
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
@@ -1154,7 +1152,6 @@ function renderCategoryEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== 3. جداول الأقاليم =====
 function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
@@ -1546,6 +1543,50 @@ function clearTrackUsers() {
 }
 
 // ============================================================
+// ✅ تهيئة التطبيق - منع الدخول بدون تسجيل
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 جاري تهيئة التطبيق...');
+    
+    const loginOverlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    console.log('📌 التوكن:', token ? 'موجود' : 'غير موجود');
+    console.log('📌 المستخدم:', user ? 'موجود' : 'غير موجود');
+    
+    // إذا كان هناك توكن ومستخدم → حاول تسجيل الدخول التلقائي
+    if (token && user) {
+        try {
+            currentUser = JSON.parse(user);
+            if (currentUser && currentUser.id) {
+                // ✅ مستخدم صحيح
+                loginOverlay.style.display = 'none';
+                mainApp.style.display = 'block';
+                updateUserDisplay();
+                loadAllData();
+                console.log('✅ تم تسجيل الدخول تلقائياً');
+                return;
+            }
+        } catch (e) {
+            console.log('❌ خطأ في قراءة المستخدم:', e);
+        }
+    }
+    
+    // ❌ لا يوجد مستخدم → إظهار شاشة الدخول
+    console.log('🔐 إظهار شاشة الدخول');
+    loginOverlay.style.display = 'flex';
+    mainApp.style.display = 'none';
+    
+    // تنظيف أي بيانات قديمة
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+});
+
+// ============================================================
 // تصدير الدوال
 // ============================================================
 
@@ -1588,80 +1629,3 @@ window.viewVesselMaintenance = viewVesselMaintenance;
 window.renderEfficiency = renderEfficiency;
 window.showAllEfficiency = showAllEfficiency;
 window.filterEfficiencyByUnit = filterEfficiencyByUnit;
-
-console.log('✅ جميع الدوال جاهزة');
-
-// ============================================================
-// ✅ تهيئة التطبيق - منع الدخول بدون تسجيل دخول
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    // ✅ إذا لا يوجد توكن أو مستخدم → أظهر شاشة الدخول
-    if (!token || !user) {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-        return;
-    }
-    
-    try {
-        currentUser = JSON.parse(user);
-        if (currentUser) {
-            // ✅ يوجد مستخدم صالح → أظهر التطبيق
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            updateUserDisplay();
-            loadAllData();
-        } else {
-            // ❌ المستخدم غير صالح → أظهر شاشة الدخول
-            localStorage.clear();
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-    } catch (e) {
-        // ❌ حدث خطأ → امسح التخزين وأظهر شاشة الدخول
-        localStorage.clear();
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    }
-});
-// ============================================================
-// ✅ منع الدخول بدون تسجيل دخول
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. تحقق من وجود توكن ومستخدم
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    // 2. إذا لا يوجد توكن → أظهر شاشة الدخول
-    if (!token || !user) {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-        return;
-    }
-    
-    // 3. حاول تحميل المستخدم
-    try {
-        currentUser = JSON.parse(user);
-        if (currentUser) {
-            // ✅ يوجد مستخدم → أظهر التطبيق
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            updateUserDisplay();
-            loadAllData();
-        } else {
-            // ❌ المستخدم غير صالح
-            localStorage.clear();
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-    } catch (e) {
-        // ❌ حدث خطأ
-        localStorage.clear();
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-    }
-});
