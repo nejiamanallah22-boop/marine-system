@@ -53,13 +53,14 @@ function getUser() {
 }
 
 // ============================================================
-// المصادقة - تسجيل الدخول
+// المصادقة - تسجيل الدخول (مصلح)
 // ============================================================
 
 function doLogin() {
     const username = document.getElementById('username')?.value.trim();
     const password = document.getElementById('password')?.value.trim();
     
+    // ✅ التحقق من وجود اسم المستخدم وكلمة المرور
     if (!username || !password) {
         showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
         return;
@@ -943,7 +944,8 @@ function renderEfficiency() {
     const vessels = allVessels || [];
     
     // تحديث عدد المراكب
-    document.getElementById('effCount').textContent = `📊 ${vessels.length} مركب`;
+    const countEl = document.getElementById('effCount');
+    if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
     updateEfficiencyStats(vessels);
     renderGeneralEfficiencyTable(vessels);
@@ -1063,7 +1065,7 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== جدول الفئات مع النسبة المئوية =====
+// ===== جدول الفئات (نفس خصائص الجدول العام) =====
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
@@ -1074,7 +1076,10 @@ function renderCategoryEfficiencyTable(vessels) {
         <div class="efficiency-table-wrapper">
             <div class="table-title">
                 <i class="fas fa-chart-pie"></i> 
-                نسبة الجاهزية حسب الفئات
+                الجدول حسب الفئات
+                <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
+                    (${vessels.length} مركب)
+                </span>
             </div>
             <div class="scrollable-table">
                 <table>
@@ -1107,10 +1112,10 @@ function renderCategoryEfficiencyTable(vessels) {
         html += `
             <tr style="border-bottom:1px solid #e9ecef;">
                 <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                <td style="padding:8px; text-align:center;">${t}</td>
-                <td style="padding:8px; text-align:center; color:#28a745;">${g}</td>
-                <td style="padding:8px; text-align:center; color:#dc3545;">${b}</td>
-                <td style="padding:8px; text-align:center; color:#ffc107;">${m}</td>
+                <td style="padding:8px; text-align:center; font-weight:bold;">${t}</td>
+                <td style="padding:8px; text-align:center; color:#28a745; font-weight:bold;">${g}</td>
+                <td style="padding:8px; text-align:center; color:#dc3545; font-weight:bold;">${b}</td>
+                <td style="padding:8px; text-align:center; color:#ffc107; font-weight:bold;">${m}</td>
                 <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
                     ${e}%
                 </td>
@@ -1151,7 +1156,7 @@ function renderCategoryEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ===== جداول الأقاليم =====
+// ===== جداول الأقاليم (نفس خصائص الجدول العام) =====
 function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
@@ -1167,7 +1172,6 @@ function renderRegionEfficiencyTables(vessels) {
     
     regions.forEach(region => {
         const regionVessels = vessels.filter(v => v.reg === region.key);
-        
         const total = regionVessels.length;
         const good = regionVessels.filter(v => v.stat === 'صالح').length;
         const bad = regionVessels.filter(v => v.stat === 'معطب').length;
@@ -1344,7 +1348,6 @@ function showAllEfficiency() {
 }
 
 function filterEfficiencyByUnit() {
-    // هذه الدالة للفلترة حسب الحاجة
     renderEfficiency();
 }
 
@@ -1591,23 +1594,37 @@ window.filterEfficiencyByUnit = filterEfficiencyByUnit;
 console.log('✅ جميع الدوال جاهزة');
 
 // ============================================================
-// تهيئة التطبيق
+// تهيئة التطبيق (مصلح - لا يدخل بدون كلمة مرور)
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    // التحقق من وجود توكن في localStorage
+    // ✅ التحقق من وجود توكن ومستخدم في localStorage
     const token = localStorage.getItem('token');
-    if (token) {
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
         try {
-            currentUser = JSON.parse(localStorage.getItem('user'));
+            currentUser = JSON.parse(user);
             if (currentUser) {
+                // ✅ إخفاء شاشة الدخول وإظهار التطبيق
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
                 updateUserDisplay();
                 loadAllData();
+            } else {
+                // ❌ إذا لم يكن هناك مستخدم، أظهر شاشة الدخول
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
             }
         } catch (e) {
+            // ❌ في حالة وجود خطأ، امسح localStorage وأظهر شاشة الدخول
             localStorage.clear();
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
         }
+    } else {
+        // ❌ لا يوجد توكن، أظهر شاشة الدخول
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
     }
 });
