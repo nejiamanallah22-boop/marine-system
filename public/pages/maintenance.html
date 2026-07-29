@@ -1,0 +1,128 @@
+<!-- ===== صفحة الصيانة ===== -->
+<div class="page-maintenance">
+    <!-- شريط الأدوات -->
+    <div class="filter-bar">
+        <span style="font-weight:700; color:#0d6efd;">🔧 نظام تتبع الصيانة</span>
+        <button class="btn btn-sm btn-success" onclick="toggleMaintenanceForm()">
+            <i class="fas fa-plus"></i> سجل صيانة جديد
+        </button>
+        <button class="btn btn-sm btn-secondary" onclick="loadMaintenance()">
+            <i class="fas fa-sync-alt"></i> تحديث
+        </button>
+    </div>
+    
+    <!-- نموذج إدخال الصيانة -->
+    <div class="maintenance-form" id="maintenanceForm">
+        <h4 style="color:#0d6efd; margin-bottom:10px;"><i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد</h4>
+        <div class="form-grid">
+            <div>
+                <label><i class="fas fa-ship"></i> المركب</label>
+                <select id="mVesselId">
+                    <option value="">اختر المركب</option>
+                </select>
+            </div>
+            <div>
+                <label><i class="fas fa-tools"></i> نوع الصيانة</label>
+                <select id="mType">
+                    <option value="عادية">عادية</option>
+                    <option value="طارئة">طارئة</option>
+                    <option value="دورية">دورية</option>
+                </select>
+            </div>
+            <div>
+                <label><i class="fas fa-industry"></i> الوحدة</label>
+                <select id="mUnit">
+                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                    <option value="شركة خاصة">🏢 شركة خاصة</option>
+                </select>
+            </div>
+            <div>
+                <label><i class="fas fa-user-cog"></i> الفني المسؤول</label>
+                <input type="text" id="mTechnician" placeholder="اسم الفني">
+            </div>
+            <div class="full-width">
+                <label><i class="fas fa-file-alt"></i> وصف العطل</label>
+                <textarea id="mDescription" placeholder="وصف تفصيلي للعطل"></textarea>
+            </div>
+            <div class="full-width">
+                <label><i class="fas fa-cogs"></i> قطع الغيار المستخدمة</label>
+                <div id="partsContainer">
+                    <div class="part-item">
+                        <input type="text" placeholder="اسم القطعة" class="part-name">
+                        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+                        <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+                        <button class="remove-part" onclick="removePart(this)">✕</button>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-info" onclick="addPart()" style="margin-top:5px;">
+                    <i class="fas fa-plus"></i> إضافة قطعة
+                </button>
+            </div>
+            <div>
+                <label><i class="fas fa-money-bill"></i> التكلفة الإجمالية <span class="currency">(د.ت)</span></label>
+                <input type="number" id="mCost" placeholder="0" step="0.01">
+            </div>
+            <div>
+                <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
+                <input type="text" id="mNotes" placeholder="ملاحظات إضافية">
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-success" onclick="saveMaintenance()">
+                <i class="fas fa-save"></i> حفظ
+            </button>
+            <button class="btn btn-secondary" onclick="toggleMaintenanceForm()">
+                <i class="fas fa-times"></i> إلغاء
+            </button>
+        </div>
+    </div>
+    
+    <!-- إحصائيات -->
+    <div id="maintenanceStats"></div>
+    
+    <!-- الصيانة العامة -->
+    <h4 style="color:#dc3545; margin:20px 0 15px;">
+        <i class="fas fa-exclamation-triangle"></i> الصيانة العامة - المراكب المعطبة
+        <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">(تختفي تلقائياً عند الإصلاح)</span>
+    </h4>
+    <div id="generalMaintenanceContainer"></div>
+    
+    <!-- Historique -->
+    <h4 style="color:#0d6efd; margin:20px 0 15px;">
+        <i class="fas fa-history"></i> Historique des maintenance
+        <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">(جميع السجلات - حتى المكررة)</span>
+    </h4>
+    
+    <!-- فلتر -->
+    <div class="filter-bar" style="background:#f8f9fa; border:1px solid #e9ecef; flex-wrap:wrap;">
+        <label style="font-weight:600; font-size:13px; color:#495057;">
+            <i class="fas fa-filter"></i> فلترة:
+        </label>
+        <input type="text" id="filterVessel" placeholder="🔍 بحث بالمركب" 
+               style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px; min-width:150px;"
+               onkeyup="applyHistoryFilters()">
+        <input type="date" id="filterDateFrom" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;"
+               onchange="applyHistoryFilters()">
+        <input type="date" id="filterDateTo" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;"
+               onchange="applyHistoryFilters()">
+        <select id="filterStatus" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;"
+                onchange="applyHistoryFilters()">
+            <option value="">جميع الحالات</option>
+            <option value="مكتملة">✅ مكتملة</option>
+            <option value="ملغية">❌ ملغية</option>
+        </select>
+        <button class="btn btn-sm btn-danger" onclick="resetHistoryFilters()">
+            <i class="fas fa-times"></i> إلغاء
+        </button>
+        <span id="historyCount" style="font-size:12px; color:#6c757d;">📊 0</span>
+    </div>
+    
+    <div id="historyMaintenanceContainer"></div>
+    
+    <!-- وحدات الصيانة -->
+    <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-building"></i> وحدات الصيانة</h4>
+    <div id="maintenanceUnitsContainer" class="unit-tables-grid"></div>
+</div>
