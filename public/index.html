@@ -31,6 +31,7 @@
 
 <!-- ===== التطبيق الرئيسي ===== -->
 <div id="mainApp" class="container">
+    
     <!-- ===== الهيدر ===== -->
     <header>
         <h1>
@@ -60,57 +61,61 @@
         <button class="btn btn-primary" onclick="showPage('note')">📝 Note Verbale</button>
     </div>
 
-    <!-- ===== نموذج الإدخال ===== -->
-    <div id="inputArea" class="input-grid">
-        <input type="text" id="iName" placeholder="🚢 اسم المركب">
-        <input type="text" id="iNum" placeholder="# الرقم">
-        <input type="number" id="iLen" placeholder="📏 الطول (م)">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">🗺️ الإقليم</option>
-            <option value="الشمال">الشمال</option>
-            <option value="الساحل">الساحل</option>
-            <option value="الوسط">الوسط</option>
-            <option value="الجنوب">الجنوب</option>
-        </select>
-        <select id="iZone">
-            <option value="">📍 المنطقة</option>
-        </select>
-        <input type="text" id="iPort" placeholder="⚓ الميناء">
-        <input type="text" id="iSupp" placeholder="🔧 التعزيز">
-        <select id="iStat">
-            <option value="صالح">✅ صالح</option>
-            <option value="معطب">❌ معطب</option>
-            <option value="صيانة">🔧 صيانة</option>
-        </select>
-        <input type="text" id="iBreak" placeholder="🛠️ العطب">
-        <div class="date-group">
-            <label><i class="fas fa-calendar-alt"></i> 📅 تاريخ العطب</label>
-            <input type="date" id="iDate">
-        </div>
-        <div class="date-group">
-            <label><i class="fas fa-calendar-check"></i> 📅 انتهاء الأشغال</label>
-            <input type="date" id="iEnd">
-        </div>
-        <input type="text" id="iRef" placeholder="📄 المرجع">
-        <select id="iRepairer">
-            <option value="">🔧 المكلف بالتصليح</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="شركة خاصة">🏢 شركة خاصة</option>
-        </select>
-        <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
-    </div>
-
-    <!-- ===== صفحة الأسطول ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة الأسطول (main) -->
+    <!-- ============================================================ -->
     <div id="pageMain">
+        <!-- نموذج الإدخال -->
+        <div id="inputArea" class="input-grid">
+            <input type="text" id="iName" placeholder="🚢 اسم المركب">
+            <input type="text" id="iNum" placeholder="# الرقم">
+            <input type="number" id="iLen" placeholder="📏 الطول (م)">
+            <select id="iReg" onchange="updateZones()">
+                <option value="">🗺️ الإقليم</option>
+                <option value="الشمال">الشمال</option>
+                <option value="الساحل">الساحل</option>
+                <option value="الوسط">الوسط</option>
+                <option value="الجنوب">الجنوب</option>
+            </select>
+            <select id="iZone">
+                <option value="">📍 المنطقة</option>
+            </select>
+            <input type="text" id="iPort" placeholder="⚓ الميناء">
+            <input type="text" id="iSupp" placeholder="🔧 التعزيز">
+            <select id="iStat">
+                <option value="صالح">✅ صالح</option>
+                <option value="معطب">❌ معطب</option>
+                <option value="صيانة">🔧 صيانة</option>
+            </select>
+            <input type="text" id="iBreak" placeholder="🛠️ العطب">
+            <div class="date-group">
+                <label><i class="fas fa-calendar-alt"></i> 📅 تاريخ العطب</label>
+                <input type="date" id="iDate">
+            </div>
+            <div class="date-group">
+                <label><i class="fas fa-calendar-check"></i> 📅 انتهاء الأشغال</label>
+                <input type="date" id="iEnd">
+            </div>
+            <input type="text" id="iRef" placeholder="📄 المرجع">
+            <select id="iRepairer">
+                <option value="">🔧 المكلف بالتصليح</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="شركة خاصة">🏢 شركة خاصة</option>
+            </select>
+            <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
+        </div>
+
+        <!-- جدول الأسطول -->
         <div class="filter-bar">
             <div class="search-input">
                 <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="loadVessels()">
             </div>
             <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
         </div>
+
         <div class="region-table-card">
             <div class="region-table-header">🚢 الأسطول البحري</div>
             <div class="scrollable-table">
@@ -134,40 +139,94 @@
         </div>
     </div>
 
-    <!-- ===== صفحة الصيانة ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة الصيانة (maintenance) -->
+    <!-- ============================================================ -->
     <div id="pageMaintenance" class="hidden">
         <div class="filter-bar">
             <span style="font-weight:700; color:#0d6efd;">🔧 نظام تتبع الصيانة</span>
             <button class="btn btn-sm btn-success" onclick="toggleMaintenanceForm()"><i class="fas fa-plus"></i> سجل صيانة جديد</button>
             <button class="btn btn-sm btn-secondary" onclick="loadMaintenance()"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
-        
+
+        <!-- نموذج الصيانة -->
         <div class="maintenance-form" id="maintenanceForm">
             <h4 style="color:#0d6efd; margin-bottom:10px;"><i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد</h4>
             <div class="form-grid">
-                <div><label><i class="fas fa-ship"></i> المركب</label><select id="mVesselId"><option value="">اختر المركب</option></select></div>
-                <div><label><i class="fas fa-tools"></i> نوع الصيانة</label><select id="mType"><option value="عادية">عادية</option><option value="طارئة">طارئة</option><option value="دورية">دورية</option></select></div>
-                <div><label><i class="fas fa-industry"></i> الوحدة</label><select id="mUnit"><option value="وحدة الصيانة والإسناد البحري تونس">تونس</option><option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option><option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option><option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option><option value="شركة خاصة">شركة خاصة</option></select></div>
-                <div><label><i class="fas fa-user-cog"></i> الفني المسؤول</label><input type="text" id="mTechnician" placeholder="اسم الفني"></div>
-                <div class="full-width"><label><i class="fas fa-file-alt"></i> وصف العطل</label><textarea id="mDescription" placeholder="وصف العطل"></textarea></div>
-                <div class="full-width"><label><i class="fas fa-cogs"></i> قطع الغيار</label><div id="partsContainer"><div class="part-item"><input type="text" placeholder="اسم القطعة" class="part-name"><input type="number" placeholder="الكمية" class="part-qty" style="width:80px;"><input type="number" placeholder="السعر" class="part-price" style="width:80px;"><button class="remove-part" onclick="removePart(this)">✕</button></div></div><button class="btn btn-sm btn-info" onclick="addPart()"><i class="fas fa-plus"></i> إضافة قطعة</button></div>
-                <div><label><i class="fas fa-money-bill"></i> التكلفة (د.ت)</label><input type="number" id="mCost" placeholder="0" step="0.01"></div>
-                <div><label><i class="fas fa-sticky-note"></i> ملاحظات</label><input type="text" id="mNotes" placeholder="ملاحظات"></div>
+                <div>
+                    <label><i class="fas fa-ship"></i> المركب</label>
+                    <select id="mVesselId"><option value="">اختر المركب</option></select>
+                </div>
+                <div>
+                    <label><i class="fas fa-tools"></i> نوع الصيانة</label>
+                    <select id="mType">
+                        <option value="عادية">عادية</option>
+                        <option value="طارئة">طارئة</option>
+                        <option value="دورية">دورية</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fas fa-industry"></i> الوحدة</label>
+                    <select id="mUnit">
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        <option value="شركة خاصة">🏢 شركة خاصة</option>
+                    </select>
+                </div>
+                <div>
+                    <label><i class="fas fa-user-cog"></i> الفني المسؤول</label>
+                    <input type="text" id="mTechnician" placeholder="اسم الفني">
+                </div>
+                <div class="full-width">
+                    <label><i class="fas fa-file-alt"></i> وصف العطل</label>
+                    <textarea id="mDescription" placeholder="وصف تفصيلي للعطل"></textarea>
+                </div>
+                <div class="full-width">
+                    <label><i class="fas fa-cogs"></i> قطع الغيار المستخدمة</label>
+                    <div id="partsContainer">
+                        <div class="part-item">
+                            <input type="text" placeholder="اسم القطعة" class="part-name">
+                            <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
+                            <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
+                            <button class="remove-part" onclick="removePart(this)">✕</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-info" onclick="addPart()" style="margin-top:5px;">
+                        <i class="fas fa-plus"></i> إضافة قطعة
+                    </button>
+                </div>
+                <div>
+                    <label><i class="fas fa-money-bill"></i> التكلفة الإجمالية <span class="currency">(د.ت)</span></label>
+                    <input type="number" id="mCost" placeholder="0" step="0.01">
+                </div>
+                <div>
+                    <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
+                    <input type="text" id="mNotes" placeholder="ملاحظات إضافية">
+                </div>
             </div>
             <div class="form-actions">
                 <button class="btn btn-success" onclick="saveMaintenance()"><i class="fas fa-save"></i> حفظ</button>
                 <button class="btn btn-secondary" onclick="toggleMaintenanceForm()"><i class="fas fa-times"></i> إلغاء</button>
             </div>
         </div>
-        
+
+        <!-- إحصائيات -->
         <div id="maintenanceStats"></div>
-        
+
         <!-- الصيانة العامة -->
-        <h4 style="color:#dc3545; margin:20px 0 15px;"><i class="fas fa-exclamation-triangle"></i> الصيانة العامة - المراكب المعطبة <span style="font-size:12px; font-weight:400; color:#6c757d;">(تختفي عند الإصلاح)</span></h4>
+        <h4 style="color:#dc3545; margin:20px 0 15px;">
+            <i class="fas fa-exclamation-triangle"></i> الصيانة العامة - المراكب المعطبة
+            <span style="font-size:12px; font-weight:400; color:#6c757d;">(تختفي عند الإصلاح)</span>
+        </h4>
         <div id="generalMaintenanceContainer"></div>
-        
+
         <!-- Historique -->
-        <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-history"></i> Historique des maintenance <span style="font-size:12px; font-weight:400; color:#6c757d;">(جميع السجلات)</span></h4>
+        <h4 style="color:#0d6efd; margin:20px 0 15px;">
+            <i class="fas fa-history"></i> Historique des maintenance
+            <span style="font-size:12px; font-weight:400; color:#6c757d;">(جميع السجلات)</span>
+        </h4>
         <div class="filter-bar" style="background:#f8f9fa; flex-wrap:wrap;">
             <input type="text" id="filterVessel" placeholder="🔍 بحث بالمركب" onkeyup="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px; min-width:120px;">
             <input type="date" id="filterDateFrom" onchange="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;">
@@ -181,20 +240,47 @@
             <span id="historyCount" style="font-size:12px; color:#6c757d;">📊 0</span>
         </div>
         <div id="historyMaintenanceContainer"></div>
-        
+
+        <!-- وحدات الصيانة -->
         <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-building"></i> وحدات الصيانة</h4>
         <div id="maintenanceUnitsContainer" class="unit-tables-grid"></div>
     </div>
 
-    <!-- ===== صفحة الجاهزية ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة الجاهزية (eff) -->
+    <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
-        <div style="margin-bottom:15px;"><button class="btn btn-success" onclick="loadVessels()">🔄 تحديث</button></div>
+        <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-success" onclick="loadVessels()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn btn-primary" onclick="showAllEfficiency()"><i class="fas fa-table"></i> عرض الكل</button>
+            <span style="font-weight:600; color:#6c757d; margin-right:10px;">| فلترة حسب الوحدة:</span>
+            <select id="effUnitFilter" onchange="filterEfficiencyByUnit()" style="padding:6px 12px; border:1px solid #ced4da; border-radius:6px; font-family:inherit;">
+                <option value="">جميع الوحدات</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="شركة خاصة">🏢 شركة خاصة</option>
+            </select>
+            <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">📊 0 مركب</span>
+        </div>
+
+        <!-- الإحصائيات -->
         <div class="stats-cards" id="statsCards"></div>
+
+        <!-- الجدول العام -->
         <div id="generalEffTableContainer"></div>
+
+        <!-- جدول الفئات -->
+        <div id="categoryEffContainer"></div>
+
+        <!-- جداول الأقاليم -->
         <div id="regionsEffContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px;"></div>
     </div>
 
-    <!-- ===== صفحة الدعم ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة الدعم (support) -->
+    <!-- ============================================================ -->
     <div id="pageSupport" class="hidden">
         <div class="region-table-card" style="padding:20px;">
             <h3>🎫 نظام التذاكر</h3>
@@ -206,49 +292,85 @@
         </div>
     </div>
 
-    <!-- ===== صفحة التتبع ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة التتبع (track) -->
+    <!-- ============================================================ -->
     <div id="pageTrack" class="hidden">
         <div class="filter-bar">
-            <span style="font-weight:700; color:#0d6efd;">📍 تتبع المستخدمين</span>
+            <span style="font-weight:700; color:#0d6efd;">📍 تتبع المستخدمين المباشر</span>
             <span id="trackUsersCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">0 متصل</span>
             <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">🔄 تحديث</button>
+            <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">🗑️ مسح الكل</button>
         </div>
-        <div class="map-container"><div id="trackMap" style="height:450px; width:100%;"></div></div>
+        <div class="map-container">
+            <div id="trackMap" style="height:450px; width:100%;"></div>
+        </div>
     </div>
 
-    <!-- ===== صفحة الخريطة ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة الخريطة (map) -->
+    <!-- ============================================================ -->
     <div id="pageMap" class="hidden">
         <div class="filter-bar">
-            <span style="font-weight:700; color:#0d6efd;">🗺️ تتبع GPS</span>
-            <span id="gpsStatusIndicator"><span class="gps-status gps-inactive" id="gpsDot"></span><span id="gpsStatusText">غير نشط</span></span>
-            <button class="btn btn-sm btn-info" onclick="startTracking()">▶️ بدء التتبع</button>
+            <span style="font-weight:700; color:#0d6efd;">🗺️ تتبع GPS المباشر</span>
+            <span id="gpsStatusIndicator">
+                <span class="gps-status gps-inactive" id="gpsDot"></span>
+                <span id="gpsStatusText" style="font-size:0.85em;">غير نشط</span>
+            </span>
+            <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">▶️ بدء التتبع</button>
             <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">⏹️ إيقاف</button>
-            <button class="btn btn-sm btn-success" onclick="loadLocations()">🔄 تحديث</button>
+            <button class="btn btn-sm btn-success" onclick="loadLocations()">🔄 تحديث الخريطة</button>
             <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">🎯 مركز موقعي</button>
         </div>
-        <div class="map-container"><div id="gpsMap" style="height:450px; width:100%;"></div></div>
+        <div class="map-container">
+            <div id="gpsMap" style="height:450px; width:100%;"></div>
+        </div>
     </div>
 
-    <!-- ===== صفحة المستخدمين ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة المستخدمين (users) -->
+    <!-- ============================================================ -->
     <div id="pageUsers" class="hidden">
         <div class="user-form">
-            <div class="form-group"><label>اسم المستخدم</label><input type="text" id="un" placeholder="اسم المستخدم"></div>
-            <div class="form-group"><label>كلمة المرور</label><input type="password" id="up" placeholder="كلمة المرور"></div>
-            <div class="form-group"><label>الصلاحية</label><select id="ur"><option value="مشاهد">مشاهد</option><option value="محرر">محرر</option><option value="مسؤول">مسؤول</option></select></div>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> اسم المستخدم</label>
+                <input type="text" id="un" placeholder="اسم المستخدم">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> كلمة المرور</label>
+                <input type="password" id="up" placeholder="كلمة المرور">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user-shield"></i> الصلاحية</label>
+                <select id="ur">
+                    <option value="مشاهد">👁️ مشاهد</option>
+                    <option value="محرر">✏️ محرر</option>
+                    <option value="مسؤول">👑 مسؤول</option>
+                </select>
+            </div>
             <button class="btn btn-primary" onclick="addUser()"><i class="fas fa-user-plus"></i> إضافة</button>
         </div>
         <div class="region-table-card">
             <div class="region-table-header">👥 إدارة المستخدمين</div>
             <div class="scrollable-table">
                 <table>
-                    <thead><tr><th>الاسم</th><th>الصلاحية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>الصلاحية</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
                     <tbody id="usersBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ===== صفحة Note Verbale ===== -->
+    <!-- ============================================================ -->
+    <!-- 📄 صفحة Note Verbale (note) -->
+    <!-- ============================================================ -->
     <div id="pageNote" class="hidden">
         <div class="region-table-card" style="padding:20px;">
             <h3>📝 Note Verbale</h3>
@@ -260,7 +382,9 @@
             <div id="notesListContainer" style="margin-top:15px;"></div>
         </div>
     </div>
+
 </div>
+<!-- ===== نهاية التطبيق الرئيسي ===== -->
 
 <!-- ===== أزرار التمرير ===== -->
 <div class="scroll-buttons">
@@ -268,7 +392,21 @@
     <button class="scroll-btn" onclick="scrollToBottom()">↓</button>
 </div>
 
-<!-- ===== JavaScript ===== -->
+<!-- ===== النوافذ المنبثقة ===== -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h3>🔑 تغيير كلمة المرور</h3>
+        <p id="modalUserName" style="margin-bottom:10px; color:#6c757d;"></p>
+        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
+        <div class="modal-actions">
+            <button class="btn btn-success" onclick="saveNewPassword()">حفظ</button>
+            <button class="btn btn-danger" onclick="closePasswordModal()">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ملفات الجافاسكريبت ===== -->
 <script src="/js/app.js"></script>
 
 </body>
