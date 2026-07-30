@@ -686,6 +686,8 @@ function renderGeneralMaintenance() {
     `;
     
     vessels.forEach((v, index) => {
+        const maintenanceRecord = allMaintenance.find(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
+        
         html += `
             <tr>
                 <td>${index + 1}</td>
@@ -693,7 +695,7 @@ function renderGeneralMaintenance() {
                 <td>${v.num || '-'}</td>
                 <td>${v.cat || '-'}</td>
                 <td>${v.repairer || v.supp || '-'}</td>
-                <td>${v.break || '-'}</td>
+                <td>${v.break || maintenanceRecord?.description || '-'}</td>
                 <td>${v.fDate || '-'}</td>
                 <td style="color:${v.stat === 'معطب' ? '#dc3545' : '#ffc107'}; font-weight:600;">
                     ${v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة'}
@@ -701,6 +703,9 @@ function renderGeneralMaintenance() {
                 <td>
                     <button class="btn btn-sm btn-success" onclick="fixVessel(${v.id})" title="إصلاح المركب">
                         <i class="fas fa-check"></i> إصلاح
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                        <i class="fas fa-clipboard-list"></i>
                     </button>
                 </td>
             </tr>
@@ -795,6 +800,7 @@ function renderHistoryMaintenance() {
                         <th>💰 التكلفة</th>
                         <th>📊 الحالة</th>
                         <th>📅 التاريخ</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -815,6 +821,14 @@ function renderHistoryMaintenance() {
                 <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
                 <td style="color:${r.status === 'مكتملة' ? '#28a745' : '#dc3545'}; font-weight:600;">${r.status || '-'}</td>
                 <td>${new Date(r.date).toLocaleDateString()}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="viewMaintenanceDetails(${r.id})" title="تفاصيل">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteMaintenance(${r.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
             </tr>
         `;
     });
@@ -826,6 +840,86 @@ function renderHistoryMaintenance() {
     `;
     
     container.innerHTML = html;
+}
+
+function viewMaintenanceDetails(id) {
+    const record = allMaintenance.find(r => r.id === id);
+    if (!record) {
+        showAlert('⚠️ السجل غير موجود', 'warning');
+        return;
+    }
+    
+    const vesselName = record.vesselName || allVessels.find(v => v.id === record.vesselId)?.name || 'غير محدد';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+        align-items: center; z-index: 99999;
+    `;
+    
+    let html = `
+        <div style="background:white; padding:25px; border-radius:12px; 
+                    max-width:500px; width:95%; max-height:80vh; overflow-y:auto; direction:rtl;">
+            <h3 style="color:#0d6efd; margin-bottom:15px;">
+                📋 تفاصيل الصيانة
+                <button onclick="this.closest('div[style]').parentElement.remove()" 
+                        style="float:left; background:#dc3545; color:white; border:none; 
+                               padding:5px 15px; border-radius:5px; cursor:pointer;">✕</button>
+            </h3>
+            <div style="margin:10px 0;"><strong>🚢 المركب:</strong> ${vesselName}</div>
+            <div style="margin:10px 0;"><strong>👨‍🔧 الفني:</strong> ${record.technician || 'غير محدد'}</div>
+            <div style="margin:10px 0;"><strong>🔧 نوع الصيانة:</strong> ${record.type || 'عادية'}</div>
+            <div style="margin:10px 0;"><strong>🏭 الوحدة:</strong> ${record.unit || 'غير محدد'}</div>
+            <div style="margin:10px 0;"><strong>📝 وصف العطل:</strong> ${record.description || '-'}</div>
+            <div style="margin:10px 0;">
+                <strong>🔩 قطع الغيار:</strong>
+                ${record.parts && record.parts.length ? 
+                    record.parts.map(p => `• ${p.name} (${p.quantity}) - ${p.price} د.ت`).join('<br>') : 
+                    'لا توجد قطع غيار'}
+            </div>
+            <div style="margin:10px 0;"><strong>💰 التكلفة الإجمالية:</strong> ${record.cost || 0} د.ت</div>
+            <div style="margin:10px 0;">
+                <strong>📊 الحالة:</strong> 
+                <span style="color:${record.status === 'مكتملة' ? '#28a745' : '#dc3545'}; font-weight:600;">
+                    ${record.status || '-'}
+                </span>
+            </div>
+            <div style="margin:10px 0;"><strong>📅 التاريخ:</strong> ${new Date(record.date).toLocaleString()}</div>
+            ${record.notes ? `<div style="margin:10px 0;"><strong>📝 ملاحظات:</strong> ${record.notes}</div>` : ''}
+        </div>
+    `;
+    
+    modal.innerHTML = html;
+    document.body.appendChild(modal);
+}
+
+function deleteMaintenance(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف سجل الصيانة هذا؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/maintenance/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف سجل الصيانة', 'success');
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete maintenance error:', err);
+        showAlert('❌ خطأ في حذف سجل الصيانة', 'danger');
+    });
 }
 
 function applyHistoryFilters() {
@@ -937,7 +1031,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية
+// 📊 صفحة الجاهزية - جميع الجداول مثل الجدول العام
 // ============================================================
 
 function renderEfficiency() {
@@ -972,7 +1066,7 @@ function updateEfficiencyStats(vessels) {
 }
 
 // ============================================================
-// 1. الجدول العام
+// 1. الجدول العام (نفس الهيكل)
 // ============================================================
 
 function renderGeneralEfficiencyTable(vessels) {
@@ -1067,7 +1161,7 @@ function renderGeneralEfficiencyTable(vessels) {
 }
 
 // ============================================================
-// 2. جدول الفئات (أفقي)
+// 2. جدول الفئات (نفس هيكل الجدول العام)
 // ============================================================
 
 function renderCategoryEfficiencyTable(vessels) {
@@ -1075,9 +1169,7 @@ function renderCategoryEfficiencyTable(vessels) {
     if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
-    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
-    const stats = {};
+    let allHtml = '';
     
     categories.forEach(cat => {
         const catVessels = vessels.filter(v => v.cat === cat);
@@ -1086,136 +1178,96 @@ function renderCategoryEfficiencyTable(vessels) {
         const bad = catVessels.filter(v => v.stat === 'معطب').length;
         const maint = catVessels.filter(v => v.stat === 'صيانة').length;
         const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+        const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
-        stats[cat] = { total, good, bad, maint, eff };
-        totalAll += total;
-        goodAll += good;
-        badAll += bad;
-        maintAll += maint;
-    });
-    
-    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-    
-    let html = `
-        <div class="efficiency-table-wrapper">
-            <div class="table-title">
-                <i class="fas fa-chart-pie"></i> 
-                نسبة الجاهزية حسب الفئات
-            </div>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right; background:#0d6efd; color:white; min-width:120px;">الفئة</th>
-                            ${categories.map(cat => `
-                                <th style="text-align:center; background:#0d6efd; color:white; min-width:80px;">
-                                    ${cat}
-                                </th>
-                            `).join('')}
-                            <th style="text-align:center; background:#1a3a5c; color:white; min-width:100px;">
-                                📊 المجموع
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- صف المراكب الصالحة -->
-                        <tr>
-                            <td style="text-align:right; font-weight:bold; background:#e8f5e9;">
-                                ✅ صالح
-                            </td>
-                            ${categories.map(cat => `
-                                <td style="text-align:center; font-weight:bold; color:#28a745;">
-                                    ${stats[cat]?.good || 0}
-                                </td>
-                            `).join('')}
-                            <td style="text-align:center; font-weight:bold; color:#28a745; background:#e8f5e9;">
-                                ${goodAll}
-                            </td>
-                        </tr>
-                        <!-- صف المراكب المعطبة -->
-                        <tr>
-                            <td style="text-align:right; font-weight:bold; background:#ffebee;">
-                                ❌ معطب
-                            </td>
-                            ${categories.map(cat => `
-                                <td style="text-align:center; font-weight:bold; color:#dc3545;">
-                                    ${stats[cat]?.bad || 0}
-                                </td>
-                            `).join('')}
-                            <td style="text-align:center; font-weight:bold; color:#dc3545; background:#ffebee;">
-                                ${badAll}
-                            </td>
-                        </tr>
-                        <!-- صف المراكب قيد الصيانة -->
-                        <tr>
-                            <td style="text-align:right; font-weight:bold; background:#fff3e0;">
-                                🔧 صيانة
-                            </td>
-                            ${categories.map(cat => `
-                                <td style="text-align:center; font-weight:bold; color:#ffc107;">
-                                    ${stats[cat]?.maint || 0}
-                                </td>
-                            `).join('')}
-                            <td style="text-align:center; font-weight:bold; color:#ffc107; background:#fff3e0;">
-                                ${maintAll}
-                            </td>
-                        </tr>
-                        <!-- صف الإجمالي -->
-                        <tr style="background:#e3f2fd;">
-                            <td style="text-align:right; font-weight:bold;">
-                                📊 الإجمالي
-                            </td>
-                            ${categories.map(cat => `
-                                <td style="text-align:center; font-weight:bold;">
-                                    ${stats[cat]?.total || 0}
-                                </td>
-                            `).join('')}
-                            <td style="text-align:center; font-weight:bold; background:#e3f2fd;">
-                                ${totalAll}
-                            </td>
-                        </tr>
-                        <!-- صف النسبة المئوية -->
-                        <tr style="background:${totalColor}20; border-top:3px solid ${totalColor};">
-                            <td style="text-align:right; font-weight:bold; color:${totalColor};">
-                                📈 النسبة
-                            </td>
-                            ${categories.map(cat => {
-                                const eff = stats[cat]?.eff || 0;
-                                const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
-                                return `
-                                    <td style="text-align:center; font-weight:bold; color:${color};">
-                                        ${eff}%
-                                    </td>
-                                `;
-                            }).join('')}
-                            <td style="text-align:center; font-weight:bold; color:${totalColor}; font-size:16px; background:${totalColor}20;">
-                                ${totalEff}%
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="progress-section" style="margin-top:15px;">
-                <div class="progress-label">
-                    <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
-                    <span class="status" style="color:${totalColor};">
-                        ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
+        allHtml += `
+            <div class="efficiency-table-wrapper" style="margin-top:15px;">
+                <div class="table-title" style="color:${color};">
+                    <i class="fas fa-tag"></i> 
+                    الفئة: ${cat}
+                    <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
+                        (${total} مركب) | ✅ ${good} | 🔧 ${maint} | ❌ ${bad}
+                        <span style="color:${color}; font-weight:700; margin-right:10px;">
+                            ${eff}% جاهزية
+                        </span>
                     </span>
                 </div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
+                <div class="scrollable-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="text-align:right;">#</th>
+                                <th style="text-align:right;">المركب</th>
+                                <th style="text-align:center;">الرقم</th>
+                                <th style="text-align:center;">الفئة</th>
+                                <th style="text-align:center;">الإقليم</th>
+                                <th style="text-align:center;">المنطقة</th>
+                                <th style="text-align:center;">الحالة</th>
+                                <th style="text-align:center;">آخر صيانة</th>
+                                <th style="text-align:center;">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${catVessels.length === 0 ? `
+                                <tr>
+                                    <td colspan="9" style="text-align:center; padding:20px; color:#6c757d;">
+                                        🚫 لا توجد مراكب في هذه الفئة
+                                    </td>
+                                </tr>
+                            ` : catVessels.map((v, i) => {
+                                const statusColor = v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107';
+                                const statusIcon = v.stat === 'صالح' ? '✅' : v.stat === 'معطب' ? '❌' : '🔧';
+                                
+                                const lastMaintenance = allMaintenance
+                                    .filter(r => r.vesselId === v.id)
+                                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                                
+                                const lastMaintDate = lastMaintenance ? new Date(lastMaintenance.date).toLocaleDateString() : '-';
+                                
+                                return `
+                                    <tr>
+                                        <td style="text-align:center;">${i + 1}</td>
+                                        <td style="text-align:right; font-weight:600;">${v.name || '-'}</td>
+                                        <td style="text-align:center;">${v.num || '-'}</td>
+                                        <td style="text-align:center;">${v.cat || '-'}</td>
+                                        <td style="text-align:center;">${v.reg || '-'}</td>
+                                        <td style="text-align:center;">${v.zone || '-'}</td>
+                                        <td style="text-align:center;">
+                                            <span style="color:${statusColor}; font-weight:600;">
+                                                ${statusIcon} ${v.stat}
+                                            </span>
+                                        </td>
+                                        <td style="text-align:center; font-size:11px;">${lastMaintDate}</td>
+                                        <td style="text-align:center;">
+                                            <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                                                <i class="fas fa-clipboard-list"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
                 </div>
+                ${total > 0 ? `
+                    <div style="padding:8px 15px; background:#f8f9fa; border-top:1px solid #e9ecef;">
+                        <span style="font-size:12px; color:#6c757d;">
+                            📊 نسبة الجاهزية: <strong style="color:${color};">${eff}%</strong>
+                        </span>
+                    </div>
+                ` : ''}
             </div>
-        </div>
-    `;
+        `;
+    });
     
-    container.innerHTML = html;
+    container.innerHTML = allHtml;
 }
 
 // ============================================================
-// 3. جداول الأقاليم
+// 3. جداول الأقاليم (نفس هيكل الجدول العام)
 // ============================================================
 
 function renderRegionEfficiencyTables(vessels) {
@@ -1697,5 +1749,7 @@ window.renderEfficiency = renderEfficiency;
 window.showAllEfficiency = showAllEfficiency;
 window.filterEfficiencyByUnit = filterEfficiencyByUnit;
 window.viewVesselMaintenance = viewVesselMaintenance;
+window.deleteMaintenance = deleteMaintenance;
+window.viewMaintenanceDetails = viewMaintenanceDetails;
 
 console.log('✅ جميع الدوال جاهزة');
