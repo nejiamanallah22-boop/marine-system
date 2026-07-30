@@ -1543,47 +1543,33 @@ function clearTrackUsers() {
 }
 
 // ============================================================
-// ✅ تهيئة التطبيق - منع الدخول بدون تسجيل
+// ✅ تهيئة التطبيق - إظهار شاشة الدخول فقط
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔄 جاري تهيئة التطبيق...');
     
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainApp');
+    // إظهار شاشة الدخول
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
     
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    console.log('📌 التوكن:', token ? 'موجود' : 'غير موجود');
-    console.log('📌 المستخدم:', user ? 'موجود' : 'غير موجود');
-    
-    // إذا كان هناك توكن ومستخدم → حاول تسجيل الدخول التلقائي
-    if (token && user) {
-        try {
-            currentUser = JSON.parse(user);
-            if (currentUser && currentUser.id) {
-                // ✅ مستخدم صحيح
-                loginOverlay.style.display = 'none';
-                mainApp.style.display = 'block';
-                updateUserDisplay();
-                loadAllData();
-                console.log('✅ تم تسجيل الدخول تلقائياً');
-                return;
-            }
-        } catch (e) {
-            console.log('❌ خطأ في قراءة المستخدم:', e);
-        }
-    }
-    
-    // ❌ لا يوجد مستخدم → إظهار شاشة الدخول
-    console.log('🔐 إظهار شاشة الدخول');
-    loginOverlay.style.display = 'flex';
-    mainApp.style.display = 'none';
-    
-    // تنظيف أي بيانات قديمة
+    // مسح أي بيانات قديمة
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    
+    // التأكد من أن الحقول فارغة
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    console.log('🔐 شاشة الدخول جاهزة - الحقول فارغة');
+});
+
+// منع الدخول التلقائي
+window.addEventListener('load', function() {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
 });
 
 // ============================================================
