@@ -22,8 +22,8 @@
         <span class="logo">⚓</span>
         <h2>منظومة الوسائل البحرية</h2>
         <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-        <input type="text" id="username" placeholder="👤 اسم المستخدم" value="admin">
-        <input type="password" id="password" placeholder="🔑 كلمة المرور" value="123456">
+        <input type="text" id="username" placeholder="👤 اسم المستخدم">
+        <input type="password" id="password" placeholder="🔑 كلمة المرور">
         <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
         <div id="loginError" class="error-msg"></div>
     </div>
@@ -240,7 +240,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- 📄 صفحة الجاهزية (eff) - الجدول العام + الفئات + الأقاليم -->
+    <!-- 📄 صفحة الجاهزية (eff) -->
     <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
         <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
@@ -249,16 +249,12 @@
             <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">📊 0 مركب</span>
         </div>
 
-        <!-- الإحصائيات -->
         <div class="stats-cards" id="statsCards"></div>
 
-        <!-- ===== الجدول العام ===== -->
         <div id="generalEffTableContainer"></div>
 
-        <!-- ===== جدول الفئات ===== -->
         <div id="categoryEffContainer" style="margin-top:20px;"></div>
 
-        <!-- ===== جداول الأقاليم ===== -->
         <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-map-marked-alt"></i> جداول الأقاليم</h4>
         <div id="regionsEffContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px;"></div>
     </div>
@@ -369,7 +365,6 @@
     </div>
 
 </div>
-<!-- ===== نهاية التطبيق الرئيسي ===== -->
 
 <!-- ===== أزرار التمرير ===== -->
 <div class="scroll-buttons">
