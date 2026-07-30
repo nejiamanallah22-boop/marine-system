@@ -236,17 +236,13 @@ function renderCategoryEfficiencyTable(vessels) {
 }
 
 // ============================================================
-// 3. جداول الأقاليم (كل إقليم في جدول منفصل)
+// 3. جداول الأقاليم
 // ============================================================
 
 function renderAllRegionsTables(vessels) {
-    // الشمال
     renderRegionTable('regionNorthContainer', vessels, 'الشمال', '🗺️ الحرس البحري بالشمال');
-    // الساحل
     renderRegionTable('regionEastContainer', vessels, 'الساحل', '🗺️ الحرس البحري بالساحل');
-    // الوسط
     renderRegionTable('regionCenterContainer', vessels, 'الوسط', '🗺️ الحرس البحري بالوسط');
-    // الجنوب
     renderRegionTable('regionSouthContainer', vessels, 'الجنوب', '🗺️ الحرس البحري بالجنوب');
 }
 
@@ -271,7 +267,6 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
         return;
     }
     
-    // ترتيب حسب الحالة
     const sorted = [...regionVessels].sort((a, b) => {
         const order = { 'صالح': 0, 'صيانة': 1, 'معطب': 2 };
         return (order[a.stat] || 3) - (order[b.stat] || 3);
@@ -382,17 +377,9 @@ function filterEfficiencyByUnit() {
     if (value) {
         const filtered = vessels.filter(v => v.reg === value);
         showAlert(`🔍 عرض إقليم: ${value}`, 'info');
-        
-        // تحديث الإحصائيات
         updateEfficiencyStats(filtered);
-        
-        // تحديث الجدول العام (يعرض المراكب المفلترة)
         renderGeneralEfficiencyTable(filtered);
-        
-        // تحديث جدول الفئات
         renderCategoryEfficiencyTable(filtered);
-        
-        // تحديث جداول الأقاليم (تظهر فقط الإقليم المختار)
         renderAllRegionsTables(filtered);
     } else {
         showAlert('✅ عرض جميع الأقاليم', 'success');
