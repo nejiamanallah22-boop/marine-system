@@ -160,12 +160,7 @@ function loadVessels() {
         renderMainTable();
         renderGeneralMaintenance();
         renderHistoryMaintenance();
-        
-        // ✅ استدعاء دالة الجاهزية إذا كانت موجودة
-        if (typeof renderEfficiency === 'function') {
-            renderEfficiency();
-        }
-        
+        if (typeof renderEfficiency === 'function') renderEfficiency();
         updateMaintenanceVessels();
     })
     .catch(err => console.error('Load vessels error:', err));
@@ -942,27 +937,19 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 دوال الجاهزية
+// 📊 صفحة الجاهزية
 // ============================================================
 
 function renderEfficiency() {
     console.log('📊 Rendering efficiency, vessels:', allVessels.length);
     const vessels = allVessels || [];
     
-    // تحديث العدد
     const countEl = document.getElementById('effCount');
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
-    // عرض الإحصائيات
     updateEfficiencyStats(vessels);
-    
-    // عرض الجدول العام
     renderGeneralEfficiencyTable(vessels);
-    
-    // عرض جدول الفئات
     renderCategoryEfficiencyTable(vessels);
-    
-    // عرض جداول الأقاليم
     renderRegionEfficiencyTables(vessels);
 }
 
@@ -983,6 +970,10 @@ function updateEfficiencyStats(vessels) {
         <div class="stat-card" style="background:#17a2b8;"><h3>${eff}%</h3><p>📊 الجاهزية</p></div>
     `;
 }
+
+// ============================================================
+// 1. الجدول العام
+// ============================================================
 
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
@@ -1075,13 +1066,18 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
+// ============================================================
+// 2. جدول الفئات (أفقي)
+// ============================================================
+
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    let allHtml = '';
+    
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+    const stats = {};
     
     categories.forEach(cat => {
         const catVessels = vessels.filter(v => v.cat === cat);
@@ -1090,107 +1086,118 @@ function renderCategoryEfficiencyTable(vessels) {
         const bad = catVessels.filter(v => v.stat === 'معطب').length;
         const maint = catVessels.filter(v => v.stat === 'صيانة').length;
         const eff = total > 0 ? Math.round((good / total) * 100) : 0;
-        const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
-        totalAll += total; goodAll += good; badAll += bad; maintAll += maint;
-        
-        allHtml += `
-            <div class="efficiency-table-wrapper" style="margin-top:15px;">
-                <div class="table-title" style="color:${color};">
-                    <i class="fas fa-tag"></i> 
-                    الفئة: ${cat}
-                    <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
-                        (${total} مركب) | ✅ ${good} | 🔧 ${maint} | ❌ ${bad}
-                        <span style="color:${color}; font-weight:700; margin-right:10px;">
-                            ${eff}% جاهزية
-                        </span>
-                    </span>
-                </div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="text-align:right;">#</th>
-                                <th style="text-align:right;">المركب</th>
-                                <th style="text-align:center;">الرقم</th>
-                                <th style="text-align:center;">الفئة</th>
-                                <th style="text-align:center;">الإقليم</th>
-                                <th style="text-align:center;">المنطقة</th>
-                                <th style="text-align:center;">الحالة</th>
-                                <th style="text-align:center;">آخر صيانة</th>
-                                <th style="text-align:center;">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${catVessels.length === 0 ? `
-                                <tr>
-                                    <td colspan="9" style="text-align:center; padding:20px; color:#6c757d;">
-                                        🚫 لا توجد مراكب في هذه الفئة
-                                    </td>
-                                </tr>
-                            ` : catVessels.map((v, i) => {
-                                const statusColor = v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107';
-                                const statusIcon = v.stat === 'صالح' ? '✅' : v.stat === 'معطب' ? '❌' : '🔧';
-                                
-                                const lastMaintenance = allMaintenance
-                                    .filter(r => r.vesselId === v.id)
-                                    .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-                                
-                                const lastMaintDate = lastMaintenance ? new Date(lastMaintenance.date).toLocaleDateString() : '-';
-                                
-                                return `
-                                    <tr>
-                                        <td style="text-align:center;">${i + 1}</td>
-                                        <td style="text-align:right; font-weight:600;">${v.name || '-'}</td>
-                                        <td style="text-align:center;">${v.num || '-'}</td>
-                                        <td style="text-align:center;">${v.cat || '-'}</td>
-                                        <td style="text-align:center;">${v.reg || '-'}</td>
-                                        <td style="text-align:center;">${v.zone || '-'}</td>
-                                        <td style="text-align:center;">
-                                            <span style="color:${statusColor}; font-weight:600;">
-                                                ${statusIcon} ${v.stat}
-                                            </span>
-                                        </td>
-                                        <td style="text-align:center; font-size:11px;">${lastMaintDate}</td>
-                                        <td style="text-align:center;">
-                                            <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
-                                                <i class="fas fa-clipboard-list"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                ${total > 0 ? `
-                    <div style="padding:8px 15px; background:#f8f9fa; border-top:1px solid #e9ecef;">
-                        <span style="font-size:12px; color:#6c757d;">
-                            📊 نسبة الجاهزية: <strong style="color:${color};">${eff}%</strong>
-                        </span>
-                    </div>
-                ` : ''}
-            </div>
-        `;
+        stats[cat] = { total, good, bad, maint, eff };
+        totalAll += total;
+        goodAll += good;
+        badAll += bad;
+        maintAll += maint;
     });
     
-    // إجمالي الفئات
     const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
     const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
     
-    allHtml += `
-        <div class="efficiency-table-wrapper" style="background:#e7f3ff; border:2px solid #0d6efd; margin-top:15px;">
-            <div class="table-title" style="color:#0d6efd;">
+    let html = `
+        <div class="efficiency-table-wrapper">
+            <div class="table-title">
                 <i class="fas fa-chart-pie"></i> 
-                📊 إجمالي الفئات
-                <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
-                    (${totalAll} مركب) | ✅ ${goodAll} | 🔧 ${maintAll} | ❌ ${badAll}
-                </span>
+                نسبة الجاهزية حسب الفئات
             </div>
-            <div class="progress-section" style="padding:0 10px 10px;">
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:right; background:#0d6efd; color:white; min-width:120px;">الفئة</th>
+                            ${categories.map(cat => `
+                                <th style="text-align:center; background:#0d6efd; color:white; min-width:80px;">
+                                    ${cat}
+                                </th>
+                            `).join('')}
+                            <th style="text-align:center; background:#1a3a5c; color:white; min-width:100px;">
+                                📊 المجموع
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- صف المراكب الصالحة -->
+                        <tr>
+                            <td style="text-align:right; font-weight:bold; background:#e8f5e9;">
+                                ✅ صالح
+                            </td>
+                            ${categories.map(cat => `
+                                <td style="text-align:center; font-weight:bold; color:#28a745;">
+                                    ${stats[cat]?.good || 0}
+                                </td>
+                            `).join('')}
+                            <td style="text-align:center; font-weight:bold; color:#28a745; background:#e8f5e9;">
+                                ${goodAll}
+                            </td>
+                        </tr>
+                        <!-- صف المراكب المعطبة -->
+                        <tr>
+                            <td style="text-align:right; font-weight:bold; background:#ffebee;">
+                                ❌ معطب
+                            </td>
+                            ${categories.map(cat => `
+                                <td style="text-align:center; font-weight:bold; color:#dc3545;">
+                                    ${stats[cat]?.bad || 0}
+                                </td>
+                            `).join('')}
+                            <td style="text-align:center; font-weight:bold; color:#dc3545; background:#ffebee;">
+                                ${badAll}
+                            </td>
+                        </tr>
+                        <!-- صف المراكب قيد الصيانة -->
+                        <tr>
+                            <td style="text-align:right; font-weight:bold; background:#fff3e0;">
+                                🔧 صيانة
+                            </td>
+                            ${categories.map(cat => `
+                                <td style="text-align:center; font-weight:bold; color:#ffc107;">
+                                    ${stats[cat]?.maint || 0}
+                                </td>
+                            `).join('')}
+                            <td style="text-align:center; font-weight:bold; color:#ffc107; background:#fff3e0;">
+                                ${maintAll}
+                            </td>
+                        </tr>
+                        <!-- صف الإجمالي -->
+                        <tr style="background:#e3f2fd;">
+                            <td style="text-align:right; font-weight:bold;">
+                                📊 الإجمالي
+                            </td>
+                            ${categories.map(cat => `
+                                <td style="text-align:center; font-weight:bold;">
+                                    ${stats[cat]?.total || 0}
+                                </td>
+                            `).join('')}
+                            <td style="text-align:center; font-weight:bold; background:#e3f2fd;">
+                                ${totalAll}
+                            </td>
+                        </tr>
+                        <!-- صف النسبة المئوية -->
+                        <tr style="background:${totalColor}20; border-top:3px solid ${totalColor};">
+                            <td style="text-align:right; font-weight:bold; color:${totalColor};">
+                                📈 النسبة
+                            </td>
+                            ${categories.map(cat => {
+                                const eff = stats[cat]?.eff || 0;
+                                const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
+                                return `
+                                    <td style="text-align:center; font-weight:bold; color:${color};">
+                                        ${eff}%
+                                    </td>
+                                `;
+                            }).join('')}
+                            <td style="text-align:center; font-weight:bold; color:${totalColor}; font-size:16px; background:${totalColor}20;">
+                                ${totalEff}%
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="progress-section" style="margin-top:15px;">
                 <div class="progress-label">
                     <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
                     <span class="status" style="color:${totalColor};">
@@ -1204,8 +1211,12 @@ function renderCategoryEfficiencyTable(vessels) {
         </div>
     `;
     
-    container.innerHTML = allHtml;
+    container.innerHTML = html;
 }
+
+// ============================================================
+// 3. جداول الأقاليم
+// ============================================================
 
 function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
@@ -1620,22 +1631,18 @@ function viewVesselMaintenance(vesselId) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔄 جاري تهيئة التطبيق...');
     
-    // إظهار شاشة الدخول
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('mainApp').style.display = 'none';
     
-    // مسح أي بيانات قديمة
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     
-    // التأكد من أن الحقول فارغة
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
     
     console.log('🔐 شاشة الدخول جاهزة - الحقول فارغة');
 });
 
-// منع الدخول التلقائي
 window.addEventListener('load', function() {
     document.getElementById('loginOverlay').style.display = 'flex';
     document.getElementById('mainApp').style.display = 'none';
