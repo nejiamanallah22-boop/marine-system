@@ -1,27 +1,44 @@
 // public/js/pages/efficiency.js
-// دوال صفحة الجاهزية - جميع الجداول بنفس خصائص الجدول العام
+console.log('✅ Efficiency page loaded');
+
+// ============================================================
+// دوال صفحة الجاهزية
+// ============================================================
 
 function initEfficiency() {
+    console.log('📊 Initializing efficiency page');
     loadVessels();
 }
 
 // ============================================================
-// دالة عرض الجاهزية الرئيسية
+// الدالة الرئيسية
 // ============================================================
 
 function renderEfficiency() {
+    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
     const vessels = allVessels || [];
     
+    // تحديث العدد
     const countEl = document.getElementById('effCount');
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
+    // عرض الإحصائيات
     updateEfficiencyStats(vessels);
+    
+    // عرض الجدول العام
     renderGeneralEfficiencyTable(vessels);
+    
+    // عرض جدول الفئات
     renderCategoryEfficiencyTable(vessels);
+    
+    // عرض جداول الأقاليم
     renderRegionEfficiencyTables(vessels);
 }
 
-// ===== الإحصائيات =====
+// ============================================================
+// الإحصائيات
+// ============================================================
+
 function updateEfficiencyStats(vessels) {
     const statsContainer = document.getElementById('statsCards');
     if (!statsContainer) return;
@@ -41,11 +58,15 @@ function updateEfficiencyStats(vessels) {
 }
 
 // ============================================================
-// 1. الجدول العام (نفس الهيكل)
+// 1. الجدول العام
 // ============================================================
+
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ generalEffTableContainer not found');
+        return;
+    }
     
     if (!vessels || vessels.length === 0) {
         container.innerHTML = `
@@ -113,14 +134,12 @@ function renderGeneralEfficiencyTable(vessels) {
                 </td>
                 <td style="text-align:center; font-size:11px;">${lastMaintDate}</td>
                 <td style="text-align:center;">
-                    <div class="action-buttons" style="justify-content:center;">
-                        <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
-                            <i class="fas fa-clipboard-list"></i>
-                        </button>
-                        <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
+                    <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                        <i class="fas fa-clipboard-list"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
                 </td>
             </tr>
         `;
@@ -137,15 +156,15 @@ function renderGeneralEfficiencyTable(vessels) {
 }
 
 // ============================================================
-// 2. جدول الفئات (نفس خصائص الجدول العام)
+// 2. جدول الفئات
 // ============================================================
+
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    let allHtml = '';
-    let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+    let html = '';
     
     categories.forEach(cat => {
         const catVessels = vessels.filter(v => v.cat === cat);
@@ -156,10 +175,7 @@ function renderCategoryEfficiencyTable(vessels) {
         const eff = total > 0 ? Math.round((good / total) * 100) : 0;
         const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
-        totalAll += total; goodAll += good; badAll += bad; maintAll += maint;
-        
-        // كل فئة في جدول منفصل بنفس خصائص الجدول العام
-        allHtml += `
+        html += `
             <div class="efficiency-table-wrapper" style="margin-top:15px;">
                 <div class="table-title" style="color:${color};">
                     <i class="fas fa-tag"></i> 
@@ -218,14 +234,12 @@ function renderCategoryEfficiencyTable(vessels) {
                                         </td>
                                         <td style="text-align:center; font-size:11px;">${lastMaintDate}</td>
                                         <td style="text-align:center;">
-                                            <div class="action-buttons" style="justify-content:center;">
-                                                <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
-                                                    <i class="fas fa-clipboard-list"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </div>
+                                            <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                                                <i class="fas fa-clipboard-list"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 `;
@@ -237,11 +251,6 @@ function renderCategoryEfficiencyTable(vessels) {
                     <div style="padding:8px 15px; background:#f8f9fa; border-top:1px solid #e9ecef;">
                         <span style="font-size:12px; color:#6c757d;">
                             📊 نسبة الجاهزية: <strong style="color:${color};">${eff}%</strong>
-                            <div style="flex:1; max-width:200px; display:inline-block; margin:0 10px;">
-                                <div style="background:#e9ecef; border-radius:10px; height:6px; overflow:hidden;">
-                                    <div style="width:${eff}%; height:100%; background:${color}; border-radius:10px; transition:width 0.5s;"></div>
-                                </div>
-                            </div>
                         </span>
                     </div>
                 ` : ''}
@@ -249,39 +258,13 @@ function renderCategoryEfficiencyTable(vessels) {
         `;
     });
     
-    // إجمالي الفئات
-    const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
-    const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
-    
-    allHtml += `
-        <div class="efficiency-table-wrapper" style="background:#e7f3ff; border:2px solid #0d6efd;">
-            <div class="table-title" style="color:#0d6efd;">
-                <i class="fas fa-chart-pie"></i> 
-                📊 إجمالي الفئات
-                <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
-                    (${totalAll} مركب) | ✅ ${goodAll} | 🔧 ${maintAll} | ❌ ${badAll}
-                </span>
-            </div>
-            <div class="progress-section" style="padding:0 10px 10px;">
-                <div class="progress-label">
-                    <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
-                    <span class="status" style="color:${totalColor};">
-                        ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
-                    </span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    container.innerHTML = allHtml;
+    container.innerHTML = html;
 }
 
 // ============================================================
-// 3. جداول الأقاليم (نفس خصائص الجدول العام)
+// 3. جداول الأقاليم
 // ============================================================
+
 function renderRegionEfficiencyTables(vessels) {
     const container = document.getElementById('regionsEffContainer');
     if (!container) return;
@@ -365,14 +348,12 @@ function renderRegionEfficiencyTables(vessels) {
                                         </td>
                                         <td style="text-align:center; font-size:11px;">${lastMaintDate}</td>
                                         <td style="text-align:center;">
-                                            <div class="action-buttons" style="justify-content:center;">
-                                                <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
-                                                    <i class="fas fa-clipboard-list"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </div>
+                                            <button class="btn btn-sm btn-info" onclick="viewVesselMaintenance(${v.id})" title="سجل الصيانة">
+                                                <i class="fas fa-clipboard-list"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 `;
@@ -431,76 +412,8 @@ function filterEfficiencyByUnit() {
     }
 }
 
-// ============================================================
-// دالة viewVesselMaintenance (إذا لم تكن موجودة)
-// ============================================================
-
-function viewVesselMaintenance(vesselId) {
-    const vessel = allVessels.find(v => v.id == vesselId);
-    if (!vessel) {
-        showAlert('❌ المركب غير موجود', 'danger');
-        return;
-    }
-    
-    const records = allMaintenance.filter(r => r.vesselId == vesselId);
-    
-    if (records.length === 0) {
-        showAlert(`🚫 لا توجد سجلات صيانة للمركب: ${vessel.name}`, 'info');
-        return;
-    }
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
-        align-items: center; z-index: 99999;
-    `;
-    
-    let html = `
-        <div style="background:white; padding:25px; border-radius:12px; 
-                    max-width:600px; width:95%; max-height:80vh; overflow-y:auto; direction:rtl;">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">
-                📋 سجل صيانة ${vessel.name}
-                <button onclick="this.closest('div[style]').parentElement.remove()" 
-                        style="float:left; background:#dc3545; color:white; border:none; 
-                               padding:5px 15px; border-radius:5px; cursor:pointer;">✕</button>
-            </h3>
-    `;
-    
-    records.slice().reverse().forEach((r, i) => {
-        html += `
-            <div style="border:1px solid #e9ecef; border-radius:8px; padding:12px; margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
-                    <span style="font-weight:600;">#${i+1}</span>
-                    <span style="color:#6c757d; font-size:12px;">${new Date(r.date).toLocaleString()}</span>
-                </div>
-                <div style="margin:8px 0;">
-                    <strong>🔧 ${r.description}</strong>
-                    <span style="color:${r.status === 'مكتملة' ? '#28a745' : r.status === 'قيد الإنجاز' ? '#ffc107' : '#dc3545'}; 
-                           font-weight:600; margin-right:10px;">${r.status}</span>
-                </div>
-                <div style="font-size:13px; color:#495057;">
-                    <div>🏭 ${r.unit || 'غير محدد'}</div>
-                    <div>👨‍🔧 ${r.technician || 'غير محدد'}</div>
-                    ${r.cost ? `<div>💰 ${r.cost} د.ت</div>` : ''}
-                    ${r.parts && r.parts.length ? `
-                        <div style="margin-top:5px;">
-                            🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `</div>`;
-    modal.innerHTML = html;
-    document.body.appendChild(modal);
-}
-
 // تصدير الدوال
 window.initEfficiency = initEfficiency;
 window.renderEfficiency = renderEfficiency;
 window.showAllEfficiency = showAllEfficiency;
 window.filterEfficiencyByUnit = filterEfficiencyByUnit;
-window.viewVesselMaintenance = viewVesselMaintenance;
