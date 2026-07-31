@@ -1,0 +1,15 @@
+<!-- ===== صفحة Note Verbale ===== -->
+<div class="page-notes">
+    <div class="region-table-card" style="padding:20px;">
+        <h3>📝 Note Verbale</h3>
+        <input type="text" id="noteTitle" placeholder="📌 العنوان" 
+               style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
+        <textarea id="noteContent" rows="3" placeholder="📝 المحتوى" 
+                  style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px;"></textarea>
+        <input type="date" id="noteDate" 
+               style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
+        <button class="btn btn-success" onclick="saveNote()">💾 حفظ</button>
+        <button class="btn btn-sm btn-secondary" onclick="loadNotes()">🔄 تحديث</button>
+        <div id="notesListContainer" style="margin-top:15px;"></div>
+    </div>
+</div>
