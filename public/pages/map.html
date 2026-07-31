@@ -1,0 +1,26 @@
+<!-- ===== صفحة الخريطة ===== -->
+<div class="page-map">
+    <div class="filter-bar">
+        <span style="font-weight:700; color:#0d6efd;">🗺️ تتبع GPS المباشر</span>
+        <span id="gpsStatusIndicator">
+            <span class="gps-status gps-inactive" id="gpsDot"></span>
+            <span id="gpsStatusText" style="font-size:0.85em;">غير نشط</span>
+        </span>
+        <button class="btn btn-sm btn-info" onclick="startTracking()" id="startTrackingBtn">▶️ بدء التتبع</button>
+        <button class="btn btn-sm btn-danger" onclick="stopTracking()" id="stopTrackingBtn" style="display:none;">⏹️ إيقاف</button>
+        <button class="btn btn-sm btn-success" onclick="loadLocations()">🔄 تحديث الخريطة</button>
+        <button class="btn btn-sm btn-primary" onclick="centerMapOnUser()">🎯 مركز موقعي</button>
+    </div>
+    <div id="mapStatus" style="text-align:center; margin:8px; color:#6c757d; padding:10px; background:#f8f9fa; border-radius:6px; font-size:13px;">
+        ℹ️ اضغط "بدء التتبع" لمشاركة موقعك الحقيقي
+    </div>
+    <div class="gps-info" id="gpsInfo">
+        <span><span class="label">📍 خط العرض:</span> <span class="value" id="gpsLat">--</span></span>
+        <span><span class="label">📍 خط الطول:</span> <span class="value" id="gpsLng">--</span></span>
+        <span><span class="label">🎯 الدقة:</span> <span class="accuracy" id="gpsAccuracy">--</span></span>
+        <span><span class="label">📡 الحالة:</span> <span id="gpsStatusText2">غير نشط</span></span>
+    </div>
+    <div class="map-container">
+        <div id="gpsMap" style="height:450px; width:100%;"></div>
+    </div>
+</div>
