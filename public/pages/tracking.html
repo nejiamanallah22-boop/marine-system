@@ -1,0 +1,12 @@
+<!-- ===== صفحة التتبع ===== -->
+<div class="page-tracking">
+    <div class="filter-bar">
+        <span style="font-weight:700; color:#0d6efd;">📍 تتبع المستخدمين المباشر</span>
+        <span id="trackUsersCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">0 متصل</span>
+        <button class="btn btn-sm btn-success" onclick="refreshTrackUsers()">🔄 تحديث</button>
+        <button class="btn btn-sm btn-danger" onclick="clearTrackUsers()">🗑️ مسح الكل</button>
+    </div>
+    <div class="map-container">
+        <div id="trackMap" style="height:450px; width:100%;"></div>
+    </div>
+</div>
