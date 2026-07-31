@@ -891,7 +891,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// دوال الجاهزية - مع جداول الأقاليم
+// ✅ دوال الجاهزية مع جداول الأقاليم
 // ============================================================
 
 function renderEfficiency() {
@@ -991,14 +991,22 @@ function renderCategoryEfficiencyTable(vessels) {
 }
 
 // ============================================================
-// ✅ دوال الأقاليم - هذه هي المهمة!
+// ✅ دوال الأقاليم - المصححة
 // ============================================================
 
 function renderAllRegionsTables(vessels) {
-    renderRegionTable('regionNorthContainer', vessels, 'الشمال', '🗺️ الحرس البحري بالشمال');
-    renderRegionTable('regionEastContainer', vessels, 'الساحل', '🗺️ الحرس البحري بالساحل');
-    renderRegionTable('regionCenterContainer', vessels, 'الوسط', '🗺️ الحرس البحري بالوسط');
-    renderRegionTable('regionSouthContainer', vessels, 'الجنوب', '🗺️ الحرس البحري بالجنوب');
+    console.log('📊 Rendering regions tables, vessels:', vessels.length);
+    
+    const containers = [
+        { id: 'regionNorthContainer', key: 'الشمال', name: '🗺️ الحرس البحري بالشمال' },
+        { id: 'regionEastContainer', key: 'الساحل', name: '🗺️ الحرس البحري بالساحل' },
+        { id: 'regionCenterContainer', key: 'الوسط', name: '🗺️ الحرس البحري بالوسط' },
+        { id: 'regionSouthContainer', key: 'الجنوب', name: '🗺️ الحرس البحري بالجنوب' }
+    ];
+    
+    containers.forEach(container => {
+        renderRegionTable(container.id, vessels, container.key, container.name);
+    });
 }
 
 function renderRegionTable(containerId, vessels, regionKey, regionName) {
@@ -1008,31 +1016,42 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
         return;
     }
     
-    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     const regionVessels = vessels.filter(v => v.reg === regionKey);
+    const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
     
     let html = `
-        <div class="efficiency-table-wrapper">
-            <div class="table-title"><i class="fas fa-map-marked-alt"></i> ${regionName}</div>
+        <div class="efficiency-table-wrapper" style="margin-top:10px; border-right:4px solid #0d6efd;">
+            <div class="table-title" style="color:#0d6efd;">
+                <i class="fas fa-map-marked-alt"></i> ${regionName}
+                <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
+                    (${regionVessels.length} مركب)
+                </span>
+            </div>
             <div class="scrollable-table">
                 <table>
                     <thead>
                         <tr>
-                            <th style="text-align:right; background:#0d6efd; color:white;">الفئة</th>
-                            <th style="text-align:center; background:#28a745; color:white;">✅ الصالحة</th>
-                            <th style="text-align:center; background:#dc3545; color:white;">❌ المعطبة</th>
-                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 الصيانة</th>
-                            <th style="text-align:center; background:#0d6efd; color:white;">📊 الإجمالي</th>
-                            <th style="text-align:center; background:#17a2b8; color:white;">📈 النسبة</th>
+                            <th style="text-align:right; background:#0d6efd; color:white; min-width:100px;">الفئة</th>
+                            <th style="text-align:center; background:#28a745; color:white; min-width:80px;">✅ الصالحة</th>
+                            <th style="text-align:center; background:#dc3545; color:white; min-width:80px;">❌ المعطبة</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c; min-width:80px;">🔧 الصيانة</th>
+                            <th style="text-align:center; background:#0d6efd; color:white; min-width:70px;">📊 الإجمالي</th>
+                            <th style="text-align:center; background:#17a2b8; color:white; min-width:80px;">📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
     `;
     
     if (regionVessels.length === 0) {
-        html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مراكب في هذا الإقليم</td></tr>`;
+        html += `
+            <tr>
+                <td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">
+                    🚫 لا توجد مراكب في هذا الإقليم
+                </td>
+            </tr>
+        `;
     } else {
         categories.forEach(cat => {
             const catVessels = regionVessels.filter(v => v.cat === cat);
@@ -1046,13 +1065,13 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
             const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
             
             html += `
-                <tr>
-                    <td style="text-align:right; font-weight:bold;">${cat}</td>
-                    <td style="text-align:center; font-weight:bold; color:#28a745;">${good}</td>
-                    <td style="text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
-                    <td style="text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
-                    <td style="text-align:center; font-weight:bold;">${total}</td>
-                    <td style="text-align:center; font-weight:bold; color:${color};">${eff}%</td>
+                <tr style="border-bottom:1px solid #e9ecef;">
+                    <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:#28a745;">${good}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold;">${total}</td>
+                    <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">${eff}%</td>
                 </tr>
             `;
         });
