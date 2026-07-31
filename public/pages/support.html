@@ -1,0 +1,13 @@
+<!-- ===== صفحة الدعم ===== -->
+<div class="page-support">
+    <div class="region-table-card" style="padding:20px;">
+        <h3>🎫 نظام التذاكر</h3>
+        <input type="text" id="ticketSubject" placeholder="📌 عنوان الطلب" 
+               style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
+        <textarea id="ticketMessage" rows="3" placeholder="📝 شرح المشكلة" 
+                  style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px;"></textarea>
+        <button class="btn btn-primary" onclick="sendTicket()">📨 إرسال</button>
+        <button class="btn btn-sm btn-secondary" onclick="loadTickets()">🔄 تحديث</button>
+        <div id="ticketsList" style="margin-top:15px;"></div>
+    </div>
+</div>
