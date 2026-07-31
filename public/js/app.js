@@ -1,9 +1,5 @@
-// public/js/app.js
+// public/js/app.js - النسخة الكاملة
 console.log('✅ App loaded');
-
-// ============================================================
-// المتغيرات العامة
-// ============================================================
 
 let allVessels = [];
 let allUsers = [];
@@ -15,18 +11,36 @@ let editingVesselId = null;
 let editingMaintenanceId = null;
 
 // ============================================================
+// منع الدخول التلقائي
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    localStorage.clear();
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+});
+
+window.addEventListener('load', function() {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+});
+
+// ============================================================
 // دوال تحميل الصفحات
 // ============================================================
 
 function loadPage(pageName) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
-    
     document.querySelectorAll('.page-content').forEach(el => el.remove());
     
     fetch(`/pages/${pageName}.html`)
         .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
+            if (!res.ok) throw new Error(`Page ${pageName} not found`);
             return res.text();
         })
         .then(html => {
@@ -38,42 +52,26 @@ function loadPage(pageName) {
             initPage(pageName);
         })
         .catch(err => {
-            console.error('Error loading page:', err);
+            console.error('Error:', err);
             container.innerHTML = `
                 <div style="text-align:center; padding:50px; color:#dc3545;">
-                    ❌ ${err.message}
+                    ❌ خطأ في تحميل الصفحة: ${pageName}
+                    <br><small>${err.message}</small>
                 </div>
             `;
         });
 }
 
 function initPage(pageName) {
-    console.log('📄 Initializing page:', pageName);
     switch(pageName) {
-        case 'fleet':
-            loadVessels();
-            break;
-        case 'maintenance':
-            loadMaintenance();
-            break;
-        case 'efficiency':
-            loadVessels();
-            break;
-        case 'support':
-            loadTickets();
-            break;
-        case 'tracking':
-            setTimeout(initMap, 100);
-            break;
-        case 'map':
-            setTimeout(initMap, 100);
-            break;
-        case 'users':
-            loadUsers();
-            break;
-        case 'notes':
-            loadNotes();
-            break;
+        case 'fleet': loadVessels(); break;
+        case 'maintenance': loadMaintenance(); break;
+        case 'efficiency': loadVessels(); break;
+        case 'support': loadTickets(); break;
+        case 'tracking': setTimeout(initMap, 100); break;
+        case 'map': setTimeout(initMap, 100); break;
+        case 'users': loadUsers(); break;
+        case 'notes': loadNotes(); break;
     }
 }
 
@@ -162,6 +160,7 @@ function doLogin() {
             currentUser = data.user;
             updateUserDisplay();
             loadAllData();
+            loadPage('fleet');
             
             showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
         } else {
@@ -221,7 +220,6 @@ function loadAllData() {
 function loadVessels() {
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/vessels', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -231,8 +229,8 @@ function loadVessels() {
         renderMainTable();
         renderGeneralMaintenance();
         renderHistoryMaintenance();
-        if (typeof renderEfficiency === 'function') renderEfficiency();
         updateMaintenanceVessels();
+        if (typeof renderEfficiency === 'function') renderEfficiency();
     })
     .catch(err => console.error('Load vessels error:', err));
 }
@@ -240,7 +238,6 @@ function loadVessels() {
 function loadMaintenance() {
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/maintenance', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -258,7 +255,6 @@ function loadMaintenance() {
 function loadTickets() {
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/tickets', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -273,7 +269,6 @@ function loadTickets() {
 function loadUsers() {
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -288,7 +283,6 @@ function loadUsers() {
 function loadNotes() {
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/notes', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -301,7 +295,7 @@ function loadNotes() {
 }
 
 // ============================================================
-// عرض الجداول الأساسية
+// عرض الجداول
 // ============================================================
 
 function renderMainTable() {
@@ -901,7 +895,7 @@ function renderMaintenanceUnits() {
 // ============================================================
 
 function renderEfficiency() {
-    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
+    console.log('📊 Rendering efficiency');
     const vessels = allVessels || [];
     const countEl = document.getElementById('effCount');
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
@@ -1450,10 +1444,6 @@ function clearTrackUsers() {
     }
 }
 
-// ============================================================
-// دوال عامة
-// ============================================================
-
 function refreshAllPages() {
     loadAllData();
     showAlert('✅ تم تحديث جميع البيانات', 'success');
@@ -1466,43 +1456,6 @@ function scrollToTop() {
 function scrollToBottom() {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
-
-// ============================================================
-// منع الدخول التلقائي
-// ============================================================
-
-(function() {
-    const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
-        if (key === 'token' || key === 'user') {
-            console.log('🚫 منع حفظ التوكن تلقائياً');
-            return;
-        }
-        originalSetItem.call(this, key, value);
-    };
-})();
-
-document.addEventListener('DOMContentLoaded', function() {
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainApp');
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-    if (mainApp) mainApp.style.display = 'none';
-    localStorage.clear();
-    const username = document.getElementById('username');
-    const password = document.getElementById('password');
-    if (username) username.value = '';
-    if (password) password.value = '';
-    console.log('🔐 شاشة الدخول جاهزة');
-});
-
-window.addEventListener('load', function() {
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainApp');
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-    if (mainApp) mainApp.style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-});
 
 // ============================================================
 // تصدير الدوال
