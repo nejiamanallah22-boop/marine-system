@@ -1,6 +1,5 @@
 <!-- ===== صفحة الأسطول ===== -->
 <div class="page-fleet">
-    <!-- نموذج الإدخال -->
     <div id="inputArea" class="input-grid">
         <input type="text" id="iName" placeholder="🚢 اسم المركب">
         <input type="text" id="iNum" placeholder="# الرقم">
@@ -40,13 +39,12 @@
             <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
             <option value="شركة خاصة">🏢 شركة خاصة</option>
         </select>
-        <button class="btn btn-success" onclick="addVessel()">💾 حفظ</button>
+        <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
     </div>
 
-    <!-- جدول الأسطول -->
     <div class="filter-bar">
         <div class="search-input">
-            <input type="text" id="searchFleet" placeholder="🔍 بحث في الأسطول" onkeyup="filterFleet()">
+            <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="loadVessels()">
         </div>
         <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
     </div>
@@ -68,7 +66,7 @@
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="fleetBody"></tbody>
+                <tbody id="mainBody"></tbody>
             </table>
         </div>
     </div>
