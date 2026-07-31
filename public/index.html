@@ -240,12 +240,17 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- 📄 صفحة الجاهزية (eff) - مع جداول الأقاليم -->
+    <!-- 📄 صفحة الجاهزية (eff) - مع الجداول والرسوم البيانية -->
     <!-- ============================================================ -->
     <div id="pageEff" class="hidden">
+        <!-- شريط الأدوات -->
         <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-success" onclick="loadVessels()"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn btn-primary" onclick="showAllEfficiency()"><i class="fas fa-table"></i> عرض الكل</button>
+            <button class="btn btn-success" onclick="loadVessels()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn btn-primary" onclick="showAllEfficiency()">
+                <i class="fas fa-table"></i> عرض الكل
+            </button>
             <span style="font-weight:600; color:#6c757d; margin-right:10px;">| فلترة حسب الإقليم:</span>
             <select id="effUnitFilter" onchange="filterEfficiencyByUnit()" style="padding:6px 12px; border:1px solid #ced4da; border-radius:6px; font-family:inherit;">
                 <option value="">جميع الأقاليم</option>
@@ -254,38 +259,90 @@
                 <option value="الوسط">🗺️ الوسط</option>
                 <option value="الجنوب">🗺️ الجنوب</option>
             </select>
-            <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">📊 0 مركب</span>
+            <span id="effCount" style="background:#0d6efd; color:white; padding:3px 12px; border-radius:20px; font-size:12px;">
+                📊 0 مركب
+            </span>
         </div>
 
-        <!-- الإحصائيات -->
+        <!-- ===== الإحصائيات ===== -->
         <div class="stats-cards" id="statsCards"></div>
 
-        <!-- الجدول العام -->
+        <!-- ===== 1. الجدول العام (بنفس شكل جدول الفئات) ===== -->
         <div id="generalEffTableContainer"></div>
 
-        <!-- النجاعة حسب الفئات -->
+        <!-- ===== 2. النجاعة العامة حسب الفئات ===== -->
         <div id="categoryEffContainer" style="margin-top:20px;"></div>
 
-        <!-- جداول الأقاليم -->
+        <!-- ============================================================ -->
+        <!-- ===== 3. جداول الأقاليم ===== -->
+        <!-- ============================================================ -->
+
+        <!-- ===== إقليم الحرس البحري بالشمال ===== -->
         <h4 style="color:#0d6efd; margin:20px 0 15px; border-bottom:2px solid #0d6efd; padding-bottom:8px;">
             <i class="fas fa-map-marked-alt"></i> إقليم الحرس البحري بالشمال
         </h4>
         <div id="regionNorthContainer"></div>
 
+        <!-- ===== إقليم الحرس البحري بالساحل ===== -->
         <h4 style="color:#0d6efd; margin:30px 0 15px; border-bottom:2px solid #0d6efd; padding-bottom:8px;">
             <i class="fas fa-map-marked-alt"></i> إقليم الحرس البحري بالساحل
         </h4>
         <div id="regionEastContainer"></div>
 
+        <!-- ===== إقليم الحرس البحري بالوسط ===== -->
         <h4 style="color:#0d6efd; margin:30px 0 15px; border-bottom:2px solid #0d6efd; padding-bottom:8px;">
             <i class="fas fa-map-marked-alt"></i> إقليم الحرس البحري بالوسط
         </h4>
         <div id="regionCenterContainer"></div>
 
+        <!-- ===== إقليم الحرس البحري بالجنوب ===== -->
         <h4 style="color:#0d6efd; margin:30px 0 15px; border-bottom:2px solid #0d6efd; padding-bottom:8px;">
             <i class="fas fa-map-marked-alt"></i> إقليم الحرس البحري بالجنوب
         </h4>
         <div id="regionSouthContainer"></div>
+
+        <!-- ============================================================ -->
+        <!-- ===== 4. الرسوم البيانية 3D ===== -->
+        <!-- ============================================================ -->
+
+        <h4 style="color:#0d6efd; margin:30px 0 15px; border-bottom:2px solid #0d6efd; padding-bottom:8px;">
+            <i class="fas fa-chart-bar"></i> الرسوم البيانية 3D
+        </h4>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px;">
+            <!-- الرسم الشريطي 3D -->
+            <div class="region-table-card" style="padding:15px;">
+                <h5 style="text-align:center; color:#0d6efd; margin-bottom:10px;">
+                    <i class="fas fa-chart-bar"></i> توزيع المراكب حسب الفئة
+                </h5>
+                <canvas id="barChart3D" style="width:100%; height:250px;"></canvas>
+            </div>
+
+            <!-- الرسم الخطي 3D -->
+            <div class="region-table-card" style="padding:15px;">
+                <h5 style="text-align:center; color:#0d6efd; margin-bottom:10px;">
+                    <i class="fas fa-chart-line"></i> نسبة الجاهزية حسب الفئة
+                </h5>
+                <canvas id="lineChart3D" style="width:100%; height:250px;"></canvas>
+            </div>
+
+            <!-- الرسم الدائري 3D -->
+            <div class="region-table-card" style="padding:15px;">
+                <h5 style="text-align:center; color:#0d6efd; margin-bottom:10px;">
+                    <i class="fas fa-chart-pie"></i> توزيع المراكب حسب الحالة
+                </h5>
+                <canvas id="pieChart3D" style="width:100%; height:250px;"></canvas>
+            </div>
+
+            <!-- الرسم الشريطي الأفقي 3D -->
+            <div class="region-table-card" style="padding:15px;">
+                <h5 style="text-align:center; color:#0d6efd; margin-bottom:10px;">
+                    <i class="fas fa-chart-bar"></i> المقارنة بين الأقاليم
+                </h5>
+                <canvas id="horizontalBarChart3D" style="width:100%; height:250px;"></canvas>
+            </div>
+        </div>
+
     </div>
 
     <!-- ============================================================ -->
