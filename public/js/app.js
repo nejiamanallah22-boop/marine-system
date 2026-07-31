@@ -1,6 +1,58 @@
 // public/js/app.js
 console.log('✅ Marine System loaded');
 
+// ============================================================
+// ✅ منع الدخول التلقائي - الحل النهائي
+// ============================================================
+
+// إجبار شاشة الدخول على الظهور قبل أي شيء
+(function() {
+    // منع حفظ التوكن تلقائياً
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = function(key, value) {
+        if (key === 'token' || key === 'user') {
+            console.log('🚫 منع حفظ التوكن تلقائياً');
+            return;
+        }
+        originalSetItem.call(this, key, value);
+    };
+})();
+
+//强制执行 شاشة الدخول
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔐 شاشة الدخول القسرية');
+    
+    const loginOverlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    if (mainApp) mainApp.style.display = 'none';
+    
+    localStorage.clear();
+    
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    if (username) username.value = '';
+    if (password) password.value = '';
+    
+    console.log('🔐 شاشة الدخول جاهزة');
+});
+
+window.addEventListener('load', function() {
+    const loginOverlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (loginOverlay) loginOverlay.style.display = 'flex';
+    if (mainApp) mainApp.style.display = 'none';
+    
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+});
+
+// ============================================================
+// المتغيرات العامة
+// ============================================================
+
 let allVessels = [];
 let allUsers = [];
 let allTickets = [];
@@ -1045,7 +1097,6 @@ function renderEfficiency() {
     renderCategoryEfficiencyTable(vessels);
     renderAllRegionsTables(vessels);
     
-    // ✅ إضافة الرسوم البيانية بعد تحميل البيانات
     setTimeout(() => {
         renderCharts(vessels);
     }, 100);
@@ -1069,34 +1120,27 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
-// ============================================================
-// 1. الجدول العام (بنفس شكل جدول الفئات)
-// ============================================================
-
+// ===== 1. الجدول العام =====
 function renderGeneralEfficiencyTable(vessels) {
     const container = document.getElementById('generalEffTableContainer');
     if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
     
     let html = `
         <div class="efficiency-table-wrapper">
-            <div class="table-title">
-                <i class="fas fa-ship"></i> 
-                الجدول العام للمراكب
-            </div>
+            <div class="table-title"><i class="fas fa-ship"></i> الجدول العام للمراكب</div>
             <div class="scrollable-table">
                 <table>
                     <thead>
                         <tr>
-                            <th style="text-align:right; background:#0d6efd; color:white; min-width:120px;">الفئة</th>
-                            <th style="text-align:center; background:#28a745; color:white; min-width:100px;">✅ الصالحة</th>
-                            <th style="text-align:center; background:#dc3545; color:white; min-width:100px;">❌ المعطبة</th>
-                            <th style="text-align:center; background:#ffc107; color:#1a3a5c; min-width:100px;">🔧 الصيانة</th>
-                            <th style="text-align:center; background:#0d6efd; color:white; min-width:80px;">📊 الإجمالي</th>
-                            <th style="text-align:center; background:#17a2b8; color:white; min-width:100px;">📈 النسبة</th>
+                            <th style="text-align:right; background:#0d6efd; color:white;">الفئة</th>
+                            <th style="text-align:center; background:#28a745; color:white;">✅ الصالحة</th>
+                            <th style="text-align:center; background:#dc3545; color:white;">❌ المعطبة</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 الصيانة</th>
+                            <th style="text-align:center; background:#0d6efd; color:white;">📊 الإجمالي</th>
+                            <th style="text-align:center; background:#17a2b8; color:white;">📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1114,15 +1158,13 @@ function renderGeneralEfficiencyTable(vessels) {
         const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
         html += `
-            <tr style="border-bottom:1px solid #e9ecef;">
-                <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#28a745;">${good}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold;">${total}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
-                    ${eff}%
-                </td>
+            <tr>
+                <td style="text-align:right; font-weight:bold;">${cat}</td>
+                <td style="text-align:center; font-weight:bold; color:#28a745;">${good}</td>
+                <td style="text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
+                <td style="text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
+                <td style="text-align:center; font-weight:bold;">${total}</td>
+                <td style="text-align:center; font-weight:bold; color:${color};">${eff}%</td>
             </tr>
         `;
     });
@@ -1132,14 +1174,12 @@ function renderGeneralEfficiencyTable(vessels) {
     
     html += `
                     <tr style="background:#e3f2fd; border-top:2px solid #0d6efd; font-weight:bold;">
-                        <td style="padding:8px; text-align:right; font-size:14px;">📊 المجموع الكلي</td>
-                        <td style="padding:8px; text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
-                        <td style="padding:8px; text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
-                        <td style="padding:8px; text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
-                        <td style="padding:8px; text-align:center; font-size:14px;">${totalAll}</td>
-                        <td style="padding:8px; text-align:center; color:${totalColor}; font-size:16px;">
-                            ${totalEff}%
-                        </td>
+                        <td style="text-align:right; font-size:14px;">📊 المجموع الكلي</td>
+                        <td style="text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
+                        <td style="text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
+                        <td style="text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
+                        <td style="text-align:center; font-size:14px;">${totalAll}</td>
+                        <td style="text-align:center; color:${totalColor}; font-size:16px;">${totalEff}%</td>
                     </tr>
                 </tbody>
             </table>
@@ -1147,9 +1187,7 @@ function renderGeneralEfficiencyTable(vessels) {
         <div class="progress-section">
             <div class="progress-label">
                 <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
-                <span class="status" style="color:${totalColor};">
-                    ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
-                </span>
+                <span class="status" style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
             </div>
             <div class="progress-track">
                 <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
@@ -1160,34 +1198,27 @@ function renderGeneralEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ============================================================
-// 2. النجاعة العامة حسب الفئات
-// ============================================================
-
+// ===== 2. النجاعة العامة حسب الفئات =====
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
     
     let html = `
         <div class="efficiency-table-wrapper">
-            <div class="table-title">
-                <i class="fas fa-chart-pie"></i> 
-                النجاعة العامة حسب الفئات
-            </div>
+            <div class="table-title"><i class="fas fa-chart-pie"></i> النجاعة العامة حسب الفئات</div>
             <div class="scrollable-table">
                 <table>
                     <thead>
                         <tr>
-                            <th style="text-align:right; background:#0d6efd; color:white; min-width:120px;">الفئة</th>
-                            <th style="text-align:center; background:#28a745; color:white; min-width:100px;">✅ الصالحة</th>
-                            <th style="text-align:center; background:#dc3545; color:white; min-width:100px;">❌ المعطبة</th>
-                            <th style="text-align:center; background:#ffc107; color:#1a3a5c; min-width:100px;">🔧 الصيانة</th>
-                            <th style="text-align:center; background:#0d6efd; color:white; min-width:80px;">📊 الإجمالي</th>
-                            <th style="text-align:center; background:#17a2b8; color:white; min-width:100px;">📈 النسبة</th>
+                            <th style="text-align:right; background:#0d6efd; color:white;">الفئة</th>
+                            <th style="text-align:center; background:#28a745; color:white;">✅ الصالحة</th>
+                            <th style="text-align:center; background:#dc3545; color:white;">❌ المعطبة</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 الصيانة</th>
+                            <th style="text-align:center; background:#0d6efd; color:white;">📊 الإجمالي</th>
+                            <th style="text-align:center; background:#17a2b8; color:white;">📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1205,15 +1236,13 @@ function renderCategoryEfficiencyTable(vessels) {
         const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
         
         html += `
-            <tr style="border-bottom:1px solid #e9ecef;">
-                <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#28a745;">${good}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold;">${total}</td>
-                <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
-                    ${eff}%
-                </td>
+            <tr>
+                <td style="text-align:right; font-weight:bold;">${cat}</td>
+                <td style="text-align:center; font-weight:bold; color:#28a745;">${good}</td>
+                <td style="text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
+                <td style="text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
+                <td style="text-align:center; font-weight:bold;">${total}</td>
+                <td style="text-align:center; font-weight:bold; color:${color};">${eff}%</td>
             </tr>
         `;
     });
@@ -1223,14 +1252,12 @@ function renderCategoryEfficiencyTable(vessels) {
     
     html += `
                     <tr style="background:#e3f2fd; border-top:2px solid #0d6efd; font-weight:bold;">
-                        <td style="padding:8px; text-align:right; font-size:14px;">📊 المجموع الكلي</td>
-                        <td style="padding:8px; text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
-                        <td style="padding:8px; text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
-                        <td style="padding:8px; text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
-                        <td style="padding:8px; text-align:center; font-size:14px;">${totalAll}</td>
-                        <td style="padding:8px; text-align:center; color:${totalColor}; font-size:16px;">
-                            ${totalEff}%
-                        </td>
+                        <td style="text-align:right; font-size:14px;">📊 المجموع الكلي</td>
+                        <td style="text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
+                        <td style="text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
+                        <td style="text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
+                        <td style="text-align:center; font-size:14px;">${totalAll}</td>
+                        <td style="text-align:center; color:${totalColor}; font-size:16px;">${totalEff}%</td>
                     </tr>
                 </tbody>
             </table>
@@ -1238,9 +1265,7 @@ function renderCategoryEfficiencyTable(vessels) {
         <div class="progress-section">
             <div class="progress-label">
                 <span>📈 نسبة الجاهزية العامة: <strong style="color:${totalColor};">${totalEff}%</strong></span>
-                <span class="status" style="color:${totalColor};">
-                    ${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}
-                </span>
+                <span class="status" style="color:${totalColor};">${totalEff >= 80 ? '✅ ممتاز' : totalEff >= 50 ? '⚠️ متوسط' : '❌ منخفض'}</span>
             </div>
             <div class="progress-track">
                 <div class="progress-fill" style="width:${totalEff}%; background:${totalColor};"></div>
@@ -1251,10 +1276,7 @@ function renderCategoryEfficiencyTable(vessels) {
     container.innerHTML = html;
 }
 
-// ============================================================
-// 3. جداول الأقاليم (بنفس شكل جدول الفئات)
-// ============================================================
-
+// ===== 3. جداول الأقاليم =====
 function renderAllRegionsTables(vessels) {
     renderRegionTable('regionNorthContainer', vessels, 'الشمال', '🗺️ الحرس البحري بالشمال');
     renderRegionTable('regionEastContainer', vessels, 'الساحل', '🗺️ الحرس البحري بالساحل');
@@ -1273,33 +1295,24 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
     
     let html = `
         <div class="efficiency-table-wrapper">
-            <div class="table-title">
-                <i class="fas fa-map-marked-alt"></i> 
-                ${regionName}
-            </div>
+            <div class="table-title"><i class="fas fa-map-marked-alt"></i> ${regionName}</div>
             <div class="scrollable-table">
                 <table>
                     <thead>
                         <tr>
-                            <th style="text-align:right; background:#0d6efd; color:white; min-width:120px;">الفئة</th>
-                            <th style="text-align:center; background:#28a745; color:white; min-width:100px;">✅ الصالحة</th>
-                            <th style="text-align:center; background:#dc3545; color:white; min-width:100px;">❌ المعطبة</th>
-                            <th style="text-align:center; background:#ffc107; color:#1a3a5c; min-width:100px;">🔧 الصيانة</th>
-                            <th style="text-align:center; background:#0d6efd; color:white; min-width:80px;">📊 الإجمالي</th>
-                            <th style="text-align:center; background:#17a2b8; color:white; min-width:100px;">📈 النسبة</th>
+                            <th style="text-align:right; background:#0d6efd; color:white;">الفئة</th>
+                            <th style="text-align:center; background:#28a745; color:white;">✅ الصالحة</th>
+                            <th style="text-align:center; background:#dc3545; color:white;">❌ المعطبة</th>
+                            <th style="text-align:center; background:#ffc107; color:#1a3a5c;">🔧 الصيانة</th>
+                            <th style="text-align:center; background:#0d6efd; color:white;">📊 الإجمالي</th>
+                            <th style="text-align:center; background:#17a2b8; color:white;">📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
     `;
     
     if (regionVessels.length === 0) {
-        html += `
-            <tr>
-                <td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">
-                    🚫 لا توجد مراكب في هذا الإقليم
-                </td>
-            </tr>
-        `;
+        html += `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مراكب في هذا الإقليم</td></tr>`;
     } else {
         categories.forEach(cat => {
             const catVessels = regionVessels.filter(v => v.cat === cat);
@@ -1313,15 +1326,13 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
             const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
             
             html += `
-                <tr style="border-bottom:1px solid #e9ecef;">
-                    <td style="padding:8px; text-align:right; font-weight:bold;">${cat}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:#28a745;">${good}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold;">${total}</td>
-                    <td style="padding:8px; text-align:center; font-weight:bold; color:${color};">
-                        ${eff}%
-                    </td>
+                <tr>
+                    <td style="text-align:right; font-weight:bold;">${cat}</td>
+                    <td style="text-align:center; font-weight:bold; color:#28a745;">${good}</td>
+                    <td style="text-align:center; font-weight:bold; color:#dc3545;">${bad}</td>
+                    <td style="text-align:center; font-weight:bold; color:#ffc107;">${maint}</td>
+                    <td style="text-align:center; font-weight:bold;">${total}</td>
+                    <td style="text-align:center; font-weight:bold; color:${color};">${eff}%</td>
                 </tr>
             `;
         });
@@ -1331,14 +1342,12 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
         
         html += `
             <tr style="background:#e3f2fd; border-top:2px solid #0d6efd; font-weight:bold;">
-                <td style="padding:8px; text-align:right; font-size:14px;">📊 المجموع الكلي</td>
-                <td style="padding:8px; text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
-                <td style="padding:8px; text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
-                <td style="padding:8px; text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
-                <td style="padding:8px; text-align:center; font-size:14px;">${totalAll}</td>
-                <td style="padding:8px; text-align:center; color:${totalColor}; font-size:16px;">
-                    ${totalEff}%
-                </td>
+                <td style="text-align:right; font-size:14px;">📊 المجموع الكلي</td>
+                <td style="text-align:center; color:#28a745; font-size:14px;">${goodAll}</td>
+                <td style="text-align:center; color:#dc3545; font-size:14px;">${badAll}</td>
+                <td style="text-align:center; color:#ffc107; font-size:14px;">${maintAll}</td>
+                <td style="text-align:center; font-size:14px;">${totalAll}</td>
+                <td style="text-align:center; color:${totalColor}; font-size:16px;">${totalEff}%</td>
             </tr>
         `;
     }
@@ -1389,7 +1398,7 @@ function renderCharts(vessels) {
         return total > 0 ? Math.round((good / total) * 100) : 0;
     });
 
-    // الرسم الشريطي 3D
+    // الرسم الشريطي
     const ctx1 = document.getElementById('barChart3D');
     if (ctx1) {
         new Chart(ctx1, {
@@ -1410,7 +1419,7 @@ function renderCharts(vessels) {
         });
     }
 
-    // الرسم الخطي 3D
+    // الرسم الخطي
     const ctx2 = document.getElementById('lineChart3D');
     if (ctx2) {
         new Chart(ctx2, {
@@ -1436,7 +1445,7 @@ function renderCharts(vessels) {
         });
     }
 
-    // الرسم الدائري 3D
+    // الرسم الدائري
     const ctx3 = document.getElementById('pieChart3D');
     if (ctx3) {
         new Chart(ctx3, {
@@ -1452,15 +1461,13 @@ function renderCharts(vessels) {
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 10 } } }
-                },
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } } },
                 cutout: '60%'
             }
         });
     }
 
-    // الرسم الشريطي الأفقي 3D
+    // الرسم الشريطي الأفقي
     const ctx4 = document.getElementById('horizontalBarChart3D');
     if (ctx4) {
         new Chart(ctx4, {
@@ -1485,7 +1492,7 @@ function renderCharts(vessels) {
 }
 
 // ============================================================
-// دوال الفلترة والجاهزية العامة
+// دوال الفلترة
 // ============================================================
 
 function showAllEfficiency() {
@@ -1507,10 +1514,7 @@ function filterEfficiencyByUnit() {
         renderGeneralEfficiencyTable(filtered);
         renderCategoryEfficiencyTable(filtered);
         renderAllRegionsTables(filtered);
-        
-        setTimeout(() => {
-            renderCharts(filtered);
-        }, 100);
+        setTimeout(() => renderCharts(filtered), 100);
     } else {
         showAlert('✅ عرض جميع الأقاليم', 'success');
         renderEfficiency();
@@ -1541,12 +1545,10 @@ function viewVesselMaintenance(vesselId) {
     let html = `
         <div style="background:white; padding:25px; border-radius:12px; 
                     max-width:600px; width:95%; max-height:80vh; overflow-y:auto; direction:rtl;">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">
-                📋 سجل صيانة ${vessel.name}
-                <button onclick="this.closest('div[style]').parentElement.remove()" 
-                        style="float:left; background:#dc3545; color:white; border:none; 
-                               padding:5px 15px; border-radius:5px; cursor:pointer;">✕</button>
-            </h3>
+            <h3 style="color:#0d6efd; margin-bottom:15px;">📋 سجل صيانة ${vessel.name}</h3>
+            <button onclick="this.closest('div[style]').parentElement.remove()" 
+                    style="float:left; background:#dc3545; color:white; border:none; 
+                           padding:5px 15px; border-radius:5px; cursor:pointer;">✕</button>
     `;
     
     records.slice().reverse().forEach((r, i) => {
@@ -1566,9 +1568,7 @@ function viewVesselMaintenance(vesselId) {
                     <div>👨‍🔧 ${r.technician || 'غير محدد'}</div>
                     ${r.cost ? `<div>💰 ${r.cost} د.ت</div>` : ''}
                     ${r.parts && r.parts.length ? `
-                        <div style="margin-top:5px;">
-                            🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}
-                        </div>
+                        <div style="margin-top:5px;">🔩 قطع الغيار: ${r.parts.map(p => `${p.name}(${p.quantity})`).join(', ')}</div>
                     ` : ''}
                 </div>
             </div>
@@ -1581,7 +1581,7 @@ function viewVesselMaintenance(vesselId) {
 }
 
 // ============================================================
-// دوال أخرى
+// دوال أخرى (تذاكر، مستخدمين، ملاحظات)
 // ============================================================
 
 function sendTicket() {
@@ -1775,41 +1775,6 @@ function clearTrackUsers() {
         showAlert('✅ تم مسح جميع المواقع', 'success');
     }
 }
-
-// ============================================================
-// ✅ تهيئة التطبيق
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 جاري تهيئة التطبيق...');
-    
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    if (token && user) {
-        try {
-            currentUser = JSON.parse(user);
-            if (currentUser) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                updateUserDisplay();
-                loadAllData();
-            } else {
-                document.getElementById('loginOverlay').style.display = 'flex';
-                document.getElementById('mainApp').style.display = 'none';
-            }
-        } catch (e) {
-            localStorage.clear();
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-        }
-    } else {
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-    }
-});
 
 // ============================================================
 // تصدير الدوال
