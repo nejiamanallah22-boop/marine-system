@@ -1,0 +1,38 @@
+<!-- ===== صفحة المستخدمين ===== -->
+<div class="page-users">
+    <div class="user-form">
+        <div class="form-group">
+            <label><i class="fas fa-user"></i> اسم المستخدم</label>
+            <input type="text" id="un" placeholder="اسم المستخدم">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-key"></i> كلمة المرور</label>
+            <input type="password" id="up" placeholder="كلمة المرور">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-user-shield"></i> الصلاحية</label>
+            <select id="ur">
+                <option value="مشاهد">👁️ مشاهد</option>
+                <option value="محرر">✏️ محرر</option>
+                <option value="مسؤول">👑 مسؤول</option>
+            </select>
+        </div>
+        <button class="btn btn-primary" onclick="addUser()"><i class="fas fa-user-plus"></i> إضافة</button>
+    </div>
+    <div class="region-table-card">
+        <div class="region-table-header">👥 إدارة المستخدمين</div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الصلاحية</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
