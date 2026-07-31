@@ -891,17 +891,19 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// ✅ دوال الجاهزية مع جداول الأقاليم
+// ✅ دوال الجاهزية - مع التعديل المطلوب
 // ============================================================
 
 function renderEfficiency() {
-    console.log('📊 Rendering efficiency');
+    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
     const vessels = allVessels || [];
+    
     const countEl = document.getElementById('effCount');
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
+    
     updateEfficiencyStats(vessels);
     renderCategoryEfficiencyTable(vessels);
-    renderAllRegionsTables(vessels);
+    renderAllRegionsTables(vessels);  // ✅ التعديل: vessels بدلاً من allVessels
     setTimeout(() => renderCharts(vessels), 100);
 }
 
