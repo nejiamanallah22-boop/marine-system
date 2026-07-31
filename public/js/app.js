@@ -22,13 +22,11 @@ function loadPage(pageName) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
     
-    // إخفاء جميع الصفحات
     document.querySelectorAll('.page-content').forEach(el => el.remove());
     
-    // تحميل الصفحة المطلوبة
     fetch(`/pages/${pageName}.html`)
         .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
+            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
             return res.text();
         })
         .then(html => {
@@ -37,17 +35,13 @@ function loadPage(pageName) {
             div.id = 'page-' + pageName;
             div.innerHTML = html;
             container.appendChild(div);
-            
-            // تهيئة الصفحة
             initPage(pageName);
         })
         .catch(err => {
             console.error('Error loading page:', err);
             container.innerHTML = `
                 <div style="text-align:center; padding:50px; color:#dc3545;">
-                    ❌ خطأ في تحميل الصفحة: ${pageName}
-                    <br>
-                    <small style="color:#6c757d;">${err.message}</small>
+                    ❌ ${err.message}
                 </div>
             `;
         });
@@ -307,7 +301,7 @@ function loadNotes() {
 }
 
 // ============================================================
-// عرض الجداول الأساسية (مختصرة)
+// عرض الجداول الأساسية
 // ============================================================
 
 function renderMainTable() {
@@ -403,13 +397,11 @@ function addItem() {
         showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
-    
     const name = document.getElementById('iName')?.value;
     if (!name) {
         showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
         return;
     }
-    
     const data = {
         name: name,
         num: document.getElementById('iNum')?.value || '',
@@ -425,10 +417,8 @@ function addItem() {
         ref: document.getElementById('iRef')?.value || '',
         repairer: document.getElementById('iRepairer')?.value || ''
     };
-    
     const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
     const method = editingVesselId ? 'PUT' : 'POST';
-    
     fetch(url, {
         method: method,
         headers: {
@@ -536,7 +526,7 @@ function updateZones() {
 }
 
 // ============================================================
-// دوال الصيانة (مختصرة)
+// دوال الصيانة
 // ============================================================
 
 function updateMaintenanceVessels() {
@@ -907,7 +897,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية
+// دوال الجاهزية
 // ============================================================
 
 function renderEfficiency() {
@@ -1478,7 +1468,7 @@ function scrollToBottom() {
 }
 
 // ============================================================
-// ✅ منع الدخول التلقائي
+// منع الدخول التلقائي
 // ============================================================
 
 (function() {
@@ -1503,11 +1493,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (username) username.value = '';
     if (password) password.value = '';
     console.log('🔐 شاشة الدخول جاهزة');
-    
-    // تحميل الصفحة الافتراضية
-    if (loginOverlay && loginOverlay.style.display === 'none') {
-        loadPage('fleet');
-    }
 });
 
 window.addEventListener('load', function() {
