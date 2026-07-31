@@ -10,12 +10,17 @@
         </button>
     </div>
 
+    <!-- نموذج إدخال الصيانة -->
     <div class="maintenance-form" id="maintenanceForm">
-        <h4 style="color:#0d6efd; margin-bottom:10px;"><i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد</h4>
+        <h4 style="color:#0d6efd; margin-bottom:10px;">
+            <i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد
+        </h4>
         <div class="form-grid">
             <div>
                 <label><i class="fas fa-ship"></i> المركب</label>
-                <select id="mVesselId"><option value="">اختر المركب</option></select>
+                <select id="mVesselId">
+                    <option value="">اختر المركب</option>
+                </select>
             </div>
             <div>
                 <label><i class="fas fa-tools"></i> نوع الصيانة</label>
@@ -67,19 +72,26 @@
             </div>
         </div>
         <div class="form-actions">
-            <button class="btn btn-success" onclick="saveMaintenance()"><i class="fas fa-save"></i> حفظ</button>
-            <button class="btn btn-secondary" onclick="toggleMaintenanceForm()"><i class="fas fa-times"></i> إلغاء</button>
+            <button class="btn btn-success" onclick="saveMaintenance()">
+                <i class="fas fa-save"></i> حفظ
+            </button>
+            <button class="btn btn-secondary" onclick="toggleMaintenanceForm()">
+                <i class="fas fa-times"></i> إلغاء
+            </button>
         </div>
     </div>
 
+    <!-- إحصائيات الصيانة -->
     <div id="maintenanceStats"></div>
 
+    <!-- الصيانة العامة -->
     <h4 style="color:#dc3545; margin:20px 0 15px;">
         <i class="fas fa-exclamation-triangle"></i> الصيانة العامة - المراكب المعطبة
         <span style="font-size:12px; font-weight:400; color:#6c757d;">(تختفي عند الإصلاح)</span>
     </h4>
     <div id="generalMaintenanceContainer"></div>
 
+    <!-- Historique -->
     <h4 style="color:#0d6efd; margin:20px 0 15px;">
         <i class="fas fa-history"></i> Historique des maintenance
         <span style="font-size:12px; font-weight:400; color:#6c757d;">(جميع السجلات)</span>
@@ -93,11 +105,14 @@
             <option value="مكتملة">✅ مكتملة</option>
             <option value="ملغية">❌ ملغية</option>
         </select>
-        <button class="btn btn-sm btn-danger" onclick="resetHistoryFilters()"><i class="fas fa-times"></i> إلغاء</button>
+        <button class="btn btn-sm btn-danger" onclick="resetHistoryFilters()">
+            <i class="fas fa-times"></i> إلغاء
+        </button>
         <span id="historyCount" style="font-size:12px; color:#6c757d;">📊 0</span>
     </div>
     <div id="historyMaintenanceContainer"></div>
 
+    <!-- وحدات الصيانة -->
     <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-building"></i> وحدات الصيانة</h4>
     <div id="maintenanceUnitsContainer" class="unit-tables-grid"></div>
 </div>
