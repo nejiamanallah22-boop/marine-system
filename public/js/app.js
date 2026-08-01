@@ -761,7 +761,8 @@ function renderHistoryMaintenance() {
                 <thead>
                     <tr>
                         <th>#</th><th>المركب</th><th>الرقم</th>
-                        <th>👨‍🔧 الفني</th><th>🔩 القطع</th>
+                        <th>👨‍🔧 الفني</th>
+                        <th>🔩 القطع</th>
                         <th>💰 التكلفة</th>
                         <th>📊 الحالة</th>
                         <th>📅 التاريخ</th>
@@ -891,7 +892,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// ✅ دوال الجاهزية - مع التعديل المطلوب
+// 📊 صفحة الجاهزية - الكود المصحح
 // ============================================================
 
 function renderEfficiency() {
@@ -903,7 +904,7 @@ function renderEfficiency() {
     
     updateEfficiencyStats(vessels);
     renderCategoryEfficiencyTable(vessels);
-    renderAllRegionsTables(vessels);  // ✅ التعديل: vessels بدلاً من allVessels
+    renderAllRegionsTables(vessels);
     setTimeout(() => renderCharts(vessels), 100);
 }
 
@@ -923,11 +924,17 @@ function updateEfficiencyStats(vessels) {
     `;
 }
 
+// ============================================================
+// ✅ 1. جدول النجاعة العامة حسب الفئات
+// ============================================================
+
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
     if (!container) return;
+    
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
+    
     let html = `
         <div class="efficiency-table-wrapper">
             <div class="table-title"><i class="fas fa-chart-pie"></i> النجاعة العامة حسب الفئات</div>
@@ -945,6 +952,7 @@ function renderCategoryEfficiencyTable(vessels) {
                     </thead>
                     <tbody>
     `;
+    
     categories.forEach(cat => {
         const catVessels = vessels.filter(v => v.cat === cat);
         const total = catVessels.length;
@@ -952,8 +960,10 @@ function renderCategoryEfficiencyTable(vessels) {
         const bad = catVessels.filter(v => v.stat === 'معطب').length;
         const maint = catVessels.filter(v => v.stat === 'صيانة').length;
         const eff = total > 0 ? Math.round((good / total) * 100) : 0;
+        
         totalAll += total; goodAll += good; badAll += bad; maintAll += maint;
         const color = eff >= 80 ? '#28a745' : eff >= 50 ? '#ffc107' : '#dc3545';
+        
         html += `
             <tr>
                 <td style="text-align:right; font-weight:bold;">${cat}</td>
@@ -965,8 +975,10 @@ function renderCategoryEfficiencyTable(vessels) {
             </tr>
         `;
     });
+    
     const totalEff = totalAll > 0 ? Math.round((goodAll / totalAll) * 100) : 0;
     const totalColor = totalEff >= 80 ? '#28a745' : totalEff >= 50 ? '#ffc107' : '#dc3545';
+    
     html += `
                     <tr style="background:#e3f2fd; border-top:2px solid #0d6efd; font-weight:bold;">
                         <td style="text-align:right; font-size:14px;">📊 المجموع الكلي</td>
@@ -989,11 +1001,12 @@ function renderCategoryEfficiencyTable(vessels) {
             </div>
         </div>
     `;
+    
     container.innerHTML = html;
 }
 
 // ============================================================
-// ✅ دوال الأقاليم - المصححة
+// ✅ 2. جداول الأقاليم
 // ============================================================
 
 function renderAllRegionsTables(vessels) {
@@ -1111,7 +1124,7 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
 }
 
 // ============================================================
-// الرسوم البيانية 3D
+// ✅ الرسوم البيانية 3D
 // ============================================================
 
 function renderCharts(vessels) {
