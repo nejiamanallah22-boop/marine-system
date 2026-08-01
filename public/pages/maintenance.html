@@ -1,118 +1,210 @@
-<!-- ===== صفحة الصيانة ===== -->
-<div class="page-maintenance">
-    <div class="filter-bar">
-        <span style="font-weight:700; color:#0d6efd;">🔧 نظام تتبع الصيانة</span>
-        <button class="btn btn-sm btn-success" onclick="toggleMaintenanceForm()">
-            <i class="fas fa-plus"></i> سجل صيانة جديد
-        </button>
-        <button class="btn btn-sm btn-secondary" onclick="loadMaintenance()">
-            <i class="fas fa-sync-alt"></i> تحديث
-        </button>
-    </div>
-
-    <!-- نموذج إدخال الصيانة -->
-    <div class="maintenance-form" id="maintenanceForm">
-        <h4 style="color:#0d6efd; margin-bottom:10px;">
-            <i class="fas fa-clipboard-list"></i> إدخال سجل صيانة جديد
-        </h4>
-        <div class="form-grid">
+<div id="page-maintenance">
+    <h2 style="color:#0d6efd; margin-bottom:20px;">🔧 إدارة الصيانة</h2>
+    
+    <!-- ===== إحصائيات الصيانة ===== -->
+    <div id="maintenanceStats"></div>
+    
+    <!-- ===== زر إضافة صيانة جديدة ===== -->
+    <button onclick="toggleMaintenanceForm()" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px; margin:15px 0;">
+        ➕ إضافة سجل صيانة جديد
+    </button>
+    
+    <!-- ===== نموذج إضافة الصيانة ===== -->
+    <div id="maintenanceForm" style="display:none; background:#f8f9fa; padding:20px; border-radius:10px; margin:15px 0; border:2px solid #0d6efd;">
+        <h3 style="margin-top:0; color:#0d6efd;">📝 تسجيل صيانة</h3>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
             <div>
-                <label><i class="fas fa-ship"></i> المركب</label>
-                <select id="mVesselId">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">🚢 المركب</label>
+                <select id="mVesselId" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
                     <option value="">اختر المركب</option>
                 </select>
             </div>
+            
             <div>
-                <label><i class="fas fa-tools"></i> نوع الصيانة</label>
-                <select id="mType">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">📋 نوع الصيانة</label>
+                <select id="mType" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
                     <option value="عادية">عادية</option>
                     <option value="طارئة">طارئة</option>
                     <option value="دورية">دورية</option>
+                    <option value="كبيرة">كبيرة</option>
                 </select>
             </div>
+            
             <div>
-                <label><i class="fas fa-industry"></i> الوحدة</label>
-                <select id="mUnit">
-                    <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                    <option value="شركة خاصة">🏢 شركة خاصة</option>
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">🏭 الوحدة</label>
+                <select id="mUnit" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
+                    <option value="وحدة الصيانة والإسناد البحري تونس">وحدة الصيانة والإسناد البحري تونس</option>
+                    <option value="وحدة الصيانة والإسناد البحري صفاقس">وحدة الصيانة والإسناد البحري صفاقس</option>
+                    <option value="وحدة الصيانة والإسناد البحري المنستير">وحدة الصيانة والإسناد البحري المنستير</option>
+                    <option value="وحدة الصيانة والإسناد البحري جرجيس">وحدة الصيانة والإسناد البحري جرجيس</option>
+                    <option value="شركة خاصة">شركة خاصة</option>
                 </select>
             </div>
+            
             <div>
-                <label><i class="fas fa-user-cog"></i> الفني المسؤول</label>
-                <input type="text" id="mTechnician" placeholder="اسم الفني">
-            </div>
-            <div class="full-width">
-                <label><i class="fas fa-file-alt"></i> وصف العطل</label>
-                <textarea id="mDescription" placeholder="وصف تفصيلي للعطل"></textarea>
-            </div>
-            <div class="full-width">
-                <label><i class="fas fa-cogs"></i> قطع الغيار المستخدمة</label>
-                <div id="partsContainer">
-                    <div class="part-item">
-                        <input type="text" placeholder="اسم القطعة" class="part-name">
-                        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-                        <input type="number" placeholder="السعر (د.ت)" class="part-price" style="width:80px;">
-                        <button class="remove-part" onclick="removePart(this)">✕</button>
-                    </div>
-                </div>
-                <button class="btn btn-sm btn-info" onclick="addPart()" style="margin-top:5px;">
-                    <i class="fas fa-plus"></i> إضافة قطعة
-                </button>
-            </div>
-            <div>
-                <label><i class="fas fa-money-bill"></i> التكلفة الإجمالية <span class="currency">(د.ت)</span></label>
-                <input type="number" id="mCost" placeholder="0" step="0.01">
-            </div>
-            <div>
-                <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
-                <input type="text" id="mNotes" placeholder="ملاحظات إضافية">
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">👨‍🔧 الفني المسؤول</label>
+                <input type="text" id="mTechnician" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="اسم الفني">
             </div>
         </div>
-        <div class="form-actions">
-            <button class="btn btn-success" onclick="saveMaintenance()">
-                <i class="fas fa-save"></i> حفظ
-            </button>
-            <button class="btn btn-secondary" onclick="toggleMaintenanceForm()">
-                <i class="fas fa-times"></i> إلغاء
-            </button>
+        
+        <div style="margin-top:15px;">
+            <label style="display:block; font-weight:bold; margin-bottom:5px;">📝 وصف العطل</label>
+            <textarea id="mDescription" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px; height:80px;" placeholder="وصف تفصيلي للعطل"></textarea>
+        </div>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:15px;">
+            <div>
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">💰 التكلفة (د.ت)</label>
+                <input type="number" id="mCost" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="0">
+            </div>
+            <div>
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">📝 ملاحظات</label>
+                <input type="text" id="mNotes" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="ملاحظات إضافية">
+            </div>
+        </div>
+        
+        <!-- ===== قطع الغيار ===== -->
+        <div style="margin-top:15px;">
+            <label style="display:block; font-weight:bold; margin-bottom:5px;">🔩 قطع الغيار المستخدمة</label>
+            <div id="partsContainer">
+                <div class="part-item" style="display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap;">
+                    <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; padding:8px; border:1px solid #ced4da; border-radius:5px;">
+                    <input type="number" placeholder="الكمية" class="part-qty" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
+                    <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
+                    <button class="remove-part" onclick="removePart(this)" style="padding:8px 15px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">✕</button>
+                </div>
+            </div>
+            <button onclick="addPart()" style="padding:5px 15px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer; margin-top:5px;">➕ إضافة قطعة</button>
+        </div>
+        
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="saveMaintenance()" style="padding:10px 30px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">💾 حفظ</button>
+            <button onclick="toggleMaintenanceForm()" style="padding:10px 30px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">❌ إلغاء</button>
         </div>
     </div>
-
-    <!-- إحصائيات الصيانة -->
-    <div id="maintenanceStats"></div>
-
-    <!-- الصيانة العامة -->
-    <h4 style="color:#dc3545; margin:20px 0 15px;">
-        <i class="fas fa-exclamation-triangle"></i> الصيانة العامة - المراكب المعطبة
-        <span style="font-size:12px; font-weight:400; color:#6c757d;">(تختفي عند الإصلاح)</span>
-    </h4>
+    
+    <!-- ===== الصيانة العامة (المراكب المعطبة) ===== -->
+    <h3 style="color:#dc3545; margin:30px 0 15px;">🛠️ المراكب المعطبة</h3>
     <div id="generalMaintenanceContainer"></div>
-
-    <!-- Historique -->
-    <h4 style="color:#0d6efd; margin:20px 0 15px;">
-        <i class="fas fa-history"></i> Historique des maintenance
-        <span style="font-size:12px; font-weight:400; color:#6c757d;">(جميع السجلات)</span>
-    </h4>
-    <div class="filter-bar" style="background:#f8f9fa; flex-wrap:wrap;">
-        <input type="text" id="filterVessel" placeholder="🔍 بحث بالمركب" onkeyup="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px; min-width:120px;">
-        <input type="date" id="filterDateFrom" onchange="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;">
-        <input type="date" id="filterDateTo" onchange="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;">
-        <select id="filterStatus" onchange="applyHistoryFilters()" style="padding:6px 10px; border:1px solid #ced4da; border-radius:6px;">
+    
+    <!-- ===== سجل الصيانة المكتملة ===== -->
+    <h3 style="color:#28a745; margin:30px 0 15px;">📋 سجل الصيانة المكتملة</h3>
+    
+    <!-- فلترة -->
+    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px; background:#f8f9fa; padding:15px; border-radius:8px;">
+        <input type="text" id="filterVessel" placeholder="🔍 بحث بالمركب" style="padding:8px; border:1px solid #ced4da; border-radius:5px; flex:1; min-width:150px;">
+        <input type="date" id="filterDateFrom" style="padding:8px; border:1px solid #ced4da; border-radius:5px;">
+        <span style="display:flex; align-items:center;">إلى</span>
+        <input type="date" id="filterDateTo" style="padding:8px; border:1px solid #ced4da; border-radius:5px;">
+        <select id="filterStatus" style="padding:8px; border:1px solid #ced4da; border-radius:5px;">
             <option value="">جميع الحالات</option>
             <option value="مكتملة">✅ مكتملة</option>
             <option value="ملغية">❌ ملغية</option>
         </select>
-        <button class="btn btn-sm btn-danger" onclick="resetHistoryFilters()">
-            <i class="fas fa-times"></i> إلغاء
-        </button>
-        <span id="historyCount" style="font-size:12px; color:#6c757d;">📊 0</span>
+        <button onclick="applyHistoryFilters()" style="padding:8px 20px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🔍 فلترة</button>
+        <button onclick="resetHistoryFilters()" style="padding:8px 20px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 إلغاء</button>
     </div>
+    
+    <div id="historyCount" style="margin-bottom:10px; font-weight:bold;">📊 0 سجل</div>
     <div id="historyMaintenanceContainer"></div>
-
-    <!-- وحدات الصيانة -->
-    <h4 style="color:#0d6efd; margin:20px 0 15px;"><i class="fas fa-building"></i> وحدات الصيانة</h4>
-    <div id="maintenanceUnitsContainer" class="unit-tables-grid"></div>
+    
+    <!-- ===== وحدات الصيانة ===== -->
+    <h3 style="color:#0d6efd; margin:30px 0 15px;">🏭 وحدات الصيانة</h3>
+    <div id="maintenanceUnitsContainer"></div>
 </div>
+
+<style>
+    .part-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 5px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .part-item input {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+    }
+    .part-item .part-name {
+        flex: 2;
+        min-width: 150px;
+    }
+    .scrollable-table {
+        overflow-x: auto;
+        margin: 10px 0;
+    }
+    .scrollable-table table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: 'Cairo', sans-serif;
+        font-size: 14px;
+    }
+    .scrollable-table table th {
+        background: #f8f9fa;
+        padding: 10px;
+        border-bottom: 2px solid #dee2e6;
+        text-align: center;
+    }
+    .scrollable-table table td {
+        padding: 8px;
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+    }
+    .scrollable-table table tr:hover {
+        background: #f8f9fa;
+    }
+    .maintenance-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin: 15px 0;
+    }
+    .stat-box {
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .stat-box h4 {
+        margin: 0;
+        font-size: 28px;
+    }
+    .stat-box p {
+        margin: 5px 0 0;
+        color: #6c757d;
+    }
+    .stat-total { background: #e7f3ff; border: 1px solid #b6d4fe; }
+    .stat-progress { background: #fff3cd; border: 1px solid #ffecb5; }
+    .stat-completed { background: #d4edda; border: 1px solid #b7eb8f; }
+    .stat-cancelled { background: #f8d7da; border: 1px solid #f5c2c7; }
+    
+    .region-table-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .region-table-header {
+        font-weight: bold;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 2px;
+    }
+    .btn-sm:hover {
+        opacity: 0.8;
+    }
+    .btn-warning { background: #ffc107; color: #000; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-success { background: #28a745; color: white; }
+</style>
