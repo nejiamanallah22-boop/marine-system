@@ -925,12 +925,15 @@ function updateEfficiencyStats(vessels) {
 }
 
 // ============================================================
-// ✅ 1. جدول النجاعة العامة حسب الفئات
+// ✅ 1. جدول النجاعة العامة حسب الفئات (مصحح)
 // ============================================================
 
 function renderCategoryEfficiencyTable(vessels) {
     const container = document.getElementById('categoryEffContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ categoryEffContainer not found');
+        return;
+    }
     
     const categories = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     let totalAll = 0, goodAll = 0, badAll = 0, maintAll = 0;
@@ -1003,10 +1006,11 @@ function renderCategoryEfficiencyTable(vessels) {
     `;
     
     container.innerHTML = html;
+    console.log('✅ Category efficiency table rendered');
 }
 
 // ============================================================
-// ✅ 2. جداول الأقاليم
+// ✅ 2. جداول الأقاليم (مصححة)
 // ============================================================
 
 function renderAllRegionsTables(vessels) {
@@ -1121,6 +1125,7 @@ function renderRegionTable(containerId, vessels, regionKey, regionName) {
     `;
     
     container.innerHTML = html;
+    console.log('✅ Region table rendered:', regionName);
 }
 
 // ============================================================
