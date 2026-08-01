@@ -1,1326 +1,832 @@
-// public/js/app.js
-console.log('✅ App loaded');
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
+const helmet = require('helmet');
+const compression = require('compression');
+const mongoSanitize = require('express-mongo-sanitize');
+const requestIp = require('request-ip');
+const crypto = require('crypto');
+const { body, validationResult } = require('express-validator');
+let UAParser;
+try {
+    UAParser = require('ua-parser-js');
+} catch (e) {
+    UAParser = null;
+}
+const Redis = require('ioredis');
+const { Queue, Worker, QueueEvents } = require('bullmq');
+const { v4: uuidv4 } = require('uuid');
+const xss = require('xss');
+require('dotenv').config();
 
-let allVessels = [];
-let allUsers = [];
-let allTickets = [];
-let allNotes = [];
-let allMaintenance = [];
-let currentUser = null;
-let editingVesselId = null;
-let editingMaintenanceId = null;
+const app = express();
 
-// ============================================================
-// منع الدخول التلقائي
-// ============================================================
+// Disable X-Powered-By header
+app.disable('x-powered-by');
 
-document.addEventListener('DOMContentLoaded', function() {
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainApp');
-    
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-    if (mainApp) mainApp.style.display = 'none';
-    
-    localStorage.clear();
-    
-    const username = document.getElementById('username');
-    const password = document.getElementById('password');
-    if (username) username.value = '';
-    if (password) password.value = '';
-    
-    if (password) {
-        password.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                doLogin();
-            }
-        });
+// Trust proxy for correct IP behind reverse proxies
+app.set('trust proxy', 1);
+
+// Auto-index only in development
+mongoose.set('autoIndex', process.env.NODE_ENV !== 'production');
+
+// ================= ENV VALIDATION =================
+const requiredEnv = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'MONGO_URI'];
+for (const env of requiredEnv) {
+    if (!process.env[env]) {
+        console.error(`❌ Missing ${env}`);
+        process.exit(1);
     }
-    if (username) {
-        username.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                if (password) password.focus();
-            }
-        });
-    }
+}
+
+// ================= REDIS =================
+const redis = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD,
+    retryStrategy: t => Math.min(t * 50, 2000),
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    lazyConnect: true
 });
 
-// ============================================================
-// دوال تحميل الصفحات
-// ============================================================
+redis.on('connect', () => console.log('✅ Redis connected'));
+redis.on('error', (err) => console.error('Redis error:', err));
 
-function loadPage(pageName) {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-    document.querySelectorAll('.page-content').forEach(el => el.remove());
-    
-    fetch(`/pages/${pageName}.html`)
-        .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
-            return res.text();
-        })
-        .then(html => {
-            const div = document.createElement('div');
-            div.className = 'page-content';
-            div.id = 'page-' + pageName;
-            div.innerHTML = html;
-            container.appendChild(div);
-            initPage(pageName);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#dc3545;">
-                    ❌ خطأ في تحميل الصفحة: ${pageName}
-                    <br><small>${err.message}</small>
-                </div>
-            `;
-        });
-}
+const isRedisReady = () => redis?.status === 'connect' || redis?.status === 'ready';
 
-function initPage(pageName) {
-    switch(pageName) {
-        case 'fleet': loadVessels(); break;
-        case 'maintenance': loadMaintenance(); break;
-        case 'efficiency': loadVessels(); break;
-        case 'support': loadTickets(); break;
-        case 'tracking': setTimeout(initMap, 100); break;
-        case 'map': setTimeout(initMap, 100); break;
-        case 'users': loadUsers(); break;
-        case 'notes': loadNotes(); break;
+// ================= RATE LIMIT REDIS STORE =================
+const rateLimitStore = new RedisStore({
+    sendCommand: (...args) => redis.call(...args),
+    prefix: 'rl:'
+});
+
+// ================= QUEUE =================
+const bullConnection = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || 6379),
+    password: process.env.REDIS_PASSWORD
+};
+
+const logQueue = new Queue('log-queue', { connection: bullConnection });
+const queueEvents = new QueueEvents('log-queue', { connection: bullConnection });
+
+// ================= MODELS =================
+
+// User Model with tokenVersion for multi-device logout
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true, trim: true, minlength: 3, maxlength: 50 },
+    pass: { type: String, required: true },
+    role: { type: String, default: 'مشاهد', enum: ['مسؤول', 'محرر', 'مشاهد'] },
+    enabled: { type: Boolean, default: true },
+    lastLogin: { type: Date, default: null },
+    lastLoginIP: { type: String, default: '' },
+    lastLoginDevice: { type: String, default: '' },
+    loginAttempts: { type: Number, default: 0 },
+    lockedUntil: { type: Date, default: null },
+    tokenVersion: { type: Number, default: 0 }
+}, { timestamps: true });
+
+userSchema.index({ name: 1, enabled: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ createdAt: -1 });
+
+userSchema.pre('save', async function(next) {
+    if (this.isModified('pass')) {
+        this.pass = await bcrypt.hash(this.pass, 12);
     }
-}
+    next();
+});
 
-function showPage(pageName) {
-    loadPage(pageName);
-}
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.pass);
+};
 
-function refreshAllPages() {
-    const currentPage = document.querySelector('.page-content');
-    if (currentPage) {
-        const pageName = currentPage.id.replace('page-', '');
-        loadPage(pageName);
-    } else {
-        loadPage('fleet');
-    }
-    showAlert('✅ تم تحديث الصفحة', 'success');
-}
+userSchema.methods.toJSON = function() {
+    const obj = this.toObject();
+    delete obj.pass;
+    return obj;
+};
 
-// ============================================================
-// دوال مساعدة
-// ============================================================
+const User = mongoose.model('User', userSchema);
 
-function showAlert(message, type = 'info') {
-    const colors = {
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#0d6efd'
-    };
-    const alertDiv = document.createElement('div');
-    alertDiv.style.cssText = `
-        position: fixed; top: 20px; right: 20px; z-index: 99999;
-        padding: 15px 25px; border-radius: 8px; color: white;
-        background: ${colors[type] || colors.info};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        font-family: 'Cairo', sans-serif;
-        max-width: 400px;
-        animation: slideIn 0.3s ease;
-        z-index: 999999;
-    `;
-    alertDiv.textContent = message;
-    document.body.appendChild(alertDiv);
-    setTimeout(() => {
-        alertDiv.style.opacity = '0';
-        alertDiv.style.transition = 'opacity 0.3s';
-        setTimeout(() => alertDiv.remove(), 300);
-    }, 4000);
-}
+// Vessel Model
+const vesselSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    num: { type: String, unique: true, sparse: true, trim: true },
+    len: { type: Number, default: 0, min: 0, max: 100 },
+    reg: { type: String, default: '', trim: true },
+    zone: { type: String, default: '', trim: true },
+    port: { type: String, default: '', trim: true },
+    supp: { type: String, default: '', trim: true },
+    stat: { type: String, default: 'صالح', enum: ['صالح', 'معطب', 'صيانة'] },
+    break: { type: String, default: '', trim: true },
+    fDate: { type: String, default: '' },
+    eDate: { type: String, default: '' },
+    ref: { type: String, default: '', trim: true },
+    cat: { type: String, default: '', trim: true }
+}, { timestamps: true });
 
-function getToken() {
-    return localStorage.getItem('token');
-}
+vesselSchema.index({ stat: 1, createdAt: -1 });
+vesselSchema.index({ reg: 1, stat: 1 });
+vesselSchema.index({ name: 1 });
+vesselSchema.index({ num: 1 }, { sparse: true });
 
-function getUser() {
+const Vessel = mongoose.model('Vessel', vesselSchema);
+
+// Reply Schema
+const replySchema = new mongoose.Schema({
+    message: { type: String, required: true, trim: true },
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    by: { type: String, required: true },
+    role: { type: String, required: true }
+});
+
+// Ticket Schema
+const ticketSchema = new mongoose.Schema({
+    userName: { type: String, required: true, trim: true },
+    userRole: { type: String, required: true },
+    subject: { type: String, required: true, trim: true },
+    message: { type: String, required: true, trim: true },
+    status: { type: String, default: 'قيد المعالجة', enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'] },
+    replies: [replySchema],
+    date: { type: String, default: '' },
+    time: { type: String, default: '' }
+}, { timestamps: true });
+
+ticketSchema.index({ status: 1, createdAt: -1 });
+ticketSchema.index({ userName: 1, status: 1 });
+ticketSchema.index({ createdAt: -1 });
+
+const Ticket = mongoose.model('Ticket', ticketSchema);
+
+// Log Model
+const logSchema = new mongoose.Schema({
+    requestId: { type: String, default: '' },
+    userName: { type: String, required: true, trim: true },
+    userRole: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String, default: '', trim: true },
+    ip: { type: String, default: '' },
+    userAgent: { type: String, default: '' },
+    device: { type: String, default: '' }
+}, { timestamps: true });
+
+logSchema.index({ createdAt: -1 });
+logSchema.index({ userName: 1, createdAt: -1 });
+logSchema.index({ action: 1, createdAt: -1 });
+logSchema.index({ requestId: 1 });
+
+const Log = mongoose.model('Log', logSchema);
+
+// ================= BULLMQ WORKER =================
+const logWorker = new Worker('log-queue', async job => {
     try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch {
+        await Log.insertMany(job.data.logs);
+    } catch (error) {
+        console.error('Batch log error:', error);
+        throw error;
+    }
+}, { connection: bullConnection, concurrency: 5 });
+
+logWorker.on('error', (err) => console.error('Worker error:', err));
+
+// ================= MIDDLEWARE =================
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(compression());
+app.use(express.json({ limit: '2mb' }));
+app.use(mongoSanitize({ replaceWith: '_' }));
+app.use(requestIp.mw());
+app.use(express.static('public'));
+
+// Request ID middleware
+app.use((req, res, next) => {
+    req.requestId = uuidv4();
+    res.setHeader('X-Request-Id', req.requestId);
+    next();
+});
+
+// XSS SAFE - Only sanitize string fields, handles arrays
+const sanitizeString = (str) => {
+    if (typeof str === 'string') return xss(str);
+    return str;
+};
+
+const sanitizeObj = (obj) => {
+    if (!obj || typeof obj !== 'object') return obj;
+    for (const k in obj) {
+        const val = obj[k];
+        if (typeof val === 'string') {
+            obj[k] = sanitizeString(val);
+        } else if (Array.isArray(val)) {
+            obj[k] = val.map(item => {
+                if (typeof item === 'string') return sanitizeString(item);
+                if (item && typeof item === 'object') return sanitizeObj(item);
+                return item;
+            });
+        } else if (val && typeof val === 'object' && !(val instanceof Date)) {
+            sanitizeObj(val);
+        }
+    }
+    return obj;
+};
+
+app.use((req, res, next) => {
+    if (req.body) sanitizeObj(req.body);
+    if (req.query) sanitizeObj(req.query);
+    // Don't sanitize params to preserve ObjectId format
+    next();
+});
+
+// ObjectId validation middleware
+function validateObjectId(req, res, next) {
+    const { id } = req.params;
+    if (id && !mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid ID format' });
+    }
+    next();
+}
+
+// ================= CORS =================
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+const isDev = process.env.NODE_ENV !== 'production';
+
+app.use(cors({
+    origin: (origin, cb) => {
+        if (!origin && isDev) return cb(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return cb(null, true);
+        }
+        return cb(new Error('Not allowed by CORS'));
+    },
+    credentials: true
+}));
+
+// ================= RATE LIMIT =================
+const generalLimiter = rateLimit({
+    store: rateLimitStore,
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    keyGenerator: req => requestIp.getClientIp(req) || req.ip || 'global',
+    message: { error: 'Too many requests, please try again later.' },
+    skip: req => req.path === '/api/health'
+});
+
+const loginLimiter = rateLimit({
+    store: rateLimitStore,
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    skipSuccessfulRequests: true,
+    keyGenerator: req => `${requestIp.getClientIp(req) || req.ip}:${req.body?.name || 'unknown'}`,
+    message: { error: 'Too many login attempts, please try again later.' }
+});
+
+app.use('/api/', generalLimiter);
+
+// ================= JWT CONFIG =================
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const JWT_EXPIRES_IN = '24h';
+const JWT_REFRESH_EXPIRES_IN = '7d';
+
+// ================= REDIS SAFE OPS =================
+const redisKeys = {
+    refreshToken: (userId, token) => `rt:${userId}:${token}`,
+    bruteForce: (ip, username) => `bf:${ip}:${username}`,
+    bruteForceIp: (ip) => `bfip:${ip}`,
+    cache: (prefix) => `cache:${prefix}`,
+    blacklist: (jti) => `blacklist:${jti}`,
+    lock: (key) => `lock:${key}`
+};
+
+async function setRedis(key, val, ttl) {
+    if (!isRedisReady()) return false;
+    try {
+        await redis.setex(key, ttl, JSON.stringify(val));
+        return true;
+    } catch (error) {
+        console.error('Redis set error:', error);
+        return false;
+    }
+}
+
+async function getRedis(key) {
+    if (!isRedisReady()) return null;
+    try {
+        const d = await redis.get(key);
+        if (!d) return null;
+        return JSON.parse(d);
+    } catch (error) {
+        console.error('Redis get error:', error);
         return null;
     }
 }
 
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToBottom() {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-function toggleNotifications() {
-    showAlert('🔔 لا توجد إشعارات جديدة', 'info');
-}
-
-// ============================================================
-// المصادقة
-// ============================================================
-
-function doLogin() {
-    console.log('🔄 محاولة تسجيل الدخول...');
-    
-    const username = document.getElementById('username')?.value?.trim();
-    const password = document.getElementById('password')?.value?.trim();
-    
-    if (!username || !password) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
+async function delRedis(key) {
+    if (!isRedisReady()) return;
+    try {
+        await redis.del(key);
+    } catch (error) {
+        console.error('Redis del error:', error);
     }
-    
-    const loginBtn = document.querySelector('#loginOverlay .login-btn');
-    if (loginBtn) {
-        loginBtn.disabled = true;
-        loginBtn.textContent = '⏳ جاري الدخول...';
-    }
-    
-    // حساب تجريبي للاختبار
-    if (username === 'admin' && password === 'admin123') {
-        console.log('✅ دخول تجريبي ناجح');
-        const user = {
-            id: 1,
-            name: 'مدير النظام',
-            role: 'مسؤول',
-            email: 'admin@example.com'
-        };
-        localStorage.setItem('token', 'demo-token-12345');
-        localStorage.setItem('user', JSON.stringify(user));
-        currentUser = user;
-        
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        updateUserDisplay();
-        loadAllData();
-        loadPage('fleet');
-        showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
-        
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '🚀 دخول';
+}
+
+async function delRedisPattern(pattern) {
+    if (!isRedisReady()) return;
+    try {
+        let cursor = '0';
+        const keys = [];
+        do {
+            const reply = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+            cursor = reply[0];
+            keys.push(...reply[1]);
+        } while (cursor !== '0');
+        if (keys.length) {
+            const pipeline = redis.pipeline();
+            keys.forEach(k => pipeline.del(k));
+            await pipeline.exec();
         }
-        return;
+    } catch (error) {
+        console.error('Redis delete pattern error:', error);
     }
+}
+
+async function delCachePattern(prefix = '*') {
+    await delRedisPattern(`cache:${prefix}`);
+}
+
+async function acquireLock(key, ttlSeconds = 5) {
+    const lockKey = redisKeys.lock(key);
+    const result = await redis.set(lockKey, '1', 'NX', 'EX', ttlSeconds);
+    return result === 'OK';
+}
+
+async function releaseLock(key) {
+    await delRedis(redisKeys.lock(key));
+}
+
+async function blacklistToken(jti, expirySeconds) {
+    await setRedis(redisKeys.blacklist(jti), true, expirySeconds);
+}
+
+async function isTokenBlacklisted(jti) {
+    return !!(await getRedis(redisKeys.blacklist(jti)));
+}
+
+// ================= BRUTE FORCE =================
+async function checkBruteForce(ip, username) {
+    const key = redisKeys.bruteForce(ip, username);
+    const ipKey = redisKeys.bruteForceIp(ip);
+    const data = await getRedis(key);
+    const ipData = await getRedis(ipKey);
+    if (data && data.blockedUntil && data.blockedUntil > Date.now()) return true;
+    if (ipData && ipData.blockedUntil && ipData.blockedUntil > Date.now()) return true;
+    return false;
+}
+
+async function recordBruteForceAttempt(ip, username) {
+    const key = redisKeys.bruteForce(ip, username);
+    const ipKey = redisKeys.bruteForceIp(ip);
+    const data = (await getRedis(key)) || { attempts: 0, blockedUntil: 0 };
+    const ipData = (await getRedis(ipKey)) || { attempts: 0, blockedUntil: 0 };
     
-    // الاتصال بالخادم
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ email: username, password })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('فشل الاتصال بالخادم');
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            updateUserDisplay();
-            loadAllData();
-            loadPage('fleet');
-            showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
-        } else {
-            showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Login error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم: ' + err.message, 'danger');
-    })
-    .finally(() => {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '🚀 دخول';
-        }
-    });
-}
-
-function doLogout() {
-    if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-function updateUserDisplay() {
-    const display = document.getElementById('userRoleDisplay');
-    if (display && currentUser) {
-        const roleEmojis = {
-            'مسؤول': '👑',
-            'مشرف': '⭐',
-            'محرر': '✏️',
-            'مشاهد': '👀'
-        };
-        display.innerHTML = `
-            <i class="fas fa-user-circle"></i> 
-            ${currentUser.name} 
-            <span style="font-size:12px; background:#e9ecef; padding:2px 10px; border-radius:10px;">
-                ${roleEmojis[currentUser.role] || '👤'} ${currentUser.role}
-            </span>
-            <button onclick="doLogout()" style="margin-left:10px; padding:2px 10px; border:none; border-radius:5px; background:#dc3545; color:white; cursor:pointer; font-size:12px;">
-                🚪 خروج
-            </button>
-        `;
-    }
-}
-
-// ============================================================
-// تحميل البيانات
-// ============================================================
-
-function loadAllData() {
-    loadVessels();
-    loadMaintenance();
-    loadTickets();
-    loadNotes();
-    loadUsers();
-}
-
-function loadVessels() {
-    const token = getToken();
-    if (!token) {
-        allVessels = getDemoData();
-        renderAllTables();
-        return;
-    }
-    fetch('/api/vessels', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allVessels = data || [];
-        console.log('✅ Vessels loaded:', allVessels.length);
-        renderAllTables();
-    })
-    .catch(err => {
-        console.error('Load vessels error:', err);
-        allVessels = getDemoData();
-        renderAllTables();
-    });
-}
-
-function loadMaintenance() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/maintenance', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allMaintenance = data || [];
-        renderGeneralMaintenance();
-        renderHistoryMaintenance();
-        updateMaintenanceStats();
-        renderMaintenanceUnits();
-    })
-    .catch(err => console.error('Load maintenance error:', err));
-}
-
-function loadTickets() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/tickets', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allTickets = data || [];
-        renderTickets();
-    })
-    .catch(err => console.error('Load tickets error:', err));
-}
-
-function loadUsers() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/users', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allUsers = data || [];
-        renderUsersTable();
-    })
-    .catch(err => console.error('Load users error:', err));
-}
-
-function loadNotes() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/notes', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allNotes = data || [];
-        renderNotes();
-    })
-    .catch(err => console.error('Load notes error:', err));
-}
-
-function renderAllTables() {
-    renderMainTable();
-    renderGeneralMaintenance();
-    renderHistoryMaintenance();
-    updateMaintenanceVessels();
-    renderEfficiency();
-}
-
-function getDemoData() {
-    return [
-        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
-        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
-        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
-        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
-        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
-        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
-        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
-        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
-        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
-        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
-        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
-        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
-        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
-        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
-        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
-        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
-        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
-        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
-        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
-        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
-        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
-    ];
-}
-
-// ============================================================
-// عرض الجداول الأساسية
-// ============================================================
-
-function renderMainTable() {
-    const tbody = document.getElementById('mainBody');
-    if (!tbody) return;
-    if (!allVessels || allVessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = allVessels.map(v => `
-        <tr>
-            <td>${v.name || '-'}</td>
-            <td>${v.num || '-'}</td>
-            <td>${v.len || 0}</td>
-            <td>${v.cat || '-'}</td>
-            <td>${v.reg || '-'}</td>
-            <td>${v.zone || '-'}</td>
-            <td>${v.port || '-'}</td>
-            <td>${v.supp || '-'}</td>
-            <td style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</td>
-            <td>${v.break || '-'}</td>
-            <td>${v.fDate || '-'}</td>
-            <td>${v.eDate || '-'}</td>
-            <td>${v.ref || '-'}</td>
-            <td>${v.repairer || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteVessel(${v.id})">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderTickets() {
-    const container = document.getElementById('ticketsList');
-    if (!container) return;
-    if (!allTickets || allTickets.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد تذاكر</p>';
-        return;
-    }
-    container.innerHTML = allTickets.map(t => `
-        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid ${t.status === 'مغلقة' ? '#28a745' : '#ffc107'}">
-            <h4>${t.subject}</h4>
-            <p>${t.message}</p>
-            <small>${t.date || ''} ${t.time || ''} | ${t.userName || 'مجهول'}</small>
-            <span style="background:#ffc107; padding:2px 10px; border-radius:10px; font-size:12px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
-        </div>
-    `).join('');
-}
-
-function renderUsersTable() {
-    const tbody = document.getElementById('usersBody');
-    if (!tbody) return;
-    if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = allUsers.map(u => `
-        <tr>
-            <td>${u.name || '-'}</td>
-            <td>${u.role || 'مشاهد'}</td>
-            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderNotes() {
-    const container = document.getElementById('notesListContainer');
-    if (!container) return;
-    if (!allNotes || allNotes.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مذكرات</p>';
-        return;
-    }
-    container.innerHTML = allNotes.map(n => `
-        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
-            <h4>${n.title}</h4>
-            <p>${n.content}</p>
-            <small>${n.date || ''} | ${n.createdBy || 'مجهول'}</small>
-        </div>
-    `).join('');
-}
-
-// ============================================================
-// دوال المراكب
-// ============================================================
-
-function addItem() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    const name = document.getElementById('iName')?.value;
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
-        return;
-    }
-    const data = {
-        name: name,
-        num: document.getElementById('iNum')?.value || '',
-        len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value || '',
-        zone: document.getElementById('iZone')?.value || '',
-        port: document.getElementById('iPort')?.value || '',
-        supp: document.getElementById('iSupp')?.value || '',
-        stat: document.getElementById('iStat')?.value || 'صالح',
-        break: document.getElementById('iBreak')?.value || '',
-        fDate: document.getElementById('iDate')?.value || '',
-        eDate: document.getElementById('iEnd')?.value || '',
-        ref: document.getElementById('iRef')?.value || '',
-        repairer: document.getElementById('iRepairer')?.value || ''
-    };
-    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
-    const method = editingVesselId ? 'PUT' : 'POST';
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
-            editingVesselId = null;
-            clearVesselInputs();
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showAlert('❌ خطأ في العملية', 'danger');
-    });
-}
-
-function editVessel(id) {
-    const vessel = allVessels.find(v => v.id === id);
-    if (!vessel) {
-        showAlert('⚠️ المركب غير موجود', 'warning');
-        return;
-    }
-    editingVesselId = vessel.id;
-    document.getElementById('iName').value = vessel.name || '';
-    document.getElementById('iNum').value = vessel.num || '';
-    document.getElementById('iLen').value = vessel.len || 0;
-    document.getElementById('iReg').value = vessel.reg || '';
-    document.getElementById('iZone').value = vessel.zone || '';
-    document.getElementById('iPort').value = vessel.port || '';
-    document.getElementById('iSupp').value = vessel.supp || '';
-    document.getElementById('iStat').value = vessel.stat || 'صالح';
-    document.getElementById('iBreak').value = vessel.break || '';
-    document.getElementById('iDate').value = vessel.fDate || '';
-    document.getElementById('iEnd').value = vessel.eDate || '';
-    document.getElementById('iRef').value = vessel.ref || '';
-    document.getElementById('iRepairer').value = vessel.repairer || '';
-}
-
-function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم الحذف', 'success');
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete error:', err);
-        showAlert('❌ خطأ في الحذف', 'danger');
-    });
-}
-
-function clearVesselInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
-    document.getElementById('iRepairer').value = '';
-}
-
-function updateZones() {
-    const reg = document.getElementById('iReg')?.value;
-    const zoneSelect = document.getElementById('iZone');
-    if (!zoneSelect) return;
-    const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
-    };
-    const options = zones[reg] || ['المنطقة غير محددة'];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
-    options.forEach(z => {
-        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
-    });
-}
-
-// ============================================================
-// دوال الصيانة
-// ============================================================
-
-function updateMaintenanceVessels() {
-    const select = document.getElementById('mVesselId');
-    if (!select) return;
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">اختر المركب</option>';
-    allVessels.forEach(v => {
-        const option = document.createElement('option');
-        option.value = v.id;
-        option.textContent = `${v.name} (${v.num || 'بدون رقم'})`;
-        if (v.id == currentValue) option.selected = true;
-        select.appendChild(option);
-    });
-}
-
-function toggleMaintenanceForm() {
-    const form = document.getElementById('maintenanceForm');
-    if (!form) return;
-    form.classList.toggle('active');
-}
-
-function addPart() {
-    const container = document.getElementById('partsContainer');
-    const div = document.createElement('div');
-    div.className = 'part-item';
-    div.innerHTML = `
-        <input type="text" placeholder="اسم القطعة" class="part-name">
-        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-        <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
-        <button class="remove-part" onclick="removePart(this)">✕</button>
-    `;
-    container.appendChild(div);
-}
-
-function removePart(btn) {
-    const container = document.getElementById('partsContainer');
-    if (container.children.length > 1) {
-        btn.parentElement.remove();
+    data.attempts++;
+    ipData.attempts++;
+    
+    const maxAttempts = parseInt(process.env.BRUTE_FORCE_MAX_ATTEMPTS) || 10;
+    const blockTime = parseInt(process.env.BRUTE_FORCE_BLOCK_TIME) || 3600000;
+    
+    if (data.attempts >= maxAttempts) {
+        data.blockedUntil = Date.now() + blockTime;
+        await setRedis(key, data, Math.ceil(blockTime / 1000));
     } else {
-        showAlert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
+        await setRedis(key, data, 3600);
+    }
+    
+    if (ipData.attempts >= maxAttempts * 3) {
+        ipData.blockedUntil = Date.now() + blockTime * 2;
+        await setRedis(ipKey, ipData, Math.ceil(blockTime * 2 / 1000));
+    } else {
+        await setRedis(ipKey, ipData, 3600);
     }
 }
 
-function getPartsData() {
-    const parts = [];
-    document.querySelectorAll('.part-item').forEach(item => {
-        const name = item.querySelector('.part-name')?.value;
-        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
-        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
-        if (name) {
-            parts.push({ name, quantity: qty, price });
-        }
-    });
-    return parts;
+async function resetBruteForce(ip, username) {
+    await delRedis(redisKeys.bruteForce(ip, username));
+    // Don't delete IP-based tracking immediately to prevent rapid attacks
 }
 
-function saveMaintenance() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
+// ================= HELPER FUNCTIONS =================
+function getCurrentDate() {
+    const now = new Date();
+    return `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
+}
+
+function getCurrentTime() {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+function getDeviceInfo(ua) {
+    if (!ua || !UAParser) return 'Unknown';
+    try {
+        const parser = new UAParser(ua);
+        const result = parser.getResult() || {};
+        const browser = result.browser?.name || 'Browser';
+        const os = result.os?.name || 'OS';
+        return `${browser} on ${os}`;
+    } catch {
+        return 'Unknown';
     }
-    const vesselId = document.getElementById('mVesselId')?.value;
-    const type = document.getElementById('mType')?.value;
-    const unit = document.getElementById('mUnit')?.value;
-    const technician = document.getElementById('mTechnician')?.value.trim();
-    const description = document.getElementById('mDescription')?.value.trim();
-    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-    const notes = document.getElementById('mNotes')?.value.trim();
-    const parts = getPartsData();
+}
+
+function escapeRegex(str) {
+    if (!str || typeof str !== 'string') return '';
+    if (str.length > 100) return str.substring(0, 100);
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function cleanDocument(doc) {
+    if (!doc || typeof doc !== 'object') return null;
     
-    if (!vesselId) {
-        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
-        return;
-    }
-    if (!description) {
-        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
-        return;
-    }
-    if (!technician) {
-        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
-        return;
-    }
+    const plain = doc.toObject ? doc.toObject() : doc;
     
-    const data = {
-        vesselId: parseFloat(vesselId),
-        type: type || 'عادية',
-        unit: unit || 'غير محدد',
-        technician: technician,
-        description: description,
-        cost: cost,
-        notes: notes || '',
-        parts: parts,
-        createdBy: currentUser?.name || 'Admin'
+    const { _id, createdAt, updatedAt, __v, ...rest } = plain;
+    return rest;
+}
+
+function cleanDocuments(arr) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map(doc => cleanDocument(doc)).filter(Boolean);
+}
+
+function safeFormatResponse(doc) {
+    if (!doc) return null;
+    try {
+        const obj = doc.toObject ? doc.toObject() : doc;
+        const { pass, ...rest } = obj;
+        const id = obj._id?.toString?.() || obj.id || null;
+        return { ...rest, id };
+    } catch {
+        return doc;
+    }
+}
+
+function safeFormatArray(arr = []) {
+    if (!Array.isArray(arr)) return [];
+    return arr.map(safeFormatResponse);
+}
+
+function generateCacheKey(obj) {
+    const sorted = Object.keys(obj).sort().reduce((acc, key) => {
+        acc[key] = obj[key];
+        return acc;
+    }, {});
+    const str = JSON.stringify(sorted);
+    return crypto.createHash('md5').update(str).digest('hex');
+}
+
+async function logActivity(userName, userRole, action, details, req = null) {
+    const ua = req?.headers?.['user-agent'] || '';
+    const logEntry = {
+        requestId: req?.requestId || '',
+        userName: userName || 'system',
+        userRole: userRole || 'system',
+        action,
+        details: details || '',
+        ip: requestIp.getClientIp(req) || req?.ip || '',
+        userAgent: ua,
+        device: getDeviceInfo(ua)
     };
-    
-    const url = editingMaintenanceId ? '/api/maintenance/' + editingMaintenanceId : '/api/maintenance';
-    const method = editingMaintenanceId ? 'PUT' : 'POST';
-    
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة' : '✅ تم إضافة سجل الصيانة', 'success');
-            editingMaintenanceId = null;
-            toggleMaintenanceForm();
-            loadAllData();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Save maintenance error:', err);
-        showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
-    });
-}
-
-function renderGeneralMaintenance() {
-    const container = document.getElementById('generalMaintenanceContainer');
-    if (!container) return;
-    const vessels = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
-    if (vessels.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:20px; background:#f8f9fa; border-radius:8px; color:#28a745;">
-                ✅ لا توجد مراكب معطبة حالياً
-            </div>
-        `;
-        return;
-    }
-    let html = `
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th><th>المركب</th><th>الرقم</th>
-                        <th>الفئة</th><th>الوحدة</th><th>العطل</th>
-                        <th>📅 تاريخ العطب</th><th>الحالة</th><th>إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    vessels.forEach((v, index) => {
-        const maintenanceRecord = allMaintenance.find(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
-        html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${v.name || '-'}</strong></td>
-                <td>${v.num || '-'}</td>
-                <td>${v.cat || '-'}</td>
-                <td>${v.repairer || v.supp || '-'}</td>
-                <td>${v.break || maintenanceRecord?.description || '-'}</td>
-                <td>${v.fDate || '-'}</td>
-                <td style="color:${v.stat === 'معطب' ? '#dc3545' : '#ffc107'}; font-weight:600;">
-                    ${v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة'}
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-success" onclick="fixVessel(${v.id})" title="إصلاح المركب">
-                        <i class="fas fa-check"></i> إصلاح
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    html += `</tbody></table></div>`;
-    container.innerHTML = html;
-}
-
-function fixVessel(vesselId) {
-    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + vesselId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ stat: 'صالح' })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إصلاح المركب', 'success');
-            loadAllData();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Fix vessel error:', err);
-        showAlert('❌ خطأ في إصلاح المركب', 'danger');
-    });
-}
-
-function renderHistoryMaintenance() {
-    const container = document.getElementById('historyMaintenanceContainer');
-    if (!container) return;
-    let records = allMaintenance.filter(r => r.status === 'مكتملة' || r.status === 'ملغية');
-    const vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
-    const dateFrom = document.getElementById('filterDateFrom')?.value || '';
-    const dateTo = document.getElementById('filterDateTo')?.value || '';
-    const statusFilter = document.getElementById('filterStatus')?.value || '';
-    
-    if (vesselFilter) {
-        records = records.filter(r => {
-            const name = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '';
-            const num = r.vesselNum || allVessels.find(v => v.id === r.vesselId)?.num || '';
-            return name.toLowerCase().includes(vesselFilter) || num.toString().includes(vesselFilter);
+    try {
+        await logQueue.add('log', { logs: [logEntry] }, {
+            removeOnComplete: 1000,
+            removeOnFail: 5000
         });
+    } catch (e) {
+        console.error('log fail fallback:', e);
+        try {
+            await Log.create(logEntry);
+        } catch (err) {
+            console.error('Fallback log error:', err);
+        }
     }
-    if (dateFrom) records = records.filter(r => r.date >= dateFrom);
-    if (dateTo) records = records.filter(r => r.date <= dateTo + 'T23:59:59');
-    if (statusFilter) records = records.filter(r => r.status === statusFilter);
-    
-    document.getElementById('historyCount').textContent = `📊 ${records.length} سجل`;
-    if (records.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:30px; color:#6c757d; background:#f8f9fa; border-radius:8px;">
-                🚫 لا توجد سجلات صيانة مكتملة
-            </div>
-        `;
-        return;
-    }
-    let html = `
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th><th>المركب</th><th>الرقم</th>
-                        <th>👨‍🔧 الفني</th>
-                        <th>🔩 القطع</th>
-                        <th>💰 التكلفة</th>
-                        <th>📊 الحالة</th>
-                        <th>📅 التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    records.slice().reverse().forEach((r, index) => {
-        const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
-        const vesselNum = r.vesselNum || allVessels.find(v => v.id === r.vesselId)?.num || '-';
-        const partsText = r.parts?.length ? r.parts.map(p => `${p.name}(${p.quantity})`).join(', ') : '-';
-        html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${vesselName}</strong></td>
-                <td>${vesselNum}</td>
-                <td>${r.technician || '-'}</td>
-                <td style="font-size:11px;">${partsText}</td>
-                <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                <td style="color:${r.status === 'مكتملة' ? '#28a745' : '#dc3545'}; font-weight:600;">${r.status || '-'}</td>
-                <td>${new Date(r.date).toLocaleDateString()}</td>
-            </tr>
-        `;
-    });
-    html += `</tbody></table></div>`;
-    container.innerHTML = html;
 }
 
-function applyHistoryFilters() {
-    renderHistoryMaintenance();
-}
-
-function resetHistoryFilters() {
-    document.getElementById('filterVessel').value = '';
-    document.getElementById('filterDateFrom').value = '';
-    document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterStatus').value = '';
-    renderHistoryMaintenance();
-    showAlert('✅ تم إلغاء الفلترة', 'success');
-}
-
-function updateMaintenanceStats() {
-    const container = document.getElementById('maintenanceStats');
-    if (!container) return;
-    const total = allMaintenance.length;
-    const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
-    const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-    const cancelled = allMaintenance.filter(r => r.status === 'ملغية').length;
-    container.innerHTML = `
-        <div class="maintenance-stats">
-            <div class="stat-box stat-total"><h4>${total}</h4><p>📊 المجموع</p></div>
-            <div class="stat-box stat-progress"><h4>${inProgress}</h4><p>🔄 قيد الإنجاز</p></div>
-            <div class="stat-box stat-completed"><h4>${completed}</h4><p>✅ مكتملة</p></div>
-            <div class="stat-box stat-cancelled"><h4>${cancelled}</h4><p>❌ ملغية</p></div>
-        </div>
-    `;
-}
-
-function renderMaintenanceUnits() {
-    const container = document.getElementById('maintenanceUnitsContainer');
-    if (!container) return;
-    const units = [
-        'وحدة الصيانة والإسناد البحري تونس',
-        'وحدة الصيانة والإسناد البحري صفاقس',
-        'وحدة الصيانة والإسناد البحري المنستير',
-        'وحدة الصيانة والإسناد البحري جرجيس',
-        'شركة خاصة'
-    ];
-    let html = '';
-    units.forEach(unit => {
-        const records = allMaintenance.filter(r => r.unit === unit);
-        const total = records.length;
-        const completed = records.filter(r => r.status === 'مكتملة').length;
-        const inProgress = records.filter(r => r.status === 'قيد الإنجاز').length;
-        const cancelled = records.filter(r => r.status === 'ملغية').length;
-        html += `
-            <div class="region-table-card">
-                <div class="region-table-header">
-                    🏭 ${unit}
-                    <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
-                        📊 ${total} سجل
-                    </span>
-                    <span style="font-size:11px; font-weight:400; margin-right:5px;">
-                        ✅ ${completed} | 🔄 ${inProgress} | ❌ ${cancelled}
-                    </span>
-                </div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>المركب</th><th>👨‍🔧 الفني</th>
-                                <th>🔩 القطع</th>
-                                <th>💰 التكلفة</th>
-                                <th>📊 الحالة</th>
-                                <th>📅 التاريخ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${records.length === 0 ? `
-                                <tr><td colspan="6" style="text-align:center; padding:15px; color:#6c757d;">🚫 لا توجد سجلات</td></tr>
-                            ` : records.slice().reverse().map(r => {
-                                const statusColors = {
-                                    'قيد الإنجاز': '#ffc107',
-                                    'مكتملة': '#28a745',
-                                    'ملغية': '#dc3545'
-                                };
-                                const partsText = r.parts && r.parts.length ? 
-                                    r.parts.map(p => `${p.name}(${p.quantity})`).join(', ') : '-';
-                                return `
-                                    <tr>
-                                        <td>${r.vesselName || '-'}</td>
-                                        <td>${r.technician || '-'}</td>
-                                        <td style="font-size:11px;">${partsText}</td>
-                                        <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                                        <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || '-'}</span></td>
-                                        <td>${new Date(r.date).toLocaleDateString()}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-// ============================================================
-// 📊 صفحة الجاهزية - الجداول الكاملة
-// ============================================================
-
-function renderEfficiency() {
-    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
-    const vessels = allVessels || [];
+// ================= TOKEN FUNCTIONS =================
+async function generateTokens(user, deviceId, deviceName, ip) {
+    const jti = uuidv4();
+    const refreshVersion = uuidv4();
     
-    const countEl = document.getElementById('effCount');
-    if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
-    
-    renderEfficiencyTables(vessels);
-}
-
-function renderEfficiencyTables(vessels) {
-    const container = document.getElementById('efficiencyTablesContainer');
-    if (!container) return;
-    
-    let html = '';
-    
-    // 1. النجاعة العامة حسب الفئات
-    html += renderGeneralEfficiency(vessels);
-    
-    // 2. أقاليم الحرس البحري
-    const regions = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح', 'رأس الجبل'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة', 'قليبية', 'نابل'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار', 'المحرس'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل', 'الطينة']
+    const accessToken = jwt.sign(
+        { userId: user._id, role: user.role, name: user.name, jti, tokenVersion: user.tokenVersion },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN }
+    );
+    const refreshToken = jwt.sign(
+        { userId: user._id, deviceId, version: refreshVersion },
+        JWT_REFRESH_SECRET,
+        { expiresIn: JWT_REFRESH_EXPIRES_IN }
+    );
+    const refreshData = {
+        userId: user._id,
+        deviceId,
+        deviceName: deviceName || 'Unknown Device',
+        ip: ip || '',
+        createdAt: Date.now(),
+        version: refreshVersion
     };
-    
-    Object.keys(regions).forEach(regionName => {
-        const regionVessels = vessels.filter(v => {
-            const zone = v.zone || '';
-            const port = v.port || '';
-            return regions[regionName].some(city => 
-                zone.includes(city) || port.includes(city)
-            );
-        });
-        html += renderRegionEfficiency(regionVessels, regionName);
-    });
-    
-    container.innerHTML = html;
+    await setRedis(redisKeys.refreshToken(user._id.toString(), refreshToken), refreshData, 7 * 24 * 60 * 60);
+    return { accessToken, refreshToken, jti };
 }
 
-function renderGeneralEfficiency(vessels) {
-    const categories = getCategoriesData(vessels);
-    
-    let html = `
-        <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">📋 1. النجاعة العامة حسب الفئات</h3>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6;">
-                            <th style="padding:10px;">الفئة</th>
-                            <th style="padding:10px; color:#28a745;">✅ الصالحة</th>
-                            <th style="padding:10px; color:#dc3545;">❌ المعطبة</th>
-                            <th style="padding:10px; color:#ffc107;">🔧 الصيانة</th>
-                            <th style="padding:10px; color:#0d6efd;">📊 الإجمالي</th>
-                            <th style="padding:10px; color:#6c757d;">📈 النسبة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    `;
-    
-    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    
-    const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
-    categoryOrder.forEach(cat => {
-        if (categories[cat]) {
-            const data = categories[cat];
-            const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-            totalReady += data.ready;
-            totalBroken += data.broken;
-            totalMaintenance += data.maintenance;
-            totalAll += data.total;
-            
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; color:#28a745; font-weight:bold;">${data.ready}</td>
-                    <td style="padding:10px; color:#dc3545; font-weight:bold;">${data.broken}</td>
-                    <td style="padding:10px; color:#ffc107; font-weight:bold;">${data.maintenance}</td>
-                    <td style="padding:10px; font-weight:bold;">${data.total}</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">${readyPercent}%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6; color:#6c757d;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:0%; height:100%; background:#6c757d; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">0%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-    });
-    
-    const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
-    html += `
-        <tr style="background:#e7f3ff; border-top:2px solid #0d6efd; font-weight:bold;">
-            <td style="padding:12px;">📊 المجموع الكلي</td>
-            <td style="padding:12px; color:#28a745;">${totalReady}</td>
-            <td style="padding:12px; color:#dc3545;">${totalBroken}</td>
-            <td style="padding:12px; color:#ffc107;">${totalMaintenance}</td>
-            <td style="padding:12px;">${totalAll}</td>
-            <td style="padding:12px;">
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                    </div>
-                    <span style="min-width:40px;">${totalPercent}%</span>
-                </div>
-            </td>
-        </tr>
-    `;
-    
-    html += `</tbody></table></div></div>`;
-    return html;
-}
+// ================= VALIDATION =================
+const validateLogin = [
+    body('name').trim().notEmpty().withMessage('اسم المستخدم مطلوب'),
+    body('pass').notEmpty().withMessage('كلمة المرور مطلوبة')
+];
 
-function renderRegionEfficiency(vessels, regionName) {
-    const categories = getCategoriesData(vessels);
-    
-    let html = `
-        <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">📋 إقليم الحرس البحري بال${regionName}</h3>
-            <div class="scrollable-table">
-                <table>
-                    <thead>
-                        <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6;">
-                            <th style="padding:10px;">الفئة</th>
-                            <th style="padding:10px; color:#28a745;">✅ الصالحة</th>
-                            <th style="padding:10px; color:#dc3545;">❌ المعطبة</th>
-                            <th style="padding:10px; color:#ffc107;">🔧 الصيانة</th>
-                            <th style="padding:10px; color:#0d6efd;">📊 الإجمالي</th>
-                            <th style="padding:10px; color:#6c757d;">📈 النسبة</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-    `;
-    
-    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    
-    const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    
-    categoryOrder.forEach(cat => {
-        if (categories[cat]) {
-            const data = categories[cat];
-            const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-            totalReady += data.ready;
-            totalBroken += data.broken;
-            totalMaintenance += data.maintenance;
-            totalAll += data.total;
-            
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; color:#28a745; font-weight:bold;">${data.ready}</td>
-                    <td style="padding:10px; color:#dc3545; font-weight:bold;">${data.broken}</td>
-                    <td style="padding:10px; color:#ffc107; font-weight:bold;">${data.maintenance}</td>
-                    <td style="padding:10px; font-weight:bold;">${data.total}</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">${readyPercent}%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6; color:#6c757d;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:0%; height:100%; background:#6c757d; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">0%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-    });
-    
-    const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
-    html += `
-        <tr style="background:#e7f3ff; border-top:2px solid #0d6efd; font-weight:bold;">
-            <td style="padding:12px;">📊 المجموع الكلي</td>
-            <td style="padding:12px; color:#28a745;">${totalReady}</td>
-            <td style="padding:12px; color:#dc3545;">${totalBroken}</td>
-            <td style="padding:12px; color:#ffc107;">${totalMaintenance}</td>
-            <td style="padding:12px;">${totalAll}</td>
-            <td style="padding:12px;">
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                    </div>
-                    <span style="min-width:40px;">${totalPercent}%</span>
-                </div>
-            </td>
-        </tr>
-    `;
-    
-    html += `</tbody></table></div></div>`;
-    return html;
-}
+const validateVessel = [
+    body('name').trim().isLength({ min: 2 }).withMessage('اسم المركب يجب أن يكون حرفين على الأقل'),
+    body('len').optional().isInt({ min: 0, max: 100 }).withMessage('الطول يجب أن يكون بين 0 و 100'),
+    body('stat').optional().isIn(['صالح', 'معطب', 'صيانة']).withMessage('الحالة غير صالحة')
+];
 
-function getCategoriesData(vessels) {
-    const categories = {};
-    
-    vessels.forEach(v => {
-        const cat = v.cat || 'غير مصنف';
-        if (!categories[cat]) {
-            categories[cat] = { ready: 0, broken: 0, maintenance: 0, total: 0 };
-        }
-        categories[cat].total++;
-        if (v.stat === 'صالح') categories[cat].ready++;
-        else if (v.stat === 'معطب') categories[cat].broken++;
-        else if (v.stat === 'صيانة') categories[cat].maintenance++;
-    });
-    
-    return categories;
-}
+const validateTicket = [
+    body('subject').trim().isLength({ min: 3 }).withMessage('عنوان التذكرة يجب أن يكون 3 أحرف على الأقل'),
+    body('message').trim().isLength({ min: 5 }).withMessage('رسالة التذكرة يجب أن تكون 5 أحرف على الأقل')
+];
 
-// ============================================================
-// دالة تصدير البيانات
-// ============================================================
+const validateUser = [
+    body('name').trim().isLength({ min: 3 }).withMessage('اسم المستخدم يجب أن يكون 3 أحرف على الأقل'),
+    body('pass').optional().isLength({ min: 4 }).withMessage('كلمة المرور يجب أن تكون 4 أحرف على الأقل')
+];
 
-function exportEfficiencyData() {
-    const vessels = allVessels || [];
-    if (vessels.length === 0) {
-        showAlert('⚠️ لا توجد بيانات للتصدير', 'warning');
-        return;
+const validationHandler = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
-    
-    let csv = 'الفئة,المركب,الرقم,الحالة,المنطقة,الميناء\n';
-    vessels.forEach(v => {
-        csv += `${v.cat || ''},${v.name || ''},${v.num || ''},${v.stat || ''},${v.zone || ''},${v.port || ''}\n`;
-    });
-    
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `الجاهزية_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    showAlert('✅ تم تصدير البيانات بنجاح', 'success');
-}
+    next();
+};
 
-// ============================================================
-// دوال الخريطة
-// ============================================================
+// ================= ROLE MIDDLEWARE =================
+const roleMiddleware = (allowedRoles) => {
+    return (req, res, next) => {
+        if (!allowedRoles.includes(req.userRole)) {
+            return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+        }
+        next();
+    };
+};
 
-function initMap() {
-    console.log('🗺️ Initializing map...');
-}
-
-// ============================================================
-// دوال إضافية
-// ============================================================
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    const token = getToken();
+const authMiddleware = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
     if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
+        return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
-    fetch('/api/users/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حذف المستخدم', 'success');
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        if (!user || !user.enabled) {
+            return res.status(401).json({ error: 'Invalid token' });
         }
+        if (decoded.tokenVersion !== user.tokenVersion) {
+            return res.status(401).json({ error: 'Token invalidated. Please login again.' });
+        }
+        if (await isTokenBlacklisted(decoded.jti)) {
+            return res.status(401).json({ error: 'Token invalidated. Please login again.' });
+        }
+        req.userId = decoded.userId;
+        req.userRole = decoded.role;
+        req.userName = decoded.name;
+        req.jti = decoded.jti;
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ error: 'Token expired', code: 'TOKEN_EXPIRED' });
+        }
+        res.status(401).json({ error: 'Invalid token' });
+    }
+};
+
+const adminMiddleware = roleMiddleware(['مسؤول']);
+const editorOrAdminMiddleware = roleMiddleware(['محرر', 'مسؤول']);
+const superAdminOnly = roleMiddleware(['مسؤول']);
+
+// ================= DATABASE CONNECTION =================
+mongoose.connect(process.env.MONGO_URI, {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000
+})
+    .then(async () => {
+        console.log('✅ Connected to MongoDB Atlas');
+        await initializeDatabase();
     })
     .catch(err => {
-        console.error('Delete user error:', err);
-        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+        console.error('❌ MongoDB Connection Error:', err.message);
+        process.exit(1);
     });
+
+if (process.env.NODE_ENV === 'development') {
+    mongoose.set('debug', true);
 }
 
-console.log('✅ تم تحميل التطبيق بالكامل');
-console.log('📝 استخدم admin / admin123 للدخول التجريبي');
+// ================= INITIALIZE DATABASE =================
+async function initializeDatabase() {
+    try {
+        // Only create default users if explicitly enabled
+        if (process.env.CREATE_DEFAULT_USERS === 'true') {
+            const adminExists = await User.findOne({ name: 'admin' });
+            if (!adminExists) {
+                await User.create({ name: 'admin', pass: 'admin123', role: 'مسؤول', enabled: true });
+                await User.create({ name: 'editor', pass: 'editor123', role: 'محرر', enabled: true });
+                await User.create({ name: 'viewer', pass: 'viewer123', role: 'مشاهد', enabled: true });
+                console.log('✅ Default users created');
+            }
+        }
+        
+        // Only create default vessels if explicitly enabled
+        if (process.env.CREATE_DEFAULT_VESSELS === 'true') {
+            const vesselsCount = await Vessel.countDocuments();
+            if (vesselsCount === 0) {
+                await Vessel.insertMany([
+                    { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", zone: "تونس", stat: "صالح", cat: "البروق" },
+                    { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", zone: "سوسة", stat: "صالح", cat: "صقور" },
+                    { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", zone: "صفاقس", stat: "معطب", break: "عطل في المحرك", fDate: "2025-03-10", eDate: "2025-04-10", cat: "خوافر" },
+                    { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", zone: "جربة", stat: "صيانة", break: "صيانة دورية", fDate: "2025-03-15", eDate: "2025-04-05", cat: "زوارق مزدوجة" },
+                    { name: "طوافة 1", num: "T001", len: 35, reg: "الشمال", zone: "بنزرت", stat: "صالح", cat: "طوافات" }
+                ]);
+                console.log('✅ Default vessels created');
+            }
+        }
+        console.log('🎉 Database initialized successfully');
+    } catch (error) {
+        console.error('❌ Initialization error:', error);
+    }
+}
+
+// ================= ASYNC HANDLER =================
+const asyncHandler = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+// ================= AUTH ROUTES =================
+app.post('/api/login', loginLimiter, validateLogin, validationHandler, asyncHandler(async (req, res) => {
+    const clientIp = requestIp.getClientIp(req) || req.ip;
+    const { name, pass } = req.body;
+    if (await checkBruteForce(clientIp, name)) {
+        return res.status(429).json({ error: 'Account temporarily locked. Please try again later.' });
+    }
+    const user = await User.findOne({ name });
+    await new Promise(resolve => setTimeout(resolve, 300));
+    if (!user || !(await user.comparePassword(pass))) {
+        await recordBruteForceAttempt(clientIp, name);
+        if (user) {
+            user.loginAttempts++;
+            if (user.loginAttempts >= (parseInt(process.env.BRUTE_FORCE_MAX_ATTEMPTS) || 10)) {
+                user.lockedUntil = new Date(Date.now() + (parseInt(process.env.BRUTE_FORCE_BLOCK_TIME) || 3600000));
+            }
+            await user.save();
+        }
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+        return res.status(429).json({ error: 'Account temporarily locked. Please try again later.' });
+    }
+    await resetBruteForce(clientIp, name);
+    const deviceId = req.headers['x-device-id'] || `web_${Date.now()}_${Math.random()}`;
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceName = getDeviceInfo(userAgent);
+    const { accessToken, refreshToken, jti } = await generateTokens(user, deviceId, deviceName, clientIp);
+    user.loginAttempts = 0;
+    user.lockedUntil = null;
+    user.lastLogin = new Date();
+    user.lastLoginIP = clientIp;
+    user.lastLoginDevice = deviceName;
+    await user.save();
+    await logActivity(user.name, user.role, 'تسجيل دخول', `تسجيل دخول من جهاز ${deviceName}`, req);
+    res.json({ token: accessToken, refreshToken, name: user.name, role: user.role, deviceId });
+}));
+
+app.post('/api/refresh', asyncHandler(async (req, res) => {
+    const { refreshToken, deviceId } = req.body;
+    const clientIp = requestIp.getClientIp(req) || req.ip;
+    if (!refreshToken) return res.status(401).json({ error: 'Invalid credentials' });
+    
+    const lockAcquired = await acquireLock(`refresh:${refreshToken}`, 5);
+    if (!lockAcquired) {
+        return res.status(409).json({ error: 'Token already used, please login again' });
+    }
+    
+    try {
+        let decoded;
+        try {
+            decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+        } catch (error) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        const tokenData = await getRedis(redisKeys.refreshToken(decoded.userId, refreshToken));
+        if (!tokenData) return res.status(401).json({ error: 'Invalid credentials' });
+        const user = await User.findById(decoded.userId);
+        if (!user || !user.enabled) return res.status(401).json({ error: 'Invalid credentials' });
+        if (tokenData.version !== decoded.version) {
+            await delRedis(redisKeys.refreshToken(decoded.userId, refreshToken));
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        const newDeviceId = deviceId || `web_${Date.now()}_${Math.random()}`;
+        const deviceName = tokenData.deviceName || 'Unknown Device';
+        const { accessToken, refreshToken: newRefreshToken, jti } = await generateTokens(user, newDeviceId, deviceName, clientIp);
+        await delRedis(redisKeys.refreshToken(decoded.userId, refreshToken));
+        res.json({ token: accessToken, refreshToken: newRefreshToken });
+    } finally {
+        await releaseLock(`refresh:${refreshToken}`);
+    }
+}));
+
+app.post('/api/logout', authMiddleware, asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+        await delRedis(redisKeys.refreshToken(req.userId, refreshToken));
+    }
+    if (req.jti) {
+        await blacklistToken(req.jti, 24 * 60 * 60);
+    }
+    await logActivity(req.userName, req.userRole, 'تسجيل خروج', 'تم تسجيل الخروج', req);
+    res.json({ success: true });
+}));
+
+app.post('/api/logout-all', authMiddleware, asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(req.userId, { $inc: { tokenVersion: 1 } });
+    await delRedisPattern(`rt:${req.userId}:*`);
+    await logActivity(req.userName, req.userRole, 'تسجيل خروج من الكل', 'تم تسجيل الخروج من جميع الأجهزة', req);
+    res.json({ success: true });
+}));
+
+app.get('/api/verify', authMiddleware, asyncHandler(async (req, res) => {
+    const user = await User.findById(req.userId).select('-pass');
+    res.json({ valid: true, name: req.userName, role: req.userRole, user });
+}));
+
+// ================= VESSEL ROUTES =================
+app.get('/api/vessels', asyncHandler(async (req, res) => {
+    const cacheKey = redisKeys.cache(`vessels_${generateCacheKey(req.query)}`);
+    const cached = await getRedis(cacheKey);
+    if (cached) return res.json(cached);
+    const { page = 1, limit = 50, search, stat, reg } = req.query;
+    const query = {};
+    const safeLimit = Math.min(parseInt(limit) || 50, 100);
+    if (search && typeof search === 'string') {
+        const escapedSearch = escapeRegex(search);
+        if (escapedSearch) {
+            query.$or = [
+                { name: { $regex: escapedSearch, $options: 'i' } },
+                { num: { $regex: escapedSearch, $options: 'i' } }
+            ];
+        }
+    }
+    if (stat && stat !== 'الكل') query.stat = stat;
+    if (reg && reg !== 'الكل') query.reg = reg;
+    const skip = (Math.max(1, parseInt(page)) - 1) * safeLimit;
+    const [vessels, total] = await Promise.all([
+        Vessel.find(query).skip(skip).limit(safeLimit).sort({ createdAt: -1 }),
+        Vessel.countDocuments(query)
+    ]);
+    const result = {
+        data: safeFormatArray(vessels),
+        pagination: { page: parseInt(page), limit: safeLimit, total, pages: Math.ceil(total / safeLimit) }
+    };
+    await setRedis(cacheKey, result, 60);
+    res.json(result);
+}));
+
+app.get('/api/vessels/all', asyncHandler(async (req, res) => {
+    const vessels = await Vessel.find();
+    res.json(safeFormatArray(vessels));
+}));
+
+app.post('/api/vessels', authMiddleware, editorOrAdminMiddleware, validateVessel, validationHandler, asyncHandler(async (req, res) => {
+    const vessel = await Vessel.create(req.body);
+    await delCachePattern('vessels');
+    await logActivity(req.userName, req.userRole, 'إضافة مركب', `أضاف مركب ${vessel.name}`, req);
+    res.status(201).json(safeFormatResponse(vessel));
+}));
+
+app.put('/api/vessels/:id', validateObjectId, authMiddleware, editorOrAdminMiddleware, validateVessel, validationHandler, asyncHandler(async (req, res) => {
+    const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+    await delCachePattern('vessels');
+    await logActivity(req.userName, req.userRole, 'تعديل مركب', `عدل مركب ${vessel.name}`, req);
+    res.json(safeFormatResponse(vessel));
+}));
+
+app.delete('/api/vessels/:id', validateObjectId, authMiddleware, adminMiddleware, asyncHandler(async (req, res) => {
+    const vessel = await Vessel.findByIdAndDelete(req.params.id);
+    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+    await delCachePattern('vessels
