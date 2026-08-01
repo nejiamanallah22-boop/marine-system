@@ -588,3 +588,20 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🔧 وحدات الصيانة المدعومة: ${MAINTENANCE_UNITS.join(', ')}`);
     console.log(`✅ نظام الصيانة متكامل مع إمكانية التعديل`);
 });
+// أضف هذا بعد تعريف vessels وقبل app.listen
+if (vessels.length === 0) {
+    const sampleVessels = [
+        { id: 1, name: 'البروق 1', num: '101', len: 11, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
+        { id: 2, name: 'البروق 2', num: '102', len: 11, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
+        { id: 3, name: 'البروق 3', num: '103', len: 11, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', stat: 'معطب', break: 'عطل محرك', fDate: '2026-07-01', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
+        { id: 4, name: 'الصقر 1', num: '201', len: 10, cat: 'صقور', reg: 'الشمال', zone: 'طبرقة', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
+        { id: 5, name: 'الصقر 2', num: '202', len: 10, cat: 'صقور', reg: 'الساحل', zone: 'المنستير', stat: 'معطب', break: 'عطل كهرباء', fDate: '2026-07-05', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
+        { id: 6, name: 'الخفارة 1', num: '301', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-07-10', eDate: '', ref: '', repairer: 'وحدة الصيانة المنستير' },
+        { id: 7, name: 'الخفارة 2', num: '302', len: 20, cat: 'خوافر', reg: 'الجنوب', zone: 'جرجيس', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة جرجيس' },
+        { id: 8, name: 'الطوافة 1', num: '401', len: 35, cat: 'طوافات', reg: 'الشمال', zone: 'المرسى', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
+        { id: 9, name: 'الزورق 1', num: '501', len: 5, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المهدية', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'شركة خاصة' },
+        { id: 10, name: 'الزورق 2', num: '502', len: 5, cat: 'زوارق مزدوجة', reg: 'الجنوب', zone: 'بن قردان', stat: 'معطب', break: 'عطل هيكل', fDate: '2026-07-15', eDate: '', ref: '', repairer: 'شركة خاصة' },
+    ];
+    vessels = sampleVessels;
+    console.log('✅ تم إضافة 10 مراكب تجريبية');
+}
