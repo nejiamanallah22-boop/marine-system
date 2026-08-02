@@ -11,9 +11,8 @@ let editingVesselId = null;
 let editingMaintenanceId = null;
 
 // متغيرات الرسوم البيانية
-let chart3DCategory = null;
-let chart3DRegion = null;
-let chart3DGeneral = null;
+let chartCategory = null;
+let chartDoughnut = null;
 
 // ============================================================
 // منع الدخول التلقائي
@@ -1593,7 +1592,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية مع الرسوم البيانية 3D
+// 📊 صفحة الجاهزية
 // ============================================================
 
 function renderEfficiency() {
@@ -1604,11 +1603,43 @@ function renderEfficiency() {
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
     renderEfficiencyTables(vessels);
+    updateEfficiencyStats(vessels);
     
-    // عرض الرسوم البيانية 3D بعد تحميل الصفحة
     setTimeout(function() {
-        render3DCharts(vessels);
-    }, 300);
+        renderCharts(vessels);
+    }, 200);
+}
+
+function updateEfficiencyStats(vessels) {
+    const container = document.getElementById('efficiencyStats');
+    if (!container) return;
+    
+    const total = vessels.length;
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
+    
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin:10px 0;">
+            <div class="stat-box" style="background:#e7f3ff; padding:15px; border-radius:10px; text-align:center; border:1px solid #b6d4fe;">
+                <div style="font-size:26px; font-weight:bold; color:#0d6efd;">${total}</div>
+                <div style="color:#6c757d; font-size:13px;">🚢 المجموع</div>
+            </div>
+            <div class="stat-box" style="background:#d4edda; padding:15px; border-radius:10px; text-align:center; border:1px solid #b7eb8f;">
+                <div style="font-size:26px; font-weight:bold; color:#28a745;">${ready}</div>
+                <div style="color:#6c757d; font-size:13px;">✅ صالح (${readyPercent}%)</div>
+            </div>
+            <div class="stat-box" style="background:#fff3cd; padding:15px; border-radius:10px; text-align:center; border:1px solid #ffecb5;">
+                <div style="font-size:26px; font-weight:bold; color:#ffc107;">${maintenance}</div>
+                <div style="color:#6c757d; font-size:13px;">🔧 صيانة</div>
+            </div>
+            <div class="stat-box" style="background:#f8d7da; padding:15px; border-radius:10px; text-align:center; border:1px solid #f5c2c7;">
+                <div style="font-size:26px; font-weight:bold; color:#dc3545;">${broken}</div>
+                <div style="color:#6c757d; font-size:13px;">❌ معطب</div>
+            </div>
+        </div>
+    `;
 }
 
 function renderEfficiencyTables(vessels) {
@@ -1616,27 +1647,23 @@ function renderEfficiencyTables(vessels) {
     if (!container) return;
     
     let html = '';
-    
-    // 1. النجاعة العامة حسب الفئات
     html += renderGeneralEfficiency(vessels);
     
-    // 2. أقاليم الحرس البحري
     const regions = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح', 'رأس الجبل'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة', 'قليبية', 'نابل'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار', 'المحرس'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل', 'الطينة']
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
     };
     
     Object.keys(regions).forEach(regionName => {
         const regionVessels = vessels.filter(v => {
             const zone = v.zone || '';
-            const port = v.port || '';
-            return regions[regionName].some(city => 
-                zone.includes(city) || port.includes(city)
-            );
+            return regions[regionName].some(city => zone.includes(city));
         });
-        html += renderRegionEfficiency(regionVessels, regionName);
+        if (regionVessels.length > 0) {
+            html += renderRegionEfficiency(regionVessels, regionName);
+        }
     });
     
     container.innerHTML = html;
@@ -1646,88 +1673,67 @@ function renderGeneralEfficiency(vessels) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">📋 1. النجاعة العامة حسب الفئات</h3>
+        <div style="background:white; border-radius:10px; padding:15px; margin:15px 0; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <h4 style="color:#0d6efd; margin:0 0 10px 0;">📋 النجاعة العامة حسب الفئات</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
-                        <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6;">
-                            <th style="padding:10px;">الفئة</th>
-                            <th style="padding:10px; color:#28a745;">✅ الصالحة</th>
-                            <th style="padding:10px; color:#dc3545;">❌ المعطبة</th>
-                            <th style="padding:10px; color:#ffc107;">🔧 الصيانة</th>
-                            <th style="padding:10px; color:#0d6efd;">📊 الإجمالي</th>
-                            <th style="padding:10px; color:#6c757d;">📈 النسبة</th>
+                        <tr>
+                            <th>الفئة</th>
+                            <th style="color:#28a745;">✅ صالح</th>
+                            <th style="color:#dc3545;">❌ معطب</th>
+                            <th style="color:#ffc107;">🔧 صيانة</th>
+                            <th>📊 الإجمالي</th>
+                            <th>📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
     `;
     
     let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    
     const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     
     categoryOrder.forEach(cat => {
-        if (categories[cat]) {
-            const data = categories[cat];
-            const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-            totalReady += data.ready;
-            totalBroken += data.broken;
-            totalMaintenance += data.maintenance;
-            totalAll += data.total;
-            
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; color:#28a745; font-weight:bold;">${data.ready}</td>
-                    <td style="padding:10px; color:#dc3545; font-weight:bold;">${data.broken}</td>
-                    <td style="padding:10px; color:#ffc107; font-weight:bold;">${data.maintenance}</td>
-                    <td style="padding:10px; font-weight:bold;">${data.total}</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">${readyPercent}%</span>
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready;
+        totalBroken += data.broken;
+        totalMaintenance += data.maintenance;
+        totalAll += data.total;
+        
+        html += `
+            <tr>
+                <td><strong>${cat}</strong></td>
+                <td style="color:#28a745;">${data.ready}</td>
+                <td style="color:#dc3545;">${data.broken}</td>
+                <td style="color:#ffc107;">${data.maintenance}</td>
+                <td>${data.total}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                        <div style="width:60px; height:6px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'};"></div>
                         </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6; color:#6c757d;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:0%; height:100%; background:#6c757d; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">0%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
+                        <span style="font-weight:bold; font-size:12px;">${readyPercent}%</span>
+                    </div>
+                </td>
+            </tr>
+        `;
     });
     
     const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
     html += `
-        <tr style="background:#e7f3ff; border-top:2px solid #0d6efd; font-weight:bold;">
-            <td style="padding:12px;">📊 المجموع الكلي</td>
-            <td style="padding:12px; color:#28a745;">${totalReady}</td>
-            <td style="padding:12px; color:#dc3545;">${totalBroken}</td>
-            <td style="padding:12px; color:#ffc107;">${totalMaintenance}</td>
-            <td style="padding:12px;">${totalAll}</td>
-            <td style="padding:12px;">
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
+        <tr style="background:#e7f3ff; font-weight:bold;">
+            <td>📊 المجموع الكلي</td>
+            <td style="color:#28a745;">${totalReady}</td>
+            <td style="color:#dc3545;">${totalBroken}</td>
+            <td style="color:#ffc107;">${totalMaintenance}</td>
+            <td>${totalAll}</td>
+            <td>
+                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                    <div style="width:60px; height:6px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'};"></div>
                     </div>
-                    <span style="min-width:40px;">${totalPercent}%</span>
+                    <span style="font-size:12px;">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
@@ -1741,88 +1747,67 @@ function renderRegionEfficiency(vessels, regionName) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-            <h3 style="color:#0d6efd; margin-bottom:15px;">📋 إقليم الحرس البحري بال${regionName}</h3>
+        <div style="background:white; border-radius:10px; padding:15px; margin:15px 0; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+            <h4 style="color:#0d6efd; margin:0 0 10px 0;">📋 إقليم الحرس البحري بال${regionName}</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
-                        <tr style="background:#f8f9fa; border-bottom:2px solid #dee2e6;">
-                            <th style="padding:10px;">الفئة</th>
-                            <th style="padding:10px; color:#28a745;">✅ الصالحة</th>
-                            <th style="padding:10px; color:#dc3545;">❌ المعطبة</th>
-                            <th style="padding:10px; color:#ffc107;">🔧 الصيانة</th>
-                            <th style="padding:10px; color:#0d6efd;">📊 الإجمالي</th>
-                            <th style="padding:10px; color:#6c757d;">📈 النسبة</th>
+                        <tr>
+                            <th>الفئة</th>
+                            <th style="color:#28a745;">✅ صالح</th>
+                            <th style="color:#dc3545;">❌ معطب</th>
+                            <th style="color:#ffc107;">🔧 صيانة</th>
+                            <th>📊 الإجمالي</th>
+                            <th>📈 النسبة</th>
                         </tr>
                     </thead>
                     <tbody>
     `;
     
     let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    
     const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
     
     categoryOrder.forEach(cat => {
-        if (categories[cat]) {
-            const data = categories[cat];
-            const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-            totalReady += data.ready;
-            totalBroken += data.broken;
-            totalMaintenance += data.maintenance;
-            totalAll += data.total;
-            
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px; color:#28a745; font-weight:bold;">${data.ready}</td>
-                    <td style="padding:10px; color:#dc3545; font-weight:bold;">${data.broken}</td>
-                    <td style="padding:10px; color:#ffc107; font-weight:bold;">${data.maintenance}</td>
-                    <td style="padding:10px; font-weight:bold;">${data.total}</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">${readyPercent}%</span>
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready;
+        totalBroken += data.broken;
+        totalMaintenance += data.maintenance;
+        totalAll += data.total;
+        
+        html += `
+            <tr>
+                <td><strong>${cat}</strong></td>
+                <td style="color:#28a745;">${data.ready}</td>
+                <td style="color:#dc3545;">${data.broken}</td>
+                <td style="color:#ffc107;">${data.maintenance}</td>
+                <td>${data.total}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                        <div style="width:60px; height:6px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#28a745' : readyPercent >= 40 ? '#ffc107' : '#dc3545'};"></div>
                         </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            html += `
-                <tr style="border-bottom:1px solid #dee2e6; color:#6c757d;">
-                    <td style="padding:10px; font-weight:bold;">${cat}</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">0</td>
-                    <td style="padding:10px;">
-                        <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                            <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                                <div style="width:0%; height:100%; background:#6c757d; border-radius:4px;"></div>
-                            </div>
-                            <span style="font-weight:bold; min-width:40px;">0%</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
+                        <span style="font-weight:bold; font-size:12px;">${readyPercent}%</span>
+                    </div>
+                </td>
+            </tr>
+        `;
     });
     
     const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
     html += `
-        <tr style="background:#e7f3ff; border-top:2px solid #0d6efd; font-weight:bold;">
-            <td style="padding:12px;">📊 المجموع الكلي</td>
-            <td style="padding:12px; color:#28a745;">${totalReady}</td>
-            <td style="padding:12px; color:#dc3545;">${totalBroken}</td>
-            <td style="padding:12px; color:#ffc107;">${totalMaintenance}</td>
-            <td style="padding:12px;">${totalAll}</td>
-            <td style="padding:12px;">
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:8px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'}; border-radius:4px;"></div>
+        <tr style="background:#e7f3ff; font-weight:bold;">
+            <td>📊 المجموع الكلي</td>
+            <td style="color:#28a745;">${totalReady}</td>
+            <td style="color:#dc3545;">${totalBroken}</td>
+            <td style="color:#ffc107;">${totalMaintenance}</td>
+            <td>${totalAll}</td>
+            <td>
+                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                    <div style="width:60px; height:6px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#28a745' : totalPercent >= 40 ? '#ffc107' : '#dc3545'};"></div>
                     </div>
-                    <span style="min-width:40px;">${totalPercent}%</span>
+                    <span style="font-size:12px;">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
@@ -1834,7 +1819,6 @@ function renderRegionEfficiency(vessels, regionName) {
 
 function getCategoriesData(vessels) {
     const categories = {};
-    
     vessels.forEach(v => {
         const cat = v.cat || 'غير مصنف';
         if (!categories[cat]) {
@@ -1845,23 +1829,20 @@ function getCategoriesData(vessels) {
         else if (v.stat === 'معطب') categories[cat].broken++;
         else if (v.stat === 'صيانة') categories[cat].maintenance++;
     });
-    
     return categories;
 }
 
 // ============================================================
-// 📊 الرسوم البيانية 3D
+// 📊 الرسوم البيانية
 // ============================================================
 
-function render3DCharts(vessels) {
-    console.log('📊 Rendering 3D Charts...');
-    render3DCategoryChart(vessels);
-    render3DRegionChart(vessels);
-    render3DGeneralChart(vessels);
+function renderCharts(vessels) {
+    renderCategoryChart(vessels);
+    renderDoughnutChart(vessels);
 }
 
-function render3DCategoryChart(vessels) {
-    const canvas = document.getElementById('chart3DCategory');
+function renderCategoryChart(vessels) {
+    const canvas = document.getElementById('chartCategory');
     if (!canvas) return;
     
     const categories = {};
@@ -1880,11 +1861,11 @@ function render3DCategoryChart(vessels) {
     const brokenData = labels.map(cat => categories[cat].broken);
     const maintenanceData = labels.map(cat => categories[cat].maintenance);
     
-    if (chart3DCategory) {
-        chart3DCategory.destroy();
+    if (chartCategory) {
+        chartCategory.destroy();
     }
     
-    chart3DCategory = new Chart(canvas, {
+    chartCategory = new Chart(canvas, {
         type: 'bar',
         data: {
             labels: labels,
@@ -1895,7 +1876,7 @@ function render3DCategoryChart(vessels) {
                     backgroundColor: 'rgba(40, 167, 69, 0.8)',
                     borderColor: '#28a745',
                     borderWidth: 2,
-                    borderRadius: 5
+                    borderRadius: 4
                 },
                 {
                     label: '❌ معطب',
@@ -1903,7 +1884,7 @@ function render3DCategoryChart(vessels) {
                     backgroundColor: 'rgba(220, 53, 69, 0.8)',
                     borderColor: '#dc3545',
                     borderWidth: 2,
-                    borderRadius: 5
+                    borderRadius: 4
                 },
                 {
                     label: '🔧 صيانة',
@@ -1911,245 +1892,9 @@ function render3DCategoryChart(vessels) {
                     backgroundColor: 'rgba(255, 193, 7, 0.8)',
                     borderColor: '#ffc107',
                     borderWidth: 2,
-                    borderRadius: 5
+                    borderRadius: 4
                 }
             ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: { family: 'Cairo', size: 12 }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 11 } }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 11 } }
-                }
-            }
-        },
-        plugins: [{
-            id: '3d-category',
-            beforeDraw: function(chart) {
-                const ctx = chart.ctx;
-                const meta = chart.getDatasetMeta(0);
-                if (meta && meta.data) {
-                    meta.data.forEach((bar, index) => {
-                        if (bar && bar.x && bar.y) {
-                            const x = bar.x;
-                            const y = bar.y;
-                            const width = bar.width || 30;
-                            const height = bar.height || 0;
-                            
-                            ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                            ctx.shadowBlur = 10;
-                            ctx.shadowOffsetX = 3;
-                            ctx.shadowOffsetY = 3;
-                            
-                            ctx.shadowBlur = 0;
-                            ctx.shadowOffsetX = 0;
-                            ctx.shadowOffsetY = 0;
-                            
-                            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            ctx.moveTo(x - width/2, y);
-                            ctx.lineTo(x + width/2, y);
-                            ctx.stroke();
-                        }
-                    });
-                }
-            }
-        }]
-    });
-}
-
-function render3DRegionChart(vessels) {
-    const canvas = document.getElementById('chart3DRegion');
-    if (!canvas) return;
-    
-    const regions = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
-    };
-    
-    const regionData = {};
-    Object.keys(regions).forEach(region => {
-        regionData[region] = { ready: 0, broken: 0, maintenance: 0 };
-    });
-    
-    vessels.forEach(v => {
-        const zone = v.zone || '';
-        let found = false;
-        Object.keys(regions).forEach(region => {
-            if (regions[region].some(city => zone.includes(city))) {
-                if (v.stat === 'صالح') regionData[region].ready++;
-                else if (v.stat === 'معطب') regionData[region].broken++;
-                else if (v.stat === 'صيانة') regionData[region].maintenance++;
-                found = true;
-            }
-        });
-        if (!found) {
-            if (!regionData['غير محدد']) {
-                regionData['غير محدد'] = { ready: 0, broken: 0, maintenance: 0 };
-            }
-            if (v.stat === 'صالح') regionData['غير محدد'].ready++;
-            else if (v.stat === 'معطب') regionData['غير محدد'].broken++;
-            else if (v.stat === 'صيانة') regionData['غير محدد'].maintenance++;
-        }
-    });
-    
-    const labels = Object.keys(regionData);
-    const readyData = labels.map(r => regionData[r].ready);
-    const brokenData = labels.map(r => regionData[r].broken);
-    const maintenanceData = labels.map(r => regionData[r].maintenance);
-    
-    if (chart3DRegion) {
-        chart3DRegion.destroy();
-    }
-    
-    chart3DRegion = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: '✅ صالح',
-                    data: readyData,
-                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
-                    borderColor: '#28a745',
-                    borderWidth: 2,
-                    borderRadius: 5
-                },
-                {
-                    label: '❌ معطب',
-                    data: brokenData,
-                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                    borderColor: '#dc3545',
-                    borderWidth: 2,
-                    borderRadius: 5
-                },
-                {
-                    label: '🔧 صيانة',
-                    data: maintenanceData,
-                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
-                    borderColor: '#ffc107',
-                    borderWidth: 2,
-                    borderRadius: 5
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        font: { family: 'Cairo', size: 12 }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 11 } }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 11 } }
-                }
-            }
-        },
-        plugins: [{
-            id: '3d-region',
-            beforeDraw: function(chart) {
-                const ctx = chart.ctx;
-                const meta = chart.getDatasetMeta(0);
-                if (meta && meta.data) {
-                    meta.data.forEach((bar, index) => {
-                        if (bar && bar.x && bar.y) {
-                            const x = bar.x;
-                            const y = bar.y;
-                            const width = bar.width || 30;
-                            const height = bar.height || 0;
-                            
-                            ctx.shadowColor = 'rgba(0,0,0,0.2)';
-                            ctx.shadowBlur = 10;
-                            ctx.shadowOffsetX = 3;
-                            ctx.shadowOffsetY = 3;
-                            
-                            ctx.shadowBlur = 0;
-                            ctx.shadowOffsetX = 0;
-                            ctx.shadowOffsetY = 0;
-                            
-                            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            ctx.moveTo(x - width/2, y);
-                            ctx.lineTo(x + width/2, y);
-                            ctx.stroke();
-                        }
-                    });
-                }
-            }
-        }]
-    });
-}
-
-function render3DGeneralChart(vessels) {
-    const canvas = document.getElementById('chart3DGeneral');
-    if (!canvas) return;
-    
-    const total = vessels.length;
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    
-    if (chart3DGeneral) {
-        chart3DGeneral.destroy();
-    }
-    
-    chart3DGeneral = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
-            datasets: [{
-                data: [ready, broken, maintenance],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.8)',
-                    'rgba(220, 53, 69, 0.8)',
-                    'rgba(255, 193, 7, 0.8)'
-                ],
-                borderColor: ['#28a745', '#dc3545', '#ffc107'],
-                borderWidth: 3,
-                hoverOffset: 15
-            }]
         },
         options: {
             responsive: true,
@@ -2158,42 +1903,101 @@ function render3DGeneralChart(vessels) {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Cairo', size: 14, weight: 'bold' },
-                        padding: 20,
+                        font: { family: 'Cairo', size: 11 },
+                        boxWidth: 12,
+                        padding: 10
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Cairo', size: 10 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+function renderDoughnutChart(vessels) {
+    const canvas = document.getElementById('chartDoughnut');
+    if (!canvas) return;
+    
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    
+    if (chartDoughnut) {
+        chartDoughnut.destroy();
+    }
+    
+    chartDoughnut = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+            datasets: [{
+                data: [ready, broken, maintenance],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.85)',
+                    'rgba(220, 53, 69, 0.85)',
+                    'rgba(255, 193, 7, 0.85)'
+                ],
+                borderColor: ['#28a745', '#dc3545', '#ffc107'],
+                borderWidth: 2,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '55%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Cairo', size: 11 },
+                        padding: 10,
                         usePointStyle: true,
-                        pointStyleWidth: 20
+                        pointStyleWidth: 12
                     }
                 },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
-                            return context.label + ': ' + context.parsed + ' مركب (' + percentage + '%)';
+                            const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                            return context.label + ': ' + context.parsed + ' (' + pct + '%)';
                         }
                     }
                 }
             }
-        }
+        },
+        plugins: [{
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                const { width, height, ctx } = chart;
+                ctx.save();
+                const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = 'bold 22px Cairo, sans-serif';
+                ctx.fillStyle = '#0d6efd';
+                ctx.fillText(total, width / 2, height / 2 - 5);
+                ctx.font = '12px Cairo, sans-serif';
+                ctx.fillStyle = '#6c757d';
+                ctx.fillText('مركب', width / 2, height / 2 + 22);
+                ctx.restore();
+            }
+        }]
     });
-    
-    // إضافة تأثير 3D للدونات
-    const originalDraw = chart3DGeneral.draw;
-    chart3DGeneral.draw = function() {
-        const ctx = this.ctx;
-        ctx.shadowColor = 'rgba(0,0,0,0.3)';
-        ctx.shadowBlur = 20;
-        ctx.shadowOffsetX = 5;
-        ctx.shadowOffsetY = 5;
-        originalDraw.call(this);
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
-    };
 }
 
 // ============================================================
-// دالة تصدير البيانات
+// تصدير البيانات
 // ============================================================
 
 function exportEfficiencyData() {
@@ -2215,8 +2019,7 @@ function exportEfficiencyData() {
     a.download = `الجاهزية_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    
-    showAlert('✅ تم تصدير البيانات بنجاح', 'success');
+    showAlert('✅ تم التصدير بنجاح', 'success');
 }
 
 // ============================================================
@@ -2259,679 +2062,3 @@ function deleteUser(id) {
 
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
-// ============================================================
-// 🌐 Three.js 3D Interactive Chart - نسخة احترافية
-// ============================================================
-
-let scene, camera, renderer, controls;
-let threeObjects = [];
-let animationId = null;
-let isAutoRotate = true;
-
-function initThreeJS(vessels) {
-    const container = document.getElementById('threeContainer');
-    if (!container) return;
-    
-    // تنظيف السابق
-    if (renderer) {
-        renderer.dispose();
-        renderer.domElement.remove();
-    }
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
-    threeObjects = [];
-    
-    // إعداد المشهد
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f0c29);
-    
-    // إضافة خلفية متحركة (Particles)
-    createParticles();
-    
-    // إعداد الكاميرا
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(10, 7, 12);
-    camera.lookAt(0, 0, 0);
-    
-    // إعداد الإضاءة المتقدمة
-    setupLighting();
-    
-    // إعداد المُصوّر
-    renderer = new THREE.WebGLRenderer({ 
-        antialias: true, 
-        alpha: true,
-        powerPreference: "high-performance"
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    container.appendChild(renderer.domElement);
-    
-    // إضافة شبكة أرضية مع تأثير
-    createGround();
-    
-    // إعداد عناصر التحكم
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
-    controls.minDistance = 5;
-    controls.maxDistance = 30;
-    controls.maxPolarAngle = Math.PI / 2.1;
-    controls.target.set(0, 0, 0);
-    
-    // حساب البيانات
-    const total = vessels.length;
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    
-    // تحديث معلومات العرض مع تأثير
-    animateNumber('threeReady', ready);
-    animateNumber('threeBroken', broken);
-    animateNumber('threeMaintenance', maintenance);
-    animateNumber('threeTotal', total);
-    
-    // إنشاء الأعمدة 3D
-    createAdvanced3DBars(ready, broken, maintenance);
-    
-    // بدء الرسوم المتحركة
-    animate();
-    
-    // إضافة مستمع لتغيير الحجم
-    window.addEventListener('resize', onThreeResize);
-}
-
-function createParticles() {
-    const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 2000;
-    const posArray = new Float32Array(particlesCount * 3);
-    
-    for (let i = 0; i < particlesCount * 3; i++) {
-        posArray[i] = (Math.random() - 0.5) * 60;
-    }
-    
-    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-    
-    const particlesMaterial = new THREE.PointsMaterial({
-        size: 0.08,
-        color: 0x4ade80,
-        transparent: true,
-        opacity: 0.3,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true
-    });
-    
-    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-    particlesMesh.position.y = 2;
-    scene.add(particlesMesh);
-}
-
-function setupLighting() {
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
-    scene.add(ambientLight);
-    
-    // Main directional light
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    mainLight.position.set(10, 20, 10);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 1024;
-    mainLight.shadow.mapSize.height = 1024;
-    scene.add(mainLight);
-    
-    // Fill light
-    const fillLight = new THREE.DirectionalLight(0x8888ff, 0.8);
-    fillLight.position.set(-10, 10, -10);
-    scene.add(fillLight);
-    
-    // Rim light
-    const rimLight = new THREE.DirectionalLight(0xff8888, 0.3);
-    rimLight.position.set(0, -10, 10);
-    scene.add(rimLight);
-    
-    // Point light
-    const pointLight = new THREE.PointLight(0x4ade80, 0.5, 30);
-    pointLight.position.set(0, 5, 0);
-    scene.add(pointLight);
-    
-    // Second point light
-    const pointLight2 = new THREE.PointLight(0x60a5fa, 0.3, 20);
-    pointLight2.position.set(-5, 3, 5);
-    scene.add(pointLight2);
-}
-
-function createGround() {
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(16, 16, 0x4ade80, 0x2d3748);
-    gridHelper.position.y = -3.5;
-    scene.add(gridHelper);
-    
-    // Ground plane (invisible but for shadows)
-    const planeGeometry = new THREE.PlaneGeometry(20, 20);
-    const planeMaterial = new THREE.ShadowMaterial({
-        opacity: 0.3,
-        color: 0x000000
-    });
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.rotation.x = -Math.PI / 2;
-    plane.position.y = -3.5;
-    plane.receiveShadow = true;
-    scene.add(plane);
-}
-
-function createAdvanced3DBars(ready, broken, maintenance) {
-    const data = [
-        { label: 'صالح', value: ready, color: 0x4ade80, emissive: 0x22c55e },
-        { label: 'معطب', value: broken, color: 0xf87171, emissive: 0xdc2626 },
-        { label: 'صيانة', value: maintenance, color: 0xfbbf24, emissive: 0xd97706 }
-    ];
-    
-    const maxValue = Math.max(ready, broken, maintenance, 1);
-    const spacing = 3.2;
-    const startX = -(data.length - 1) * spacing / 2;
-    
-    data.forEach((item, index) => {
-        const height = Math.max((item.value / maxValue) * 5, 0.5);
-        const x = startX + index * spacing;
-        const width = 1.8;
-        const depth = 1.8;
-        
-        // العمود الرئيسي مع تأثيرات
-        const geometry = new THREE.BoxGeometry(width, height, depth);
-        const material = new THREE.MeshStandardMaterial({
-            color: item.color,
-            emissive: item.emissive,
-            emissiveIntensity: 0.15,
-            roughness: 0.25,
-            metalness: 0.4,
-            transparent: true,
-            opacity: 0.92
-        });
-        const bar = new THREE.Mesh(geometry, material);
-        bar.position.set(x, height/2 - 3.5, 0);
-        bar.castShadow = true;
-        bar.receiveShadow = true;
-        bar.userData = { label: item.label, value: item.value };
-        scene.add(bar);
-        threeObjects.push(bar);
-        
-        // إطار العمود
-        const edgesGeometry = new THREE.EdgesGeometry(geometry);
-        const edgesMaterial = new THREE.LineBasicMaterial({ 
-            color: item.color, 
-            transparent: true, 
-            opacity: 0.3 
-        });
-        const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-        edges.position.copy(bar.position);
-        scene.add(edges);
-        threeObjects.push(edges);
-        
-        // القاعدة (أسفل العمود)
-        const baseGeometry = new THREE.BoxGeometry(width + 0.3, 0.1, depth + 0.3);
-        const baseMaterial = new THREE.MeshStandardMaterial({
-            color: item.color,
-            transparent: true,
-            opacity: 0.2,
-            roughness: 0.5,
-            metalness: 0.1
-        });
-        const base = new THREE.Mesh(baseGeometry, baseMaterial);
-        base.position.set(x, -3.5 + 0.05, 0);
-        scene.add(base);
-        threeObjects.push(base);
-        
-        // النص فوق العمود (Sprite)
-        const textCanvas = document.createElement('canvas');
-        textCanvas.width = 512;
-        textCanvas.height = 256;
-        const ctx = textCanvas.getContext('2d');
-        
-        // خلفية شفافة مع توهج
-        const gradient = ctx.createRadialGradient(256, 128, 0, 256, 128, 200);
-        gradient.addColorStop(0, 'rgba(255,255,255,0.05)');
-        gradient.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 512, 256);
-        
-        // القيمة
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.shadowColor = 'rgba(0,0,0,0.5)';
-        ctx.shadowBlur = 20;
-        ctx.font = 'bold 80px Cairo, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(item.value, 256, 90);
-        
-        // التصنيف
-        ctx.shadowBlur = 10;
-        ctx.font = 'bold 32px Cairo, sans-serif';
-        ctx.fillStyle = item.label === 'صالح' ? '#4ade80' : 
-                       item.label === 'معطب' ? '#f87171' : '#fbbf24';
-        ctx.fillText(item.label, 256, 160);
-        
-        const texture = new THREE.CanvasTexture(textCanvas);
-        texture.needsUpdate = true;
-        
-        const spriteMaterial = new THREE.SpriteMaterial({ 
-            map: texture, 
-            transparent: true, 
-            depthTest: false,
-            blending: THREE.AdditiveBlending
-        });
-        const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.position.set(x, height - 3.5 + 0.8, 0);
-        sprite.scale.set(3.5, 1.75, 1);
-        scene.add(sprite);
-        threeObjects.push(sprite);
-        
-        // جسيمات حول العمود
-        const particleCount = 80;
-        const particlesGeo = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const velocities = [];
-        for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = (Math.random() - 0.5) * 2.5;
-            positions[i * 3 + 1] = Math.random() * height;
-            positions[i * 3 + 2] = (Math.random() - 0.5) * 2.5;
-            velocities.push({
-                x: (Math.random() - 0.5) * 0.005,
-                y: 0.002 + Math.random() * 0.008,
-                z: (Math.random() - 0.5) * 0.005
-            });
-        }
-        particlesGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        
-        const particlesMat = new THREE.PointsMaterial({
-            color: item.color,
-            size: 0.08,
-            transparent: true,
-            opacity: 0.4,
-            blending: THREE.AdditiveBlending,
-            sizeAttenuation: true
-        });
-        const particles = new THREE.Points(particlesGeo, particlesMat);
-        particles.position.set(x, -3.5, 0);
-        particles.userData = { velocities, height };
-        scene.add(particles);
-        threeObjects.push(particles);
-    });
-    
-    // إضافة بعض الجسيمات العائمة
-    addFloatingParticles();
-}
-
-function addFloatingParticles() {
-    const count = 300;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-    
-    const colorPalette = [0x4ade80, 0xf87171, 0xfbbf24, 0x60a5fa];
-    
-    for (let i = 0; i < count; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 12;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 8;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 6;
-        
-        const color = new THREE.Color(colorPalette[Math.floor(Math.random() * colorPalette.length)]);
-        colors[i * 3] = color.r;
-        colors[i * 3 + 1] = color.g;
-        colors[i * 3 + 2] = color.b;
-    }
-    
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    
-    const material = new THREE.PointsMaterial({
-        size: 0.05,
-        transparent: true,
-        opacity: 0.2,
-        vertexColors: true,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true
-    });
-    
-    const particles = new THREE.Points(geometry, material);
-    particles.position.y = 0;
-    scene.add(particles);
-    threeObjects.push(particles);
-}
-
-// ============================================================
-// دوال التحكم
-// ============================================================
-
-function toggleAutoRotate() {
-    if (controls) {
-        controls.autoRotate = !controls.autoRotate;
-        isAutoRotate = controls.autoRotate;
-        const btn = document.querySelector('#threeControls button:first-child');
-        if (btn) {
-            btn.textContent = isAutoRotate ? '⏸️ إيقاف التدوير' : '🔄 تدوير تلقائي';
-            btn.style.background = isAutoRotate ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.15)';
-        }
-    }
-}
-
-function resetCamera() {
-    if (camera && controls) {
-        camera.position.set(10, 7, 12);
-        controls.target.set(0, 0, 0);
-        controls.update();
-    }
-}
-
-function onThreeResize() {
-    const container = document.getElementById('threeContainer');
-    if (!container || !renderer || !camera) return;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-}
-
-// ============================================================
-// دوال مساعدة
-// ============================================================
-
-function animateNumber(elementId, target) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
-    const start = parseInt(el.textContent) || 0;
-    const duration = 1000;
-    const startTime = Date.now();
-    
-    function update() {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const current = Math.round(start + (target - start) * eased);
-        el.textContent = current;
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        } else {
-            el.textContent = target;
-        }
-    }
-    update();
-}
-
-function export3DChart() {
-    if (!renderer) {
-        showAlert('⚠️ لا يوجد رسم بياني للتصدير', 'warning');
-        return;
-    }
-    const link = document.createElement('a');
-    link.download = 'chart-3d.png';
-    link.href = renderer.domElement.toDataURL('image/png');
-    link.click();
-    showAlert('✅ تم تصدير الصورة بنجاح', 'success');
-}
-
-// ============================================================
-// تحديث دالة renderEfficiency
-// ============================================================
-
-// استبدل دالة renderEfficiency الموجودة بهذه:
-function renderEfficiency() {
-    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
-    const vessels = allVessels || [];
-    
-    const countEl = document.getElementById('effCount');
-    if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
-    
-    renderEfficiencyTables(vessels);
-    updateEfficiencyStats(vessels);
-    
-    // عرض Three.js
-    setTimeout(function() {
-        initThreeJS(vessels);
-    }, 300);
-    
-    // عرض الرسوم البيانية الإضافية
-    setTimeout(function() {
-        renderAdditionalCharts(vessels);
-    }, 500);
-}
-
-// ============================================================
-// الرسوم البيانية الإضافية
-// ============================================================
-
-let chartDoughnut = null;
-let chartLine = null;
-
-function renderAdditionalCharts(vessels) {
-    renderDoughnutChart(vessels);
-    renderLineChart(vessels);
-}
-
-function renderDoughnutChart(vessels) {
-    const canvas = document.getElementById('chartDoughnut');
-    if (!canvas) return;
-    
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    
-    if (chartDoughnut) {
-        chartDoughnut.destroy();
-    }
-    
-    chartDoughnut = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
-            datasets: [{
-                data: [ready, broken, maintenance],
-                backgroundColor: [
-                    'rgba(40, 167, 69, 0.85)',
-                    'rgba(220, 53, 69, 0.85)',
-                    'rgba(255, 193, 7, 0.85)'
-                ],
-                borderColor: ['#28a745', '#dc3545', '#ffc107'],
-                borderWidth: 3,
-                hoverOffset: 20
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        font: { family: 'Cairo', size: 13 },
-                        padding: 15,
-                        usePointStyle: true,
-                        pointStyleWidth: 15
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
-                            return context.label + ': ' + context.parsed + ' مركب (' + percentage + '%)';
-                        }
-                    }
-                }
-            }
-        },
-        plugins: [{
-            id: 'centerText',
-            beforeDraw: function(chart) {
-                const { width, height, ctx } = chart;
-                ctx.save();
-                const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.font = 'bold 28px Cairo, sans-serif';
-                ctx.fillStyle = '#0d6efd';
-                ctx.fillText(total, width / 2, height / 2 - 10);
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.fillStyle = '#6c757d';
-                ctx.fillText('مركب', width / 2, height / 2 + 25);
-                ctx.restore();
-            }
-        }]
-    });
-}
-
-function renderLineChart(vessels) {
-    const canvas = document.getElementById('chartLine');
-    if (!canvas) return;
-    
-    // محاكاة بيانات التطور الشهري
-    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-    const currentMonth = new Date().getMonth();
-    const last6Months = [];
-    for (let i = 5; i >= 0; i--) {
-        const index = (currentMonth - i + 12) % 12;
-        last6Months.push(months[index]);
-    }
-    
-    // توليد بيانات عشوائية للتطور
-    const readyData = last6Months.map(() => Math.floor(Math.random() * 10) + 10);
-    const brokenData = last6Months.map(() => Math.floor(Math.random() * 5) + 2);
-    const maintenanceData = last6Months.map(() => Math.floor(Math.random() * 3) + 1);
-    
-    if (chartLine) {
-        chartLine.destroy();
-    }
-    
-    chartLine = new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: last6Months,
-            datasets: [
-                {
-                    label: '✅ صالح',
-                    data: readyData,
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#28a745',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: '❌ معطب',
-                    data: brokenData,
-                    borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#dc3545',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8
-                },
-                {
-                    label: '🔧 صيانة',
-                    data: maintenanceData,
-                    borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#ffc107',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        font: { family: 'Cairo', size: 12 },
-                        padding: 15,
-                        usePointStyle: true,
-                        pointStyleWidth: 15
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 11 } }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 11 } }
-                }
-            }
-        }
-    });
-}
-
-// ============================================================
-// تحديث دوال الإحصائيات
-// ============================================================
-
-function updateEfficiencyStats(vessels) {
-    const container = document.getElementById('efficiencyStats');
-    if (!container) return;
-    
-    const total = vessels.length;
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    
-    container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin:15px 0;">
-            <div class="stat-box-animated" style="background:linear-gradient(135deg, #e7f3ff, #b6d4fe); padding:20px; border-radius:12px; text-align:center; border:1px solid #b6d4fe;">
-                <div style="font-size:32px; font-weight:bold; color:#0d6efd;" id="statTotal">0</div>
-                <div style="color:#6c757d; font-size:14px;">🚢 المجموع</div>
-            </div>
-            <div class="stat-box-animated" style="background:linear-gradient(135deg, #d4edda, #b7eb8f); padding:20px; border-radius:12px; text-align:center; border:1px solid #b7eb8f;">
-                <div style="font-size:32px; font-weight:bold; color:#28a745;" id="statReady">0</div>
-                <div style="color:#6c757d; font-size:14px;">✅ صالح (${readyPercent}%)</div>
-            </div>
-            <div class="stat-box-animated" style="background:linear-gradient(135deg, #fff3cd, #ffecb5); padding:20px; border-radius:12px; text-align:center; border:1px solid #ffecb5;">
-                <div style="font-size:32px; font-weight:bold; color:#ffc107;" id="statMaintenance">0</div>
-                <div style="color:#6c757d; font-size:14px;">🔧 صيانة</div>
-            </div>
-            <div class="stat-box-animated" style="background:linear-gradient(135deg, #f8d7da, #f5c2c7); padding:20px; border-radius:12px; text-align:center; border:1px solid #f5c2c7;">
-                <div style="font-size:32px; font-weight:bold; color:#dc3545;" id="statBroken">0</div>
-                <div style="color:#6c757d; font-size:14px;">❌ معطب</div>
-            </div>
-        </div>
-    `;
-    
-    // تشغيل العدادات المتحركة
-    setTimeout(() => {
-        animateNumber('statTotal', total);
-        animateNumber('statReady', ready);
-        animateNumber('statMaintenance', maintenance);
-        animateNumber('statBroken', broken);
-    }, 100);
-}
