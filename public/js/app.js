@@ -1584,7 +1584,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - رسوم بيانية ثابتة (بدون حركة)
+// 📊 صفحة الجاهزية - رسوم بيانية مصغرة جداً (ارتفاع 120px)
 // ============================================================
 
 function renderEfficiency() {
@@ -1613,22 +1613,22 @@ function updateEfficiencyStats(vessels) {
     const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
     
     container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin:12px 0;">
-            <div class="stat-card" style="background:#e7f3ff; padding:12px; border-radius:10px; text-align:center; border:1px solid #b6d4fe;">
-                <div style="font-size:22px; font-weight:bold; color:#667eea;">${total}</div>
-                <div style="color:#6c757d; font-size:11px;">🚢 المجموع</div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:8px; margin:8px 0;">
+            <div class="stat-card" style="background:#e7f3ff; padding:8px 10px; border-radius:8px; text-align:center; border:1px solid #b6d4fe;">
+                <div style="font-size:18px; font-weight:bold; color:#667eea;">${total}</div>
+                <div style="color:#6c757d; font-size:10px;">🚢 المجموع</div>
             </div>
-            <div class="stat-card" style="background:#d4edda; padding:12px; border-radius:10px; text-align:center; border:1px solid #b7eb8f;">
-                <div style="font-size:22px; font-weight:bold; color:#4ade80;">${ready}</div>
-                <div style="color:#6c757d; font-size:11px;">✅ صالح (${readyPercent}%)</div>
+            <div class="stat-card" style="background:#d4edda; padding:8px 10px; border-radius:8px; text-align:center; border:1px solid #b7eb8f;">
+                <div style="font-size:18px; font-weight:bold; color:#4ade80;">${ready}</div>
+                <div style="color:#6c757d; font-size:10px;">✅ صالح (${readyPercent}%)</div>
             </div>
-            <div class="stat-card" style="background:#fff3cd; padding:12px; border-radius:10px; text-align:center; border:1px solid #ffecb5;">
-                <div style="font-size:22px; font-weight:bold; color:#fbbf24;">${maintenance}</div>
-                <div style="color:#6c757d; font-size:11px;">🔧 صيانة</div>
+            <div class="stat-card" style="background:#fff3cd; padding:8px 10px; border-radius:8px; text-align:center; border:1px solid #ffecb5;">
+                <div style="font-size:18px; font-weight:bold; color:#fbbf24;">${maintenance}</div>
+                <div style="color:#6c757d; font-size:10px;">🔧 صيانة</div>
             </div>
-            <div class="stat-card" style="background:#f8d7da; padding:12px; border-radius:10px; text-align:center; border:1px solid #f5c2c7;">
-                <div style="font-size:22px; font-weight:bold; color:#f87171;">${broken}</div>
-                <div style="color:#6c757d; font-size:11px;">❌ معطب</div>
+            <div class="stat-card" style="background:#f8d7da; padding:8px 10px; border-radius:8px; text-align:center; border:1px solid #f5c2c7;">
+                <div style="font-size:18px; font-weight:bold; color:#f87171;">${broken}</div>
+                <div style="color:#6c757d; font-size:10px;">❌ معطب</div>
             </div>
         </div>
     `;
@@ -1640,7 +1640,7 @@ function renderCharts(vessels) {
 }
 
 // ============================================================
-// 📊 الرسوم البيانية - نسخة ثابتة (بدون حركة)
+// 📊 الرسوم البيانية - نسخة مصغرة جداً (ارتفاع 120px، بدون حركة)
 // ============================================================
 
 function renderCategoryChart(vessels) {
@@ -1678,8 +1678,8 @@ function renderCategoryChart(vessels) {
                     backgroundColor: 'rgba(74, 222, 128, 0.8)',
                     borderColor: '#4ade80',
                     borderWidth: 1,
-                    borderRadius: 4,
-                    barThickness: 22
+                    borderRadius: 3,
+                    barThickness: 16
                 },
                 {
                     label: 'معطب',
@@ -1687,8 +1687,8 @@ function renderCategoryChart(vessels) {
                     backgroundColor: 'rgba(248, 113, 113, 0.8)',
                     borderColor: '#f87171',
                     borderWidth: 1,
-                    borderRadius: 4,
-                    barThickness: 22
+                    borderRadius: 3,
+                    barThickness: 16
                 },
                 {
                     label: 'صيانة',
@@ -1696,8 +1696,8 @@ function renderCategoryChart(vessels) {
                     backgroundColor: 'rgba(251, 191, 36, 0.8)',
                     borderColor: '#fbbf24',
                     borderWidth: 1,
-                    borderRadius: 4,
-                    barThickness: 22
+                    borderRadius: 3,
+                    barThickness: 16
                 }
             ]
         },
@@ -1705,31 +1705,31 @@ function renderCategoryChart(vessels) {
             responsive: true,
             maintainAspectRatio: false,
             animation: {
-                duration: 0 // إيقاف الحركة تماماً
+                duration: 0
             },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Cairo', size: 9 },
-                        boxWidth: 10,
-                        padding: 6,
+                        font: { family: 'Cairo', size: 8 },
+                        boxWidth: 8,
+                        padding: 4,
                         usePointStyle: true,
-                        pointStyleWidth: 8
+                        pointStyleWidth: 6
                     }
                 }
             },
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 9 } }
+                    ticks: { font: { family: 'Cairo', size: 8 } }
                 },
                 y: {
                     beginAtZero: true,
                     ticks: { 
                         stepSize: 1, 
-                        font: { family: 'Cairo', size: 8 },
-                        maxTicksLimit: 5
+                        font: { family: 'Cairo', size: 7 },
+                        maxTicksLimit: 4
                     },
                     grid: { color: 'rgba(0,0,0,0.04)' }
                 }
@@ -1763,25 +1763,25 @@ function renderDoughnutChart(vessels) {
                     'rgba(251, 191, 36, 0.85)'
                 ],
                 borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                borderWidth: 2,
-                hoverOffset: 0 // إيقاف التكبير عند التمرير
+                borderWidth: 1.5,
+                hoverOffset: 0
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '60%',
+            cutout: '55%',
             animation: {
-                duration: 0 // إيقاف الحركة تماماً
+                duration: 0
             },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Cairo', size: 10 },
-                        padding: 8,
+                        font: { family: 'Cairo', size: 9 },
+                        padding: 4,
                         usePointStyle: true,
-                        pointStyleWidth: 10
+                        pointStyleWidth: 8
                     }
                 },
                 tooltip: {
@@ -1803,12 +1803,12 @@ function renderDoughnutChart(vessels) {
                 const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = 'bold 18px Cairo, sans-serif';
+                ctx.font = 'bold 14px Cairo, sans-serif';
                 ctx.fillStyle = '#1a1a2e';
-                ctx.fillText(total, width / 2, height / 2 - 4);
-                ctx.font = '10px Cairo, sans-serif';
+                ctx.fillText(total, width / 2, height / 2 - 3);
+                ctx.font = '8px Cairo, sans-serif';
                 ctx.fillStyle = '#6c757d';
-                ctx.fillText('مركب', width / 2, height / 2 + 18);
+                ctx.fillText('مركب', width / 2, height / 2 + 14);
                 ctx.restore();
             }
         }]
@@ -1850,8 +1850,8 @@ function renderGeneralEfficiency(vessels) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:12px; padding:15px; margin:15px 0; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
-            <h4 style="color:#1a1a2e; margin:0 0 10px 0; font-size:14px;">📋 النجاعة العامة حسب الفئات</h4>
+        <div style="background:white; border-radius:10px; padding:12px; margin:10px 0; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <h4 style="color:#1a1a2e; margin:0 0 8px 0; font-size:13px;">📋 النجاعة العامة حسب الفئات</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
@@ -1886,11 +1886,11 @@ function renderGeneralEfficiency(vessels) {
                 <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
                 <td>${data.total}</td>
                 <td>
-                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                        <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                    <div style="display:flex; align-items:center; gap:4px; justify-content:center;">
+                        <div style="width:50px; height:4px; background:#e9ecef; border-radius:2px; overflow:hidden;">
                             <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                         </div>
-                        <span style="font-weight:600; font-size:12px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                        <span style="font-weight:600; font-size:11px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
                     </div>
                 </td>
             </tr>
@@ -1906,11 +1906,11 @@ function renderGeneralEfficiency(vessels) {
             <td style="color:#fbbf24;">${totalMaintenance}</td>
             <td>${totalAll}</td>
             <td>
-                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                    <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                <div style="display:flex; align-items:center; gap:4px; justify-content:center;">
+                    <div style="width:50px; height:4px; background:#e9ecef; border-radius:2px; overflow:hidden;">
                         <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                     </div>
-                    <span style="font-size:12px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                    <span style="font-size:11px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
@@ -1924,8 +1924,8 @@ function renderRegionEfficiency(vessels, regionName) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:12px; padding:15px; margin:15px 0; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
-            <h4 style="color:#1a1a2e; margin:0 0 10px 0; font-size:14px;">📋 إقليم الحرس البحري بال${regionName}</h4>
+        <div style="background:white; border-radius:10px; padding:12px; margin:10px 0; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <h4 style="color:#1a1a2e; margin:0 0 8px 0; font-size:13px;">📋 إقليم الحرس البحري بال${regionName}</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
@@ -1960,11 +1960,11 @@ function renderRegionEfficiency(vessels, regionName) {
                 <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
                 <td>${data.total}</td>
                 <td>
-                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                        <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                    <div style="display:flex; align-items:center; gap:4px; justify-content:center;">
+                        <div style="width:50px; height:4px; background:#e9ecef; border-radius:2px; overflow:hidden;">
                             <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                         </div>
-                        <span style="font-weight:600; font-size:12px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                        <span style="font-weight:600; font-size:11px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
                     </div>
                 </td>
             </tr>
@@ -1980,11 +1980,11 @@ function renderRegionEfficiency(vessels, regionName) {
             <td style="color:#fbbf24;">${totalMaintenance}</td>
             <td>${totalAll}</td>
             <td>
-                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
-                    <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                <div style="display:flex; align-items:center; gap:4px; justify-content:center;">
+                    <div style="width:50px; height:4px; background:#e9ecef; border-radius:2px; overflow:hidden;">
                         <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                     </div>
-                    <span style="font-size:12px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                    <span style="font-size:11px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
