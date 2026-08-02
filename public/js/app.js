@@ -2062,3 +2062,650 @@ function deleteUser(id) {
 
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
+// ============================================================
+// 📊 الرسوم البيانية الاحترافية - Dashboard Style
+// ============================================================
+
+let chartCategory = null;
+let chartDoughnut = null;
+let chartLine = null;
+
+function renderEfficiency() {
+    console.log('📊 Rendering efficiency dashboard...');
+    const vessels = allVessels || [];
+    
+    const countEl = document.getElementById('effCount');
+    if (countEl) countEl.textContent = vessels.length;
+    
+    renderEfficiencyTables(vessels);
+    updateEfficiencyStats(vessels);
+    
+    setTimeout(function() {
+        renderProfessionalCharts(vessels);
+    }, 300);
+}
+
+function updateEfficiencyStats(vessels) {
+    const container = document.getElementById('efficiencyStats');
+    if (!container) return;
+    
+    const total = vessels.length;
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
+    
+    const stats = [
+        { 
+            label: 'إجمالي المراكب', 
+            value: total, 
+            icon: '🚢', 
+            color: '#667eea',
+            bg: 'linear-gradient(135deg, rgba(102,126,234,0.1), rgba(102,126,234,0.05))'
+        },
+        { 
+            label: 'جاهز للخدمة', 
+            value: ready, 
+            icon: '✅', 
+            color: '#4ade80',
+            bg: 'linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.05))',
+            sub: readyPercent + '%'
+        },
+        { 
+            label: 'تحت الصيانة', 
+            value: maintenance, 
+            icon: '🔧', 
+            color: '#fbbf24',
+            bg: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.05))'
+        },
+        { 
+            label: 'معطل', 
+            value: broken, 
+            icon: '❌', 
+            color: '#f87171',
+            bg: 'linear-gradient(135deg, rgba(248,113,113,0.1), rgba(248,113,113,0.05))'
+        }
+    ];
+    
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin:20px 0;">
+            ${stats.map(s => `
+                <div class="stat-card" style="background:${s.bg}; padding:18px 20px; border-radius:14px; border:1px solid rgba(0,0,0,0.04); box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-size:28px; font-weight:800; color:${s.color}; line-height:1.2;">${s.value}</div>
+                            <div style="font-size:12px; color:#6c757d; margin-top:3px;">${s.label}</div>
+                        </div>
+                        <div style="font-size:24px; opacity:0.7;">${s.icon}</div>
+                    </div>
+                    ${s.sub ? `<div style="font-size:11px; color:${s.color}; margin-top:5px; font-weight:600;">${s.sub}</div>` : ''}
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderProfessionalCharts(vessels) {
+    renderCategoryChartProfessional(vessels);
+    renderDoughnutChartProfessional(vessels);
+    renderLineChartProfessional(vessels);
+}
+
+function renderCategoryChartProfessional(vessels) {
+    const canvas = document.getElementById('chartCategory');
+    if (!canvas) return;
+    
+    const categories = {};
+    vessels.forEach(v => {
+        const cat = v.cat || 'غير مصنف';
+        if (!categories[cat]) {
+            categories[cat] = { ready: 0, broken: 0, maintenance: 0 };
+        }
+        if (v.stat === 'صالح') categories[cat].ready++;
+        else if (v.stat === 'معطب') categories[cat].broken++;
+        else if (v.stat === 'صيانة') categories[cat].maintenance++;
+    });
+    
+    const labels = Object.keys(categories);
+    const readyData = labels.map(cat => categories[cat].ready);
+    const brokenData = labels.map(cat => categories[cat].broken);
+    const maintenanceData = labels.map(cat => categories[cat].maintenance);
+    
+    if (chartCategory) {
+        chartCategory.destroy();
+    }
+    
+    chartCategory = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'صالح',
+                    data: readyData,
+                    backgroundColor: 'rgba(74, 222, 128, 0.85)',
+                    borderColor: '#4ade80',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 35
+                },
+                {
+                    label: 'معطب',
+                    data: brokenData,
+                    backgroundColor: 'rgba(248, 113, 113, 0.85)',
+                    borderColor: '#f87171',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 35
+                },
+                {
+                    label: 'صيانة',
+                    data: maintenanceData,
+                    backgroundColor: 'rgba(251, 191, 36, 0.85)',
+                    borderColor: '#fbbf24',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 35
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Cairo', size: 12, weight: '600' },
+                        boxWidth: 14,
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyleWidth: 10
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.9)',
+                    titleFont: { family: 'Cairo', size: 13 },
+                    bodyFont: { family: 'Cairo', size: 12 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Cairo', size: 11, weight: '600' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        stepSize: 1, 
+                        font: { family: 'Cairo', size: 11 },
+                        callback: function(value) { return value; }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            }
+        },
+        plugins: [{
+            id: 'roundedBars',
+            beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((bar, index) => {
+                        if (bar && bar.x && bar.y) {
+                            const x = bar.x;
+                            const y = bar.y;
+                            const width = bar.width || 30;
+                            const height = bar.height || 0;
+                            const radius = 8;
+                            
+                            ctx.shadowColor = 'rgba(0,0,0,0.05)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetY = 3;
+                            
+                            ctx.shadowBlur = 0;
+                            ctx.shadowOffsetY = 0;
+                        }
+                    });
+                });
+            }
+        }]
+    });
+}
+
+function renderDoughnutChartProfessional(vessels) {
+    const canvas = document.getElementById('chartDoughnut');
+    if (!canvas) return;
+    
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    const total = ready + broken + maintenance;
+    
+    if (chartDoughnut) {
+        chartDoughnut.destroy();
+    }
+    
+    chartDoughnut = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['صالح', 'معطب', 'صيانة'],
+            datasets: [{
+                data: [ready, broken, maintenance],
+                backgroundColor: [
+                    'rgba(74, 222, 128, 0.9)',
+                    'rgba(248, 113, 113, 0.9)',
+                    'rgba(251, 191, 36, 0.9)'
+                ],
+                borderColor: ['#4ade80', '#f87171', '#fbbf24'],
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Cairo', size: 13, weight: '600' },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyleWidth: 14
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.9)',
+                    titleFont: { family: 'Cairo', size: 13 },
+                    bodyFont: { family: 'Cairo', size: 12 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                            return context.label + ': ' + context.parsed + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        },
+        plugins: [{
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                const { width, height, ctx } = chart;
+                ctx.save();
+                const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // النص الرئيسي
+                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                ctx.shadowBlur = 20;
+                ctx.font = 'bold 32px Cairo, sans-serif';
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillText(total, width / 2, height / 2 - 8);
+                
+                ctx.shadowBlur = 0;
+                ctx.font = '14px Cairo, sans-serif';
+                ctx.fillStyle = '#6c757d';
+                ctx.fillText('مركب', width / 2, height / 2 + 28);
+                ctx.restore();
+            }
+        }]
+    });
+}
+
+function renderLineChartProfessional(vessels) {
+    const canvas = document.getElementById('chartLine');
+    if (!canvas) return;
+    
+    // توليد بيانات الأشهر الستة الماضية
+    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
+    const currentMonth = new Date().getMonth();
+    const labels = [];
+    for (let i = 5; i >= 0; i--) {
+        const index = (currentMonth - i + 12) % 12;
+        labels.push(months[index % 6]);
+    }
+    
+    // محاكاة بيانات تطور الجاهزية
+    const readyData = [12, 14, 13, 16, 18, 20];
+    const brokenData = [5, 4, 6, 3, 4, 2];
+    const maintenanceData = [3, 2, 1, 1, 2, 3];
+    
+    if (chartLine) {
+        chartLine.destroy();
+    }
+    
+    const gradient = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(74, 222, 128, 0.3)');
+    gradient.addColorStop(1, 'rgba(74, 222, 128, 0.02)');
+    
+    const gradient2 = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient2.addColorStop(0, 'rgba(248, 113, 113, 0.3)');
+    gradient2.addColorStop(1, 'rgba(248, 113, 113, 0.02)');
+    
+    const gradient3 = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    gradient3.addColorStop(0, 'rgba(251, 191, 36, 0.3)');
+    gradient3.addColorStop(1, 'rgba(251, 191, 36, 0.02)');
+    
+    chartLine = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'صالح',
+                    data: readyData,
+                    borderColor: '#4ade80',
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4ade80',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    borderWidth: 3
+                },
+                {
+                    label: 'معطب',
+                    data: brokenData,
+                    borderColor: '#f87171',
+                    backgroundColor: gradient2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#f87171',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    borderWidth: 3
+                },
+                {
+                    label: 'صيانة',
+                    data: maintenanceData,
+                    borderColor: '#fbbf24',
+                    backgroundColor: gradient3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fbbf24',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.9)',
+                    titleFont: { family: 'Cairo', size: 13 },
+                    bodyFont: { family: 'Cairo', size: 12 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Cairo', size: 11, weight: '600' } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { 
+                        stepSize: 2, 
+                        font: { family: 'Cairo', size: 11 }
+                    },
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+// ============================================================
+// دوال الجداول (تحديث بسيط)
+// ============================================================
+
+function renderEfficiencyTables(vessels) {
+    const container = document.getElementById('efficiencyTablesContainer');
+    if (!container) return;
+    
+    let html = '';
+    html += renderGeneralEfficiency(vessels);
+    
+    const regions = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
+    };
+    
+    Object.keys(regions).forEach(regionName => {
+        const regionVessels = vessels.filter(v => {
+            const zone = v.zone || '';
+            return regions[regionName].some(city => zone.includes(city));
+        });
+        if (regionVessels.length > 0) {
+            html += renderRegionEfficiency(regionVessels, regionName);
+        }
+    });
+    
+    container.innerHTML = html;
+}
+
+function renderGeneralEfficiency(vessels) {
+    const categories = getCategoriesData(vessels);
+    
+    let html = `
+        <div style="background:white; border-radius:14px; padding:20px; margin:20px 0; box-shadow:0 4px 25px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.04);">
+            <h4 style="color:#1a1a2e; margin:0 0 15px 0; font-size:16px;">📋 النجاعة العامة حسب الفئات</h4>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الفئة</th>
+                            <th style="color:#4ade80;">✅ صالح</th>
+                            <th style="color:#f87171;">❌ معطب</th>
+                            <th style="color:#fbbf24;">🔧 صيانة</th>
+                            <th>📊 الإجمالي</th>
+                            <th>📈 النسبة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
+    const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    
+    categoryOrder.forEach(cat => {
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready;
+        totalBroken += data.broken;
+        totalMaintenance += data.maintenance;
+        totalAll += data.total;
+        
+        html += `
+            <tr>
+                <td><strong>${cat}</strong></td>
+                <td style="color:#4ade80; font-weight:600;">${data.ready}</td>
+                <td style="color:#f87171; font-weight:600;">${data.broken}</td>
+                <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
+                <td>${data.total}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                        <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                        </div>
+                        <span style="font-weight:700; font-size:13px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
+    html += `
+        <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); font-weight:700; border-top:2px solid #dee2e6;">
+            <td>📊 المجموع الكلي</td>
+            <td style="color:#4ade80;">${totalReady}</td>
+            <td style="color:#f87171;">${totalBroken}</td>
+            <td style="color:#fbbf24;">${totalMaintenance}</td>
+            <td>${totalAll}</td>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                    <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                    </div>
+                    <span style="font-size:13px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    html += `</tbody></table></div></div>`;
+    return html;
+}
+
+function renderRegionEfficiency(vessels, regionName) {
+    const categories = getCategoriesData(vessels);
+    
+    let html = `
+        <div style="background:white; border-radius:14px; padding:20px; margin:20px 0; box-shadow:0 4px 25px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.04);">
+            <h4 style="color:#1a1a2e; margin:0 0 15px 0; font-size:16px;">📋 إقليم الحرس البحري بال${regionName}</h4>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الفئة</th>
+                            <th style="color:#4ade80;">✅ صالح</th>
+                            <th style="color:#f87171;">❌ معطب</th>
+                            <th style="color:#fbbf24;">🔧 صيانة</th>
+                            <th>📊 الإجمالي</th>
+                            <th>📈 النسبة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
+    const categoryOrder = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    
+    categoryOrder.forEach(cat => {
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const readyPercent = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready;
+        totalBroken += data.broken;
+        totalMaintenance += data.maintenance;
+        totalAll += data.total;
+        
+        html += `
+            <tr>
+                <td><strong>${cat}</strong></td>
+                <td style="color:#4ade80; font-weight:600;">${data.ready}</td>
+                <td style="color:#f87171; font-weight:600;">${data.broken}</td>
+                <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
+                <td>${data.total}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                        <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                        </div>
+                        <span style="font-weight:700; font-size:13px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
+    html += `
+        <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); font-weight:700; border-top:2px solid #dee2e6;">
+            <td>📊 المجموع الكلي</td>
+            <td style="color:#4ade80;">${totalReady}</td>
+            <td style="color:#f87171;">${totalBroken}</td>
+            <td style="color:#fbbf24;">${totalMaintenance}</td>
+            <td>${totalAll}</td>
+            <td>
+                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                    <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                    </div>
+                    <span style="font-size:13px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                </div>
+            </td>
+        </tr>
+    `;
+    
+    html += `</tbody></table></div></div>`;
+    return html;
+}
+
+function getCategoriesData(vessels) {
+    const categories = {};
+    vessels.forEach(v => {
+        const cat = v.cat || 'غير مصنف';
+        if (!categories[cat]) {
+            categories[cat] = { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        }
+        categories[cat].total++;
+        if (v.stat === 'صالح') categories[cat].ready++;
+        else if (v.stat === 'معطب') categories[cat].broken++;
+        else if (v.stat === 'صيانة') categories[cat].maintenance++;
+    });
+    return categories;
+}
+
+// ============================================================
+// تصدير البيانات
+// ============================================================
+
+function exportEfficiencyData() {
+    const vessels = allVessels || [];
+    if (vessels.length === 0) {
+        showAlert('⚠️ لا توجد بيانات للتصدير', 'warning');
+        return;
+    }
+    
+    let csv = 'الفئة,المركب,الرقم,الحالة,المنطقة,الميناء\n';
+    vessels.forEach(v => {
+        csv += `${v.cat || ''},${v.name || ''},${v.num || ''},${v.stat || ''},${v.zone || ''},${v.port || ''}\n`;
+    });
+    
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `الجاهزية_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showAlert('✅ تم التصدير بنجاح', 'success');
+}
