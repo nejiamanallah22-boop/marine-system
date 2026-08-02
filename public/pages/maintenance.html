@@ -46,7 +46,6 @@
   }
   .hidden{display:none !important;}
 
-  /* ===== Top bar ===== */
   .topbar{
     background:linear-gradient(135deg,var(--navy-950),var(--navy-800) 70%);
     color:#fff;
@@ -104,7 +103,6 @@
   .btn-sm{padding:6px 12px; font-size:12.5px; border-radius:6px;}
   .btn:disabled{opacity:.5; cursor:not-allowed;}
 
-  /* ===== Layout ===== */
   main{max-width:1180px; margin:0 auto; padding:26px 20px 60px;}
   section{margin-bottom:34px;}
   .section-head{
@@ -128,7 +126,6 @@
     margin-inline-start:8px;
   }
 
-  /* ===== KPI cards ===== */
   .kpi-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
@@ -152,7 +149,6 @@
   .kpi-value{font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--navy-900); margin-top:6px;}
   .kpi-sub{font-size:11.5px; color:var(--ink-400); margin-top:4px;}
 
-  /* ===== Cards / grids ===== */
   .card-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px;}
   .vessel-card{
     background:var(--surface);
@@ -185,7 +181,6 @@
   }
   .empty-state .em-icon{font-size:26px; margin-bottom:6px; display:block;}
 
-  /* ===== Form ===== */
   .form-panel{
     background:var(--surface);
     border:1px solid var(--line);
@@ -253,7 +248,6 @@
     border-top:1px solid var(--line);
   }
 
-  /* ===== Filter bar ===== */
   .filter-bar{
     background:var(--surface);
     border:1px solid var(--line);
@@ -271,7 +265,6 @@
     padding:8px 14px; border-radius:20px;
   }
 
-  /* ===== Table ===== */
   .table-wrap{
     background:var(--surface);
     border:1px solid var(--line);
@@ -304,7 +297,6 @@
   .badge-status-قيد_الإصلاح{background:var(--amber-100); color:var(--amber-500);}
   .badge-status-منتهية{background:var(--green-100); color:var(--green-600);}
 
-  /* ===== Units ===== */
   .unit-card{
     background:var(--surface);
     border:1px solid var(--line);
@@ -361,7 +353,6 @@
 
 <main>
 
-  <!-- ===== إحصائيات الصيانة ===== -->
   <section>
     <div class="section-head">
       <div>
@@ -372,7 +363,6 @@
     <div id="maintenanceStats" class="kpi-grid"></div>
   </section>
 
-  <!-- ===== 1. المراكب المعطبة ===== -->
   <section>
     <div class="section-head">
       <div>
@@ -383,7 +373,6 @@
     <div id="generalMaintenanceContainer" class="card-grid"></div>
   </section>
 
-  <!-- ===== نموذج إضافة الصيانة ===== -->
   <div id="maintenanceForm" class="form-panel hidden">
     <div class="form-panel-head">
       <h3 id="formTitle">📝 تسجيل صيانة جديدة</h3>
@@ -484,7 +473,6 @@
         </div>
       </div>
 
-      <!-- قطع الغيار -->
       <div class="field" style="margin-top:16px;">
         <label>🔩 قطع الغيار المستخدمة</label>
         <div class="parts-box">
@@ -501,7 +489,6 @@
     </div>
   </div>
 
-  <!-- ===== 4. سجل الصيانة التاريخي ===== -->
   <section>
     <div class="section-head">
       <div>
@@ -574,7 +561,6 @@
     <div id="historyMaintenanceContainer"></div>
   </section>
 
-  <!-- ===== وحدات الصيانة ===== -->
   <section>
     <div class="section-head">
       <div>
@@ -591,10 +577,8 @@
 
 <script>
 /* ============================================================
-   DATA LAYER
+   DATA LAYER - متوافق مع MongoDB
    ============================================================ */
-const STORAGE_VESSELS = 'msa_vessels_v1';
-const STORAGE_RECORDS = 'msa_records_v1';
 
 const UNITS = [
   'وحدة الصيانة والإسناد البحري تونس',
@@ -604,76 +588,157 @@ const UNITS = [
   'شركة خاصة'
 ];
 
-const DEFAULT_VESSELS = [
-  { id: 'v1', name: 'الحارس 01' },
-  { id: 'v2', name: 'النجدة 02' },
-  { id: 'v3', name: 'الصقر 03' },
-  { id: 'v4', name: 'الأمل 04' },
-  { id: 'v5', name: 'الوفاء 05' },
-  { id: 'v6', name: 'الرجاء 06' }
-];
-
-function seedRecords(vessels){
-  const today = new Date();
-  const iso = (d) => d.toISOString().slice(0,10);
-  const daysAgo = (n) => { const d = new Date(today); d.setDate(d.getDate()-n); return iso(d); };
-  return [
-    {
-      id: 'r1', vesselId: vessels[0].id, type: 'طارئة', unit: UNITS[0], technician: 'محمد الطرابلسي',
-      faultType: 'محرك', startDate: daysAgo(6), endDate: '', status: 'قيد الإصلاح',
-      description: 'ارتفاع غير طبيعي في حرارة المحرك الرئيسي أثناء الدورية.',
-      repair: 'فحص نظام التبريد واستبدال المضخة.', cost: 850,
-      notes: 'بانتظار وصول قطعة الغيار.',
-      parts: [{ name: 'مضخة تبريد', qty: 1, price: 620 }]
-    },
-    {
-      id: 'r2', vesselId: vessels[1].id, type: 'دورية', unit: UNITS[1], technician: 'سامي بن عمر',
-      faultType: 'كهرباء', startDate: daysAgo(45), endDate: daysAgo(42), status: 'منتهية',
-      description: 'صيانة دورية للنظام الكهربائي ولوحة التحكم.',
-      repair: 'تنظيف الوصلات واستبدال قواطع تالفة.', cost: 320,
-      notes: '', parts: [{ name: 'قاطع كهربائي', qty: 3, price: 45 }]
-    },
-    {
-      id: 'r3', vesselId: vessels[2].id, type: 'كبرى', unit: UNITS[2], technician: 'أنيس الجبالي',
-      faultType: 'هيكل', startDate: daysAgo(120), endDate: daysAgo(95), status: 'منتهية',
-      description: 'تصليح تشققات في الهيكل الخارجي وإعادة طلاء.',
-      repair: 'لحام وتقوية الهيكل مع طلاء مقاوم للتآكل.', cost: 4200,
-      notes: 'صيانة كبرى ضمن الخطة السنوية.', parts: [{ name: 'صفائح فولاذية', qty: 4, price: 300 }]
-    },
-    {
-      id: 'r4', vesselId: vessels[3].id, type: 'طارئة', unit: UNITS[3], technician: 'وليد الشريف',
-      faultType: 'هيدروليك', startDate: daysAgo(2), endDate: '', status: 'قيد الإصلاح',
-      description: 'تسرب في نظام التوجيه الهيدروليكي.',
-      repair: 'استبدال الخراطيم والزيت الهيدروليكي.', cost: 260,
-      notes: '', parts: []
-    }
-  ];
-}
-
-let vessels = loadJSON(STORAGE_VESSELS, null) || DEFAULT_VESSELS.slice();
-let records = loadJSON(STORAGE_RECORDS, null) || seedRecords(vessels);
-if (!loadJSON(STORAGE_VESSELS, null)) saveJSON(STORAGE_VESSELS, vessels);
-if (!loadJSON(STORAGE_RECORDS, null)) saveJSON(STORAGE_RECORDS, records);
-
+let vessels = [];
+let records = [];
 let activeFilters = null;
 
-function loadJSON(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  }catch(e){ return fallback; }
+/* ============================================================
+   دوال الاتصال بالسيرفر (متوافقة مع MongoDB)
+   ============================================================ */
+
+// جلب المراكب من السيرفر
+async function loadVesselsFromServer() {
+    try {
+        const response = await fetch('/api/vessels');
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                vessels = data.map(v => ({
+                    id: String(v._id || v.id || v._id),
+                    name: v.name || 'مركب بدون اسم'
+                }));
+            }
+        }
+    } catch(e) {
+        console.error('خطأ في تحميل المراكب:', e);
+        vessels = [];
+    }
+    return vessels;
 }
-function saveJSON(key, value){
-  try{ localStorage.setItem(key, JSON.stringify(value)); }
-  catch(e){ showToast('تعذر حفظ البيانات محليًا', true); }
+
+// جلب سجلات الصيانة من السيرفر
+async function loadRecordsFromServer() {
+    try {
+        const response = await fetch('/api/maintenance');
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                records = data.map(r => ({
+                    ...r,
+                    id: String(r._id || r.id)
+                }));
+            }
+        }
+    } catch(e) {
+        console.error('خطأ في تحميل سجلات الصيانة:', e);
+        records = [];
+    }
+    return records;
 }
-function saveVessels(){ saveJSON(STORAGE_VESSELS, vessels); }
-function saveRecords(){ saveJSON(STORAGE_RECORDS, records); }
+
+// حفظ سجل صيانة جديد في السيرفر
+async function saveRecordToServer(record) {
+    try {
+        const response = await fetch('/api/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في الحفظ');
+        }
+        const result = await response.json();
+        // التعامل مع تنسيقات MongoDB المختلفة
+        const savedRecord = result.record || result;
+        return {
+            success: true,
+            record: {
+                ...savedRecord,
+                id: String(savedRecord._id || savedRecord.id)
+            }
+        };
+    } catch(e) {
+        console.error('خطأ في حفظ السجل:', e);
+        throw e;
+    }
+}
+
+// تحديث سجل صيانة في السيرفر
+async function updateRecordOnServer(id, record) {
+    try {
+        const response = await fetch(`/api/maintenance/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في التحديث');
+        }
+        const result = await response.json();
+        const updatedRecord = result.record || result;
+        return {
+            success: true,
+            record: {
+                ...updatedRecord,
+                id: String(updatedRecord._id || updatedRecord.id)
+            }
+        };
+    } catch(e) {
+        console.error('خطأ في تحديث السجل:', e);
+        throw e;
+    }
+}
+
+// حذف سجل صيانة من السيرفر
+async function deleteRecordFromServer(id) {
+    try {
+        const response = await fetch(`/api/maintenance/${id}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في الحذف');
+        }
+        return await response.json();
+    } catch(e) {
+        console.error('خطأ في حذف السجل:', e);
+        throw e;
+    }
+}
+
+// إضافة مركب جديد
+async function addVesselToServer(name) {
+    try {
+        const response = await fetch('/api/vessels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'فشل في إضافة المركب');
+        }
+        const result = await response.json();
+        const newVessel = result.vessel || result;
+        return {
+            success: true,
+            vessel: {
+                id: String(newVessel._id || newVessel.id),
+                name: newVessel.name
+            }
+        };
+    } catch(e) {
+        console.error('خطأ في إضافة المركب:', e);
+        throw e;
+    }
+}
 
 /* ============================================================
    HELPERS
    ============================================================ */
-function vesselName(id){
+function getVesselName(id){
   const v = vessels.find(x => x.id === id);
   return v ? v.name : 'مركب غير معروف';
 }
@@ -704,9 +769,6 @@ function statusClass(status){
 function typeClass(type){
   return 'badge-type-' + type;
 }
-function uid(){
-  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-}
 function showToast(msg, isError){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -725,16 +787,20 @@ function populateVesselSelect(){
     vessels.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)}</option>`).join('');
   if (current) sel.value = current;
 }
-function promptAddVessel(e){
+
+async function promptAddVessel(e){
   e.preventDefault();
   const name = prompt('اسم المركب الجديد:');
   if (!name || !name.trim()) return;
-  const v = { id: uid(), name: name.trim() };
-  vessels.push(v);
-  saveVessels();
-  populateVesselSelect();
-  document.getElementById('mVesselId').value = v.id;
-  showToast('تمت إضافة المركب: ' + v.name);
+  try {
+    const result = await addVesselToServer(name.trim());
+    vessels.push(result.vessel);
+    populateVesselSelect();
+    document.getElementById('mVesselId').value = result.vessel.id;
+    showToast('✅ تمت إضافة المركب: ' + result.vessel.name);
+  } catch(e) {
+    showToast('❌ خطأ في إضافة المركب: ' + e.message, true);
+  }
 }
 
 /* ============================================================
@@ -865,9 +931,9 @@ function updatePartsTotalDisplay(){
 }
 
 /* ============================================================
-   SAVE / DELETE
+   SAVE / DELETE - متوافق مع MongoDB
    ============================================================ */
-function saveMaintenance(){
+async function saveMaintenance(){
   clearFormErrors();
   const vesselId = document.getElementById('mVesselId').value;
   const startDate = document.getElementById('mStartDate').value;
@@ -877,10 +943,9 @@ function saveMaintenance(){
   if (!startDate){ document.getElementById('fieldStartDate').classList.add('invalid'); valid = false; }
   if (!valid){ showToast('الرجاء إكمال الحقول الإلزامية', true); return; }
 
-  const id = document.getElementById('mRecordId').value || uid();
+  const existingId = document.getElementById('mRecordId').value;
   const status = document.getElementById('mStatus').value;
   const record = {
-    id,
     vesselId,
     type: document.getElementById('mType').value,
     unit: document.getElementById('mUnit').value,
@@ -896,30 +961,43 @@ function saveMaintenance(){
     parts: collectPartsFromForm()
   };
 
-  const existingIndex = records.findIndex(r => r.id === id);
-  if (existingIndex >= 0){
-    records[existingIndex] = record;
-    showToast('تم تحديث سجل الصيانة بنجاح');
-  } else {
-    records.push(record);
-    showToast('تمت إضافة سجل الصيانة بنجاح');
+  try {
+    if (existingId) {
+      // تحديث
+      const result = await updateRecordOnServer(existingId, record);
+      const index = records.findIndex(r => r.id === existingId);
+      if (index !== -1) {
+        records[index] = result.record;
+      }
+      showToast('✅ تم تحديث سجل الصيانة بنجاح');
+    } else {
+      // إضافة جديدة
+      const result = await saveRecordToServer(record);
+      records.push(result.record);
+      showToast('✅ تمت إضافة سجل الصيانة بنجاح');
+    }
+    toggleMaintenanceForm();
+    renderAll();
+  } catch(e) {
+    showToast('❌ خطأ في الحفظ: ' + e.message, true);
   }
-  saveRecords();
-  toggleMaintenanceForm();
-  renderAll();
 }
 
-function deleteMaintenance(id){
+async function deleteMaintenance(id){
   const r = records.find(x => x.id === id);
   if (!r) return;
-  if (!confirm(`هل تريد فعلًا حذف سجل صيانة "${vesselName(r.vesselId)}" بتاريخ ${fmtDate(r.startDate)}؟`)) return;
-  records = records.filter(x => x.id !== id);
-  saveRecords();
-  showToast('تم حذف السجل');
-  renderAll();
+  if (!confirm(`هل تريد فعلًا حذف سجل صيانة "${getVesselName(r.vesselId)}" بتاريخ ${fmtDate(r.startDate)}؟`)) return;
+  try {
+    await deleteRecordFromServer(id);
+    records = records.filter(x => x.id !== id);
+    showToast('✅ تم حذف السجل');
+    renderAll();
+  } catch(e) {
+    showToast('❌ خطأ في الحذف: ' + e.message, true);
+  }
 }
 
-function markAsCompleted(id){
+async function markAsCompleted(id){
   const r = records.find(x => x.id === id);
   if (!r) return;
   const today = new Date().toISOString().slice(0,10);
@@ -927,13 +1005,17 @@ function markAsCompleted(id){
   if (endDate === null) return;
   r.status = 'منتهية';
   r.endDate = endDate || today;
-  saveRecords();
-  showToast('تم تحديد المركب كصيانة منتهية');
-  renderAll();
+  try {
+    await updateRecordOnServer(id, r);
+    showToast('✅ تم تحديد المركب كصيانة منتهية');
+    renderAll();
+  } catch(e) {
+    showToast('❌ خطأ في التحديث: ' + e.message, true);
+  }
 }
 
 /* ============================================================
-   RENDER: KPI STATS
+   RENDER FUNCTIONS
    ============================================================ */
 function renderStats(){
   const total = records.length;
@@ -960,9 +1042,6 @@ function renderStats(){
   `).join('');
 }
 
-/* ============================================================
-   RENDER: DAMAGED VESSELS
-   ============================================================ */
 function renderDamagedVessels(){
   const container = document.getElementById('generalMaintenanceContainer');
   const damaged = records
@@ -985,7 +1064,7 @@ function renderDamagedVessels(){
     return `
     <div class="vessel-card">
       <div class="v-head">
-        <div class="v-name">🚢 ${escapeHtml(vesselName(r.vesselId))}</div>
+        <div class="v-name">🚢 ${escapeHtml(getVesselName(r.vesselId))}</div>
         <span class="v-days">${days} يوم</span>
       </div>
       <dl>
@@ -1007,9 +1086,6 @@ function shortUnit(u){
   return (u || '').replace('وحدة الصيانة والإسناد البحري ', '');
 }
 
-/* ============================================================
-   RENDER: HISTORY TABLE + FILTERS
-   ============================================================ */
 function populateFilterYear(){
   const years = Array.from(new Set(records.map(r => (r.startDate || '').slice(0,4)).filter(Boolean))).sort().reverse();
   const sel = document.getElementById('filterYear');
@@ -1024,7 +1100,7 @@ function getFilteredRecords(){
   if (filters){
     if (filters.vessel){
       const q = filters.vessel.toLowerCase();
-      list = list.filter(r => vesselName(r.vesselId).toLowerCase().includes(q));
+      list = list.filter(r => getVesselName(r.vesselId).toLowerCase().includes(q));
     }
     if (filters.year) list = list.filter(r => (r.startDate || '').startsWith(filters.year));
     if (filters.type) list = list.filter(r => r.type === filters.type);
@@ -1079,7 +1155,7 @@ function renderHistory(){
 
   const rows = list.map(r => `
     <tr>
-      <td data-label="المركب" class="cell-vessel">${escapeHtml(vesselName(r.vesselId))}</td>
+      <td data-label="المركب" class="cell-vessel">${escapeHtml(getVesselName(r.vesselId))}</td>
       <td data-label="النوع"><span class="badge ${typeClass(r.type)}">${escapeHtml(r.type)}</span></td>
       <td data-label="العطل">${escapeHtml(r.faultType)}</td>
       <td data-label="الوحدة">${escapeHtml(shortUnit(r.unit))}</td>
@@ -1110,9 +1186,6 @@ function renderHistory(){
     </div>`;
 }
 
-/* ============================================================
-   RENDER: UNITS SUMMARY
-   ============================================================ */
 function renderUnits(){
   const container = document.getElementById('maintenanceUnitsContainer');
   container.innerHTML = UNITS.map(u => {
@@ -1130,19 +1203,15 @@ function renderUnits(){
   }).join('');
 }
 
-/* ============================================================
-   ESCAPE
-   ============================================================ */
 function escapeHtml(str){
   return String(str ?? '').replace(/[&<>"']/g, c => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
   }[c]));
 }
 
-/* ============================================================
-   INIT
-   ============================================================ */
-function renderAll(){
+async function renderAll(){
+  await loadVesselsFromServer();
+  await loadRecordsFromServer();
   renderStats();
   renderDamagedVessels();
   populateFilterYear();
@@ -1150,7 +1219,9 @@ function renderAll(){
   renderUnits();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadVesselsFromServer();
+  await loadRecordsFromServer();
   populateVesselSelect();
   resetForm();
   renderAll();
