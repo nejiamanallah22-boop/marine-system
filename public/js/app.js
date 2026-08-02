@@ -211,7 +211,7 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== حسابات تجريبية =====
+    // ===== حسابات تجريبية للاختبار بدون خادم =====
     const demoUsers = {
         'admin': {
             password: '123456',
@@ -231,8 +231,9 @@ function doLogin() {
         }
     };
     
+    // التحقق من الحسابات التجريبية أولاً
     if (demoUsers[username] && demoUsers[username].password === password) {
-        console.log('✅ دخول ناجح للمستخدم:', username);
+        console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
         const userData = demoUsers[username].user;
         localStorage.setItem('token', 'demo-token-' + Date.now());
         localStorage.setItem('user', JSON.stringify(userData));
@@ -330,15 +331,27 @@ function loadAllData() {
 
 function loadVessels() {
     const token = getToken();
+    // إذا كان هناك توكن، حاول الاتصال بالخادم
+    if (token && token.startsWith('demo-token')) {
+        // استخدام البيانات التجريبية
+        allVessels = getDemoVessels();
+        renderAllTables();
+        return;
+    }
+    
     if (!token) {
         allVessels = getDemoVessels();
         renderAllTables();
         return;
     }
+    
     fetch('/api/vessels', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('فشل تحميل المراكب');
+        return res.json();
+    })
     .then(data => {
         allVessels = data || [];
         console.log('✅ Vessels loaded:', allVessels.length);
@@ -353,16 +366,27 @@ function loadVessels() {
 
 function loadMaintenance() {
     const token = getToken();
+    if (token && token.startsWith('demo-token')) {
+        allMaintenance = getDemoMaintenance();
+        renderMaintenanceTables();
+        updateYearFilter();
+        return;
+    }
+    
     if (!token) {
         allMaintenance = getDemoMaintenance();
         renderMaintenanceTables();
         updateYearFilter();
         return;
     }
+    
     fetch('/api/maintenance', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('فشل تحميل الصيانة');
+        return res.json();
+    })
     .then(data => {
         allMaintenance = data || [];
         console.log('✅ Maintenance loaded:', allMaintenance.length);
@@ -424,6 +448,12 @@ function renderAllTables() {
     renderMaintenanceTables();
     updateMaintenanceVessels();
     renderEfficiency();
+    // محاولة تحديث Dashboard إذا كانت مفتوحة
+    if (document.getElementById('page-dashboard')) {
+        if (typeof loadDashboard === 'function') {
+            setTimeout(loadDashboard, 100);
+        }
+    }
 }
 
 function renderMaintenanceTables() {
@@ -1339,11 +1369,10 @@ function renderDashboardCharts() {
     try {
         const dashCanvas = document.getElementById('dashChart');
         if (dashCanvas) {
-            // إعادة ضبط الحجم
             dashCanvas.style.height = '200px';
             dashCanvas.style.width = '100%';
-            
             if (dashChart) dashChart.destroy();
+            
             const ready = allVessels.filter(v => v.stat === 'صالح').length;
             const broken = allVessels.filter(v => v.stat === 'معطب').length;
             const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
@@ -1382,11 +1411,10 @@ function renderDashboardCharts() {
     try {
         const lineCanvas = document.getElementById('dashLineChart');
         if (lineCanvas) {
-            // إعادة ضبط الحجم
             lineCanvas.style.height = '200px';
             lineCanvas.style.width = '100%';
-            
             if (dashLineChart) dashLineChart.destroy();
+            
             const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
             const readyData = [12, 14, 13, 16, 18, 20];
             const brokenData = [5, 4, 6, 3, 4, 2];
@@ -1489,6 +1517,10 @@ function deleteUser(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
     showAlert('✅ تم حذف المستخدم', 'success');
 }
+
+// ============================================================
+// تشغيل التطبيق
+// ============================================================
 
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
