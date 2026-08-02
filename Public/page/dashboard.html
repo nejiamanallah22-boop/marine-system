@@ -1,0 +1,107 @@
+function loadDashboard() {
+    console.log('📊 Loading dashboard...');
+    const dashTotal = document.getElementById('dashTotal');
+    if (!dashTotal) {
+        console.log('⚠️ Dashboard elements not found');
+        return;
+    }
+    const total = allVessels.length;
+    const ready = allVessels.filter(v => v.stat === 'صالح').length;
+    const broken = allVessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
+    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const maintenanceCount = allMaintenance.length;
+    
+    document.getElementById('dashTotal').textContent = total;
+    document.getElementById('dashReady').textContent = ready;
+    document.getElementById('dashBroken').textContent = broken;
+    document.getElementById('dashMaintenance').textContent = maintenance;
+    document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
+    document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
+    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
+    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ar-TN');
+    
+    setTimeout(() => renderDashboardCharts(), 200);
+}
+
+function renderDashboardCharts() {
+    try {
+        const dashCanvas = document.getElementById('dashChart');
+        if (dashCanvas) {
+            if (dashChart) dashChart.destroy();
+            const ready = allVessels.filter(v => v.stat === 'صالح').length;
+            const broken = allVessels.filter(v => v.stat === 'معطب').length;
+            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            dashChart = new Chart(dashCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+                    datasets: [{
+                        data: [ready, broken, maintenance],
+                        backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
+                        borderColor: ['#4ade80', '#f87171', '#fbbf24'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    } catch(e) { console.log('⚠️ Chart error:', e); }
+    
+    try {
+        const lineCanvas = document.getElementById('dashLineChart');
+        if (lineCanvas) {
+            if (dashLineChart) dashLineChart.destroy();
+            const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
+            dashLineChart = new Chart(lineCanvas, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'صالح', data: [12,14,13,16,18,20], borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#4ade80' },
+                        { label: 'معطب', data: [5,4,6,3,4,2], borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#f87171' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } } },
+                    scales: { x: { ticks: { color: 'rgba(255,255,255,0.3)' } }, y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true } }
+                }
+            });
+        }
+    } catch(e) { console.log('⚠️ Line chart error:', e); }
+    
+    updateDashboardActivity();
+}
+
+function updateDashboardActivity() {
+    const container = document.getElementById('dashActivity');
+    if (!container) return;
+    const activities = [];
+    allMaintenance.slice(0, 5).forEach(r => {
+        activities.push({ icon: '🔧', text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`, time: r.date || 'اليوم' });
+    });
+    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+        activities.push({ icon: '⚠️', text: `المركب ${v.name} أصبح معطباً`, time: v.fDate || 'اليوم' });
+    });
+    if (activities.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">لا توجد نشاطات حديثة</div>';
+        return;
+    }
+    container.innerHTML = activities.map(a => `
+        <div class="activity-item">
+            <span class="activity-icon">${a.icon}</span>
+            <span>${a.text}</span>
+            <span class="activity-time">${a.time}</span>
+        </div>
+    `).join('');
+}
