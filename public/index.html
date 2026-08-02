@@ -7,93 +7,133 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <link rel="stylesheet" href="/css/style.css">
     
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 
-<!-- ===== شاشة الدخول الفاخرة ===== -->
+<!-- ===== شاشة الدخول ===== -->
 <div id="loginOverlay">
     <div class="login-box">
-        <span class="logo-icon">⚓</span>
-        <h1>منظومة الوسائل البحرية</h1>
+        <div class="login-logo">
+            <span class="logo-icon">⚓</span>
+            <span class="logo-text">منظومة الوسائل البحرية</span>
+        </div>
         <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
         <div class="developer">
-            <span>الوكيل</span>
-            <span style="color:#f5d76e; font-weight:700;">أمان الله ناجي</span>
+            <span class="dev-label">الوكيل</span>
+            <span class="dev-name">أمان الله ناجي</span>
         </div>
-        <input type="text" id="username" placeholder="👤 اسم المستخدم">
-        <input type="password" id="password" placeholder="🔑 كلمة المرور">
-        <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
+        <div class="input-group">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" placeholder="اسم المستخدم">
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" placeholder="كلمة المرور">
+        </div>
+        <button class="login-btn" onclick="doLogin()">
+            <span>🚀</span> دخول
+        </button>
         <div id="loginError" class="error-msg"></div>
         <div class="login-footer">
-            نظام إدارة وإسناد الوحدات البحرية
+            <span>نظام إدارة وإسناد الوحدات البحرية</span>
+            <span class="version">v3.0</span>
         </div>
     </div>
 </div>
 
 <!-- ===== التطبيق الرئيسي ===== -->
-<div id="mainApp" class="container">
+<div id="mainApp" style="display:none;">
     
     <!-- ===== الهيدر ===== -->
     <header>
-        <h1>
-            ⚓ منظومة متابعة الوسائل البحرية
-            <span class="developer-tag">الوكيل أمان الله ناجي</span>
-        </h1>
-        <div class="header-content">
+        <div class="header-left">
+            <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
+            <h1>
+                <span>⚓</span>
+                منظومة الوسائل البحرية
+                <span class="developer-tag">الوكيل أمان الله ناجي</span>
+            </h1>
+        </div>
+        <div class="header-right">
             <span class="notification-icon" onclick="toggleNotifications()">
                 🔔 <span class="notification-badge" id="notificationBadge">0</span>
             </span>
             <span class="role-badge" id="userRoleDisplay">👤</span>
-            <button class="btn-outline-white" onclick="window.print()">🖨️ طباعة</button>
-            <button class="btn-outline-white" onclick="refreshAllPages()">🔄 تحديث</button>
-            <button class="btn-outline-white" onclick="doLogout()" style="border-color:rgba(248,113,113,0.3); color:#f87171;">🚪 خروج</button>
+            <button class="btn-outline-white" onclick="window.print()"><i class="fas fa-print"></i></button>
+            <button class="btn-outline-white" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
-    <!-- ===== شريط التنقل ===== -->
-    <div class="nav">
-        <button class="btn btn-primary" onclick="showPage('fleet')">🚢 الأسطول</button>
-        <button class="btn btn-warning" onclick="showPage('maintenance')">🔧 الصيانة</button>
-        <button class="btn btn-success" onclick="showPage('efficiency')">📊 الجاهزية</button>
-        <button class="btn btn-info" onclick="showPage('support')">🎫 الدعم</button>
-        <button class="btn btn-secondary" onclick="showPage('tracking')">📍 التتبع</button>
-        <button class="btn btn-secondary" onclick="showPage('map')">🗺️ الخريطة</button>
-        <button class="btn btn-secondary" onclick="showPage('users')">👥 المستخدمين</button>
-        <button class="btn btn-primary" onclick="showPage('notes')">📝 Note Verbale</button>
-    </div>
+    <!-- ===== الشريط الجانبي ===== -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span>⚓</span>
+            <span>الأسطول البحري</span>
+        </div>
+        <button class="nav-btn active" onclick="showPage('dashboard')">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
+        </button>
+        <button class="nav-btn" onclick="showPage('fleet')">
+            <i class="fas fa-ship"></i> الأسطول
+        </button>
+        <button class="nav-btn" onclick="showPage('maintenance')">
+            <i class="fas fa-wrench"></i> الصيانة
+        </button>
+        <button class="nav-btn" onclick="showPage('efficiency')">
+            <i class="fas fa-chart-line"></i> الجاهزية
+        </button>
+        <button class="nav-btn" onclick="showPage('support')">
+            <i class="fas fa-headset"></i> الدعم
+        </button>
+        <button class="nav-btn" onclick="showPage('tracking')">
+            <i class="fas fa-map-marker-alt"></i> التتبع
+        </button>
+        <button class="nav-btn" onclick="showPage('map')">
+            <i class="fas fa-map"></i> الخريطة
+        </button>
+        <button class="nav-btn" onclick="showPage('users')">
+            <i class="fas fa-users"></i> المستخدمين
+        </button>
+        <button class="nav-btn" onclick="showPage('notes')">
+            <i class="fas fa-sticky-note"></i> Note Verbale
+        </button>
+        <div class="sidebar-footer">
+            <span>الوكيل أمان الله ناجي</span>
+        </div>
+    </nav>
 
-    <!-- ===== حاوية الصفحات ===== -->
-    <div id="pageContainer"></div>
+    <!-- ===== المحتوى الرئيسي ===== -->
+    <div class="main-content">
+        <div id="pageContainer"></div>
+    </div>
 </div>
 
 <!-- ===== أزرار التمرير ===== -->
-<div class="scroll-buttons" style="position:fixed; bottom:20px; left:20px; display:flex; flex-direction:column; gap:8px; z-index:50;">
-    <button onclick="scrollToTop()" style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px;">↑</button>
-    <button onclick="scrollToBottom()" style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px;">↓</button>
+<div class="scroll-buttons">
+    <button class="scroll-btn" onclick="scrollToTop()"><i class="fas fa-chevron-up"></i></button>
+    <button class="scroll-btn" onclick="scrollToBottom()"><i class="fas fa-chevron-down"></i></button>
 </div>
 
 <!-- ===== النوافذ المنبثقة ===== -->
-<div id="passwordModal" class="modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(10px);">
-    <div style="background:rgba(26,26,46,0.95); border-radius:20px; padding:30px; max-width:400px; width:90%; border:1px solid rgba(255,255,255,0.1);">
-        <h3 style="color:white; text-align:center; margin-bottom:15px;">🔑 تغيير كلمة المرور</h3>
-        <p id="modalUserName" style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:15px;"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" style="width:100%; padding:12px; margin:8px 0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white;">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="width:100%; padding:12px; margin:8px 0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white;">
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button onclick="saveNewPassword()" style="flex:1; padding:12px; background:linear-gradient(135deg, #4ade80, #22c55e); border:none; border-radius:10px; color:white; font-weight:700; cursor:pointer;">حفظ</button>
-            <button onclick="closePasswordModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white; cursor:pointer;">إلغاء</button>
+<div id="passwordModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3>🔑 تغيير كلمة المرور</h3>
+        <p id="modalUserName"></p>
+        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
+        <div class="modal-actions">
+            <button class="btn-save" onclick="saveNewPassword()">حفظ</button>
+            <button class="btn-cancel" onclick="closePasswordModal()">إلغاء</button>
         </div>
     </div>
 </div>
 
-<!-- ===== ملفات الجافاسكريبت ===== -->
 <script src="/js/app.js"></script>
-
 </body>
 </html>
