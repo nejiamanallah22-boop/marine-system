@@ -1584,7 +1584,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - رسوم بيانية مصغرة
+// 📊 صفحة الجاهزية - رسوم بيانية ثابتة (بدون حركة)
 // ============================================================
 
 function renderEfficiency() {
@@ -1599,7 +1599,7 @@ function renderEfficiency() {
     
     setTimeout(function() {
         renderCharts(vessels);
-    }, 200);
+    }, 100);
 }
 
 function updateEfficiencyStats(vessels) {
@@ -1638,6 +1638,10 @@ function renderCharts(vessels) {
     renderCategoryChart(vessels);
     renderDoughnutChart(vessels);
 }
+
+// ============================================================
+// 📊 الرسوم البيانية - نسخة ثابتة (بدون حركة)
+// ============================================================
 
 function renderCategoryChart(vessels) {
     const canvas = document.getElementById('chartCategory');
@@ -1700,6 +1704,9 @@ function renderCategoryChart(vessels) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0 // إيقاف الحركة تماماً
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -1757,13 +1764,16 @@ function renderDoughnutChart(vessels) {
                 ],
                 borderColor: ['#4ade80', '#f87171', '#fbbf24'],
                 borderWidth: 2,
-                hoverOffset: 10
+                hoverOffset: 0 // إيقاف التكبير عند التمرير
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '60%',
+            animation: {
+                duration: 0 // إيقاف الحركة تماماً
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -1804,6 +1814,10 @@ function renderDoughnutChart(vessels) {
         }]
     });
 }
+
+// ============================================================
+// دوال الجداول
+// ============================================================
 
 function renderEfficiencyTables(vessels) {
     const container = document.getElementById('efficiencyTablesContainer');
