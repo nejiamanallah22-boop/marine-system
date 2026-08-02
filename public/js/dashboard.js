@@ -1,410 +1,125 @@
-// ============================================================
-// 📊 dashboard.js - لوحة التحكم
-// ============================================================
-
-// ============================================================
-// 📊 دوال الجاهزية
-// ============================================================
-
-function renderEfficiency() {
-  const container = document.getElementById('statsCards');
-  if (!container) return;
-  
-  const total = allVessels.length;
-  const good = allVessels.filter(v => v.stat === 'صالح').length;
-  const bad = allVessels.filter(v => v.stat === 'معطب').length;
-  const maintenance = allVessels.filter(v => v.stat === 'صيانة').length;
-  
-  const efficiency = total > 0 ? Math.round((good / total) * 100) : 0;
-  
-  container.innerHTML = `
-    <div class="stat-card" style="background:#28a745;">
-      <h3>${good}</h3>
-      <p>✅ صالح</p>
+<div id="page-dashboard">
+    <!-- ===== عنوان الصفحة ===== -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div>
+            <h2 style="margin:0; color:white; font-size:22px;">📊 لوحة التحكم</h2>
+            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">نظرة عامة على أداء الأسطول البحري</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <span style="background:rgba(255,255,255,0.04); padding:6px 16px; border-radius:20px; font-size:12px; color:rgba(255,255,255,0.5);">
+                🕐 آخر تحديث: <span id="lastUpdate">الآن</span>
+            </span>
+            <button onclick="refreshAllPages()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
+        </div>
     </div>
-    <div class="stat-card" style="background:#dc3545;">
-      <h3>${bad}</h3>
-      <p>❌ معطب</p>
+
+    <!-- ===== البطاقات الرئيسية ===== -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin:20px 0;">
+        <div class="stat-card" style="padding:18px 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:28px; font-weight:800; color:#60a5fa;" id="dashTotal">0</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.4);">🚢 إجمالي المراكب</div>
+                </div>
+                <div style="font-size:30px; opacity:0.3;">🚢</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:18px 20px; border-color:rgba(74,222,128,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:28px; font-weight:800; color:#4ade80;" id="dashReady">0</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.4);">✅ جاهز للخدمة</div>
+                </div>
+                <div style="font-size:30px; opacity:0.3;">✅</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:18px 20px; border-color:rgba(251,191,36,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:28px; font-weight:800; color:#fbbf24;" id="dashMaintenance">0</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.4);">🔧 تحت الصيانة</div>
+                </div>
+                <div style="font-size:30px; opacity:0.3;">🔧</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:18px 20px; border-color:rgba(248,113,113,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:28px; font-weight:800; color:#f87171;" id="dashBroken">0</div>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.4);">❌ معطل</div>
+                </div>
+                <div style="font-size:30px; opacity:0.3;">❌</div>
+            </div>
+        </div>
     </div>
-    <div class="stat-card" style="background:#ffc107;">
-      <h3>${maintenance}</h3>
-      <p>🔧 صيانة</p>
+
+    <!-- ===== صف ثاني: إحصائيات متقدمة ===== -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin:20px 0;">
+        <div class="stat-card" style="padding:15px 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:14px; color:rgba(255,255,255,0.3);">💰 إجمالي تكاليف الصيانة</div>
+                    <div style="font-size:24px; font-weight:700; color:#f5d76e;" id="dashTotalCost">0 د.ت</div>
+                </div>
+                <div style="font-size:24px; opacity:0.3;">💰</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:15px 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:14px; color:rgba(255,255,255,0.3);">📋 إجمالي سجلات الصيانة</div>
+                    <div style="font-size:24px; font-weight:700; color:#60a5fa;" id="dashMaintenanceCount">0</div>
+                </div>
+                <div style="font-size:24px; opacity:0.3;">📋</div>
+            </div>
+        </div>
+        <div class="stat-card" style="padding:15px 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-size:14px; color:rgba(255,255,255,0.3);">📊 نسبة الجاهزية</div>
+                    <div style="font-size:24px; font-weight:700; color:#4ade80;" id="dashReadyPercent">0%</div>
+                </div>
+                <div style="font-size:24px; opacity:0.3;">📊</div>
+            </div>
+        </div>
     </div>
-    <div class="stat-card" style="background:#17a2b8;">
-      <h3>${efficiency}%</h3>
-      <p>📊 الجاهزية</p>
+
+    <!-- ===== رسوم بيانية ===== -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(350px, 1fr)); gap:20px; margin:20px 0;">
+        <div class="stat-card" style="padding:15px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0; font-size:14px;">📊 توزيع الحالات</h4>
+            <canvas id="dashChart" style="height:200px; width:100%;"></canvas>
+        </div>
+        <div class="stat-card" style="padding:15px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0; font-size:14px;">📈 تطور الجاهزية (آخر 6 أشهر)</h4>
+            <canvas id="dashLineChart" style="height:200px; width:100%;"></canvas>
+        </div>
     </div>
-  `;
-}
 
-function refreshEff() {
-  loadVessels();
-  loadNotes();
-  showNotification('✅ تم تحديث بيانات الجاهزية', 'success');
-}
+    <!-- ===== نشاط حديث ===== -->
+    <div class="stat-card" style="padding:15px; margin:20px 0;">
+        <h4 style="color:rgba(255,255,255,0.7); margin:0 0 15px 0; font-size:14px;">🔄 آخر النشاطات</h4>
+        <div id="dashActivity" style="max-height:200px; overflow-y:auto;">
+            <div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">لا توجد نشاطات حديثة</div>
+        </div>
+    </div>
+</div>
 
-// ============================================================
-// 📝 دوال Note Verbale
-// ============================================================
-
-function loadLatestNoteData() {
-  const container = document.getElementById('latestNoteContainer');
-  if (!container) return;
-  
-  const token = getToken();
-  if (!token) return;
-  
-  fetch('/api/notes/latest', {
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(note => {
-    if (note && note._id) {
-      container.style.display = 'block';
-      document.getElementById('latestNoteDate').textContent = note.date || '';
-      document.getElementById('latestNoteTitle').textContent = note.title || '';
-      document.getElementById('latestNoteContent').textContent = note.content || '';
-    } else {
-      container.style.display = 'none';
+<style>
+    #dashActivity::-webkit-scrollbar { width: 4px; }
+    #dashActivity::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
+    #dashActivity::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    .activity-item {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 13px;
+        color: rgba(255,255,255,0.6);
+        animation: slideIn 0.3s ease;
     }
-  })
-  .catch(err => console.error('Load latest note error:', err));
-}
-
-function loadNotesData() {
-  const container = document.getElementById('notesListContainer');
-  if (!container) return;
-  
-  const week = document.getElementById('filterWeek')?.value || '';
-  const limit = parseInt(document.getElementById('filterLimit')?.value) || 10;
-  
-  const token = getToken();
-  if (!token) {
-    container.innerHTML = '<p style="color:#6c757d;">⚠️ يرجى تسجيل الدخول</p>';
-    return;
-  }
-  
-  let url = '/api/notes?limit=' + limit;
-  if (week) url += '&week=' + week;
-  
-  fetch(url, {
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(notes => {
-    if (!Array.isArray(notes) || notes.length === 0) {
-      container.innerHTML = '<p style="color:#6c757d;">🚫 لا توجد مذكرات</p>';
-      return;
-    }
-    
-    container.innerHTML = notes.map(n => `
-      <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
-        <h4 style="color:#0d6efd;">${n.title || 'بدون عنوان'}</h4>
-        <p style="color:#495057;">${n.content || ''}</p>
-        <small style="color:#6c757d;">${n.date || ''} ${n.time || ''} | ${n.createdBy || 'مجهول'}</small>
-        <button class="btn btn-sm btn-danger" onclick="deleteNote('${n._id}')" style="float:left;">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    `).join('');
-  })
-  .catch(err => {
-    console.error('Load notes error:', err);
-    container.innerHTML = '<p style="color:#dc3545;">❌ خطأ في تحميل المذكرات</p>';
-  });
-}
-
-function deleteNote(id) {
-  if (!confirm('⚠️ هل أنت متأكد من حذف هذه المذكرة؟')) return;
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  fetch('/api/notes/' + id, {
-    method: 'DELETE',
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم حذف المذكرة', 'success');
-      loadNotesData();
-      loadLatestNoteData();
-    }
-  })
-  .catch(err => {
-    console.error('Delete note error:', err);
-    showNotification('❌ خطأ في حذف المذكرة', 'error');
-  });
-}
-
-function saveNote() {
-  const title = document.getElementById('noteTitle')?.value.trim();
-  const content = document.getElementById('noteContent')?.value.trim();
-  const date = document.getElementById('noteDate')?.value;
-  
-  if (!title || !content || !date) {
-    showNotification('⚠️ الرجاء إدخال العنوان والمحتوى والتاريخ', 'warning');
-    return;
-  }
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  const data = {
-    title,
-    content,
-    date,
-    time: getCurrentTime(),
-    week: getWeekNumber(date).toString()
-  };
-  
-  fetch('/api/notes', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    },
-    body: JSON.stringify(data)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم حفظ المذكرة', 'success');
-      document.getElementById('noteTitle').value = '';
-      document.getElementById('noteContent').value = '';
-      document.getElementById('noteDate').value = '';
-      loadNotesData();
-      loadLatestNoteData();
-    }
-  })
-  .catch(err => {
-    console.error('Save note error:', err);
-    showNotification('❌ خطأ في حفظ المذكرة', 'error');
-  });
-}
-
-function clearNote() {
-  document.getElementById('noteTitle').value = '';
-  document.getElementById('noteContent').value = '';
-  document.getElementById('noteDate').value = '';
-  document.getElementById('noteResult').style.display = 'none';
-}
-
-function exportNotePDF() {
-  showNotification('📄 جاري تصدير PDF...', 'info');
-}
-
-function exportNoteWord() {
-  showNotification('📄 جاري تصدير Word...', 'info');
-}
-
-function importNoteFile() {
-  showNotification('📂 جاري استيراد الملف...', 'info');
-}
-
-function loadNotesByWeek() {
-  loadNotesData();
-}
-
-// ============================================================
-// 👥 دوال المستخدمين
-// ============================================================
-
-function addUser() {
-  const name = document.getElementById('un')?.value.trim();
-  const password = document.getElementById('up')?.value.trim();
-  const role = document.getElementById('ur')?.value;
-  
-  if (!name || !password) {
-    showNotification('⚠️ الرجاء إدخال الاسم وكلمة المرور', 'warning');
-    return;
-  }
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  const email = name.toLowerCase() + '@marine.gov.tn';
-  
-  fetch('/api/users', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    },
-    body: JSON.stringify({ name, email, password, role })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم إضافة المستخدم', 'success');
-      document.getElementById('un').value = '';
-      document.getElementById('up').value = '';
-      loadUsers();
-    }
-  })
-  .catch(err => {
-    console.error('Add user error:', err);
-    showNotification('❌ خطأ في إضافة المستخدم', 'error');
-  });
-}
-
-function refreshUsers() {
-  loadUsers();
-  showNotification('✅ تم تحديث المستخدمين', 'success');
-}
-
-function changeUserPassword(id, name) {
-  document.getElementById('modalUserName').textContent = 'تغيير كلمة المرور لـ: ' + name;
-  document.getElementById('passwordModal').style.display = 'flex';
-  document.getElementById('newPassword').value = '';
-  document.getElementById('confirmPassword').value = '';
-  document.getElementById('passwordModal').dataset.userId = id;
-}
-
-function saveNewPassword() {
-  const password = document.getElementById('newPassword')?.value.trim();
-  const confirm = document.getElementById('confirmPassword')?.value.trim();
-  const userId = document.getElementById('passwordModal')?.dataset.userId;
-  
-  if (!password || password.length < 6) {
-    showNotification('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'warning');
-    return;
-  }
-  
-  if (password !== confirm) {
-    showNotification('⚠️ كلمة المرور غير متطابقة', 'warning');
-    return;
-  }
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  fetch('/api/users/' + userId, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    },
-    body: JSON.stringify({ password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم تغيير كلمة المرور', 'success');
-      closePasswordModal();
-    }
-  })
-  .catch(err => {
-    console.error('Change password error:', err);
-    showNotification('❌ خطأ في تغيير كلمة المرور', 'error');
-  });
-}
-
-function closePasswordModal() {
-  document.getElementById('passwordModal').style.display = 'none';
-}
-
-function toggleUserStatus(id) {
-  const user = allUsers.find(u => u._id === id);
-  if (!user) return;
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  fetch('/api/users/' + id, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token
-    },
-    body: JSON.stringify({ isActive: !user.isActive })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم تحديث حالة المستخدم', 'success');
-      loadUsers();
-    }
-  })
-  .catch(err => {
-    console.error('Toggle user status error:', err);
-    showNotification('❌ خطأ في تحديث حالة المستخدم', 'error');
-  });
-}
-
-function deleteUser(id) {
-  if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-  
-  const token = getToken();
-  if (!token) {
-    showNotification('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-    return;
-  }
-  
-  fetch('/api/users/' + id, {
-    method: 'DELETE',
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.error) {
-      showNotification('❌ ' + data.error, 'error');
-    } else {
-      showNotification('✅ تم حذف المستخدم', 'success');
-      loadUsers();
-    }
-  })
-  .catch(err => {
-    console.error('Delete user error:', err);
-    showNotification('❌ خطأ في حذف المستخدم', 'error');
-  });
-}
-
-// ============================================================
-// 🔄 تصدير للاستخدام العالمي
-// ============================================================
-
-window.renderEfficiency = renderEfficiency;
-window.refreshEff = refreshEff;
-window.loadLatestNoteData = loadLatestNoteData;
-window.loadNotesData = loadNotesData;
-window.saveNote = saveNote;
-window.clearNote = clearNote;
-window.exportNotePDF = exportNotePDF;
-window.exportNoteWord = exportNoteWord;
-window.importNoteFile = importNoteFile;
-window.loadNotesByWeek = loadNotesByWeek;
-window.deleteNote = deleteNote;
-window.addUser = addUser;
-window.refreshUsers = refreshUsers;
-window.changeUserPassword = changeUserPassword;
-window.saveNewPassword = saveNewPassword;
-window.closePasswordModal = closePasswordModal;
-window.toggleUserStatus = toggleUserStatus;
-window.deleteUser = deleteUser;
+    .activity-item:hover { background: rgba(255,255,255,0.02); }
+    .activity-icon { font-size: 18px; opacity: 0.5; }
+    .activity-time { margin-right: auto; font-size: 11px; color: rgba(255,255,255,0.2); }
+</style>
