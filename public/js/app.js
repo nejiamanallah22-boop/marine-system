@@ -13,7 +13,6 @@ let editingMaintenanceId = null;
 // متغيرات الرسوم البيانية
 let chartCategory = null;
 let chartDoughnut = null;
-let chartLine = null;
 
 // ============================================================
 // منع الدخول التلقائي
@@ -1044,7 +1043,7 @@ function renderGeneralMaintenance() {
     
     if (vessels.length === 0) {
         container.innerHTML = `
-            <div style="text-align:center; padding:30px; background:#d4edda; border-radius:14px; border:2px solid #4ade80;">
+            <div style="text-align:center; padding:30px; background:#d4edda; border-radius:12px; border:2px solid #4ade80;">
                 <h3 style="color:#4ade80; margin:0;">✅ لا توجد مراكب معطبة حالياً</h3>
                 <p style="color:#6c757d;">جميع المراكب في حالة جاهزة</p>
             </div>
@@ -1056,10 +1055,10 @@ function renderGeneralMaintenance() {
         <div class="scrollable-table">
             <table>
                 <thead>
-                    <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); border-bottom:2px solid #f87171;">
+                    <tr style="background:#f8f9fa; border-bottom:2px solid #f87171;">
                         <th>🚢 المركب</th>
                         <th>الفئة</th>
-                        <th>الحالة الحالية</th>
+                        <th>الحالة</th>
                         <th>⚠️ العطل</th>
                         <th>📅 بداية العطل</th>
                         <th>⏱️ مدة التوقف</th>
@@ -1109,12 +1108,8 @@ function renderGeneralMaintenance() {
                 <td>${maintenanceRecord?.repair || maintenanceRecord?.notes || '-'}</td>
                 <td>${v.repairer || v.supp || '-'}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})" title="فتح ملف المركب">
-                        📂 فتح الملف
-                    </button>
-                    <button class="btn btn-sm btn-success" onclick="fixVessel(${v.id})" title="إصلاح المركب">
-                        ✅ إصلاح
-                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
+                    <button class="btn btn-sm btn-success" onclick="fixVessel(${v.id})">✅ إصلاح</button>
                 </td>
             </tr>
         `;
@@ -1205,71 +1200,70 @@ function openMaintenanceFile(vesselId) {
     `;
     
     modal.innerHTML = `
-        <div style="background:white; border-radius:16px; padding:30px; max-width:900px; width:100%; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <button onclick="this.closest('div[style]').remove()" style="position:absolute; top:15px; right:20px; font-size:24px; border:none; background:none; cursor:pointer; color:#6c757d;">✕</button>
+        <div style="background:white; border-radius:14px; padding:25px; max-width:850px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
+            <button onclick="this.closest('div[style]').remove()" style="position:absolute; top:12px; right:18px; font-size:22px; border:none; background:none; cursor:pointer; color:#6c757d;">✕</button>
             
-            <h2 style="color:#1a1a2e; margin-top:0;">🚢 ${vessel.name}</h2>
+            <h2 style="color:#1a1a2e; margin-top:0; font-size:22px;">🚢 ${vessel.name}</h2>
             
-            <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:20px;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px;">
                 <span class="status-badge ${vessel.stat === 'صالح' ? 'status-ready' : 'status-broken'}">
                     ${vessel.stat === 'صالح' ? '🟢 جاهز' : '🔴 معطب'}
                 </span>
-                <span style="background:#f0f0f0; padding:4px 14px; border-radius:20px; font-size:13px;">${vessel.cat || 'بدون فئة'}</span>
-                <span style="background:#f0f0f0; padding:4px 14px; border-radius:20px; font-size:13px;">${vessel.num || 'بدون رقم'}</span>
+                <span style="background:#f0f0f0; padding:3px 12px; border-radius:16px; font-size:12px;">${vessel.cat || 'بدون فئة'}</span>
+                <span style="background:#f0f0f0; padding:3px 12px; border-radius:16px; font-size:12px;">${vessel.num || 'بدون رقم'}</span>
             </div>
             
-            <hr style="margin:15px 0; border-color:#f0f0f0;">
+            <hr style="margin:12px 0; border-color:#f0f0f0;">
             
-            <h4 style="color:#1a1a2e;">📚 تاريخ الصيانة</h4>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin:10px 0;">
-                <div style="background:linear-gradient(135deg, #e7f3ff, #d4e4ff); padding:15px; border-radius:12px; text-align:center;">
-                    <div style="font-size:28px; font-weight:bold; color:#667eea;">${totalMaintenance}</div>
-                    <div style="font-size:12px; color:#6c757d;">عدد الصيانات</div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin:10px 0;">
+                <div style="background:#e7f3ff; padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#667eea;">${totalMaintenance}</div>
+                    <div style="font-size:11px; color:#6c757d;">عدد الصيانات</div>
                 </div>
-                <div style="background:linear-gradient(135deg, #d4edda, #b7eb8f); padding:15px; border-radius:12px; text-align:center;">
-                    <div style="font-size:28px; font-weight:bold; color:#4ade80;">${totalCost.toLocaleString()} د.ت</div>
-                    <div style="font-size:12px; color:#6c757d;">إجمالي التكلفة</div>
+                <div style="background:#d4edda; padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:24px; font-weight:bold; color:#4ade80;">${totalCost.toLocaleString()} د.ت</div>
+                    <div style="font-size:11px; color:#6c757d;">إجمالي التكلفة</div>
                 </div>
-                <div style="background:linear-gradient(135deg, #fff3cd, #ffecb5); padding:15px; border-radius:12px; text-align:center;">
-                    <div style="font-size:18px; font-weight:bold; color:#fbbf24;">${lastMaintenance ? new Date(lastMaintenance.date).toLocaleDateString('ar-TN') : '-'}</div>
-                    <div style="font-size:12px; color:#6c757d;">آخر صيانة</div>
+                <div style="background:#fff3cd; padding:12px; border-radius:10px; text-align:center;">
+                    <div style="font-size:16px; font-weight:bold; color:#fbbf24;">${lastMaintenance ? new Date(lastMaintenance.date).toLocaleDateString('ar-TN') : '-'}</div>
+                    <div style="font-size:11px; color:#6c757d;">آخر صيانة</div>
                 </div>
             </div>
             
             ${topFaults.length > 0 ? `
-                <div style="background:#f8f9fa; padding:12px; border-radius:10px; margin:10px 0;">
-                    <h5 style="margin:0; color:#f87171;">⚠️ الأعطال المتكررة</h5>
-                    <ul style="margin:5px 0; padding-right:20px;">
+                <div style="background:#f8f9fa; padding:10px; border-radius:8px; margin:8px 0;">
+                    <h5 style="margin:0; color:#f87171; font-size:13px;">⚠️ الأعطال المتكررة</h5>
+                    <ul style="margin:3px 0; padding-right:18px; font-size:12px;">
                         ${topFaults.map(f => `<li>${f} (${faultCount[f]} مرات)</li>`).join('')}
                     </ul>
                 </div>
             ` : ''}
             
-            <hr style="margin:15px 0; border-color:#f0f0f0;">
+            <hr style="margin:12px 0; border-color:#f0f0f0;">
             
             ${records.length > 0 ? `
-                <div style="max-height:300px; overflow-y:auto;">
-                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <div style="max-height:250px; overflow-y:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:12px;">
                         <thead style="background:#f8f9fa;">
                             <tr>
-                                <th style="padding:10px; text-align:center;">التاريخ</th>
-                                <th style="padding:10px; text-align:center;">نوع الصيانة</th>
-                                <th style="padding:10px; text-align:center;">العطل</th>
-                                <th style="padding:10px; text-align:center;">الإصلاح</th>
-                                <th style="padding:10px; text-align:center;">التكلفة</th>
-                                <th style="padding:10px; text-align:center;">الحالة</th>
+                                <th style="padding:6px;">التاريخ</th>
+                                <th style="padding:6px;">النوع</th>
+                                <th style="padding:6px;">العطل</th>
+                                <th style="padding:6px;">الإصلاح</th>
+                                <th style="padding:6px;">التكلفة</th>
+                                <th style="padding:6px;">الحالة</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${records.slice().reverse().map(r => `
                                 <tr style="border-bottom:1px solid #f0f0f0;">
-                                    <td style="padding:8px; text-align:center;">${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
-                                    <td style="padding:8px; text-align:center;">${r.type || '-'}</td>
-                                    <td style="padding:8px; text-align:center;">${r.description || '-'}</td>
-                                    <td style="padding:8px; text-align:center;">${r.repair || '-'}</td>
-                                    <td style="padding:8px; text-align:center; color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                                    <td style="padding:8px; text-align:center;">
-                                        <span class="status-badge ${r.status === 'مغلقة' || r.status === 'مكتملة' ? 'status-closed' : 'status-maintenance'}">
+                                    <td style="padding:5px; text-align:center;">${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
+                                    <td style="padding:5px; text-align:center;">${r.type || '-'}</td>
+                                    <td style="padding:5px; text-align:center;">${r.description || '-'}</td>
+                                    <td style="padding:5px; text-align:center;">${r.repair || '-'}</td>
+                                    <td style="padding:5px; text-align:center; color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
+                                    <td style="padding:5px; text-align:center;">
+                                        <span class="status-badge ${r.status === 'مغلقة' || r.status === 'مكتملة' ? 'status-closed' : 'status-maintenance'}" style="font-size:10px;">
                                             ${r.status === 'مغلقة' || r.status === 'مكتملة' ? '✅ مغلقة' : '🔄 قيد الإنجاز'}
                                         </span>
                                     </td>
@@ -1279,16 +1273,16 @@ function openMaintenanceFile(vesselId) {
                     </table>
                 </div>
             ` : `
-                <div style="text-align:center; padding:20px; color:#6c757d;">
-                    🚫 لا توجد سجلات صيانة لهذا المركب
+                <div style="text-align:center; padding:15px; color:#6c757d; font-size:13px;">
+                    🚫 لا توجد سجلات صيانة
                 </div>
             `}
             
-            <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-                <button onclick="exportVesselReport(${vesselId})" style="padding:10px 30px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">
-                    📥 تصدير التقرير
+            <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+                <button onclick="exportVesselReport(${vesselId})" style="padding:8px 25px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">
+                    📥 تصدير
                 </button>
-                <button onclick="this.closest('div[style]').remove()" style="padding:10px 30px; background:#6c757d; color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600;">
+                <button onclick="this.closest('div[style]').remove()" style="padding:8px 25px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">
                     ❌ إغلاق
                 </button>
             </div>
@@ -1384,7 +1378,7 @@ function renderHistoryMaintenance() {
     
     if (records.length === 0) {
         container.innerHTML = `
-            <div style="text-align:center; padding:30px; color:#6c757d; background:#f8f9fa; border-radius:12px;">
+            <div style="text-align:center; padding:25px; color:#6c757d; background:#f8f9fa; border-radius:10px;">
                 🚫 لا توجد سجلات صيانة مطابقة للفلترة
             </div>
         `;
@@ -1395,15 +1389,15 @@ function renderHistoryMaintenance() {
         <div class="scrollable-table">
             <table>
                 <thead>
-                    <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); border-bottom:2px solid #667eea;">
+                    <tr style="background:#f8f9fa; border-bottom:2px solid #667eea;">
                         <th>📅 التاريخ</th>
                         <th>🚢 المركب</th>
-                        <th>🔧 نوع الصيانة</th>
+                        <th>🔧 النوع</th>
                         <th>⚠️ العطل</th>
                         <th>🔩 الإصلاح</th>
                         <th>قطع الغيار</th>
                         <th>💰 التكلفة</th>
-                        <th>⏱️ مدة التوقف</th>
+                        <th>⏱️ المدة</th>
                         <th>📊 الحالة</th>
                     </tr>
                 </thead>
@@ -1419,22 +1413,22 @@ function renderHistoryMaintenance() {
             const start = new Date(r.startDate);
             const end = new Date(r.endDate);
             const days = Math.floor((end - start) / (1000 * 60 * 60 * 24));
-            if (days > 0) downtime = `${days} يوم${days > 1 ? 'اً' : ''}`;
+            if (days > 0) downtime = `${days} يوم`;
             else if (days === 0) downtime = 'أقل من يوم';
         }
         
         html += `
             <tr style="border-bottom:1px solid #f0f0f0;">
-                <td style="padding:8px;">${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
-                <td style="padding:8px;"><strong>${vesselName}</strong></td>
-                <td style="padding:8px;">${r.type || '-'}</td>
-                <td style="padding:8px;">${r.description || '-'}</td>
-                <td style="padding:8px;">${r.repair || '-'}</td>
-                <td style="padding:8px; font-size:11px;">${partsText}</td>
-                <td style="padding:8px; font-weight:bold; color:#4ade80;">${r.cost ? r.cost.toLocaleString() + ' د.ت' : '-'}</td>
-                <td style="padding:8px;">${downtime}</td>
-                <td style="padding:8px;">
-                    <span class="status-badge status-closed">✅ ${r.status === 'مغلقة' ? 'مغلقة' : r.status === 'مكتملة' ? 'مكتملة' : 'ملغية'}</span>
+                <td style="padding:6px;">${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
+                <td style="padding:6px;"><strong>${vesselName}</strong></td>
+                <td style="padding:6px;">${r.type || '-'}</td>
+                <td style="padding:6px;">${r.description || '-'}</td>
+                <td style="padding:6px;">${r.repair || '-'}</td>
+                <td style="padding:6px; font-size:10px;">${partsText}</td>
+                <td style="padding:6px; font-weight:bold; color:#4ade80;">${r.cost ? r.cost.toLocaleString() + ' د.ت' : '-'}</td>
+                <td style="padding:6px;">${downtime}</td>
+                <td style="padding:6px;">
+                    <span class="status-badge status-closed" style="font-size:10px;">✅ ${r.status === 'مغلقة' ? 'مغلقة' : r.status === 'مكتملة' ? 'مكتملة' : 'ملغية'}</span>
                 </td>
             </tr>
         `;
@@ -1496,14 +1490,11 @@ function updateMaintenanceStats() {
 
 function renderMaintenanceUnits() {
     const container = document.getElementById('maintenanceUnitsContainer');
-    if (!container) {
-        console.warn('⚠️ maintenanceUnitsContainer غير موجود');
-        return;
-    }
+    if (!container) return;
     
     if (!allMaintenance || allMaintenance.length === 0) {
         container.innerHTML = `
-            <div style="text-align:center; padding:30px; color:#6c757d; background:#f8f9fa; border-radius:12px;">
+            <div style="text-align:center; padding:25px; color:#6c757d; background:#f8f9fa; border-radius:10px;">
                 🚫 لا توجد سجلات صيانة لعرضها
             </div>
         `;
@@ -1526,7 +1517,7 @@ function renderMaintenanceUnits() {
         
         html += `
             <div class="region-table-card" style="border-right:4px solid ${total > 0 ? '#667eea' : '#6c757d'};">
-                <div class="region-table-header" style="background:${total > 0 ? 'linear-gradient(135deg, #e7f3ff, #d4e4ff)' : '#f8f9fa'};">
+                <div class="region-table-header" style="background:${total > 0 ? '#e7f3ff' : '#f8f9fa'};">
                     🏭 ${unit}
                     <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
                         📊 ${total} سجل
@@ -1540,8 +1531,8 @@ function renderMaintenanceUnits() {
                     ` : ''}
                 </div>
                 ${total === 0 ? `
-                    <div style="text-align:center; padding:15px; color:#6c757d;">
-                        🚫 لا توجد سجلات في هذه الوحدة
+                    <div style="text-align:center; padding:12px; color:#6c757d; font-size:13px;">
+                        🚫 لا توجد سجلات
                     </div>
                 ` : `
                     <div class="scrollable-table">
@@ -1574,7 +1565,7 @@ function renderMaintenanceUnits() {
                                             <td>${index + 1}</td>
                                             <td><strong>${vesselName}</strong></td>
                                             <td>${r.technician || '-'}</td>
-                                            <td style="font-size:11px;">${partsText}</td>
+                                            <td style="font-size:10px;">${partsText}</td>
                                             <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
                                             <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || 'غير محدد'}</span></td>
                                             <td>${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
@@ -1593,11 +1584,11 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - Dashboard احترافي
+// 📊 صفحة الجاهزية - رسوم بيانية مصغرة
 // ============================================================
 
 function renderEfficiency() {
-    console.log('📊 Rendering efficiency dashboard...');
+    console.log('📊 Rendering efficiency...');
     const vessels = allVessels || [];
     
     const countEl = document.getElementById('effCount');
@@ -1607,8 +1598,8 @@ function renderEfficiency() {
     updateEfficiencyStats(vessels);
     
     setTimeout(function() {
-        renderProfessionalCharts(vessels);
-    }, 300);
+        renderCharts(vessels);
+    }, 200);
 }
 
 function updateEfficiencyStats(vessels) {
@@ -1621,63 +1612,34 @@ function updateEfficiencyStats(vessels) {
     const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
     const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
     
-    const stats = [
-        { 
-            label: 'إجمالي المراكب', 
-            value: total, 
-            icon: '🚢', 
-            color: '#667eea',
-            bg: 'linear-gradient(135deg, rgba(102,126,234,0.1), rgba(102,126,234,0.05))'
-        },
-        { 
-            label: 'جاهز للخدمة', 
-            value: ready, 
-            icon: '✅', 
-            color: '#4ade80',
-            bg: 'linear-gradient(135deg, rgba(74,222,128,0.1), rgba(74,222,128,0.05))',
-            sub: readyPercent + '%'
-        },
-        { 
-            label: 'تحت الصيانة', 
-            value: maintenance, 
-            icon: '🔧', 
-            color: '#fbbf24',
-            bg: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.05))'
-        },
-        { 
-            label: 'معطل', 
-            value: broken, 
-            icon: '❌', 
-            color: '#f87171',
-            bg: 'linear-gradient(135deg, rgba(248,113,113,0.1), rgba(248,113,113,0.05))'
-        }
-    ];
-    
     container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin:20px 0;">
-            ${stats.map(s => `
-                <div class="stat-card" style="background:${s.bg}; padding:18px 20px; border-radius:14px; border:1px solid rgba(0,0,0,0.04); box-shadow:0 2px 10px rgba(0,0,0,0.04); transition:all 0.3s;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <div style="font-size:28px; font-weight:800; color:${s.color}; line-height:1.2;">${s.value}</div>
-                            <div style="font-size:12px; color:#6c757d; margin-top:3px;">${s.label}</div>
-                        </div>
-                        <div style="font-size:24px; opacity:0.7;">${s.icon}</div>
-                    </div>
-                    ${s.sub ? `<div style="font-size:11px; color:${s.color}; margin-top:5px; font-weight:600;">${s.sub}</div>` : ''}
-                </div>
-            `).join('')}
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; margin:12px 0;">
+            <div class="stat-card" style="background:#e7f3ff; padding:12px; border-radius:10px; text-align:center; border:1px solid #b6d4fe;">
+                <div style="font-size:22px; font-weight:bold; color:#667eea;">${total}</div>
+                <div style="color:#6c757d; font-size:11px;">🚢 المجموع</div>
+            </div>
+            <div class="stat-card" style="background:#d4edda; padding:12px; border-radius:10px; text-align:center; border:1px solid #b7eb8f;">
+                <div style="font-size:22px; font-weight:bold; color:#4ade80;">${ready}</div>
+                <div style="color:#6c757d; font-size:11px;">✅ صالح (${readyPercent}%)</div>
+            </div>
+            <div class="stat-card" style="background:#fff3cd; padding:12px; border-radius:10px; text-align:center; border:1px solid #ffecb5;">
+                <div style="font-size:22px; font-weight:bold; color:#fbbf24;">${maintenance}</div>
+                <div style="color:#6c757d; font-size:11px;">🔧 صيانة</div>
+            </div>
+            <div class="stat-card" style="background:#f8d7da; padding:12px; border-radius:10px; text-align:center; border:1px solid #f5c2c7;">
+                <div style="font-size:22px; font-weight:bold; color:#f87171;">${broken}</div>
+                <div style="color:#6c757d; font-size:11px;">❌ معطب</div>
+            </div>
         </div>
     `;
 }
 
-function renderProfessionalCharts(vessels) {
-    renderCategoryChartProfessional(vessels);
-    renderDoughnutChartProfessional(vessels);
-    renderLineChartProfessional(vessels);
+function renderCharts(vessels) {
+    renderCategoryChart(vessels);
+    renderDoughnutChart(vessels);
 }
 
-function renderCategoryChartProfessional(vessels) {
+function renderCategoryChart(vessels) {
     const canvas = document.getElementById('chartCategory');
     if (!canvas) return;
     
@@ -1709,29 +1671,29 @@ function renderCategoryChartProfessional(vessels) {
                 {
                     label: 'صالح',
                     data: readyData,
-                    backgroundColor: 'rgba(74, 222, 128, 0.85)',
+                    backgroundColor: 'rgba(74, 222, 128, 0.8)',
                     borderColor: '#4ade80',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    barThickness: 35
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 22
                 },
                 {
                     label: 'معطب',
                     data: brokenData,
-                    backgroundColor: 'rgba(248, 113, 113, 0.85)',
+                    backgroundColor: 'rgba(248, 113, 113, 0.8)',
                     borderColor: '#f87171',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    barThickness: 35
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 22
                 },
                 {
                     label: 'صيانة',
                     data: maintenanceData,
-                    backgroundColor: 'rgba(251, 191, 36, 0.85)',
+                    backgroundColor: 'rgba(251, 191, 36, 0.8)',
                     borderColor: '#fbbf24',
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    barThickness: 35
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    barThickness: 22
                 }
             ]
         },
@@ -1742,45 +1704,34 @@ function renderCategoryChartProfessional(vessels) {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Cairo', size: 12, weight: '600' },
-                        boxWidth: 14,
-                        padding: 20,
+                        font: { family: 'Cairo', size: 9 },
+                        boxWidth: 10,
+                        padding: 6,
                         usePointStyle: true,
-                        pointStyleWidth: 10
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(26,26,46,0.9)',
-                    titleFont: { family: 'Cairo', size: 13 },
-                    bodyFont: { family: 'Cairo', size: 12 },
-                    padding: 12,
-                    cornerRadius: 10,
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
-                        }
+                        pointStyleWidth: 8
                     }
                 }
             },
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 11, weight: '600' } }
+                    ticks: { font: { family: 'Cairo', size: 9 } }
                 },
                 y: {
                     beginAtZero: true,
                     ticks: { 
                         stepSize: 1, 
-                        font: { family: 'Cairo', size: 11 }
+                        font: { family: 'Cairo', size: 8 },
+                        maxTicksLimit: 5
                     },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    grid: { color: 'rgba(0,0,0,0.04)' }
                 }
             }
         }
     });
 }
 
-function renderDoughnutChartProfessional(vessels) {
+function renderDoughnutChart(vessels) {
     const canvas = document.getElementById('chartDoughnut');
     if (!canvas) return;
     
@@ -1800,35 +1751,30 @@ function renderDoughnutChartProfessional(vessels) {
             datasets: [{
                 data: [ready, broken, maintenance],
                 backgroundColor: [
-                    'rgba(74, 222, 128, 0.9)',
-                    'rgba(248, 113, 113, 0.9)',
-                    'rgba(251, 191, 36, 0.9)'
+                    'rgba(74, 222, 128, 0.85)',
+                    'rgba(248, 113, 113, 0.85)',
+                    'rgba(251, 191, 36, 0.85)'
                 ],
                 borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                borderWidth: 3,
-                hoverOffset: 15
+                borderWidth: 2,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%',
+            cutout: '60%',
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        font: { family: 'Cairo', size: 13, weight: '600' },
-                        padding: 20,
+                        font: { family: 'Cairo', size: 10 },
+                        padding: 8,
                         usePointStyle: true,
-                        pointStyleWidth: 14
+                        pointStyleWidth: 10
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(26,26,46,0.9)',
-                    titleFont: { family: 'Cairo', size: 13 },
-                    bodyFont: { family: 'Cairo', size: 12 },
-                    padding: 12,
-                    cornerRadius: 10,
                     callbacks: {
                         label: function(context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -1847,144 +1793,15 @@ function renderDoughnutChartProfessional(vessels) {
                 const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                
-                ctx.shadowColor = 'rgba(0,0,0,0.1)';
-                ctx.shadowBlur = 20;
-                ctx.font = 'bold 32px Cairo, sans-serif';
+                ctx.font = 'bold 18px Cairo, sans-serif';
                 ctx.fillStyle = '#1a1a2e';
-                ctx.fillText(total, width / 2, height / 2 - 8);
-                
-                ctx.shadowBlur = 0;
-                ctx.font = '14px Cairo, sans-serif';
+                ctx.fillText(total, width / 2, height / 2 - 4);
+                ctx.font = '10px Cairo, sans-serif';
                 ctx.fillStyle = '#6c757d';
-                ctx.fillText('مركب', width / 2, height / 2 + 28);
+                ctx.fillText('مركب', width / 2, height / 2 + 18);
                 ctx.restore();
             }
         }]
-    });
-}
-
-function renderLineChartProfessional(vessels) {
-    const canvas = document.getElementById('chartLine');
-    if (!canvas) return;
-    
-    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-    const currentMonth = new Date().getMonth();
-    const labels = [];
-    for (let i = 5; i >= 0; i--) {
-        const index = (currentMonth - i + 12) % 12;
-        labels.push(months[index % 6]);
-    }
-    
-    // بيانات محاكاة
-    const readyData = [12, 14, 13, 16, 18, 20];
-    const brokenData = [5, 4, 6, 3, 4, 2];
-    const maintenanceData = [3, 2, 1, 1, 2, 3];
-    
-    if (chartLine) {
-        chartLine.destroy();
-    }
-    
-    const gradient = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(74, 222, 128, 0.3)');
-    gradient.addColorStop(1, 'rgba(74, 222, 128, 0.02)');
-    
-    const gradient2 = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
-    gradient2.addColorStop(0, 'rgba(248, 113, 113, 0.3)');
-    gradient2.addColorStop(1, 'rgba(248, 113, 113, 0.02)');
-    
-    const gradient3 = canvas.getContext('2d').createLinearGradient(0, 0, 0, 300);
-    gradient3.addColorStop(0, 'rgba(251, 191, 36, 0.3)');
-    gradient3.addColorStop(1, 'rgba(251, 191, 36, 0.02)');
-    
-    chartLine = new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'صالح',
-                    data: readyData,
-                    borderColor: '#4ade80',
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#4ade80',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
-                    borderWidth: 3
-                },
-                {
-                    label: 'معطب',
-                    data: brokenData,
-                    borderColor: '#f87171',
-                    backgroundColor: gradient2,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#f87171',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
-                    borderWidth: 3
-                },
-                {
-                    label: 'صيانة',
-                    data: maintenanceData,
-                    borderColor: '#fbbf24',
-                    backgroundColor: gradient3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#fbbf24',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 8,
-                    borderWidth: 3
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(26,26,46,0.9)',
-                    titleFont: { family: 'Cairo', size: 13 },
-                    bodyFont: { family: 'Cairo', size: 12 },
-                    padding: 12,
-                    cornerRadius: 10,
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Cairo', size: 11, weight: '600' } }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { 
-                        stepSize: 2, 
-                        font: { family: 'Cairo', size: 11 }
-                    },
-                    grid: { color: 'rgba(0,0,0,0.05)' }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            }
-        }
     });
 }
 
@@ -2019,8 +1836,8 @@ function renderGeneralEfficiency(vessels) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:14px; padding:20px; margin:20px 0; box-shadow:0 4px 25px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.04);">
-            <h4 style="color:#1a1a2e; margin:0 0 15px 0; font-size:16px;">📋 النجاعة العامة حسب الفئات</h4>
+        <div style="background:white; border-radius:12px; padding:15px; margin:15px 0; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+            <h4 style="color:#1a1a2e; margin:0 0 10px 0; font-size:14px;">📋 النجاعة العامة حسب الفئات</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
@@ -2055,11 +1872,11 @@ function renderGeneralEfficiency(vessels) {
                 <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
                 <td>${data.total}</td>
                 <td>
-                    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                        <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                        <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                         </div>
-                        <span style="font-weight:700; font-size:13px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                        <span style="font-weight:600; font-size:12px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
                     </div>
                 </td>
             </tr>
@@ -2068,18 +1885,18 @@ function renderGeneralEfficiency(vessels) {
     
     const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
     html += `
-        <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); font-weight:700; border-top:2px solid #dee2e6;">
+        <tr style="background:#f8f9fa; font-weight:700; border-top:2px solid #dee2e6;">
             <td>📊 المجموع الكلي</td>
             <td style="color:#4ade80;">${totalReady}</td>
             <td style="color:#f87171;">${totalBroken}</td>
             <td style="color:#fbbf24;">${totalMaintenance}</td>
             <td>${totalAll}</td>
             <td>
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                    <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                     </div>
-                    <span style="font-size:13px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                    <span style="font-size:12px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
@@ -2093,8 +1910,8 @@ function renderRegionEfficiency(vessels, regionName) {
     const categories = getCategoriesData(vessels);
     
     let html = `
-        <div style="background:white; border-radius:14px; padding:20px; margin:20px 0; box-shadow:0 4px 25px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.04);">
-            <h4 style="color:#1a1a2e; margin:0 0 15px 0; font-size:16px;">📋 إقليم الحرس البحري بال${regionName}</h4>
+        <div style="background:white; border-radius:12px; padding:15px; margin:15px 0; box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+            <h4 style="color:#1a1a2e; margin:0 0 10px 0; font-size:14px;">📋 إقليم الحرس البحري بال${regionName}</h4>
             <div class="scrollable-table">
                 <table>
                     <thead>
@@ -2129,11 +1946,11 @@ function renderRegionEfficiency(vessels, regionName) {
                 <td style="color:#fbbf24; font-weight:600;">${data.maintenance}</td>
                 <td>${data.total}</td>
                 <td>
-                    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                        <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                    <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                        <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                            <div style="width:${readyPercent}%; height:100%; background:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                         </div>
-                        <span style="font-weight:700; font-size:13px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
+                        <span style="font-weight:600; font-size:12px; color:${readyPercent >= 70 ? '#4ade80' : readyPercent >= 40 ? '#fbbf24' : '#f87171'};">${readyPercent}%</span>
                     </div>
                 </td>
             </tr>
@@ -2142,18 +1959,18 @@ function renderRegionEfficiency(vessels, regionName) {
     
     const totalPercent = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
     html += `
-        <tr style="background:linear-gradient(135deg, #f8f9fa, #e9ecef); font-weight:700; border-top:2px solid #dee2e6;">
+        <tr style="background:#f8f9fa; font-weight:700; border-top:2px solid #dee2e6;">
             <td>📊 المجموع الكلي</td>
             <td style="color:#4ade80;">${totalReady}</td>
             <td style="color:#f87171;">${totalBroken}</td>
             <td style="color:#fbbf24;">${totalMaintenance}</td>
             <td>${totalAll}</td>
             <td>
-                <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
-                    <div style="width:80px; height:6px; background:#e9ecef; border-radius:4px; overflow:hidden;">
-                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'}; border-radius:4px;"></div>
+                <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                    <div style="width:60px; height:5px; background:#e9ecef; border-radius:3px; overflow:hidden;">
+                        <div style="width:${totalPercent}%; height:100%; background:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};"></div>
                     </div>
-                    <span style="font-size:13px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
+                    <span style="font-size:12px; color:${totalPercent >= 70 ? '#4ade80' : totalPercent >= 40 ? '#fbbf24' : '#f87171'};">${totalPercent}%</span>
                 </div>
             </td>
         </tr>
