@@ -1,11 +1,11 @@
 <div id="page-efficiency">
     <!-- Header -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid #f0f0f0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; flex-wrap:wrap; gap:5px; border-bottom:1px solid #f0f0f0;">
         <div>
-            <h2 style="margin:0; color:#1a1a2e; font-size:20px;">📊 الجاهزية</h2>
-            <p style="margin:0; color:#6c757d; font-size:12px;">تحليل الأسطول البحري</p>
+            <h2 style="margin:0; color:#1a1a2e; font-size:18px;">📊 الجاهزية</h2>
+            <p style="margin:0; color:#6c757d; font-size:11px;">تحليل الأسطول البحري</p>
         </div>
-        <span style="background:linear-gradient(135deg, #667eea, #764ba2); color:white; padding:5px 16px; border-radius:20px; font-weight:bold; font-size:13px;">
+        <span style="background:linear-gradient(135deg, #667eea, #764ba2); color:white; padding:4px 14px; border-radius:20px; font-weight:bold; font-size:12px;">
             📊 <span id="effCount">0</span>
         </span>
     </div>
@@ -13,22 +13,22 @@
     <!-- إحصائيات سريعة -->
     <div id="efficiencyStats"></div>
     
-    <!-- رسوم بيانية مصغرة -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:15px; margin:15px 0;">
-        <div style="background:white; border-radius:12px; padding:12px; box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:12px; font-weight:600; color:#1a1a2e;">📊 الفئات</span>
-                <span style="font-size:10px; color:#6c757d;">حسب الحالة</span>
+    <!-- رسوم بيانية مصغرة جداً -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
+        <div style="background:white; border-radius:8px; padding:8px; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:10px; font-weight:600; color:#1a1a2e;">📊 الفئات</span>
+                <span style="font-size:8px; color:#6c757d;">حسب الحالة</span>
             </div>
-            <canvas id="chartCategory" style="height:160px; width:100%;"></canvas>
+            <canvas id="chartCategory" style="height:120px; width:100%;"></canvas>
         </div>
         
-        <div style="background:white; border-radius:12px; padding:12px; box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:12px; font-weight:600; color:#1a1a2e;">🎯 التوزيع</span>
-                <span style="font-size:10px; color:#6c757d;">نسبة مئوية</span>
+        <div style="background:white; border-radius:8px; padding:8px; box-shadow:0 1px 6px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-size:10px; font-weight:600; color:#1a1a2e;">🎯 التوزيع</span>
+                <span style="font-size:8px; color:#6c757d;">نسبة</span>
             </div>
-            <canvas id="chartDoughnut" style="height:160px; width:100%;"></canvas>
+            <canvas id="chartDoughnut" style="height:120px; width:100%;"></canvas>
         </div>
     </div>
     
@@ -36,10 +36,10 @@
     <div id="efficiencyTablesContainer"></div>
     
     <!-- أزرار -->
-    <div style="display:flex; gap:8px; margin:12px 0; flex-wrap:wrap;">
-        <button onclick="exportEfficiencyData()" style="padding:6px 16px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">📥 CSV</button>
-        <button onclick="window.print()" style="padding:6px 16px; background:linear-gradient(135deg, #11998e, #38ef7d); color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🖨️ طباعة</button>
-        <button onclick="refreshAllPages()" style="padding:6px 16px; background:#6c757d; color:white; border:none; border-radius:8px; cursor:pointer; font-size:12px;">🔄 تحديث</button>
+    <div style="display:flex; gap:6px; margin:8px 0; flex-wrap:wrap;">
+        <button onclick="exportEfficiencyData()" style="padding:4px 12px; background:linear-gradient(135deg, #667eea, #764ba2); color:white; border:none; border-radius:6px; cursor:pointer; font-size:11px;">📥 CSV</button>
+        <button onclick="window.print()" style="padding:4px 12px; background:linear-gradient(135deg, #11998e, #38ef7d); color:white; border:none; border-radius:6px; cursor:pointer; font-size:11px;">🖨️ طباعة</button>
+        <button onclick="refreshAllPages()" style="padding:4px 12px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer; font-size:11px;">🔄 تحديث</button>
     </div>
 </div>
 
@@ -48,17 +48,17 @@
         width: 100%;
         border-collapse: collapse;
         font-family: 'Cairo', sans-serif;
-        font-size: 12px;
+        font-size: 11px;
     }
     #efficiencyTablesContainer table th {
         background: #f8f9fa;
-        padding: 8px;
+        padding: 5px 6px;
         border-bottom: 2px solid #dee2e6;
         font-weight: 700;
         text-align: center;
     }
     #efficiencyTablesContainer table td {
-        padding: 6px 8px;
+        padding: 4px 6px;
         border-bottom: 1px solid #f0f0f0;
         text-align: center;
     }
@@ -74,9 +74,16 @@
     }
     .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
     }
     @media print {
         .no-print { display: none !important; }
+    }
+    @media (max-width: 600px) {
+        #efficiencyStats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
     }
 </style>
