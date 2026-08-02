@@ -12,6 +12,7 @@
         </div>
     </div>
 
+    <!-- ===== البطاقات الرئيسية ===== -->
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin:20px 0;">
         <div class="stat-card" style="padding:18px 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -51,6 +52,7 @@
         </div>
     </div>
 
+    <!-- ===== إحصائيات متقدمة ===== -->
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin:20px 0;">
         <div class="stat-card" style="padding:15px 18px;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -81,17 +83,26 @@
         </div>
     </div>
 
+    <!-- ===== الرسوم البيانية - بحجم ثابت ===== -->
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(350px, 1fr)); gap:20px; margin:20px 0;">
+        <!-- رسم بياني 1: Doughnut -->
         <div class="stat-card" style="padding:15px;">
             <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0; font-size:14px;">📊 توزيع الحالات</h4>
-            <canvas id="dashChart" style="height:200px; width:100%;"></canvas>
+            <div style="height:200px; width:100%; position:relative;">
+                <canvas id="dashChart" style="height:200px !important; width:100% !important; max-height:200px !important;"></canvas>
+            </div>
         </div>
+        
+        <!-- رسم بياني 2: Line -->
         <div class="stat-card" style="padding:15px;">
             <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0; font-size:14px;">📈 تطور الجاهزية (آخر 6 أشهر)</h4>
-            <canvas id="dashLineChart" style="height:200px; width:100%;"></canvas>
+            <div style="height:200px; width:100%; position:relative;">
+                <canvas id="dashLineChart" style="height:200px !important; width:100% !important; max-height:200px !important;"></canvas>
+            </div>
         </div>
     </div>
 
+    <!-- ===== النشاطات ===== -->
     <div class="stat-card" style="padding:15px; margin:20px 0;">
         <h4 style="color:rgba(255,255,255,0.7); margin:0 0 15px 0; font-size:14px;">🔄 آخر النشاطات</h4>
         <div id="dashActivity" style="max-height:200px; overflow-y:auto;">
@@ -101,9 +112,18 @@
 </div>
 
 <style>
+    /* منع تمدد الرسوم البيانية */
+    #dashChart, #dashLineChart {
+        height: 200px !important;
+        max-height: 200px !important;
+        min-height: 200px !important;
+        width: 100% !important;
+    }
+    
     #dashActivity::-webkit-scrollbar { width: 4px; }
     #dashActivity::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
     #dashActivity::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    
     .activity-item {
         padding: 10px 12px;
         border-bottom: 1px solid rgba(255,255,255,0.03);
