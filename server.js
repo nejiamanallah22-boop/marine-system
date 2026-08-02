@@ -24,11 +24,10 @@ let vessels = [
 let logs = [];
 let tickets = [];
 let nextId = 6;
-let nextTicketId = 1;
 
 // ==================== API Routes ====================
 
-// تسجيل الدخول
+// Login
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password && u.enabled);
@@ -51,59 +50,40 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// جلب جميع المراكب
+// Get all vessels
 app.get('/api/vessels', (req, res) => {
-    const { region, status, search } = req.query;
-    let filtered = [...vessels];
-    
-    if (region && region !== 'الكل') {
-        filtered = filtered.filter(v => v.reg === region);
-    }
-    if (status && status !== 'الكل') {
-        filtered = filtered.filter(v => v.stat === status);
-    }
-    if (search) {
-        const s = search.toLowerCase();
-        filtered = filtered.filter(v => 
-            v.name.toLowerCase().includes(s) || 
-            (v.num && v.num.toLowerCase().includes(s)) ||
-            (v.reg && v.reg.toLowerCase().includes(s))
-        );
-    }
-    
-    res.json({ success: true, data: filtered });
+    res.json({ success: true, data: vessels });
 });
 
-// إضافة مركب جديد
+// Add vessel
 app.post('/api/vessels', (req, res) => {
-    const { name, num, len, cat, reg, zone, port, supp, stat, break: breakdown, fDate, eDate, ref } = req.body;
-    
-    if (!name) {
+    const vessel = req.body;
+    if (!vessel.name) {
         return res.status(400).json({ success: false, message: "اسم المركب مطلوب" });
     }
     
     const newVessel = {
         id: nextId++,
-        name: name,
-        num: num || "",
-        len: len || 0,
-        cat: cat || getCategory(len),
-        reg: reg || "",
-        zone: zone || "",
-        port: port || "",
-        supp: supp || "",
-        stat: stat || "صالح",
-        break: breakdown || "",
-        fDate: fDate || "",
-        eDate: eDate || "",
-        ref: ref || ""
+        name: vessel.name,
+        num: vessel.num || "",
+        len: vessel.len || 0,
+        cat: vessel.cat || "",
+        reg: vessel.reg || "",
+        zone: vessel.zone || "",
+        port: vessel.port || "",
+        supp: vessel.supp || "",
+        stat: vessel.stat || "صالح",
+        break: vessel.break || "",
+        fDate: vessel.fDate || "",
+        eDate: vessel.eDate || "",
+        ref: vessel.ref || ""
     };
     
     vessels.push(newVessel);
     res.json({ success: true, message: "تم إضافة المركب بنجاح", data: newVessel });
 });
 
-// تحديث مركب
+// Update vessel
 app.put('/api/vessels/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const index = vessels.findIndex(v => v.id === id);
@@ -116,26 +96,14 @@ app.put('/api/vessels/:id', (req, res) => {
     res.json({ success: true, message: "تم تحديث المركب بنجاح" });
 });
 
-// حذف مركب
+// Delete vessel
 app.delete('/api/vessels/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const deleted = vessels.find(v => v.id === id);
     vessels = vessels.filter(v => v.id !== id);
-    
-    if (deleted) {
-        logs.unshift({
-            id: Date.now(),
-            user: "system",
-            action: "حذف مركب",
-            details: `تم حذف المركب: ${deleted.name}`,
-            date: new Date().toISOString()
-        });
-    }
-    
     res.json({ success: true, message: "تم حذف المركب بنجاح" });
 });
 
-// جلب جميع المستخدمين
+// Get users
 app.get('/api/users', (req, res) => {
     res.json({ 
         success: true, 
@@ -148,7 +116,7 @@ app.get('/api/users', (req, res) => {
     });
 });
 
-// إضافة مستخدم
+// Add user
 app.post('/api/users', (req, res) => {
     const { username, password, role } = req.body;
     
@@ -172,7 +140,7 @@ app.post('/api/users', (req, res) => {
     res.json({ success: true, message: "تم إضافة المستخدم بنجاح" });
 });
 
-// تحديث مستخدم (تغيير الصلاحية أو التفعيل)
+// Update user
 app.put('/api/users/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const user = users.find(u => u.id === id);
@@ -188,7 +156,7 @@ app.put('/api/users/:id', (req, res) => {
     res.json({ success: true, message: "تم تحديث المستخدم بنجاح" });
 });
 
-// حذف مستخدم
+// Delete user
 app.delete('/api/users/:id', (req, res) => {
     const id = parseInt(req.params.id);
     const adminCount = users.filter(u => u.role === 'مسؤول').length;
@@ -199,24 +167,24 @@ app.delete('/api/users/:id', (req, res) => {
     }
     
     if (userToDelete.role === 'مسؤول' && adminCount === 1) {
-        return res.status(400).json({ success: false, message: "لا يمكن حذف المسؤول الوحيد في النظام" });
+        return res.status(400).json({ success: false, message: "لا يمكن حذف المسؤول الوحيد" });
     }
     
     users = users.filter(u => u.id !== id);
     res.json({ success: true, message: "تم حذف المستخدم بنجاح" });
 });
 
-// جلب سجل النشاطات
+// Get logs
 app.get('/api/logs', (req, res) => {
     res.json({ success: true, data: logs.slice(0, 200) });
 });
 
-// جلب التذاكر
+// Get tickets
 app.get('/api/tickets', (req, res) => {
     res.json({ success: true, data: tickets });
 });
 
-// إرسال تذكرة
+// Add ticket
 app.post('/api/tickets', (req, res) => {
     const { userName, subject, message } = req.body;
     
@@ -225,7 +193,7 @@ app.post('/api/tickets', (req, res) => {
     }
     
     const newTicket = {
-        id: nextTicketId++,
+        id: Date.now(),
         userName: userName || "مجهول",
         subject: subject,
         message: message,
@@ -237,28 +205,12 @@ app.post('/api/tickets', (req, res) => {
     res.json({ success: true, message: "تم إرسال التذكرة بنجاح" });
 });
 
-// إحصائيات الأسطول
+// Statistics
 app.get('/api/statistics', (req, res) => {
     const total = vessels.length;
     const operational = vessels.filter(v => v.stat === 'صالح').length;
     const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
     const broken = vessels.filter(v => v.stat === 'معطب').length;
-    
-    // إحصائيات حسب الإقليم
-    const byRegion = {};
-    vessels.forEach(v => {
-        if (!byRegion[v.reg]) byRegion[v.reg] = { total: 0, operational: 0 };
-        byRegion[v.reg].total++;
-        if (v.stat === 'صالح') byRegion[v.reg].operational++;
-    });
-    
-    // إحصائيات حسب الفئة
-    const byCategory = {};
-    vessels.forEach(v => {
-        if (!byCategory[v.cat]) byCategory[v.cat] = { total: 0, operational: 0 };
-        byCategory[v.cat].total++;
-        if (v.stat === 'صالح') byCategory[v.cat].operational++;
-    });
     
     res.json({
         success: true,
@@ -267,61 +219,44 @@ app.get('/api/statistics', (req, res) => {
             operational: operational,
             maintenance: maintenance,
             broken: broken,
-            readinessRate: total ? ((operational / total) * 100).toFixed(1) : 0,
-            byRegion: Object.entries(byRegion).map(([name, data]) => ({ name, ...data })),
-            byCategory: Object.entries(byCategory).map(([name, data]) => ({ name, ...data }))
+            readinessRate: total ? ((operational / total) * 100).toFixed(1) : 0
         }
     });
 });
 
-// تصدير البيانات
+// Export
 app.get('/api/export', (req, res) => {
     res.json({
         exportDate: new Date().toISOString(),
-        version: "1.0",
         vessels: vessels,
-        users: users.map(u => ({ id: u.id, username: u.username, role: u.role })),
-        tickets: tickets
+        users: users.map(u => ({ id: u.id, username: u.username, role: u.role }))
     });
 });
 
-// استيراد البيانات
+// Import
 app.post('/api/import', (req, res) => {
     const { vessels: importedVessels, users: importedUsers } = req.body;
-    
     if (importedVessels) {
         vessels = importedVessels;
         nextId = Math.max(...vessels.map(v => v.id), 0) + 1;
     }
-    
     if (importedUsers) {
         users = importedUsers.map(u => ({ ...u, password: u.password || "1234" }));
     }
-    
     res.json({ success: true, message: "تم استيراد البيانات بنجاح" });
 });
 
-// دالة مساعدة لتحديد الفئة
-function getCategory(len) {
-    const l = parseFloat(len);
-    if (l === 11) return "البروق";
-    if (l >= 8 && l <= 12) return "صقور";
-    if (l > 12 && l <= 25) return "خوافر";
-    if (l >= 30) return "طوافات";
-    return "زوارق مزدوجة";
-}
-
-// ==================== تقديم الواجهة ====================
+// ==================== Serve frontend ====================
 app.use(express.static('.'));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// ==================== تشغيل السيرفر ====================
+// ==================== Start Server ====================
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ السيرفر يعمل على http://localhost:${PORT}`);
-    console.log(`👤 admin / 1234 (مسؤول)`);
-    console.log(`👤 editor / 1234 (محرر)`);
-    console.log(`👤 viewer / 1234 (مشاهد)`);
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`👤 admin / 1234`);
+    console.log(`👤 editor / 1234`);
+    console.log(`👤 viewer / 1234`);
 });
