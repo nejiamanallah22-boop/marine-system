@@ -19,27 +19,6 @@ let dashChart = null;
 let dashLineChart = null;
 
 // ============================================================
-// تهيئة المستخدمين المحليين
-// ============================================================
-
-function initLocalUsers() {
-    try {
-        const stored = localStorage.getItem('local_users');
-        if (stored) {
-            const users = JSON.parse(stored);
-            users.forEach(u => {
-                if (!allUsers.find(ex => ex.id === u.id)) {
-                    allUsers.push(u);
-                }
-            });
-            console.log('✅ تم تحميل المستخدمين المحليين:', allUsers.length);
-        }
-    } catch(e) {
-        console.error('Error loading local users:', e);
-    }
-}
-
-// ============================================================
 // منع الدخول التلقائي
 // ============================================================
 
@@ -71,8 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    initLocalUsers();
 });
 
 // ============================================================
@@ -297,62 +274,7 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== 1. تحميل المستخدمين المحليين =====
-    let localUsers = [];
-    try {
-        const stored = localStorage.getItem('local_users');
-        if (stored) {
-            localUsers = JSON.parse(stored);
-        }
-    } catch(e) {}
-    
-    localUsers.forEach(u => {
-        if (!allUsers.find(ex => ex.id === u.id)) {
-            allUsers.push(u);
-        }
-    });
-    
-    // ===== 2. البحث عن المستخدم =====
-    const foundUser = allUsers.find(u => u.email === username && u.isActive !== false);
-    
-    if (foundUser) {
-        if (foundUser.password === password) {
-            console.log('✅ دخول ناجح للمستخدم المحلي:', username);
-            const userData = {
-                id: foundUser.id,
-                name: foundUser.name,
-                role: foundUser.role || 'مشاهد',
-                email: foundUser.email
-            };
-            localStorage.setItem('token', 'local-token-' + Date.now());
-            localStorage.setItem('user', JSON.stringify(userData));
-            currentUser = userData;
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            updateUserDisplay();
-            loadAllData();
-            loadPage('dashboard');
-            startActivityTracking();
-            showAlert('✅ مرحباً ' + userData.name + '!', 'success');
-            
-            if (loginBtn) {
-                loginBtn.disabled = false;
-                loginBtn.textContent = '🚀 دخول';
-            }
-            return;
-        } else {
-            showAlert('❌ كلمة المرور غير صحيحة', 'danger');
-            if (loginBtn) {
-                loginBtn.disabled = false;
-                loginBtn.textContent = '🚀 دخول';
-            }
-            return;
-        }
-    }
-    
-    // ===== 3. حسابات تجريبية =====
+    // ===== حسابات تجريبية =====
     const demoUsers = {
         'admin': {
             password: '123456',
@@ -373,11 +295,12 @@ function doLogin() {
     };
     
     if (demoUsers[username] && demoUsers[username].password === password) {
-        console.log('✅ دخول تجريبي ناجح:', username);
+        console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
         const userData = demoUsers[username].user;
         localStorage.setItem('token', 'demo-token-' + Date.now());
         localStorage.setItem('user', JSON.stringify(userData));
         currentUser = userData;
+        sessionId = 'demo-session-' + Date.now();
         
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -395,7 +318,7 @@ function doLogin() {
         return;
     }
     
-    // ===== 4. الاتصال بالخادم =====
+    // ===== الاتصال بالخادم =====
     fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -410,6 +333,7 @@ function doLogin() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             currentUser = data.user;
+            sessionId = data.session?.sessionId || null;
             
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -425,7 +349,7 @@ function doLogin() {
     })
     .catch(err => {
         console.error('Login error:', err);
-        showAlert('❌ اسم المستخدم أو كلمة المرور غير صحيحة', 'danger');
+        showAlert('❌ خطأ في الاتصال بالخادم: ' + err.message, 'danger');
     })
     .finally(() => {
         if (loginBtn) {
@@ -444,7 +368,7 @@ function doLogout() {
     }
     
     const token = getToken();
-    if (token && !token.startsWith('demo-token') && !token.startsWith('local-token')) {
+    if (token && !token.startsWith('demo-token')) {
         fetch('/api/auth/logout', {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token }
@@ -486,7 +410,7 @@ function loadAllData() {
 
 function loadVessels() {
     const token = getToken();
-    if (token && (token.startsWith('demo-token') || token.startsWith('local-token'))) {
+    if (token && token.startsWith('demo-token')) {
         allVessels = getDemoVessels();
         renderAllTables();
         return;
@@ -519,7 +443,7 @@ function loadVessels() {
 
 function loadMaintenance() {
     const token = getToken();
-    if (token && (token.startsWith('demo-token') || token.startsWith('local-token'))) {
+    if (token && token.startsWith('demo-token')) {
         allMaintenance = getDemoMaintenance();
         renderMaintenanceTables();
         updateYearFilter();
@@ -556,11 +480,7 @@ function loadMaintenance() {
 
 function loadTickets() {
     const token = getToken();
-    if (!token) {
-        allTickets = [];
-        renderTickets();
-        return;
-    }
+    if (!token) return;
     fetch('/api/tickets', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -569,51 +489,27 @@ function loadTickets() {
         allTickets = data || [];
         renderTickets();
     })
-    .catch(err => {
-        console.error('Load tickets error:', err);
-        allTickets = [];
-        renderTickets();
-    });
+    .catch(err => console.error('Load tickets error:', err));
 }
 
 function loadUsers() {
-    try {
-        const stored = localStorage.getItem('local_users');
-        if (stored) {
-            const users = JSON.parse(stored);
-            allUsers = users;
-            renderUsersTable();
-        }
-    } catch(e) {}
-    
     const token = getToken();
     if (!token) return;
-    
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
-        if (data && data.length > 0) {
-            data.forEach(u => {
-                if (!allUsers.find(ex => ex.id === u.id)) {
-                    allUsers.push(u);
-                }
-            });
-            localStorage.setItem('local_users', JSON.stringify(allUsers));
-            renderUsersTable();
-        }
+        allUsers = data || [];
+        console.log('✅ Users loaded:', allUsers.length);
+        renderUsersTable();
     })
     .catch(err => console.error('Load users error:', err));
 }
 
 function loadNotes() {
     const token = getToken();
-    if (!token) {
-        allNotes = [];
-        renderNotes();
-        return;
-    }
+    if (!token) return;
     fetch('/api/notes', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -622,11 +518,7 @@ function loadNotes() {
         allNotes = data || [];
         renderNotes();
     })
-    .catch(err => {
-        console.error('Load notes error:', err);
-        allNotes = [];
-        renderNotes();
-    });
+    .catch(err => console.error('Load notes error:', err));
 }
 
 function loadSessions() {
@@ -862,21 +754,16 @@ function renderTickets() {
 function renderUsersTable() {
     const tbody = document.getElementById('usersBody');
     if (!tbody) return;
-    
-    const countEl = document.getElementById('usersCount');
-    if (countEl) countEl.textContent = allUsers.length;
-    
     if (!allUsers || allUsers.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>`;
         return;
     }
-    
     tbody.innerHTML = allUsers.map(u => `
         <tr>
             <td><strong>${u.name || '-'}</strong></td>
             <td>${u.email || '-'}</td>
             <td><span style="color:${u.role === 'مسؤول' ? '#fbbf24' : u.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${u.role || 'مشاهد'}</span></td>
-            <td>${u.isActive !== false ? '✅ نشط' : '❌ معطل'}</td>
+            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
             <td style="font-size:12px; color:rgba(255,255,255,0.3);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-TN') : '-'}</td>
             <td>
                 <button class="btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
@@ -903,7 +790,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين
+// 👥 دوال المستخدمين (كاملة)
 // ============================================================
 
 function addUser() {
@@ -931,105 +818,147 @@ function addUser() {
         return;
     }
     
-    const existing = allUsers.find(u => u.email === email);
-    if (existing) {
-        showAlert('⚠️ هذا البريد الإلكتروني مستخدم بالفعل', 'warning');
-        return;
-    }
-    
-    const newUser = {
-        id: 'user-' + Date.now(),
-        name: name,
-        email: email,
-        password: password,
-        role: role || 'مشاهد',
-        isActive: true,
-        createdAt: new Date().toISOString()
-    };
-    allUsers.push(newUser);
-    
-    try {
-        localStorage.setItem('local_users', JSON.stringify(allUsers));
-    } catch(e) {}
-    
-    renderUsersTable();
-    showAlert('✅ تم إضافة المستخدم بنجاح! كلمة المرور: ' + password, 'success');
-    clearUserInputs();
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, email, password, role })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
+            clearUserInputs();
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+    });
 }
 
 function editUser(id) {
-    const user = allUsers.find(u => u.id === id);
-    if (!user) {
-        showAlert('⚠️ المستخدم غير موجود', 'warning');
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
-    document.getElementById('uName').value = user.name || '';
-    document.getElementById('uEmail').value = user.email || '';
-    document.getElementById('uPassword').value = '';
-    document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
-    document.getElementById('uRole').value = user.role || 'مشاهد';
-    
-    const addBtn = document.querySelector('[onclick="addUser()"]');
-    if (addBtn) {
-        addBtn.textContent = '💾 تحديث المستخدم';
-        addBtn.onclick = function() { updateUser(id); };
-    }
-    
-    showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        const user = users.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        
+        document.getElementById('uName').value = user.name || '';
+        document.getElementById('uEmail').value = user.email || '';
+        document.getElementById('uPassword').value = '';
+        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
+        document.getElementById('uRole').value = user.role || 'مشاهد';
+        
+        const addBtn = document.querySelector('[onclick="addUser()"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 تحديث المستخدم';
+            addBtn.onclick = function() { updateUser(id); };
+        }
+        
+        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+    })
+    .catch(err => {
+        console.error('Edit user error:', err);
+        showAlert('❌ خطأ في تحميل بيانات المستخدم', 'danger');
+    });
 }
 
 function updateUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
     const name = document.getElementById('uName')?.value.trim();
     const email = document.getElementById('uEmail')?.value.trim();
     const password = document.getElementById('uPassword')?.value.trim();
     const role = document.getElementById('uRole')?.value;
     
-    if (!name || !email) {
-        showAlert('⚠️ الرجاء إكمال الحقول', 'warning');
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
         return;
     }
     
-    const user = allUsers.find(u => u.id === id);
-    if (user) {
-        user.name = name;
-        user.email = email;
-        user.role = role || 'مشاهد';
-        if (password && password.length >= 4) {
-            user.password = password;
-        }
-        
-        try {
-            localStorage.setItem('local_users', JSON.stringify(allUsers));
-        } catch(e) {}
-        
-        renderUsersTable();
-        showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
-        clearUserInputs();
-        const addBtn = document.querySelector('[onclick*="updateUser"]');
-        if (addBtn) {
-            addBtn.textContent = '💾 إضافة مستخدم';
-            addBtn.onclick = addUser;
-        }
+    const data = { name, email, role };
+    if (password && password.length >= 4) {
+        data.password = password;
     }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
+            clearUserInputs();
+            const addBtn = document.querySelector('[onclick*="updateUser"]');
+            if (addBtn) {
+                addBtn.textContent = '💾 إضافة مستخدم';
+                addBtn.onclick = addUser;
+            }
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Update user error:', err);
+        showAlert('❌ خطأ في تحديث المستخدم', 'danger');
+    });
 }
 
 function deleteUser(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    
-    if (currentUser && currentUser.id === id) {
-        showAlert('⚠️ لا يمكنك حذف حسابك الحالي', 'warning');
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
-    
-    allUsers = allUsers.filter(u => u.id !== id);
-    
-    try {
-        localStorage.setItem('local_users', JSON.stringify(allUsers));
-    } catch(e) {}
-    
-    renderUsersTable();
-    showAlert('✅ تم حذف المستخدم', 'success');
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
 }
 
 function clearUserInputs() {
@@ -1037,11 +966,6 @@ function clearUserInputs() {
     document.getElementById('uEmail').value = '';
     document.getElementById('uPassword').value = '';
     document.getElementById('uRole').value = 'مشاهد';
-    const addBtn = document.querySelector('[onclick*="updateUser"]');
-    if (addBtn) {
-        addBtn.textContent = '💾 إضافة مستخدم';
-        addBtn.onclick = addUser;
-    }
 }
 
 // ============================================================
@@ -1074,48 +998,121 @@ function addItem() {
         ref: document.getElementById('iRef')?.value || '',
         repairer: document.getElementById('iRepairer')?.value || ''
     };
-    
-    const newVessel = {
-        id: allVessels.length > 0 ? Math.max(...allVessels.map(v => v.id)) + 1 : 1,
-        ...data,
-        createdAt: new Date().toISOString()
-    };
-    allVessels.push(newVessel);
-    renderAllTables();
-    clearVesselInputs();
-    showAlert('✅ تم إضافة المركب', 'success');
+    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
+    const method = editingVesselId ? 'PUT' : 'POST';
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
+            editingVesselId = null;
+            clearVesselInputs();
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showAlert('❌ خطأ في العملية', 'danger');
+    });
 }
 
 function editVessel(id) {
+    console.log('✏️ Editing vessel with ID:', id);
     const vessel = allVessels.find(v => v.id === id);
     if (!vessel) {
         showAlert('⚠️ المركب غير موجود', 'warning');
         return;
     }
     
-    document.getElementById('iName').value = vessel.name || '';
-    document.getElementById('iNum').value = vessel.num || '';
-    document.getElementById('iLen').value = vessel.len || 0;
-    document.getElementById('iReg').value = vessel.reg || '';
-    document.getElementById('iZone').value = vessel.zone || '';
-    document.getElementById('iPort').value = vessel.port || '';
-    document.getElementById('iSupp').value = vessel.supp || '';
-    document.getElementById('iStat').value = vessel.stat || 'صالح';
-    document.getElementById('iBreak').value = vessel.break || '';
-    document.getElementById('iDate').value = vessel.fDate || '';
-    document.getElementById('iEnd').value = vessel.eDate || '';
-    document.getElementById('iRef').value = vessel.ref || '';
-    document.getElementById('iRepairer').value = vessel.repairer || '';
+    const elements = {
+        iName: document.getElementById('iName'),
+        iNum: document.getElementById('iNum'),
+        iLen: document.getElementById('iLen'),
+        iReg: document.getElementById('iReg'),
+        iZone: document.getElementById('iZone'),
+        iPort: document.getElementById('iPort'),
+        iSupp: document.getElementById('iSupp'),
+        iStat: document.getElementById('iStat'),
+        iBreak: document.getElementById('iBreak'),
+        iDate: document.getElementById('iDate'),
+        iEnd: document.getElementById('iEnd'),
+        iRef: document.getElementById('iRef'),
+        iRepairer: document.getElementById('iRepairer')
+    };
+    
+    let missingElements = [];
+    Object.keys(elements).forEach(key => {
+        if (!elements[key]) missingElements.push(key);
+    });
+    
+    if (missingElements.length > 0) {
+        console.error('❌ عناصر مفقودة:', missingElements);
+        showAlert('⚠️ تأكد من وجود جميع حقول المركب', 'warning');
+        return;
+    }
     
     editingVesselId = vessel.id;
+    elements.iName.value = vessel.name || '';
+    elements.iNum.value = vessel.num || '';
+    elements.iLen.value = vessel.len || 0;
+    elements.iReg.value = vessel.reg || '';
+    elements.iZone.value = vessel.zone || '';
+    elements.iPort.value = vessel.port || '';
+    elements.iSupp.value = vessel.supp || '';
+    elements.iStat.value = vessel.stat || 'صالح';
+    elements.iBreak.value = vessel.break || '';
+    elements.iDate.value = vessel.fDate || '';
+    elements.iEnd.value = vessel.eDate || '';
+    elements.iRef.value = vessel.ref || '';
+    elements.iRepairer.value = vessel.repairer || '';
+    
+    const form = document.querySelector('.fleet-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.style.border = '2px solid #fbbf24';
+        form.style.boxShadow = '0 0 20px rgba(251,191,36,0.3)';
+        setTimeout(() => {
+            form.style.border = '1px solid rgba(255,255,255,0.1)';
+            form.style.boxShadow = 'none';
+        }, 3000);
+    }
+    
     showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
 }
 
 function deleteVessel(id) {
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    allVessels = allVessels.filter(v => v.id !== id);
-    renderAllTables();
-    showAlert('✅ تم الحذف', 'success');
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    fetch('/api/vessels/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم الحذف', 'success');
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete error:', err);
+        showAlert('❌ خطأ في الحذف', 'danger');
+    });
 }
 
 function clearVesselInputs() {
@@ -1208,39 +1205,91 @@ function saveMaintenance() {
         return;
     }
     const vesselId = document.getElementById('mVesselId')?.value;
-    const description = document.getElementById('mDescription')?.value.trim();
+    const type = document.getElementById('mType')?.value;
+    const unit = document.getElementById('mUnit')?.value;
     const technician = document.getElementById('mTechnician')?.value.trim();
+    const description = document.getElementById('mDescription')?.value.trim();
+    const repair = document.getElementById('mRepair')?.value.trim();
+    const faultType = document.getElementById('mFaultType')?.value;
+    const startDate = document.getElementById('mStartDate')?.value;
+    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
+    const notes = document.getElementById('mNotes')?.value.trim();
+    const parts = getPartsData();
     
-    if (!vesselId || !description || !technician) {
-        showAlert('⚠️ الرجاء إكمال الحقول الإلزامية', 'warning');
+    if (!vesselId) {
+        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
+        return;
+    }
+    if (!description) {
+        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
+        return;
+    }
+    if (!technician) {
+        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
         return;
     }
     
     const vessel = allVessels.find(v => v.id == vesselId);
-    const record = {
-        id: Date.now(),
+    if (vessel && vessel.stat === 'صالح') {
+        fetch('/api/vessels/' + vesselId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ 
+                stat: 'معطب',
+                break: description,
+                fDate: startDate || new Date().toISOString().split('T')[0]
+            })
+        }).catch(err => console.error('Error updating vessel status:', err));
+    }
+    
+    const data = {
         vesselId: parseFloat(vesselId),
-        vesselName: vessel ? vessel.name : 'مركب غير معروف',
-        type: document.getElementById('mType')?.value || 'عادية',
-        unit: document.getElementById('mUnit')?.value || 'غير محدد',
+        vesselName: vessel ? vessel.name : '',
+        type: type || 'عادية',
+        unit: unit || 'غير محدد',
         technician: technician,
         description: description,
-        repair: document.getElementById('mRepair')?.value || '',
-        faultType: document.getElementById('mFaultType')?.value || 'أخرى',
-        cost: parseFloat(document.getElementById('mCost')?.value) || 0,
-        notes: document.getElementById('mNotes')?.value || '',
-        parts: getPartsData(),
-        status: document.getElementById('mStatus')?.value || 'قيد الإنجاز',
+        repair: repair || '',
+        faultType: faultType || 'أخرى',
+        cost: cost,
+        notes: notes || '',
+        parts: parts,
+        status: 'قيد الإنجاز',
         date: new Date().toISOString().split('T')[0],
-        startDate: document.getElementById('mStartDate')?.value || new Date().toISOString().split('T')[0],
+        startDate: startDate || new Date().toISOString().split('T')[0],
         endDate: null,
         createdBy: currentUser?.name || 'Admin'
     };
     
-    allMaintenance.push(record);
-    renderAllTables();
-    toggleMaintenanceForm();
-    showAlert('✅ تم إضافة سجل الصيانة', 'success');
+    const url = editingMaintenanceId ? '/api/maintenance/' + editingMaintenanceId : '/api/maintenance';
+    const method = editingMaintenanceId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة' : '✅ تم إضافة سجل الصيانة', 'success');
+            editingMaintenanceId = null;
+            toggleMaintenanceForm();
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Save maintenance error:', err);
+        showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
+    });
 }
 
 function renderGeneralMaintenance() {
@@ -1271,13 +1320,32 @@ function renderGeneralMaintenance() {
 
 function fixVessel(vesselId) {
     if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
-    const vessel = allVessels.find(v => v.id === vesselId);
-    if (vessel) {
-        vessel.stat = 'صالح';
-        vessel.break = '';
-        renderAllTables();
-        showAlert('✅ تم إصلاح المركب', 'success');
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
     }
+    fetch('/api/vessels/' + vesselId, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ stat: 'صالح' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إصلاح المركب', 'success');
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Fix vessel error:', err);
+        showAlert('❌ خطأ في إصلاح المركب', 'danger');
+    });
 }
 
 function openMaintenanceFile(vesselId) {
@@ -1531,7 +1599,7 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard) - النسخة الاحترافية
+// 📊 لوحة التحكم (Dashboard)
 // ============================================================
 
 function loadDashboard() {
@@ -1543,24 +1611,21 @@ function loadDashboard() {
         return;
     }
     
-    const vessels = allVessels || [];
-    const maintenance = allMaintenance || [];
-    
-    const total = vessels.length;
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenanceCount = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+    const total = allVessels.length;
+    const ready = allVessels.filter(v => v.stat === 'صالح').length;
+    const broken = allVessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
     const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const totalMaintenance = maintenance.length;
+    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const maintenanceCount = allMaintenance.length;
     
     document.getElementById('dashTotal').textContent = total;
     document.getElementById('dashReady').textContent = ready;
     document.getElementById('dashBroken').textContent = broken;
-    document.getElementById('dashMaintenance').textContent = maintenanceCount;
+    document.getElementById('dashMaintenance').textContent = maintenance;
     document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
     document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-    document.getElementById('dashMaintenanceCount').textContent = totalMaintenance;
+    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
     
     const now = new Date();
     document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
@@ -1578,10 +1643,9 @@ function renderDashboardCharts() {
             dashCanvas.style.width = '100%';
             if (dashChart) dashChart.destroy();
             
-            const vessels = allVessels || [];
-            const ready = vessels.filter(v => v.stat === 'صالح').length;
-            const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            const ready = allVessels.filter(v => v.stat === 'صالح').length;
+            const broken = allVessels.filter(v => v.stat === 'معطب').length;
+            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
             
             dashChart = new Chart(dashCanvas, {
                 type: 'doughnut',
@@ -1686,13 +1750,10 @@ function updateDashboardActivity() {
     if (!container) return;
     
     const activities = [];
-    const maintenance = allMaintenance || [];
-    const vessels = allVessels || [];
-    
-    maintenance.slice(0, 5).forEach(r => {
+    allMaintenance.slice(0, 5).forEach(r => {
         activities.push({ icon: '🔧', text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`, time: r.date || 'اليوم' });
     });
-    vessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
         activities.push({ icon: '⚠️', text: `المركب ${v.name} أصبح معطباً`, time: v.fDate || 'اليوم' });
     });
     
@@ -1729,4 +1790,4 @@ function initMap() {
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
 console.log('👤 حسابات: admin, manager, editor, viewer');
-console.log('🔑 يمكنك إضافة مستخدمين جدد من صفحة المستخدمين');
+console.log('🔑 كلمة المرور: 123456');
