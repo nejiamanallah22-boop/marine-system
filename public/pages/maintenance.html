@@ -1,183 +1,1160 @@
-<!-- صفحة سجل الصيانة - نسخة محسنة ومصححة -->
-<div id="pageMaint" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-        <h2 style="color: #0d6efd; margin: 0;">🔧 إدارة الصيانة</h2>
-        <button onclick="toggleMaintenanceForm()" class="btn btn-success" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">➕ إضافة سجل صيانة جديد</button>
-    </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إدارة الصيانة البحرية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#071b2e;
+    --navy-900:#0b2740;
+    --navy-800:#0f3452;
+    --navy-700:#14456b;
+    --navy-600:#1a5a89;
+    --teal-600:#0b8f83;
+    --teal-500:#12a89a;
+    --amber-500:#e0932a;
+    --amber-100:#fbeadb;
+    --red-600:#c23b3b;
+    --red-100:#f8e2e2;
+    --green-600:#2f8f5b;
+    --green-100:#e1f3e8;
+    --bg:#eef2f5;
+    --surface:#ffffff;
+    --surface-2:#f6f8fa;
+    --line:#dde3e8;
+    --ink-900:#12222f;
+    --ink-600:#4d5f6d;
+    --ink-400:#83939e;
+    --radius:10px;
+    --shadow-sm:0 1px 2px rgba(11,39,64,.06);
+    --shadow-md:0 6px 20px rgba(11,39,64,.08);
+    --font-body:'Tajawal', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
 
-    <!-- ===== إحصائيات الصيانة ===== -->
-    <div id="maintenanceStats"></div>
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    background:var(--bg);
+    color:var(--ink-900);
+    line-height:1.6;
+  }
+  .hidden{display:none !important;}
 
-    <!-- ===== 1. المراكب المعطبة ===== -->
-    <h3 style="color: #dc3545; margin: 30px 0 15px;">🟥 1. المراكب المعطبة</h3>
-    <div id="generalMaintenanceContainer"></div>
+  /* ===== Top bar ===== */
+  .topbar{
+    background:linear-gradient(135deg,var(--navy-950),var(--navy-800) 70%);
+    color:#fff;
+    padding:22px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 2px, transparent 2px 26px);
+    pointer-events:none;
+  }
+  .topbar-title{display:flex; align-items:center; gap:12px; z-index:1;}
+  .topbar-title .icon{
+    width:44px; height:44px; border-radius:10px;
+    background:rgba(18,168,154,.18);
+    border:1px solid rgba(18,168,154,.4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .topbar-title h1{margin:0; font-size:20px; font-weight:900; letter-spacing:.2px;}
+  .topbar-title p{margin:2px 0 0; font-size:12.5px; color:#a9c1d3; font-family:var(--font-mono); letter-spacing:.4px;}
+  .btn{
+    font-family:var(--font-body);
+    font-weight:700;
+    font-size:14px;
+    border:none;
+    border-radius:8px;
+    padding:11px 20px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--teal-600); color:#fff;}
+  .btn-primary:hover{background:var(--teal-500); box-shadow:var(--shadow-md);}
+  .btn-success{background:var(--green-600); color:#fff;}
+  .btn-success:hover{opacity:.92; box-shadow:var(--shadow-md);}
+  .btn-secondary{background:#e3e9ed; color:var(--ink-900);}
+  .btn-secondary:hover{background:#d5dde2;}
+  .btn-danger{background:var(--red-100); color:var(--red-600);}
+  .btn-danger:hover{background:#f2c9c9;}
+  .btn-ghost{background:transparent; color:var(--navy-700); border:1px solid var(--line);}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-sm{padding:6px 12px; font-size:12.5px; border-radius:6px;}
+  .btn:disabled{opacity:.5; cursor:not-allowed;}
 
-    <!-- ===== نموذج إضافة الصيانة ===== -->
-    <div id="maintenanceForm" style="display:none; background:#f8f9fa; padding:20px; border-radius:10px; margin:15px 0; border:2px solid #0d6efd;">
-        <h3 style="margin-top:0; color:#0d6efd;">📝 تسجيل صيانة</h3>
-        
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">🚢 المركب</label>
-                <select id="mVesselId" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">اختر المركب</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">📋 نوع الصيانة</label>
-                <select id="mType" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="كبرى">كبرى</option>
-                    <option value="دورية">دورية</option>
-                    <option value="طارئة">طارئة</option>
-                    <option value="عادية">عادية</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">🏭 الوحدة</label>
-                <select id="mUnit" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
-                    <option value="شركة خاصة">شركة خاصة</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">👨‍🔧 الفني</label>
-                <input type="text" id="mTechnician" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="اسم الفني">
-            </div>
-        </div>
-        
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:15px;">
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">⚠️ نوع العطل</label>
-                <select id="mFaultType" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="محرك">محرك</option>
-                    <option value="كهرباء">كهرباء</option>
-                    <option value="هيدروليك">هيدروليك</option>
-                    <option value="هيكل">هيكل</option>
-                    <option value="توجيه">توجيه</option>
-                    <option value="تبريد">تبريد</option>
-                    <option value="أخرى">أخرى</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">📅 تاريخ بدء العطل</label>
-                <input type="date" id="mStartDate" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-            </div>
-        </div>
-        
-        <div style="margin-top:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">📝 وصف العطل</label>
-            <textarea id="mDescription" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px; height:80px;" placeholder="وصف تفصيلي للعطل"></textarea>
-        </div>
-        
-        <div style="margin-top:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">🔧 الإصلاح المقترح</label>
-            <textarea id="mRepair" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px; height:60px;" placeholder="خطة الإصلاح المقترحة"></textarea>
-        </div>
-        
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:15px;">
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">💰 التكلفة (د.ت)</label>
-                <input type="number" id="mCost" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="0">
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">📝 ملاحظات</label>
-                <input type="text" id="mNotes" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="ملاحظات إضافية">
-            </div>
-        </div>
-        
-        <!-- قطع الغيار -->
-        <div style="margin-top:15px;">
-            <label style="display:block; font-weight:bold; margin-bottom:5px;">🔩 قطع الغيار المستخدمة</label>
-            <div id="partsContainer">
-                <div class="part-item">
-                    <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:150px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <input type="number" placeholder="الكمية" class="part-qty" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <button onclick="removePart(this)" style="padding:8px 15px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">✕</button>
-                </div>
-            </div>
-            <button onclick="addPart()" style="padding:5px 15px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer; margin-top:5px;">➕ إضافة قطعة</button>
-        </div>
-        
-        <div style="margin-top:20px; display:flex; gap:10px;">
-            <button onclick="saveMaintenance()" class="btn btn-success" style="padding:10px 30px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">💾 حفظ</button>
-            <button onclick="toggleMaintenanceForm()" class="btn btn-secondary" style="padding:10px 30px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">❌ إلغاء</button>
-        </div>
+  /* ===== Layout ===== */
+  main{max-width:1180px; margin:0 auto; padding:26px 20px 60px;}
+  section{margin-bottom:34px;}
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:12px; margin-bottom:14px; flex-wrap:wrap;
+  }
+  .section-eyebrow{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--teal-600);
+    letter-spacing:1px;
+    display:block;
+    margin-bottom:2px;
+  }
+  .section-title{font-size:19px; font-weight:900; margin:0; color:var(--navy-900);}
+  .section-title .count-badge{
+    font-family:var(--font-mono);
+    font-size:12px;
+    font-weight:500;
+    color:var(--ink-400);
+    margin-inline-start:8px;
+  }
+
+  /* ===== KPI cards ===== */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+    gap:14px;
+  }
+  .kpi-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    box-shadow:var(--shadow-sm);
+    position:relative;
+    overflow:hidden;
+  }
+  .kpi-card::before{
+    content:"";
+    position:absolute; inset-inline-start:0; top:0; bottom:0; width:4px;
+    background:var(--kpi-accent, var(--teal-600));
+  }
+  .kpi-label{font-size:12.5px; color:var(--ink-600); font-weight:700;}
+  .kpi-value{font-family:var(--font-mono); font-size:26px; font-weight:700; color:var(--navy-900); margin-top:6px;}
+  .kpi-sub{font-size:11.5px; color:var(--ink-400); margin-top:4px;}
+
+  /* ===== Cards / grids ===== */
+  .card-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:14px;}
+  .vessel-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-inline-start:4px solid var(--red-600);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    box-shadow:var(--shadow-sm);
+  }
+  .vessel-card .v-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .vessel-card .v-name{font-weight:900; font-size:16px; color:var(--navy-900);}
+  .vessel-card .v-days{
+    font-family:var(--font-mono); font-size:12px; font-weight:700;
+    background:var(--red-100); color:var(--red-600);
+    padding:3px 9px; border-radius:20px; white-space:nowrap;
+  }
+  .vessel-card dl{margin:10px 0 0; display:grid; grid-template-columns:auto 1fr; gap:4px 10px; font-size:13px;}
+  .vessel-card dt{color:var(--ink-400);}
+  .vessel-card dd{margin:0; color:var(--ink-900); font-weight:500;}
+  .vessel-card .v-actions{margin-top:12px; display:flex; gap:8px;}
+
+  .empty-state{
+    background:var(--surface);
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:34px 20px;
+    text-align:center;
+    color:var(--ink-400);
+    font-size:14px;
+  }
+  .empty-state .em-icon{font-size:26px; margin-bottom:6px; display:block;}
+
+  /* ===== Form ===== */
+  .form-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-md);
+    overflow:hidden;
+    margin-bottom:28px;
+  }
+  .form-panel-head{
+    background:var(--navy-900); color:#fff;
+    padding:16px 22px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .form-panel-head h3{margin:0; font-size:16px; font-weight:900;}
+  .form-panel-head .form-mode{font-family:var(--font-mono); font-size:11.5px; color:#9fc2d8;}
+  .form-body{padding:22px;}
+  .field-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:16px;}
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:13px; font-weight:700; color:var(--ink-900);}
+  .field label .req{color:var(--red-600); margin-inline-start:2px;}
+  .field-input{
+    font-family:var(--font-body);
+    padding:9px 11px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:14px;
+    background:var(--surface-2);
+    color:var(--ink-900);
+    width:100%;
+  }
+  .field-input:focus{
+    outline:none;
+    border-color:var(--teal-500);
+    background:#fff;
+    box-shadow:0 0 0 3px rgba(18,168,154,.15);
+  }
+  textarea.field-input{resize:vertical; min-height:64px;}
+  .field-hint{font-size:11.5px; color:var(--ink-400);}
+  .field-error{font-size:11.5px; color:var(--red-600); display:none;}
+  .field.invalid .field-input{border-color:var(--red-600); background:var(--red-100);}
+  .field.invalid .field-error{display:block;}
+
+  .parts-box{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:14px;
+    margin-top:6px;
+  }
+  .part-item{display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;}
+  .part-item .field-input{flex:1 1 140px;}
+  .part-item .part-qty, .part-item .part-price{flex:0 1 90px;}
+  .part-remove{
+    background:var(--red-100); color:var(--red-600); border:none;
+    border-radius:6px; width:36px; cursor:pointer; font-weight:700;
+  }
+  .part-remove:hover{background:#f2c9c9;}
+  .parts-total{
+    font-family:var(--font-mono); font-size:13px; color:var(--ink-600);
+    margin-top:8px; text-align:start;
+  }
+
+  .form-actions{
+    display:flex; gap:10px; margin-top:22px; padding-top:18px;
+    border-top:1px solid var(--line);
+  }
+
+  /* ===== Filter bar ===== */
+  .filter-bar{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .filter-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px;}
+  .filter-grid .field label{font-size:11.5px; color:var(--ink-600);}
+  .filter-actions{display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  .result-count{
+    font-family:var(--font-mono); font-size:12.5px; font-weight:700;
+    color:var(--navy-800); background:var(--surface-2);
+    border:1px solid var(--line);
+    padding:8px 14px; border-radius:20px;
+  }
+
+  /* ===== Table ===== */
+  .table-wrap{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow-sm);
+  }
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{
+    background:var(--navy-900); color:#dbe8f0;
+    text-align:start; padding:12px 14px;
+    font-weight:700; font-size:12.5px;
+    position:sticky; top:0;
+  }
+  tbody td{padding:12px 14px; border-top:1px solid var(--line); vertical-align:top; color:var(--ink-900);}
+  tbody tr:hover{background:var(--surface-2);}
+  tbody tr:nth-child(even){background:rgba(15,52,82,.02);}
+  .cell-vessel{font-weight:700;}
+  .cell-cost{font-family:var(--font-mono); font-weight:700; white-space:nowrap;}
+  .row-actions{display:flex; gap:6px;}
+
+  .badge{
+    display:inline-block; padding:3px 10px; border-radius:20px;
+    font-size:11.5px; font-weight:700; white-space:nowrap;
+  }
+  .badge-type-كبرى{background:#e6ddf7; color:#5b34a6;}
+  .badge-type-دورية{background:#dcecf9; color:#1a5a89;}
+  .badge-type-طارئة{background:var(--red-100); color:var(--red-600);}
+  .badge-type-عادية{background:#e6ecef; color:var(--ink-600);}
+  .badge-status-قيد_الإصلاح{background:var(--amber-100); color:var(--amber-500);}
+  .badge-status-منتهية{background:var(--green-100); color:var(--green-600);}
+
+  /* ===== Units ===== */
+  .unit-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    box-shadow:var(--shadow-sm);
+    border-top:3px solid var(--navy-700);
+  }
+  .unit-card .u-name{font-weight:900; font-size:14.5px; color:var(--navy-900); margin-bottom:10px;}
+  .unit-stat-row{display:flex; justify-content:space-between; font-size:13px; padding:4px 0; color:var(--ink-600);}
+  .unit-stat-row b{color:var(--ink-900); font-family:var(--font-mono);}
+
+  .toast{
+    position:fixed; bottom:22px; inset-inline-end:22px;
+    background:var(--navy-900); color:#fff;
+    padding:12px 20px; border-radius:8px;
+    font-size:13.5px; font-weight:700;
+    box-shadow:var(--shadow-md);
+    z-index:999;
+    opacity:0; transform:translateY(10px);
+    transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast.error{background:var(--red-600);}
+
+  @media (max-width:640px){
+    .topbar{padding:18px;}
+    main{padding:18px 14px 40px;}
+    thead{display:none;}
+    table, tbody, tr, td{display:block; width:100%;}
+    tbody tr{border:1px solid var(--line); border-radius:8px; margin-bottom:10px; padding:6px 0;}
+    tbody td{border-top:none; padding:6px 14px; display:flex; justify-content:space-between; gap:10px;}
+    tbody td::before{content:attr(data-label); font-weight:700; color:var(--ink-400); font-size:11.5px;}
+  }
+
+  :focus-visible{outline:2px solid var(--teal-500); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">
+    <div class="icon">🔧</div>
+    <div>
+      <h1>إدارة الصيانة البحرية</h1>
+      <p>MAINTENANCE&nbsp;REGISTRY&nbsp;/&nbsp;FLEET&nbsp;OPS</p>
     </div>
-    
-    <!-- ===== 4. Historique de Maintenance ===== -->
-    <h3 style="color:#0d6efd; margin:30px 0 15px;">📚 4. Historique de Maintenance</h3>
-    
-    <!-- فلترة متقدمة -->
-    <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-bottom:15px;">
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">🚢 المركب</label>
-                <input type="text" id="filterVessel" placeholder="بحث" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">📅 السنة</label>
-                <select id="filterYear" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">الكل</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">🔧 نوع الصيانة</label>
-                <select id="filterType" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">الكل</option>
-                    <option value="كبرى">كبرى</option>
-                    <option value="دورية">دورية</option>
-                    <option value="طارئة">طارئة</option>
-                    <option value="عادية">عادية</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">🏭 الوحدة</label>
-                <select id="filterUnit" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">الكل</option>
-                    <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
-                    <option value="شركة خاصة">شركة خاصة</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">💰 التكلفة</label>
-                <select id="filterCost" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">الكل</option>
-                    <option value="0-1000">أقل من 1000</option>
-                    <option value="1000-5000">1000 - 5000</option>
-                    <option value="5000-10000">5000 - 10000</option>
-                    <option value="10000+">أكثر من 10000</option>
-                </select>
-            </div>
-            <div>
-                <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px;">⚠️ نوع العطل</label>
-                <select id="filterFaultType" style="width:100%; padding:6px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="">الكل</option>
-                    <option value="محرك">محرك</option>
-                    <option value="كهرباء">كهرباء</option>
-                    <option value="هيدروليك">هيدروليك</option>
-                    <option value="هيكل">هيكل</option>
-                    <option value="توجيه">توجيه</option>
-                    <option value="تبريد">تبريد</option>
-                </select>
-            </div>
-        </div>
-        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button onclick="applyHistoryFilters()" class="btn btn-primary" style="padding:8px 20px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🔍 فلترة</button>
-            <button onclick="resetHistoryFilters()" class="btn btn-secondary" style="padding:8px 20px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 إلغاء</button>
-            <span id="historyCount" style="font-weight:bold; padding:8px; background:#e9ecef; border-radius:5px;">📊 0 سجل</span>
-        </div>
-    </div>
-    
-    <div id="historyMaintenanceContainer"></div>
-    
-    <!-- ===== وحدات الصيانة ===== -->
-    <h3 style="color:#0d6efd; margin:30px 0 15px;">🏭 وحدات الصيانة</h3>
-    <div id="maintenanceUnitsContainer"></div>
+  </div>
+  <button class="btn btn-success" id="toggleFormBtn" onclick="toggleMaintenanceForm()">
+    <span>➕</span><span>إضافة سجل صيانة جديد</span>
+  </button>
 </div>
+
+<main>
+
+  <!-- ===== إحصائيات الصيانة ===== -->
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="section-eyebrow">OVERVIEW</span>
+        <h2 class="section-title">إحصائيات الصيانة</h2>
+      </div>
+    </div>
+    <div id="maintenanceStats" class="kpi-grid"></div>
+  </section>
+
+  <!-- ===== 1. المراكب المعطبة ===== -->
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="section-eyebrow">SECTION 01</span>
+        <h2 class="section-title">المراكب المعطبة<span class="count-badge" id="damagedCount"></span></h2>
+      </div>
+    </div>
+    <div id="generalMaintenanceContainer" class="card-grid"></div>
+  </section>
+
+  <!-- ===== نموذج إضافة الصيانة ===== -->
+  <div id="maintenanceForm" class="form-panel hidden">
+    <div class="form-panel-head">
+      <h3 id="formTitle">📝 تسجيل صيانة جديدة</h3>
+      <span class="form-mode" id="formMode">NEW RECORD</span>
+    </div>
+    <div class="form-body">
+      <input type="hidden" id="mRecordId" value="">
+
+      <div class="field-grid">
+        <div class="field" id="fieldVessel">
+          <label for="mVesselId">🚢 المركب <span class="req">*</span></label>
+          <select id="mVesselId" class="field-input">
+            <option value="">اختر المركب</option>
+          </select>
+          <span class="field-hint"><a href="#" onclick="promptAddVessel(event)">+ إضافة مركب جديد</a></span>
+          <span class="field-error">الرجاء اختيار المركب</span>
+        </div>
+
+        <div class="field">
+          <label for="mType">📋 نوع الصيانة</label>
+          <select id="mType" class="field-input">
+            <option value="كبرى">كبرى</option>
+            <option value="دورية">دورية</option>
+            <option value="طارئة">طارئة</option>
+            <option value="عادية">عادية</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mUnit">🏭 الوحدة</label>
+          <select id="mUnit" class="field-input">
+            <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
+            <option value="شركة خاصة">شركة خاصة</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="mTechnician">👨‍🔧 الفني</label>
+          <input type="text" id="mTechnician" class="field-input" placeholder="اسم الفني">
+        </div>
+      </div>
+
+      <div class="field-grid" style="margin-top:16px;">
+        <div class="field">
+          <label for="mFaultType">⚠️ نوع العطل</label>
+          <select id="mFaultType" class="field-input">
+            <option value="محرك">محرك</option>
+            <option value="كهرباء">كهرباء</option>
+            <option value="هيدروليك">هيدروليك</option>
+            <option value="هيكل">هيكل</option>
+            <option value="توجيه">توجيه</option>
+            <option value="تبريد">تبريد</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+
+        <div class="field" id="fieldStartDate">
+          <label for="mStartDate">📅 تاريخ بدء العطل <span class="req">*</span></label>
+          <input type="date" id="mStartDate" class="field-input">
+          <span class="field-error">الرجاء إدخال تاريخ البدء</span>
+        </div>
+
+        <div class="field">
+          <label for="mStatus">📌 حالة الصيانة</label>
+          <select id="mStatus" class="field-input" onchange="onStatusChange()">
+            <option value="قيد الإصلاح">قيد الإصلاح</option>
+            <option value="منتهية">منتهية</option>
+          </select>
+        </div>
+
+        <div class="field" id="fieldEndDate">
+          <label for="mEndDate">✅ تاريخ انتهاء الإصلاح</label>
+          <input type="date" id="mEndDate" class="field-input">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="mDescription">📝 وصف العطل</label>
+        <textarea id="mDescription" class="field-input" placeholder="وصف تفصيلي للعطل"></textarea>
+      </div>
+
+      <div class="field" style="margin-top:16px;">
+        <label for="mRepair">🔧 الإصلاح المقترح</label>
+        <textarea id="mRepair" class="field-input" style="min-height:52px;" placeholder="خطة الإصلاح المقترحة"></textarea>
+      </div>
+
+      <div class="field-grid" style="margin-top:16px;">
+        <div class="field">
+          <label for="mCost">💰 تكلفة اليد العاملة (د.ت)</label>
+          <input type="number" id="mCost" class="field-input" placeholder="0" min="0" step="0.001">
+        </div>
+        <div class="field">
+          <label for="mNotes">📝 ملاحظات</label>
+          <input type="text" id="mNotes" class="field-input" placeholder="ملاحظات إضافية">
+        </div>
+      </div>
+
+      <!-- قطع الغيار -->
+      <div class="field" style="margin-top:16px;">
+        <label>🔩 قطع الغيار المستخدمة</label>
+        <div class="parts-box">
+          <div id="partsContainer"></div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="addPart()">➕ إضافة قطعة</button>
+          <div class="parts-total">إجمالي قطع الغيار: <strong id="partsTotalDisplay">0.000 د.ت</strong></div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-success" onclick="saveMaintenance()">💾 حفظ</button>
+        <button class="btn btn-secondary" onclick="toggleMaintenanceForm()">❌ إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 4. سجل الصيانة التاريخي ===== -->
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="section-eyebrow">SECTION 04</span>
+        <h2 class="section-title">سجل الصيانة (التاريخ الكامل)</h2>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="filterVessel">🚢 المركب</label>
+          <input type="text" id="filterVessel" class="field-input" placeholder="بحث بالاسم">
+        </div>
+        <div class="field">
+          <label for="filterYear">📅 السنة</label>
+          <select id="filterYear" class="field-input"><option value="">الكل</option></select>
+        </div>
+        <div class="field">
+          <label for="filterType">🔧 نوع الصيانة</label>
+          <select id="filterType" class="field-input">
+            <option value="">الكل</option>
+            <option value="كبرى">كبرى</option>
+            <option value="دورية">دورية</option>
+            <option value="طارئة">طارئة</option>
+            <option value="عادية">عادية</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterUnit">🏭 الوحدة</label>
+          <select id="filterUnit" class="field-input">
+            <option value="">الكل</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
+            <option value="شركة خاصة">شركة خاصة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterCost">💰 التكلفة</label>
+          <select id="filterCost" class="field-input">
+            <option value="">الكل</option>
+            <option value="0-1000">أقل من 1000</option>
+            <option value="1000-5000">1000 - 5000</option>
+            <option value="5000-10000">5000 - 10000</option>
+            <option value="10000+">أكثر من 10000</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterFaultType">⚠️ نوع العطل</label>
+          <select id="filterFaultType" class="field-input">
+            <option value="">الكل</option>
+            <option value="محرك">محرك</option>
+            <option value="كهرباء">كهرباء</option>
+            <option value="هيدروليك">هيدروليك</option>
+            <option value="هيكل">هيكل</option>
+            <option value="توجيه">توجيه</option>
+            <option value="تبريد">تبريد</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary btn-sm" onclick="applyHistoryFilters()">🔍 فلترة</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetHistoryFilters()">🔄 إلغاء الفلترة</button>
+        <span class="result-count" id="historyCount">📊 0 سجل</span>
+      </div>
+    </div>
+
+    <div id="historyMaintenanceContainer"></div>
+  </section>
+
+  <!-- ===== وحدات الصيانة ===== -->
+  <section>
+    <div class="section-head">
+      <div>
+        <span class="section-eyebrow">FACILITIES</span>
+        <h2 class="section-title">وحدات الصيانة</h2>
+      </div>
+    </div>
+    <div id="maintenanceUnitsContainer" class="card-grid"></div>
+  </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   DATA LAYER
+   ============================================================ */
+const STORAGE_VESSELS = 'msa_vessels_v1';
+const STORAGE_RECORDS = 'msa_records_v1';
+
+const UNITS = [
+  'وحدة الصيانة والإسناد البحري تونس',
+  'وحدة الصيانة والإسناد البحري صفاقس',
+  'وحدة الصيانة والإسناد البحري المنستير',
+  'وحدة الصيانة والإسناد البحري جرجيس',
+  'شركة خاصة'
+];
+
+const DEFAULT_VESSELS = [
+  { id: 'v1', name: 'الحارس 01' },
+  { id: 'v2', name: 'النجدة 02' },
+  { id: 'v3', name: 'الصقر 03' },
+  { id: 'v4', name: 'الأمل 04' },
+  { id: 'v5', name: 'الوفاء 05' },
+  { id: 'v6', name: 'الرجاء 06' }
+];
+
+function seedRecords(vessels){
+  const today = new Date();
+  const iso = (d) => d.toISOString().slice(0,10);
+  const daysAgo = (n) => { const d = new Date(today); d.setDate(d.getDate()-n); return iso(d); };
+  return [
+    {
+      id: 'r1', vesselId: vessels[0].id, type: 'طارئة', unit: UNITS[0], technician: 'محمد الطرابلسي',
+      faultType: 'محرك', startDate: daysAgo(6), endDate: '', status: 'قيد الإصلاح',
+      description: 'ارتفاع غير طبيعي في حرارة المحرك الرئيسي أثناء الدورية.',
+      repair: 'فحص نظام التبريد واستبدال المضخة.', cost: 850,
+      notes: 'بانتظار وصول قطعة الغيار.',
+      parts: [{ name: 'مضخة تبريد', qty: 1, price: 620 }]
+    },
+    {
+      id: 'r2', vesselId: vessels[1].id, type: 'دورية', unit: UNITS[1], technician: 'سامي بن عمر',
+      faultType: 'كهرباء', startDate: daysAgo(45), endDate: daysAgo(42), status: 'منتهية',
+      description: 'صيانة دورية للنظام الكهربائي ولوحة التحكم.',
+      repair: 'تنظيف الوصلات واستبدال قواطع تالفة.', cost: 320,
+      notes: '', parts: [{ name: 'قاطع كهربائي', qty: 3, price: 45 }]
+    },
+    {
+      id: 'r3', vesselId: vessels[2].id, type: 'كبرى', unit: UNITS[2], technician: 'أنيس الجبالي',
+      faultType: 'هيكل', startDate: daysAgo(120), endDate: daysAgo(95), status: 'منتهية',
+      description: 'تصليح تشققات في الهيكل الخارجي وإعادة طلاء.',
+      repair: 'لحام وتقوية الهيكل مع طلاء مقاوم للتآكل.', cost: 4200,
+      notes: 'صيانة كبرى ضمن الخطة السنوية.', parts: [{ name: 'صفائح فولاذية', qty: 4, price: 300 }]
+    },
+    {
+      id: 'r4', vesselId: vessels[3].id, type: 'طارئة', unit: UNITS[3], technician: 'وليد الشريف',
+      faultType: 'هيدروليك', startDate: daysAgo(2), endDate: '', status: 'قيد الإصلاح',
+      description: 'تسرب في نظام التوجيه الهيدروليكي.',
+      repair: 'استبدال الخراطيم والزيت الهيدروليكي.', cost: 260,
+      notes: '', parts: []
+    }
+  ];
+}
+
+let vessels = loadJSON(STORAGE_VESSELS, null) || DEFAULT_VESSELS.slice();
+let records = loadJSON(STORAGE_RECORDS, null) || seedRecords(vessels);
+if (!loadJSON(STORAGE_VESSELS, null)) saveJSON(STORAGE_VESSELS, vessels);
+if (!loadJSON(STORAGE_RECORDS, null)) saveJSON(STORAGE_RECORDS, records);
+
+let activeFilters = null;
+
+function loadJSON(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){ return fallback; }
+}
+function saveJSON(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }
+  catch(e){ showToast('تعذر حفظ البيانات محليًا', true); }
+}
+function saveVessels(){ saveJSON(STORAGE_VESSELS, vessels); }
+function saveRecords(){ saveJSON(STORAGE_RECORDS, records); }
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function vesselName(id){
+  const v = vessels.find(x => x.id === id);
+  return v ? v.name : 'مركب غير معروف';
+}
+function fmtMoney(n){
+  n = Number(n) || 0;
+  return n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' د.ت';
+}
+function fmtDate(d){
+  if(!d) return '—';
+  const dt = new Date(d);
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('fr-TN', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+function daysBetween(startIso, endIso){
+  const start = new Date(startIso);
+  const end = endIso ? new Date(endIso) : new Date();
+  return Math.max(0, Math.round((end - start) / 86400000));
+}
+function partsTotal(parts){
+  return (parts || []).reduce((sum,p) => sum + (Number(p.qty)||0) * (Number(p.price)||0), 0);
+}
+function recordTotalCost(r){
+  return (Number(r.cost)||0) + partsTotal(r.parts);
+}
+function statusClass(status){
+  return 'badge-status-' + status.replace(/\s+/g,'_');
+}
+function typeClass(type){
+  return 'badge-type-' + type;
+}
+function uid(){
+  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+function showToast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => { t.classList.remove('show'); }, 2600);
+}
+
+/* ============================================================
+   VESSEL SELECT
+   ============================================================ */
+function populateVesselSelect(){
+  const sel = document.getElementById('mVesselId');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">اختر المركب</option>' +
+    vessels.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.name)}</option>`).join('');
+  if (current) sel.value = current;
+}
+function promptAddVessel(e){
+  e.preventDefault();
+  const name = prompt('اسم المركب الجديد:');
+  if (!name || !name.trim()) return;
+  const v = { id: uid(), name: name.trim() };
+  vessels.push(v);
+  saveVessels();
+  populateVesselSelect();
+  document.getElementById('mVesselId').value = v.id;
+  showToast('تمت إضافة المركب: ' + v.name);
+}
+
+/* ============================================================
+   FORM: open / close / edit
+   ============================================================ */
+function toggleMaintenanceForm(recordId){
+  const panel = document.getElementById('maintenanceForm');
+  const isOpening = panel.classList.contains('hidden');
+
+  if (!isOpening && recordId === undefined){
+    panel.classList.add('hidden');
+    return;
+  }
+
+  populateVesselSelect();
+  clearFormErrors();
+
+  if (recordId){
+    const r = records.find(x => x.id === recordId);
+    if (!r){ showToast('السجل غير موجود', true); return; }
+    document.getElementById('formTitle').textContent = '✏️ تعديل سجل صيانة';
+    document.getElementById('formMode').textContent = 'EDIT RECORD';
+    fillForm(r);
+  } else {
+    document.getElementById('formTitle').textContent = '📝 تسجيل صيانة جديدة';
+    document.getElementById('formMode').textContent = 'NEW RECORD';
+    resetForm();
+  }
+
+  panel.classList.remove('hidden');
+  onStatusChange();
+  panel.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function resetForm(){
+  document.getElementById('mRecordId').value = '';
+  document.getElementById('mVesselId').value = '';
+  document.getElementById('mType').value = 'كبرى';
+  document.getElementById('mUnit').value = UNITS[0];
+  document.getElementById('mTechnician').value = '';
+  document.getElementById('mFaultType').value = 'محرك';
+  document.getElementById('mStartDate').value = '';
+  document.getElementById('mEndDate').value = '';
+  document.getElementById('mStatus').value = 'قيد الإصلاح';
+  document.getElementById('mDescription').value = '';
+  document.getElementById('mRepair').value = '';
+  document.getElementById('mCost').value = '';
+  document.getElementById('mNotes').value = '';
+  document.getElementById('partsContainer').innerHTML = '';
+  addPart();
+  updatePartsTotalDisplay();
+}
+
+function fillForm(r){
+  document.getElementById('mRecordId').value = r.id;
+  document.getElementById('mVesselId').value = r.vesselId;
+  document.getElementById('mType').value = r.type;
+  document.getElementById('mUnit').value = r.unit;
+  document.getElementById('mTechnician').value = r.technician || '';
+  document.getElementById('mFaultType').value = r.faultType;
+  document.getElementById('mStartDate').value = r.startDate || '';
+  document.getElementById('mEndDate').value = r.endDate || '';
+  document.getElementById('mStatus').value = r.status;
+  document.getElementById('mDescription').value = r.description || '';
+  document.getElementById('mRepair').value = r.repair || '';
+  document.getElementById('mCost').value = r.cost || '';
+  document.getElementById('mNotes').value = r.notes || '';
+
+  const container = document.getElementById('partsContainer');
+  container.innerHTML = '';
+  if (r.parts && r.parts.length){
+    r.parts.forEach(p => addPart(p));
+  } else {
+    addPart();
+  }
+  updatePartsTotalDisplay();
+}
+
+function onStatusChange(){
+  const status = document.getElementById('mStatus').value;
+  const endField = document.getElementById('fieldEndDate');
+  endField.style.opacity = status === 'منتهية' ? '1' : '.45';
+  document.getElementById('mEndDate').disabled = status !== 'منتهية';
+}
+
+function clearFormErrors(){
+  document.getElementById('fieldVessel').classList.remove('invalid');
+  document.getElementById('fieldStartDate').classList.remove('invalid');
+}
+
+/* ============================================================
+   PARTS
+   ============================================================ */
+function addPart(part){
+  const container = document.getElementById('partsContainer');
+  const row = document.createElement('div');
+  row.className = 'part-item';
+  row.innerHTML = `
+    <input type="text" placeholder="اسم القطعة" class="field-input part-name" value="${escapeHtml(part?.name || '')}">
+    <input type="number" placeholder="الكمية" class="field-input part-qty" min="0" step="1" value="${part?.qty ?? ''}">
+    <input type="number" placeholder="السعر (د.ت)" class="field-input part-price" min="0" step="0.001" value="${part?.price ?? ''}">
+    <button type="button" class="part-remove" onclick="removePart(this)" title="حذف القطعة">✕</button>
+  `;
+  row.querySelectorAll('.part-qty, .part-price').forEach(inp => {
+    inp.addEventListener('input', updatePartsTotalDisplay);
+  });
+  container.appendChild(row);
+  updatePartsTotalDisplay();
+}
+
+function removePart(btn){
+  const row = btn.closest('.part-item');
+  row.remove();
+  updatePartsTotalDisplay();
+}
+
+function collectPartsFromForm(){
+  return Array.from(document.querySelectorAll('#partsContainer .part-item')).map(row => ({
+    name: row.querySelector('.part-name').value.trim(),
+    qty: Number(row.querySelector('.part-qty').value) || 0,
+    price: Number(row.querySelector('.part-price').value) || 0
+  })).filter(p => p.name || p.qty || p.price);
+}
+
+function updatePartsTotalDisplay(){
+  const parts = collectPartsFromForm();
+  document.getElementById('partsTotalDisplay').textContent = fmtMoney(partsTotal(parts));
+}
+
+/* ============================================================
+   SAVE / DELETE
+   ============================================================ */
+function saveMaintenance(){
+  clearFormErrors();
+  const vesselId = document.getElementById('mVesselId').value;
+  const startDate = document.getElementById('mStartDate').value;
+
+  let valid = true;
+  if (!vesselId){ document.getElementById('fieldVessel').classList.add('invalid'); valid = false; }
+  if (!startDate){ document.getElementById('fieldStartDate').classList.add('invalid'); valid = false; }
+  if (!valid){ showToast('الرجاء إكمال الحقول الإلزامية', true); return; }
+
+  const id = document.getElementById('mRecordId').value || uid();
+  const status = document.getElementById('mStatus').value;
+  const record = {
+    id,
+    vesselId,
+    type: document.getElementById('mType').value,
+    unit: document.getElementById('mUnit').value,
+    technician: document.getElementById('mTechnician').value.trim(),
+    faultType: document.getElementById('mFaultType').value,
+    startDate,
+    endDate: status === 'منتهية' ? document.getElementById('mEndDate').value : '',
+    status,
+    description: document.getElementById('mDescription').value.trim(),
+    repair: document.getElementById('mRepair').value.trim(),
+    cost: Number(document.getElementById('mCost').value) || 0,
+    notes: document.getElementById('mNotes').value.trim(),
+    parts: collectPartsFromForm()
+  };
+
+  const existingIndex = records.findIndex(r => r.id === id);
+  if (existingIndex >= 0){
+    records[existingIndex] = record;
+    showToast('تم تحديث سجل الصيانة بنجاح');
+  } else {
+    records.push(record);
+    showToast('تمت إضافة سجل الصيانة بنجاح');
+  }
+  saveRecords();
+  toggleMaintenanceForm();
+  renderAll();
+}
+
+function deleteMaintenance(id){
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  if (!confirm(`هل تريد فعلًا حذف سجل صيانة "${vesselName(r.vesselId)}" بتاريخ ${fmtDate(r.startDate)}؟`)) return;
+  records = records.filter(x => x.id !== id);
+  saveRecords();
+  showToast('تم حذف السجل');
+  renderAll();
+}
+
+function markAsCompleted(id){
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  const today = new Date().toISOString().slice(0,10);
+  const endDate = prompt('تاريخ انتهاء الإصلاح:', today);
+  if (endDate === null) return;
+  r.status = 'منتهية';
+  r.endDate = endDate || today;
+  saveRecords();
+  showToast('تم تحديد المركب كصيانة منتهية');
+  renderAll();
+}
+
+/* ============================================================
+   RENDER: KPI STATS
+   ============================================================ */
+function renderStats(){
+  const total = records.length;
+  const totalCost = records.reduce((s,r) => s + recordTotalCost(r), 0);
+  const inRepair = records.filter(r => r.status === 'قيد الإصلاح');
+  const finished = records.filter(r => r.status === 'منتهية' && r.endDate);
+  const avgDuration = finished.length
+    ? Math.round(finished.reduce((s,r) => s + daysBetween(r.startDate, r.endDate), 0) / finished.length)
+    : 0;
+
+  const cards = [
+    { label:'إجمالي سجلات الصيانة', value: total.toLocaleString('en-US'), sub: 'منذ بداية التسجيل', accent:'var(--navy-700)' },
+    { label:'إجمالي التكلفة', value: fmtMoney(totalCost), sub: 'يد عاملة + قطع غيار', accent:'var(--teal-600)' },
+    { label:'مراكب معطبة حاليًا', value: inRepair.length.toLocaleString('en-US'), sub: 'قيد الإصلاح الآن', accent:'var(--red-600)' },
+    { label:'متوسط مدة الإصلاح', value: avgDuration + ' يوم', sub: 'للسجلات المنتهية', accent:'var(--amber-500)' },
+  ];
+
+  document.getElementById('maintenanceStats').innerHTML = cards.map(c => `
+    <div class="kpi-card" style="--kpi-accent:${c.accent}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   RENDER: DAMAGED VESSELS
+   ============================================================ */
+function renderDamagedVessels(){
+  const container = document.getElementById('generalMaintenanceContainer');
+  const damaged = records
+    .filter(r => r.status === 'قيد الإصلاح')
+    .sort((a,b) => new Date(a.startDate) - new Date(b.startDate));
+
+  document.getElementById('damagedCount').textContent = damaged.length ? `(${damaged.length})` : '';
+
+  if (!damaged.length){
+    container.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;">
+        <span class="em-icon">✅</span>
+        لا توجد مراكب معطبة حاليًا — جميع المراكب في حالة تشغيلية جيدة.
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = damaged.map(r => {
+    const days = daysBetween(r.startDate);
+    return `
+    <div class="vessel-card">
+      <div class="v-head">
+        <div class="v-name">🚢 ${escapeHtml(vesselName(r.vesselId))}</div>
+        <span class="v-days">${days} يوم</span>
+      </div>
+      <dl>
+        <dt>العطل:</dt><dd>${escapeHtml(r.faultType)}</dd>
+        <dt>الوصف:</dt><dd>${escapeHtml(r.description || '—')}</dd>
+        <dt>بداية العطل:</dt><dd>${fmtDate(r.startDate)}</dd>
+        <dt>الوحدة:</dt><dd>${escapeHtml(shortUnit(r.unit))}</dd>
+        <dt>الفني:</dt><dd>${escapeHtml(r.technician || '—')}</dd>
+      </dl>
+      <div class="v-actions">
+        <button class="btn btn-success btn-sm" onclick="markAsCompleted('${r.id}')">✅ إنهاء الإصلاح</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleMaintenanceForm('${r.id}')">✏️ تعديل</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function shortUnit(u){
+  return (u || '').replace('وحدة الصيانة والإسناد البحري ', '');
+}
+
+/* ============================================================
+   RENDER: HISTORY TABLE + FILTERS
+   ============================================================ */
+function populateFilterYear(){
+  const years = Array.from(new Set(records.map(r => (r.startDate || '').slice(0,4)).filter(Boolean))).sort().reverse();
+  const sel = document.getElementById('filterYear');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">الكل</option>' + years.map(y => `<option value="${y}">${y}</option>`).join('');
+  sel.value = current;
+}
+
+function getFilteredRecords(){
+  const filters = activeFilters;
+  let list = records.slice();
+  if (filters){
+    if (filters.vessel){
+      const q = filters.vessel.toLowerCase();
+      list = list.filter(r => vesselName(r.vesselId).toLowerCase().includes(q));
+    }
+    if (filters.year) list = list.filter(r => (r.startDate || '').startsWith(filters.year));
+    if (filters.type) list = list.filter(r => r.type === filters.type);
+    if (filters.unit) list = list.filter(r => r.unit === filters.unit);
+    if (filters.faultType) list = list.filter(r => r.faultType === filters.faultType);
+    if (filters.cost){
+      list = list.filter(r => {
+        const total = recordTotalCost(r);
+        if (filters.cost === '0-1000') return total < 1000;
+        if (filters.cost === '1000-5000') return total >= 1000 && total <= 5000;
+        if (filters.cost === '5000-10000') return total > 5000 && total <= 10000;
+        if (filters.cost === '10000+') return total > 10000;
+        return true;
+      });
+    }
+  }
+  return list.sort((a,b) => new Date(b.startDate) - new Date(a.startDate));
+}
+
+function applyHistoryFilters(){
+  activeFilters = {
+    vessel: document.getElementById('filterVessel').value.trim(),
+    year: document.getElementById('filterYear').value,
+    type: document.getElementById('filterType').value,
+    unit: document.getElementById('filterUnit').value,
+    cost: document.getElementById('filterCost').value,
+    faultType: document.getElementById('filterFaultType').value,
+  };
+  renderHistory();
+}
+
+function resetHistoryFilters(){
+  ['filterVessel'].forEach(id => document.getElementById(id).value = '');
+  ['filterYear','filterType','filterUnit','filterCost','filterFaultType'].forEach(id => document.getElementById(id).value = '');
+  activeFilters = null;
+  renderHistory();
+}
+
+function renderHistory(){
+  const container = document.getElementById('historyMaintenanceContainer');
+  const list = getFilteredRecords();
+  document.getElementById('historyCount').textContent = `📊 ${list.length} سجل`;
+
+  if (!list.length){
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="em-icon">🗂️</span>
+        لا توجد سجلات مطابقة لمعايير البحث الحالية.
+      </div>`;
+    return;
+  }
+
+  const rows = list.map(r => `
+    <tr>
+      <td data-label="المركب" class="cell-vessel">${escapeHtml(vesselName(r.vesselId))}</td>
+      <td data-label="النوع"><span class="badge ${typeClass(r.type)}">${escapeHtml(r.type)}</span></td>
+      <td data-label="العطل">${escapeHtml(r.faultType)}</td>
+      <td data-label="الوحدة">${escapeHtml(shortUnit(r.unit))}</td>
+      <td data-label="بداية العطل">${fmtDate(r.startDate)}</td>
+      <td data-label="نهاية الإصلاح">${r.endDate ? fmtDate(r.endDate) : '—'}</td>
+      <td data-label="الحالة"><span class="badge ${statusClass(r.status)}">${escapeHtml(r.status)}</span></td>
+      <td data-label="التكلفة" class="cell-cost">${fmtMoney(recordTotalCost(r))}</td>
+      <td data-label="إجراءات">
+        <div class="row-actions">
+          <button class="btn btn-ghost btn-sm" onclick="toggleMaintenanceForm('${r.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteMaintenance('${r.id}')">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المركب</th><th>النوع</th><th>العطل</th><th>الوحدة</th>
+            <th>بداية العطل</th><th>نهاية الإصلاح</th><th>الحالة</th><th>التكلفة</th><th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ============================================================
+   RENDER: UNITS SUMMARY
+   ============================================================ */
+function renderUnits(){
+  const container = document.getElementById('maintenanceUnitsContainer');
+  container.innerHTML = UNITS.map(u => {
+    const unitRecords = records.filter(r => r.unit === u);
+    const count = unitRecords.length;
+    const cost = unitRecords.reduce((s,r) => s + recordTotalCost(r), 0);
+    const active = unitRecords.filter(r => r.status === 'قيد الإصلاح').length;
+    return `
+      <div class="unit-card">
+        <div class="u-name">🏭 ${escapeHtml(shortUnit(u))}</div>
+        <div class="unit-stat-row"><span>عدد السجلات</span><b>${count}</b></div>
+        <div class="unit-stat-row"><span>قيد الإصلاح الآن</span><b>${active}</b></div>
+        <div class="unit-stat-row"><span>إجمالي التكلفة</span><b>${fmtMoney(cost)}</b></div>
+      </div>`;
+  }).join('');
+}
+
+/* ============================================================
+   ESCAPE
+   ============================================================ */
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function renderAll(){
+  renderStats();
+  renderDamagedVessels();
+  populateFilterYear();
+  renderHistory();
+  renderUnits();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  populateVesselSelect();
+  resetForm();
+  renderAll();
+});
+</script>
+</body>
+</html>
