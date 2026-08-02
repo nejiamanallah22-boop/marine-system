@@ -1,7 +1,7 @@
 {
-  "name": "marine-system",
-  "version": "2.0.0",
-  "description": "منظومة الوسائل البحرية - نظام متابعة الأسطول مع إدارة الصيانة",
+  "name": "marine-fleet-management",
+  "version": "3.0.0",
+  "description": "نظام إدارة الأسطول البحري - منظومة متابعة الوسائل البحرية",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,13 +9,21 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["marine", "fleet", "maintenance", "tracking"],
-  "author": "أمان الله ناجي",
+  "keywords": [
+    "marine",
+    "fleet",
+    "management",
+    "tunisia",
+    "navy"
+  ],
+  "author": "الوكيل أمان الله ناجي",
   "license": "MIT"
 }
