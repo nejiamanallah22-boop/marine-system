@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css" />
     <link rel="stylesheet" href="/css/style.css">
@@ -16,16 +16,23 @@
 </head>
 <body>
 
-<!-- ===== شاشة الدخول ===== -->
+<!-- ===== شاشة الدخول الفاخرة ===== -->
 <div id="loginOverlay">
     <div class="login-box">
-        <span class="logo">⚓</span>
-        <h2>منظومة الوسائل البحرية</h2>
+        <span class="logo-icon">⚓</span>
+        <h1>منظومة الوسائل البحرية</h1>
         <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
+        <div class="developer">
+            <span>الوكيل</span>
+            <span style="color:#f5d76e; font-weight:700;">أمان الله ناجي</span>
+        </div>
         <input type="text" id="username" placeholder="👤 اسم المستخدم">
         <input type="password" id="password" placeholder="🔑 كلمة المرور">
         <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
         <div id="loginError" class="error-msg"></div>
+        <div class="login-footer">
+            نظام إدارة وإسناد الوحدات البحرية
+        </div>
     </div>
 </div>
 
@@ -36,16 +43,16 @@
     <header>
         <h1>
             ⚓ منظومة متابعة الوسائل البحرية
-            <span class="developer"><i class="fas fa-code"></i> المطور: أمان الله ناجي</span>
+            <span class="developer-tag">الوكيل أمان الله ناجي</span>
         </h1>
         <div class="header-content">
             <span class="notification-icon" onclick="toggleNotifications()">
                 🔔 <span class="notification-badge" id="notificationBadge">0</span>
             </span>
             <span class="role-badge" id="userRoleDisplay">👤</span>
-            <button class="btn btn-sm btn-outline-white" onclick="window.print()">🖨️ طباعة</button>
-            <button class="btn btn-sm btn-outline-white" onclick="refreshAllPages()">🔄 تحديث</button>
-            <button class="btn btn-sm btn-outline-white" onclick="doLogout()">🚪 خروج</button>
+            <button class="btn-outline-white" onclick="window.print()">🖨️ طباعة</button>
+            <button class="btn-outline-white" onclick="refreshAllPages()">🔄 تحديث</button>
+            <button class="btn-outline-white" onclick="doLogout()" style="border-color:rgba(248,113,113,0.3); color:#f87171;">🚪 خروج</button>
         </div>
     </header>
 
@@ -66,21 +73,21 @@
 </div>
 
 <!-- ===== أزرار التمرير ===== -->
-<div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()">↑</button>
-    <button class="scroll-btn" onclick="scrollToBottom()">↓</button>
+<div class="scroll-buttons" style="position:fixed; bottom:20px; left:20px; display:flex; flex-direction:column; gap:8px; z-index:50;">
+    <button onclick="scrollToTop()" style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px;">↑</button>
+    <button onclick="scrollToBottom()" style="background:rgba(255,255,255,0.05); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); color:white; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:18px;">↓</button>
 </div>
 
 <!-- ===== النوافذ المنبثقة ===== -->
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3>🔑 تغيير كلمة المرور</h3>
-        <p id="modalUserName" style="margin-bottom:10px; color:#6c757d;"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        <div class="modal-actions">
-            <button class="btn btn-success" onclick="saveNewPassword()">حفظ</button>
-            <button class="btn btn-danger" onclick="closePasswordModal()">إلغاء</button>
+<div id="passwordModal" class="modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:99999; justify-content:center; align-items:center; backdrop-filter:blur(10px);">
+    <div style="background:rgba(26,26,46,0.95); border-radius:20px; padding:30px; max-width:400px; width:90%; border:1px solid rgba(255,255,255,0.1);">
+        <h3 style="color:white; text-align:center; margin-bottom:15px;">🔑 تغيير كلمة المرور</h3>
+        <p id="modalUserName" style="text-align:center; color:rgba(255,255,255,0.6); margin-bottom:15px;"></p>
+        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" style="width:100%; padding:12px; margin:8px 0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white;">
+        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="width:100%; padding:12px; margin:8px 0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white;">
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button onclick="saveNewPassword()" style="flex:1; padding:12px; background:linear-gradient(135deg, #4ade80, #22c55e); border:none; border-radius:10px; color:white; font-weight:700; cursor:pointer;">حفظ</button>
+            <button onclick="closePasswordModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; color:white; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 </div>
