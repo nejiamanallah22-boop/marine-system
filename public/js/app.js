@@ -278,7 +278,7 @@ function debounce(func, wait) {
 }
 
 // ============================================================
-// المصادقة - النسخة الكاملة
+// المصادقة - النسخة النهائية
 // ============================================================
 
 function doLogin() {
@@ -298,10 +298,32 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== 1. التحقق من المستخدمين المحليين (من allUsers) =====
+    // ===== 1. تحميل المستخدمين المحليين من localStorage =====
+    let localUsers = [];
+    try {
+        const stored = localStorage.getItem('local_users');
+        if (stored) {
+            localUsers = JSON.parse(stored);
+            console.log('✅ تم تحميل المستخدمين المحليين:', localUsers.length);
+        }
+    } catch(e) {
+        console.error('Error loading local users:', e);
+    }
+    
+    // دمج مع allUsers
+    localUsers.forEach(u => {
+        if (!allUsers.find(ex => ex.id === u.id)) {
+            allUsers.push(u);
+        }
+    });
+    
+    // ===== 2. التحقق من المستخدمين المحليين =====
     const localUser = allUsers.find(u => u.email === username && u.isActive !== false);
     if (localUser) {
-        // التحقق من كلمة المرور
+        console.log('🔍 تم العثور على المستخدم المحلي:', localUser.name);
+        console.log('🔑 كلمة المرور المدخلة:', password);
+        console.log('🔑 كلمة المرور المخزنة:', localUser.password);
+        
         if (localUser.password === password) {
             console.log('✅ دخول ناجح للمستخدم المحلي:', username);
             const userData = {
@@ -338,7 +360,7 @@ function doLogin() {
         }
     }
     
-    // ===== 2. حسابات تجريبية (admin, manager, editor, viewer) =====
+    // ===== 3. حسابات تجريبية =====
     const demoUsers = {
         'admin': {
             password: '123456',
@@ -381,7 +403,7 @@ function doLogin() {
         return;
     }
     
-    // ===== 3. الاتصال بالخادم (إذا كان موجوداً) =====
+    // ===== 4. الاتصال بالخادم =====
     fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -411,7 +433,24 @@ function doLogin() {
     })
     .catch(err => {
         console.error('Login error:', err);
-        showAlert('❌ اسم المستخدم أو كلمة المرور غير صحيحة', 'danger');
+        // محاولة الدخول التجريبي كحل أخير
+        if (demoUsers[username] && demoUsers[username].password === password) {
+            const userData = demoUsers[username].user;
+            localStorage.setItem('token', 'demo-token-' + Date.now());
+            localStorage.setItem('user', JSON.stringify(userData));
+            currentUser = userData;
+            
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            updateUserDisplay();
+            loadAllData();
+            loadPage('dashboard');
+            startActivityTracking();
+            showAlert('✅ مرحباً ' + userData.name + '! (وضع التجربة)', 'success');
+        } else {
+            showAlert('❌ اسم المستخدم أو كلمة المرور غير صحيحة', 'danger');
+        }
     })
     .finally(() => {
         if (loginBtn) {
@@ -563,31 +602,42 @@ function loadTickets() {
 }
 
 function loadUsers() {
-    const token = getToken();
-    if (token && (token.startsWith('demo-token') || token.startsWith('local-token'))) {
-        // استخدام المستخدمين المحليين
-        renderUsersTable();
-        return;
+    // تحميل من localStorage أولاً
+    try {
+        const stored = localStorage.getItem('local_users');
+        if (stored) {
+            const users = JSON.parse(stored);
+            allUsers = users;
+            console.log('✅ Users loaded from localStorage:', allUsers.length);
+            renderUsersTable();
+        }
+    } catch(e) {
+        console.error('Error loading users:', e);
     }
     
-    if (!token) {
-        renderUsersTable();
-        return;
-    }
+    // ثم محاولة الاتصال بالخادم
+    const token = getToken();
+    if (!token) return;
     
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
-        allUsers = data || [];
-        console.log('✅ Users loaded from server:', allUsers.length);
-        renderUsersTable();
+        if (data && data.length > 0) {
+            // دمج المستخدمين من الخادم مع المحليين
+            data.forEach(u => {
+                if (!allUsers.find(ex => ex.id === u.id)) {
+                    allUsers.push(u);
+                }
+            });
+            // حفظ في localStorage
+            localStorage.setItem('local_users', JSON.stringify(allUsers));
+            console.log('✅ Users merged from server:', allUsers.length);
+            renderUsersTable();
+        }
     })
-    .catch(err => {
-        console.error('Load users error:', err);
-        renderUsersTable();
-    });
+    .catch(err => console.error('Load users error:', err));
 }
 
 function loadNotes() {
@@ -846,7 +896,6 @@ function renderUsersTable() {
     const tbody = document.getElementById('usersBody');
     if (!tbody) return;
     
-    // تحديث العدد
     const countEl = document.getElementById('usersCount');
     if (countEl) countEl.textContent = allUsers.length;
     
@@ -915,14 +964,12 @@ function addUser() {
         return;
     }
     
-    // التحقق من عدم وجود البريد الإلكتروني مكرراً
     const existing = allUsers.find(u => u.email === email);
     if (existing) {
         showAlert('⚠️ هذا البريد الإلكتروني مستخدم بالفعل', 'warning');
         return;
     }
     
-    // إضافة المستخدم مع كلمة المرور
     const newUser = {
         id: 'user-' + Date.now(),
         name: name,
@@ -934,13 +981,16 @@ function addUser() {
     };
     allUsers.push(newUser);
     
-    // حفظ في localStorage للاستمرارية
+    // حفظ في localStorage
     try {
         localStorage.setItem('local_users', JSON.stringify(allUsers));
-    } catch(e) {}
+        console.log('✅ تم حفظ المستخدمين في localStorage:', allUsers.length);
+    } catch(e) {
+        console.error('Error saving local users:', e);
+    }
     
     renderUsersTable();
-    showAlert('✅ تم إضافة المستخدم بنجاح - يمكنه الدخول بكلمة المرور: ' + password, 'success');
+    showAlert('✅ تم إضافة المستخدم بنجاح! يمكنه الدخول بكلمة المرور: ' + password, 'success');
     clearUserInputs();
 }
 
@@ -986,7 +1036,6 @@ function updateUser(id) {
             user.password = password;
         }
         
-        // حفظ في localStorage
         try {
             localStorage.setItem('local_users', JSON.stringify(allUsers));
         } catch(e) {}
@@ -1005,7 +1054,6 @@ function updateUser(id) {
 function deleteUser(id) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
     
-    // منع حذف المستخدم الحالي
     if (currentUser && currentUser.id === id) {
         showAlert('⚠️ لا يمكنك حذف حسابك الحالي', 'warning');
         return;
@@ -1013,7 +1061,6 @@ function deleteUser(id) {
     
     allUsers = allUsers.filter(u => u.id !== id);
     
-    // حفظ في localStorage
     try {
         localStorage.setItem('local_users', JSON.stringify(allUsers));
     } catch(e) {}
