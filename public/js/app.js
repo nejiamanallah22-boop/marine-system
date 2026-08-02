@@ -102,7 +102,6 @@ function initPage(pageName) {
 }
 
 function initTrackingPage() {
-    // التحقق من وجود الصفحة
     if (document.getElementById('page-tracking')) {
         if (typeof initTrackingMap === 'function') {
             setTimeout(initTrackingMap, 300);
@@ -215,7 +214,6 @@ function scrollToBottom() {
 function startActivityTracking() {
     if (activityInterval) clearInterval(activityInterval);
     
-    // تسجيل النشاط كل 30 ثانية
     activityInterval = setInterval(() => {
         const token = getToken();
         if (!token) return;
@@ -229,7 +227,6 @@ function startActivityTracking() {
         }).catch(err => console.log('Activity tracking error:', err));
     }, 30000);
     
-    // تسجيل النشاط عند أي تفاعل
     document.addEventListener('click', logActivity);
     document.addEventListener('keydown', logActivity);
     document.addEventListener('scroll', debounce(logActivity, 5000));
@@ -277,7 +274,7 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== حسابات تجريبية للاختبار بدون خادم =====
+    // ===== حسابات تجريبية =====
     const demoUsers = {
         'admin': {
             password: '123456',
@@ -297,7 +294,6 @@ function doLogin() {
         }
     };
     
-    // التحقق من الحسابات التجريبية أولاً
     if (demoUsers[username] && demoUsers[username].password === password) {
         console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
         const userData = demoUsers[username].user;
@@ -366,13 +362,11 @@ function doLogin() {
 function doLogout() {
     if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
     
-    // إيقاف تتبع النشاط
     if (activityInterval) {
         clearInterval(activityInterval);
         activityInterval = null;
     }
     
-    // إبلاغ الخادم بتسجيل الخروج
     const token = getToken();
     if (token && !token.startsWith('demo-token')) {
         fetch('/api/auth/logout', {
@@ -507,6 +501,7 @@ function loadUsers() {
     .then(res => res.json())
     .then(data => {
         allUsers = data || [];
+        console.log('✅ Users loaded:', allUsers.length);
         renderUsersTable();
     })
     .catch(err => console.error('Load users error:', err));
@@ -529,7 +524,6 @@ function loadNotes() {
 function loadSessions() {
     const token = getToken();
     if (!token) return;
-    
     if (document.getElementById('page-sessions')) {
         if (typeof refreshSessions === 'function') {
             refreshSessions();
@@ -761,16 +755,19 @@ function renderUsersTable() {
     const tbody = document.getElementById('usersBody');
     if (!tbody) return;
     if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>`;
         return;
     }
     tbody.innerHTML = allUsers.map(u => `
         <tr>
-            <td>${u.name || '-'}</td>
-            <td>${u.role || 'مشاهد'}</td>
+            <td><strong>${u.name || '-'}</strong></td>
+            <td>${u.email || '-'}</td>
+            <td><span style="color:${u.role === 'مسؤول' ? '#fbbf24' : u.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${u.role || 'مشاهد'}</span></td>
             <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+            <td style="font-size:12px; color:rgba(255,255,255,0.3);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-TN') : '-'}</td>
             <td>
-                <button class="btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️</button>
+                <button class="btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -790,6 +787,185 @@ function renderNotes() {
             <small style="color:rgba(255,255,255,0.3);">${n.date || ''} | ${n.createdBy || 'مجهول'}</small>
         </div>
     `).join('');
+}
+
+// ============================================================
+// 👥 دوال المستخدمين (كاملة)
+// ============================================================
+
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        return;
+    }
+    if (!password || password.length < 4) {
+        showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
+        return;
+    }
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, email, password, role })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
+            clearUserInputs();
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+    });
+}
+
+function editUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        const user = users.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        
+        document.getElementById('uName').value = user.name || '';
+        document.getElementById('uEmail').value = user.email || '';
+        document.getElementById('uPassword').value = '';
+        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
+        document.getElementById('uRole').value = user.role || 'مشاهد';
+        
+        const addBtn = document.querySelector('[onclick="addUser()"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 تحديث المستخدم';
+            addBtn.onclick = function() { updateUser(id); };
+        }
+        
+        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+    })
+    .catch(err => {
+        console.error('Edit user error:', err);
+        showAlert('❌ خطأ في تحميل بيانات المستخدم', 'danger');
+    });
+}
+
+function updateUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        return;
+    }
+    
+    const data = { name, email, role };
+    if (password && password.length >= 4) {
+        data.password = password;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
+            clearUserInputs();
+            const addBtn = document.querySelector('[onclick*="updateUser"]');
+            if (addBtn) {
+                addBtn.textContent = '💾 إضافة مستخدم';
+                addBtn.onclick = addUser;
+            }
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Update user error:', err);
+        showAlert('❌ خطأ في تحديث المستخدم', 'danger');
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
+}
+
+function clearUserInputs() {
+    document.getElementById('uName').value = '';
+    document.getElementById('uEmail').value = '';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uRole').value = 'مشاهد';
 }
 
 // ============================================================
@@ -1605,11 +1781,6 @@ function exportEfficiencyData() {
 
 function initMap() {
     console.log('🗺️ Initializing map...');
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    showAlert('✅ تم حذف المستخدم', 'success');
 }
 
 // ============================================================
