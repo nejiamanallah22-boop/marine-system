@@ -9,6 +9,8 @@ let allMaintenance = [];
 let currentUser = null;
 let editingVesselId = null;
 let editingMaintenanceId = null;
+let activityInterval = null;
+let sessionId = null;
 
 // متغيرات الرسوم البيانية
 let chartCategory = null;
@@ -94,6 +96,7 @@ function initPage(pageName) {
         case 'map': setTimeout(initMap, 100); break;
         case 'users': loadUsers(); break;
         case 'notes': loadNotes(); break;
+        case 'sessions': loadSessions(); break;
         default: console.log('⚠️ Unknown page:', pageName);
     }
 }
@@ -103,7 +106,7 @@ function showPage(pageName) {
     const btns = document.querySelectorAll('.nav-btn');
     const pageMap = {
         'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8
+        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 'sessions': 9
     };
     if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
         btns[pageMap[pageName]].classList.add('active');
@@ -191,6 +194,54 @@ function scrollToBottom() {
 }
 
 // ============================================================
+// 🕐 مراقبة النشاط
+// ============================================================
+
+function startActivityTracking() {
+    if (activityInterval) clearInterval(activityInterval);
+    
+    // تسجيل النشاط كل 30 ثانية
+    activityInterval = setInterval(() => {
+        const token = getToken();
+        if (!token) return;
+        
+        fetch('/api/auth/activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        }).catch(err => console.log('Activity tracking error:', err));
+    }, 30000);
+    
+    // تسجيل النشاط عند أي تفاعل
+    document.addEventListener('click', logActivity);
+    document.addEventListener('keydown', logActivity);
+    document.addEventListener('scroll', debounce(logActivity, 5000));
+}
+
+function logActivity() {
+    const token = getToken();
+    if (!token) return;
+    
+    fetch('/api/auth/activity', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        }
+    }).catch(err => console.log('Activity log error:', err));
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, arguments), wait);
+    };
+}
+
+// ============================================================
 // المصادقة
 // ============================================================
 
@@ -215,19 +266,19 @@ function doLogin() {
     const demoUsers = {
         'admin': {
             password: '123456',
-            user: { id: 1, name: 'مدير النظام', role: 'مسؤول', email: 'admin@example.com' }
+            user: { id: '1', name: 'مدير النظام', role: 'مسؤول', email: 'admin@example.com' }
         },
         'manager': {
             password: '123456',
-            user: { id: 2, name: 'مدير العمليات', role: 'مشرف', email: 'manager@example.com' }
+            user: { id: '2', name: 'مدير العمليات', role: 'مشرف', email: 'manager@example.com' }
         },
         'editor': {
             password: '123456',
-            user: { id: 3, name: 'محرر', role: 'محرر', email: 'editor@example.com' }
+            user: { id: '3', name: 'محرر', role: 'محرر', email: 'editor@example.com' }
         },
         'viewer': {
             password: '123456',
-            user: { id: 4, name: 'مشاهد', role: 'مشاهد', email: 'viewer@example.com' }
+            user: { id: '4', name: 'مشاهد', role: 'مشاهد', email: 'viewer@example.com' }
         }
     };
     
@@ -238,6 +289,7 @@ function doLogin() {
         localStorage.setItem('token', 'demo-token-' + Date.now());
         localStorage.setItem('user', JSON.stringify(userData));
         currentUser = userData;
+        sessionId = 'demo-session-' + Date.now();
         
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
@@ -245,6 +297,7 @@ function doLogin() {
         updateUserDisplay();
         loadAllData();
         loadPage('dashboard');
+        startActivityTracking();
         showAlert('✅ مرحباً ' + userData.name + '!', 'success');
         
         if (loginBtn) {
@@ -269,6 +322,7 @@ function doLogin() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
             currentUser = data.user;
+            sessionId = data.session?.sessionId || null;
             
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainApp').style.display = 'block';
@@ -276,6 +330,7 @@ function doLogin() {
             updateUserDisplay();
             loadAllData();
             loadPage('dashboard');
+            startActivityTracking();
             showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
         } else {
             showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
@@ -294,10 +349,25 @@ function doLogin() {
 }
 
 function doLogout() {
-    if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
-        localStorage.clear();
-        location.reload();
+    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    // إيقاف تتبع النشاط
+    if (activityInterval) {
+        clearInterval(activityInterval);
+        activityInterval = null;
     }
+    
+    // إبلاغ الخادم بتسجيل الخروج
+    const token = getToken();
+    if (token && !token.startsWith('demo-token')) {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).catch(err => console.log('Logout error:', err));
+    }
+    
+    localStorage.clear();
+    location.reload();
 }
 
 function updateUserDisplay() {
@@ -331,9 +401,7 @@ function loadAllData() {
 
 function loadVessels() {
     const token = getToken();
-    // إذا كان هناك توكن، حاول الاتصال بالخادم
     if (token && token.startsWith('demo-token')) {
-        // استخدام البيانات التجريبية
         allVessels = getDemoVessels();
         renderAllTables();
         return;
@@ -443,12 +511,23 @@ function loadNotes() {
     .catch(err => console.error('Load notes error:', err));
 }
 
+function loadSessions() {
+    const token = getToken();
+    if (!token) return;
+    
+    // هذه الدالة تستدعي من صفحة sessions.html
+    if (document.getElementById('page-sessions')) {
+        if (typeof refreshSessions === 'function') {
+            refreshSessions();
+        }
+    }
+}
+
 function renderAllTables() {
     renderMainTable();
     renderMaintenanceTables();
     updateMaintenanceVessels();
     renderEfficiency();
-    // محاولة تحديث Dashboard إذا كانت مفتوحة
     if (document.getElementById('page-dashboard')) {
         if (typeof loadDashboard === 'function') {
             setTimeout(loadDashboard, 100);
@@ -507,11 +586,11 @@ function getDemoMaintenance() {
             faultType: 'محرك',
             cost: 4500,
             notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
-            status: 'مغلقة',
+            status: 'مكتملة',
             date: '2026-01-20',
             startDate: '2026-01-15',
             endDate: '2026-01-20',
-            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }, { name: 'فلتر زيت', quantity: 2, price: 150 }],
+            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }],
             createdBy: 'Admin'
         },
         {
@@ -526,7 +605,7 @@ function getDemoMaintenance() {
             faultType: 'محرك',
             cost: 300,
             notes: 'تم تغيير الزيوت والفلتر',
-            status: 'مغلقة',
+            status: 'مكتملة',
             date: '2026-05-15',
             startDate: '2026-05-14',
             endDate: '2026-05-15',
@@ -545,7 +624,7 @@ function getDemoMaintenance() {
             faultType: 'هيكل',
             cost: 5000,
             notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
-            status: 'مغلقة',
+            status: 'مكتملة',
             date: '2026-01-10',
             startDate: '2026-01-05',
             endDate: '2026-01-10',
@@ -564,7 +643,7 @@ function getDemoMaintenance() {
             faultType: 'كهرباء',
             cost: 1200,
             notes: 'تم تغيير البطاريات والكابلات',
-            status: 'مغلقة',
+            status: 'مكتملة',
             date: '2026-02-05',
             startDate: '2026-02-03',
             endDate: '2026-02-05',
@@ -602,11 +681,11 @@ function getDemoMaintenance() {
             faultType: 'تبريد',
             cost: 3200,
             notes: 'تم تغيير نظام التبريد بالكامل',
-            status: 'مغلقة',
+            status: 'مكتملة',
             date: '2026-07-15',
             startDate: '2026-07-10',
             endDate: '2026-07-15',
-            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }, { name: 'ماء مقطر', quantity: 10, price: 40 }],
+            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }],
             createdBy: 'Admin'
         }
     ];
@@ -1088,7 +1167,7 @@ function openMaintenanceFile(vesselId) {
 function renderHistoryMaintenance() {
     const container = document.getElementById('historyMaintenanceContainer');
     if (!container) return;
-    const records = allMaintenance.filter(r => r.status === 'مغلقة' || r.status === 'مكتملة');
+    const records = allMaintenance.filter(r => r.status === 'مكتملة' || r.status === 'ملغية');
     if (records.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>';
         return;
@@ -1130,7 +1209,8 @@ function updateMaintenanceStats() {
         <div class="maintenance-stats">
             <div class="stat-box stat-total"><h4>${allMaintenance.length}</h4><p>📊 المجموع</p></div>
             <div class="stat-box stat-progress"><h4>${allMaintenance.filter(r => r.status === 'قيد الإنجاز').length}</h4><p>🔄 قيد الإنجاز</p></div>
-            <div class="stat-box stat-completed"><h4>${allMaintenance.filter(r => r.status === 'مغلقة' || r.status === 'مكتملة').length}</h4><p>✅ مكتملة</p></div>
+            <div class="stat-box stat-completed"><h4>${allMaintenance.filter(r => r.status === 'مكتملة').length}</h4><p>✅ مكتملة</p></div>
+            <div class="stat-box stat-cancelled"><h4>${allMaintenance.filter(r => r.status === 'ملغية').length}</h4><p>❌ ملغية</p></div>
         </div>
     `;
 }
