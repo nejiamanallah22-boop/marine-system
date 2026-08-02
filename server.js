@@ -36,6 +36,26 @@ function getCurrentTime() {
     return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
+// ==================== البيانات ====================
+let users = [
+    { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true },
+    { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true },
+    { id: 3, name: 'viewer', pass: hashPassword('1234'), role: 'مشاهد', enabled: true }
+];
+
+let vessels = [
+    { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
+    { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
+    { id: 3, name: 'زورق صيانة', num: 'Z003', len: 15, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صيانة', break: 'عطل كهربائي', fDate: '2024-05-10', eDate: '2024-05-30', ref: 'REF002', cat: 'زوارق مزدوجة' }
+];
+
+let tickets = [];
+let activityLogs = [];
+let userLocations = [];
+let maintenanceRecords = [];
+let nextId = 10;
+
+// ==================== دوال السجلات ====================
 function logActivity(username, role, action, details, ip) {
     const log = {
         id: Date.now(),
@@ -53,25 +73,6 @@ function logActivity(username, role, action, details, ip) {
     return log;
 }
 
-// ==================== البيانات ====================
-let users = [
-    { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true, lastLogin: null },
-    { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true, lastLogin: null },
-    { id: 3, name: 'viewer', pass: hashPassword('1234'), role: 'مشاهد', enabled: true, lastLogin: null }
-];
-
-let vessels = [
-    { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
-    { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
-    { id: 3, name: 'زورق صيانة', num: 'Z003', len: 15, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صيانة', break: 'عطل كهربائي', fDate: '2024-05-10', eDate: '2024-05-30', ref: 'REF002', cat: 'زوارق مزدوجة' }
-];
-
-let tickets = [];
-let activityLogs = [];
-let userLocations = [];
-let maintenanceRecords = [];
-let nextId = 10;
-
 // ==================== API تسجيل الدخول ====================
 app.post('/api/login', (req, res) => {
     const { name, pass } = req.body;
@@ -85,7 +86,6 @@ app.post('/api/login', (req, res) => {
     req.session.userId = user.id;
     req.session.userName = user.name;
     req.session.userRole = user.role;
-    user.lastLogin = new Date().toISOString();
     
     logActivity(user.name, user.role, 'تسجيل دخول', `قام بتسجيل الدخول من ${getClientIp(req)}`, getClientIp(req));
     
@@ -163,7 +163,7 @@ app.post('/api/vessels', (req, res) => {
     
     const newVessel = { 
         id: nextId++, 
-        ...req.body,
+        name: req.body.name,
         createdAt: new Date().toISOString()
     };
     vessels.push(newVessel);
@@ -445,7 +445,7 @@ app.post('/api/import-all', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== API الصيانة ====================
+// ==================== ✅ API الصيانة (المضافة حديثاً) ====================
 
 // جلب جميع سجلات الصيانة
 app.get('/api/maintenance', (req, res) => {
@@ -500,7 +500,7 @@ app.put('/api/maintenance/:id', (req, res) => {
     logActivity(req.session.userName, req.session.userRole, 'تعديل سجل صيانة', 
         `عدل سجل الصيانة: ${req.params.id}`, getClientIp(req));
     
-    res.json({ success: true });
+    res.json({ success: true, record: maintenanceRecords[index] });
 });
 
 // حذف سجل صيانة
@@ -519,40 +519,6 @@ app.delete('/api/maintenance/:id', (req, res) => {
         `حذف سجل الصيانة: ${req.params.id}`, getClientIp(req));
     
     res.json({ success: true });
-});
-
-// مزامنة المراكب
-app.post('/api/vessels/sync', (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
-    const newVessels = req.body;
-    if (Array.isArray(newVessels)) {
-        newVessels.forEach(v => {
-            if (!vessels.find(existing => existing.id === v.id)) {
-                vessels.push(v);
-            }
-        });
-        res.json({ success: true });
-    } else {
-        res.status(400).json({ error: 'بيانات غير صالحة' });
-    }
-});
-
-// مزامنة سجلات الصيانة
-app.post('/api/maintenance/sync', (req, res) => {
-    if (!req.session.userId) {
-        return res.status(401).json({ error: 'غير مصرح' });
-    }
-    
-    const newRecords = req.body;
-    if (Array.isArray(newRecords)) {
-        maintenanceRecords = newRecords;
-        res.json({ success: true });
-    } else {
-        res.status(400).json({ error: 'بيانات غير صالحة' });
-    }
 });
 
 // ==================== API الاختبار ====================
