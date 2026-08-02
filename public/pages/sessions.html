@@ -2,46 +2,38 @@
     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
         <div>
             <h2 style="margin:0; color:white; font-size:22px;">👥 مراقبة المستخدمين</h2>
-            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">تتبع نشاط المستخدمين والأجهزة المتصلة</p>
+            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">تتبع المستخدمين على الخريطة</p>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span style="background:rgba(74,222,128,0.15); color:#4ade80; padding:6px 16px; border-radius:20px; font-size:12px; border:1px solid rgba(74,222,128,0.1);">
-                🟢 <span id="onlineCount">0</span> متصل
+                🟢 <span id="sessionOnline">0</span> متصل
             </span>
             <button onclick="refreshSessions()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
         </div>
     </div>
 
-    <!-- إحصائيات -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin:20px 0;">
-        <div class="stat-card" style="padding:15px;">
-            <div style="font-size:28px; font-weight:800; color:#4ade80;" id="sessionOnline">0</div>
-            <div style="font-size:12px; color:rgba(255,255,255,0.4);">🟢 متصلون الآن</div>
-        </div>
-        <div class="stat-card" style="padding:15px;">
-            <div style="font-size:28px; font-weight:800; color:#60a5fa;" id="sessionTotal">0</div>
-            <div style="font-size:12px; color:rgba(255,255,255,0.4);">📊 إجمالي الجلسات</div>
-        </div>
-        <div class="stat-card" style="padding:15px;">
-            <div style="font-size:28px; font-weight:800; color:#f87171;" id="sessionOffline">0</div>
-            <div style="font-size:12px; color:rgba(255,255,255,0.4);">🔴 غير متصل</div>
-        </div>
-        <div class="stat-card" style="padding:15px;">
-            <div style="font-size:28px; font-weight:800; color:#fbbf24;" id="sessionToday">0</div>
-            <div style="font-size:12px; color:rgba(255,255,255,0.4);">📅 دخول اليوم</div>
-        </div>
+    <!-- ===== الخريطة ===== -->
+    <div style="background:rgba(255,255,255,0.02); border-radius:12px; padding:10px; margin:15px 0; border:1px solid rgba(255,255,255,0.04);">
+        <div id="sessionsMap" style="height:400px; width:100%; border-radius:8px;"></div>
     </div>
 
-    <!-- جدول الجلسات -->
-    <div class="stat-card" style="padding:15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 سجل الجلسات</h4>
-            <div style="display:flex; gap:8px;">
-                <button onclick="filterSessions('all')" class="filter-btn active" data-filter="all" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">الكل</button>
-                <button onclick="filterSessions('online')" class="filter-btn" data-filter="online" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">🟢 متصل</button>
-                <button onclick="filterSessions('offline')" class="filter-btn" data-filter="offline" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">🔴 غير متصل</button>
-            </div>
+    <!-- ===== حالة GPS ===== -->
+    <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px 16px; margin:10px 0; border:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <div>
+            <span style="color:rgba(255,255,255,0.4);">📍 موقعي:</span>
+            <span id="myLocation" style="color:rgba(255,255,255,0.6);">--</span>
         </div>
+        <button onclick="shareMyLocationSessions()" style="padding:4px 14px; background:rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.1); border-radius:6px; color:#4ade80; cursor:pointer; font-size:12px;">
+            📤 مشاركة موقعي
+        </button>
+        <button onclick="centerMapSessions()" style="padding:4px 14px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:6px; color:#60a5fa; cursor:pointer; font-size:12px;">
+            🎯 مركز الخريطة
+        </button>
+    </div>
+
+    <!-- ===== جدول المستخدمين ===== -->
+    <div class="stat-card" style="padding:15px; margin-top:15px;">
+        <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0; font-size:14px;">📋 قائمة المستخدمين</h4>
         <div class="scrollable-table">
             <table>
                 <thead>
@@ -51,30 +43,51 @@
                         <th>🟢 الحالة</th>
                         <th>📱 الجهاز</th>
                         <th>🌐 IP</th>
-                        <th>🖥 المتصفح</th>
-                        <th>⏱ آخر دخول</th>
                         <th>⏱ آخر نشاط</th>
                     </tr>
                 </thead>
                 <tbody id="sessionsBody">
-                    <tr><td colspan="8" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>
+                    <tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+<!-- Leaflet CSS & JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 <style>
-    .filter-btn.active {
-        background: rgba(74,222,128,0.15) !important;
-        color: #4ade80 !important;
-        border-color: rgba(74,222,128,0.2) !important;
+    #sessionsMap {
+        height: 400px;
+        width: 100%;
+        border-radius: 8px;
+        background: #0a0a1a;
     }
-    .session-status {
-        display: inline-flex;
+    .user-marker {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 6px;
+        font-size: 12px;
+        color: white;
+        font-weight: bold;
     }
+    .user-marker .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #0d6efd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        border: 2px solid white;
+        box-shadow: 0 0 20px rgba(13,110,253,0.3);
+    }
+    .user-marker .avatar.online { background: #4ade80; border-color: #4ade80; }
+    .user-marker .avatar.offline { background: #6c757d; border-color: #6c757d; }
     .session-status .dot {
         width: 8px;
         height: 8px;
@@ -83,141 +96,267 @@
     }
     .dot-online { background: #4ade80; }
     .dot-offline { background: #f87171; }
-    .session-device {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-    }
-    .session-device .icon { font-size: 16px; }
-    .session-time { font-size: 12px; color: rgba(255,255,255,0.4); }
 </style>
 
 <script>
 // ============================================================
-// 📊 صفحة مراقبة المستخدمين
+// 📍 مراقبة المستخدمين مع خريطة
 // ============================================================
 
-let sessionsData = [];
-let currentFilter = 'all';
+let sessionsMap = null;
+let sessionsMarkers = {};
+let sessionsSocket = null;
+let myLocationSessions = null;
 
-function refreshSessions() {
-    console.log('🔄 Refreshing sessions...');
-    const token = localStorage.getItem('token');
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+// ============================================================
+// 1. تهيئة الخريطة
+// ============================================================
+
+function initSessionsMap() {
+    if (sessionsMap) {
+        sessionsMap.invalidateSize();
         return;
     }
+    
+    console.log('🗺️ Initializing sessions map...');
+    
+    sessionsMap = L.map('sessionsMap', {
+        center: [36.8, 10.18],
+        zoom: 12
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+    }).addTo(sessionsMap);
+}
+
+// ============================================================
+// 2. تحديث الماركرز
+// ============================================================
+
+function updateSessionsMarker(data) {
+    if (!sessionsMap) return;
+    
+    const { userId, username, role, lat, lng, status, updatedAt } = data;
+    if (!userId || !lat || !lng) return;
+    
+    const isOnline = status === 'online';
+    const iconColor = isOnline ? '#4ade80' : '#6c757d';
+    
+    if (sessionsMarkers[userId]) {
+        sessionsMap.removeLayer(sessionsMarkers[userId]);
+        delete sessionsMarkers[userId];
+    }
+    
+    const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `
+            <div class="user-marker">
+                <div class="avatar ${isOnline ? 'online' : 'offline'}">
+                    ${role === 'مسؤول' ? '👑' : role === 'مشرف' ? '⭐' : '👤'}
+                </div>
+                <div style="font-size:10px; margin-top:2px; background:rgba(0,0,0,0.7); padding:2px 8px; border-radius:10px;">
+                    ${username}
+                </div>
+            </div>
+        `,
+        iconSize: [50, 50],
+        iconAnchor: [25, 25],
+        popupAnchor: [0, -25]
+    });
+    
+    const marker = L.marker([lat, lng], { icon: icon }).addTo(sessionsMap);
+    
+    const popupContent = `
+        <div style="text-align:right; font-family:Cairo, sans-serif;">
+            <div style="font-weight:bold; font-size:15px;">${username}</div>
+            <div style="color:#6c757d; font-size:12px;">${role}</div>
+            <div style="color:${isOnline ? '#4ade80' : '#6c757d'}; font-size:12px;">
+                ${isOnline ? '🟢 متصل' : '🔴 غير متصل'}
+            </div>
+            <div style="color:#6c757d; font-size:11px;">
+                📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}
+            </div>
+            <div style="color:#6c757d; font-size:10px;">
+                ${updatedAt ? '🕐 ' + new Date(updatedAt).toLocaleString('ar-TN') : ''}
+            </div>
+        </div>
+    `;
+    marker.bindPopup(popupContent);
+    
+    sessionsMarkers[userId] = marker;
+}
+
+// ============================================================
+// 3. مشاركة الموقع
+// ============================================================
+
+function shareMyLocationSessions() {
+    if (!navigator.geolocation) {
+        showAlert('⚠️ جهازك لا يدعم تحديد الموقع', 'warning');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            myLocationSessions = { lat: latitude, lng: longitude, accuracy };
+            
+            document.getElementById('myLocation').textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+            
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (sessionsSocket && sessionsSocket.connected) {
+                sessionsSocket.emit('update-location', {
+                    userId: user.id || 'unknown',
+                    username: user.name || 'مجهول',
+                    role: user.role || 'مشاهد',
+                    lat: latitude,
+                    lng: longitude,
+                    accuracy: accuracy,
+                    token: token
+                });
+            }
+            
+            if (sessionsMap) {
+                sessionsMap.setView([latitude, longitude], 14);
+            }
+            
+            showAlert('✅ تم مشاركة موقعك', 'success');
+        },
+        (error) => {
+            showAlert('❌ تعذر تحديد الموقع', 'danger');
+        },
+        { enableHighAccuracy: true, timeout: 15000 }
+    );
+}
+
+function centerMapSessions() {
+    if (!sessionsMap) return;
+    if (myLocationSessions) {
+        sessionsMap.setView([myLocationSessions.lat, myLocationSessions.lng], 14);
+    } else {
+        sessionsMap.setView([36.8, 10.18], 12);
+    }
+}
+
+// ============================================================
+// 4. الاتصال بـ Socket.IO
+// ============================================================
+
+function initSessionsSocket() {
+    if (sessionsSocket) return;
+    
+    sessionsSocket = io('/', {
+        transports: ['websocket'],
+        reconnection: true
+    });
+    
+    sessionsSocket.on('connect', () => {
+        console.log('✅ Sessions socket connected');
+        sessionsSocket.emit('get-locations');
+    });
+    
+    sessionsSocket.on('location-update', (data) => {
+        updateSessionsMarker(data);
+        refreshSessions();
+    });
+    
+    sessionsSocket.on('all-locations', (locations) => {
+        locations.forEach(loc => updateSessionsMarker(loc));
+        refreshSessions();
+    });
+    
+    sessionsSocket.on('user-offline', (data) => {
+        if (sessionsMarkers[data.userId]) {
+            sessionsMap.removeLayer(sessionsMarkers[data.userId]);
+            delete sessionsMarkers[data.userId];
+        }
+        refreshSessions();
+    });
+}
+
+// ============================================================
+// 5. تحميل الجلسات
+// ============================================================
+
+function refreshSessions() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
     
     fetch('/api/sessions', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => {
-        if (!res.ok) throw new Error('فشل تحميل الجلسات');
-        return res.json();
-    })
+    .then(res => res.json())
     .then(data => {
-        sessionsData = data || [];
-        console.log('✅ Sessions loaded:', sessionsData.length);
-        updateSessionStats();
-        renderSessionsTable();
+        renderSessionsTable(data);
+        updateSessionStats(data);
     })
-    .catch(err => {
-        console.error('Error loading sessions:', err);
-        showAlert('❌ خطأ في تحميل الجلسات', 'danger');
-    });
+    .catch(err => console.error('Error loading sessions:', err));
 }
 
-function updateSessionStats() {
-    const online = sessionsData.filter(s => s.status === 'online' && s.isActive).length;
-    const offline = sessionsData.filter(s => s.status === 'offline' || !s.isActive).length;
-    const today = new Date().toISOString().split('T')[0];
-    const todaySessions = sessionsData.filter(s => s.loginTime && s.loginTime.startsWith(today)).length;
-    
-    document.getElementById('sessionOnline').textContent = online;
-    document.getElementById('sessionOffline').textContent = offline;
-    document.getElementById('sessionTotal').textContent = sessionsData.length;
-    document.getElementById('sessionToday').textContent = todaySessions;
-    document.getElementById('onlineCount').textContent = online;
-}
-
-function renderSessionsTable() {
+function renderSessionsTable(sessions) {
     const tbody = document.getElementById('sessionsBody');
     if (!tbody) return;
     
-    let filtered = sessionsData;
-    if (currentFilter === 'online') {
-        filtered = sessionsData.filter(s => s.status === 'online' && s.isActive);
-    } else if (currentFilter === 'offline') {
-        filtered = sessionsData.filter(s => s.status === 'offline' || !s.isActive);
-    }
-    
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>`;
+    if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>`;
         return;
     }
     
-    tbody.innerHTML = filtered.map(s => {
+    tbody.innerHTML = sessions.map(s => {
         const isOnline = s.status === 'online' && s.isActive;
-        const lastActivity = s.lastActivity ? new Date(s.lastActivity) : null;
-        const loginTime = s.loginTime ? new Date(s.loginTime) : null;
-        
-        // حساب وقت النشاط
-        let timeAgo = 'غير معروف';
-        if (lastActivity) {
-            const diff = Date.now() - lastActivity.getTime();
-            if (diff < 60000) timeAgo = 'منذ ' + Math.floor(diff / 1000) + ' ثواني';
-            else if (diff < 3600000) timeAgo = 'منذ ' + Math.floor(diff / 60000) + ' دقائق';
-            else timeAgo = 'منذ ' + Math.floor(diff / 3600000) + ' ساعات';
-        }
-        
-        const deviceIcons = {
-            'Computer / Laptop': '💻',
-            'iPhone': '📱',
-            'iPad': '📱',
-            'Android Phone': '📱',
-            'Mobile Device': '📱'
-        };
-        const deviceIcon = deviceIcons[s.device] || '🖥';
+        const timeAgo = s.lastActivity ? getTimeAgo(new Date(s.lastActivity)) : '--';
         
         return `
             <tr>
                 <td><strong>${s.username || '-'}</strong></td>
-                <td><span style="color:${s.role === 'مسؤول' ? '#fbbf24' : s.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${s.role || '-'}</span></td>
+                <td><span style="color:${s.role === 'مسؤول' ? '#fbbf24' : '#60a5fa'}">${s.role || '-'}</span></td>
                 <td>
                     <span class="session-status">
                         <span class="dot ${isOnline ? 'dot-online' : 'dot-offline'}"></span>
                         ${isOnline ? '🟢 متصل' : '🔴 غير متصل'}
                     </span>
                 </td>
-                <td>
-                    <span class="session-device">
-                        <span class="icon">${deviceIcon}</span>
-                        ${s.device || '-'}
-                    </span>
-                </td>
+                <td style="font-size:12px;">${s.device || '-'}</td>
                 <td style="font-size:12px; font-family:monospace;">${s.ipAddress || '-'}</td>
-                <td style="font-size:12px;">${s.browser || '-'} ${s.os ? '(' + s.os + ')' : ''}</td>
-                <td class="session-time">${loginTime ? loginTime.toLocaleDateString('ar-TN') + ' ' + loginTime.toLocaleTimeString('ar-TN') : '-'}</td>
-                <td class="session-time">${isOnline ? '🟢 ' + timeAgo : '-'}</td>
+                <td style="font-size:12px; color:rgba(255,255,255,0.4);">${isOnline ? timeAgo : '--'}</td>
             </tr>
         `;
     }).join('');
 }
 
-function filterSessions(filter) {
-    currentFilter = filter;
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filter);
-    });
-    renderSessionsTable();
+function updateSessionStats(sessions) {
+    const online = sessions.filter(s => s.status === 'online' && s.isActive).length;
+    document.getElementById('sessionOnline').textContent = online;
 }
 
-// تحميل الجلسات عند ظهور الصفحة
+function getTimeAgo(date) {
+    const diff = Date.now() - date.getTime();
+    if (diff < 60000) return 'الآن';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)} دقائق`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)} ساعات`;
+    return `${Math.floor(diff / 86400000)} أيام`;
+}
+
+// ============================================================
+// 6. التهيئة
+// ============================================================
+
 if (document.getElementById('page-sessions')) {
     console.log('📄 Sessions page loaded');
-    setTimeout(refreshSessions, 300);
-    setTimeout(refreshSessions, 1000);
+    
+    setTimeout(() => {
+        initSessionsMap();
+        initSessionsSocket();
+    }, 300);
+    
+    setTimeout(refreshSessions, 500);
+    setTimeout(refreshSessions, 1500);
 }
 
 // تحديث كل 30 ثانية
