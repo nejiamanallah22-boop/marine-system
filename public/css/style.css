@@ -1,8 +1,6 @@
 /* ============================================================
-   🚀 نظام إدارة الأسطول البحري - تصميم احترافي
+   🚀 نظام إدارة الأسطول البحري - تصميم فاخر v3.0
    ============================================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap');
 
 * {
     margin: 0;
@@ -11,21 +9,19 @@
 }
 
 :root {
-    --primary: #1a1a2e;
-    --secondary: #16213e;
-    --accent: #0f3460;
+    --primary: #0a0a1a;
+    --secondary: #141432;
+    --accent: #1a1a3e;
     --gold: #e6b31e;
     --gold-light: #f5d76e;
-    --text-light: #ffffff;
-    --text-muted: rgba(255,255,255,0.7);
-    --glass-bg: rgba(255,255,255,0.08);
-    --glass-border: rgba(255,255,255,0.15);
-    --shadow: 0 8px 32px rgba(0,0,0,0.3);
+    --glass-bg: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.06);
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
 body {
     font-family: 'Cairo', sans-serif;
-    background: #0a0a1a;
+    background: var(--primary);
     direction: rtl;
     min-height: 100vh;
     color: #ffffff;
@@ -33,7 +29,7 @@ body {
 }
 
 /* ============================================================
-   🌊 شاشة الدخول - تصميم فاخر
+   🌊 شاشة الدخول
    ============================================================ */
 
 #loginOverlay {
@@ -42,35 +38,32 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 30%, #0d1b2a 60%, #0a0a1a 100%);
+    background: linear-gradient(135deg, #0a0a1a 0%, #141432 30%, #0d1b2a 60%, #1a1a3e 100%);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 99999;
-    font-family: 'Cairo', sans-serif;
 }
 
-/* خلفية متحركة - أمواج بحرية */
 #loginOverlay::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
     background: 
-        radial-gradient(ellipse at 20% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 50%, rgba(14, 165, 233, 0.1) 0%, transparent 60%),
-        radial-gradient(ellipse at 50% 100%, rgba(14, 165, 233, 0.08) 0%, transparent 50%);
-    animation: waveGlow 8s ease-in-out infinite;
+        radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(230,179,30,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.05) 0%, transparent 50%);
+    animation: backgroundPulse 10s ease-in-out infinite;
 }
 
-@keyframes waveGlow {
-    0%, 100% { opacity: 0.5; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.1); }
+@keyframes backgroundPulse {
+    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+    50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
 }
 
-/* جسيمات الخلفية */
 #loginOverlay::after {
     content: '';
     position: absolute;
@@ -79,84 +72,83 @@ body {
     right: 0;
     bottom: 0;
     background-image: 
-        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
-        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
-        radial-gradient(2px 2px at 50px 160px, rgba(255,255,255,0.3), transparent),
-        radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.2), transparent),
-        radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.3), transparent),
-        radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.2), transparent);
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.2), transparent),
+        radial-gradient(2px 2px at 20% 60%, rgba(255,255,255,0.15), transparent),
+        radial-gradient(2px 2px at 40% 10%, rgba(255,255,255,0.2), transparent),
+        radial-gradient(2px 2px at 60% 70%, rgba(255,255,255,0.1), transparent),
+        radial-gradient(2px 2px at 80% 30%, rgba(255,255,255,0.15), transparent),
+        radial-gradient(2px 2px at 90% 80%, rgba(255,255,255,0.2), transparent);
     background-size: 200px 200px;
-    animation: starsFloat 20s linear infinite;
+    animation: starsFloat 25s linear infinite;
     opacity: 0.5;
 }
 
 @keyframes starsFloat {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-200px); }
+    0% { transform: translateY(0) translateX(0); }
+    100% { transform: translateY(-200px) translateX(50px); }
 }
 
 .login-box {
     position: relative;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 30px;
     padding: 50px 45px 40px;
-    width: 440px;
+    width: 420px;
     max-width: 95%;
-    box-shadow: 
-        0 20px 60px rgba(0,0,0,0.5),
-        inset 0 1px 0 rgba(255,255,255,0.1);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
     text-align: center;
-    animation: loginFadeIn 0.8s ease-out;
+    animation: loginSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes loginFadeIn {
-    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+@keyframes loginSlideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.login-box .logo-icon {
-    font-size: 60px;
-    display: block;
-    margin-bottom: 10px;
-    animation: logoPulse 3s ease-in-out infinite;
+.login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 8px;
 }
 
-@keyframes logoPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+.login-logo .logo-icon {
+    font-size: 52px;
+    animation: logoFloat 4s ease-in-out infinite;
 }
 
-.login-box h1 {
-    font-size: 26px;
-    font-weight: 800;
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1.05); }
+}
+
+.login-logo .logo-text {
+    font-size: 28px;
+    font-weight: 900;
     background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 5px;
-    letter-spacing: 1px;
 }
 
 .login-box .subtitle {
-    font-size: 13px;
-    color: rgba(255,255,255,0.6);
-    margin-bottom: 5px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 8px;
     font-weight: 300;
 }
 
 .login-box .developer {
-    font-size: 12px;
-    color: var(--gold);
-    margin-bottom: 25px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
+    margin-bottom: 30px;
+    padding: 8px 0;
 }
 
 .login-box .developer::before,
@@ -164,23 +156,40 @@ body {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(230, 179, 30, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(230,179,30,0.2), transparent);
 }
 
-.login-box .developer::before {
-    margin-left: 10px;
+.login-box .developer .dev-label {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    font-weight: 300;
 }
 
-.login-box .developer::after {
-    margin-right: 10px;
+.login-box .developer .dev-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-light);
 }
 
-.login-box input {
+.input-group {
+    position: relative;
+    margin: 12px 0;
+}
+
+.input-group .input-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.2);
+    font-size: 14px;
+}
+
+.input-group input {
     width: 100%;
-    padding: 14px 18px;
-    margin: 10px 0;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    padding: 14px 48px 14px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: 14px;
     color: #ffffff;
     font-size: 15px;
@@ -189,24 +198,20 @@ body {
     outline: none;
 }
 
-.login-box input::placeholder {
-    color: rgba(255,255,255,0.4);
+.input-group input::placeholder {
+    color: rgba(255,255,255,0.25);
 }
 
-.login-box input:focus {
+.input-group input:focus {
     border-color: var(--gold);
-    background: rgba(255,255,255,0.1);
-    box-shadow: 0 0 30px rgba(230, 179, 30, 0.1);
-}
-
-.login-box input:focus::placeholder {
-    color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 0 40px rgba(230,179,30,0.05);
 }
 
 .login-btn {
     width: 100%;
     padding: 16px;
-    margin-top: 15px;
+    margin-top: 18px;
     background: linear-gradient(135deg, #e6b31e, #f5d76e);
     border: none;
     border-radius: 14px;
@@ -216,122 +221,115 @@ body {
     font-family: 'Cairo', sans-serif;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 25px rgba(230, 179, 30, 0.3);
-    letter-spacing: 1px;
+    box-shadow: 0 4px 30px rgba(230,179,30,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .login-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 40px rgba(230, 179, 30, 0.5);
-}
-
-.login-btn:active {
-    transform: translateY(0);
+    box-shadow: 0 8px 50px rgba(230,179,30,0.4);
 }
 
 .login-btn:disabled {
-    opacity: 0.7;
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
 }
 
 .login-box .login-footer {
-    margin-top: 20px;
+    margin-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 11px;
-    color: rgba(255,255,255,0.3);
-    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.2);
+}
+
+.login-box .login-footer .version {
+    background: rgba(255,255,255,0.03);
+    padding: 2px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
 }
 
 /* ============================================================
-   🏛️ التطبيق الرئيسي - تصميم احترافي
+   🏛️ التطبيق الرئيسي
    ============================================================ */
 
 #mainApp {
     display: none;
     min-height: 100vh;
-    background: linear-gradient(180deg, #0a0a1a 0%, #141432 100%);
+    background: var(--primary);
 }
 
 /* ============================================================
-   📋 الهيدر - شريط علوي فاخر
+   📋 الهيدر
    ============================================================ */
 
 header {
-    background: rgba(26, 26, 46, 0.9);
+    background: rgba(10,10,26,0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    padding: 15px 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    padding: 12px 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
     position: sticky;
     top: 0;
     z-index: 100;
 }
 
-header h1 {
-    font-size: 20px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 18px;
+}
+
+.menu-toggle {
+    font-size: 22px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s;
+    display: none;
+}
+
+.menu-toggle:hover {
+    opacity: 1;
+}
+
+header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ffffff;
 }
 
 header h1 .developer-tag {
-    font-size: 12px;
-    font-weight: 400;
-    background: rgba(230, 179, 30, 0.15);
-    color: var(--gold);
-    padding: 4px 14px;
-    border-radius: 20px;
-    -webkit-text-fill-color: var(--gold);
-    border: 1px solid rgba(230, 179, 30, 0.2);
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.role-badge {
-    background: rgba(255,255,255,0.06);
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid rgba(255,255,255,0.06);
-}
-
-.role-badge button {
-    background: rgba(220, 53, 69, 0.2);
-    color: #f87171;
-    border: 1px solid rgba(220, 53, 69, 0.2);
-    padding: 3px 12px;
-    border-radius: 12px;
-    cursor: pointer;
     font-size: 11px;
-    transition: all 0.3s;
+    font-weight: 400;
+    background: rgba(230,179,30,0.12);
+    color: var(--gold-light);
+    padding: 3px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(230,179,30,0.1);
 }
 
-.role-badge button:hover {
-    background: rgba(220, 53, 69, 0.3);
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .notification-icon {
     position: relative;
     font-size: 20px;
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.5;
     transition: all 0.3s;
 }
 
@@ -341,7 +339,7 @@ header h1 .developer-tag {
 
 .notification-badge {
     position: absolute;
-    top: -5px;
+    top: -6px;
     right: -8px;
     background: #f87171;
     color: white;
@@ -352,44 +350,74 @@ header h1 .developer-tag {
     text-align: center;
 }
 
+.role-badge {
+    background: rgba(255,255,255,0.04);
+    padding: 5px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
 .btn-outline-white {
     background: transparent;
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.7);
-    padding: 6px 14px;
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.4);
+    padding: 6px 12px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 14px;
     transition: all 0.3s;
     font-family: 'Cairo', sans-serif;
 }
 
 .btn-outline-white:hover {
-    background: rgba(255,255,255,0.05);
-    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.15);
     color: #ffffff;
 }
 
-/* ============================================================
-   🧭 شريط التنقل - تصميم عصري
-   ============================================================ */
-
-.nav {
-    background: rgba(26, 26, 46, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding: 10px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    position: sticky;
-    top: 70px;
-    z-index: 99;
+.btn-logout:hover {
+    border-color: rgba(248,113,113,0.3) !important;
+    color: #f87171 !important;
 }
 
-.nav .btn {
-    padding: 8px 20px;
+/* ============================================================
+   🧭 الشريط الجانبي
+   ============================================================ */
+
+.sidebar {
+    position: fixed;
+    top: 65px;
+    right: 0;
+    width: 220px;
+    height: calc(100vh - 65px);
+    background: rgba(10,10,26,0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255,255,255,0.04);
+    padding: 15px 10px;
+    overflow-y: auto;
+    z-index: 50;
+    transition: all 0.3s ease;
+}
+
+.sidebar-brand {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+}
+
+.sidebar .nav-btn {
+    width: 100%;
+    padding: 10px 16px;
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -397,83 +425,64 @@ header h1 .developer-tag {
     font-weight: 600;
     font-family: 'Cairo', sans-serif;
     transition: all 0.3s ease;
-    color: rgba(255,255,255,0.7);
-    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.5);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
 }
 
-.nav .btn:hover {
-    background: rgba(255,255,255,0.1);
+.sidebar .nav-btn i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.sidebar .nav-btn:hover {
+    background: rgba(255,255,255,0.04);
     color: #ffffff;
-    transform: translateY(-1px);
 }
 
-.nav .btn-primary {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(14, 165, 233, 0.05));
-    color: #60a5fa;
-    border: 1px solid rgba(14, 165, 233, 0.2);
+.sidebar .nav-btn.active {
+    background: rgba(230,179,30,0.08);
+    color: var(--gold-light);
+    border: 1px solid rgba(230,179,30,0.08);
 }
 
-.nav .btn-primary:hover {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(14, 165, 233, 0.1));
-}
-
-.nav .btn-success {
-    background: linear-gradient(135deg, rgba(74, 222, 128, 0.2), rgba(74, 222, 128, 0.05));
-    color: #4ade80;
-    border: 1px solid rgba(74, 222, 128, 0.2);
-}
-
-.nav .btn-success:hover {
-    background: linear-gradient(135deg, rgba(74, 222, 128, 0.3), rgba(74, 222, 128, 0.1));
-}
-
-.nav .btn-warning {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05));
-    color: #fbbf24;
-    border: 1px solid rgba(251, 191, 36, 0.2);
-}
-
-.nav .btn-warning:hover {
-    background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.1));
-}
-
-.nav .btn-info {
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(96, 165, 250, 0.05));
-    color: #60a5fa;
-    border: 1px solid rgba(96, 165, 250, 0.2);
-}
-
-.nav .btn-info:hover {
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.3), rgba(96, 165, 250, 0.1));
-}
-
-.nav .btn-secondary {
-    background: rgba(255,255,255,0.05);
-    color: rgba(255,255,255,0.6);
-    border: 1px solid rgba(255,255,255,0.05);
-}
-
-.nav .btn-secondary:hover {
-    background: rgba(255,255,255,0.1);
-    color: #ffffff;
+.sidebar-footer {
+    position: absolute;
+    bottom: 20px;
+    right: 10px;
+    left: 10px;
+    padding: 12px 16px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 /* ============================================================
-   📄 حاوية الصفحات
+   📄 المحتوى الرئيسي
    ============================================================ */
 
-#pageContainer {
+.main-content {
+    margin-right: 220px;
     padding: 20px 25px;
+    min-height: calc(100vh - 65px);
+}
+
+#pageContainer {
     max-width: 1400px;
     margin: 0 auto;
 }
 
 .page-content {
-    animation: pageFadeIn 0.4s ease-out;
+    animation: pageFade 0.4s ease-out;
 }
 
-@keyframes pageFadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+@keyframes pageFade {
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
@@ -482,10 +491,10 @@ header h1 .developer-tag {
    ============================================================ */
 
 .stat-card {
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.03);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.04);
     border-radius: 14px;
     padding: 16px 20px;
     transition: all 0.3s ease;
@@ -493,8 +502,8 @@ header h1 .developer-tag {
 
 .stat-card:hover {
     transform: translateY(-3px);
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.08);
     box-shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 
@@ -511,30 +520,30 @@ header h1 .developer-tag {
     width: 100%;
     border-collapse: collapse;
     font-family: 'Cairo', sans-serif;
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.02);
     border-radius: 12px;
 }
 
 .scrollable-table table th {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.04);
     padding: 12px 16px;
-    border-bottom: 2px solid rgba(255,255,255,0.06);
+    border-bottom: 2px solid rgba(255,255,255,0.04);
     font-weight: 700;
     text-align: center;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.7);
     font-size: 13px;
 }
 
 .scrollable-table table td {
     padding: 10px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
     text-align: center;
-    color: rgba(255,255,255,0.8);
+    color: rgba(255,255,255,0.7);
     font-size: 13px;
 }
 
 .scrollable-table table tr:hover td {
-    background: rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.02);
 }
 
 /* ============================================================
@@ -542,17 +551,17 @@ header h1 .developer-tag {
    ============================================================ */
 
 .status-badge {
-    padding: 4px 14px;
+    padding: 3px 14px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
     display: inline-block;
 }
 
-.status-broken { background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
-.status-maintenance { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
-.status-ready { background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
-.status-closed { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.05); }
+.status-broken { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+.status-maintenance { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+.status-ready { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+.status-closed { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.03); }
 
 /* ============================================================
    🔘 الأزرار
@@ -574,84 +583,72 @@ header h1 .developer-tag {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.btn-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
-.btn-warning:hover { background: rgba(251, 191, 36, 0.3); }
+.btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+.btn-warning:hover { background: rgba(251,191,36,0.25); }
 
-.btn-danger { background: rgba(248, 113, 113, 0.2); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.2); }
-.btn-danger:hover { background: rgba(248, 113, 113, 0.3); }
+.btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+.btn-danger:hover { background: rgba(248,113,113,0.25); }
 
-.btn-success { background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2); }
-.btn-success:hover { background: rgba(74, 222, 128, 0.3); }
+.btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+.btn-success:hover { background: rgba(74,222,128,0.25); }
 
-.btn-primary { background: rgba(96, 165, 250, 0.2); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.2); }
-.btn-primary:hover { background: rgba(96, 165, 250, 0.3); }
+.btn-primary { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
+.btn-primary:hover { background: rgba(96,165,250,0.25); }
 
 /* ============================================================
    📱 شاشة الجوال
    ============================================================ */
 
-@media (max-width: 768px) {
-    header {
-        padding: 12px 15px;
+@media (max-width: 992px) {
+    .sidebar {
+        right: -280px;
+        width: 280px;
+        transition: right 0.3s ease;
+    }
+    .sidebar.open {
+        right: 0;
+    }
+    .menu-toggle {
+        display: block !important;
+    }
+    .main-content {
+        margin-right: 0;
+        padding: 15px 18px;
     }
     header h1 {
-        font-size: 16px;
+        font-size: 15px;
     }
     header h1 .developer-tag {
-        font-size: 10px;
-        padding: 2px 10px;
-    }
-    .nav {
-        padding: 8px 12px;
-        top: 60px;
-        gap: 5px;
-    }
-    .nav .btn {
-        font-size: 11px;
-        padding: 6px 12px;
-    }
-    #pageContainer {
-        padding: 12px 15px;
-    }
-    .login-box {
-        padding: 30px 20px 25px;
-    }
-    .login-box h1 {
-        font-size: 20px;
+        display: none;
     }
 }
 
-@media (max-width: 480px) {
-    .header-content {
-        gap: 8px;
+@media (max-width: 768px) {
+    .login-box {
+        padding: 30px 25px 25px;
     }
-    .header-content .btn-outline-white {
-        font-size: 10px;
-        padding: 4px 10px;
+    .login-logo .logo-text {
+        font-size: 20px;
+    }
+    .login-logo .logo-icon {
+        font-size: 38px;
+    }
+    header {
+        padding: 10px 15px;
+    }
+    .header-right {
+        gap: 8px;
     }
     .role-badge {
         font-size: 11px;
-        padding: 4px 10px;
+        padding: 3px 10px;
     }
-    .scrollable-table table th,
-    .scrollable-table table td {
-        font-size: 11px;
-        padding: 6px 10px;
+    .btn-outline-white {
+        font-size: 12px;
+        padding: 4px 8px;
     }
-}
-
-/* ============================================================
-   🔄 أنيميشن التحميل
-   ============================================================ */
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
+    .notification-icon {
+        font-size: 16px;
     }
 }
 
@@ -660,11 +657,12 @@ header h1 .developer-tag {
    ============================================================ */
 
 @media print {
-    .nav, header .header-content, .no-print {
+    header, .sidebar, .scroll-buttons, .no-print {
         display: none !important;
     }
-    #pageContainer {
-        padding: 0;
+    .main-content {
+        margin-right: 0 !important;
+        padding: 0 !important;
     }
     .scrollable-table table {
         background: white;
@@ -678,4 +676,74 @@ header h1 .developer-tag {
         color: #000;
         border-bottom: 1px solid #eee;
     }
+}
+
+/* ============================================================
+   📦 صناديق الحالة
+   ============================================================ */
+
+.region-table-card {
+    background: rgba(255,255,255,0.02);
+    border-radius: 14px;
+    padding: 16px;
+    margin: 16px 0;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+.region-table-header {
+    font-weight: 700;
+    padding: 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+}
+
+/* ============================================================
+   🔄 أنيميشن الإشعارات
+   ============================================================ */
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================================================
+   📊 لوحة التحكم
+   ============================================================ */
+
+#dashActivity::-webkit-scrollbar {
+    width: 4px;
+}
+#dashActivity::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.02);
+    border-radius: 10px;
+}
+#dashActivity::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+}
+
+.activity-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    animation: slideIn 0.3s ease;
+}
+.activity-item:hover {
+    background: rgba(255,255,255,0.02);
+}
+.activity-icon {
+    font-size: 18px;
+    opacity: 0.5;
+}
+.activity-time {
+    margin-right: auto;
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
 }
