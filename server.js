@@ -33,7 +33,7 @@ const MAINTENANCE_FILE = path.join(DB_PATH, 'maintenance.json');
 const TICKETS_FILE = path.join(DB_PATH, 'tickets.json');
 const NOTES_FILE = path.join(DB_PATH, 'notes.json');
 const SESSIONS_FILE = path.join(DB_PATH, 'sessions.json');
-const LOCATIONS_FILE = path.join(DB_PATH, 'locations.json'); // ← ملف المواقع
+const LOCATIONS_FILE = path.join(DB_PATH, 'locations.json');
 
 if (!fs.existsSync(DB_PATH)) {
     fs.mkdirSync(DB_PATH, { recursive: true });
@@ -77,7 +77,7 @@ function getUserById(id) {
 }
 
 // ============================================================
-// 🕐 دوال الجلسات (Sessions)
+// 🕐 دوال الجلسات
 // ============================================================
 
 function getSessions() {
@@ -106,7 +106,6 @@ function createSession(userId, username, role, deviceInfo, ipAddress) {
         lastActivity: new Date().toISOString(),
         status: 'online',
         isActive: true,
-        // إحداثيات GPS (سيتم تحديثها من المستخدم)
         lat: null,
         lng: null,
         accuracy: null
@@ -175,17 +174,11 @@ function updateUserLocation(userId, username, role, lat, lng, accuracy) {
     return locationData;
 }
 
-function getUserLocation(userId) {
-    const locations = getLocations();
-    return locations.find(l => l.userId === userId);
-}
-
 function getAllLocations() {
     const locations = getLocations();
     const now = Date.now();
-    const timeout = 5 * 60 * 1000; // 5 دقائق
+    const timeout = 5 * 60 * 1000;
     
-    // تحديث حالة المواقع
     return locations.map(l => {
         const lastUpdate = new Date(l.updatedAt).getTime();
         if ((now - lastUpdate) > timeout) {
@@ -195,17 +188,6 @@ function getAllLocations() {
         }
         return l;
     });
-}
-
-function clearOldLocations() {
-    const locations = getLocations();
-    const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
-    const filtered = locations.filter(l => {
-        const updated = new Date(l.updatedAt).getTime();
-        return (now - updated) < oneHour;
-    });
-    writeData(LOCATIONS_FILE, filtered);
 }
 
 // ============================================================
@@ -294,10 +276,9 @@ function authenticate(req, res, next) {
 }
 
 // ============================================================
-// 📍 تحديث الموقع عبر WebSocket (Socket.io)
+// 📍 Socket.IO (لتحديث المواقع الفوري)
 // ============================================================
 
-// تثبيت socket.io: npm install socket.io
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -309,22 +290,19 @@ const io = socketIo(server, {
     }
 });
 
-// تخزين مواقع المستخدمين في الذاكرة للتحديث الفوري
+// تخزين مواقع المستخدمين في الذاكرة
 const userLocations = new Map();
 
 io.on('connection', (socket) => {
     console.log('✅ مستخدم متصل:', socket.id);
     
-    // تحديث الموقع من المستخدم
     socket.on('update-location', (data) => {
         const { userId, username, role, lat, lng, accuracy, token } = data;
         
-        // التحقق من التوكن
         if (!token) return;
         const decoded = verifyToken(token);
         if (!decoded) return;
         
-        // تحديث في الذاكرة
         userLocations.set(userId, {
             userId,
             username,
@@ -333,13 +311,12 @@ io.on('connection', (socket) => {
             lng,
             accuracy,
             updatedAt: new Date().toISOString(),
-            socketId: socket.id
+            socketId: socket.id,
+            status: 'online'
         });
         
-        // حفظ في قاعدة البيانات
         updateUserLocation(userId, username, role, lat, lng, accuracy);
         
-        // بث الموقع لجميع المستخدمين
         io.emit('location-update', {
             userId,
             username,
@@ -347,23 +324,20 @@ io.on('connection', (socket) => {
             lat,
             lng,
             accuracy,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            status: 'online'
         });
         
         console.log(`📍 ${username} - ${lat}, ${lng}`);
     });
     
-    // طلب جميع المواقع
     socket.on('get-locations', () => {
         const allLocations = Array.from(userLocations.values());
         socket.emit('all-locations', allLocations);
     });
     
-    // قطع الاتصال
     socket.on('disconnect', () => {
         console.log('❌ مستخدم disconnected:', socket.id);
-        
-        // تحديث حالة المستخدم
         for (const [userId, data] of userLocations) {
             if (data.socketId === socket.id) {
                 data.status = 'offline';
@@ -465,7 +439,6 @@ app.post('/api/location', authenticate, (req, res) => {
 });
 
 app.get('/api/locations', authenticate, (req, res) => {
-    // فقط المسؤول يمكنه رؤية جميع المواقع
     const user = getUserById(req.user.id);
     if (user.role !== 'مسؤول') {
         return res.status(403).json({ success: false, error: 'Access denied' });
@@ -473,14 +446,6 @@ app.get('/api/locations', authenticate, (req, res) => {
     
     const locations = getAllLocations();
     res.json(locations);
-});
-
-app.get('/api/locations/:userId', authenticate, (req, res) => {
-    const location = getUserLocation(req.params.userId);
-    if (!location) {
-        return res.status(404).json({ success: false, error: 'Location not found' });
-    }
-    res.json(location);
 });
 
 // ---------- الجلسات ----------
@@ -753,7 +718,6 @@ function initDefaultUsers() {
 // ============================================================
 
 initDefaultUsers();
-clearOldLocations();
 
 server.listen(PORT, () => {
     console.log('========================================');
