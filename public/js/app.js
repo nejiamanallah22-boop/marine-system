@@ -33,7 +33,6 @@ function initLocalUsers() {
                 }
             });
             console.log('✅ تم تحميل المستخدمين المحليين:', allUsers.length);
-            console.log('👥 المستخدمين:', allUsers);
         }
     } catch(e) {
         console.error('Error loading local users:', e);
@@ -73,7 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // تحميل المستخدمين المحليين
     initLocalUsers();
 });
 
@@ -279,7 +277,7 @@ function debounce(func, wait) {
 }
 
 // ============================================================
-// المصادقة - النسخة النهائية
+// المصادقة
 // ============================================================
 
 function doLogin() {
@@ -299,37 +297,27 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== 1. تحميل المستخدمين من localStorage =====
+    // ===== 1. تحميل المستخدمين المحليين =====
     let localUsers = [];
     try {
         const stored = localStorage.getItem('local_users');
         if (stored) {
             localUsers = JSON.parse(stored);
-            console.log('📦 المستخدمين في localStorage:', localUsers);
         }
-    } catch(e) {
-        console.error('Error loading local users:', e);
-    }
+    } catch(e) {}
     
-    // دمج مع allUsers
     localUsers.forEach(u => {
         if (!allUsers.find(ex => ex.id === u.id)) {
             allUsers.push(u);
         }
     });
     
-    console.log('👥 جميع المستخدمين:', allUsers);
-    
     // ===== 2. البحث عن المستخدم =====
     const foundUser = allUsers.find(u => u.email === username && u.isActive !== false);
     
     if (foundUser) {
-        console.log('🔍 تم العثور على المستخدم:', foundUser.name);
-        console.log('🔑 كلمة المرور المدخلة:', password);
-        console.log('🔑 كلمة المرور المخزنة:', foundUser.password);
-        
         if (foundUser.password === password) {
-            console.log('✅ دخول ناجح!');
+            console.log('✅ دخول ناجح للمستخدم المحلي:', username);
             const userData = {
                 id: foundUser.id,
                 name: foundUser.name,
@@ -589,20 +577,15 @@ function loadTickets() {
 }
 
 function loadUsers() {
-    // تحميل من localStorage أولاً
     try {
         const stored = localStorage.getItem('local_users');
         if (stored) {
             const users = JSON.parse(stored);
             allUsers = users;
-            console.log('✅ Users loaded from localStorage:', allUsers.length);
             renderUsersTable();
         }
-    } catch(e) {
-        console.error('Error loading users:', e);
-    }
+    } catch(e) {}
     
-    // ثم محاولة الاتصال بالخادم
     const token = getToken();
     if (!token) return;
     
@@ -612,15 +595,12 @@ function loadUsers() {
     .then(res => res.json())
     .then(data => {
         if (data && data.length > 0) {
-            // دمج المستخدمين من الخادم مع المحليين
             data.forEach(u => {
                 if (!allUsers.find(ex => ex.id === u.id)) {
                     allUsers.push(u);
                 }
             });
-            // حفظ في localStorage
             localStorage.setItem('local_users', JSON.stringify(allUsers));
-            console.log('✅ Users merged from server:', allUsers.length);
             renderUsersTable();
         }
     })
@@ -923,7 +903,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (كاملة مع حفظ كلمة المرور)
+// 👥 دوال المستخدمين
 // ============================================================
 
 function addUser() {
@@ -968,17 +948,12 @@ function addUser() {
     };
     allUsers.push(newUser);
     
-    // حفظ في localStorage
     try {
         localStorage.setItem('local_users', JSON.stringify(allUsers));
-        console.log('✅ تم حفظ المستخدمين في localStorage:', allUsers.length);
-        console.log('👥 المستخدمين المحفوظين:', allUsers);
-    } catch(e) {
-        console.error('Error saving local users:', e);
-    }
+    } catch(e) {}
     
     renderUsersTable();
-    showAlert('✅ تم إضافة المستخدم بنجاح! يمكنه الدخول بكلمة المرور: ' + password, 'success');
+    showAlert('✅ تم إضافة المستخدم بنجاح! كلمة المرور: ' + password, 'success');
     clearUserInputs();
 }
 
@@ -1556,7 +1531,7 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard)
+// 📊 لوحة التحكم (Dashboard) - النسخة الاحترافية
 // ============================================================
 
 function loadDashboard() {
@@ -1568,21 +1543,24 @@ function loadDashboard() {
         return;
     }
     
-    const total = allVessels.length;
-    const ready = allVessels.filter(v => v.stat === 'صالح').length;
-    const broken = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+    const vessels = allVessels || [];
+    const maintenance = allMaintenance || [];
+    
+    const total = vessels.length;
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenanceCount = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
     const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const maintenanceCount = allMaintenance.length;
+    const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const totalMaintenance = maintenance.length;
     
     document.getElementById('dashTotal').textContent = total;
     document.getElementById('dashReady').textContent = ready;
     document.getElementById('dashBroken').textContent = broken;
-    document.getElementById('dashMaintenance').textContent = maintenance;
+    document.getElementById('dashMaintenance').textContent = maintenanceCount;
     document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
     document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
+    document.getElementById('dashMaintenanceCount').textContent = totalMaintenance;
     
     const now = new Date();
     document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
@@ -1600,9 +1578,10 @@ function renderDashboardCharts() {
             dashCanvas.style.width = '100%';
             if (dashChart) dashChart.destroy();
             
-            const ready = allVessels.filter(v => v.stat === 'صالح').length;
-            const broken = allVessels.filter(v => v.stat === 'معطب').length;
-            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            const vessels = allVessels || [];
+            const ready = vessels.filter(v => v.stat === 'صالح').length;
+            const broken = vessels.filter(v => v.stat === 'معطب').length;
+            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
             
             dashChart = new Chart(dashCanvas, {
                 type: 'doughnut',
@@ -1707,10 +1686,13 @@ function updateDashboardActivity() {
     if (!container) return;
     
     const activities = [];
-    allMaintenance.slice(0, 5).forEach(r => {
+    const maintenance = allMaintenance || [];
+    const vessels = allVessels || [];
+    
+    maintenance.slice(0, 5).forEach(r => {
         activities.push({ icon: '🔧', text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`, time: r.date || 'اليوم' });
     });
-    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+    vessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
         activities.push({ icon: '⚠️', text: `المركب ${v.name} أصبح معطباً`, time: v.fDate || 'اليوم' });
     });
     
