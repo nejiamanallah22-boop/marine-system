@@ -1,18 +1,17 @@
-<div id="page-maintenance">
-    <h2 style="color:#0d6efd; margin-bottom:20px;">🔧 إدارة الصيانة</h2>
-    
+<!-- صفحة سجل الصيانة - نسخة محسنة ومصححة -->
+<div id="pageMaint" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+        <h2 style="color: #0d6efd; margin: 0;">🔧 إدارة الصيانة</h2>
+        <button onclick="toggleMaintenanceForm()" class="btn btn-success" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">➕ إضافة سجل صيانة جديد</button>
+    </div>
+
     <!-- ===== إحصائيات الصيانة ===== -->
     <div id="maintenanceStats"></div>
-    
+
     <!-- ===== 1. المراكب المعطبة ===== -->
-    <h3 style="color:#dc3545; margin:30px 0 15px;">🟥 1. المراكب المعطبة</h3>
+    <h3 style="color: #dc3545; margin: 30px 0 15px;">🟥 1. المراكب المعطبة</h3>
     <div id="generalMaintenanceContainer"></div>
-    
-    <!-- ===== زر إضافة صيانة ===== -->
-    <button onclick="toggleMaintenanceForm()" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px; margin:15px 0;">
-        ➕ إضافة سجل صيانة جديد
-    </button>
-    
+
     <!-- ===== نموذج إضافة الصيانة ===== -->
     <div id="maintenanceForm" style="display:none; background:#f8f9fa; padding:20px; border-radius:10px; margin:15px 0; border:2px solid #0d6efd;">
         <h3 style="margin-top:0; color:#0d6efd;">📝 تسجيل صيانة</h3>
@@ -24,7 +23,6 @@
                     <option value="">اختر المركب</option>
                 </select>
             </div>
-            
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px;">📋 نوع الصيانة</label>
                 <select id="mType" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
@@ -34,7 +32,6 @@
                     <option value="عادية">عادية</option>
                 </select>
             </div>
-            
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px;">🏭 الوحدة</label>
                 <select id="mUnit" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
@@ -45,7 +42,6 @@
                     <option value="شركة خاصة">شركة خاصة</option>
                 </select>
             </div>
-            
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px;">👨‍🔧 الفني</label>
                 <input type="text" id="mTechnician" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="اسم الفني">
@@ -96,19 +92,19 @@
         <div style="margin-top:15px;">
             <label style="display:block; font-weight:bold; margin-bottom:5px;">🔩 قطع الغيار المستخدمة</label>
             <div id="partsContainer">
-                <div class="part-item" style="display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap; align-items:center;">
+                <div class="part-item">
                     <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:150px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
                     <input type="number" placeholder="الكمية" class="part-qty" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
                     <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <button class="remove-part" onclick="removePart(this)" style="padding:8px 15px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">✕</button>
+                    <button onclick="removePart(this)" style="padding:8px 15px; background:#dc3545; color:white; border:none; border-radius:5px; cursor:pointer;">✕</button>
                 </div>
             </div>
             <button onclick="addPart()" style="padding:5px 15px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer; margin-top:5px;">➕ إضافة قطعة</button>
         </div>
         
         <div style="margin-top:20px; display:flex; gap:10px;">
-            <button onclick="saveMaintenance()" style="padding:10px 30px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">💾 حفظ</button>
-            <button onclick="toggleMaintenanceForm()" style="padding:10px 30px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">❌ إلغاء</button>
+            <button onclick="saveMaintenance()" class="btn btn-success" style="padding:10px 30px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer;">💾 حفظ</button>
+            <button onclick="toggleMaintenanceForm()" class="btn btn-secondary" style="padding:10px 30px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">❌ إلغاء</button>
         </div>
     </div>
     
@@ -173,8 +169,8 @@
             </div>
         </div>
         <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button onclick="applyHistoryFilters()" style="padding:8px 20px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🔍 فلترة</button>
-            <button onclick="resetHistoryFilters()" style="padding:8px 20px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 إلغاء</button>
+            <button onclick="applyHistoryFilters()" class="btn btn-primary" style="padding:8px 20px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer;">🔍 فلترة</button>
+            <button onclick="resetHistoryFilters()" class="btn btn-secondary" style="padding:8px 20px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">🔄 إلغاء</button>
             <span id="historyCount" style="font-weight:bold; padding:8px; background:#e9ecef; border-radius:5px;">📊 0 سجل</span>
         </div>
     </div>
@@ -185,112 +181,3 @@
     <h3 style="color:#0d6efd; margin:30px 0 15px;">🏭 وحدات الصيانة</h3>
     <div id="maintenanceUnitsContainer"></div>
 </div>
-
-<style>
-    .part-item {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 5px;
-        flex-wrap: wrap;
-        align-items: center;
-    }
-    .part-item input {
-        padding: 8px;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
-    }
-    .part-item .part-name {
-        flex: 2;
-        min-width: 150px;
-    }
-    .scrollable-table {
-        overflow-x: auto;
-        margin: 10px 0;
-    }
-    .scrollable-table table {
-        width: 100%;
-        border-collapse: collapse;
-        font-family: 'Cairo', sans-serif;
-        font-size: 14px;
-    }
-    .scrollable-table table th {
-        background: #f8f9fa;
-        padding: 10px;
-        border-bottom: 2px solid #dee2e6;
-        text-align: center;
-    }
-    .scrollable-table table td {
-        padding: 8px;
-        border-bottom: 1px solid #dee2e6;
-        text-align: center;
-    }
-    .scrollable-table table tr:hover {
-        background: #f8f9fa;
-    }
-    .maintenance-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin: 15px 0;
-    }
-    .stat-box {
-        padding: 15px;
-        border-radius: 8px;
-        text-align: center;
-    }
-    .stat-box h4 {
-        margin: 0;
-        font-size: 28px;
-    }
-    .stat-box p {
-        margin: 5px 0 0;
-        color: #6c757d;
-    }
-    .stat-total { background: #e7f3ff; border: 1px solid #b6d4fe; }
-    .stat-progress { background: #fff3cd; border: 1px solid #ffecb5; }
-    .stat-completed { background: #d4edda; border: 1px solid #b7eb8f; }
-    .stat-cancelled { background: #f8d7da; border: 1px solid #f5c2c7; }
-    
-    .region-table-card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        margin: 15px 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .region-table-header {
-        font-weight: bold;
-        padding: 10px;
-        background: #f8f9fa;
-        border-radius: 5px;
-        margin-bottom: 10px;
-    }
-    .btn-sm {
-        padding: 4px 10px;
-        font-size: 12px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin: 2px;
-    }
-    .btn-sm:hover {
-        opacity: 0.8;
-    }
-    .btn-warning { background: #ffc107; color: #000; }
-    .btn-danger { background: #dc3545; color: white; }
-    .btn-success { background: #28a745; color: white; }
-    .btn-primary { background: #0d6efd; color: white; }
-    .btn-info { background: #0dcaf0; color: #000; }
-    
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        display: inline-block;
-    }
-    .status-broken { background: #dc3545; color: white; }
-    .status-maintenance { background: #ffc107; color: #000; }
-    .status-ready { background: #28a745; color: white; }
-    .status-closed { background: #6c757d; color: white; }
-</style>
