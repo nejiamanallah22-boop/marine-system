@@ -10,6 +10,11 @@ let currentUser = null;
 let editingVesselId = null;
 let editingMaintenanceId = null;
 
+// متغيرات الرسوم البيانية
+let chart3DCategory = null;
+let chart3DRegion = null;
+let chart3DGeneral = null;
+
 // ============================================================
 // منع الدخول التلقائي
 // ============================================================
@@ -212,7 +217,6 @@ function doLogin() {
         }
     };
     
-    // التحقق من الحسابات التجريبية
     if (demoUsers[username] && demoUsers[username].password === password) {
         console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
         const userData = demoUsers[username].user;
@@ -891,7 +895,6 @@ function toggleMaintenanceForm() {
     if (form.style.display === 'none' || form.style.display === '') {
         form.style.display = 'block';
         updateMaintenanceVessels();
-        // تعيين التاريخ الحالي
         const startDate = document.getElementById('mStartDate');
         if (startDate) {
             startDate.value = new Date().toISOString().split('T')[0];
@@ -970,7 +973,6 @@ function saveMaintenance() {
         return;
     }
     
-    // تغيير حالة المركب إلى معطب
     const vessel = allVessels.find(v => v.id == vesselId);
     if (vessel && vessel.stat === 'صالح') {
         fetch('/api/vessels/' + vesselId, {
@@ -1038,7 +1040,6 @@ function renderGeneralMaintenance() {
     const container = document.getElementById('generalMaintenanceContainer');
     if (!container) return;
     
-    // المراكب المعطبة
     const vessels = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة' || v.stat === 'خارج الخدمة');
     
     if (vessels.length === 0) {
@@ -1144,7 +1145,6 @@ function fixVessel(vesselId) {
         if (data.success) {
             showAlert('✅ تم إصلاح المركب وعودته للخدمة', 'success');
             
-            // إغلاق سجلات الصيانة المفتوحة
             const openRecords = allMaintenance.filter(r => 
                 r.vesselId === vesselId && 
                 (r.status === 'مفتوحة' || r.status === 'قيد الإنجاز' || r.status === 'قيد الإصلاح')
@@ -1593,7 +1593,7 @@ function renderMaintenanceUnits() {
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية
+// 📊 صفحة الجاهزية مع الرسوم البيانية 3D
 // ============================================================
 
 function renderEfficiency() {
@@ -1604,6 +1604,11 @@ function renderEfficiency() {
     if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
     
     renderEfficiencyTables(vessels);
+    
+    // عرض الرسوم البيانية 3D بعد تحميل الصفحة
+    setTimeout(function() {
+        render3DCharts(vessels);
+    }, 300);
 }
 
 function renderEfficiencyTables(vessels) {
@@ -1842,6 +1847,349 @@ function getCategoriesData(vessels) {
     });
     
     return categories;
+}
+
+// ============================================================
+// 📊 الرسوم البيانية 3D
+// ============================================================
+
+function render3DCharts(vessels) {
+    console.log('📊 Rendering 3D Charts...');
+    render3DCategoryChart(vessels);
+    render3DRegionChart(vessels);
+    render3DGeneralChart(vessels);
+}
+
+function render3DCategoryChart(vessels) {
+    const canvas = document.getElementById('chart3DCategory');
+    if (!canvas) return;
+    
+    const categories = {};
+    vessels.forEach(v => {
+        const cat = v.cat || 'غير مصنف';
+        if (!categories[cat]) {
+            categories[cat] = { ready: 0, broken: 0, maintenance: 0 };
+        }
+        if (v.stat === 'صالح') categories[cat].ready++;
+        else if (v.stat === 'معطب') categories[cat].broken++;
+        else if (v.stat === 'صيانة') categories[cat].maintenance++;
+    });
+    
+    const labels = Object.keys(categories);
+    const readyData = labels.map(cat => categories[cat].ready);
+    const brokenData = labels.map(cat => categories[cat].broken);
+    const maintenanceData = labels.map(cat => categories[cat].maintenance);
+    
+    if (chart3DCategory) {
+        chart3DCategory.destroy();
+    }
+    
+    chart3DCategory = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '✅ صالح',
+                    data: readyData,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: '#28a745',
+                    borderWidth: 2,
+                    borderRadius: 5
+                },
+                {
+                    label: '❌ معطب',
+                    data: brokenData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: '#dc3545',
+                    borderWidth: 2,
+                    borderRadius: 5
+                },
+                {
+                    label: '🔧 صيانة',
+                    data: maintenanceData,
+                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    borderColor: '#ffc107',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: { family: 'Cairo', size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Cairo', size: 11 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 11 } }
+                }
+            }
+        },
+        plugins: [{
+            id: '3d-category',
+            beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                const meta = chart.getDatasetMeta(0);
+                if (meta && meta.data) {
+                    meta.data.forEach((bar, index) => {
+                        if (bar && bar.x && bar.y) {
+                            const x = bar.x;
+                            const y = bar.y;
+                            const width = bar.width || 30;
+                            const height = bar.height || 0;
+                            
+                            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetX = 3;
+                            ctx.shadowOffsetY = 3;
+                            
+                            ctx.shadowBlur = 0;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 0;
+                            
+                            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(x - width/2, y);
+                            ctx.lineTo(x + width/2, y);
+                            ctx.stroke();
+                        }
+                    });
+                }
+            }
+        }]
+    });
+}
+
+function render3DRegionChart(vessels) {
+    const canvas = document.getElementById('chart3DRegion');
+    if (!canvas) return;
+    
+    const regions = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
+    };
+    
+    const regionData = {};
+    Object.keys(regions).forEach(region => {
+        regionData[region] = { ready: 0, broken: 0, maintenance: 0 };
+    });
+    
+    vessels.forEach(v => {
+        const zone = v.zone || '';
+        let found = false;
+        Object.keys(regions).forEach(region => {
+            if (regions[region].some(city => zone.includes(city))) {
+                if (v.stat === 'صالح') regionData[region].ready++;
+                else if (v.stat === 'معطب') regionData[region].broken++;
+                else if (v.stat === 'صيانة') regionData[region].maintenance++;
+                found = true;
+            }
+        });
+        if (!found) {
+            if (!regionData['غير محدد']) {
+                regionData['غير محدد'] = { ready: 0, broken: 0, maintenance: 0 };
+            }
+            if (v.stat === 'صالح') regionData['غير محدد'].ready++;
+            else if (v.stat === 'معطب') regionData['غير محدد'].broken++;
+            else if (v.stat === 'صيانة') regionData['غير محدد'].maintenance++;
+        }
+    });
+    
+    const labels = Object.keys(regionData);
+    const readyData = labels.map(r => regionData[r].ready);
+    const brokenData = labels.map(r => regionData[r].broken);
+    const maintenanceData = labels.map(r => regionData[r].maintenance);
+    
+    if (chart3DRegion) {
+        chart3DRegion.destroy();
+    }
+    
+    chart3DRegion = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '✅ صالح',
+                    data: readyData,
+                    backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                    borderColor: '#28a745',
+                    borderWidth: 2,
+                    borderRadius: 5
+                },
+                {
+                    label: '❌ معطب',
+                    data: brokenData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderColor: '#dc3545',
+                    borderWidth: 2,
+                    borderRadius: 5
+                },
+                {
+                    label: '🔧 صيانة',
+                    data: maintenanceData,
+                    backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                    borderColor: '#ffc107',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: { family: 'Cairo', size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' مركب';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Cairo', size: 11 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Cairo', size: 11 } }
+                }
+            }
+        },
+        plugins: [{
+            id: '3d-region',
+            beforeDraw: function(chart) {
+                const ctx = chart.ctx;
+                const meta = chart.getDatasetMeta(0);
+                if (meta && meta.data) {
+                    meta.data.forEach((bar, index) => {
+                        if (bar && bar.x && bar.y) {
+                            const x = bar.x;
+                            const y = bar.y;
+                            const width = bar.width || 30;
+                            const height = bar.height || 0;
+                            
+                            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+                            ctx.shadowBlur = 10;
+                            ctx.shadowOffsetX = 3;
+                            ctx.shadowOffsetY = 3;
+                            
+                            ctx.shadowBlur = 0;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 0;
+                            
+                            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(x - width/2, y);
+                            ctx.lineTo(x + width/2, y);
+                            ctx.stroke();
+                        }
+                    });
+                }
+            }
+        }]
+    });
+}
+
+function render3DGeneralChart(vessels) {
+    const canvas = document.getElementById('chart3DGeneral');
+    if (!canvas) return;
+    
+    const total = vessels.length;
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    
+    if (chart3DGeneral) {
+        chart3DGeneral.destroy();
+    }
+    
+    chart3DGeneral = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+            datasets: [{
+                data: [ready, broken, maintenance],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(255, 193, 7, 0.8)'
+                ],
+                borderColor: ['#28a745', '#dc3545', '#ffc107'],
+                borderWidth: 3,
+                hoverOffset: 15
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Cairo', size: 14, weight: 'bold' },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyleWidth: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = total > 0 ? Math.round((context.parsed / total) * 100) : 0;
+                            return context.label + ': ' + context.parsed + ' مركب (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // إضافة تأثير 3D للدونات
+    const originalDraw = chart3DGeneral.draw;
+    chart3DGeneral.draw = function() {
+        const ctx = this.ctx;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+        originalDraw.call(this);
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    };
 }
 
 // ============================================================
