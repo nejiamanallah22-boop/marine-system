@@ -33,6 +33,7 @@ function initLocalUsers() {
                 }
             });
             console.log('✅ تم تحميل المستخدمين المحليين:', allUsers.length);
+            console.log('👥 المستخدمين:', allUsers);
         }
     } catch(e) {
         console.error('Error loading local users:', e);
@@ -298,13 +299,13 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== 1. تحميل المستخدمين المحليين من localStorage =====
+    // ===== 1. تحميل المستخدمين من localStorage =====
     let localUsers = [];
     try {
         const stored = localStorage.getItem('local_users');
         if (stored) {
             localUsers = JSON.parse(stored);
-            console.log('✅ تم تحميل المستخدمين المحليين:', localUsers.length);
+            console.log('📦 المستخدمين في localStorage:', localUsers);
         }
     } catch(e) {
         console.error('Error loading local users:', e);
@@ -317,20 +318,23 @@ function doLogin() {
         }
     });
     
-    // ===== 2. التحقق من المستخدمين المحليين =====
-    const localUser = allUsers.find(u => u.email === username && u.isActive !== false);
-    if (localUser) {
-        console.log('🔍 تم العثور على المستخدم المحلي:', localUser.name);
+    console.log('👥 جميع المستخدمين:', allUsers);
+    
+    // ===== 2. البحث عن المستخدم =====
+    const foundUser = allUsers.find(u => u.email === username && u.isActive !== false);
+    
+    if (foundUser) {
+        console.log('🔍 تم العثور على المستخدم:', foundUser.name);
         console.log('🔑 كلمة المرور المدخلة:', password);
-        console.log('🔑 كلمة المرور المخزنة:', localUser.password);
+        console.log('🔑 كلمة المرور المخزنة:', foundUser.password);
         
-        if (localUser.password === password) {
-            console.log('✅ دخول ناجح للمستخدم المحلي:', username);
+        if (foundUser.password === password) {
+            console.log('✅ دخول ناجح!');
             const userData = {
-                id: localUser.id,
-                name: localUser.name,
-                role: localUser.role || 'مشاهد',
-                email: localUser.email
+                id: foundUser.id,
+                name: foundUser.name,
+                role: foundUser.role || 'مشاهد',
+                email: foundUser.email
             };
             localStorage.setItem('token', 'local-token-' + Date.now());
             localStorage.setItem('user', JSON.stringify(userData));
@@ -381,7 +385,7 @@ function doLogin() {
     };
     
     if (demoUsers[username] && demoUsers[username].password === password) {
-        console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
+        console.log('✅ دخول تجريبي ناجح:', username);
         const userData = demoUsers[username].user;
         localStorage.setItem('token', 'demo-token-' + Date.now());
         localStorage.setItem('user', JSON.stringify(userData));
@@ -433,24 +437,7 @@ function doLogin() {
     })
     .catch(err => {
         console.error('Login error:', err);
-        // محاولة الدخول التجريبي كحل أخير
-        if (demoUsers[username] && demoUsers[username].password === password) {
-            const userData = demoUsers[username].user;
-            localStorage.setItem('token', 'demo-token-' + Date.now());
-            localStorage.setItem('user', JSON.stringify(userData));
-            currentUser = userData;
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            updateUserDisplay();
-            loadAllData();
-            loadPage('dashboard');
-            startActivityTracking();
-            showAlert('✅ مرحباً ' + userData.name + '! (وضع التجربة)', 'success');
-        } else {
-            showAlert('❌ اسم المستخدم أو كلمة المرور غير صحيحة', 'danger');
-        }
+        showAlert('❌ اسم المستخدم أو كلمة المرور غير صحيحة', 'danger');
     })
     .finally(() => {
         if (loginBtn) {
@@ -985,6 +972,7 @@ function addUser() {
     try {
         localStorage.setItem('local_users', JSON.stringify(allUsers));
         console.log('✅ تم حفظ المستخدمين في localStorage:', allUsers.length);
+        console.log('👥 المستخدمين المحفوظين:', allUsers);
     } catch(e) {
         console.error('Error saving local users:', e);
     }
