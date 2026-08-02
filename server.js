@@ -100,6 +100,18 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
+// ✅ إضافة: التحقق من الجلسة الحالية (لإعادة تحميل الواجهة بعد Refresh دون فقدان تسجيل الدخول)
+app.get('/api/me', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    res.json({
+        id: req.session.userId,
+        name: req.session.userName,
+        role: req.session.userRole
+    });
+});
+
 // ==================== API تتبع المستخدمين ====================
 app.post('/api/update-location', (req, res) => {
     if (!req.session.userId) {
