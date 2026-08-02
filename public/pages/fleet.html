@@ -1,69 +1,58 @@
-<!-- ===== صفحة الأسطول ===== -->
-<div class="page-fleet">
-    <div id="inputArea" class="input-grid">
-        <input type="text" id="iName" placeholder="🚢 اسم المركب">
-        <input type="text" id="iNum" placeholder="# الرقم">
-        <input type="number" id="iLen" placeholder="📏 الطول (م)">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">🗺️ الإقليم</option>
-            <option value="الشمال">الشمال</option>
-            <option value="الساحل">الساحل</option>
-            <option value="الوسط">الوسط</option>
-            <option value="الجنوب">الجنوب</option>
-        </select>
-        <select id="iZone">
-            <option value="">📍 المنطقة</option>
-        </select>
-        <input type="text" id="iPort" placeholder="⚓ الميناء">
-        <input type="text" id="iSupp" placeholder="🔧 التعزيز">
-        <select id="iStat">
-            <option value="صالح">✅ صالح</option>
-            <option value="معطب">❌ معطب</option>
-            <option value="صيانة">🔧 صيانة</option>
-        </select>
-        <input type="text" id="iBreak" placeholder="🛠️ العطب">
-        <div class="date-group">
-            <label><i class="fas fa-calendar-alt"></i> 📅 تاريخ العطب</label>
-            <input type="date" id="iDate">
+<div id="page-fleet">
+    <h2 style="color:white; margin-bottom:15px;">🚢 إدارة الأسطول</h2>
+    
+    <!-- ===== نموذج الإضافة ===== -->
+    <div class="stat-card" style="padding:15px; margin-bottom:15px; border-color:rgba(96,165,250,0.1);">
+        <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0;">➕ إضافة مركب جديد</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px;">
+            <input type="text" id="iName" placeholder="🚢 اسم المركب" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="text" id="iNum" placeholder="# الرقم" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="number" id="iLen" placeholder="📏 الطول (م)" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <select id="iReg" onchange="updateZones()" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                <option value="">🗺️ الإقليم</option>
+                <option value="الشمال">الشمال</option>
+                <option value="الساحل">الساحل</option>
+                <option value="الوسط">الوسط</option>
+                <option value="الجنوب">الجنوب</option>
+            </select>
+            <select id="iZone" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                <option value="">📍 المنطقة</option>
+            </select>
+            <input type="text" id="iPort" placeholder="⚓ الميناء" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="text" id="iSupp" placeholder="🔧 التعزيز" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <select id="iStat" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                <option value="صالح">✅ صالح</option>
+                <option value="معطب">🛠️ معطب</option>
+                <option value="صيانة">🔧 صيانة</option>
+                <option value="خارج الخدمة">⛔ خارج الخدمة</option>
+            </select>
+            <input type="text" id="iBreak" placeholder="🛠️ العطب" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="date" id="iDate" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="date" id="iEnd" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="text" id="iRef" placeholder="📄 المرجع" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            <input type="text" id="iRepairer" placeholder="👨‍🔧 المسؤول" style="padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
         </div>
-        <div class="date-group">
-            <label><i class="fas fa-calendar-check"></i> 📅 انتهاء الأشغال</label>
-            <input type="date" id="iEnd">
+        <div style="margin-top:10px; display:flex; gap:10px;">
+            <button onclick="addItem()" class="btn-sm btn-success" style="padding:8px 20px; background:rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.1); color:#4ade80; border-radius:8px; cursor:pointer;">💾 حفظ</button>
+            <button onclick="clearVesselInputs()" class="btn-sm" style="padding:8px 20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); border-radius:8px; cursor:pointer;">🗑️ إلغاء</button>
         </div>
-        <input type="text" id="iRef" placeholder="📄 المرجع">
-        <select id="iRepairer">
-            <option value="">🔧 المكلف بالتصليح</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="شركة خاصة">🏢 شركة خاصة</option>
-        </select>
-        <button class="btn btn-success" onclick="addItem()">💾 حفظ</button>
     </div>
-
-    <div class="filter-bar">
-        <div class="search-input">
-            <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول" onkeyup="loadVessels()">
+    
+    <!-- ===== الجدول ===== -->
+    <div class="stat-card" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0;">📋 قائمة المراكب</h4>
+            <span style="color:rgba(255,255,255,0.3); font-size:12px;">عدد: <span id="fleetCount">0</span></span>
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="loadVessels()">🔄 تحديث</button>
-    </div>
-
-    <div class="region-table-card">
-        <div class="region-table-header">🚢 الأسطول البحري</div>
         <div class="scrollable-table">
             <table>
                 <thead>
                     <tr>
-                        <th>الاسم</th><th>الرقم</th><th>الطول</th>
-                        <th>الفئة</th><th>الإقليم</th><th>المنطقة</th>
-                        <th>الميناء</th><th>التعزيز</th><th>الحالة</th>
-                        <th>العطب</th>
-                        <th>📅 تاريخ العطب</th>
-                        <th>📅 انتهاء الأشغال</th>
-                        <th>المرجع</th>
-                        <th>🔧 المكلف بالتصليح</th>
-                        <th>الإجراءات</th>
+                        <th>🚢 الاسم</th><th># الرقم</th><th>📏 الطول</th><th>الفئة</th>
+                        <th>🗺️ الإقليم</th><th>📍 المنطقة</th><th>⚓ الميناء</th><th>🔧 التعزيز</th>
+                        <th>الحالة</th><th>🛠️ العطب</th><th>📅 تاريخ العطب</th>
+                        <th>📅 الصلاحية</th><th>📄 المرجع</th><th>👨‍🔧 المسؤول</th>
+                        <th>إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="mainBody"></tbody>
@@ -71,3 +60,11 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateFleetCount() {
+        const el = document.getElementById('fleetCount');
+        if (el) el.textContent = allVessels ? allVessels.length : 0;
+    }
+    setTimeout(updateFleetCount, 500);
+</script>
