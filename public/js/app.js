@@ -888,6 +888,17 @@ function removePart(btn) {
     }
 }
 
+function getPartsData() {
+    const parts = [];
+    document.querySelectorAll('.part-item').forEach(item => {
+        const name = item.querySelector('.part-name')?.value;
+        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
+        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
+        if (name) parts.push({ name, quantity: qty, price });
+    });
+    return parts;
+}
+
 function saveMaintenance() {
     const token = getToken();
     if (!token) {
@@ -980,17 +991,6 @@ function saveMaintenance() {
         console.error('Save maintenance error:', err);
         showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
     });
-}
-
-function getPartsData() {
-    const parts = [];
-    document.querySelectorAll('.part-item').forEach(item => {
-        const name = item.querySelector('.part-name')?.value;
-        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
-        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
-        if (name) parts.push({ name, quantity: qty, price });
-    });
-    return parts;
 }
 
 function renderGeneralMaintenance() {
@@ -1339,6 +1339,10 @@ function renderDashboardCharts() {
     try {
         const dashCanvas = document.getElementById('dashChart');
         if (dashCanvas) {
+            // إعادة ضبط الحجم
+            dashCanvas.style.height = '200px';
+            dashCanvas.style.width = '100%';
+            
             if (dashChart) dashChart.destroy();
             const ready = allVessels.filter(v => v.stat === 'صالح').length;
             const broken = allVessels.filter(v => v.stat === 'معطب').length;
@@ -1360,7 +1364,13 @@ function renderDashboardCharts() {
                     maintainAspectRatio: false,
                     cutout: '60%',
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } }
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: 'rgba(255,255,255,0.6)', 
+                                font: { size: 11 } 
+                            } 
+                        }
                     }
                 }
             });
@@ -1372,6 +1382,10 @@ function renderDashboardCharts() {
     try {
         const lineCanvas = document.getElementById('dashLineChart');
         if (lineCanvas) {
+            // إعادة ضبط الحجم
+            lineCanvas.style.height = '200px';
+            lineCanvas.style.width = '100%';
+            
             if (dashLineChart) dashLineChart.destroy();
             const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
             const readyData = [12, 14, 13, 16, 18, 20];
@@ -1382,15 +1396,47 @@ function renderDashboardCharts() {
                 data: {
                     labels: months,
                     datasets: [
-                        { label: 'صالح', data: readyData, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#4ade80' },
-                        { label: 'معطب', data: brokenData, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#f87171' }
+                        { 
+                            label: 'صالح', 
+                            data: readyData, 
+                            borderColor: '#4ade80', 
+                            backgroundColor: 'rgba(74,222,128,0.1)', 
+                            fill: true, 
+                            tension: 0.4, 
+                            pointBackgroundColor: '#4ade80' 
+                        },
+                        { 
+                            label: 'معطب', 
+                            data: brokenData, 
+                            borderColor: '#f87171', 
+                            backgroundColor: 'rgba(248,113,113,0.1)', 
+                            fill: true, 
+                            tension: 0.4, 
+                            pointBackgroundColor: '#f87171' 
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } } },
-                    scales: { x: { ticks: { color: 'rgba(255,255,255,0.3)' } }, y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true } }
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: 'rgba(255,255,255,0.6)', 
+                                font: { size: 11 } 
+                            } 
+                        } 
+                    },
+                    scales: { 
+                        x: { 
+                            ticks: { color: 'rgba(255,255,255,0.3)' } 
+                        }, 
+                        y: { 
+                            ticks: { color: 'rgba(255,255,255,0.3)' }, 
+                            beginAtZero: true 
+                        } 
+                    }
                 }
             });
         }
