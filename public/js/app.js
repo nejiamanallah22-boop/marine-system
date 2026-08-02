@@ -16,125 +16,6 @@ let chartDoughnut = null;
 let dashChart = null;
 let dashLineChart = null;
 
-// متغيرات Three.js
-let scene, camera, renderer, controls;
-let threeObjects = [];
-let animationId = null;
-let isAutoRotate = true;
-
-// متغيرات WebSocket
-let socket = null;
-let notificationCount = 0;
-let notifications = [];
-
-// ============================================================
-// 🔐 صلاحيات متقدمة
-// ============================================================
-
-const PERMISSIONS = {
-    VIEW_FLEET: 'view_fleet',
-    ADD_VESSEL: 'add_vessel',
-    EDIT_VESSEL: 'edit_vessel',
-    DELETE_VESSEL: 'delete_vessel',
-    VIEW_MAINTENANCE: 'view_maintenance',
-    ADD_MAINTENANCE: 'add_maintenance',
-    EDIT_MAINTENANCE: 'edit_maintenance',
-    DELETE_MAINTENANCE: 'delete_maintenance',
-    FIX_VESSEL: 'fix_vessel',
-    VIEW_USERS: 'view_users',
-    ADD_USER: 'add_user',
-    EDIT_USER: 'edit_user',
-    DELETE_USER: 'delete_user',
-    VIEW_EFFICIENCY: 'view_efficiency',
-    VIEW_SUPPORT: 'view_support',
-    VIEW_NOTES: 'view_notes',
-    EXPORT_DATA: 'export_data'
-};
-
-const ROLES = {
-    'مسؤول': {
-        name: 'مسؤول',
-        permissions: Object.values(PERMISSIONS)
-    },
-    'مشرف': {
-        name: 'مشرف',
-        permissions: [
-            PERMISSIONS.VIEW_FLEET, PERMISSIONS.ADD_VESSEL, PERMISSIONS.EDIT_VESSEL,
-            PERMISSIONS.VIEW_MAINTENANCE, PERMISSIONS.ADD_MAINTENANCE, PERMISSIONS.EDIT_MAINTENANCE,
-            PERMISSIONS.FIX_VESSEL, PERMISSIONS.VIEW_USERS,
-            PERMISSIONS.VIEW_EFFICIENCY, PERMISSIONS.VIEW_SUPPORT, PERMISSIONS.VIEW_NOTES,
-            PERMISSIONS.EXPORT_DATA
-        ]
-    },
-    'محرر': {
-        name: 'محرر',
-        permissions: [
-            PERMISSIONS.VIEW_FLEET, PERMISSIONS.ADD_VESSEL, PERMISSIONS.EDIT_VESSEL,
-            PERMISSIONS.VIEW_MAINTENANCE, PERMISSIONS.ADD_MAINTENANCE, PERMISSIONS.EDIT_MAINTENANCE,
-            PERMISSIONS.FIX_VESSEL, PERMISSIONS.VIEW_EFFICIENCY,
-            PERMISSIONS.VIEW_SUPPORT, PERMISSIONS.VIEW_NOTES, PERMISSIONS.EXPORT_DATA
-        ]
-    },
-    'مشاهد': {
-        name: 'مشاهد',
-        permissions: [
-            PERMISSIONS.VIEW_FLEET, PERMISSIONS.VIEW_MAINTENANCE,
-            PERMISSIONS.VIEW_EFFICIENCY, PERMISSIONS.VIEW_SUPPORT, PERMISSIONS.VIEW_NOTES
-        ]
-    }
-};
-
-function hasPermission(permission) {
-    if (!currentUser) return false;
-    const role = ROLES[currentUser.role];
-    if (!role) return false;
-    return role.permissions.includes(permission);
-}
-
-function checkPermission(permission, callback) {
-    if (hasPermission(permission)) {
-        if (callback) callback();
-        return true;
-    } else {
-        showAlert('⛔ لا تملك صلاحية للقيام بهذه العملية', 'danger');
-        return false;
-    }
-}
-
-function applyPermissions() {
-    if (!hasPermission(PERMISSIONS.ADD_VESSEL)) {
-        document.querySelectorAll('.add-btn, .btn-add').forEach(el => el.style.display = 'none');
-    }
-    if (!hasPermission(PERMISSIONS.DELETE_VESSEL)) {
-        document.querySelectorAll('.btn-delete, .btn-danger').forEach(el => {
-            if (el.textContent.includes('حذف') || el.textContent.includes('🗑️')) {
-                el.style.display = 'none';
-            }
-        });
-    }
-    if (!hasPermission(PERMISSIONS.EDIT_VESSEL)) {
-        document.querySelectorAll('.btn-edit, .btn-warning').forEach(el => {
-            if (el.textContent.includes('تعديل') || el.textContent.includes('✏️')) {
-                el.style.display = 'none';
-            }
-        });
-    }
-    if (!hasPermission(PERMISSIONS.ADD_MAINTENANCE)) {
-        document.querySelectorAll('.btn-add-maintenance').forEach(el => el.style.display = 'none');
-    }
-    if (!hasPermission(PERMISSIONS.FIX_VESSEL)) {
-        document.querySelectorAll('.btn-fix, .btn-success').forEach(el => {
-            if (el.textContent.includes('إصلاح') || el.textContent.includes('✅')) {
-                el.style.display = 'none';
-            }
-        });
-    }
-    if (!hasPermission(PERMISSIONS.VIEW_USERS)) {
-        const usersNav = document.querySelector('[onclick*="users"]');
-        if (usersNav) usersNav.style.display = 'none';
-    }
-}
-
 // ============================================================
 // منع الدخول التلقائي
 // ============================================================
@@ -190,11 +71,6 @@ function loadPage(pageName) {
             div.innerHTML = html;
             container.appendChild(div);
             initPage(pageName);
-            setTimeout(applyPermissions, 300);
-            
-            if (hasPermission(PERMISSIONS.EXPORT_DATA)) {
-                addPDFExportButton();
-            }
         })
         .catch(err => {
             console.error('Error:', err);
@@ -218,6 +94,7 @@ function initPage(pageName) {
         case 'map': setTimeout(initMap, 100); break;
         case 'users': loadUsers(); break;
         case 'notes': loadNotes(); break;
+        default: console.log('⚠️ Unknown page:', pageName);
     }
 }
 
@@ -231,12 +108,10 @@ function showPage(pageName) {
     if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
         btns[pageMap[pageName]].classList.add('active');
     }
-    
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 992) {
         sidebar.classList.remove('open');
     }
-    
     loadPage(pageName);
 }
 
@@ -371,8 +246,6 @@ function doLogin() {
         loadPage('dashboard');
         showAlert('✅ مرحباً ' + userData.name + '!', 'success');
         
-        initWebSocket();
-        
         if (loginBtn) {
             loginBtn.disabled = false;
             loginBtn.textContent = '🚀 دخول';
@@ -403,8 +276,6 @@ function doLogin() {
             loadAllData();
             loadPage('dashboard');
             showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
-            
-            initWebSocket();
         } else {
             showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
         }
@@ -423,7 +294,6 @@ function doLogin() {
 
 function doLogout() {
     if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
-        if (socket) socket.close();
         localStorage.clear();
         location.reload();
     }
@@ -456,7 +326,6 @@ function loadAllData() {
     loadTickets();
     loadNotes();
     loadUsers();
-    setTimeout(applyPermissions, 500);
 }
 
 function loadVessels() {
@@ -555,7 +424,6 @@ function renderAllTables() {
     renderMaintenanceTables();
     updateMaintenanceVessels();
     renderEfficiency();
-    loadDashboard();
 }
 
 function renderMaintenanceTables() {
@@ -742,8 +610,8 @@ function renderMainTable() {
             <td>${v.ref || '-'}</td>
             <td>${v.repairer || '-'}</td>
             <td>
-                <button class="btn-sm btn-warning" onclick="editVessel(${v.id})" ${!hasPermission(PERMISSIONS.EDIT_VESSEL) ? 'style="display:none"' : ''}>✏️</button>
-                <button class="btn-sm btn-danger" onclick="deleteVessel(${v.id})" ${!hasPermission(PERMISSIONS.DELETE_VESSEL) ? 'style="display:none"' : ''}>🗑️</button>
+                <button class="btn-sm btn-warning" onclick="editVessel(${v.id})">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteVessel(${v.id})">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -779,7 +647,7 @@ function renderUsersTable() {
             <td>${u.role || 'مشاهد'}</td>
             <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
             <td>
-                <button class="btn-sm btn-danger" onclick="deleteUser(${u.id})" ${!hasPermission(PERMISSIONS.DELETE_USER) ? 'style="display:none"' : ''}>🗑️</button>
+                <button class="btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -802,11 +670,10 @@ function renderNotes() {
 }
 
 // ============================================================
-// دوال المراكب (مختصرة)
+// دوال المراكب
 // ============================================================
 
 function addItem() {
-    if (!checkPermission(PERMISSIONS.ADD_VESSEL)) return;
     const token = getToken();
     if (!token) {
         showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
@@ -817,515 +684,173 @@ function addItem() {
         showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
         return;
     }
-    // باقي الكود...
-    showAlert('✅ تم إضافة المركب بنجاح', 'success');
-    loadVessels();
+    const data = {
+        name: name,
+        num: document.getElementById('iNum')?.value || '',
+        len: parseFloat(document.getElementById('iLen')?.value) || 0,
+        reg: document.getElementById('iReg')?.value || '',
+        zone: document.getElementById('iZone')?.value || '',
+        port: document.getElementById('iPort')?.value || '',
+        supp: document.getElementById('iSupp')?.value || '',
+        stat: document.getElementById('iStat')?.value || 'صالح',
+        break: document.getElementById('iBreak')?.value || '',
+        fDate: document.getElementById('iDate')?.value || '',
+        eDate: document.getElementById('iEnd')?.value || '',
+        ref: document.getElementById('iRef')?.value || '',
+        repairer: document.getElementById('iRepairer')?.value || ''
+    };
+    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
+    const method = editingVesselId ? 'PUT' : 'POST';
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
+            editingVesselId = null;
+            clearVesselInputs();
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showAlert('❌ خطأ في العملية', 'danger');
+    });
 }
 
 function editVessel(id) {
-    if (!checkPermission(PERMISSIONS.EDIT_VESSEL)) return;
-    showAlert('✏️ جارٍ تعديل المركب', 'info');
+    console.log('✏️ Editing vessel with ID:', id);
+    const vessel = allVessels.find(v => v.id === id);
+    if (!vessel) {
+        showAlert('⚠️ المركب غير موجود', 'warning');
+        return;
+    }
+    
+    const elements = {
+        iName: document.getElementById('iName'),
+        iNum: document.getElementById('iNum'),
+        iLen: document.getElementById('iLen'),
+        iReg: document.getElementById('iReg'),
+        iZone: document.getElementById('iZone'),
+        iPort: document.getElementById('iPort'),
+        iSupp: document.getElementById('iSupp'),
+        iStat: document.getElementById('iStat'),
+        iBreak: document.getElementById('iBreak'),
+        iDate: document.getElementById('iDate'),
+        iEnd: document.getElementById('iEnd'),
+        iRef: document.getElementById('iRef'),
+        iRepairer: document.getElementById('iRepairer')
+    };
+    
+    let missingElements = [];
+    Object.keys(elements).forEach(key => {
+        if (!elements[key]) missingElements.push(key);
+    });
+    
+    if (missingElements.length > 0) {
+        console.error('❌ عناصر مفقودة:', missingElements);
+        showAlert('⚠️ تأكد من وجود جميع حقول المركب', 'warning');
+        return;
+    }
+    
+    editingVesselId = vessel.id;
+    elements.iName.value = vessel.name || '';
+    elements.iNum.value = vessel.num || '';
+    elements.iLen.value = vessel.len || 0;
+    elements.iReg.value = vessel.reg || '';
+    elements.iZone.value = vessel.zone || '';
+    elements.iPort.value = vessel.port || '';
+    elements.iSupp.value = vessel.supp || '';
+    elements.iStat.value = vessel.stat || 'صالح';
+    elements.iBreak.value = vessel.break || '';
+    elements.iDate.value = vessel.fDate || '';
+    elements.iEnd.value = vessel.eDate || '';
+    elements.iRef.value = vessel.ref || '';
+    elements.iRepairer.value = vessel.repairer || '';
+    
+    const form = document.querySelector('.fleet-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.style.border = '2px solid #fbbf24';
+        form.style.boxShadow = '0 0 20px rgba(251,191,36,0.3)';
+        setTimeout(() => {
+            form.style.border = '1px solid rgba(255,255,255,0.1)';
+            form.style.boxShadow = 'none';
+        }, 3000);
+    }
+    
+    showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
 }
 
 function deleteVessel(id) {
-    if (!checkPermission(PERMISSIONS.DELETE_VESSEL)) return;
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    showAlert('✅ تم الحذف', 'success');
-    loadVessels();
-}
-
-// ============================================================
-// 📊 لوحة التحكم (Dashboard)
-// ============================================================
-
-function loadDashboard() {
-    console.log('📊 Loading dashboard...');
-    
-    // تحديث الإحصائيات
-    const total = allVessels.length;
-    const ready = allVessels.filter(v => v.stat === 'صالح').length;
-    const broken = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
-    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const maintenanceCount = allMaintenance.length;
-    
-    document.getElementById('dashTotal').textContent = total;
-    document.getElementById('dashReady').textContent = ready;
-    document.getElementById('dashBroken').textContent = broken;
-    document.getElementById('dashMaintenance').textContent = maintenance;
-    document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
-    document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
-    
-    // تحديث آخر تحديث
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
-    
-    // عرض الرسوم البيانية
-    setTimeout(() => {
-        renderDashboardCharts();
-        initThreeJS();
-    }, 200);
-}
-
-function renderDashboardCharts() {
-    // رسم بياني Doughnut
-    const dashCanvas = document.getElementById('dashChart');
-    if (dashCanvas) {
-        if (dashChart) dashChart.destroy();
-        
-        const ready = allVessels.filter(v => v.stat === 'صالح').length;
-        const broken = allVessels.filter(v => v.stat === 'معطب').length;
-        const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
-        
-        dashChart = new Chart(dashCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
-                datasets: [{
-                    data: [ready, broken, maintenance],
-                    backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
-                    borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } }
-                    }
-                }
-            }
-        });
-    }
-    
-    // رسم بياني Line
-    const lineCanvas = document.getElementById('dashLineChart');
-    if (lineCanvas) {
-        if (dashLineChart) dashLineChart.destroy();
-        
-        const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-        const readyData = [12, 14, 13, 16, 18, 20];
-        const brokenData = [5, 4, 6, 3, 4, 2];
-        
-        dashLineChart = new Chart(lineCanvas, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    {
-                        label: 'صالح',
-                        data: readyData,
-                        borderColor: '#4ade80',
-                        backgroundColor: 'rgba(74,222,128,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#4ade80'
-                    },
-                    {
-                        label: 'معطب',
-                        data: brokenData,
-                        borderColor: '#f87171',
-                        backgroundColor: 'rgba(248,113,113,0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#f87171'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } }
-                    }
-                },
-                scales: {
-                    x: { ticks: { color: 'rgba(255,255,255,0.3)' } },
-                    y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true }
-                }
-            }
-        });
-    }
-    
-    // تحديث النشاطات
-    updateDashboardActivity();
-}
-
-function updateDashboardActivity() {
-    const container = document.getElementById('dashActivity');
-    if (!container) return;
-    
-    const activities = [];
-    
-    // إضافة نشاطات من الصيانة
-    allMaintenance.slice(0, 5).forEach(r => {
-        activities.push({
-            icon: '🔧',
-            text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`,
-            time: r.date || 'اليوم'
-        });
-    });
-    
-    // إضافة نشاطات من المراكب
-    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
-        activities.push({
-            icon: '⚠️',
-            text: `المركب ${v.name} أصبح معطباً`,
-            time: v.fDate || 'اليوم'
-        });
-    });
-    
-    if (activities.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">لا توجد نشاطات حديثة</div>';
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
-    
-    container.innerHTML = activities.map(a => `
-        <div class="activity-item">
-            <span class="activity-icon">${a.icon}</span>
-            <span>${a.text}</span>
-            <span class="activity-time">${a.time}</span>
-        </div>
-    `).join('');
-}
-
-// ============================================================
-// 🌐 Three.js 3D
-// ============================================================
-
-function initThreeJS() {
-    const container = document.getElementById('threeContainer');
-    if (!container) return;
-    
-    // تنظيف سابق
-    if (renderer) {
-        renderer.dispose();
-        renderer.domElement.remove();
-    }
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
-    threeObjects = [];
-    
-    // المشهد
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a1a);
-    
-    // الكاميرا
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(8, 5, 8);
-    camera.lookAt(0, 0, 0);
-    
-    // الإضاءة
-    const ambientLight = new THREE.AmbientLight(0x404060);
-    scene.add(ambientLight);
-    
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(10, 20, 10);
-    scene.add(directionalLight);
-    
-    const pointLight = new THREE.PointLight(0x4ade80, 0.3, 30);
-    pointLight.position.set(0, 5, 0);
-    scene.add(pointLight);
-    
-    // الرندرر
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
-    
-    // شبكة أرضية
-    const gridHelper = new THREE.GridHelper(12, 12, 0x4ade80, 0x2d3748);
-    gridHelper.position.y = -2;
-    scene.add(gridHelper);
-    
-    // عناصر التحكم
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
-    controls.minDistance = 4;
-    controls.maxDistance = 20;
-    controls.target.set(0, 0, 0);
-    
-    // إنشاء الأعمدة
-    create3DBars();
-    
-    // بدء الأنيميشن
-    animateThree();
-}
-
-function create3DBars() {
-    const data = [
-        { label: 'صالح', value: allVessels.filter(v => v.stat === 'صالح').length, color: 0x4ade80 },
-        { label: 'معطب', value: allVessels.filter(v => v.stat === 'معطب').length, color: 0xf87171 },
-        { label: 'صيانة', value: allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length, color: 0xfbbf24 }
-    ];
-    
-    const maxValue = Math.max(data[0].value, data[1].value, data[2].value, 1);
-    const spacing = 2.5;
-    const startX = -(data.length - 1) * spacing / 2;
-    
-    data.forEach((item, index) => {
-        const height = Math.max((item.value / maxValue) * 3.5, 0.3);
-        const x = startX + index * spacing;
-        
-        const geometry = new THREE.BoxGeometry(1.5, height, 1.5);
-        const material = new THREE.MeshStandardMaterial({
-            color: item.color,
-            emissive: item.color,
-            emissiveIntensity: 0.1,
-            roughness: 0.3,
-            metalness: 0.1,
-            transparent: true,
-            opacity: 0.85
-        });
-        const bar = new THREE.Mesh(geometry, material);
-        bar.position.set(x, height/2 - 2, 0);
-        bar.castShadow = true;
-        scene.add(bar);
-        threeObjects.push(bar);
-        
-        // الإطار
-        const edgesGeometry = new THREE.EdgesGeometry(geometry);
-        const edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.1 });
-        const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-        edges.position.copy(bar.position);
-        scene.add(edges);
-        threeObjects.push(edges);
-        
-        // النص (Sprite)
-        const canvas = document.createElement('canvas');
-        canvas.width = 256;
-        canvas.height = 128;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'rgba(0,0,0,0)';
-        ctx.fillRect(0, 0, 256, 128);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = 'bold 48px Cairo, sans-serif';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(item.value, 128, 50);
-        ctx.font = 'bold 24px Cairo, sans-serif';
-        ctx.fillStyle = '#94a3b8';
-        ctx.fillText(item.label, 128, 100);
-        
-        const texture = new THREE.CanvasTexture(canvas);
-        const spriteMaterial = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-        const sprite = new THREE.Sprite(spriteMaterial);
-        sprite.position.set(x, height - 2 + 0.5, 0);
-        sprite.scale.set(2, 1, 1);
-        scene.add(sprite);
-        threeObjects.push(sprite);
+    fetch('/api/vessels/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم الحذف', 'success');
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete error:', err);
+        showAlert('❌ خطأ في الحذف', 'danger');
     });
 }
 
-function animateThree() {
-    animationId = requestAnimationFrame(animateThree);
-    controls.update();
-    renderer.render(scene, camera);
+function clearVesselInputs() {
+    document.getElementById('iName').value = '';
+    document.getElementById('iNum').value = '';
+    document.getElementById('iLen').value = '';
+    document.getElementById('iReg').value = '';
+    document.getElementById('iZone').value = '';
+    document.getElementById('iPort').value = '';
+    document.getElementById('iSupp').value = '';
+    document.getElementById('iStat').value = 'صالح';
+    document.getElementById('iBreak').value = '';
+    document.getElementById('iDate').value = '';
+    document.getElementById('iEnd').value = '';
+    document.getElementById('iRef').value = '';
+    document.getElementById('iRepairer').value = '';
 }
 
-function toggleThreeRotate() {
-    if (controls) {
-        controls.autoRotate = !controls.autoRotate;
-        isAutoRotate = controls.autoRotate;
-        const btn = document.querySelector('#threeControls button:first-child');
-        if (btn) {
-            btn.textContent = isAutoRotate ? '⏸️ إيقاف' : '🔄 تدوير';
-        }
-    }
-}
-
-function resetThreeCamera() {
-    if (camera && controls) {
-        camera.position.set(8, 5, 8);
-        controls.target.set(0, 0, 0);
-        controls.update();
-    }
-}
-
-// ============================================================
-// 🔔 WebSocket والإشعارات
-// ============================================================
-
-function initWebSocket() {
-    try {
-        socket = new WebSocket('wss://' + window.location.host + '/ws');
-        socket.onopen = function() {
-            console.log('✅ WebSocket متصل');
-            addNotification('🟢 تم الاتصال بالخادم', 'success');
-        };
-        socket.onmessage = function(event) {
-            try {
-                const data = JSON.parse(event.data);
-                addNotification(data.message || 'رسالة جديدة', data.type || 'info');
-                notificationCount++;
-                updateNotificationBadge();
-            } catch (e) {
-                console.log('📨 رسالة:', event.data);
-            }
-        };
-        socket.onclose = function() {
-            console.log('❌ WebSocket مغلق');
-            setTimeout(initWebSocket, 5000);
-        };
-        socket.onerror = function(error) {
-            console.error('❌ خطأ WebSocket:', error);
-        };
-    } catch (e) {
-        console.log('⚠️ WebSocket غير متاح، استخدام وضع المحاكاة');
-        simulateNotifications();
-    }
-}
-
-function addNotification(message, type = 'info') {
-    const time = new Date().toLocaleTimeString('ar-TN');
-    notifications.unshift({ message, type, time });
-    if (notifications.length > 50) notifications.pop();
-    renderNotifications();
-}
-
-function renderNotifications() {
-    const container = document.getElementById('notificationList');
-    if (!container) return;
-    if (notifications.length === 0) {
-        container.innerHTML = '<div style="padding:15px; color:rgba(255,255,255,0.2); text-align:center;">🔕 لا توجد إشعارات</div>';
-        return;
-    }
-    container.innerHTML = notifications.map(n => `
-        <div style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); display:flex; align-items:center; gap:10px; font-size:13px; color:rgba(255,255,255,0.7); animation:slideIn 0.3s ease;">
-            <span>${n.type === 'success' ? '✅' : n.type === 'danger' ? '❌' : n.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
-            <span>${n.message}</span>
-            <span style="margin-right:auto; font-size:10px; color:rgba(255,255,255,0.2);">${n.time}</span>
-        </div>
-    `).join('');
-}
-
-function updateNotificationBadge() {
-    const badge = document.getElementById('notificationBadge');
-    if (badge) {
-        badge.textContent = notificationCount;
-        badge.style.display = notificationCount > 0 ? 'block' : 'none';
-    }
-}
-
-function toggleNotifications() {
-    let panel = document.getElementById('notificationPanel');
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'notificationPanel';
-        panel.style.cssText = `
-            position: fixed; top: 70px; left: 20px; width: 350px; max-height: 400px;
-            background: rgba(10,10,26,0.95); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 9999;
-            overflow-y: auto; display: none;
-        `;
-        panel.innerHTML = `
-            <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:700; color:white;">🔔 الإشعارات</span>
-                <button onclick="clearNotifications()" style="background:transparent; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-size:12px;">مسح الكل</button>
-            </div>
-            <div id="notificationList"></div>
-        `;
-        document.body.appendChild(panel);
-        renderNotifications();
-    }
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-function clearNotifications() {
-    notifications = [];
-    notificationCount = 0;
-    updateNotificationBadge();
-    renderNotifications();
-    showAlert('🗑️ تم مسح جميع الإشعارات', 'info');
-}
-
-function simulateNotifications() {
-    const messages = [
-        { type: 'success', message: '✅ المركب البروق 4 تم إصلاحه' },
-        { type: 'warning', message: '⚠️ المركب صقر 2 يحتاج صيانة' },
-        { type: 'info', message: 'ℹ️ تم إضافة مركب جديد: زورق مزدوج 6' },
-        { type: 'danger', message: '❌ عطل في المركب خافر 3' }
-    ];
-    let index = 0;
-    setInterval(() => {
-        if (document.getElementById('mainApp').style.display === 'block') {
-            const msg = messages[index % messages.length];
-            addNotification(msg.message, msg.type);
-            notificationCount++;
-            updateNotificationBadge();
-            index++;
-        }
-    }, 30000);
-}
-
-// ============================================================
-// 📄 تصدير PDF
-// ============================================================
-
-function exportToPDF() {
-    showAlert('⏳ جاري تحضير ملف PDF...', 'info');
-    const element = document.getElementById('pageContainer');
-    const opt = {
-        margin: 10,
-        filename: `تقرير_الأسطول_${new Date().toISOString().split('T')[0]}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, backgroundColor: '#0a0a1a', logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+function updateZones() {
+    const reg = document.getElementById('iReg')?.value;
+    const zoneSelect = document.getElementById('iZone');
+    if (!zoneSelect) return;
+    const zones = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
     };
-    if (typeof html2pdf === 'undefined') {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = function() {
-            html2pdf().set(opt).from(element).save();
-            showAlert('✅ تم تصدير التقرير بنجاح', 'success');
-        };
-        document.head.appendChild(script);
-    } else {
-        html2pdf().set(opt).from(element).save();
-        showAlert('✅ تم تصدير التقرير بنجاح', 'success');
-    }
-}
-
-function addPDFExportButton() {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-    if (container.querySelector('.pdf-export-btn')) return;
-    const btnContainer = container.querySelector('.page-content > div:last-child');
-    if (btnContainer) {
-        const btn = document.createElement('button');
-        btn.className = 'pdf-export-btn';
-        btn.innerHTML = '📄 تصدير PDF';
-        btn.style.cssText = `
-            padding: 6px 16px; background: rgba(220,53,69,0.15); border: 1px solid rgba(220,53,69,0.2);
-            border-radius: 8px; color: #f87171; cursor: pointer; font-size: 12px;
-            font-family: 'Cairo', sans-serif; transition: all 0.3s; margin-right: 8px;
-        `;
-        btn.onmouseover = function() { this.style.background = 'rgba(220,53,69,0.25)'; };
-        btn.onmouseout = function() { this.style.background = 'rgba(220,53,69,0.15)'; };
-        btn.onclick = exportToPDF;
-        btnContainer.appendChild(btn);
-    }
+    const options = zones[reg] || ['المنطقة غير محددة'];
+    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    options.forEach(z => {
+        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
+    });
 }
 
 // ============================================================
-// دوال الصيانة (مختصرة)
+// دوال الصيانة
 // ============================================================
 
 function updateMaintenanceVessels() {
@@ -1364,8 +889,108 @@ function removePart(btn) {
 }
 
 function saveMaintenance() {
-    if (!checkPermission(PERMISSIONS.ADD_MAINTENANCE)) return;
-    showAlert('✅ تم إضافة سجل الصيانة', 'success');
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    const vesselId = document.getElementById('mVesselId')?.value;
+    const type = document.getElementById('mType')?.value;
+    const unit = document.getElementById('mUnit')?.value;
+    const technician = document.getElementById('mTechnician')?.value.trim();
+    const description = document.getElementById('mDescription')?.value.trim();
+    const repair = document.getElementById('mRepair')?.value.trim();
+    const faultType = document.getElementById('mFaultType')?.value;
+    const startDate = document.getElementById('mStartDate')?.value;
+    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
+    const notes = document.getElementById('mNotes')?.value.trim();
+    const parts = getPartsData();
+    
+    if (!vesselId) {
+        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
+        return;
+    }
+    if (!description) {
+        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
+        return;
+    }
+    if (!technician) {
+        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
+        return;
+    }
+    
+    const vessel = allVessels.find(v => v.id == vesselId);
+    if (vessel && vessel.stat === 'صالح') {
+        fetch('/api/vessels/' + vesselId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ 
+                stat: 'معطب',
+                break: description,
+                fDate: startDate || new Date().toISOString().split('T')[0]
+            })
+        }).catch(err => console.error('Error updating vessel status:', err));
+    }
+    
+    const data = {
+        vesselId: parseFloat(vesselId),
+        vesselName: vessel ? vessel.name : '',
+        type: type || 'عادية',
+        unit: unit || 'غير محدد',
+        technician: technician,
+        description: description,
+        repair: repair || '',
+        faultType: faultType || 'أخرى',
+        cost: cost,
+        notes: notes || '',
+        parts: parts,
+        status: 'قيد الإنجاز',
+        date: new Date().toISOString().split('T')[0],
+        startDate: startDate || new Date().toISOString().split('T')[0],
+        endDate: null,
+        createdBy: currentUser?.name || 'Admin'
+    };
+    
+    const url = editingMaintenanceId ? '/api/maintenance/' + editingMaintenanceId : '/api/maintenance';
+    const method = editingMaintenanceId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة' : '✅ تم إضافة سجل الصيانة', 'success');
+            editingMaintenanceId = null;
+            toggleMaintenanceForm();
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Save maintenance error:', err);
+        showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
+    });
+}
+
+function getPartsData() {
+    const parts = [];
+    document.querySelectorAll('.part-item').forEach(item => {
+        const name = item.querySelector('.part-name')?.value;
+        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
+        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
+        if (name) parts.push({ name, quantity: qty, price });
+    });
+    return parts;
 }
 
 function renderGeneralMaintenance() {
@@ -1395,9 +1020,33 @@ function renderGeneralMaintenance() {
 }
 
 function fixVessel(vesselId) {
-    if (!checkPermission(PERMISSIONS.FIX_VESSEL)) return;
-    showAlert('✅ تم إصلاح المركب', 'success');
-    loadAllData();
+    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    fetch('/api/vessels/' + vesselId, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ stat: 'صالح' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إصلاح المركب', 'success');
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Fix vessel error:', err);
+        showAlert('❌ خطأ في إصلاح المركب', 'danger');
+    });
 }
 
 function openMaintenanceFile(vesselId) {
@@ -1650,6 +1299,135 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
+// 📊 لوحة التحكم (Dashboard)
+// ============================================================
+
+function loadDashboard() {
+    console.log('📊 Loading dashboard...');
+    
+    const dashTotal = document.getElementById('dashTotal');
+    if (!dashTotal) {
+        console.log('⚠️ Dashboard elements not found, skipping...');
+        return;
+    }
+    
+    const total = allVessels.length;
+    const ready = allVessels.filter(v => v.stat === 'صالح').length;
+    const broken = allVessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
+    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const maintenanceCount = allMaintenance.length;
+    
+    document.getElementById('dashTotal').textContent = total;
+    document.getElementById('dashReady').textContent = ready;
+    document.getElementById('dashBroken').textContent = broken;
+    document.getElementById('dashMaintenance').textContent = maintenance;
+    document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
+    document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
+    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
+    
+    const now = new Date();
+    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
+    
+    setTimeout(() => {
+        renderDashboardCharts();
+    }, 200);
+}
+
+function renderDashboardCharts() {
+    try {
+        const dashCanvas = document.getElementById('dashChart');
+        if (dashCanvas) {
+            if (dashChart) dashChart.destroy();
+            const ready = allVessels.filter(v => v.stat === 'صالح').length;
+            const broken = allVessels.filter(v => v.stat === 'معطب').length;
+            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            
+            dashChart = new Chart(dashCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+                    datasets: [{
+                        data: [ready, broken, maintenance],
+                        backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
+                        borderColor: ['#4ade80', '#f87171', '#fbbf24'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    } catch(e) {
+        console.log('⚠️ Dashboard chart error:', e);
+    }
+    
+    try {
+        const lineCanvas = document.getElementById('dashLineChart');
+        if (lineCanvas) {
+            if (dashLineChart) dashLineChart.destroy();
+            const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
+            const readyData = [12, 14, 13, 16, 18, 20];
+            const brokenData = [5, 4, 6, 3, 4, 2];
+            
+            dashLineChart = new Chart(lineCanvas, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'صالح', data: readyData, borderColor: '#4ade80', backgroundColor: 'rgba(74,222,128,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#4ade80' },
+                        { label: 'معطب', data: brokenData, borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#f87171' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } } } },
+                    scales: { x: { ticks: { color: 'rgba(255,255,255,0.3)' } }, y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true } }
+                }
+            });
+        }
+    } catch(e) {
+        console.log('⚠️ Dashboard line chart error:', e);
+    }
+    
+    updateDashboardActivity();
+}
+
+function updateDashboardActivity() {
+    const container = document.getElementById('dashActivity');
+    if (!container) return;
+    
+    const activities = [];
+    allMaintenance.slice(0, 5).forEach(r => {
+        activities.push({ icon: '🔧', text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`, time: r.date || 'اليوم' });
+    });
+    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+        activities.push({ icon: '⚠️', text: `المركب ${v.name} أصبح معطباً`, time: v.fDate || 'اليوم' });
+    });
+    
+    if (activities.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">لا توجد نشاطات حديثة</div>';
+        return;
+    }
+    
+    container.innerHTML = activities.map(a => `
+        <div class="activity-item">
+            <span class="activity-icon">${a.icon}</span>
+            <span>${a.text}</span>
+            <span class="activity-time">${a.time}</span>
+        </div>
+    `).join('');
+}
+
+// ============================================================
 // دوال إضافية
 // ============================================================
 
@@ -1662,7 +1440,7 @@ function initMap() {
 }
 
 function deleteUser(id) {
-    if (!checkPermission(PERMISSIONS.DELETE_USER)) return;
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
     showAlert('✅ تم حذف المستخدم', 'success');
 }
 
