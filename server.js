@@ -1,607 +1,588 @@
 const express = require('express');
-const cors = require('cors');
+const session = require('express-session');
+const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============================================================
-// ✅ حل مشكلة CSS
-// ============================================================
-app.use((req, res, next) => {
-    if (req.url.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-    } else if (req.url.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-    }
-    next();
-});
-
-app.use(cors());
+// ==================== Middleware ====================
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
+app.use(session({
+    secret: crypto.randomBytes(32).toString('hex'),
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+}));
 
-// ============================================================
-// ✅ البيانات (Mock Data)
-// ============================================================
-let vessels = [];
-let users = [
-    { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول', isActive: true }
-];
-let tickets = [];
-let notes = [];
-let locations = [];
+// ==================== دوال مساعدة ====================
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
+}
 
-// ============================================================
-// ✅ نظام الصيانة - البيانات
-// ============================================================
-let maintenanceRecords = [];
-let nextMaintenanceId = 1;
+function getClientIp(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
+}
 
-const MAINTENANCE_UNITS = [
-    'وحدة الصيانة والإسناد البحري تونس',
-    'وحدة الصيانة والإسناد البحري صفاقس',
-    'وحدة الصيانة والإسناد البحري المنستير',
-    'وحدة الصيانة والإسناد البحري جرجيس',
-    'شركة خاصة'
-];
-
-// ============================================================
-// ✅ دوال مساعدة
-// ============================================================
 function getCurrentDate() {
-    return new Date().toISOString().split('T')[0];
+    const d = new Date();
+    return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
 }
 
 function getCurrentTime() {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const d = new Date();
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
-function getCurrentDateTime() {
-    return new Date().toISOString();
+function logActivity(username, role, action, details, ip) {
+    const log = {
+        id: Date.now(),
+        userName: username,
+        userRole: role,
+        action: action,
+        details: details,
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+        ip: ip,
+        timestamp: new Date().toISOString()
+    };
+    activityLogs.unshift(log);
+    if (activityLogs.length > 1000) activityLogs.pop();
+    return log;
 }
 
-function determineCategory(len) {
-    const n = parseFloat(len);
-    if (isNaN(n)) return 'زوارق مزدوجة';
-    if (n === 11) return 'البروق';
-    if (n >= 8 && n <= 12) return 'صقور';
-    if (n > 12 && n <= 25) return 'خوافر';
-    if (n > 30) return 'طوافات';
-    return 'زوارق مزدوجة';
-}
+// ==================== البيانات ====================
+let users = [
+    { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true, lastLogin: null },
+    { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true, lastLogin: null },
+    { id: 3, name: 'viewer', pass: hashPassword('1234'), role: 'مشاهد', enabled: true, lastLogin: null }
+];
 
-function generateId() {
-    return Date.now() + Math.random() * 1000;
-}
+let vessels = [
+    { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
+    { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
+    { id: 3, name: 'زورق صيانة', num: 'Z003', len: 15, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صيانة', break: 'عطل كهربائي', fDate: '2024-05-10', eDate: '2024-05-30', ref: 'REF002', cat: 'زوارق مزدوجة' }
+];
 
-// ============================================================
-// ✅ API Routes - المصادقة
-// ============================================================
+let tickets = [];
+let activityLogs = [];
+let userLocations = [];
+let maintenanceRecords = [];
+let nextId = 10;
 
-app.post('/api/auth/login', (req, res) => {
-    const { email, password } = req.body;
-    if (email === 'admin' && password === '123456') {
-        res.json({
-            success: true,
-            token: 'fake-token-' + Date.now(),
-            user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' }
-        });
+// ==================== API تسجيل الدخول ====================
+app.post('/api/login', (req, res) => {
+    const { name, pass } = req.body;
+    const hashedInputPass = hashPassword(pass);
+    const user = users.find(u => u.name === name && u.pass === hashedInputPass);
+    
+    if (!user || !user.enabled) {
+        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
+    }
+    
+    req.session.userId = user.id;
+    req.session.userName = user.name;
+    req.session.userRole = user.role;
+    user.lastLogin = new Date().toISOString();
+    
+    logActivity(user.name, user.role, 'تسجيل دخول', `قام بتسجيل الدخول من ${getClientIp(req)}`, getClientIp(req));
+    
+    res.json({ success: true, name: user.name, role: user.role, id: user.id });
+});
+
+app.post('/api/logout', (req, res) => {
+    if (req.session.userId) {
+        logActivity(req.session.userName, req.session.userRole, 'تسجيل خروج', 'قام بتسجيل الخروج', getClientIp(req));
+        userLocations = userLocations.filter(l => l.userId !== req.session.userId);
+    }
+    req.session.destroy();
+    res.json({ success: true });
+});
+
+// ==================== API تتبع المستخدمين ====================
+app.post('/api/update-location', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const { lat, lng, page } = req.body;
+    const existingIndex = userLocations.findIndex(l => l.userId === req.session.userId);
+    const locationData = {
+        userId: req.session.userId,
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        lat: lat,
+        lng: lng,
+        page: page || 'unknown',
+        lastUpdate: new Date().toISOString(),
+        lastSeen: new Date().toLocaleTimeString('ar-TN')
+    };
+    
+    if (existingIndex !== -1) {
+        userLocations[existingIndex] = locationData;
     } else {
-        res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
+        userLocations.push(locationData);
+    }
+    
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    userLocations = userLocations.filter(l => new Date(l.lastUpdate) > fiveMinutesAgo);
+    
+    res.json({ success: true });
+});
+
+app.get('/api/user-locations', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    if (req.session.userRole === 'مسؤول') {
+        res.json(userLocations);
+    } else {
+        const myLocation = userLocations.find(l => l.userId === req.session.userId);
+        res.json(myLocation ? [myLocation] : []);
     }
 });
 
-app.get('/api/auth/me', (req, res) => {
-    res.json({ success: true, user: { id: 1, name: 'Admin', email: 'admin', role: 'مسؤول' } });
-});
-
-// ============================================================
-// 🚢 API Routes - المراكب
-// ============================================================
-
+// ==================== API المراكب ====================
 app.get('/api/vessels', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
     res.json(vessels);
 });
 
 app.post('/api/vessels', (req, res) => {
-    const data = req.body;
-    
-    const newVessel = {
-        id: generateId(),
-        name: data.name || 'مركب جديد',
-        num: data.num || '',
-        len: parseFloat(data.len) || 0,
-        cat: determineCategory(data.len),
-        reg: data.reg || '',
-        zone: data.zone || '',
-        port: data.port || '',
-        supp: data.supp || '',
-        stat: data.stat || 'صالح',
-        break: data.break || '',
-        fDate: data.fDate || '',
-        eDate: data.eDate || '',
-        ref: data.ref || '',
-        repairer: data.repairer || '',
-        maintenanceHistory: [],
-        lastMaintenance: null,
-        nextMaintenance: null
-    };
-    
-    vessels.push(newVessel);
-    
-    // ✅ إذا كان المركب معطباً، أنشئ سجل صيانة تلقائي
-    if (newVessel.stat === 'معطب' || newVessel.stat === 'صيانة') {
-        const maintenanceRecord = {
-            id: generateId(),
-            vesselId: newVessel.id,
-            vesselName: newVessel.name,
-            vesselNum: newVessel.num,
-            unit: newVessel.repairer || 'غير محدد',
-            date: getCurrentDateTime(),
-            type: 'طارئة',
-            description: newVessel.break || 'عطل غير محدد',
-            parts: [],
-            technician: 'غير محدد',
-            cost: 0,
-            status: 'قيد الإنجاز',
-            notes: 'تم إنشاء تلقائياً عند إضافة المركب',
-            createdBy: 'Admin',
-            completedAt: null,
-            vesselStatus: newVessel.stat
-        };
-        maintenanceRecords.push(maintenanceRecord);
-        
-        newVessel.maintenanceHistory.push({
-            maintenanceId: maintenanceRecord.id,
-            date: maintenanceRecord.date,
-            description: maintenanceRecord.description,
-            status: 'قيد الإنجاز'
-        });
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الإضافة' });
     }
     
-    res.status(201).json({ success: true, data: newVessel });
+    const newVessel = { 
+        id: nextId++, 
+        ...req.body,
+        createdAt: new Date().toISOString()
+    };
+    vessels.push(newVessel);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إضافة مركب', 
+        `أضاف مركب جديد: ${newVessel.name}`, getClientIp(req));
+    
+    res.json({ success: true, vessel: newVessel });
 });
 
 app.put('/api/vessels/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = vessels.findIndex(v => v.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية التعديل' });
     }
     
-    const oldStat = vessels[index].stat;
-    const newStat = req.body.stat;
-    
-    vessels[index] = { ...vessels[index], ...req.body };
-    
-    // ✅ إذا تغيرت الحالة من معطب إلى صالح
-    if (oldStat !== 'صالح' && newStat === 'صالح') {
-        maintenanceRecords.forEach(record => {
-            if (record.vesselId === vessels[index].id && record.status === 'قيد الإنجاز') {
-                record.status = 'مكتملة';
-                record.completedAt = getCurrentDateTime();
-                record.notes = (record.notes || '') + ' - تم إكمال الصيانة تلقائياً عند تغيير حالة المركب';
-            }
-        });
+    const index = vessels.findIndex(v => v.id == req.params.id);
+    if (index !== -1) {
+        const oldName = vessels[index].name;
+        vessels[index] = { ...vessels[index], ...req.body, updatedAt: new Date().toISOString() };
         
-        vessels[index].maintenanceHistory.forEach(record => {
-            if (record.status === 'قيد الإنجاز') {
-                record.status = 'مكتملة';
-            }
-        });
+        logActivity(req.session.userName, req.session.userRole, 'تعديل مركب', 
+            `عدل المركب: ${oldName}`, getClientIp(req));
         
-        vessels[index].lastMaintenance = getCurrentDateTime();
+        res.json({ success: true, vessel: vessels[index] });
+    } else {
+        res.status(404).json({ error: 'مركب غير موجود' });
     }
-    
-    // ✅ إذا تغيرت الحالة إلى معطب أو صيانة
-    if (newStat === 'معطب' || newStat === 'صيانة') {
-        const hasOpenRecord = maintenanceRecords.some(r => 
-            r.vesselId === vessels[index].id && r.status === 'قيد الإنجاز'
-        );
-        
-        if (!hasOpenRecord) {
-            const maintenanceRecord = {
-                id: generateId(),
-                vesselId: vessels[index].id,
-                vesselName: vessels[index].name,
-                vesselNum: vessels[index].num,
-                unit: vessels[index].repairer || 'غير محدد',
-                date: getCurrentDateTime(),
-                type: 'طارئة',
-                description: vessels[index].break || 'عطل غير محدد',
-                parts: [],
-                technician: 'غير محدد',
-                cost: 0,
-                status: 'قيد الإنجاز',
-                notes: 'تم إنشاء تلقائياً عند تغيير حالة المركب',
-                createdBy: 'Admin',
-                completedAt: null,
-                vesselStatus: newStat
-            };
-            maintenanceRecords.push(maintenanceRecord);
-            
-            vessels[index].maintenanceHistory.push({
-                maintenanceId: maintenanceRecord.id,
-                date: maintenanceRecord.date,
-                description: maintenanceRecord.description,
-                status: 'قيد الإنجاز'
-            });
-        }
-    }
-    
-    res.json({ success: true, data: vessels[index] });
 });
 
 app.delete('/api/vessels/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = vessels.findIndex(v => v.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الحذف' });
     }
     
-    maintenanceRecords = maintenanceRecords.filter(r => r.vesselId !== vessels[index].id);
-    vessels.splice(index, 1);
+    const vessel = vessels.find(v => v.id == req.params.id);
+    vessels = vessels.filter(v => v.id != req.params.id);
     
-    res.json({ success: true, message: 'تم الحذف' });
+    logActivity(req.session.userName, req.session.userRole, 'حذف مركب', 
+        `حذف المركب: ${vessel?.name}`, getClientIp(req));
+    
+    res.json({ success: true });
 });
 
-// ============================================================
-// 🔧 API Routes - نظام الصيانة
-// ============================================================
-
-// جلب جميع سجلات الصيانة
-app.get('/api/maintenance', (req, res) => {
-    res.json(maintenanceRecords);
-});
-
-// جلب سجلات صيانة مركب معين
-app.get('/api/maintenance/vessel/:vesselId', (req, res) => {
-    const vesselId = parseFloat(req.params.vesselId);
-    const records = maintenanceRecords.filter(r => r.vesselId === vesselId);
-    res.json(records);
-});
-
-// جلب سجلات صيانة حسب الوحدة
-app.get('/api/maintenance/unit/:unit', (req, res) => {
-    const unit = decodeURIComponent(req.params.unit);
-    const records = maintenanceRecords.filter(r => r.unit === unit);
-    res.json(records);
-});
-
-// إنشاء سجل صيانة جديد
-app.post('/api/maintenance', (req, res) => {
-    const data = req.body;
-    
-    const vessel = vessels.find(v => v.id === data.vesselId);
-    if (!vessel) {
-        return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-    }
-    
-    const newRecord = {
-        id: generateId(),
-        vesselId: vessel.id,
-        vesselName: vessel.name,
-        vesselNum: vessel.num,
-        unit: data.unit || vessel.repairer || 'غير محدد',
-        date: getCurrentDateTime(),
-        type: data.type || 'عادية',
-        description: data.description || 'صيانة',
-        parts: data.parts || [],
-        technician: data.technician || 'غير محدد',
-        cost: data.cost || 0,
-        status: 'قيد الإنجاز',
-        notes: data.notes || '',
-        createdBy: data.createdBy || 'Admin',
-        completedAt: null,
-        vesselStatus: vessel.stat
-    };
-    
-    maintenanceRecords.push(newRecord);
-    
-    vessel.stat = 'صيانة';
-    vessel.break = data.description || 'صيانة';
-    vessel.maintenanceHistory.push({
-        maintenanceId: newRecord.id,
-        date: newRecord.date,
-        description: newRecord.description,
-        status: 'قيد الإنجاز'
-    });
-    
-    res.status(201).json({ success: true, data: newRecord });
-});
-
-// تحديث سجل صيانة (كامل)
-app.put('/api/maintenance/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = maintenanceRecords.findIndex(r => r.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-    }
-    
-    const record = maintenanceRecords[index];
-    const data = req.body;
-    
-    // تحديث البيانات
-    if (data.unit) record.unit = data.unit;
-    if (data.type) record.type = data.type;
-    if (data.description) record.description = data.description;
-    if (data.technician) record.technician = data.technician;
-    if (data.cost !== undefined) record.cost = data.cost;
-    if (data.notes) record.notes = data.notes;
-    if (data.parts) record.parts = data.parts;
-    
-    // تحديث المركب إذا تغيرت الوحدة
-    if (data.unit) {
-        const vessel = vessels.find(v => v.id === record.vesselId);
-        if (vessel) {
-            vessel.repairer = data.unit;
-        }
-    }
-    
-    res.json({ success: true, data: record });
-});
-
-// إكمال الصيانة
-app.put('/api/maintenance/:id/complete', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = maintenanceRecords.findIndex(r => r.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-    }
-    
-    const record = maintenanceRecords[index];
-    
-    record.status = 'مكتملة';
-    record.completedAt = getCurrentDateTime();
-    if (req.body.notes) record.notes = (record.notes || '') + ' - ' + req.body.notes;
-    if (req.body.cost !== undefined) record.cost = req.body.cost;
-    if (req.body.parts) record.parts = req.body.parts;
-    if (req.body.technician) record.technician = req.body.technician;
-    
-    const vessel = vessels.find(v => v.id === record.vesselId);
-    if (vessel) {
-        vessel.stat = 'صالح';
-        vessel.lastMaintenance = getCurrentDateTime();
-        
-        vessel.maintenanceHistory.forEach(record => {
-            if (record.maintenanceId === id) {
-                record.status = 'مكتملة';
-            }
-        });
-    }
-    
-    res.json({ success: true, data: record });
-});
-
-// إلغاء سجل صيانة
-app.put('/api/maintenance/:id/cancel', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = maintenanceRecords.findIndex(r => r.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-    }
-    
-    maintenanceRecords[index].status = 'ملغية';
-    maintenanceRecords[index].notes = (maintenanceRecords[index].notes || '') + ' - تم الإلغاء';
-    
-    res.json({ success: true, message: 'تم إلغاء سجل الصيانة' });
-});
-
-// حذف سجل صيانة
-app.delete('/api/maintenance/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = maintenanceRecords.findIndex(r => r.id === id);
-    
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
-    }
-    
-    maintenanceRecords.splice(index, 1);
-    res.json({ success: true, message: 'تم الحذف' });
-});
-
-// إحصائيات الصيانة
-app.get('/api/maintenance/stats', (req, res) => {
-    const total = maintenanceRecords.length;
-    const inProgress = maintenanceRecords.filter(r => r.status === 'قيد الإنجاز').length;
-    const completed = maintenanceRecords.filter(r => r.status === 'مكتملة').length;
-    const cancelled = maintenanceRecords.filter(r => r.status === 'ملغية').length;
-    
-    const unitStats = {};
-    MAINTENANCE_UNITS.forEach(unit => {
-        const records = maintenanceRecords.filter(r => r.unit === unit);
-        unitStats[unit] = {
-            total: records.length,
-            completed: records.filter(r => r.status === 'مكتملة').length,
-            inProgress: records.filter(r => r.status === 'قيد الإنجاز').length
-        };
-    });
-    
-    res.json({
-        total,
-        inProgress,
-        completed,
-        cancelled,
-        unitStats
-    });
-});
-
-// ============================================================
-// 👥 API Routes - المستخدمين
-// ============================================================
-
+// ==================== API المستخدمين ====================
 app.get('/api/users', (req, res) => {
-    res.json(users);
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const safeUsers = users.map(u => ({ 
+        id: u.id, 
+        name: u.name, 
+        role: u.role, 
+        enabled: u.enabled 
+    }));
+    
+    res.json(safeUsers);
 });
 
 app.post('/api/users', (req, res) => {
-    const data = req.body;
-    const newUser = {
-        id: generateId(),
-        name: data.name || 'مستخدم جديد',
-        email: data.email || data.name?.toLowerCase().replace(/\s/g, '') + '@test.com',
-        role: data.role || 'مشاهد',
-        isActive: true
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { name, pass, role } = req.body;
+    
+    if (!name || !pass) {
+        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+    }
+    
+    if (users.find(u => u.name === name)) {
+        return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+    }
+    
+    const newUser = { 
+        id: nextId++, 
+        name: name, 
+        pass: hashPassword(pass),
+        role: role || 'مشاهد', 
+        enabled: true,
+        lastLogin: null
     };
+    
     users.push(newUser);
-    res.status(201).json({ success: true, data: newUser });
+    logActivity(req.session.userName, req.session.userRole, 'إضافة مستخدم', 
+        `أضاف مستخدم جديد: ${name}`, getClientIp(req));
+    
+    res.json({ success: true, user: { id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled } });
 });
 
 app.put('/api/users/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const user = users.find(u => u.id === id);
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
     }
-    Object.assign(user, req.body);
-    res.json({ success: true, data: user });
+    
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+        const { name, role, enabled } = req.body;
+        if (name !== undefined) users[index].name = name;
+        if (role !== undefined) users[index].role = role;
+        if (enabled !== undefined) users[index].enabled = enabled;
+        
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'مستخدم غير موجود' });
+    }
+});
+
+app.put('/api/users/:id/password', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { newPassword } = req.body;
+    if (!newPassword) {
+        return res.status(400).json({ error: 'كلمة المرور الجديدة مطلوبة' });
+    }
+    
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+        users[index].pass = hashPassword(newPassword);
+        logActivity(req.session.userName, req.session.userRole, 'تغيير كلمة مرور', 
+            `غير كلمة مرور المستخدم: ${users[index].name}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'مستخدم غير موجود' });
+    }
 });
 
 app.delete('/api/users/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
     }
-    users.splice(index, 1);
-    res.json({ success: true, message: 'تم الحذف' });
+    
+    const user = users.find(u => u.id == req.params.id);
+    if (user && user.name === 'admin') {
+        return res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
+    }
+    
+    users = users.filter(u => u.id != req.params.id);
+    logActivity(req.session.userName, req.session.userRole, 'حذف مستخدم', 
+        `حذف المستخدم: ${user?.name}`, getClientIp(req));
+    
+    res.json({ success: true });
 });
 
-// ============================================================
-// 🎫 API Routes - التذاكر
-// ============================================================
-
+// ==================== API التذاكر ====================
 app.get('/api/tickets', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
     res.json(tickets);
 });
 
 app.post('/api/tickets', (req, res) => {
-    const data = req.body;
-    const newTicket = {
-        id: generateId(),
-        subject: data.subject || 'موضوع جديد',
-        message: data.message || '',
-        status: 'قيد المعالجة',
-        userName: 'Admin',
-        date: getCurrentDate(),
-        time: getCurrentTime(),
-        replies: []
-    };
-    tickets.push(newTicket);
-    res.status(201).json({ success: true, data: newTicket });
-});
-
-// ============================================================
-// 📝 API Routes - المذكرات
-// ============================================================
-
-app.get('/api/notes', (req, res) => {
-    res.json(notes);
-});
-
-app.post('/api/notes', (req, res) => {
-    const data = req.body;
-    const newNote = {
-        id: generateId(),
-        title: data.title || 'مذكرة جديدة',
-        content: data.content || '',
-        date: data.date || getCurrentDate(),
-        time: getCurrentTime(),
-        week: '1',
-        createdBy: 'Admin'
-    };
-    notes.push(newNote);
-    res.status(201).json({ success: true, data: newNote });
-});
-
-app.delete('/api/notes/:id', (req, res) => {
-    const id = parseFloat(req.params.id);
-    const index = notes.findIndex(n => n.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'المذكرة غير موجودة' });
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
     }
-    notes.splice(index, 1);
-    res.json({ success: true, message: 'تم الحذف' });
-});
-
-app.get('/api/notes/latest', (req, res) => {
-    res.json(notes.length > 0 ? notes[notes.length - 1] : null);
-});
-
-// ============================================================
-// 📍 API Routes - المواقع
-// ============================================================
-
-app.get('/api/locations', (req, res) => {
-    res.json(locations);
-});
-
-app.post('/api/locations', (req, res) => {
-    const { lat, lng } = req.body;
-    const newLocation = {
-        id: generateId(),
-        userName: 'Admin',
-        lat: parseFloat(lat) || 0,
-        lng: parseFloat(lng) || 0,
-        timestamp: new Date()
+    
+    const newTicket = { 
+        _id: Date.now().toString(), 
+        ...req.body, 
+        replies: [],
+        createdAt: new Date().toISOString()
     };
-    locations.push(newLocation);
-    res.status(201).json({ success: true, data: newLocation });
+    tickets.unshift(newTicket);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إرسال تذكرة', 
+        `أرسل تذكرة دعم: ${req.body.subject}`, getClientIp(req));
+    
+    res.json({ success: true, ticket: newTicket });
 });
 
-// ============================================================
-// ❤️ Health Check
-// ============================================================
+app.put('/api/tickets/:id/reply', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const ticket = tickets.find(t => t._id === req.params.id);
+    if (ticket) {
+        ticket.replies.push(req.body.reply);
+        ticket.status = 'تم الرد';
+        logActivity(req.session.userName, req.session.userRole, 'رد على تذكرة', 
+            `رد على تذكرة: ${ticket.subject}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'تذكرة غير موجودة' });
+    }
+});
 
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
+app.put('/api/tickets/:id/close', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const ticket = tickets.find(t => t._id === req.params.id);
+    if (ticket) {
+        ticket.status = 'مغلقة';
+        logActivity(req.session.userName, req.session.userRole, 'إغلاق تذكرة', 
+            `أغلق التذكرة: ${ticket.subject}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'تذكرة غير موجودة' });
+    }
+});
+
+// ==================== API سجل النشاطات ====================
+app.get('/api/logs', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json(activityLogs);
+});
+
+app.post('/api/logs', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const { action, details } = req.body;
+    const log = logActivity(
+        req.session.userName, 
+        req.session.userRole, 
+        action, 
+        details, 
+        getClientIp(req)
+    );
+    
+    res.json({ success: true, log });
+});
+
+// ==================== API تصدير واستيراد ====================
+app.get('/api/export-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const exportData = {
+        vessels: vessels,
+        tickets: tickets,
+        maintenance: maintenanceRecords,
+        users: users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })),
+        exportDate: new Date().toISOString(),
+        version: '2.0'
+    };
+    
+    logActivity(req.session.userName, req.session.userRole, 'تصدير بيانات', 
+        'قام بتصدير جميع البيانات', getClientIp(req));
+    
+    res.json(exportData);
+});
+
+app.post('/api/import-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { vessels: newVessels, tickets: newTickets, maintenance: newMaintenance } = req.body;
+    
+    if (newVessels && Array.isArray(newVessels)) {
+        vessels = newVessels;
+    }
+    if (newTickets && Array.isArray(newTickets)) {
+        tickets = newTickets;
+    }
+    if (newMaintenance && Array.isArray(newMaintenance)) {
+        maintenanceRecords = newMaintenance;
+    }
+    
+    logActivity(req.session.userName, req.session.userRole, 'استيراد بيانات', 
+        'قام باستيراد البيانات من ملف', getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// ==================== API الصيانة ====================
+
+// جلب جميع سجلات الصيانة
+app.get('/api/maintenance', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    res.json(maintenanceRecords);
+});
+
+// إضافة سجل صيانة جديد
+app.post('/api/maintenance', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الإضافة' });
+    }
+    
+    const newRecord = { 
+        id: Date.now().toString(), 
+        ...req.body,
+        createdAt: new Date().toISOString()
+    };
+    maintenanceRecords.push(newRecord);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إضافة سجل صيانة', 
+        `أضاف سجل صيانة للمركب: ${req.body.vesselId}`, getClientIp(req));
+    
+    res.json({ success: true, record: newRecord });
+});
+
+// تحديث سجل صيانة
+app.put('/api/maintenance/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية التعديل' });
+    }
+    
+    const index = maintenanceRecords.findIndex(r => r.id === req.params.id);
+    if (index === -1) {
+        return res.status(404).json({ error: 'السجل غير موجود' });
+    }
+    
+    maintenanceRecords[index] = { 
+        ...maintenanceRecords[index], 
+        ...req.body, 
+        updatedAt: new Date().toISOString() 
+    };
+    
+    logActivity(req.session.userName, req.session.userRole, 'تعديل سجل صيانة', 
+        `عدل سجل الصيانة: ${req.params.id}`, getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// حذف سجل صيانة
+app.delete('/api/maintenance/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الحذف' });
+    }
+    
+    const record = maintenanceRecords.find(r => r.id === req.params.id);
+    maintenanceRecords = maintenanceRecords.filter(r => r.id !== req.params.id);
+    
+    logActivity(req.session.userName, req.session.userRole, 'حذف سجل صيانة', 
+        `حذف سجل الصيانة: ${req.params.id}`, getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// مزامنة المراكب
+app.post('/api/vessels/sync', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const newVessels = req.body;
+    if (Array.isArray(newVessels)) {
+        newVessels.forEach(v => {
+            if (!vessels.find(existing => existing.id === v.id)) {
+                vessels.push(v);
+            }
+        });
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ error: 'بيانات غير صالحة' });
+    }
+});
+
+// مزامنة سجلات الصيانة
+app.post('/api/maintenance/sync', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const newRecords = req.body;
+    if (Array.isArray(newRecords)) {
+        maintenanceRecords = newRecords;
+        res.json({ success: true });
+    } else {
+        res.status(400).json({ error: 'بيانات غير صالحة' });
+    }
+});
+
+// ==================== API الاختبار ====================
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        status: 'OK', 
         timestamp: new Date().toISOString(),
-        vessels: vessels.length,
-        maintenance: maintenanceRecords.length,
-        users: users.length
+        server: 'Marine Tracking System v2.0'
     });
 });
 
-// ============================================================
-// 🏠 الصفحة الرئيسية
-// ============================================================
+// ==================== تنظيف المواقع القديمة ====================
+setInterval(() => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    userLocations = userLocations.filter(l => new Date(l.lastUpdate) > fiveMinutesAgo);
+}, 60 * 1000);
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// ==================== تشغيل السيرفر ====================
+app.listen(PORT, () => {
+    console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
+    console.log(`║     🚀 منظومة الوسائل البحرية - نظام متابعة الأسطول       ║`);
+    console.log(`╠══════════════════════════════════════════════════════════════╣`);
+    console.log(`║  ✅ السيرفر يعمل على: http://localhost:${PORT}                  ║`);
+    console.log(`║  🗺️  خريطة تتبع المستخدمين: نشطة                          ║`);
+    console.log(`║  🔐 تشفير كلمات المرور: SHA-256                            ║`);
+    console.log(`║  🛠️  نظام الصيانة: مفعل                                   ║`);
+    console.log(`╠══════════════════════════════════════════════════════════════╣`);
+    console.log(`║  📝 بيانات الدخول التجريبية:                                ║`);
+    console.log(`║     👑 admin / 1234  (مسؤول كامل الصلاحيات)                ║`);
+    console.log(`║     ✏️ editor / 1234 (محرر - يمكنه الإضافة والتعديل)       ║`);
+    console.log(`║     👁️ viewer / 1234 (مشاهد - قراءة فقط)                   ║`);
+    console.log(`╚══════════════════════════════════════════════════════════════╝\n`);
 });
-
-// ============================================================
-// 🚀 تشغيل السيرفر
-// ============================================================
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server: http://localhost:${PORT}`);
-    console.log(`📧 admin / 🔑 123456`);
-    console.log(`🔧 وحدات الصيانة المدعومة: ${MAINTENANCE_UNITS.join(', ')}`);
-    console.log(`✅ نظام الصيانة متكامل مع إمكانية التعديل`);
-});
-// أضف هذا بعد تعريف vessels وقبل app.listen
-if (vessels.length === 0) {
-    const sampleVessels = [
-        { id: 1, name: 'البروق 1', num: '101', len: 11, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
-        { id: 2, name: 'البروق 2', num: '102', len: 11, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
-        { id: 3, name: 'البروق 3', num: '103', len: 11, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', stat: 'معطب', break: 'عطل محرك', fDate: '2026-07-01', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
-        { id: 4, name: 'الصقر 1', num: '201', len: 10, cat: 'صقور', reg: 'الشمال', zone: 'طبرقة', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
-        { id: 5, name: 'الصقر 2', num: '202', len: 10, cat: 'صقور', reg: 'الساحل', zone: 'المنستير', stat: 'معطب', break: 'عطل كهرباء', fDate: '2026-07-05', eDate: '', ref: '', repairer: 'وحدة الصيانة صفاقس' },
-        { id: 6, name: 'الخفارة 1', num: '301', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-07-10', eDate: '', ref: '', repairer: 'وحدة الصيانة المنستير' },
-        { id: 7, name: 'الخفارة 2', num: '302', len: 20, cat: 'خوافر', reg: 'الجنوب', zone: 'جرجيس', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة جرجيس' },
-        { id: 8, name: 'الطوافة 1', num: '401', len: 35, cat: 'طوافات', reg: 'الشمال', zone: 'المرسى', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'وحدة الصيانة تونس' },
-        { id: 9, name: 'الزورق 1', num: '501', len: 5, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المهدية', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', repairer: 'شركة خاصة' },
-        { id: 10, name: 'الزورق 2', num: '502', len: 5, cat: 'زوارق مزدوجة', reg: 'الجنوب', zone: 'بن قردان', stat: 'معطب', break: 'عطل هيكل', fDate: '2026-07-15', eDate: '', ref: '', repairer: 'شركة خاصة' },
-    ];
-    vessels = sampleVessels;
-    console.log('✅ تم إضافة 10 مراكب تجريبية');
-}
