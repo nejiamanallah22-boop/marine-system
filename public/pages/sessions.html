@@ -1,0 +1,225 @@
+<div id="page-sessions">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div>
+            <h2 style="margin:0; color:white; font-size:22px;">👥 مراقبة المستخدمين</h2>
+            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">تتبع نشاط المستخدمين والأجهزة المتصلة</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="background:rgba(74,222,128,0.15); color:#4ade80; padding:6px 16px; border-radius:20px; font-size:12px; border:1px solid rgba(74,222,128,0.1);">
+                🟢 <span id="onlineCount">0</span> متصل
+            </span>
+            <button onclick="refreshSessions()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
+        </div>
+    </div>
+
+    <!-- إحصائيات -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:15px; margin:20px 0;">
+        <div class="stat-card" style="padding:15px;">
+            <div style="font-size:28px; font-weight:800; color:#4ade80;" id="sessionOnline">0</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.4);">🟢 متصلون الآن</div>
+        </div>
+        <div class="stat-card" style="padding:15px;">
+            <div style="font-size:28px; font-weight:800; color:#60a5fa;" id="sessionTotal">0</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.4);">📊 إجمالي الجلسات</div>
+        </div>
+        <div class="stat-card" style="padding:15px;">
+            <div style="font-size:28px; font-weight:800; color:#f87171;" id="sessionOffline">0</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.4);">🔴 غير متصل</div>
+        </div>
+        <div class="stat-card" style="padding:15px;">
+            <div style="font-size:28px; font-weight:800; color:#fbbf24;" id="sessionToday">0</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.4);">📅 دخول اليوم</div>
+        </div>
+    </div>
+
+    <!-- جدول الجلسات -->
+    <div class="stat-card" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 سجل الجلسات</h4>
+            <div style="display:flex; gap:8px;">
+                <button onclick="filterSessions('all')" class="filter-btn active" data-filter="all" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">الكل</button>
+                <button onclick="filterSessions('online')" class="filter-btn" data-filter="online" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">🟢 متصل</button>
+                <button onclick="filterSessions('offline')" class="filter-btn" data-filter="offline" style="padding:4px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:11px;">🔴 غير متصل</button>
+            </div>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>👤 المستخدم</th>
+                        <th>🔐 الصلاحية</th>
+                        <th>🟢 الحالة</th>
+                        <th>📱 الجهاز</th>
+                        <th>🌐 IP</th>
+                        <th>🖥 المتصفح</th>
+                        <th>⏱ آخر دخول</th>
+                        <th>⏱ آخر نشاط</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <tr><td colspan="8" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-btn.active {
+        background: rgba(74,222,128,0.15) !important;
+        color: #4ade80 !important;
+        border-color: rgba(74,222,128,0.2) !important;
+    }
+    .session-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .session-status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .dot-online { background: #4ade80; }
+    .dot-offline { background: #f87171; }
+    .session-device {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+    }
+    .session-device .icon { font-size: 16px; }
+    .session-time { font-size: 12px; color: rgba(255,255,255,0.4); }
+</style>
+
+<script>
+// ============================================================
+// 📊 صفحة مراقبة المستخدمين
+// ============================================================
+
+let sessionsData = [];
+let currentFilter = 'all';
+
+function refreshSessions() {
+    console.log('🔄 Refreshing sessions...');
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/sessions', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('فشل تحميل الجلسات');
+        return res.json();
+    })
+    .then(data => {
+        sessionsData = data || [];
+        console.log('✅ Sessions loaded:', sessionsData.length);
+        updateSessionStats();
+        renderSessionsTable();
+    })
+    .catch(err => {
+        console.error('Error loading sessions:', err);
+        showAlert('❌ خطأ في تحميل الجلسات', 'danger');
+    });
+}
+
+function updateSessionStats() {
+    const online = sessionsData.filter(s => s.status === 'online' && s.isActive).length;
+    const offline = sessionsData.filter(s => s.status === 'offline' || !s.isActive).length;
+    const today = new Date().toISOString().split('T')[0];
+    const todaySessions = sessionsData.filter(s => s.loginTime && s.loginTime.startsWith(today)).length;
+    
+    document.getElementById('sessionOnline').textContent = online;
+    document.getElementById('sessionOffline').textContent = offline;
+    document.getElementById('sessionTotal').textContent = sessionsData.length;
+    document.getElementById('sessionToday').textContent = todaySessions;
+    document.getElementById('onlineCount').textContent = online;
+}
+
+function renderSessionsTable() {
+    const tbody = document.getElementById('sessionsBody');
+    if (!tbody) return;
+    
+    let filtered = sessionsData;
+    if (currentFilter === 'online') {
+        filtered = sessionsData.filter(s => s.status === 'online' && s.isActive);
+    } else if (currentFilter === 'offline') {
+        filtered = sessionsData.filter(s => s.status === 'offline' || !s.isActive);
+    }
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد جلسات</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(s => {
+        const isOnline = s.status === 'online' && s.isActive;
+        const lastActivity = s.lastActivity ? new Date(s.lastActivity) : null;
+        const loginTime = s.loginTime ? new Date(s.loginTime) : null;
+        
+        // حساب وقت النشاط
+        let timeAgo = 'غير معروف';
+        if (lastActivity) {
+            const diff = Date.now() - lastActivity.getTime();
+            if (diff < 60000) timeAgo = 'منذ ' + Math.floor(diff / 1000) + ' ثواني';
+            else if (diff < 3600000) timeAgo = 'منذ ' + Math.floor(diff / 60000) + ' دقائق';
+            else timeAgo = 'منذ ' + Math.floor(diff / 3600000) + ' ساعات';
+        }
+        
+        const deviceIcons = {
+            'Computer / Laptop': '💻',
+            'iPhone': '📱',
+            'iPad': '📱',
+            'Android Phone': '📱',
+            'Mobile Device': '📱'
+        };
+        const deviceIcon = deviceIcons[s.device] || '🖥';
+        
+        return `
+            <tr>
+                <td><strong>${s.username || '-'}</strong></td>
+                <td><span style="color:${s.role === 'مسؤول' ? '#fbbf24' : s.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${s.role || '-'}</span></td>
+                <td>
+                    <span class="session-status">
+                        <span class="dot ${isOnline ? 'dot-online' : 'dot-offline'}"></span>
+                        ${isOnline ? '🟢 متصل' : '🔴 غير متصل'}
+                    </span>
+                </td>
+                <td>
+                    <span class="session-device">
+                        <span class="icon">${deviceIcon}</span>
+                        ${s.device || '-'}
+                    </span>
+                </td>
+                <td style="font-size:12px; font-family:monospace;">${s.ipAddress || '-'}</td>
+                <td style="font-size:12px;">${s.browser || '-'} ${s.os ? '(' + s.os + ')' : ''}</td>
+                <td class="session-time">${loginTime ? loginTime.toLocaleDateString('ar-TN') + ' ' + loginTime.toLocaleTimeString('ar-TN') : '-'}</td>
+                <td class="session-time">${isOnline ? '🟢 ' + timeAgo : '-'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterSessions(filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+    });
+    renderSessionsTable();
+}
+
+// تحميل الجلسات عند ظهور الصفحة
+if (document.getElementById('page-sessions')) {
+    console.log('📄 Sessions page loaded');
+    setTimeout(refreshSessions, 300);
+    setTimeout(refreshSessions, 1000);
+}
+
+// تحديث كل 30 ثانية
+setInterval(refreshSessions, 30000);
+</script>
