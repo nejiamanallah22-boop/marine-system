@@ -4,11 +4,11 @@
     <!-- ===== إحصائيات الصيانة ===== -->
     <div id="maintenanceStats"></div>
     
-    <!-- ===== 1. المراكب المعطبة (Live Maintenance Queue) ===== -->
-    <h3 style="color:#dc3545; margin:30px 0 15px;">🟥 1. المراكب المعطبة (Live Maintenance Queue)</h3>
+    <!-- ===== 1. المراكب المعطبة ===== -->
+    <h3 style="color:#dc3545; margin:30px 0 15px;">🟥 1. المراكب المعطبة</h3>
     <div id="generalMaintenanceContainer"></div>
     
-    <!-- ===== زر إضافة صيانة جديدة ===== -->
+    <!-- ===== زر إضافة صيانة ===== -->
     <button onclick="toggleMaintenanceForm()" style="padding:10px 20px; background:#28a745; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px; margin:15px 0;">
         ➕ إضافة سجل صيانة جديد
     </button>
@@ -38,16 +38,16 @@
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px;">🏭 الوحدة</label>
                 <select id="mUnit" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;">
-                    <option value="وحدة الصيانة والإسناد البحري تونس">وحدة الصيانة والإسناد البحري تونس</option>
-                    <option value="وحدة الصيانة والإسناد البحري صفاقس">وحدة الصيانة والإسناد البحري صفاقس</option>
-                    <option value="وحدة الصيانة والإسناد البحري المنستير">وحدة الصيانة والإسناد البحري المنستير</option>
-                    <option value="وحدة الصيانة والإسناد البحري جرجيس">وحدة الصيانة والإسناد البحري جرجيس</option>
+                    <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
+                    <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
+                    <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
+                    <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
                     <option value="شركة خاصة">شركة خاصة</option>
                 </select>
             </div>
             
             <div>
-                <label style="display:block; font-weight:bold; margin-bottom:5px;">👨‍🔧 الفني المسؤول</label>
+                <label style="display:block; font-weight:bold; margin-bottom:5px;">👨‍🔧 الفني</label>
                 <input type="text" id="mTechnician" style="width:100%; padding:8px; border:1px solid #ced4da; border-radius:5px;" placeholder="اسم الفني">
             </div>
         </div>
