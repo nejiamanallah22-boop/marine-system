@@ -1,19 +1,10 @@
-// server.js - خادم التطبيق بالكامل
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
-
-// ============================================================
-// إعدادات الخادم
-// ============================================================
 
 // Middleware
 app.use(cors());
@@ -28,32 +19,25 @@ app.use('/pages', express.static(path.join(__dirname, 'public/pages')));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // ============================================================
-// قاعدة البيانات (JSON)
+// قاعدة بيانات بسيطة (JSON)
 // ============================================================
 
 const DB_PATH = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DB_PATH, 'users.json');
 const VESSELS_FILE = path.join(DB_PATH, 'vessels.json');
 const MAINTENANCE_FILE = path.join(DB_PATH, 'maintenance.json');
-const TICKETS_FILE = path.join(DB_PATH, 'tickets.json');
-const NOTES_FILE = path.join(DB_PATH, 'notes.json');
 
-// إنشاء مجلد البيانات إذا لم يكن موجوداً
 if (!fs.existsSync(DB_PATH)) {
     fs.mkdirSync(DB_PATH, { recursive: true });
 }
 
-// دوال مساعدة للقراءة والكتابة
 function readData(filePath, defaultData = []) {
     try {
         if (!fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
             return defaultData;
         }
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        console.error(`Error reading ${filePath}:`, error);
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch {
         return defaultData;
     }
 }
@@ -62,537 +46,256 @@ function writeData(filePath, data) {
     try {
         fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
         return true;
-    } catch (error) {
-        console.error(`Error writing ${filePath}:`, error);
+    } catch {
         return false;
     }
 }
 
 // ============================================================
-// دوال المستخدمين
+// بيانات تجريبية أولية
 // ============================================================
 
-function getUsers() {
-    return readData(USERS_FILE);
+function getInitialVessels() {
+    return [
+        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
+        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
+        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
+        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
+        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
+        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
+        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
+        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
+        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
+        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
+        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
+        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
+        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
+        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
+        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
+        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
+        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
+        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
+        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
+        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
+        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
+    ];
 }
 
-function getUserByEmail(email) {
-    const users = getUsers();
-    return users.find(u => u.email === email);
-}
-
-function getUserById(id) {
-    const users = getUsers();
-    return users.find(u => u.id === id);
-}
-
-function createUser(userData) {
-    const users = getUsers();
-    const newUser = {
-        id: uuidv4(),
-        ...userData,
-        createdAt: new Date().toISOString(),
-        isActive: true
-    };
-    users.push(newUser);
-    writeData(USERS_FILE, users);
-    return newUser;
-}
-
-function updateUser(id, updates) {
-    const users = getUsers();
-    const index = users.findIndex(u => u.id === id);
-    if (index === -1) return null;
-    users[index] = { ...users[index], ...updates };
-    writeData(USERS_FILE, users);
-    return users[index];
-}
-
-function deleteUser(id) {
-    const users = getUsers();
-    const filtered = users.filter(u => u.id !== id);
-    if (filtered.length === users.length) return false;
-    writeData(USERS_FILE, filtered);
-    return true;
+function getInitialMaintenance() {
+    return [
+        {
+            id: 1,
+            vesselId: 4,
+            vesselName: 'البروق 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في المحرك الرئيسي',
+            repair: 'تم تغيير طلمبة الزيت والمضخة',
+            faultType: 'محرك',
+            cost: 4500,
+            notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
+            status: 'مغلقة',
+            date: '2026-01-20',
+            startDate: '2026-01-15',
+            endDate: '2026-01-20',
+            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }, { name: 'فلتر زيت', quantity: 2, price: 150 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 2,
+            vesselId: 9,
+            vesselName: 'صقر 2',
+            type: 'دورية',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'صيانة دورية للمحرك',
+            repair: 'تم تغيير الزيوت والفلتر',
+            faultType: 'محرك',
+            cost: 300,
+            notes: 'تم تغيير الزيوت والفلتر',
+            status: 'مغلقة',
+            date: '2026-05-15',
+            startDate: '2026-05-14',
+            endDate: '2026-05-15',
+            parts: [{ name: 'زيت محرك', quantity: 5, price: 100 }, { name: 'فلتر هواء', quantity: 1, price: 300 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 3,
+            vesselId: 14,
+            vesselName: 'خافر 2',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري المنستير',
+            technician: 'فني 3',
+            description: 'إصلاح شامل للهيكل',
+            repair: 'تم تغيير ألواح الهيكل والدهان',
+            faultType: 'هيكل',
+            cost: 5000,
+            notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
+            status: 'مغلقة',
+            date: '2026-01-10',
+            startDate: '2026-01-05',
+            endDate: '2026-01-10',
+            parts: [{ name: 'ألواح فولاذ', quantity: 10, price: 350 }, { name: 'دهان مضاد للصدأ', quantity: 5, price: 200 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 4,
+            vesselId: 6,
+            vesselName: 'البروق 6',
+            type: 'عادية',
+            unit: 'وحدة الصيانة والإسناد البحري جرجيس',
+            technician: 'فني 4',
+            description: 'عطل في النظام الكهربائي',
+            repair: 'تم تغيير البطاريات والكابلات',
+            faultType: 'كهرباء',
+            cost: 1200,
+            notes: 'تم تغيير البطاريات والكابلات',
+            status: 'مغلقة',
+            date: '2026-02-05',
+            startDate: '2026-02-03',
+            endDate: '2026-02-05',
+            parts: [{ name: 'بطارية', quantity: 2, price: 450 }, { name: 'كابلات', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 5,
+            vesselId: 19,
+            vesselName: 'زورق مزدوج 3',
+            type: 'طارئة',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في نظام التوجيه',
+            repair: 'تم تغيير طرمبة التوجيه',
+            faultType: 'توجيه',
+            cost: 1800,
+            notes: 'تم تغيير طرمبة التوجيه بالكامل',
+            status: 'قيد الإنجاز',
+            date: '2026-02-10',
+            startDate: '2026-02-08',
+            endDate: null,
+            parts: [{ name: 'طرمبة توجيه', quantity: 1, price: 1500 }, { name: 'زيت هيدروليك', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 6,
+            vesselId: 11,
+            vesselName: 'صقر 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'عطل في نظام التبريد',
+            repair: 'تم تغيير الراديتر والمراوح',
+            faultType: 'تبريد',
+            cost: 3200,
+            notes: 'تم تغيير نظام التبريد بالكامل',
+            status: 'مغلقة',
+            date: '2026-07-15',
+            startDate: '2026-07-10',
+            endDate: '2026-07-15',
+            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }, { name: 'ماء مقطر', quantity: 10, price: 40 }],
+            createdBy: 'Admin'
+        }
+    ];
 }
 
 // ============================================================
-// دوال المراكب
+// API Routes
 // ============================================================
 
-function getVessels() {
-    return readData(VESSELS_FILE);
-}
+// المراكب
+app.get('/api/vessels', (req, res) => {
+    let vessels = readData(VESSELS_FILE);
+    if (vessels.length === 0) {
+        vessels = getInitialVessels();
+        writeData(VESSELS_FILE, vessels);
+    }
+    res.json(vessels);
+});
 
-function getVesselById(id) {
-    const vessels = getVessels();
-    return vessels.find(v => v.id === id);
-}
-
-function createVessel(vesselData) {
-    const vessels = getVessels();
+app.post('/api/vessels', (req, res) => {
+    const vessels = readData(VESSELS_FILE);
     const newVessel = {
         id: vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 1,
-        ...vesselData,
+        ...req.body,
         createdAt: new Date().toISOString()
     };
     vessels.push(newVessel);
     writeData(VESSELS_FILE, vessels);
-    return newVessel;
-}
+    res.json({ success: true, vessel: newVessel });
+});
 
-function updateVessel(id, updates) {
-    const vessels = getVessels();
+app.put('/api/vessels/:id', (req, res) => {
+    const vessels = readData(VESSELS_FILE);
+    const id = parseInt(req.params.id);
     const index = vessels.findIndex(v => v.id === id);
-    if (index === -1) return null;
-    vessels[index] = { ...vessels[index], ...updates };
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'Vessel not found' });
+    }
+    vessels[index] = { ...vessels[index], ...req.body };
     writeData(VESSELS_FILE, vessels);
-    return vessels[index];
-}
+    res.json({ success: true, vessel: vessels[index] });
+});
 
-function deleteVessel(id) {
-    const vessels = getVessels();
+app.delete('/api/vessels/:id', (req, res) => {
+    const vessels = readData(VESSELS_FILE);
+    const id = parseInt(req.params.id);
     const filtered = vessels.filter(v => v.id !== id);
-    if (filtered.length === vessels.length) return false;
+    if (filtered.length === vessels.length) {
+        return res.status(404).json({ success: false, error: 'Vessel not found' });
+    }
     writeData(VESSELS_FILE, filtered);
-    return true;
-}
+    res.json({ success: true });
+});
 
-// ============================================================
-// دوال الصيانة
-// ============================================================
+// الصيانة
+app.get('/api/maintenance', (req, res) => {
+    let maintenance = readData(MAINTENANCE_FILE);
+    if (maintenance.length === 0) {
+        maintenance = getInitialMaintenance();
+        writeData(MAINTENANCE_FILE, maintenance);
+    }
+    res.json(maintenance);
+});
 
-function getMaintenance() {
-    return readData(MAINTENANCE_FILE);
-}
-
-function getMaintenanceById(id) {
-    const records = getMaintenance();
-    return records.find(r => r.id === id);
-}
-
-function createMaintenance(data) {
-    const records = getMaintenance();
+app.post('/api/maintenance', (req, res) => {
+    const maintenance = readData(MAINTENANCE_FILE);
     const newRecord = {
-        id: records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1,
-        ...data,
+        id: maintenance.length > 0 ? Math.max(...maintenance.map(r => r.id)) + 1 : 1,
+        ...req.body,
         createdAt: new Date().toISOString()
     };
-    records.push(newRecord);
-    writeData(MAINTENANCE_FILE, records);
-    return newRecord;
-}
+    maintenance.push(newRecord);
+    writeData(MAINTENANCE_FILE, maintenance);
+    res.json({ success: true, record: newRecord });
+});
 
-function updateMaintenance(id, updates) {
-    const records = getMaintenance();
-    const index = records.findIndex(r => r.id === id);
-    if (index === -1) return null;
-    records[index] = { ...records[index], ...updates };
-    writeData(MAINTENANCE_FILE, records);
-    return records[index];
-}
+app.put('/api/maintenance/:id', (req, res) => {
+    const maintenance = readData(MAINTENANCE_FILE);
+    const id = parseInt(req.params.id);
+    const index = maintenance.findIndex(r => r.id === id);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+    maintenance[index] = { ...maintenance[index], ...req.body };
+    writeData(MAINTENANCE_FILE, maintenance);
+    res.json({ success: true, record: maintenance[index] });
+});
 
-function deleteMaintenance(id) {
-    const records = getMaintenance();
-    const filtered = records.filter(r => r.id !== id);
-    if (filtered.length === records.length) return false;
+app.delete('/api/maintenance/:id', (req, res) => {
+    const maintenance = readData(MAINTENANCE_FILE);
+    const id = parseInt(req.params.id);
+    const filtered = maintenance.filter(r => r.id !== id);
+    if (filtered.length === maintenance.length) {
+        return res.status(404).json({ success: false, error: 'Record not found' });
+    }
     writeData(MAINTENANCE_FILE, filtered);
-    return true;
-}
-
-// ============================================================
-// دوال التذاكر
-// ============================================================
-
-function getTickets() {
-    return readData(TICKETS_FILE);
-}
-
-function createTicket(data) {
-    const tickets = getTickets();
-    const newTicket = {
-        id: tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1,
-        ...data,
-        status: data.status || 'قيد المعالجة',
-        createdAt: new Date().toISOString()
-    };
-    tickets.push(newTicket);
-    writeData(TICKETS_FILE, tickets);
-    return newTicket;
-}
-
-function updateTicket(id, updates) {
-    const tickets = getTickets();
-    const index = tickets.findIndex(t => t.id === id);
-    if (index === -1) return null;
-    tickets[index] = { ...tickets[index], ...updates };
-    writeData(TICKETS_FILE, tickets);
-    return tickets[index];
-}
-
-// ============================================================
-// دوال المذكرات (Note Verbale)
-// ============================================================
-
-function getNotes() {
-    return readData(NOTES_FILE);
-}
-
-function createNote(data) {
-    const notes = getNotes();
-    const newNote = {
-        id: notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1,
-        ...data,
-        createdAt: new Date().toISOString()
-    };
-    notes.push(newNote);
-    writeData(NOTES_FILE, notes);
-    return newNote;
-}
-
-function updateNote(id, updates) {
-    const notes = getNotes();
-    const index = notes.findIndex(n => n.id === id);
-    if (index === -1) return null;
-    notes[index] = { ...notes[index], ...updates };
-    writeData(NOTES_FILE, notes);
-    return notes[index];
-}
-
-function deleteNote(id) {
-    const notes = getNotes();
-    const filtered = notes.filter(n => n.id !== id);
-    if (filtered.length === notes.length) return false;
-    writeData(NOTES_FILE, filtered);
-    return true;
-}
-
-// ============================================================
-// 🔐 المصادقة (Authentication)
-// ============================================================
-
-// إنشاء مستخدم افتراضي إذا لم يكن موجوداً
-function initDefaultUsers() {
-    const users = getUsers();
-    if (users.length === 0) {
-        const salt = bcrypt.genSaltSync(10);
-        const hashedPassword = bcrypt.hashSync('123456', salt);
-        
-        const defaultUsers = [
-            {
-                id: uuidv4(),
-                name: 'مدير النظام',
-                email: 'admin',
-                password: hashedPassword,
-                role: 'مسؤول',
-                isActive: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: uuidv4(),
-                name: 'مدير العمليات',
-                email: 'manager',
-                password: hashedPassword,
-                role: 'مشرف',
-                isActive: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: uuidv4(),
-                name: 'محرر',
-                email: 'editor',
-                password: hashedPassword,
-                role: 'محرر',
-                isActive: true,
-                createdAt: new Date().toISOString()
-            },
-            {
-                id: uuidv4(),
-                name: 'مشاهد',
-                email: 'viewer',
-                password: hashedPassword,
-                role: 'مشاهد',
-                isActive: true,
-                createdAt: new Date().toISOString()
-            }
-        ];
-        writeData(USERS_FILE, defaultUsers);
-        console.log('✅ تم إنشاء المستخدمين الافتراضيين:');
-        console.log('   admin / 123456 (مسؤول)');
-        console.log('   manager / 123456 (مشرف)');
-        console.log('   editor / 123456 (محرر)');
-        console.log('   viewer / 123456 (مشاهد)');
-    }
-}
-
-// ============================================================
-// 🔐 دوال المصادقة
-// ============================================================
-
-function generateToken(user) {
-    return jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-}
-
-function verifyToken(token) {
-    try {
-        return jwt.verify(token, JWT_SECRET);
-    } catch (error) {
-        return null;
-    }
-}
-
-function authenticate(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
-    }
-    
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-    if (!decoded) {
-        return res.status(401).json({ success: false, error: 'Invalid token' });
-    }
-    
-    req.user = decoded;
-    next();
-}
-
-// ============================================================
-// 🚀 API Routes
-// ============================================================
-
-// ---------- المصادقة ----------
-app.post('/api/auth/login', (req, res) => {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-        return res.status(400).json({ success: false, error: 'Email and password required' });
-    }
-    
-    const user = getUserByEmail(email);
-    if (!user) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-    
-    if (!bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-    
-    if (!user.isActive) {
-        return res.status(401).json({ success: false, error: 'Account is disabled' });
-    }
-    
-    const token = generateToken(user);
-    const { password: _, ...userWithoutPassword } = user;
-    
-    res.json({
-        success: true,
-        token: token,
-        user: userWithoutPassword
-    });
-});
-
-app.post('/api/auth/change-password', authenticate, (req, res) => {
-    const { currentPassword, newPassword } = req.body;
-    const user = getUserById(req.user.id);
-    
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    
-    if (!bcrypt.compareSync(currentPassword, user.password)) {
-        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
-    }
-    
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(newPassword, salt);
-    updateUser(user.id, { password: hashedPassword });
-    
-    res.json({ success: true, message: 'Password changed successfully' });
-});
-
-// ---------- المستخدمين ----------
-app.get('/api/users', authenticate, (req, res) => {
-    const users = getUsers().map(({ password, ...user }) => user);
-    res.json(users);
-});
-
-app.post('/api/users', authenticate, (req, res) => {
-    const { name, email, password, role } = req.body;
-    
-    if (!name || !email || !password) {
-        return res.status(400).json({ success: false, error: 'Name, email and password required' });
-    }
-    
-    if (getUserByEmail(email)) {
-        return res.status(400).json({ success: false, error: 'Email already exists' });
-    }
-    
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
-    
-    const user = createUser({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'مشاهد'
-    });
-    
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ success: true, user: userWithoutPassword });
-});
-
-app.put('/api/users/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
-    
-    if (updates.password) {
-        const salt = bcrypt.genSaltSync(10);
-        updates.password = bcrypt.hashSync(updates.password, salt);
-    }
-    
-    const user = updateUser(id, updates);
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ success: true, user: userWithoutPassword });
-});
-
-app.delete('/api/users/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    
-    if (id === req.user.id) {
-        return res.status(400).json({ success: false, error: 'Cannot delete yourself' });
-    }
-    
-    const deleted = deleteUser(id);
-    if (!deleted) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    
-    res.json({ success: true });
-});
-
-// ---------- المراكب ----------
-app.get('/api/vessels', authenticate, (req, res) => {
-    res.json(getVessels());
-});
-
-app.get('/api/vessels/:id', authenticate, (req, res) => {
-    const vessel = getVesselById(parseInt(req.params.id));
-    if (!vessel) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
-    }
-    res.json(vessel);
-});
-
-app.post('/api/vessels', authenticate, (req, res) => {
-    const vessel = createVessel(req.body);
-    res.json({ success: true, vessel });
-});
-
-app.put('/api/vessels/:id', authenticate, (req, res) => {
-    const vessel = updateVessel(parseInt(req.params.id), req.body);
-    if (!vessel) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
-    }
-    res.json({ success: true, vessel });
-});
-
-app.delete('/api/vessels/:id', authenticate, (req, res) => {
-    const deleted = deleteVessel(parseInt(req.params.id));
-    if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
-    }
-    res.json({ success: true });
-});
-
-// ---------- الصيانة ----------
-app.get('/api/maintenance', authenticate, (req, res) => {
-    res.json(getMaintenance());
-});
-
-app.get('/api/maintenance/:id', authenticate, (req, res) => {
-    const record = getMaintenanceById(parseInt(req.params.id));
-    if (!record) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
-    }
-    res.json(record);
-});
-
-app.post('/api/maintenance', authenticate, (req, res) => {
-    const record = createMaintenance(req.body);
-    res.json({ success: true, record });
-});
-
-app.put('/api/maintenance/:id', authenticate, (req, res) => {
-    const record = updateMaintenance(parseInt(req.params.id), req.body);
-    if (!record) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
-    }
-    res.json({ success: true, record });
-});
-
-app.delete('/api/maintenance/:id', authenticate, (req, res) => {
-    const deleted = deleteMaintenance(parseInt(req.params.id));
-    if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
-    }
-    res.json({ success: true });
-});
-
-// ---------- التذاكر ----------
-app.get('/api/tickets', authenticate, (req, res) => {
-    res.json(getTickets());
-});
-
-app.post('/api/tickets', authenticate, (req, res) => {
-    const ticket = createTicket(req.body);
-    res.json({ success: true, ticket });
-});
-
-app.put('/api/tickets/:id', authenticate, (req, res) => {
-    const ticket = updateTicket(parseInt(req.params.id), req.body);
-    if (!ticket) {
-        return res.status(404).json({ success: false, error: 'Ticket not found' });
-    }
-    res.json({ success: true, ticket });
-});
-
-// ---------- المذكرات ----------
-app.get('/api/notes', authenticate, (req, res) => {
-    res.json(getNotes());
-});
-
-app.post('/api/notes', authenticate, (req, res) => {
-    const note = createNote(req.body);
-    res.json({ success: true, note });
-});
-
-app.put('/api/notes/:id', authenticate, (req, res) => {
-    const note = updateNote(parseInt(req.params.id), req.body);
-    if (!note) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
-    }
-    res.json({ success: true, note });
-});
-
-app.delete('/api/notes/:id', authenticate, (req, res) => {
-    const deleted = deleteNote(parseInt(req.params.id));
-    if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
-    }
     res.json({ success: true });
 });
 
 // ============================================================
-// 📄 تقديم الصفحات
+// تقديم الصفحات
 // ============================================================
 
 app.get('/', (req, res) => {
@@ -600,8 +303,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/pages/:page', (req, res) => {
-    const page = req.params.page;
-    const filePath = path.join(__dirname, 'public', 'pages', `${page}.html`);
+    const filePath = path.join(__dirname, 'public', 'pages', `${req.params.page}.html`);
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
     } else {
@@ -610,11 +312,8 @@ app.get('/pages/:page', (req, res) => {
 });
 
 // ============================================================
-// 🚀 تشغيل الخادم
+// تشغيل الخادم
 // ============================================================
-
-// تهيئة المستخدمين الافتراضيين
-initDefaultUsers();
 
 app.listen(PORT, () => {
     console.log('========================================');
@@ -622,44 +321,6 @@ app.listen(PORT, () => {
     console.log('========================================');
     console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
     console.log('========================================');
-    console.log('📝 حسابات الدخول التجريبية:');
-    console.log('   👑 admin   / 123456 (مسؤول كامل)');
-    console.log('   ⭐ manager / 123456 (مشرف)');
-    console.log('   ✏️ editor  / 123456 (محرر)');
-    console.log('   👀 viewer  / 123456 (مشاهد)');
-    console.log('========================================');
     console.log('📁 قاعدة البيانات: data/');
     console.log('========================================');
 });
-
-// ============================================================
-// 📦 WebSocket (للإشعارات الفورية)
-// ============================================================
-
-// إذا كنت تريد إضافة WebSocket، يمكنك إضافة هذا الكود
-// npm install ws
-/*
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
-
-wss.on('connection', (ws) => {
-    console.log('✅ WebSocket client connected');
-    
-    ws.on('message', (message) => {
-        console.log('Received:', message);
-    });
-    
-    ws.on('close', () => {
-        console.log('❌ WebSocket client disconnected');
-    });
-});
-
-// إرسال إشعار للجميع
-function broadcastNotification(data) {
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(data));
-        }
-    });
-}
-*/
