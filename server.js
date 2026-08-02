@@ -1,7 +1,6 @@
 const express = require('express');
 const session = require('express-session');
 const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
 
 const app = express();
@@ -36,7 +35,7 @@ function getCurrentTime() {
     return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
-// ==================== البيانات ====================
+// ==================== البيانات (في الذاكرة مؤقتاً) ====================
 let users = [
     { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true },
     { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true },
@@ -445,7 +444,7 @@ app.post('/api/import-all', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== ✅ API الصيانة (المضافة حديثاً) ====================
+// ==================== ✅ API الصيانة ====================
 
 // جلب جميع سجلات الصيانة
 app.get('/api/maintenance', (req, res) => {
@@ -545,6 +544,7 @@ app.listen(PORT, () => {
     console.log(`║  🗺️  خريطة تتبع المستخدمين: نشطة                          ║`);
     console.log(`║  🔐 تشفير كلمات المرور: SHA-256                            ║`);
     console.log(`║  🛠️  نظام الصيانة: مفعل                                   ║`);
+    console.log(`║  📦  التخزين: في الذاكرة (للتجربة)                        ║`);
     console.log(`╠══════════════════════════════════════════════════════════════╣`);
     console.log(`║  📝 بيانات الدخول التجريبية:                                ║`);
     console.log(`║     👑 admin / 1234  (مسؤول كامل الصلاحيات)                ║`);
