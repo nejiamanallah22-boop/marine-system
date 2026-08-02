@@ -35,7 +35,7 @@ function getCurrentTime() {
     return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 }
 
-// ==================== البيانات (في الذاكرة مؤقتاً) ====================
+// ==================== البيانات (في الذاكرة) ====================
 let users = [
     { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true },
     { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true },
@@ -51,7 +51,46 @@ let vessels = [
 let tickets = [];
 let activityLogs = [];
 let userLocations = [];
-let maintenanceRecords = [];
+let maintenanceRecords = [
+    {
+        id: '1',
+        vesselId: 1,
+        type: 'كبرى',
+        unit: 'وحدة الصيانة والإسناد البحري تونس',
+        technician: 'أحمد المنصوري',
+        faultType: 'محرك',
+        startDate: '2024-06-01',
+        endDate: '2024-06-15',
+        status: 'منتهية',
+        description: 'صيانة كبرى للمحرك الرئيسي',
+        repair: 'استبدال مجموعة المكبس بالكامل',
+        cost: 4500,
+        notes: 'تم الانتهاء بنجاح',
+        parts: [
+            { name: 'مكبس', qty: 4, price: 800 },
+            { name: 'حلقات مكبس', qty: 4, price: 150 }
+        ]
+    },
+    {
+        id: '2',
+        vesselId: 2,
+        type: 'طارئة',
+        unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+        technician: 'محمد الصغير',
+        faultType: 'كهرباء',
+        startDate: '2024-06-10',
+        endDate: '',
+        status: 'قيد الإصلاح',
+        description: 'عطل كهربائي شامل في لوحة التحكم',
+        repair: 'إعادة تركيب لوحة الكهرباء واستبدال القواطع',
+        cost: 2800,
+        notes: 'بانتظار وصول قطع الغيار',
+        parts: [
+            { name: 'لوحة تحكم', qty: 1, price: 2000 },
+            { name: 'قواطع كهربائية', qty: 5, price: 80 }
+        ]
+    }
+];
 let nextId = 10;
 
 // ==================== دوال السجلات ====================
@@ -86,7 +125,7 @@ app.post('/api/login', (req, res) => {
     req.session.userName = user.name;
     req.session.userRole = user.role;
     
-    logActivity(user.name, user.role, 'تسجيل دخول', `قام بتسجيل الدخول من ${getClientIp(req)}`, getClientIp(req));
+    logActivity(user.name, user.role, 'تسجيل دخول', `قام بتسجيل الدخول`, getClientIp(req));
     
     res.json({ success: true, name: user.name, role: user.role, id: user.id });
 });
@@ -100,7 +139,7 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ✅ إضافة: التحقق من الجلسة الحالية (لإعادة تحميل الواجهة بعد Refresh دون فقدان تسجيل الدخول)
+// ✅ التحقق من الجلسة الحالية
 app.get('/api/me', (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({ error: 'غير مصرح' });
