@@ -1,735 +1,723 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('.'));
 
-// ملفات ثابتة
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js', express.static(path.join(__dirname, 'public/js')));
-app.use('/pages', express.static(path.join(__dirname, 'public/pages')));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
+// ==================== قاعدة بيانات في الذاكرة ====================
+const users = [
+    { id: 1, username: "admin", password: "1234", role: "admin", enabled: true },
+    { id: 2, username: "editor", password: "1234", role: "editor", enabled: true },
+    { id: 3, username: "viewer", password: "1234", role: "viewer", enabled: true }
+];
 
-// ============================================================
-// 📁 قاعدة البيانات
-// ============================================================
+let vessels = [
+    { id: 1, name: "البروق 1", number: "B001", length: 11, category: "البروق", region: "الشمال", zone: "تونس", port: "تونس", supply: "قاعدة الشمال", status: "صالح", breakdown: "", failureDate: "", endDate: "", reference: "" },
+    { id: 2, name: "صقر 1", number: "S001", length: 10, category: "صقور", region: "الساحل", zone: "سوسة", port: "سوسة", supply: "قاعدة الساحل", status: "صالح", breakdown: "", failureDate: "", endDate: "", reference: "" },
+    { id: 3, name: "خافرة 1", number: "K001", length: 20, category: "خوافر", region: "الوسط", zone: "صفاقس", port: "صفاقس", supply: "قاعدة الوسط", status: "معطب", breakdown: "عطل في المحرك", failureDate: "2025-03-10", endDate: "2025-04-10", reference: "REF001" }
+];
 
-const DB_PATH = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DB_PATH, 'users.json');
-const VESSELS_FILE = path.join(DB_PATH, 'vessels.json');
-const MAINTENANCE_FILE = path.join(DB_PATH, 'maintenance.json');
-const TICKETS_FILE = path.join(DB_PATH, 'tickets.json');
-const NOTES_FILE = path.join(DB_PATH, 'notes.json');
-const SESSIONS_FILE = path.join(DB_PATH, 'sessions.json');
-const LOCATIONS_FILE = path.join(DB_PATH, 'locations.json');
+let logs = [];
+let tickets = [];
+let nextId = 4;
 
-if (!fs.existsSync(DB_PATH)) {
-    fs.mkdirSync(DB_PATH, { recursive: true });
-}
+// ==================== API Routes ====================
 
-function readData(filePath, defaultData = []) {
-    try {
-        if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
-            return defaultData;
-        }
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch {
-        return defaultData;
-    }
-}
-
-function writeData(filePath, data) {
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-// ============================================================
-// 👤 دوال المستخدمين
-// ============================================================
-
-function getUsers() {
-    return readData(USERS_FILE);
-}
-
-function getUserByEmail(email) {
-    return getUsers().find(u => u.email === email);
-}
-
-function getUserById(id) {
-    return getUsers().find(u => u.id === id);
-}
-
-// ============================================================
-// 🕐 دوال الجلسات
-// ============================================================
-
-function getSessions() {
-    return readData(SESSIONS_FILE);
-}
-
-function getSessionByUserId(userId) {
-    const sessions = getSessions();
-    return sessions.find(s => s.userId === userId && s.isActive === true);
-}
-
-function createSession(userId, username, role, deviceInfo, ipAddress) {
-    const sessions = getSessions();
-    const filtered = sessions.filter(s => s.userId !== userId);
+// Login
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    const user = users.find(u => u.username === username && u.password === password && u.enabled);
     
-    const newSession = {
-        sessionId: uuidv4(),
-        userId: userId,
-        username: username,
-        role: role,
-        device: deviceInfo.device || 'غير معروف',
-        browser: deviceInfo.browser || 'غير معروف',
-        os: deviceInfo.os || 'غير معروف',
-        ipAddress: ipAddress || 'غير معروف',
-        loginTime: new Date().toISOString(),
-        lastActivity: new Date().toISOString(),
-        status: 'online',
-        isActive: true,
-        lat: null,
-        lng: null,
-        accuracy: null
-    };
-    
-    filtered.push(newSession);
-    writeData(SESSIONS_FILE, filtered);
-    return newSession;
-}
-
-function updateSessionActivity(sessionId) {
-    const sessions = getSessions();
-    const session = sessions.find(s => s.sessionId === sessionId);
-    if (session) {
-        session.lastActivity = new Date().toISOString();
-        session.status = 'online';
-        writeData(SESSIONS_FILE, sessions);
-        return session;
-    }
-    return null;
-}
-
-function logoutSession(sessionId) {
-    const sessions = getSessions();
-    const session = sessions.find(s => s.sessionId === sessionId);
-    if (session) {
-        session.status = 'offline';
-        session.isActive = false;
-        session.logoutTime = new Date().toISOString();
-        writeData(SESSIONS_FILE, sessions);
-        return session;
-    }
-    return null;
-}
-
-// ============================================================
-// 📍 دوال مواقع GPS
-// ============================================================
-
-function getLocations() {
-    return readData(LOCATIONS_FILE);
-}
-
-function updateUserLocation(userId, username, role, lat, lng, accuracy) {
-    const locations = getLocations();
-    const existing = locations.find(l => l.userId === userId);
-    
-    const locationData = {
-        userId: userId,
-        username: username,
-        role: role,
-        lat: lat,
-        lng: lng,
-        accuracy: accuracy || null,
-        updatedAt: new Date().toISOString(),
-        status: 'online'
-    };
-    
-    if (existing) {
-        Object.assign(existing, locationData);
+    if (user) {
+        logs.unshift({
+            id: Date.now(),
+            user: user.username,
+            action: "تسجيل دخول",
+            date: new Date().toISOString()
+        });
+        res.json({ success: true, user: { id: user.id, username: user.username, role: user.role } });
     } else {
-        locations.push(locationData);
-    }
-    
-    writeData(LOCATIONS_FILE, locations);
-    return locationData;
-}
-
-function getAllLocations() {
-    const locations = getLocations();
-    const now = Date.now();
-    const timeout = 5 * 60 * 1000;
-    
-    return locations.map(l => {
-        const lastUpdate = new Date(l.updatedAt).getTime();
-        if ((now - lastUpdate) > timeout) {
-            l.status = 'offline';
-        } else {
-            l.status = 'online';
-        }
-        return l;
-    });
-}
-
-// ============================================================
-// 🌐 دوال الجهاز
-// ============================================================
-
-function getDeviceInfo(req) {
-    const userAgent = req.headers['user-agent'] || '';
-    let device = 'غير معروف';
-    let browser = 'غير معروف';
-    let os = 'غير معروف';
-    
-    if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) browser = 'Chrome';
-    else if (userAgent.includes('Firefox')) browser = 'Firefox';
-    else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari';
-    else if (userAgent.includes('Edg')) browser = 'Edge';
-    else if (userAgent.includes('Opera')) browser = 'Opera';
-    else if (userAgent.includes('Android') && userAgent.includes('Mobile')) browser = 'Android Browser';
-    else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) browser = 'Safari iOS';
-    
-    if (userAgent.includes('Windows NT 10.0')) os = 'Windows 10/11';
-    else if (userAgent.includes('Windows NT 6.1')) os = 'Windows 7';
-    else if (userAgent.includes('Mac OS X')) os = 'macOS';
-    else if (userAgent.includes('Android')) os = 'Android';
-    else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) os = 'iOS';
-    else if (userAgent.includes('Linux')) os = 'Linux';
-    
-    if (userAgent.includes('Mobile')) {
-        if (userAgent.includes('iPhone')) device = 'iPhone';
-        else if (userAgent.includes('iPad')) device = 'iPad';
-        else if (userAgent.includes('Android')) {
-            const match = userAgent.match(/Android\s([\d.]+)/);
-            device = match ? `Android ${match[1]}` : 'Android Phone';
-        } else {
-            device = 'Mobile Device';
-        }
-    } else {
-        device = 'Computer / Laptop';
-    }
-    
-    return { device, browser, os };
-}
-
-function getClientIP(req) {
-    return req.headers['x-forwarded-for'] || 
-           req.headers['x-real-ip'] || 
-           req.connection?.remoteAddress || 
-           req.socket?.remoteAddress || 
-           'غير معروف';
-}
-
-// ============================================================
-// 🔐 المصادقة
-// ============================================================
-
-function generateToken(user) {
-    return jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-}
-
-function verifyToken(token) {
-    try {
-        return jwt.verify(token, JWT_SECRET);
-    } catch {
-        return null;
-    }
-}
-
-function authenticate(req, res, next) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
-    }
-    
-    const token = authHeader.substring(7);
-    const decoded = verifyToken(token);
-    if (!decoded) {
-        return res.status(401).json({ success: false, error: 'Invalid token' });
-    }
-    
-    req.user = decoded;
-    next();
-}
-
-// ============================================================
-// 📍 Socket.IO (لتحديث المواقع الفوري)
-// ============================================================
-
-const http = require('http');
-const socketIo = require('socket.io');
-
-const server = http.createServer(app);
-const io = socketIo(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
+        res.status(401).json({ success: false, message: "بيانات الدخول غير صحيحة" });
     }
 });
 
-// تخزين مواقع المستخدمين في الذاكرة
-const userLocations = new Map();
-
-io.on('connection', (socket) => {
-    console.log('✅ مستخدم متصل:', socket.id);
-    
-    socket.on('update-location', (data) => {
-        const { userId, username, role, lat, lng, accuracy, token } = data;
-        
-        if (!token) return;
-        const decoded = verifyToken(token);
-        if (!decoded) return;
-        
-        userLocations.set(userId, {
-            userId,
-            username,
-            role,
-            lat,
-            lng,
-            accuracy,
-            updatedAt: new Date().toISOString(),
-            socketId: socket.id,
-            status: 'online'
-        });
-        
-        updateUserLocation(userId, username, role, lat, lng, accuracy);
-        
-        io.emit('location-update', {
-            userId,
-            username,
-            role,
-            lat,
-            lng,
-            accuracy,
-            updatedAt: new Date().toISOString(),
-            status: 'online'
-        });
-        
-        console.log(`📍 ${username} - ${lat}, ${lng}`);
-    });
-    
-    socket.on('get-locations', () => {
-        const allLocations = Array.from(userLocations.values());
-        socket.emit('all-locations', allLocations);
-    });
-    
-    socket.on('disconnect', () => {
-        console.log('❌ مستخدم disconnected:', socket.id);
-        for (const [userId, data] of userLocations) {
-            if (data.socketId === socket.id) {
-                data.status = 'offline';
-                io.emit('user-offline', { userId });
-                break;
-            }
-        }
-    });
+// Get all vessels
+app.get('/api/vessels', (req, res) => {
+    res.json({ success: true, data: vessels });
 });
 
-// ============================================================
-// 🚀 API Routes
-// ============================================================
+// Add vessel
+app.post('/api/vessels', (req, res) => {
+    const vessel = { id: nextId++, ...req.body };
+    vessels.push(vessel);
+    res.json({ success: true, message: "تم الإضافة بنجاح", data: vessel });
+});
 
-// ---------- المصادقة ----------
-app.post('/api/auth/login', (req, res) => {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-        return res.status(400).json({ success: false, error: 'Email and password required' });
+// Update vessel
+app.put('/api/vessels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = vessels.findIndex(v => v.id === id);
+    if (index !== -1) {
+        vessels[index] = { ...vessels[index], ...req.body };
+        res.json({ success: true, message: "تم التحديث بنجاح" });
+    } else {
+        res.status(404).json({ success: false, message: "المركب غير موجود" });
     }
-    
-    const user = getUserByEmail(email);
-    if (!user) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-    
-    if (!bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
-    }
-    
-    if (!user.isActive) {
-        return res.status(401).json({ success: false, error: 'Account is disabled' });
-    }
-    
-    const ipAddress = getClientIP(req);
-    const deviceInfo = getDeviceInfo(req);
-    
-    const session = createSession(
-        user.id,
-        user.name,
-        user.role,
-        deviceInfo,
-        ipAddress
-    );
-    
-    const token = generateToken(user);
-    const { password: _, ...userWithoutPassword } = user;
+});
+
+// Delete vessel
+app.delete('/api/vessels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    vessels = vessels.filter(v => v.id !== id);
+    res.json({ success: true, message: "تم الحذف بنجاح" });
+});
+
+// Get statistics
+app.get('/api/statistics', (req, res) => {
+    const total = vessels.length;
+    const operational = vessels.filter(v => v.status === 'صالح').length;
+    const maintenance = vessels.filter(v => v.status === 'صيانة').length;
+    const broken = vessels.filter(v => v.status === 'معطب').length;
     
     res.json({
         success: true,
-        token: token,
-        user: userWithoutPassword,
-        session: {
-            sessionId: session.sessionId,
-            device: session.device,
-            browser: session.browser,
-            ipAddress: session.ipAddress,
-            loginTime: session.loginTime
+        data: {
+            total,
+            operational,
+            maintenance,
+            broken,
+            readiness: total ? ((operational / total) * 100).toFixed(1) : 0
         }
     });
 });
 
-app.post('/api/auth/logout', authenticate, (req, res) => {
-    const session = getSessionByUserId(req.user.id);
-    if (session) {
-        logoutSession(session.sessionId);
+// Get logs
+app.get('/api/logs', (req, res) => {
+    res.json({ success: true, data: logs.slice(0, 100) });
+});
+
+// Get tickets
+app.get('/api/tickets', (req, res) => {
+    res.json({ success: true, data: tickets });
+});
+
+// Add ticket
+app.post('/api/tickets', (req, res) => {
+    const ticket = { id: Date.now(), ...req.body, date: new Date().toISOString(), status: "قيد المعالجة" };
+    tickets.unshift(ticket);
+    res.json({ success: true, message: "تم الإرسال بنجاح" });
+});
+
+// Get users
+app.get('/api/users', (req, res) => {
+    res.json({ success: true, data: users.map(u => ({ id: u.id, username: u.username, role: u.role, enabled: u.enabled })) });
+});
+
+// Add user
+app.post('/api/users', (req, res) => {
+    const { username, password, role } = req.body;
+    if (users.find(u => u.username === username)) {
+        return res.status(400).json({ success: false, message: "المستخدم موجود مسبقاً" });
     }
-    res.json({ success: true, message: 'Logged out successfully' });
+    const newUser = { id: users.length + 1, username, password, role, enabled: true };
+    users.push(newUser);
+    res.json({ success: true, message: "تم الإضافة بنجاح" });
 });
 
-app.post('/api/auth/activity', authenticate, (req, res) => {
-    const session = getSessionByUserId(req.user.id);
-    if (session) {
-        updateSessionActivity(session.sessionId);
-    }
-    res.json({ success: true });
-});
-
-// ---------- المواقع GPS ----------
-app.post('/api/location', authenticate, (req, res) => {
-    const { lat, lng, accuracy } = req.body;
-    const user = getUserById(req.user.id);
-    
-    if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    
-    const location = updateUserLocation(
-        user.id,
-        user.name,
-        user.role,
-        lat,
-        lng,
-        accuracy
-    );
-    
-    res.json({ success: true, location });
-});
-
-app.get('/api/locations', authenticate, (req, res) => {
-    const user = getUserById(req.user.id);
-    if (user.role !== 'مسؤول') {
-        return res.status(403).json({ success: false, error: 'Access denied' });
-    }
-    
-    const locations = getAllLocations();
-    res.json(locations);
-});
-
-// ---------- الجلسات ----------
-app.get('/api/sessions', authenticate, (req, res) => {
-    const user = getUserById(req.user.id);
-    if (user.role !== 'مسؤول') {
-        return res.status(403).json({ success: false, error: 'Access denied' });
-    }
-    
-    const sessions = getSessions();
-    const now = Date.now();
-    const timeout = 5 * 60 * 1000;
-    
-    const updatedSessions = sessions.map(s => {
-        const lastActivity = new Date(s.lastActivity).getTime();
-        if (s.isActive && (now - lastActivity) > timeout) {
-            s.status = 'offline';
-            s.isActive = false;
-        } else if (s.isActive) {
-            s.status = 'online';
-        }
-        return s;
-    });
-    writeData(SESSIONS_FILE, updatedSessions);
-    
-    res.json(updatedSessions);
-});
-
-// ---------- المراكب ----------
-app.get('/api/vessels', authenticate, (req, res) => {
-    res.json(readData(VESSELS_FILE));
-});
-
-app.post('/api/vessels', authenticate, (req, res) => {
-    const vessels = readData(VESSELS_FILE);
-    const newVessel = {
-        id: vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 1,
-        ...req.body,
-        createdAt: new Date().toISOString()
-    };
-    vessels.push(newVessel);
-    writeData(VESSELS_FILE, vessels);
-    res.json({ success: true, vessel: newVessel });
-});
-
-app.put('/api/vessels/:id', authenticate, (req, res) => {
-    const vessels = readData(VESSELS_FILE);
+// Update user
+app.put('/api/users/:id', (req, res) => {
     const id = parseInt(req.params.id);
-    const index = vessels.findIndex(v => v.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
-    }
-    vessels[index] = { ...vessels[index], ...req.body };
-    writeData(VESSELS_FILE, vessels);
-    res.json({ success: true, vessel: vessels[index] });
-});
-
-app.delete('/api/vessels/:id', authenticate, (req, res) => {
-    const vessels = readData(VESSELS_FILE);
-    const id = parseInt(req.params.id);
-    const filtered = vessels.filter(v => v.id !== id);
-    if (filtered.length === vessels.length) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
-    }
-    writeData(VESSELS_FILE, filtered);
-    res.json({ success: true });
-});
-
-// ---------- الصيانة ----------
-app.get('/api/maintenance', authenticate, (req, res) => {
-    res.json(readData(MAINTENANCE_FILE));
-});
-
-app.post('/api/maintenance', authenticate, (req, res) => {
-    const maintenance = readData(MAINTENANCE_FILE);
-    const newRecord = {
-        id: maintenance.length > 0 ? Math.max(...maintenance.map(r => r.id)) + 1 : 1,
-        ...req.body,
-        createdAt: new Date().toISOString()
-    };
-    maintenance.push(newRecord);
-    writeData(MAINTENANCE_FILE, maintenance);
-    res.json({ success: true, record: newRecord });
-});
-
-app.put('/api/maintenance/:id', authenticate, (req, res) => {
-    const maintenance = readData(MAINTENANCE_FILE);
-    const id = parseInt(req.params.id);
-    const index = maintenance.findIndex(r => r.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
-    }
-    maintenance[index] = { ...maintenance[index], ...req.body };
-    writeData(MAINTENANCE_FILE, maintenance);
-    res.json({ success: true, record: maintenance[index] });
-});
-
-app.delete('/api/maintenance/:id', authenticate, (req, res) => {
-    const maintenance = readData(MAINTENANCE_FILE);
-    const id = parseInt(req.params.id);
-    const filtered = maintenance.filter(r => r.id !== id);
-    if (filtered.length === maintenance.length) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
-    }
-    writeData(MAINTENANCE_FILE, filtered);
-    res.json({ success: true });
-});
-
-// ---------- التذاكر ----------
-app.get('/api/tickets', authenticate, (req, res) => {
-    res.json(readData(TICKETS_FILE));
-});
-
-app.post('/api/tickets', authenticate, (req, res) => {
-    const tickets = readData(TICKETS_FILE);
-    const newTicket = {
-        id: tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1,
-        ...req.body,
-        status: req.body.status || 'قيد المعالجة',
-        createdAt: new Date().toISOString()
-    };
-    tickets.push(newTicket);
-    writeData(TICKETS_FILE, tickets);
-    res.json({ success: true, ticket: newTicket });
-});
-
-// ---------- المذكرات ----------
-app.get('/api/notes', authenticate, (req, res) => {
-    res.json(readData(NOTES_FILE));
-});
-
-app.post('/api/notes', authenticate, (req, res) => {
-    const notes = readData(NOTES_FILE);
-    const newNote = {
-        id: notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1,
-        ...req.body,
-        createdAt: new Date().toISOString()
-    };
-    notes.push(newNote);
-    writeData(NOTES_FILE, notes);
-    res.json({ success: true, note: newNote });
-});
-
-app.put('/api/notes/:id', authenticate, (req, res) => {
-    const notes = readData(NOTES_FILE);
-    const id = parseInt(req.params.id);
-    const index = notes.findIndex(n => n.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
-    }
-    notes[index] = { ...notes[index], ...req.body };
-    writeData(NOTES_FILE, notes);
-    res.json({ success: true, note: notes[index] });
-});
-
-app.delete('/api/notes/:id', authenticate, (req, res) => {
-    const notes = readData(NOTES_FILE);
-    const id = parseInt(req.params.id);
-    const filtered = notes.filter(n => n.id !== id);
-    if (filtered.length === notes.length) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
-    }
-    writeData(NOTES_FILE, filtered);
-    res.json({ success: true });
-});
-
-// ---------- المستخدمين ----------
-app.get('/api/users', authenticate, (req, res) => {
-    const users = getUsers().map(({ password, ...user }) => user);
-    res.json(users);
-});
-
-app.post('/api/users', authenticate, (req, res) => {
-    const { name, email, password, role } = req.body;
-    if (!name || !email || !password) {
-        return res.status(400).json({ success: false, error: 'Name, email and password required' });
-    }
-    if (getUserByEmail(email)) {
-        return res.status(400).json({ success: false, error: 'Email already exists' });
-    }
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(password, salt);
-    const user = {
-        id: uuidv4(),
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'مشاهد',
-        isActive: true,
-        createdAt: new Date().toISOString()
-    };
-    const users = getUsers();
-    users.push(user);
-    writeData(USERS_FILE, users);
-    const { password: _, ...userWithoutPassword } = user;
-    res.json({ success: true, user: userWithoutPassword });
-});
-
-app.put('/api/users/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
-    if (updates.password) {
-        const salt = bcrypt.genSaltSync(10);
-        updates.password = bcrypt.hashSync(updates.password, salt);
-    }
-    const users = getUsers();
-    const index = users.findIndex(u => u.id === id);
-    if (index === -1) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    users[index] = { ...users[index], ...updates };
-    writeData(USERS_FILE, users);
-    const { password: _, ...userWithoutPassword } = users[index];
-    res.json({ success: true, user: userWithoutPassword });
-});
-
-app.delete('/api/users/:id', authenticate, (req, res) => {
-    const { id } = req.params;
-    if (id === req.user.id) {
-        return res.status(400).json({ success: false, error: 'Cannot delete yourself' });
-    }
-    const users = getUsers();
-    const filtered = users.filter(u => u.id !== id);
-    if (filtered.length === users.length) {
-        return res.status(404).json({ success: false, error: 'User not found' });
-    }
-    writeData(USERS_FILE, filtered);
-    res.json({ success: true });
-});
-
-// ============================================================
-// 📄 تقديم الصفحات
-// ============================================================
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/pages/:page', (req, res) => {
-    const filePath = path.join(__dirname, 'public', 'pages', `${req.params.page}.html`);
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
+    const user = users.find(u => u.id === id);
+    if (user) {
+        if (req.body.enabled !== undefined) user.enabled = req.body.enabled;
+        if (req.body.role) user.role = req.body.role;
+        if (req.body.password) user.password = req.body.password;
+        res.json({ success: true, message: "تم التحديث بنجاح" });
     } else {
-        res.status(404).send('Page not found');
+        res.status(404).json({ success: false, message: "المستخدم غير موجود" });
     }
 });
 
-// ============================================================
-// 🔄 تهيئة المستخدمين الافتراضيين
-// ============================================================
-
-function initDefaultUsers() {
-    const users = getUsers();
-    if (users.length === 0) {
-        const salt = bcrypt.genSaltSync(10);
-        const hashedPassword = bcrypt.hashSync('123456', salt);
-        const defaultUsers = [
-            { id: uuidv4(), name: 'مدير النظام', email: 'admin', password: hashedPassword, role: 'مسؤول', isActive: true, createdAt: new Date().toISOString() },
-            { id: uuidv4(), name: 'مدير العمليات', email: 'manager', password: hashedPassword, role: 'مشرف', isActive: true, createdAt: new Date().toISOString() },
-            { id: uuidv4(), name: 'محرر', email: 'editor', password: hashedPassword, role: 'محرر', isActive: true, createdAt: new Date().toISOString() },
-            { id: uuidv4(), name: 'مشاهد', email: 'viewer', password: hashedPassword, role: 'مشاهد', isActive: true, createdAt: new Date().toISOString() }
-        ];
-        writeData(USERS_FILE, defaultUsers);
-        console.log('✅ تم إنشاء المستخدمين الافتراضيين');
+// Delete user
+app.delete('/api/users/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const index = users.findIndex(u => u.id === id);
+    if (index !== -1 && users[index].username !== 'admin') {
+        users.splice(index, 1);
+        res.json({ success: true, message: "تم الحذف بنجاح" });
+    } else {
+        res.status(400).json({ success: false, message: "لا يمكن حذف هذا المستخدم" });
     }
-}
+});
 
-// ============================================================
-// 🚀 تشغيل الخادم
-// ============================================================
+// ==================== Serve HTML ====================
+app.get('/', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة الوسائل البحرية</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; direction: rtl; }
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .login-card { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .login-card h2 { color: #2d3748; margin-bottom: 30px; text-align: center; }
+        .login-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; }
+        .login-card button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 18px; cursor: pointer; }
+        .app-container { display: none; max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .nav { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .nav button { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
+        .nav button:hover { transform: translateY(-2px); }
+        .page { display: none; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #667eea; color: white; }
+        .status-good { color: green; font-weight: bold; }
+        .status-broken { color: red; font-weight: bold; }
+        .status-maintenance { color: orange; font-weight: bold; }
+        .btn { padding: 5px 10px; margin: 2px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-edit { background: #f39c12; color: white; }
+        .btn-delete { background: #e74c3c; color: white; }
+        .btn-save { background: #27ae60; color: white; padding: 10px 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; }
+        .form-grid input, .form-grid select { padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 10px; text-align: center; }
+        .stat-card .number { font-size: 32px; font-weight: bold; }
+        .search-box { width: 100%; padding: 10px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; }
+        .hidden { display: none; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } .nav button { flex: 1; } }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="loginContainer">
+        <div class="login-card">
+            <h2>⚓ منظومة الوسائل البحرية</h2>
+            <input type="text" id="username" placeholder="اسم المستخدم">
+            <input type="password" id="password" placeholder="كلمة المرور">
+            <button onclick="login()">دخول</button>
+            <div id="loginError" style="color: red; margin-top: 10px; text-align: center;"></div>
+            <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">
+                <p><strong>admin</strong> / 1234 (صلاحية كاملة)</p>
+                <p><strong>editor</strong> / 1234 (تعديل)</p>
+                <p><strong>viewer</strong> / 1234 (مشاهدة فقط)</p>
+            </div>
+        </div>
+    </div>
 
-initDefaultUsers();
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <h1>⚓ منظومة متابعة الوسائل البحرية</h1>
+            <div><span id="userInfo"></span> <button onclick="logout()" class="btn" style="background: #e74c3c; color: white;">🚪 خروج</button></div>
+        </div>
 
-server.listen(PORT, () => {
-    console.log('========================================');
-    console.log('🚀 نظام إدارة الأسطول البحري');
-    console.log('========================================');
-    console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
-    console.log(`✅ WebSocket يعمل على: ws://localhost:${PORT}`);
-    console.log('========================================');
-    console.log('📝 حسابات الدخول:');
-    console.log('   admin   / 123456 (مسؤول)');
-    console.log('   manager / 123456 (مشرف)');
-    console.log('   editor  / 123456 (محرر)');
-    console.log('   viewer  / 123456 (مشاهد)');
-    console.log('========================================');
+        <div class="nav" id="navButtons">
+            <button onclick="showPage('main')" style="background: #667eea; color: white;">🏠 السجل العام</button>
+            <button onclick="showPage('maint')" style="background: #f39c12; color: white;">🛠️ سجل الصيانة</button>
+            <button onclick="showPage('eff')" style="background: #27ae60; color: white;">📈 جاهزية الأسطول</button>
+            <button onclick="showPage('support')" style="background: #3498db; color: white;">📞 الدعم الفني</button>
+            <button id="trackBtn" onclick="showPage('track')" style="background: #9b59b6; color: white; display: none;">📊 التتبع</button>
+            <button id="usersBtn" onclick="showPage('users')" style="background: #e74c3c; color: white; display: none;">👥 المستخدمين</button>
+            <button onclick="window.print()" style="background: #1abc9c; color: white;">🖨️ طباعة</button>
+        </div>
+
+        <!-- السجل العام -->
+        <div id="pageMain" class="page">
+            <div class="form-grid" id="vesselForm">
+                <input type="text" id="name" placeholder="اسم المركب *">
+                <input type="text" id="number" placeholder="الرقم">
+                <input type="number" id="length" placeholder="الطول (م)">
+                <select id="region">
+                    <option value="">الإقليم</option>
+                    <option value="الشمال">الشمال</option>
+                    <option value="الساحل">الساحل</option>
+                    <option value="الوسط">الوسط</option>
+                    <option value="الجنوب">الجنوب</option>
+                </select>
+                <input type="text" id="zone" placeholder="المنطقة">
+                <input type="text" id="port" placeholder="الميناء">
+                <select id="status">
+                    <option value="صالح">صالح</option>
+                    <option value="معطب">معطب</option>
+                    <option value="صيانة">صيانة</option>
+                </select>
+                <input type="text" id="breakdown" placeholder="نوع العطب">
+                <input type="date" id="failureDate">
+                <button class="btn-save" onclick="saveVessel()">✅ حفظ</button>
+            </div>
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 بحث باسم المركب أو الإقليم..." onkeyup="filterVessels()">
+            <div id="vesselsTable"></div>
+        </div>
+
+        <!-- سجل الصيانة -->
+        <div id="pageMaint" class="page">
+            <div id="maintenanceTable"></div>
+        </div>
+
+        <!-- الجاهزية -->
+        <div id="pageEff" class="page">
+            <div class="stats" id="statsContainer"></div>
+            <canvas id="chartCanvas" style="max-height: 400px;"></canvas>
+        </div>
+
+        <!-- الدعم -->
+        <div id="pageSupport" class="page">
+            <h3>📞 مركز الدعم الفني</h3>
+            <input type="text" id="ticketSubject" placeholder="عنوان التذكرة" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <textarea id="ticketMessage" rows="5" placeholder="تفاصيل المشكلة..." style="width: 100%; padding: 10px;"></textarea>
+            <button onclick="sendTicket()" style="background: #27ae60; color: white; padding: 10px 20px;">📨 إرسال</button>
+            <div id="ticketsList" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- التتبع -->
+        <div id="pageTrack" class="page">
+            <div id="logsTable"></div>
+        </div>
+
+        <!-- المستخدمين -->
+        <div id="pageUsers" class="page">
+            <div class="form-grid">
+                <input type="text" id="newUsername" placeholder="اسم المستخدم">
+                <input type="password" id="newPassword" placeholder="كلمة المرور">
+                <select id="newRole">
+                    <option value="viewer">مشاهد</option>
+                    <option value="editor">محرر</option>
+                    <option value="admin">مسؤول</option>
+                </select>
+                <button class="btn-save" onclick="addUser()">➕ إضافة مستخدم</button>
+            </div>
+            <div id="usersTable"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let allVessels = [];
+        let chart = null;
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentUser = data.user;
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('userInfo').innerHTML = \`👤 \${currentUser.username} | 🔑 \${currentUser.role === 'admin' ? 'مسؤول' : (currentUser.role === 'editor' ? 'محرر' : 'مشاهد')}\`;
+                    
+                    const isAdmin = currentUser.role === 'admin';
+                    const isViewer = currentUser.role === 'viewer';
+                    
+                    document.getElementById('trackBtn').style.display = isAdmin ? 'inline-block' : 'none';
+                    document.getElementById('usersBtn').style.display = isAdmin ? 'inline-block' : 'none';
+                    document.getElementById('vesselForm').style.display = isViewer ? 'none' : 'grid';
+                    
+                    showPage('main');
+                    loadVessels();
+                    loadStatistics();
+                } else {
+                    document.getElementById('loginError').innerText = data.message;
+                }
+            } catch(err) {
+                document.getElementById('loginError').innerText = 'خطأ في الاتصال بالخادم';
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+        }
+
+        async function loadVessels() {
+            try {
+                const res = await fetch('/api/vessels');
+                const data = await res.json();
+                if (data.success) {
+                    allVessels = data.data;
+                    filterVessels();
+                    loadMaintenanceTable();
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        function filterVessels() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allVessels.filter(v => 
+                v.name.toLowerCase().includes(search) || 
+                (v.region && v.region.toLowerCase().includes(search))
+            );
+            renderVesselsTable(filtered);
+        }
+
+        function renderVesselsTable(vessels) {
+            const html = \`
+                <table>
+                    <thead>
+                        <tr>
+                            <th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th>
+                            <th>الإقليم</th><th>المنطقة</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        \${vessels.map(v => \`
+                            <tr>
+                                <td>\${v.name}</td>
+                                <td>\${v.number || '-'}</td>
+                                <td>\${v.length || '-'}</td>
+                                <td>\${v.category || getCategory(v.length)}</td>
+                                <td>\${v.region || '-'}</td>
+                                <td>\${v.zone || '-'}</td>
+                                <td class="status-\${v.status === 'صالح' ? 'good' : (v.status === 'معطب' ? 'broken' : 'maintenance')}">\${v.status}</td>
+                                <td>\${v.breakdown || '-'}</td>
+                                <td>\${v.failureDate || '-'}</td>
+                                <td>
+                                    \${currentUser?.role !== 'viewer' ? \`<button class="btn btn-edit" onclick="editVessel(\${v.id})">✏️ تعديل</button>\` : ''}
+                                    \${currentUser?.role === 'admin' ? \`<button class="btn btn-delete" onclick="deleteVessel(\${v.id})">🗑️ حذف</button>\` : ''}
+                                 </td>
+                            </tr>
+                        \`).join('')}
+                        \${vessels.length === 0 ? '<tr><td colspan="10">لا توجد بيانات</td></tr>' : ''}
+                    </tbody>
+                </table>
+            \`;
+            document.getElementById('vesselsTable').innerHTML = html;
+        }
+
+        function getCategory(length) {
+            const l = parseFloat(length);
+            if (l === 11) return "البروق";
+            if (l >= 8 && l <= 12) return "صقور";
+            if (l > 12 && l <= 25) return "خوافر";
+            if (l >= 30) return "طوافات";
+            return "زوارق مزدوجة";
+        }
+
+        function loadMaintenanceTable() {
+            const maintVessels = allVessels.filter(v => v.status === 'معطب' || v.status === 'صيانة');
+            const html = \`
+                <table>
+                    <thead><tr><th>الاسم</th><th>الإقليم</th><th>الحالة</th><th>العطب</th><th>تاريخ العطب</th><th>تاريخ الانتهاء</th><th>المرجع</th></tr></thead>
+                    <tbody>
+                        \${maintVessels.map(v => \`
+                            <tr>
+                                <td>\${v.name}</td><td>\${v.region || '-'}</td>
+                                <td class="status-\${v.status === 'معطب' ? 'broken' : 'maintenance'}">\${v.status}</td>
+                                <td>\${v.breakdown || '-'}</td><td>\${v.failureDate || '-'}</td>
+                                <td>\${v.endDate || '-'}</td><td>\${v.reference || '-'}</td>
+                            </tr>
+                        \`).join('')}
+                        \${maintVessels.length === 0 ? '<tr><td colspan="7">لا توجد مراكب معطوبة أو تحت الصيانة</td></tr>' : ''}
+                    </tbody>
+                </table>
+            \`;
+            document.getElementById('maintenanceTable').innerHTML = html;
+        }
+
+        async function saveVessel() {
+            if (currentUser?.role === 'viewer') {
+                alert('ليس لديك صلاحية للإضافة');
+                return;
+            }
+            
+            const vessel = {
+                name: document.getElementById('name').value,
+                number: document.getElementById('number').value,
+                length: document.getElementById('length').value,
+                region: document.getElementById('region').value,
+                zone: document.getElementById('zone').value,
+                port: document.getElementById('port').value,
+                status: document.getElementById('status').value,
+                breakdown: document.getElementById('breakdown').value,
+                failureDate: document.getElementById('failureDate').value,
+                category: getCategory(document.getElementById('length').value)
+            };
+            
+            if (!vessel.name) {
+                alert('اسم المركب مطلوب');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/vessels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(vessel)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('تم الحفظ بنجاح');
+                    clearForm();
+                    loadVessels();
+                    loadStatistics();
+                }
+            } catch(err) {
+                alert('حدث خطأ في الحفظ');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('number').value = '';
+            document.getElementById('length').value = '';
+            document.getElementById('region').value = '';
+            document.getElementById('zone').value = '';
+            document.getElementById('port').value = '';
+            document.getElementById('breakdown').value = '';
+            document.getElementById('failureDate').value = '';
+        }
+
+        async function editVessel(id) {
+            alert('جاري تطوير وظيفة التعديل...');
+        }
+
+        async function deleteVessel(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا المركب؟')) return;
+            try {
+                const res = await fetch(\`/api/vessels/\${id}\`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('تم الحذف بنجاح');
+                    loadVessels();
+                    loadStatistics();
+                }
+            } catch(err) {
+                alert('حدث خطأ في الحذف');
+            }
+        }
+
+        async function loadStatistics() {
+            try {
+                const res = await fetch('/api/statistics');
+                const data = await res.json();
+                if (data.success) {
+                    const s = data.data;
+                    document.getElementById('statsContainer').innerHTML = \`
+                        <div class="stat-card"><div class="number">\${s.total}</div>🚢 إجمالي المراكب</div>
+                        <div class="stat-card"><div class="number">\${s.operational}</div>✅ الصالح</div>
+                        <div class="stat-card"><div class="number">\${s.maintenance}</div>🔧 تحت الصيانة</div>
+                        <div class="stat-card"><div class="number">\${s.broken}</div>⚠️ المعطوب</div>
+                        <div class="stat-card"><div class="number">\${s.readiness}%</div>📈 نسبة الجاهزية</div>
+                    \`;
+                    
+                    if (chart) chart.destroy();
+                    const ctx = document.getElementById('chartCanvas').getContext('2d');
+                    chart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['صالح', 'صيانة', 'معطب'],
+                            datasets: [{
+                                data: [s.operational, s.maintenance, s.broken],
+                                backgroundColor: ['#27ae60', '#f39c12', '#e74c3c']
+                            }]
+                        },
+                        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function sendTicket() {
+            const subject = document.getElementById('ticketSubject').value;
+            const message = document.getElementById('ticketMessage').value;
+            if (!subject || !message) {
+                alert('يرجى إدخال عنوان وتفاصيل المشكلة');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/tickets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userName: currentUser.username, subject, message })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('تم إرسال التذكرة بنجاح');
+                    document.getElementById('ticketSubject').value = '';
+                    document.getElementById('ticketMessage').value = '';
+                    loadTickets();
+                }
+            } catch(err) {
+                alert('حدث خطأ في الإرسال');
+            }
+        }
+
+        async function loadTickets() {
+            try {
+                const res = await fetch('/api/tickets');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('ticketsList').innerHTML = \`
+                        <h4>📋 التذاكر السابقة</h4>
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>العنوان</th><th>الحالة</th></tr></thead>
+                            <tbody>
+                                \${data.data.map(t => \`
+                                    <tr><td>\${new Date(t.date).toLocaleDateString('ar')}</td><td>\${t.subject}</td><td>\${t.status}</td></tr>
+                                \`).join('')}
+                                \${data.data.length === 0 ? '<tr><td colspan="3">لا توجد تذاكر</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    \`;
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('logsTable').innerHTML = \`
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>المستخدم</th><th>الإجراء</th></tr></thead>
+                            <tbody>
+                                \${data.data.map(log => \`
+                                    <tr><td>\${new Date(log.date).toLocaleString('ar')}</td><td>\${log.user}</td><td>\${log.action}</td></tr>
+                                \`).join('')}
+                            </tbody>
+                        </table>
+                    \`;
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function loadUsers() {
+            if (currentUser?.role !== 'admin') return;
+            try {
+                const res = await fetch('/api/users');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('usersTable').innerHTML = \`
+                        <table>
+                            <thead><tr><th>المستخدم</th><th>الصلاحية</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+                            <tbody>
+                                \${data.data.map(u => \`
+                                    <tr>
+                                        <td>\${u.username}</td>
+                                        <td>\${u.role === 'admin' ? 'مسؤول' : (u.role === 'editor' ? 'محرر' : 'مشاهد')}</td>
+                                        <td>\${u.enabled ? '✅ مفعل' : '❌ معطل'}</td>
+                                        <td>
+                                            <button class="btn btn-edit" onclick="toggleUser(\${u.id}, \${!u.enabled})">\${u.enabled ? 'تعطيل' : 'تفعيل'}</button>
+                                            \${u.username !== 'admin' ? '<button class="btn btn-delete" onclick="deleteUser(' + u.id + ')">حذف</button>' : ''}
+                                        </td>
+                                    </tr>
+                                \`).join('')}
+                            </tbody>
+                        </table>
+                    \`;
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
+        async function addUser() {
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const role = document.getElementById('newRole').value;
+            
+            if (!username || !password) {
+                alert('يرجى إدخال اسم المستخدم وكلمة المرور');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, role })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('تم إضافة المستخدم بنجاح');
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                    loadUsers();
+                } else {
+                    alert(data.message);
+                }
+            } catch(err) {
+                alert('حدث خطأ');
+            }
+        }
+
+        async function toggleUser(id, enabled) {
+            try {
+                await fetch(\`/api/users/\${id}\`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                loadUsers();
+            } catch(err) {
+                alert('حدث خطأ');
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+            try {
+                await fetch(\`/api/users/\${id}\`, { method: 'DELETE' });
+                loadUsers();
+            } catch(err) {
+                alert('حدث خطأ');
+            }
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+            document.getElementById(\`page\${page.charAt(0).toUpperCase() + page.slice(1)}\`).style.display = 'block';
+            
+            if (page === 'main') loadVessels();
+            if (page === 'eff') loadStatistics();
+            if (page === 'support') loadTickets();
+            if (page === 'track') loadLogs();
+            if (page === 'users') loadUsers();
+        }
+
+        window.login = login;
+        window.logout = logout;
+        window.saveVessel = saveVessel;
+        window.editVessel = editVessel;
+        window.deleteVessel = deleteVessel;
+        window.sendTicket = sendTicket;
+        window.addUser = addUser;
+        window.toggleUser = toggleUser;
+        window.deleteUser = deleteUser;
+        window.showPage = showPage;
+        window.filterVessels = filterVessels;
+    </script>
+</body>
+</html>
+    `);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
 });
