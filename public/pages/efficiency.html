@@ -12,6 +12,31 @@
     <!-- حاوية الجداول -->
     <div id="efficiencyTablesContainer"></div>
     
+    <!-- ===== الرسوم البيانية 3D ===== -->
+    <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+        <h3 style="color:#0d6efd; margin-bottom:15px;">📊 3D - تحليل الجاهزية ثلاثي الأبعاد</h3>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(350px, 1fr)); gap:20px;">
+            <!-- رسم بياني 3D - الفئات -->
+            <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 الجاهزية حسب الفئة</h4>
+                <canvas id="chart3DCategory" style="height:280px; width:100%;"></canvas>
+            </div>
+            
+            <!-- رسم بياني 3D - الأقاليم -->
+            <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
+                <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 الجاهزية حسب الإقليم</h4>
+                <canvas id="chart3DRegion" style="height:280px; width:100%;"></canvas>
+            </div>
+        </div>
+        
+        <!-- رسم بياني 3D - التوزيع العام -->
+        <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-top:15px;">
+            <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 التوزيع العام للحالات</h4>
+            <canvas id="chart3DGeneral" style="height:280px; width:100%;"></canvas>
+        </div>
+    </div>
+    
     <!-- أزرار إضافية -->
     <div style="display:flex; gap:10px; margin:20px 0; flex-wrap:wrap;">
         <button onclick="exportEfficiencyData()" style="padding:10px 25px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
@@ -50,10 +75,6 @@
     
     #efficiencyTablesContainer table tr:hover {
         background: #f8f9fa;
-    }
-    
-    #efficiencyTablesContainer table tr:last-child td {
-        border-bottom: none;
     }
     
     .scrollable-table {
