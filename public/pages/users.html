@@ -1,38 +1,381 @@
-<!-- ===== صفحة المستخدمين ===== -->
-<div class="page-users">
-    <div class="user-form">
-        <div class="form-group">
-            <label><i class="fas fa-user"></i> اسم المستخدم</label>
-            <input type="text" id="un" placeholder="اسم المستخدم">
+<div id="page-users">
+    <h2 style="color:white; margin-bottom:15px;">👥 إدارة المستخدمين</h2>
+    
+    <!-- ===== نموذج إضافة مستخدم ===== -->
+    <div class="stat-card" style="padding:15px; margin-bottom:15px; border-color:rgba(96,165,250,0.1);">
+        <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0;">➕ إضافة مستخدم جديد</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+            <div>
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">👤 اسم المستخدم</label>
+                <input type="text" id="uName" placeholder="الاسم الكامل" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📧 البريد الإلكتروني</label>
+                <input type="email" id="uEmail" placeholder="example@domain.com" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🔑 كلمة المرور</label>
+                <input type="password" id="uPassword" placeholder="كلمة المرور" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🔐 الصلاحية</label>
+                <select id="uRole" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                    <option value="مسؤول">👑 مسؤول</option>
+                    <option value="مشرف">⭐ مشرف</option>
+                    <option value="محرر">✏️ محرر</option>
+                    <option value="مشاهد">👀 مشاهد</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group">
-            <label><i class="fas fa-key"></i> كلمة المرور</label>
-            <input type="password" id="up" placeholder="كلمة المرور">
+        <div style="margin-top:10px; display:flex; gap:10px;">
+            <button onclick="addUser()" class="btn-sm btn-success" style="padding:8px 20px; background:rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.1); color:#4ade80; border-radius:8px; cursor:pointer;">💾 إضافة مستخدم</button>
+            <button onclick="clearUserInputs()" class="btn-sm" style="padding:8px 20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); border-radius:8px; cursor:pointer;">🗑️ إلغاء</button>
         </div>
-        <div class="form-group">
-            <label><i class="fas fa-user-shield"></i> الصلاحية</label>
-            <select id="ur">
-                <option value="مشاهد">👁️ مشاهد</option>
-                <option value="محرر">✏️ محرر</option>
-                <option value="مسؤول">👑 مسؤول</option>
-            </select>
-        </div>
-        <button class="btn btn-primary" onclick="addUser()"><i class="fas fa-user-plus"></i> إضافة</button>
+        <div id="userFormMessage" style="margin-top:8px; font-size:13px;"></div>
     </div>
-    <div class="region-table-card">
-        <div class="region-table-header">👥 إدارة المستخدمين</div>
+    
+    <!-- ===== جدول المستخدمين ===== -->
+    <div class="stat-card" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة المستخدمين</h4>
+            <span style="color:rgba(255,255,255,0.3); font-size:12px;">عدد: <span id="usersCount">0</span></span>
+        </div>
         <div class="scrollable-table">
             <table>
                 <thead>
                     <tr>
-                        <th>الاسم</th>
-                        <th>الصلاحية</th>
-                        <th>الحالة</th>
-                        <th>الإجراءات</th>
+                        <th>👤 الاسم</th>
+                        <th>📧 البريد</th>
+                        <th>🔐 الصلاحية</th>
+                        <th>📊 الحالة</th>
+                        <th>📅 تاريخ الإنشاء</th>
+                        <th>⚙️ إجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="usersBody"></tbody>
+                <tbody id="usersBody">
+                    <tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<style>
+    .stat-card {
+        background: rgba(255,255,255,0.02);
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 13px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Cairo', sans-serif;
+    }
+    .btn-sm:hover { opacity: 0.8; }
+    .btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+    .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+    .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+    .scrollable-table { overflow-x: auto; }
+    .scrollable-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .scrollable-table table th {
+        background: rgba(255,255,255,0.04);
+        padding: 10px;
+        border-bottom: 2px solid rgba(255,255,255,0.06);
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+    }
+    .scrollable-table table td {
+        padding: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        text-align: center;
+        color: rgba(255,255,255,0.6);
+    }
+    .scrollable-table table tr:hover { background: rgba(255,255,255,0.02); }
+</style>
+
+<script>
+// ============================================================
+// 👥 دوال إدارة المستخدمين
+// ============================================================
+
+function clearUserInputs() {
+    document.getElementById('uName').value = '';
+    document.getElementById('uEmail').value = '';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uRole').value = 'مشاهد';
+    document.getElementById('userFormMessage').textContent = '';
+    document.getElementById('userFormMessage').style.color = '';
+}
+
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    // التحقق من الحقول
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        document.getElementById('uName').focus();
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        document.getElementById('uEmail').focus();
+        return;
+    }
+    if (!password || password.length < 4) {
+        showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
+        document.getElementById('uPassword').focus();
+        return;
+    }
+    
+    // إظهار رسالة انتظار
+    const msgEl = document.getElementById('userFormMessage');
+    msgEl.textContent = '⏳ جاري إضافة المستخدم...';
+    msgEl.style.color = '#fbbf24';
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, email, password, role })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
+            msgEl.textContent = '✅ تم إضافة المستخدم: ' + data.user.name;
+            msgEl.style.color = '#4ade80';
+            clearUserInputs();
+            loadUsers(); // تحديث القائمة
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+            msgEl.textContent = '❌ ' + (data.error || 'خطأ في الإضافة');
+            msgEl.style.color = '#f87171';
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+        msgEl.textContent = '❌ خطأ في الاتصال بالخادم';
+        msgEl.style.color = '#f87171';
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
+}
+
+function editUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    // جلب بيانات المستخدم
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        const user = users.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        
+        // ملء النموذج
+        document.getElementById('uName').value = user.name || '';
+        document.getElementById('uEmail').value = user.email || '';
+        document.getElementById('uPassword').value = '';
+        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور الحالية';
+        document.getElementById('uRole').value = user.role || 'مشاهد';
+        
+        // تغيير زر الإضافة إلى تحديث
+        const addBtn = document.querySelector('[onclick="addUser()"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 تحديث المستخدم';
+            addBtn.onclick = function() { updateUser(id); };
+        }
+        
+        document.getElementById('userFormMessage').textContent = '✏️ جارٍ تعديل المستخدم: ' + user.name;
+        document.getElementById('userFormMessage').style.color = '#fbbf24';
+        
+        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+    })
+    .catch(err => {
+        console.error('Edit user error:', err);
+        showAlert('❌ خطأ في تحميل بيانات المستخدم', 'danger');
+    });
+}
+
+function updateUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        return;
+    }
+    
+    const data = { name, email, role };
+    if (password && password.length >= 4) {
+        data.password = password;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
+            clearUserInputs();
+            // إعادة زر الإضافة
+            const addBtn = document.querySelector('[onclick*="updateUser"]');
+            if (addBtn) {
+                addBtn.textContent = '💾 إضافة مستخدم';
+                addBtn.onclick = addUser;
+            }
+            document.getElementById('userFormMessage').textContent = '';
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Update user error:', err);
+        showAlert('❌ خطأ في تحديث المستخدم', 'danger');
+    });
+}
+
+// ============================================================
+// 🔄 تحميل المستخدمين
+// ============================================================
+
+function loadUsers() {
+    const token = getToken();
+    if (!token) {
+        console.log('⚠️ No token, skipping users load');
+        return;
+    }
+    
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        allUsers = data || [];
+        console.log('✅ Users loaded:', allUsers.length);
+        renderUsersTable();
+    })
+    .catch(err => {
+        console.error('Load users error:', err);
+    });
+}
+
+function renderUsersTable() {
+    const tbody = document.getElementById('usersBody');
+    if (!tbody) return;
+    
+    const usersCount = document.getElementById('usersCount');
+    if (usersCount) usersCount.textContent = allUsers.length;
+    
+    if (!allUsers || allUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = allUsers.map(u => `
+        <tr>
+            <td><strong>${u.name || '-'}</strong></td>
+            <td>${u.email || '-'}</td>
+            <td><span style="color:${u.role === 'مسؤول' ? '#fbbf24' : u.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${u.role || 'مشاهد'}</span></td>
+            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+            <td style="font-size:12px; color:rgba(255,255,255,0.3);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-TN') : '-'}</td>
+            <td>
+                <button class="btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ============================================================
+// 🔄 تهيئة الصفحة
+// ============================================================
+
+if (document.getElementById('page-users')) {
+    console.log('📄 Users page loaded');
+    setTimeout(loadUsers, 300);
+    setTimeout(loadUsers, 1000);
+}
+
+// ============================================================
+// 🔄 تحديث من app.js (إذا كانت الدالة موجودة)
+// ============================================================
+
+// التأكد من أن loadUsers متاحة عالمياً
+window.loadUsers = loadUsers;
+window.addUser = addUser;
+window.deleteUser = deleteUser;
+window.editUser = editUser;
+window.updateUser = updateUser;
+window.clearUserInputs = clearUserInputs;
+</script>
