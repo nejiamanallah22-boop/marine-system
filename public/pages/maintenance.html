@@ -1,3 +1,4 @@
+<!-- public/pages/maintenance.html -->
 <div id="page-maintenance">
     <h2 style="color:white; margin-bottom:15px;">🔧 إدارة الصيانة</h2>
     
@@ -21,7 +22,7 @@
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:5px; color:rgba(255,255,255,0.7);">🚢 المركب</label>
                 <select id="mVesselId" style="width:100%; padding:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:5px; color:white;">
-                    <option value="">اختر المركب</option>
+                    <option value="">-- اختر المركب --</option>
                 </select>
             </div>
             
@@ -133,7 +134,7 @@
             <div>
                 <label style="display:block; font-weight:bold; margin-bottom:3px; font-size:12px; color:rgba(255,255,255,0.5);">📅 السنة</label>
                 <select id="filterYear" style="width:100%; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:5px; color:white;">
-                    <option value="">الكل</option>
+                    <option value="">-- جميع السنوات --</option>
                 </select>
             </div>
             <div>
@@ -291,204 +292,323 @@
 
 <script>
 // ============================================================
-// دوال الصيانة - كود مستقل داخل الصفحة
+// 🚢 دوال الصيانة - الكود الكامل المصحح
 // ============================================================
 
-function refreshMaintenancePage() {
-    console.log('🔄 Refreshing maintenance page...');
+// ============================================================
+// 1. تحميل البيانات من localStorage أو allVessels
+// ============================================================
+
+function getVesselsData() {
+    // محاولة الحصول من allVessels (التطبيق الرئيسي)
+    if (typeof allVessels !== 'undefined' && allVessels.length > 0) {
+        console.log('✅ Using allVessels from app:', allVessels.length);
+        return allVessels;
+    }
     
-    // تحديث قائمة المراكب في النموذج
-    updateMaintenanceVessels();
+    // محاولة من localStorage
+    try {
+        const stored = localStorage.getItem('vessels_data');
+        if (stored) {
+            const data = JSON.parse(stored);
+            if (data.length > 0) {
+                console.log('✅ Loaded vessels from localStorage:', data.length);
+                return data;
+            }
+        }
+    } catch(e) {
+        console.error('Error loading vessels:', e);
+    }
     
-    // تحديث الإحصائيات
-    updateMaintenanceStats();
-    
-    // تحديث المراكب المعطبة
-    renderGeneralMaintenance();
-    
-    // تحديث سجل الصيانة
-    renderHistoryMaintenance();
-    
-    // تحديث وحدات الصيانة
-    renderMaintenanceUnits();
-    
-    // تحديث فلتر السنوات
-    updateYearFilter();
+    // البيانات التجريبية
+    const demo = getDemoVessels();
+    localStorage.setItem('vessels_data', JSON.stringify(demo));
+    console.log('✅ Using demo vessels:', demo.length);
+    return demo;
 }
 
-// استدعاء التحديث عند تحميل الصفحة
-if (document.getElementById('page-maintenance')) {
-    setTimeout(refreshMaintenancePage, 300);
-    setTimeout(refreshMaintenancePage, 1000);
+function getMaintenanceRecords() {
+    // محاولة الحصول من allMaintenance (التطبيق الرئيسي)
+    if (typeof allMaintenance !== 'undefined' && allMaintenance.length > 0) {
+        console.log('✅ Using allMaintenance from app:', allMaintenance.length);
+        return allMaintenance;
+    }
+    
+    // محاولة من localStorage
+    try {
+        const stored = localStorage.getItem('maintenance_records');
+        if (stored) {
+            const data = JSON.parse(stored);
+            if (data.length > 0) {
+                console.log('✅ Loaded records from localStorage:', data.length);
+                return data;
+            }
+        }
+    } catch(e) {
+        console.error('Error loading records:', e);
+    }
+    
+    // البيانات التجريبية
+    const demo = getDemoRecords();
+    localStorage.setItem('maintenance_records', JSON.stringify(demo));
+    console.log('✅ Using demo records:', demo.length);
+    return demo;
 }
 
 // ============================================================
-// دوال الصيانة (مستقلة)
+// 2. البيانات التجريبية
+// ============================================================
+
+function getDemoVessels() {
+    return [
+        { id: 1, name: 'البروق 1', num: 'B001', cat: 'البروق', stat: 'صالح' },
+        { id: 2, name: 'البروق 2', num: 'B002', cat: 'البروق', stat: 'صالح' },
+        { id: 3, name: 'البروق 3', num: 'B003', cat: 'البروق', stat: 'صالح' },
+        { id: 4, name: 'البروق 4', num: 'B004', cat: 'البروق', stat: 'معطب' },
+        { id: 5, name: 'البروق 5', num: 'B005', cat: 'البروق', stat: 'صالح' },
+        { id: 6, name: 'البروق 6', num: 'B006', cat: 'البروق', stat: 'معطب' },
+        { id: 7, name: 'البروق 7', num: 'B007', cat: 'البروق', stat: 'صالح' },
+        { id: 8, name: 'صقر 1', num: 'S001', cat: 'صقور', stat: 'صالح' },
+        { id: 9, name: 'صقر 2', num: 'S002', cat: 'صقور', stat: 'معطب' },
+        { id: 10, name: 'صقر 3', num: 'S003', cat: 'صقور', stat: 'صالح' },
+        { id: 11, name: 'صقر 4', num: 'S004', cat: 'صقور', stat: 'معطب' },
+        { id: 12, name: 'صقر 5', num: 'S005', cat: 'صقور', stat: 'صالح' },
+        { id: 13, name: 'خافر 1', num: 'K001', cat: 'خوافر', stat: 'صالح' },
+        { id: 14, name: 'خافر 2', num: 'K002', cat: 'خوافر', stat: 'صيانة' },
+        { id: 15, name: 'خافر 3', num: 'K003', cat: 'خوافر', stat: 'صالح' },
+        { id: 16, name: 'طوافة 1', num: 'T001', cat: 'طوافات', stat: 'صالح' },
+        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', cat: 'زوارق مزدوجة', stat: 'صالح' },
+        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', cat: 'زوارق مزدوجة', stat: 'صالح' },
+        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', cat: 'زوارق مزدوجة', stat: 'معطب' },
+        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', cat: 'زوارق مزدوجة', stat: 'صالح' },
+        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', cat: 'زوارق مزدوجة', stat: 'صالح' }
+    ];
+}
+
+function getDemoRecords() {
+    return [
+        {
+            id: 1,
+            vesselId: 4,
+            vesselName: 'البروق 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في المحرك الرئيسي',
+            repair: 'تم تغيير طلمبة الزيت والمضخة',
+            faultType: 'محرك',
+            cost: 4500,
+            notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
+            status: 'مكتملة',
+            date: '2026-01-20',
+            startDate: '2026-01-15',
+            endDate: '2026-01-20',
+            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 2,
+            vesselId: 9,
+            vesselName: 'صقر 2',
+            type: 'دورية',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'صيانة دورية للمحرك',
+            repair: 'تم تغيير الزيوت والفلتر',
+            faultType: 'محرك',
+            cost: 300,
+            notes: 'تم تغيير الزيوت والفلتر',
+            status: 'مكتملة',
+            date: '2026-05-15',
+            startDate: '2026-05-14',
+            endDate: '2026-05-15',
+            parts: [{ name: 'زيت محرك', quantity: 5, price: 100 }, { name: 'فلتر هواء', quantity: 1, price: 300 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 3,
+            vesselId: 14,
+            vesselName: 'خافر 2',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري المنستير',
+            technician: 'فني 3',
+            description: 'إصلاح شامل للهيكل',
+            repair: 'تم تغيير ألواح الهيكل والدهان',
+            faultType: 'هيكل',
+            cost: 5000,
+            notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
+            status: 'مكتملة',
+            date: '2026-01-10',
+            startDate: '2026-01-05',
+            endDate: '2026-01-10',
+            parts: [{ name: 'ألواح فولاذ', quantity: 10, price: 350 }, { name: 'دهان مضاد للصدأ', quantity: 5, price: 200 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 4,
+            vesselId: 6,
+            vesselName: 'البروق 6',
+            type: 'عادية',
+            unit: 'وحدة الصيانة والإسناد البحري جرجيس',
+            technician: 'فني 4',
+            description: 'عطل في النظام الكهربائي',
+            repair: 'تم تغيير البطاريات والكابلات',
+            faultType: 'كهرباء',
+            cost: 1200,
+            notes: 'تم تغيير البطاريات والكابلات',
+            status: 'مكتملة',
+            date: '2026-02-05',
+            startDate: '2026-02-03',
+            endDate: '2026-02-05',
+            parts: [{ name: 'بطارية', quantity: 2, price: 450 }, { name: 'كابلات', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 5,
+            vesselId: 19,
+            vesselName: 'زورق مزدوج 3',
+            type: 'طارئة',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في نظام التوجيه',
+            repair: 'تم تغيير طرمبة التوجيه',
+            faultType: 'توجيه',
+            cost: 1800,
+            notes: 'تم تغيير طرمبة التوجيه بالكامل',
+            status: 'قيد الإنجاز',
+            date: '2026-02-10',
+            startDate: '2026-02-08',
+            endDate: null,
+            parts: [{ name: 'طرمبة توجيه', quantity: 1, price: 1500 }, { name: 'زيت هيدروليك', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 6,
+            vesselId: 11,
+            vesselName: 'صقر 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'عطل في نظام التبريد',
+            repair: 'تم تغيير الراديتر والمراوح',
+            faultType: 'تبريد',
+            cost: 3200,
+            notes: 'تم تغيير نظام التبريد بالكامل',
+            status: 'مكتملة',
+            date: '2026-07-15',
+            startDate: '2026-07-10',
+            endDate: '2026-07-15',
+            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }],
+            createdBy: 'Admin'
+        }
+    ];
+}
+
+// ============================================================
+// 3. تحديث قائمة المراكب (Check Liste)
 // ============================================================
 
 function updateMaintenanceVessels() {
     const select = document.getElementById('mVesselId');
     if (!select) return;
+    
     const currentValue = select.value;
-    select.innerHTML = '<option value="">اختر المركب</option>';
-    if (typeof allVessels !== 'undefined' && allVessels.length > 0) {
-        allVessels.forEach(v => {
-            const option = document.createElement('option');
-            option.value = v.id;
-            option.textContent = `${v.name} (${v.num || 'بدون رقم'}) - ${v.cat || 'بدون فئة'}`;
-            if (v.id == currentValue) option.selected = true;
-            select.appendChild(option);
-        });
-    }
+    const vessels = getVesselsData();
+    
+    select.innerHTML = '<option value="">-- اختر المركب --</option>';
+    
+    vessels.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.id;
+        const num = v.num || 'بدون رقم';
+        const cat = v.cat || 'بدون فئة';
+        option.textContent = `${v.name} (${num}) - ${cat}`;
+        if (v.id == currentValue) option.selected = true;
+        select.appendChild(option);
+    });
+    
+    console.log('✅ تم تحديث قائمة المراكب:', vessels.length);
 }
 
-function toggleMaintenanceForm() {
-    const form = document.getElementById('maintenanceForm');
-    if (!form) return;
-    if (form.style.display === 'none' || form.style.display === '') {
-        form.style.display = 'block';
-        updateMaintenanceVessels();
-        const startDate = document.getElementById('mStartDate');
-        if (startDate) {
-            startDate.value = new Date().toISOString().split('T')[0];
+// ============================================================
+// 4. تحديث فلتر السنوات (2025، 2026، 2027...)
+// ============================================================
+
+function updateYearFilter() {
+    const select = document.getElementById('filterYear');
+    if (!select) return;
+    
+    const records = getMaintenanceRecords();
+    const years = new Set();
+    
+    // جمع السنوات من السجلات
+    records.forEach(r => {
+        if (r.date) {
+            const year = r.date.split('-')[0];
+            if (year && year.length === 4) years.add(year);
         }
-        // إعادة تعيين الحقول
-        document.getElementById('mRecordId').value = '';
-        document.getElementById('mType').value = 'كبرى';
-        document.getElementById('mUnit').value = 'وحدة الصيانة والإسناد البحري تونس';
-        document.getElementById('mTechnician').value = '';
-        document.getElementById('mFaultType').value = 'محرك';
-        document.getElementById('mStatus').value = 'قيد الإنجاز';
-        document.getElementById('mDescription').value = '';
-        document.getElementById('mRepair').value = '';
-        document.getElementById('mCost').value = '';
-        document.getElementById('mNotes').value = '';
-        document.getElementById('partsContainer').innerHTML = '';
-        addPart();
-        showAlert('📝 فتح نموذج إضافة صيانة', 'info');
-    } else {
-        form.style.display = 'none';
-    }
-}
-
-function addPart() {
-    const container = document.getElementById('partsContainer');
-    if (!container) return;
-    const div = document.createElement('div');
-    div.className = 'part-item';
-    div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap; align-items:center;';
-    div.innerHTML = `
-        <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
-        <input type="number" placeholder="الكمية" class="part-qty" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
-        <input type="number" placeholder="السعر" class="part-price" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
-        <button onclick="removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:4px; cursor:pointer;">✕</button>
-    `;
-    container.appendChild(div);
-}
-
-function removePart(btn) {
-    const container = document.getElementById('partsContainer');
-    if (!container) return;
-    if (container.children.length > 1) {
-        btn.parentElement.remove();
-    } else {
-        showAlert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
-    }
-}
-
-function getPartsData() {
-    const parts = [];
-    document.querySelectorAll('#partsContainer .part-item').forEach(item => {
-        const name = item.querySelector('.part-name')?.value;
-        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
-        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
-        if (name) {
-            parts.push({ name, quantity: qty, price });
+        if (r.startDate) {
+            const year = r.startDate.split('-')[0];
+            if (year && year.length === 4) years.add(year);
         }
     });
-    return parts;
+    
+    // إذا لم توجد سنوات، أضف السنوات الحالية والماضية
+    if (years.size === 0) {
+        const currentYear = new Date().getFullYear();
+        for (let i = -2; i <= 2; i++) {
+            years.add((currentYear + i).toString());
+        }
+    }
+    
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">-- جميع السنوات --</option>';
+    
+    // ترتيب السنوات تنازلياً
+    Array.from(years).sort().reverse().forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = `📅 ${year}`;
+        if (year === currentValue) option.selected = true;
+        select.appendChild(option);
+    });
+    
+    console.log('✅ تم تحديث فلتر السنوات:', Array.from(years).sort().reverse());
 }
 
-function saveMaintenance() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
+// ============================================================
+// 5. تحديث الإحصائيات
+// ============================================================
+
+function updateMaintenanceStats() {
+    const container = document.getElementById('maintenanceStats');
+    if (!container) return;
     
-    const vesselId = document.getElementById('mVesselId')?.value;
-    const type = document.getElementById('mType')?.value;
-    const unit = document.getElementById('mUnit')?.value;
-    const technician = document.getElementById('mTechnician')?.value.trim();
-    const description = document.getElementById('mDescription')?.value.trim();
-    const repair = document.getElementById('mRepair')?.value.trim();
-    const faultType = document.getElementById('mFaultType')?.value;
-    const startDate = document.getElementById('mStartDate')?.value;
-    const status = document.getElementById('mStatus')?.value;
-    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-    const notes = document.getElementById('mNotes')?.value.trim();
-    const parts = getPartsData();
+    const records = getMaintenanceRecords();
+    const total = records.length;
+    const inProgress = records.filter(r => r.status === 'قيد الإنجاز').length;
+    const completed = records.filter(r => r.status === 'مكتملة').length;
+    const cancelled = records.filter(r => r.status === 'ملغية').length;
     
-    if (!vesselId) {
-        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
-        return;
-    }
-    if (!description) {
-        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
-        return;
-    }
-    if (!technician) {
-        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
-        return;
-    }
-    
-    // الحصول على اسم المركب
-    const vessel = typeof allVessels !== 'undefined' ? allVessels.find(v => v.id == vesselId) : null;
-    const vesselName = vessel ? vessel.name : 'مركب غير معروف';
-    
-    // إنشاء سجل الصيانة
-    const record = {
-        id: Date.now(),
-        vesselId: parseFloat(vesselId),
-        vesselName: vesselName,
-        type: type || 'عادية',
-        unit: unit || 'غير محدد',
-        technician: technician,
-        description: description,
-        repair: repair || '',
-        faultType: faultType || 'أخرى',
-        cost: cost,
-        notes: notes || '',
-        parts: parts,
-        status: status || 'قيد الإنجاز',
-        date: new Date().toISOString().split('T')[0],
-        startDate: startDate || new Date().toISOString().split('T')[0],
-        endDate: null,
-        createdBy: currentUser?.name || 'Admin'
-    };
-    
-    // حفظ في localStorage كنسخة احتياطية
-    let localRecords = JSON.parse(localStorage.getItem('maintenance_records') || '[]');
-    localRecords.push(record);
-    localStorage.setItem('maintenance_records', JSON.stringify(localRecords));
-    
-    // إضافة إلى allMaintenance
-    if (typeof allMaintenance !== 'undefined') {
-        allMaintenance.push(record);
-    }
-    
-    showAlert('✅ تم إضافة سجل الصيانة بنجاح', 'success');
-    toggleMaintenanceForm();
-    refreshMaintenancePage();
-    loadAllData();
+    container.innerHTML = `
+        <div class="maintenance-stats">
+            <div class="stat-box stat-total"><h4>${total}</h4><p>📊 المجموع</p></div>
+            <div class="stat-box stat-progress"><h4>${inProgress}</h4><p>🔄 قيد الإنجاز</p></div>
+            <div class="stat-box stat-completed"><h4>${completed}</h4><p>✅ مكتملة</p></div>
+            <div class="stat-box stat-cancelled"><h4>${cancelled}</h4><p>❌ ملغية</p></div>
+        </div>
+    `;
 }
+
+// ============================================================
+// 6. عرض المراكب المعطبة
+// ============================================================
 
 function renderGeneralMaintenance() {
     const container = document.getElementById('generalMaintenanceContainer');
     if (!container) return;
     
-    // استخدام allVessels من التطبيق الرئيسي
-    const vessels = typeof allVessels !== 'undefined' ? allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة') : [];
+    const vessels = getVesselsData().filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
     
     if (vessels.length === 0) {
         container.innerHTML = `
@@ -510,7 +630,6 @@ function renderGeneralMaintenance() {
                         <th>الحالة</th>
                         <th>⚠️ العطل</th>
                         <th>📅 بداية العطل</th>
-                        <th>⏱️ مدة التوقف</th>
                         <th>🏭 المسؤول</th>
                         <th>إجراءات</th>
                     </tr>
@@ -519,15 +638,6 @@ function renderGeneralMaintenance() {
     `;
     
     vessels.forEach(v => {
-        let downtime = '-';
-        if (v.fDate) {
-            const start = new Date(v.fDate);
-            const now = new Date();
-            const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-            if (days > 0) downtime = `${days} يوم${days > 1 ? 'اً' : ''}`;
-            else downtime = 'اليوم';
-        }
-        
         const statusColors = {
             'معطب': '🔴 معطبة',
             'صيانة': '🟠 صيانة',
@@ -541,7 +651,6 @@ function renderGeneralMaintenance() {
                 <td><span class="status-badge status-broken">${statusColors[v.stat] || v.stat}</span></td>
                 <td>${v.break || '-'}</td>
                 <td>${v.fDate || '-'}</td>
-                <td>${downtime}</td>
                 <td>${v.repairer || v.supp || '-'}</td>
                 <td>
                     <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
@@ -555,78 +664,15 @@ function renderGeneralMaintenance() {
     container.innerHTML = html;
 }
 
-function fixVessel(vesselId) {
-    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    // تحديث حالة المركب في allVessels
-    if (typeof allVessels !== 'undefined') {
-        const vessel = allVessels.find(v => v.id === vesselId);
-        if (vessel) {
-            vessel.stat = 'صالح';
-            vessel.break = '';
-        }
-    }
-    
-    // تحديث في localStorage
-    let vessels = JSON.parse(localStorage.getItem('vessels_data') || '[]');
-    const idx = vessels.findIndex(v => v.id === vesselId);
-    if (idx !== -1) {
-        vessels[idx].stat = 'صالح';
-        vessels[idx].break = '';
-        localStorage.setItem('vessels_data', JSON.stringify(vessels));
-    }
-    
-    showAlert('✅ تم إصلاح المركب وعودته للخدمة', 'success');
-    loadAllData();
-    refreshMaintenancePage();
-}
-
-function openMaintenanceFile(vesselId) {
-    const vessel = typeof allVessels !== 'undefined' ? allVessels.find(v => v.id === vesselId) : null;
-    if (!vessel) {
-        showAlert('⚠️ المركب غير موجود', 'warning');
-        return;
-    }
-    
-    // عرض سجلات الصيانة لهذا المركب
-    const records = typeof allMaintenance !== 'undefined' ? allMaintenance.filter(r => r.vesselId === vesselId) : [];
-    const totalMaintenance = records.length;
-    const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const lastMaintenance = records.length > 0 ? records[records.length - 1] : null;
-    
-    let message = `📂 ملف المركب: ${vessel.name}\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `الفئة: ${vessel.cat || '-'}\n`;
-    message += `الحالة: ${vessel.stat || '-'}\n`;
-    message += `عدد الصيانات: ${totalMaintenance}\n`;
-    message += `إجمالي التكلفة: ${totalCost} د.ت\n`;
-    if (lastMaintenance) {
-        message += `آخر صيانة: ${lastMaintenance.date || '-'}\n`;
-    }
-    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    if (records.length > 0) {
-        message += `سجلات الصيانة:\n`;
-        records.slice().reverse().forEach(r => {
-            message += `- ${r.date || '-'} | ${r.type || '-'} | ${r.description || '-'} | ${r.cost || 0} د.ت\n`;
-        });
-    } else {
-        message += `🚫 لا توجد سجلات صيانة\n`;
-    }
-    
-    alert(message);
-    showAlert(`📂 فتح ملف المركب: ${vessel.name}`, 'info');
-}
+// ============================================================
+// 7. عرض سجل الصيانة التاريخي
+// ============================================================
 
 function renderHistoryMaintenance() {
     const container = document.getElementById('historyMaintenanceContainer');
     if (!container) return;
     
-    let records = typeof allMaintenance !== 'undefined' ? [...allMaintenance] : [];
+    let records = getMaintenanceRecords();
     
     // تطبيق الفلترة
     const vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
@@ -638,7 +684,7 @@ function renderHistoryMaintenance() {
     
     if (vesselFilter) {
         records = records.filter(r => {
-            const name = r.vesselName || (typeof allVessels !== 'undefined' ? allVessels.find(v => v.id === r.vesselId)?.name : '') || '';
+            const name = r.vesselName || '';
             return name.toLowerCase().includes(vesselFilter);
         });
     }
@@ -688,7 +734,6 @@ function renderHistoryMaintenance() {
                         <th>🚢 المركب</th>
                         <th>🔧 نوع الصيانة</th>
                         <th>⚠️ العطل</th>
-                        <th>🔩 الإصلاح</th>
                         <th>💰 التكلفة</th>
                         <th>📊 الحالة</th>
                         <th>إجراءات</th>
@@ -698,7 +743,6 @@ function renderHistoryMaintenance() {
     `;
     
     records.slice().reverse().forEach(r => {
-        const vesselName = r.vesselName || (typeof allVessels !== 'undefined' ? allVessels.find(v => v.id === r.vesselId)?.name : '') || '-';
         const statusColors = {
             'قيد الإنجاز': '#fbbf24',
             'مكتملة': '#4ade80',
@@ -708,10 +752,9 @@ function renderHistoryMaintenance() {
         html += `
             <tr>
                 <td>${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
-                <td><strong>${vesselName}</strong></td>
+                <td><strong>${r.vesselName || '-'}</strong></td>
                 <td>${r.type || '-'}</td>
                 <td>${r.description || '-'}</td>
-                <td>${r.repair || '-'}</td>
                 <td style="color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
                 <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || 'غير محدد'}</span></td>
                 <td>
@@ -726,98 +769,15 @@ function renderHistoryMaintenance() {
     container.innerHTML = html;
 }
 
-function editMaintenance(id) {
-    const records = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
-    const record = records.find(r => r.id === id);
-    if (!record) {
-        showAlert('⚠️ السجل غير موجود', 'warning');
-        return;
-    }
-    
-    // فتح النموذج وملء البيانات
-    toggleMaintenanceForm();
-    document.getElementById('mVesselId').value = record.vesselId;
-    document.getElementById('mType').value = record.type || 'كبرى';
-    document.getElementById('mUnit').value = record.unit || 'وحدة الصيانة والإسناد البحري تونس';
-    document.getElementById('mTechnician').value = record.technician || '';
-    document.getElementById('mFaultType').value = record.faultType || 'محرك';
-    document.getElementById('mStartDate').value = record.startDate || '';
-    document.getElementById('mStatus').value = record.status || 'قيد الإنجاز';
-    document.getElementById('mDescription').value = record.description || '';
-    document.getElementById('mRepair').value = record.repair || '';
-    document.getElementById('mCost').value = record.cost || '';
-    document.getElementById('mNotes').value = record.notes || '';
-    document.getElementById('mRecordId').value = record.id;
-    
-    // إضافة القطع
-    const container = document.getElementById('partsContainer');
-    container.innerHTML = '';
-    if (record.parts && record.parts.length) {
-        record.parts.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'part-item';
-            div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap; align-items:center;';
-            div.innerHTML = `
-                <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.name || ''}">
-                <input type="number" placeholder="الكمية" class="part-qty" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.quantity || p.qty || 0}">
-                <input type="number" placeholder="السعر" class="part-price" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.price || 0}">
-                <button onclick="removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:4px; cursor:pointer;">✕</button>
-            `;
-            container.appendChild(div);
-        });
-    } else {
-        addPart();
-    }
-    
-    // تغيير عنوان النموذج
-    document.querySelector('#maintenanceForm h3').textContent = '✏️ تعديل سجل صيانة';
-    showAlert('✏️ جارٍ تعديل السجل', 'info');
-}
-
-function deleteMaintenance(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
-    
-    if (typeof allMaintenance !== 'undefined') {
-        const index = allMaintenance.findIndex(r => r.id === id);
-        if (index !== -1) {
-            allMaintenance.splice(index, 1);
-        }
-    }
-    
-    // حذف من localStorage
-    let records = JSON.parse(localStorage.getItem('maintenance_records') || '[]');
-    records = records.filter(r => r.id !== id);
-    localStorage.setItem('maintenance_records', JSON.stringify(records));
-    
-    showAlert('✅ تم حذف السجل', 'success');
-    refreshMaintenancePage();
-}
-
-function updateMaintenanceStats() {
-    const container = document.getElementById('maintenanceStats');
-    if (!container) return;
-    
-    const records = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
-    const total = records.length;
-    const inProgress = records.filter(r => r.status === 'قيد الإنجاز').length;
-    const completed = records.filter(r => r.status === 'مكتملة').length;
-    const cancelled = records.filter(r => r.status === 'ملغية').length;
-    
-    container.innerHTML = `
-        <div class="maintenance-stats">
-            <div class="stat-box stat-total"><h4>${total}</h4><p>📊 المجموع</p></div>
-            <div class="stat-box stat-progress"><h4>${inProgress}</h4><p>🔄 قيد الإنجاز</p></div>
-            <div class="stat-box stat-completed"><h4>${completed}</h4><p>✅ مكتملة</p></div>
-            <div class="stat-box stat-cancelled"><h4>${cancelled}</h4><p>❌ ملغية</p></div>
-        </div>
-    `;
-}
+// ============================================================
+// 8. وحدات الصيانة
+// ============================================================
 
 function renderMaintenanceUnits() {
     const container = document.getElementById('maintenanceUnitsContainer');
     if (!container) return;
     
-    const records = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
+    const records = getMaintenanceRecords();
     const units = [
         'وحدة الصيانة والإسناد البحري تونس',
         'وحدة الصيانة والإسناد البحري صفاقس',
@@ -858,12 +818,10 @@ function renderMaintenanceUnits() {
                                     <th>👨‍🔧 الفني</th>
                                     <th>💰 التكلفة</th>
                                     <th>📊 الحالة</th>
-                                    <th>📅 التاريخ</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${unitRecords.slice().reverse().map(r => {
-                                    const vesselName = r.vesselName || (typeof allVessels !== 'undefined' ? allVessels.find(v => v.id === r.vesselId)?.name : '') || '-';
                                     const statusColors = {
                                         'قيد الإنجاز': '#fbbf24',
                                         'مكتملة': '#4ade80',
@@ -871,11 +829,10 @@ function renderMaintenanceUnits() {
                                     };
                                     return `
                                         <tr>
-                                            <td><strong>${vesselName}</strong></td>
+                                            <td><strong>${r.vesselName || '-'}</strong></td>
                                             <td>${r.technician || '-'}</td>
                                             <td style="color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
                                             <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || 'غير محدد'}</span></td>
-                                            <td>${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
                                         </tr>
                                     `;
                                 }).join('')}
@@ -889,23 +846,268 @@ function renderMaintenanceUnits() {
     container.innerHTML = html;
 }
 
-function updateYearFilter() {
-    const select = document.getElementById('filterYear');
-    if (!select) return;
+// ============================================================
+// 9. تحديث الصفحة بالكامل
+// ============================================================
+
+function refreshMaintenancePage() {
+    console.log('🔄 Refreshing maintenance page...');
     
-    const records = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
-    const years = new Set();
-    records.forEach(r => {
-        if (r.date) {
-            const year = r.date.split('-')[0];
-            if (year) years.add(year);
+    setTimeout(updateMaintenanceVessels, 100);
+    setTimeout(updateYearFilter, 200);
+    setTimeout(updateMaintenanceStats, 300);
+    setTimeout(renderGeneralMaintenance, 400);
+    setTimeout(renderHistoryMaintenance, 500);
+    setTimeout(renderMaintenanceUnits, 600);
+    
+    console.log('✅ تم تحديث صفحة الصيانة');
+}
+
+// ============================================================
+// 10. تحميل الصفحة
+// ============================================================
+
+if (document.getElementById('page-maintenance')) {
+    console.log('📄 Maintenance page loaded');
+    setTimeout(refreshMaintenancePage, 300);
+    setTimeout(refreshMaintenancePage, 1000);
+}
+
+// ============================================================
+// 11. دوال إضافية (نموذج، حفظ، حذف، تعديل)
+// ============================================================
+
+function toggleMaintenanceForm() {
+    const form = document.getElementById('maintenanceForm');
+    if (!form) return;
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        updateMaintenanceVessels();
+        document.getElementById('mStartDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('mRecordId').value = '';
+        document.getElementById('partsContainer').innerHTML = '';
+        addPart();
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+function addPart() {
+    const container = document.getElementById('partsContainer');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'part-item';
+    div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap; align-items:center;';
+    div.innerHTML = `
+        <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
+        <input type="number" placeholder="الكمية" class="part-qty" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
+        <input type="number" placeholder="السعر" class="part-price" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;">
+        <button onclick="removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:4px; cursor:pointer;">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function removePart(btn) {
+    const container = document.getElementById('partsContainer');
+    if (!container) return;
+    if (container.children.length > 1) {
+        btn.parentElement.remove();
+    } else {
+        showAlert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
+    }
+}
+
+function getPartsData() {
+    const parts = [];
+    document.querySelectorAll('#partsContainer .part-item').forEach(item => {
+        const name = item.querySelector('.part-name')?.value;
+        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
+        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
+        if (name) {
+            parts.push({ name, quantity: qty, price });
         }
     });
+    return parts;
+}
+
+function saveMaintenance() {
+    const vesselId = document.getElementById('mVesselId')?.value;
+    const type = document.getElementById('mType')?.value;
+    const unit = document.getElementById('mUnit')?.value;
+    const technician = document.getElementById('mTechnician')?.value.trim();
+    const description = document.getElementById('mDescription')?.value.trim();
+    const repair = document.getElementById('mRepair')?.value.trim();
+    const faultType = document.getElementById('mFaultType')?.value;
+    const startDate = document.getElementById('mStartDate')?.value;
+    const status = document.getElementById('mStatus')?.value;
+    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
+    const notes = document.getElementById('mNotes')?.value.trim();
+    const parts = getPartsData();
     
-    select.innerHTML = '<option value="">الكل</option>';
-    Array.from(years).sort().reverse().forEach(year => {
-        select.innerHTML += `<option value="${year}">${year}</option>`;
-    });
+    if (!vesselId) {
+        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
+        return;
+    }
+    if (!description) {
+        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
+        return;
+    }
+    if (!technician) {
+        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
+        return;
+    }
+    
+    const vessels = getVesselsData();
+    const vessel = vessels.find(v => v.id == vesselId);
+    const vesselName = vessel ? vessel.name : 'مركب غير معروف';
+    
+    const record = {
+        id: Date.now(),
+        vesselId: parseFloat(vesselId),
+        vesselName: vesselName,
+        type: type || 'عادية',
+        unit: unit || 'غير محدد',
+        technician: technician,
+        description: description,
+        repair: repair || '',
+        faultType: faultType || 'أخرى',
+        cost: cost,
+        notes: notes || '',
+        parts: parts,
+        status: status || 'قيد الإنجاز',
+        date: new Date().toISOString().split('T')[0],
+        startDate: startDate || new Date().toISOString().split('T')[0],
+        endDate: null,
+        createdBy: currentUser?.name || 'Admin'
+    };
+    
+    // حفظ في localStorage
+    let records = JSON.parse(localStorage.getItem('maintenance_records') || '[]');
+    records.push(record);
+    localStorage.setItem('maintenance_records', JSON.stringify(records));
+    
+    // إذا كان allMaintenance موجوداً
+    if (typeof allMaintenance !== 'undefined') {
+        allMaintenance.push(record);
+    }
+    
+    showAlert('✅ تم إضافة سجل الصيانة بنجاح', 'success');
+    toggleMaintenanceForm();
+    refreshMaintenancePage();
+}
+
+function deleteMaintenance(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
+    
+    let records = JSON.parse(localStorage.getItem('maintenance_records') || '[]');
+    records = records.filter(r => r.id !== id);
+    localStorage.setItem('maintenance_records', JSON.stringify(records));
+    
+    if (typeof allMaintenance !== 'undefined') {
+        const index = allMaintenance.findIndex(r => r.id === id);
+        if (index !== -1) allMaintenance.splice(index, 1);
+    }
+    
+    showAlert('✅ تم حذف السجل', 'success');
+    refreshMaintenancePage();
+}
+
+function editMaintenance(id) {
+    const records = getMaintenanceRecords();
+    const record = records.find(r => r.id === id);
+    if (!record) {
+        showAlert('⚠️ السجل غير موجود', 'warning');
+        return;
+    }
+    
+    toggleMaintenanceForm();
+    document.getElementById('mVesselId').value = record.vesselId;
+    document.getElementById('mType').value = record.type || 'كبرى';
+    document.getElementById('mUnit').value = record.unit || 'وحدة الصيانة والإسناد البحري تونس';
+    document.getElementById('mTechnician').value = record.technician || '';
+    document.getElementById('mFaultType').value = record.faultType || 'محرك';
+    document.getElementById('mStartDate').value = record.startDate || '';
+    document.getElementById('mStatus').value = record.status || 'قيد الإنجاز';
+    document.getElementById('mDescription').value = record.description || '';
+    document.getElementById('mRepair').value = record.repair || '';
+    document.getElementById('mCost').value = record.cost || '';
+    document.getElementById('mNotes').value = record.notes || '';
+    document.getElementById('mRecordId').value = record.id;
+    
+    const container = document.getElementById('partsContainer');
+    container.innerHTML = '';
+    if (record.parts && record.parts.length) {
+        record.parts.forEach(p => {
+            const div = document.createElement('div');
+            div.className = 'part-item';
+            div.style.cssText = 'display:flex; gap:10px; margin-bottom:5px; flex-wrap:wrap; align-items:center;';
+            div.innerHTML = `
+                <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.name || ''}">
+                <input type="number" placeholder="الكمية" class="part-qty" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.quantity || p.qty || 0}">
+                <input type="number" placeholder="السعر" class="part-price" style="width:60px; padding:6px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:4px; color:white;" value="${p.price || 0}">
+                <button onclick="removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:4px; cursor:pointer;">✕</button>
+            `;
+            container.appendChild(div);
+        });
+    } else {
+        addPart();
+    }
+    
+    document.querySelector('#maintenanceForm h3').textContent = '✏️ تعديل سجل صيانة';
+}
+
+function fixVessel(vesselId) {
+    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
+    
+    let vessels = JSON.parse(localStorage.getItem('vessels_data') || '[]');
+    const idx = vessels.findIndex(v => v.id === vesselId);
+    if (idx !== -1) {
+        vessels[idx].stat = 'صالح';
+        vessels[idx].break = '';
+        localStorage.setItem('vessels_data', JSON.stringify(vessels));
+    }
+    
+    if (typeof allVessels !== 'undefined') {
+        const vessel = allVessels.find(v => v.id === vesselId);
+        if (vessel) {
+            vessel.stat = 'صالح';
+            vessel.break = '';
+        }
+    }
+    
+    showAlert('✅ تم إصلاح المركب وعودته للخدمة', 'success');
+    refreshMaintenancePage();
+}
+
+function openMaintenanceFile(vesselId) {
+    const vessels = getVesselsData();
+    const vessel = vessels.find(v => v.id === vesselId);
+    if (!vessel) {
+        showAlert('⚠️ المركب غير موجود', 'warning');
+        return;
+    }
+    
+    const records = getMaintenanceRecords().filter(r => r.vesselId === vesselId);
+    const totalMaintenance = records.length;
+    const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
+    
+    let message = `📂 ملف المركب: ${vessel.name}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `الفئة: ${vessel.cat || '-'}\n`;
+    message += `الحالة: ${vessel.stat || '-'}\n`;
+    message += `عدد الصيانات: ${totalMaintenance}\n`;
+    message += `إجمالي التكلفة: ${totalCost} د.ت\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (records.length > 0) {
+        message += `سجلات الصيانة:\n`;
+        records.slice().reverse().forEach(r => {
+            message += `- ${r.date || '-'} | ${r.type || '-'} | ${r.description || '-'} | ${r.cost || 0} د.ت\n`;
+        });
+    } else {
+        message += `🚫 لا توجد سجلات صيانة\n`;
+    }
+    
+    alert(message);
 }
 
 function applyHistoryFilters() {
@@ -925,30 +1127,8 @@ function resetHistoryFilters() {
 }
 
 // ============================================================
-// تحديث الدوال لتكون متوافقة مع app.js
+// 12. استدعاء التحميل عند ظهور الصفحة
 // ============================================================
 
-// إذا كانت دالة loadAllData غير معرفة، نستخدم localStorage
-if (typeof loadAllData === 'undefined') {
-    function loadAllData() {
-        // تحميل البيانات من localStorage
-        const vessels = JSON.parse(localStorage.getItem('vessels_data') || '[]');
-        const records = JSON.parse(localStorage.getItem('maintenance_records') || '[]');
-        
-        if (typeof allVessels !== 'undefined') {
-            if (vessels.length > 0) {
-                allVessels = vessels;
-            }
-        }
-        if (typeof allMaintenance !== 'undefined') {
-            if (records.length > 0) {
-                allMaintenance = records;
-            }
-        }
-        refreshMaintenancePage();
-    }
-}
-
-// تحميل البيانات عند بدء الصفحة
-setTimeout(loadAllData, 200);
+console.log('✅ Maintenance page script loaded');
 </script>
