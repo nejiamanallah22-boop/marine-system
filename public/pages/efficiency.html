@@ -1,51 +1,74 @@
 <div id="page-efficiency">
+    <!-- Header مع تأثيرات -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:10px;">
-        <h2 style="margin:0; color:#0d6efd;">📊 الجاهزية</h2>
-        <span id="effCount" style="background:#e9ecef; padding:8px 20px; border-radius:20px; font-weight:bold;">
-            📊 0 مركب
-        </span>
+        <div>
+            <h2 style="margin:0; color:#0d6efd; font-size:28px;">📊 الجاهزية</h2>
+            <p style="margin:0; color:#6c757d; font-size:14px;">تحليل شامل للأسطول البحري</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="effCount" style="background:linear-gradient(135deg, #0d6efd, #0dcaf0); color:white; padding:8px 20px; border-radius:20px; font-weight:bold;">
+                📊 0 مركب
+            </span>
+            <button onclick="refreshAllPages()" style="padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:50%; cursor:pointer; font-size:16px;">🔄</button>
+        </div>
     </div>
     
-    <!-- الإحصائيات -->
+    <!-- الإحصائيات المتحركة -->
     <div id="efficiencyStats"></div>
+    
+    <!-- ===== 3D Interactive Chart باستخدام Three.js ===== -->
+    <div style="background:linear-gradient(135deg, #0f0c29, #302b63, #24243e); border-radius:15px; padding:20px; margin:20px 0; box-shadow:0 10px 40px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="color:white; margin:0; font-size:20px;">🌐 3D Interactive - تحليل الأسطول ثلاثي الأبعاد</h3>
+            <div style="display:flex; gap:15px;">
+                <div style="color:#4ade80; font-size:13px;">🟢 صالح: <span id="threeReady" style="font-weight:bold;">0</span></div>
+                <div style="color:#f87171; font-size:13px;">🔴 معطب: <span id="threeBroken" style="font-weight:bold;">0</span></div>
+                <div style="color:#fbbf24; font-size:13px;">🟡 صيانة: <span id="threeMaintenance" style="font-weight:bold;">0</span></div>
+                <div style="color:#60a5fa; font-size:13px;">📊 المجموع: <span id="threeTotal" style="font-weight:bold;">0</span></div>
+            </div>
+        </div>
+        <div id="threeContainer" style="height:500px; border-radius:10px; position:relative; overflow:hidden; cursor:grab;">
+            <div id="threeControls" style="position:absolute; bottom:15px; left:50%; transform:translateX(-50%); z-index:10; display:flex; gap:10px;">
+                <button onclick="toggleAutoRotate()" style="padding:8px 20px; background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:20px; cursor:pointer; font-size:12px;">
+                    🔄 تدوير تلقائي
+                </button>
+                <button onclick="resetCamera()" style="padding:8px 20px; background:rgba(255,255,255,0.15); backdrop-filter:blur(10px); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:20px; cursor:pointer; font-size:12px;">
+                    🏠 إعادة تعيين
+                </button>
+            </div>
+            <div style="position:absolute; bottom:15px; right:20px; z-index:10; color:rgba(255,255,255,0.3); font-size:11px;">
+                🖱️ اسحب للدوران | 🔄 تمرير للتكبير
+            </div>
+        </div>
+    </div>
     
     <!-- حاوية الجداول -->
     <div id="efficiencyTablesContainer"></div>
     
-    <!-- ===== الرسوم البيانية 3D ===== -->
-    <div style="background:white; border-radius:10px; padding:20px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-        <h3 style="color:#0d6efd; margin-bottom:15px;">📊 3D - تحليل الجاهزية ثلاثي الأبعاد</h3>
-        
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(350px, 1fr)); gap:20px;">
-            <!-- رسم بياني 3D - الفئات -->
-            <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
-                <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 الجاهزية حسب الفئة</h4>
-                <canvas id="chart3DCategory" style="height:280px; width:100%;"></canvas>
-            </div>
-            
-            <!-- رسم بياني 3D - الأقاليم -->
-            <div style="background:#f8f9fa; padding:15px; border-radius:8px;">
-                <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 الجاهزية حسب الإقليم</h4>
-                <canvas id="chart3DRegion" style="height:280px; width:100%;"></canvas>
-            </div>
+    <!-- ===== الرسوم البيانية الإضافية ===== -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(400px, 1fr)); gap:20px; margin:20px 0;">
+        <!-- رسم بياني Doughnut -->
+        <div style="background:white; border-radius:15px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid rgba(0,0,0,0.05);">
+            <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">🎯 توزيع الحالات</h4>
+            <canvas id="chartDoughnut" style="height:280px; width:100%;"></canvas>
         </div>
         
-        <!-- رسم بياني 3D - التوزيع العام -->
-        <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin-top:15px;">
-            <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📊 التوزيع العام للحالات</h4>
-            <canvas id="chart3DGeneral" style="height:280px; width:100%;"></canvas>
+        <!-- رسم بياني Line للتطور -->
+        <div style="background:white; border-radius:15px; padding:20px; box-shadow:0 4px 20px rgba(0,0,0,0.08); border:1px solid rgba(0,0,0,0.05);">
+            <h4 style="text-align:center; color:#0d6efd; margin:0 0 10px 0;">📈 تطور الجاهزية</h4>
+            <canvas id="chartLine" style="height:280px; width:100%;"></canvas>
         </div>
     </div>
     
     <!-- أزرار إضافية -->
     <div style="display:flex; gap:10px; margin:20px 0; flex-wrap:wrap;">
-        <button onclick="exportEfficiencyData()" style="padding:10px 25px; background:#0d6efd; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
+        <button onclick="exportEfficiencyData()" style="padding:10px 25px; background:linear-gradient(135deg, #0d6efd, #0dcaf0); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(13,110,253,0.3);">
             📥 تصدير البيانات (CSV)
         </button>
-        <button onclick="refreshAllPages()" style="padding:10px 25px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
-            🔄 تحديث
+        <button onclick="export3DChart()" style="padding:10px 25px; background:linear-gradient(135deg, #6c757d, #495057); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(108,117,125,0.3);">
+            🖼️ تصدير الصورة
         </button>
-        <button onclick="window.print()" style="padding:10px 25px; background:#198754; color:white; border:none; border-radius:5px; cursor:pointer; font-size:14px;">
+        <button onclick="window.print()" style="padding:10px 25px; background:linear-gradient(135deg, #198754, #20c997); color:white; border:none; border-radius:8px; cursor:pointer; font-size:14px; box-shadow:0 4px 15px rgba(25,135,84,0.3);">
             🖨️ طباعة
         </button>
     </div>
@@ -58,39 +81,39 @@
         font-family: 'Cairo', sans-serif;
         font-size: 14px;
     }
-    
     #efficiencyTablesContainer table th {
-        background: #f8f9fa;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         padding: 12px;
         border-bottom: 2px solid #dee2e6;
         font-weight: 700;
         text-align: center;
     }
-    
     #efficiencyTablesContainer table td {
         padding: 10px;
         border-bottom: 1px solid #dee2e6;
         text-align: center;
     }
-    
     #efficiencyTablesContainer table tr:hover {
         background: #f8f9fa;
     }
-    
     .scrollable-table {
         overflow-x: auto;
     }
-    
+    .stat-box-animated {
+        transition: all 0.5s ease;
+        cursor: default;
+    }
+    .stat-box-animated:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
     @media print {
-        .no-print {
-            display: none !important;
-        }
-        #efficiencyTablesContainer table {
-            font-size: 11px;
-        }
-        #efficiencyTablesContainer table th,
-        #efficiencyTablesContainer table td {
-            padding: 4px 6px;
-        }
+        .no-print { display: none !important; }
+        #threeContainer { height: 300px !important; }
     }
 </style>
+
+<!-- مكتبات Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
