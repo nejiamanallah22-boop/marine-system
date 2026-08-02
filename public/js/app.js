@@ -92,12 +92,27 @@ function initPage(pageName) {
         case 'maintenance': loadMaintenance(); break;
         case 'efficiency': loadVessels(); break;
         case 'support': loadTickets(); break;
-        case 'tracking': setTimeout(initMap, 100); break;
+        case 'tracking': initTrackingPage(); break;
         case 'map': setTimeout(initMap, 100); break;
         case 'users': loadUsers(); break;
         case 'notes': loadNotes(); break;
         case 'sessions': loadSessions(); break;
         default: console.log('⚠️ Unknown page:', pageName);
+    }
+}
+
+function initTrackingPage() {
+    // التحقق من وجود الصفحة
+    if (document.getElementById('page-tracking')) {
+        if (typeof initTrackingMap === 'function') {
+            setTimeout(initTrackingMap, 300);
+        }
+        if (typeof initTrackingSocket === 'function') {
+            setTimeout(initTrackingSocket, 500);
+        }
+        if (typeof startContinuousTracking === 'function') {
+            setTimeout(startContinuousTracking, 1000);
+        }
     }
 }
 
@@ -515,7 +530,6 @@ function loadSessions() {
     const token = getToken();
     if (!token) return;
     
-    // هذه الدالة تستدعي من صفحة sessions.html
     if (document.getElementById('page-sessions')) {
         if (typeof refreshSessions === 'function') {
             refreshSessions();
