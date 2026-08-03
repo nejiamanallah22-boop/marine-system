@@ -1,4 +1,4 @@
-// server.js - خادم التطبيق بالكامل
+// server.js - خادم التطبيق بالكامل (نسخة مصححة مع صلاحيات المستخدمين)
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -202,7 +202,7 @@ function createTicket(data) {
     const newTicket = {
         id: tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1,
         ...data,
-        status: data.status || 'قيد المعالجة',
+        status: data.status || 'مفتوحة',
         createdAt: new Date().toISOString()
     };
     tickets.push(newTicket);
@@ -217,6 +217,14 @@ function updateTicket(id, updates) {
     tickets[index] = { ...tickets[index], ...updates };
     writeData(TICKETS_FILE, tickets);
     return tickets[index];
+}
+
+function deleteTicket(id) {
+    const tickets = getTickets();
+    const filtered = tickets.filter(t => t.id !== id);
+    if (filtered.length === tickets.length) return false;
+    writeData(TICKETS_FILE, filtered);
+    return true;
 }
 
 // ============================================================
@@ -279,13 +287,13 @@ function verifyToken(token) {
 function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: 'Unauthorized' });
+        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
     }
     
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
     if (!decoded) {
-        return res.status(401).json({ success: false, error: 'Invalid token' });
+        return res.status(401).json({ success: false, error: '❌ توكن غير صالح' });
     }
     
     req.user = decoded;
@@ -355,20 +363,20 @@ app.post('/api/auth/login', (req, res) => {
     const { email, password } = req.body;
     
     if (!email || !password) {
-        return res.status(400).json({ success: false, error: 'Email and password required' });
+        return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني وكلمة المرور مطلوبة' });
     }
     
     const user = getUserByEmail(email);
     if (!user) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        return res.status(401).json({ success: false, error: '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
     
     if (!bcrypt.compareSync(password, user.password)) {
-        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        return res.status(401).json({ success: false, error: '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
     
     if (!user.isActive) {
-        return res.status(401).json({ success: false, error: 'Account is disabled' });
+        return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
     }
     
     const token = generateToken(user);
@@ -386,35 +394,44 @@ app.post('/api/auth/change-password', authenticate, (req, res) => {
     const user = getUserById(req.user.id);
     
     if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
     }
     
     if (!bcrypt.compareSync(currentPassword, user.password)) {
-        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        return res.status(401).json({ success: false, error: '❌ كلمة المرور الحالية غير صحيحة' });
     }
     
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(newPassword, salt);
     updateUser(user.id, { password: hashedPassword });
     
-    res.json({ success: true, message: 'Password changed successfully' });
+    res.json({ success: true, message: '✅ تم تغيير كلمة المرور بنجاح' });
 });
 
-// ---------- المستخدمين ----------
+// ---------- المستخدمين (مع صلاحيات) ----------
 app.get('/api/users', authenticate, (req, res) => {
     const users = getUsers().map(({ password, ...user }) => user);
     res.json(users);
 });
 
 app.post('/api/users', authenticate, (req, res) => {
+    // ✅ التحقق من الصلاحية: فقط المسؤول يمكنه إضافة مستخدمين
+    const currentUser = getUserById(req.user.id);
+    if (!currentUser || currentUser.role !== 'مسؤول') {
+        return res.status(403).json({ 
+            success: false, 
+            error: '❌ فقط المسؤول يمكنه إضافة مستخدمين' 
+        });
+    }
+
     const { name, email, password, role } = req.body;
     
     if (!name || !email || !password) {
-        return res.status(400).json({ success: false, error: 'Name, email and password required' });
+        return res.status(400).json({ success: false, error: '❌ الاسم والبريد وكلمة المرور مطلوبة' });
     }
     
     if (getUserByEmail(email)) {
-        return res.status(400).json({ success: false, error: 'Email already exists' });
+        return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم بالفعل' });
     }
     
     const salt = bcrypt.genSaltSync(10);
@@ -432,6 +449,15 @@ app.post('/api/users', authenticate, (req, res) => {
 });
 
 app.put('/api/users/:id', authenticate, (req, res) => {
+    // ✅ التحقق من الصلاحية: مسؤول أو مشرف يمكنه التعديل
+    const currentUser = getUserById(req.user.id);
+    if (!currentUser || (currentUser.role !== 'مسؤول' && currentUser.role !== 'مشرف')) {
+        return res.status(403).json({ 
+            success: false, 
+            error: '❌ ليس لديك صلاحية لتعديل المستخدمين' 
+        });
+    }
+
     const { id } = req.params;
     const updates = req.body;
     
@@ -442,7 +468,7 @@ app.put('/api/users/:id', authenticate, (req, res) => {
     
     const user = updateUser(id, updates);
     if (!user) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
     }
     
     const { password: _, ...userWithoutPassword } = user;
@@ -450,15 +476,24 @@ app.put('/api/users/:id', authenticate, (req, res) => {
 });
 
 app.delete('/api/users/:id', authenticate, (req, res) => {
+    // ✅ فقط المسؤول يمكنه الحذف
+    const currentUser = getUserById(req.user.id);
+    if (!currentUser || currentUser.role !== 'مسؤول') {
+        return res.status(403).json({ 
+            success: false, 
+            error: '❌ فقط المسؤول يمكنه حذف المستخدمين' 
+        });
+    }
+
     const { id } = req.params;
     
     if (id === req.user.id) {
-        return res.status(400).json({ success: false, error: 'Cannot delete yourself' });
+        return res.status(400).json({ success: false, error: '❌ لا يمكنك حذف حسابك بنفسك' });
     }
     
     const deleted = deleteUser(id);
     if (!deleted) {
-        return res.status(404).json({ success: false, error: 'User not found' });
+        return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
     }
     
     res.json({ success: true });
@@ -466,14 +501,13 @@ app.delete('/api/users/:id', authenticate, (req, res) => {
 
 // ---------- المراكب ----------
 app.get('/api/vessels', (req, res) => {
-    // لا تحتاج مصادقة للقراءة (يمكن تغييرها)
     res.json(getVessels());
 });
 
 app.get('/api/vessels/:id', (req, res) => {
     const vessel = getVesselById(parseInt(req.params.id));
     if (!vessel) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
+        return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
     }
     res.json(vessel);
 });
@@ -486,7 +520,7 @@ app.post('/api/vessels', authenticate, (req, res) => {
 app.put('/api/vessels/:id', authenticate, (req, res) => {
     const vessel = updateVessel(parseInt(req.params.id), req.body);
     if (!vessel) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
+        return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
     }
     res.json({ success: true, vessel });
 });
@@ -494,7 +528,7 @@ app.put('/api/vessels/:id', authenticate, (req, res) => {
 app.delete('/api/vessels/:id', authenticate, (req, res) => {
     const deleted = deleteVessel(parseInt(req.params.id));
     if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Vessel not found' });
+        return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
     }
     res.json({ success: true });
 });
@@ -507,7 +541,7 @@ app.get('/api/maintenance', (req, res) => {
 app.get('/api/maintenance/:id', (req, res) => {
     const record = getMaintenanceById(parseInt(req.params.id));
     if (!record) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
+        return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
     }
     res.json(record);
 });
@@ -520,7 +554,7 @@ app.post('/api/maintenance', authenticate, (req, res) => {
 app.put('/api/maintenance/:id', authenticate, (req, res) => {
     const record = updateMaintenance(parseInt(req.params.id), req.body);
     if (!record) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
+        return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
     }
     res.json({ success: true, record });
 });
@@ -528,7 +562,7 @@ app.put('/api/maintenance/:id', authenticate, (req, res) => {
 app.delete('/api/maintenance/:id', authenticate, (req, res) => {
     const deleted = deleteMaintenance(parseInt(req.params.id));
     if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Record not found' });
+        return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
     }
     res.json({ success: true });
 });
@@ -546,9 +580,17 @@ app.post('/api/tickets', authenticate, (req, res) => {
 app.put('/api/tickets/:id', authenticate, (req, res) => {
     const ticket = updateTicket(parseInt(req.params.id), req.body);
     if (!ticket) {
-        return res.status(404).json({ success: false, error: 'Ticket not found' });
+        return res.status(404).json({ success: false, error: '❌ التذكرة غير موجودة' });
     }
     res.json({ success: true, ticket });
+});
+
+app.delete('/api/tickets/:id', authenticate, (req, res) => {
+    const deleted = deleteTicket(parseInt(req.params.id));
+    if (!deleted) {
+        return res.status(404).json({ success: false, error: '❌ التذكرة غير موجودة' });
+    }
+    res.json({ success: true });
 });
 
 // ---------- المذكرات ----------
@@ -564,7 +606,7 @@ app.post('/api/notes', authenticate, (req, res) => {
 app.put('/api/notes/:id', authenticate, (req, res) => {
     const note = updateNote(parseInt(req.params.id), req.body);
     if (!note) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
+        return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
     }
     res.json({ success: true, note });
 });
@@ -572,7 +614,7 @@ app.put('/api/notes/:id', authenticate, (req, res) => {
 app.delete('/api/notes/:id', authenticate, (req, res) => {
     const deleted = deleteNote(parseInt(req.params.id));
     if (!deleted) {
-        return res.status(404).json({ success: false, error: 'Note not found' });
+        return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
     }
     res.json({ success: true });
 });
