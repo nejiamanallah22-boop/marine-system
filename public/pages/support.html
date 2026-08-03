@@ -1,13 +1,304 @@
-<!-- ===== صفحة الدعم ===== -->
-<div class="page-support">
-    <div class="region-table-card" style="padding:20px;">
-        <h3>🎫 نظام التذاكر</h3>
-        <input type="text" id="ticketSubject" placeholder="📌 عنوان الطلب" 
-               style="width:100%; padding:10px; margin:8px 0; border:1px solid #ced4da; border-radius:6px;">
-        <textarea id="ticketMessage" rows="3" placeholder="📝 شرح المشكلة" 
-                  style="width:100%; padding:10px; border:1px solid #ced4da; border-radius:6px;"></textarea>
-        <button class="btn btn-primary" onclick="sendTicket()">📨 إرسال</button>
-        <button class="btn btn-sm btn-secondary" onclick="loadTickets()">🔄 تحديث</button>
-        <div id="ticketsList" style="margin-top:15px;"></div>
+<!-- public/pages/support.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدعم الفني</title>
+    <style>
+        .support-container {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .support-header {
+            background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(74,222,128,0.05));
+            border-radius: 16px;
+            padding: 24px 30px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .support-header .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 4px;
+        }
+
+        .support-header .subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .support-header .developer-info {
+            margin-top: 12px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: inline-block;
+        }
+
+        .support-header .developer-info .name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .support-header .developer-info .contact {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+
+        .support-header .developer-info .contact i {
+            margin-left: 6px;
+            width: 18px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .support-header .developer-info .contact a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .support-header .developer-info .contact a:hover {
+            text-decoration: underline;
+        }
+
+        .support-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .support-card {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .support-card h4 {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .support-card h4 i {
+            font-size: 16px;
+        }
+
+        .ticket-item {
+            background: rgba(255,255,255,0.02);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-right: 3px solid rgba(251,191,36,0.3);
+            transition: all 0.3s;
+        }
+
+        .ticket-item:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
+        .ticket-item .ticket-subject {
+            font-weight: bold;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+
+        .ticket-item .ticket-message {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin: 4px 0;
+        }
+
+        .ticket-item .ticket-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .ticket-item .ticket-status {
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+
+        .ticket-status.open {
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+        }
+
+        .ticket-status.progress {
+            background: rgba(96,165,250,0.15);
+            color: #60a5fa;
+        }
+
+        .ticket-status.closed {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+        }
+
+        .no-tickets {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .support-form {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            margin-top: 20px;
+        }
+
+        .support-form h4 {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .support-form .form-group {
+            margin-bottom: 12px;
+        }
+
+        .support-form .form-group label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 4px;
+        }
+
+        .support-form .form-group input,
+        .support-form .form-group textarea,
+        .support-form .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .support-form .form-group input:focus,
+        .support-form .form-group textarea:focus,
+        .support-form .form-group select:focus {
+            outline: none;
+            border-color: rgba(96,165,250,0.3);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .support-form .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .support-form .form-group select option {
+            background: #1a1a2e;
+        }
+
+        .support-form .btn-submit {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .support-form .btn-submit:hover {
+            transform: scale(1.01);
+            opacity: 0.9;
+        }
+
+        .support-form .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* تحسين للشاشات الصغيرة */
+        @media (max-width: 768px) {
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+            .support-header .developer-info .contact {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="support-container">
+        <!-- ===== الهيدر ===== -->
+        <div class="support-header">
+            <div class="title">🛟 مركز الدعم الفني</div>
+            <div class="subtitle">نظام متابعة وإدارة الأسطول البحري</div>
+            <div class="developer-info">
+                <div class="name">👨‍💻 الوكيل أمان الله ناجي</div>
+                <div class="contact">
+                    <i class="fas fa-phone"></i> 29659945 &nbsp;|&nbsp;
+                    <i class="fas fa-envelope"></i> <a href="mailto:nejiamanallah22@gmail.com">nejiamanallah22@gmail.com</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== قائمة التذاكر ===== -->
+        <div class="support-grid">
+            <div class="support-card">
+                <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
+                <div id="ticketsList">
+                    <div class="no-tickets">⏳ جاري تحميل التذاكر...</div>
+                </div>
+            </div>
+
+            <!-- ===== نموذج إرسال تذكرة ===== -->
+            <div class="support-card">
+                <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إرسال تذكرة جديدة</h4>
+                <form id="ticketForm" onsubmit="sendTicket(event)">
+                    <div class="form-group">
+                        <label>✏️ الموضوع</label>
+                        <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📝 الرسالة</label>
+                        <textarea id="ticketMessage" placeholder="اكتب تفاصيل مشكلتك هنا..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>🔵 الأولوية</label>
+                        <select id="ticketPriority">
+                            <option value="منخفضة">🟢 منخفضة</option>
+                            <option value="متوسطة" selected>🟡 متوسطة</option>
+                            <option value="عالية">🟠 عالية</option>
+                            <option value="عاجلة">🔴 عاجلة</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit" id="sendTicketBtn">📨 إرسال التذكرة</button>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
+</body>
+</html>
