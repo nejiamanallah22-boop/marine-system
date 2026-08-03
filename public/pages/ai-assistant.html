@@ -1,3 +1,4 @@
+<!-- public/pages/ai-assistant.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -59,6 +60,23 @@
             margin-top: 4px;
         }
 
+        .chat-message .audio-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: rgba(255,255,255,0.5);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 6px;
+            transition: all 0.3s;
+        }
+
+        .chat-message .audio-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
         .chat-input-area {
             display: flex;
             gap: 10px;
@@ -66,6 +84,7 @@
             padding: 12px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
         }
 
         .chat-input-area input {
@@ -77,6 +96,7 @@
             color: white;
             font-size: 14px;
             font-family: 'Cairo', sans-serif;
+            min-width: 150px;
         }
 
         .chat-input-area input:focus {
@@ -85,7 +105,7 @@
         }
 
         .chat-input-area button {
-            padding: 10px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
             background: linear-gradient(135deg, #60a5fa, #3b82f6);
@@ -94,6 +114,7 @@
             font-family: 'Cairo', sans-serif;
             font-weight: bold;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .chat-input-area button:hover {
@@ -104,6 +125,24 @@
         .chat-input-area button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .chat-input-area .mic-btn {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+        }
+
+        .chat-input-area .mic-btn.listening {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            animation: pulse 1s infinite;
+        }
+
+        .chat-input-area .speaker-btn {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .ai-features-grid {
@@ -196,17 +235,17 @@
             color: white;
         }
 
-        /* وضع التحميل */
-        .loading-dots::after {
-            content: '...';
-            animation: dots 1.5s steps(3) infinite;
+        .voice-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            margin-top: 8px;
+            display: none;
         }
 
-        @keyframes dots {
-            0% { content: ''; }
-            33% { content: '.'; }
-            66% { content: '..'; }
-            100% { content: '...'; }
+        .voice-status.active {
+            display: block;
+            color: #4ade80;
         }
     </style>
 </head>
@@ -244,7 +283,7 @@
         <div class="chat-box" id="chatBox">
             <div class="chat-message ai">
                 <div class="sender">🤖 المساعد الذكي</div>
-                <div class="content">مرحباً! 👋 أنا مساعدك الذكي. اسألني عن أي شيء يتعلق بالمراكب، الصيانة، أو الإحصائيات.</div>
+                <div class="content">مرحباً! 👋 أنا مساعدك الذكي. اسألني عن أي شيء يتعلق بالمراكب، الصيانة، أو الإحصائيات. يمكنك أيضاً استخدام الميكروفون للتحدث معي 🎤</div>
                 <div class="time">الآن</div>
             </div>
         </div>
@@ -253,9 +292,17 @@
             <span></span><span></span><span></span>
         </div>
 
+        <div class="voice-status" id="voiceStatus">🎤 جاري الاستماع...</div>
+
         <div class="chat-input-area">
             <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key==='Enter') askAI()">
             <button onclick="askAI()" id="sendBtn">إرسال</button>
+            <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="تحدث معي 🎤">
+                🎤
+            </button>
+            <button class="speaker-btn" onclick="speakLastResponse()" title="استماع للرد الأخير 🔊">
+                🔊
+            </button>
         </div>
     </div>
 </body>
