@@ -2002,41 +2002,62 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard)
+// 📊 لوحة التحكم (Dashboard) - نسخة آمنة
 // ============================================================
 
 function loadDashboard() {
     console.log('📊 Loading dashboard...');
     
+    // ✅ التحقق من وجود العناصر قبل التعديل
     const dashTotal = document.getElementById('dashTotal');
     if (!dashTotal) {
-        console.log('⚠️ Dashboard elements not found, waiting...');
+        console.log('⚠️ Dashboard elements not found, retrying...');
         setTimeout(loadDashboard, 500);
         return;
     }
     
-    const total = allVessels.length;
-    const ready = allVessels.filter(v => v.stat === 'صالح').length;
-    const broken = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
-    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const maintenanceCount = allMaintenance.length;
-    
-    document.getElementById('dashTotal').textContent = total;
-    document.getElementById('dashReady').textContent = ready;
-    document.getElementById('dashBroken').textContent = broken;
-    document.getElementById('dashMaintenance').textContent = maintenance;
-    document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
-    document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
-    
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
-    
-    setTimeout(() => {
-        renderDashboardCharts();
-    }, 200);
+    try {
+        const total = allVessels.length || 0;
+        const ready = allVessels.filter(v => v.stat === 'صالح').length || 0;
+        const broken = allVessels.filter(v => v.stat === 'معطب').length || 0;
+        const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length || 0;
+        const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
+        const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+        const maintenanceCount = allMaintenance.length || 0;
+        
+        // ✅ تحديث العناصر مع التحقق من وجودها
+        const elements = {
+            'dashTotal': total,
+            'dashReady': ready,
+            'dashBroken': broken,
+            'dashMaintenance': maintenance,
+            'dashReadyPercent': readyPercent + '%',
+            'dashTotalCost': totalCost.toLocaleString() + ' د.ت',
+            'dashMaintenanceCount': maintenanceCount
+        };
+        
+        Object.keys(elements).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = elements[id];
+            }
+        });
+        
+        const lastUpdate = document.getElementById('lastUpdate');
+        if (lastUpdate) {
+            lastUpdate.textContent = new Date().toLocaleTimeString('ar-TN');
+        }
+        
+        // ✅ تحديث الرسوم البيانية
+        setTimeout(() => {
+            renderDashboardCharts();
+        }, 200);
+        
+    } catch (error) {
+        console.error('❌ Error loading dashboard:', error);
+        // محاولة مرة أخرى
+        setTimeout(loadDashboard, 1000);
+    }
 }
 
 function renderDashboardCharts() {
@@ -2047,9 +2068,9 @@ function renderDashboardCharts() {
             dashCanvas.style.width = '100%';
             if (dashChart) dashChart.destroy();
             
-            const ready = allVessels.filter(v => v.stat === 'صالح').length;
-            const broken = allVessels.filter(v => v.stat === 'معطب').length;
-            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            const ready = allVessels.filter(v => v.stat === 'صالح').length || 0;
+            const broken = allVessels.filter(v => v.stat === 'معطب').length || 0;
+            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length || 0;
             
             dashChart = new Chart(dashCanvas, {
                 type: 'doughnut',
