@@ -255,7 +255,7 @@ function debounce(func, wait) {
 }
 
 // ============================================================
-// المصادقة
+// المصادقة - نسخة بدون وضع تجريبي
 // ============================================================
 
 function doLogin() {
@@ -275,14 +275,18 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
-    // ===== الاتصال بالخادم الحقيقي =====
+    // ===== الاتصال بالسيرفر مباشرة =====
     fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ email: username, password: password })
     })
     .then(res => {
-        if (!res.ok) throw new Error('فشل الاتصال بالخادم');
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw new Error(data.error || 'فشل تسجيل الدخول');
+            });
+        }
         return res.json();
     })
     .then(data => {
@@ -306,7 +310,7 @@ function doLogin() {
     })
     .catch(err => {
         console.error('Login error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم: ' + err.message, 'danger');
+        showAlert('❌ ' + err.message, 'danger');
     })
     .finally(() => {
         if (loginBtn) {
@@ -388,7 +392,7 @@ function loadVessels() {
     .catch(err => {
         console.error('Load vessels error:', err);
         showAlert('❌ خطأ في تحميل المراكب', 'danger');
-        allVessels = getDemoVessels();
+        allVessels = [];
         renderAllTables();
     });
 }
@@ -417,7 +421,7 @@ function loadMaintenance() {
     .catch(err => {
         console.error('Load maintenance error:', err);
         showAlert('❌ خطأ في تحميل سجلات الصيانة', 'danger');
-        allMaintenance = getDemoMaintenance();
+        allMaintenance = [];
         renderMaintenanceTables();
         updateYearFilter();
     });
@@ -470,7 +474,7 @@ function loadUsers() {
     .catch(err => {
         console.error('Load users error:', err);
         showAlert('❌ خطأ في تحميل المستخدمين', 'danger');
-        allUsers = getDemoUsers();
+        allUsers = [];
         renderUsersTable();
     });
 }
@@ -518,67 +522,6 @@ function renderMaintenanceTables() {
 }
 
 // ============================================================
-// بيانات تجريبية (للاحتياط)
-// ============================================================
-
-function getDemoVessels() {
-    return [
-        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
-        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
-        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
-        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
-        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
-        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
-        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
-        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
-        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
-        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
-        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
-        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
-        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
-        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
-        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
-        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
-        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
-        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
-        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
-        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
-        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
-    ];
-}
-
-function getDemoUsers() {
-    return [
-        { id: '1', name: 'مدير النظام', email: 'admin@example.com', role: 'مسؤول', isActive: true, createdAt: '2026-01-01' },
-        { id: '2', name: 'مدير العمليات', email: 'manager@example.com', role: 'مشرف', isActive: true, createdAt: '2026-01-01' }
-    ];
-}
-
-function getDemoMaintenance() {
-    return [
-        {
-            id: 1,
-            vesselId: 4,
-            vesselName: 'البروق 4',
-            type: 'كبرى',
-            unit: 'وحدة الصيانة والإسناد البحري تونس',
-            technician: 'فني 1',
-            description: 'عطل في المحرك الرئيسي',
-            repair: 'تم تغيير طلمبة الزيت والمضخة',
-            faultType: 'محرك',
-            cost: 4500,
-            notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
-            status: 'مكتملة',
-            date: '2026-01-20',
-            startDate: '2026-01-15',
-            endDate: '2026-01-20',
-            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }],
-            createdBy: 'Admin'
-        }
-    ];
-}
-
-// ============================================================
 // عرض الجداول الأساسية
 // ============================================================
 
@@ -606,8 +549,8 @@ function renderMainTable() {
             <td>${v.ref || '-'}</td>
             <td>${v.repairer || '-'}</td>
             <td>
-                <button class="btn-sm btn-warning" onclick="editVessel('${v._id || v.id}')">✏️</button>
-                <button class="btn-sm btn-danger" onclick="deleteVessel('${v._id || v.id}')">🗑️</button>
+                <button class="btn-sm btn-warning" onclick="editVessel('${v.id}')">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteVessel('${v.id}')">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -628,8 +571,8 @@ function renderUsersTable() {
             <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
             <td style="font-size:12px; color:rgba(255,255,255,0.3);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-TN') : '-'}</td>
             <td>
-                <button class="btn-sm btn-warning" onclick="editUser('${u._id || u.id}')">✏️</button>
-                <button class="btn-sm btn-danger" onclick="deleteUser('${u._id || u.id}')">🗑️</button>
+                <button class="btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
+                <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -847,7 +790,7 @@ function editUser(id) {
     })
     .then(res => res.json())
     .then(users => {
-        const user = users.find(u => (u._id || u.id) === id);
+        const user = users.find(u => u.id === id);
         if (!user) {
             showAlert('⚠️ المستخدم غير موجود', 'warning');
             return;
@@ -1063,7 +1006,7 @@ function addItem() {
 }
 
 function editVessel(id) {
-    const vessel = allVessels.find(v => (v._id || v.id) === id);
+    const vessel = allVessels.find(v => v.id === id);
     if (!vessel) {
         showAlert('⚠️ المركب غير موجود', 'warning');
         return;
@@ -1197,7 +1140,7 @@ function updateMaintenanceVessels() {
     if (!select) return;
     select.innerHTML = '<option value="">اختر المركب</option>';
     allVessels.forEach(v => {
-        select.innerHTML += `<option value="${v._id || v.id}">${v.name} (${v.num || 'بدون رقم'})</option>`;
+        select.innerHTML += `<option value="${v.id}">${v.name} (${v.num || 'بدون رقم'})</option>`;
     });
 }
 
@@ -1262,7 +1205,7 @@ function saveMaintenance() {
         return;
     }
     
-    const vessel = allVessels.find(v => (v._id || v.id) == vesselId);
+    const vessel = allVessels.find(v => v.id == vesselId);
     const data = {
         vesselId: vesselId,
         vesselName: vessel ? vessel.name : '',
@@ -1320,7 +1263,6 @@ function renderGeneralMaintenance() {
     }
     let html = '<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفئة</th><th>الحالة</th><th>العطل</th><th>المسؤول</th><th>إجراءات</th></tr></thead><tbody>';
     vessels.forEach(v => {
-        const vid = v._id || v.id;
         html += `<tr>
             <td><strong>${v.name}</strong></td>
             <td>${v.cat || '-'}</td>
@@ -1328,8 +1270,8 @@ function renderGeneralMaintenance() {
             <td>${v.break || '-'}</td>
             <td>${v.repairer || '-'}</td>
             <td>
-                <button class="btn-sm btn-primary" onclick="openMaintenanceFile('${vid}')">📂 فتح</button>
-                <button class="btn-sm btn-success" onclick="fixVessel('${vid}')">✅ إصلاح</button>
+                <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
+                <button class="btn-sm btn-success" onclick="fixVessel(${v.id})">✅ إصلاح</button>
             </td>
         </tr>`;
     });
@@ -1369,7 +1311,7 @@ function fixVessel(vesselId) {
 }
 
 function openMaintenanceFile(vesselId) {
-    const vessel = allVessels.find(v => (v._id || v.id) === vesselId);
+    const vessel = allVessels.find(v => v.id === vesselId);
     if (!vessel) return;
     showAlert(`📂 فتح ملف المركب: ${vessel.name}`, 'info');
 }
@@ -1384,7 +1326,7 @@ function renderHistoryMaintenance() {
     }
     let html = '<div class="scrollable-table"><table><thead><tr><th>التاريخ</th><th>المركب</th><th>نوع الصيانة</th><th>العطل</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>';
     records.slice().reverse().forEach(r => {
-        const vesselName = r.vesselName || allVessels.find(v => (v._id || v.id) === r.vesselId)?.name || '-';
+        const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
         html += `<tr>
             <td>${r.date || '-'}</td>
             <td><strong>${vesselName}</strong></td>
@@ -2618,7 +2560,7 @@ function initMap() {
 // ============================================================
 
 console.log('✅ تم تحميل التطبيق بالكامل');
-console.log('📝 استخدم admin@example.com / 123456 للدخول');
+console.log('📝 استخدم admin / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
 console.log('🎤 ميزات الصوت: تحدث مع المساعد واستمع للردود');
 console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
