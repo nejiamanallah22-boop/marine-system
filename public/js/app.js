@@ -494,7 +494,20 @@ function loadTickets() {
 
 function loadUsers() {
     const token = getToken();
-    if (!token) return;
+    
+    // ✅ دعم الوضع التجريبي
+    if (!token || token.startsWith('demo-token')) {
+        // استخدام بيانات تجريبية للمستخدمين
+        allUsers = [
+            { id: '1', name: 'مدير النظام', email: 'admin@example.com', role: 'مسؤول', isActive: true, createdAt: new Date().toISOString() },
+            { id: '2', name: 'مدير العمليات', email: 'manager@example.com', role: 'مشرف', isActive: true, createdAt: new Date().toISOString() },
+            { id: '3', name: 'محرر', email: 'editor@example.com', role: 'محرر', isActive: true, createdAt: new Date().toISOString() },
+            { id: '4', name: 'مشاهد', email: 'viewer@example.com', role: 'مشاهد', isActive: true, createdAt: new Date().toISOString() }
+        ];
+        renderUsersTable();
+        return;
+    }
+    
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -790,7 +803,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (المُصححة)
+// 👥 دوال المستخدمين (مع دعم الوضع التجريبي)
 // ============================================================
 
 function addUser() {
@@ -821,13 +834,36 @@ function addUser() {
         return;
     }
     
-    // تعطيل الزر لمنع الإرسال المتكرر
     const addBtn = document.querySelector('[onclick="addUser()"]');
     if (addBtn) {
         addBtn.disabled = true;
         addBtn.textContent = '⏳ جاري الإضافة...';
     }
     
+    // ✅ دعم الوضع التجريبي
+    if (token.startsWith('demo-token')) {
+        // إضافة مستخدم تجريبي محلياً
+        const newUser = {
+            id: 'user-' + Date.now(),
+            name: name,
+            email: email,
+            role: role || 'مشاهد',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+        allUsers.push(newUser);
+        renderUsersTable();
+        clearUserInputs();
+        showAlert('✅ تم إضافة المستخدم (وضع تجريبي)', 'success');
+        
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.textContent = '💾 إضافة مستخدم';
+        }
+        return;
+    }
+    
+    // ✅ الاتصال بالخادم الحقيقي
     fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -847,34 +883,22 @@ function addUser() {
         if (data.success) {
             showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
             clearUserInputs();
-            loadUsers(); // تحديث الجدول
+            loadUsers();
             
-            // إغلاق النموذج إذا كان موجوداً
             const modal = document.getElementById('addUserModal');
             if (modal) modal.style.display = 'none';
-            
-            // إعادة تعيين زر الإضافة
-            const btn = document.querySelector('[onclick="addUser()"]');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '💾 إضافة مستخدم';
-            }
         } else {
             showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
-            const btn = document.querySelector('[onclick="addUser()"]');
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = '💾 إضافة مستخدم';
-            }
         }
     })
     .catch(err => {
         console.error('Add user error:', err);
         showAlert('❌ ' + err.message, 'danger');
-        const btn = document.querySelector('[onclick="addUser()"]');
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = '💾 إضافة مستخدم';
+    })
+    .finally(() => {
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.textContent = '💾 إضافة مستخدم';
         }
     });
 }
@@ -886,6 +910,31 @@ function editUser(id) {
         return;
     }
     
+    // ✅ دعم الوضع التجريبي
+    if (token.startsWith('demo-token')) {
+        const user = allUsers.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        
+        document.getElementById('uName').value = user.name || '';
+        document.getElementById('uEmail').value = user.email || '';
+        document.getElementById('uPassword').value = '';
+        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
+        document.getElementById('uRole').value = user.role || 'مشاهد';
+        
+        const addBtn = document.querySelector('[onclick="addUser()"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 تحديث المستخدم';
+            addBtn.onclick = function() { updateUser(id); };
+        }
+        
+        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+        return;
+    }
+    
+    // ✅ الاتصال بالخادم الحقيقي
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -938,15 +987,41 @@ function updateUser(id) {
         return;
     }
     
-    const data = { name, email, role };
-    if (password && password.length >= 4) {
-        data.password = password;
-    }
-    
     const updateBtn = document.querySelector('[onclick*="updateUser"]');
     if (updateBtn) {
         updateBtn.disabled = true;
         updateBtn.textContent = '⏳ جاري التحديث...';
+    }
+    
+    // ✅ دعم الوضع التجريبي
+    if (token.startsWith('demo-token')) {
+        const index = allUsers.findIndex(u => u.id === id);
+        if (index === -1) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        
+        allUsers[index].name = name;
+        allUsers[index].email = email;
+        allUsers[index].role = role || 'مشاهد';
+        
+        renderUsersTable();
+        clearUserInputs();
+        showAlert('✅ تم تحديث المستخدم (وضع تجريبي)', 'success');
+        
+        const addBtn = document.querySelector('[onclick*="updateUser"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 إضافة مستخدم';
+            addBtn.onclick = addUser;
+            addBtn.disabled = false;
+        }
+        return;
+    }
+    
+    // ✅ الاتصال بالخادم الحقيقي
+    const data = { name, email, role };
+    if (password && password.length >= 4) {
+        data.password = password;
     }
     
     fetch('/api/users/' + id, {
@@ -978,15 +1053,16 @@ function updateUser(id) {
             loadUsers();
         } else {
             showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
-            const btn = document.querySelector('[onclick*="updateUser"]');
-            if (btn) btn.disabled = false;
         }
     })
     .catch(err => {
         console.error('Update user error:', err);
         showAlert('❌ ' + err.message, 'danger');
-        const btn = document.querySelector('[onclick*="updateUser"]');
-        if (btn) btn.disabled = false;
+    })
+    .finally(() => {
+        if (updateBtn) {
+            updateBtn.disabled = false;
+        }
     });
 }
 
@@ -997,6 +1073,16 @@ function deleteUser(id) {
         showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
+    
+    // ✅ دعم الوضع التجريبي
+    if (token.startsWith('demo-token')) {
+        allUsers = allUsers.filter(u => u.id !== id);
+        renderUsersTable();
+        showAlert('✅ تم حذف المستخدم (وضع تجريبي)', 'success');
+        return;
+    }
+    
+    // ✅ الاتصال بالخادم الحقيقي
     fetch('/api/users/' + id, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
