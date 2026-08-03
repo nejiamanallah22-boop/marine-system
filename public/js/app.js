@@ -888,7 +888,7 @@ function clearUserInputs() {
 }
 
 // ============================================================
-// 🚢 دوال المراكب (مع خادم MongoDB) - نسخة مُصححة
+// 🚢 دوال المراكب (مع خادم MongoDB)
 // ============================================================
 
 function addItem() {
@@ -1898,7 +1898,7 @@ function loadVoices() {
 }
 
 // ============================================================
-// 🤖 الذكاء الاصطناعي - المساعد الذكي
+// 🤖 الذكاء الاصطناعي - المساعد الذكي (مُحدّث مع المطور)
 // ============================================================
 
 function askAI(userMessage) {
@@ -1977,27 +1977,77 @@ function generateAIResponse(message) {
     const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
     const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
 
-    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-        return `👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟<br><br>
-        يمكنك أن تسألني عن:<br>
-        • 📊 حالة المراكب<br>
-        • 🔧 إحصائيات الصيانة<br>
-        • 🔮 توقع الأعطال<br>
-        • 💡 نصائح لتحسين الأداء`;
+    // ===== معلومات المطور =====
+    const developerInfo = `المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي`;
+
+    // 1️⃣ السؤال عن من صنع التطبيق
+    if (msg.includes('من صنع') || msg.includes('صانع') || msg.includes('مطور') || 
+        msg.includes('المبرمج') || msg.includes('الذي صنع') || msg.includes('صمم') ||
+        msg.includes('من عمل') || msg.includes('المبدع') || msg.includes('الوكيل') ||
+        msg.includes('الحرس') || msg.includes('أمان الله') || msg.includes('ناجي')) {
+        return `🌟 <strong>تم تطوير هذا النظام بواسطة:</strong><br><br>
+        👨‍💻 <strong>${developerInfo}</strong><br><br>
+        🏆 هذا التطبيق هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة البحرية.<br>
+        📌 يتميز النظام بالدقة والاحترافية والجودة العالية.<br><br>
+        🔹 <em>${developerInfo} هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.</em>`;
     }
 
+    // 2️⃣ السؤال عن المبرمج أو الوكيل
+    if (msg.includes('أمان الله') || msg.includes('ناجي') || msg.includes('الوكيل') || 
+        msg.includes('المبرمج') || msg.includes('المطور') || msg.includes('المبدع') ||
+        msg.includes('الحرس الوطني')) {
+        return `👨‍💻 <strong>${developerInfo}</strong><br><br>
+        🏅 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.<br>
+        🚀 تم تصميم هذا النظام بخبرة عالية وجودة استثنائية.<br>
+        📌 يتميز بالدقة والاحترافية والالتزام بأعلى المعايير.<br><br>
+        💡 <em>"منظومة الوسائل البحرية" هي نتاج إبداع ${developerInfo}.</em>`;
+    }
+
+    // 3️⃣ السؤال عن التطبيق بشكل عام
+    if (msg.includes('التطبيق') || msg.includes('النظام') || msg.includes('البرنامج') || 
+        msg.includes('منظومة') || msg.includes('الأسطول')) {
+        if (msg.includes('من') || msg.includes('صنع') || msg.includes('مطور') || 
+            msg.includes('مبرمج') || msg.includes('مصمم')) {
+            return `🌟 هذا النظام من تطوير <strong>${developerInfo}</strong><br><br>
+            🏆 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة البحرية والإدارية.<br>
+            📌 تم تصميم هذا النظام بجودة عالية ودقة متناهية.<br><br>
+            💡 <em>للتواصل مع المطور: ${developerInfo}</em>`;
+        }
+    }
+
+    // 4️⃣ أسئلة الترحيب
+    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً') || msg.includes('هلو')) {
+        return `👋 وعليكم السلام ورحمة الله وبركاته!<br><br>
+        أنا المساعد الذكي لمنظومة الوسائل البحرية.<br><br>
+        تم تطوير هذا النظام بواسطة:<br>
+        🌟 <strong>${developerInfo}</strong><br><br>
+        كيف يمكنني مساعدتك اليوم؟<br>
+        يمكنك أن تسألني عن:<br>
+        • 📊 حالة المراكب والجاهزية<br>
+        • 🔧 إحصائيات الصيانة والتكاليف<br>
+        • 🔮 توقع الأعطال<br>
+        • 💡 نصائح لتحسين الأداء<br>
+        • 🏭 الوحدات البحرية<br>
+        • 👨‍💻 من صنع هذا التطبيق`;
+    }
+
+    // 5️⃣ عدد المراكب الصالحة
     if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
         return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
         نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
-        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}`;
+        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}<br><br>
+        📌 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 6️⃣ عدد المراكب المعطبة
     if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
         const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
         return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
-        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}`;
+        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}<br><br>
+        🔹 نظام متابعة الأسطول من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 7️⃣ إحصائيات الصيانة
     if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
         const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
         const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
@@ -2005,9 +2055,11 @@ function generateAIResponse(message) {
         • 📊 إجمالي السجلات: <strong>${totalMaintenance}</strong><br>
         • ✅ مكتملة: <strong>${completed}</strong><br>
         • 🔄 قيد الإنجاز: <strong>${inProgress}</strong><br>
-        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong>`;
+        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong><br><br>
+        🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 8️⃣ توقع الأعطال
     if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
         const highRisk = allVessels.filter(v => {
             const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
@@ -2021,9 +2073,11 @@ function generateAIResponse(message) {
         return `🔮 توقع الأعطال:<br><br>
         • المراكب المعطبة حالياً: ${brokenVessels}<br>
         • المراكب في الصيانة: ${maintenanceVessels}<br>
-        • ${recommendations}`;
+        • ${recommendations}<br><br>
+        📌 نظام متابعة وتوقع الأعطال من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 9️⃣ تقرير شامل
     if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
         return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
         🚢 <strong>المراكب:</strong><br>
@@ -2036,9 +2090,11 @@ function generateAIResponse(message) {
         • التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت<br><br>
         📌 <strong>التوصيات:</strong><br>
         ${readyPercent < 70 ? '• ⚠️ يوصى بتحسين نسبة الجاهزية' : '• ✅ الأداء جيد'}<br>
-        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}`;
+        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}<br><br>
+        🔹 هذا التقرير من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 🔟 الوحدات البحرية
     if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
         const units = {};
         allVessels.forEach(v => {
@@ -2050,9 +2106,11 @@ function generateAIResponse(message) {
             .map(([unit, count]) => `• ${unit}: ${count} مركب`)
             .join('<br>');
         return `🏭 <strong>الوحدات البحرية</strong><br><br>
-        ${unitText || 'لا توجد وحدات مسجلة'}`;
+        ${unitText || 'لا توجد وحدات مسجلة'}<br><br>
+        🔹 نظام متابعة الوحدات من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 1️⃣1️⃣ نصائح تحسين
     if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
         const tips = [];
         if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
@@ -2060,11 +2118,14 @@ function generateAIResponse(message) {
         if (totalCost > 10000) tips.push('• 💰 مراجعة عقود الصيانة لتقليل التكاليف');
         if (tips.length === 0) tips.push('• ✅ الأداء ممتاز، استمر في الصيانة الدورية');
         tips.push('• 📊 استخدام الذكاء الاصطناعي لتحليل الأعطال المتكررة');
+        tips.push(`• 👨‍💻 الاستعانة بخبرات ${developerInfo} لتطوير النظام`);
         
         return `💡 <strong>نصائح لتحسين الأداء</strong><br><br>
-        ${tips.join('<br>')}`;
+        ${tips.join('<br>')}<br><br>
+        🔹 تم إعداد هذه النصائح بواسطة <strong>${developerInfo}</strong>`;
     }
 
+    // 1️⃣2️⃣ مساعدة
     if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
         return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
         إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
@@ -2074,17 +2135,22 @@ function generateAIResponse(message) {
         • 🔮 "توقع الأعطال القادمة"<br>
         • 📊 "تقرير شامل عن الأسطول"<br>
         • 💡 "نصائح لتحسين الأداء"<br>
-        • 🏭 "الوحدات البحرية"`;
+        • 🏭 "الوحدات البحرية"<br>
+        • 👨‍💻 "من صنع هذا التطبيق"<br><br>
+        🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
+    // 1️⃣3️⃣ رد افتراضي
     return `🤔 لم أفهم سؤالك بالكامل.<br><br>
     يمكنك أن تسألني عن:<br>
     • 📊 حالة المراكب والجاهزية<br>
     • 🔧 إحصائيات الصيانة والتكاليف<br>
     • 🔮 توقع الأعطال<br>
     • 💡 نصائح لتحسين الأداء<br>
-    • 🏭 معلومات عن الوحدات البحرية<br><br>
-    أو اكتب "مساعدة" لعرض جميع الخيارات.`;
+    • 🏭 معلومات عن الوحدات البحرية<br>
+    • 👨‍💻 من صنع هذا التطبيق<br><br>
+    أو اكتب "مساعدة" لعرض جميع الخيارات.<br><br>
+    🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
 }
 
 // ============================================================
@@ -2107,3 +2173,4 @@ console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin@example.com / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
 console.log('🎤 ميزات الصوت: تحدث مع المساعد واستمع للردود');
+console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
