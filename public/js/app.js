@@ -66,17 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadPage(pageName) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
-    
-    // ✅ إزالة الصفحات القديمة
     document.querySelectorAll('.page-content').forEach(el => el.remove());
-    
-    // ✅ إظهار مؤشر تحميل
-    container.innerHTML = `
-        <div style="text-align:center; padding:50px; color:rgba(255,255,255,0.2);">
-            <i class="fas fa-spinner fa-spin" style="font-size:30px; display:block; margin-bottom:10px;"></i>
-            جاري تحميل الصفحة...
-        </div>
-    `;
     
     fetch(`/pages/${pageName}.html`)
         .then(res => {
@@ -88,13 +78,11 @@ function loadPage(pageName) {
             div.className = 'page-content';
             div.id = 'page-' + pageName;
             div.innerHTML = html;
-            container.innerHTML = '';
             container.appendChild(div);
             
-            // ✅ تأخير كاف لتحميل DOM
             setTimeout(() => {
                 initPage(pageName);
-            }, 300);
+            }, 100);
         })
         .catch(err => {
             console.error('Error:', err);
@@ -109,46 +97,42 @@ function loadPage(pageName) {
 
 function initPage(pageName) {
     console.log('📄 Initializing page:', pageName);
-    
-    // ✅ تأخير بسيط لضمان تحميل DOM
-    setTimeout(() => {
-        switch(pageName) {
-            case 'dashboard': 
-                loadDashboard(); 
-                break;
-            case 'fleet': 
-                loadVessels(); 
-                break;
-            case 'maintenance': 
-                loadMaintenance(); 
-                break;
-            case 'efficiency': 
-                loadVessels(); 
-                break;
-            case 'support': 
-                loadTickets(); 
-                break;
-            case 'users': 
-                loadUsers(); 
-                break;
-            case 'notes': 
-                loadNotes(); 
-                break;
-            case 'sessions': 
-                loadSessions(); 
-                startTrackingAutoUpdate(); 
-                setTimeout(function() {
-                    initUserMap();
-                    startMapAutoRefresh();
-                }, 1000);
-                break;
-            case 'ai-assistant': 
-                initAIAssistant(); 
-                break;
-            default: 
-                console.log('⚠️ Unknown page:', pageName);
-        }
-    }, 200);
+    switch(pageName) {
+        case 'dashboard': 
+            loadDashboard(); 
+            break;
+        case 'fleet': 
+            loadVessels(); 
+            break;
+        case 'maintenance': 
+            loadMaintenance(); 
+            break;
+        case 'efficiency': 
+            loadVessels(); 
+            break;
+        case 'support': 
+            loadTickets(); 
+            break;
+        case 'users': 
+            loadUsers(); 
+            break;
+        case 'notes': 
+            loadNotes(); 
+            break;
+        case 'sessions': 
+            loadSessions(); 
+            startTrackingAutoUpdate(); 
+            setTimeout(function() {
+                initUserMap();
+                startMapAutoRefresh();
+            }, 1000);
+            break;
+        case 'ai-assistant': 
+            initAIAssistant(); 
+            break;
+        default: 
+            console.log('⚠️ Unknown page:', pageName);
+    }
 }
 
 // ===== بدء تحديث الخريطة التلقائي =====
@@ -595,6 +579,7 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
+    // ✅ استخدام السيرفر مباشرة وليس الوضع التجريبي
     fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -621,13 +606,12 @@ function doLogin() {
             updateUserDisplay();
             loadAllData();
             
-            // ✅ تحميل لوحة التحكم بعد تأكيد تحميل البيانات
             setTimeout(() => {
                 loadPage('dashboard');
                 document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
                 const dashboardBtn = document.querySelector('.nav-btn[onclick="showPage(\'dashboard\')"]');
                 if (dashboardBtn) dashboardBtn.classList.add('active');
-            }, 500);
+            }, 200);
             
             startActivityTracking();
             initNotifications();
@@ -2019,25 +2003,17 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard) - نسخة مستقرة تماماً
+// 📊 لوحة التحكم (Dashboard) - نسخة آمنة ومستقرة
 // ============================================================
 
 function loadDashboard() {
     console.log('📊 Loading dashboard...');
     
-    // ✅ التحقق من وجود حاوية الصفحة
-    const container = document.getElementById('pageContainer');
-    if (!container) {
-        console.log('⚠️ Page container not found, retrying...');
-        setTimeout(loadDashboard, 300);
-        return;
-    }
-    
-    // ✅ التحقق من وجود عناصر لوحة التحكم
+    // ✅ التحقق من وجود العناصر قبل التعديل
     const dashTotal = document.getElementById('dashTotal');
     if (!dashTotal) {
-        console.log('⚠️ Dashboard elements not found, waiting for DOM...');
-        setTimeout(loadDashboard, 300);
+        console.log('⚠️ Dashboard elements not found, retrying...');
+        setTimeout(loadDashboard, 500);
         return;
     }
     
@@ -2073,140 +2049,121 @@ function loadDashboard() {
             lastUpdate.textContent = new Date().toLocaleTimeString('ar-TN');
         }
         
-        // ✅ تحديث الرسوم البيانية مع تأخير كاف
+        // ✅ تحديث الرسوم البيانية
         setTimeout(() => {
             renderDashboardCharts();
-        }, 300);
-        
-        console.log('✅ Dashboard loaded successfully');
+        }, 200);
         
     } catch (error) {
         console.error('❌ Error loading dashboard:', error);
-        setTimeout(loadDashboard, 500);
+        // محاولة مرة أخرى
+        setTimeout(loadDashboard, 1000);
     }
 }
 
 function renderDashboardCharts() {
     try {
         const dashCanvas = document.getElementById('dashChart');
-        if (!dashCanvas) {
-            console.log('⚠️ Chart canvas not found');
-            return;
-        }
-        
-        if (typeof Chart === 'undefined') {
-            console.log('⚠️ Chart.js not loaded, retrying...');
-            setTimeout(renderDashboardCharts, 500);
-            return;
-        }
-        
-        const ready = allVessels.filter(v => v.stat === 'صالح').length || 0;
-        const broken = allVessels.filter(v => v.stat === 'معطب').length || 0;
-        const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length || 0;
-        
-        if (dashChart) {
-            dashChart.destroy();
-            dashChart = null;
-        }
-        
-        dashCanvas.style.height = '200px';
-        dashCanvas.style.width = '100%';
-        
-        dashChart = new Chart(dashCanvas, {
-            type: 'doughnut',
-            data: {
-                labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
-                datasets: [{
-                    data: [ready, broken, maintenance],
-                    backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
-                    borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: {
-                    legend: { 
-                        position: 'bottom', 
-                        labels: { 
-                            color: 'rgba(255,255,255,0.6)', 
-                            font: { size: 11 } 
-                        } 
+        if (dashCanvas) {
+            dashCanvas.style.height = '200px';
+            dashCanvas.style.width = '100%';
+            if (dashChart) dashChart.destroy();
+            
+            const ready = allVessels.filter(v => v.stat === 'صالح').length || 0;
+            const broken = allVessels.filter(v => v.stat === 'معطب').length || 0;
+            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length || 0;
+            
+            dashChart = new Chart(dashCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+                    datasets: [{
+                        data: [ready, broken, maintenance],
+                        backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
+                        borderColor: ['#4ade80', '#f87171', '#fbbf24'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: 'rgba(255,255,255,0.6)', 
+                                font: { size: 11 } 
+                            } 
+                        }
                     }
                 }
-            }
-        });
-        
+            });
+        }
     } catch(e) {
         console.log('⚠️ Dashboard chart error:', e);
     }
     
     try {
         const lineCanvas = document.getElementById('dashLineChart');
-        if (!lineCanvas) return;
-        
-        if (dashLineChart) {
-            dashLineChart.destroy();
-            dashLineChart = null;
-        }
-        
-        lineCanvas.style.height = '200px';
-        lineCanvas.style.width = '100%';
-        
-        const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-        const readyData = [12, 14, 13, 16, 18, 20];
-        const brokenData = [5, 4, 6, 3, 4, 2];
-        
-        dashLineChart = new Chart(lineCanvas, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    { 
-                        label: 'صالح', 
-                        data: readyData, 
-                        borderColor: '#4ade80', 
-                        backgroundColor: 'rgba(74,222,128,0.1)', 
-                        fill: true, 
-                        tension: 0.4, 
-                        pointBackgroundColor: '#4ade80' 
-                    },
-                    { 
-                        label: 'معطب', 
-                        data: brokenData, 
-                        borderColor: '#f87171', 
-                        backgroundColor: 'rgba(248,113,113,0.1)', 
-                        fill: true, 
-                        tension: 0.4, 
-                        pointBackgroundColor: '#f87171' 
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                    legend: { 
-                        position: 'bottom', 
-                        labels: { 
-                            color: 'rgba(255,255,255,0.6)', 
-                            font: { size: 11 } 
-                        } 
-                    } 
+        if (lineCanvas) {
+            lineCanvas.style.height = '200px';
+            lineCanvas.style.width = '100%';
+            if (dashLineChart) dashLineChart.destroy();
+            
+            const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
+            const readyData = [12, 14, 13, 16, 18, 20];
+            const brokenData = [5, 4, 6, 3, 4, 2];
+            
+            dashLineChart = new Chart(lineCanvas, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { 
+                            label: 'صالح', 
+                            data: readyData, 
+                            borderColor: '#4ade80', 
+                            backgroundColor: 'rgba(74,222,128,0.1)', 
+                            fill: true, 
+                            tension: 0.4, 
+                            pointBackgroundColor: '#4ade80' 
+                        },
+                        { 
+                            label: 'معطب', 
+                            data: brokenData, 
+                            borderColor: '#f87171', 
+                            backgroundColor: 'rgba(248,113,113,0.1)', 
+                            fill: true, 
+                            tension: 0.4, 
+                            pointBackgroundColor: '#f87171' 
+                        }
+                    ]
                 },
-                scales: { 
-                    x: { 
-                        ticks: { color: 'rgba(255,255,255,0.3)' } 
-                    }, 
-                    y: { 
-                        ticks: { color: 'rgba(255,255,255,0.3)' }, 
-                        beginAtZero: true 
-                    } 
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: 'rgba(255,255,255,0.6)', 
+                                font: { size: 11 } 
+                            } 
+                        } 
+                    },
+                    scales: { 
+                        x: { 
+                            ticks: { color: 'rgba(255,255,255,0.3)' } 
+                        }, 
+                        y: { 
+                            ticks: { color: 'rgba(255,255,255,0.3)' }, 
+                            beginAtZero: true 
+                        } 
+                    }
                 }
-            }
-        });
+            });
+        }
     } catch(e) {
         console.log('⚠️ Dashboard line chart error:', e);
     }
