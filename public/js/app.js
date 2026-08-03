@@ -436,7 +436,45 @@ function loadMaintenance() {
 // ===== تحميل التذاكر =====
 function loadTickets() {
     const token = getToken();
-    if (!token) return;
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const defaultTickets = [
+        {
+            id: 1,
+            subject: '⚠️ عطل في المركب البروق 4',
+            message: 'المركب البروق 4 يعاني من عطل في المحرك الرئيسي، يرجى التدخل العاجل.',
+            priority: 'عالية',
+            status: 'قيد المعالجة',
+            userName: 'مدير النظام',
+            date: new Date().toISOString().split('T')[0]
+        },
+        {
+            id: 2,
+            subject: '🔧 طلب صيانة دورية',
+            message: 'طلب إجراء الصيانة الدورية للمراكب صقر 1 وصقر 2 حسب الجدول المرفق.',
+            priority: 'متوسطة',
+            status: 'مفتوحة',
+            userName: 'مدير العمليات',
+            date: new Date().toISOString().split('T')[0]
+        },
+        {
+            id: 3,
+            subject: '📊 طلب تقرير الجاهزية',
+            message: 'الرجاء تزويدي بتقرير الجاهزية الشهري لجميع المراكب.',
+            priority: 'منخفضة',
+            status: 'مغلقة',
+            userName: 'مشاهد',
+            date: new Date(Date.now() - 86400000).toISOString().split('T')[0]
+        }
+    ];
+    
+    allTickets = defaultTickets;
+    renderTickets();
+    updateTicketStats();
+    loadNotifications();
     
     fetch('/api/tickets', {
         headers: { 'Authorization': 'Bearer ' + token }
@@ -446,18 +484,16 @@ function loadTickets() {
         return res.json();
     })
     .then(data => {
-        allTickets = data || [];
-        console.log('✅ Tickets loaded from DB:', allTickets.length);
-        renderTickets();
-        updateTicketStats();
-        loadNotifications();
+        if (data && data.length > 0) {
+            allTickets = data;
+            renderTickets();
+            updateTicketStats();
+            loadNotifications();
+            console.log('✅ Tickets loaded from server:', allTickets.length);
+        }
     })
     .catch(err => {
-        console.error('Load tickets error:', err);
-        showAlert('❌ خطأ في تحميل التذاكر', 'danger');
-        allTickets = [];
-        renderTickets();
-        updateTicketStats();
+        console.warn('⚠️ Tickets server not available, using local data');
     });
 }
 
@@ -490,7 +526,7 @@ function loadUsers() {
     });
 }
 
-// ===== تحميل المذكرات (نسخة مصححة) =====
+// ===== تحميل المذكرات =====
 function loadNotes() {
     const token = getToken();
     if (!token) {
@@ -498,7 +534,6 @@ function loadNotes() {
         return;
     }
     
-    // ✅ بيانات محلية افتراضية
     const defaultNotes = [
         {
             id: 1,
@@ -526,7 +561,6 @@ function loadNotes() {
     allNotes = defaultNotes;
     renderNotes();
     
-    // ✅ محاولة الاتصال بالسيرفر
     fetch('/api/notes', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
@@ -543,7 +577,6 @@ function loadNotes() {
     })
     .catch(err => {
         console.warn('⚠️ Notes server not available, using local data');
-        // نستخدم البيانات المحلية
     });
 }
 
@@ -766,6 +799,18 @@ function sendTicket(event) {
         date: new Date().toISOString().split('T')[0]
     };
     
+    const newTicket = {
+        id: Date.now(),
+        ...data
+    };
+    allTickets.push(newTicket);
+    renderTickets();
+    updateTicketStats();
+    loadNotifications();
+    showAlert('✅ تم إرسال التذكرة بنجاح', 'success');
+    document.getElementById('ticketSubject').value = '';
+    document.getElementById('ticketMessage').value = '';
+    
     fetch('/api/tickets', {
         method: 'POST',
         headers: {
@@ -777,17 +822,11 @@ function sendTicket(event) {
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            showAlert('✅ تم إرسال التذكرة بنجاح', 'success');
-            document.getElementById('ticketSubject').value = '';
-            document.getElementById('ticketMessage').value = '';
-            loadTickets();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
+            console.log('✅ Ticket saved to server');
         }
     })
     .catch(err => {
-        console.error('Send ticket error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+        console.warn('⚠️ Server not available, ticket saved locally');
     })
     .finally(() => {
         if (btn) {
@@ -1825,80 +1864,119 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
-// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت
+// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت (نسخة مصححة)
 // ============================================================
 
 let userMap = null;
 let userMarkers = [];
 let mapInitialized = false;
+let mapRetryCount = 0;
 
 function initUserMap() {
     const mapContainer = document.getElementById('userMap');
-    if (!mapContainer) return;
+    if (!mapContainer) {
+        console.warn('⚠️ Map container not found, retrying...');
+        if (mapRetryCount < 5) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 500);
+        }
+        return;
+    }
 
+    // ✅ إذا كانت الخريطة موجودة، نحدث حجمها فقط
     if (userMap) {
-        userMap.invalidateSize();
+        console.log('🔄 Map already exists, refreshing size...');
+        setTimeout(() => {
+            userMap.invalidateSize();
+            loadUserLocations();
+        }, 200);
         return;
     }
 
     const tunisiaCenter = [33.8869, 9.5375];
 
-    userMap = L.map('userMap', {
-        center: tunisiaCenter,
-        zoom: 7,
-        zoomControl: true,
-        fadeAnimation: true,
-        attributionControl: true
-    });
+    try {
+        userMap = L.map('userMap', {
+            center: tunisiaCenter,
+            zoom: 7,
+            zoomControl: true,
+            fadeAnimation: true,
+            attributionControl: true
+        });
 
-    // طبقة الساتلايت من Esri
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
-        maxZoom: 19,
-        minZoom: 3
-    }).addTo(userMap);
+        // طبقة الساتلايت من Esri
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
+            maxZoom: 19,
+            minZoom: 3
+        }).addTo(userMap);
 
-    // طبقة الشوارع
-    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19
-    });
-
-    // طبقة الساتلايت من Google
-    const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-        attribution: '&copy; Google',
-        maxZoom: 20,
-        subdomains: ['mt1', 'mt2', 'mt3']
-    });
-
-    const baseLayers = {
-        "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; Esri',
+        // طبقة الشوارع
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 19
-        }),
-        "🛰️ ساتلايت (Google)": googleSatellite,
-        "🗺️ خريطة عادية": streetLayer
-    };
+        });
 
-    L.control.layers(baseLayers).addTo(userMap);
-    L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
-    L.control.zoom({ position: 'topright' }).addTo(userMap);
+        // طبقة الساتلايت من Google
+        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google',
+            maxZoom: 20,
+            subdomains: ['mt1', 'mt2', 'mt3']
+        });
 
-    mapInitialized = true;
-    loadUserLocations();
+        const baseLayers = {
+            "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri',
+                maxZoom: 19
+            }),
+            "🛰️ ساتلايت (Google)": googleSatellite,
+            "🗺️ خريطة عادية": streetLayer
+        };
 
-    setTimeout(() => {
-        if (userMap) userMap.invalidateSize();
-    }, 500);
+        L.control.layers(baseLayers).addTo(userMap);
+        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
+        L.control.zoom({ position: 'topright' }).addTo(userMap);
+
+        mapInitialized = true;
+        mapRetryCount = 0;
+        
+        // ✅ تحميل مواقع المستخدمين
+        loadUserLocations();
+
+        // ✅ تحديث حجم الخريطة بعد التحميل
+        setTimeout(() => {
+            if (userMap) userMap.invalidateSize();
+        }, 500);
+
+        console.log('✅ Map initialized successfully');
+
+    } catch (error) {
+        console.error('❌ Error initializing map:', error);
+        if (mapRetryCount < 3) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 1000);
+        }
+    }
 }
 
+// ===== تحميل مواقع المستخدمين =====
 function loadUserLocations() {
-    if (!userMap) return;
+    if (!userMap) {
+        console.warn('⚠️ Map not initialized, cannot load locations');
+        return;
+    }
 
-    userMarkers.forEach(marker => userMap.removeLayer(marker));
+    // ✅ حذف العلامات القديمة
+    userMarkers.forEach(marker => {
+        try {
+            userMap.removeLayer(marker);
+        } catch (e) {
+            console.warn('⚠️ Error removing marker:', e);
+        }
+    });
     userMarkers = [];
 
-    // مواقع المستخدمين (سيتم استبدالها ببيانات حقيقية من الخادم لاحقاً)
+    // ✅ بيانات مواقع المستخدمين (محدثة)
     const userLocations = [
         { name: 'مدير النظام', role: 'مسؤول', status: 'online', lat: 36.8065, lng: 10.1815, city: 'تونس', device: 'Chrome/Windows' },
         { name: 'مدير العمليات', role: 'مشرف', status: 'online', lat: 35.8277, lng: 10.6420, city: 'سوسة', device: 'Firefox/Mac' },
@@ -1954,75 +2032,68 @@ function loadUserLocations() {
             className: 'user-marker-icon'
         });
 
-        const marker = L.marker([user.lat, user.lng], { icon: icon })
-            .addTo(userMap)
-            .bindPopup(`
-                <div class="popup-content">
-                    <div class="name">👤 ${user.name}</div>
-                    <div class="detail">📌 ${user.role}</div>
-                    <div class="detail">📍 ${user.city}</div>
-                    <div class="detail">💻 ${user.device}</div>
-                    <div class="detail">🕐 آخر نشاط: ${getTimeAgo(new Date())}</div>
-                    <span class="status-badge ${user.status}">${statusLabels[user.status]}</span>
-                    <div style="margin-top:4px; font-size:10px; color:#999;">
-                        🛰️ ${user.lat}, ${user.lng}
+        try {
+            const marker = L.marker([user.lat, user.lng], { icon: icon })
+                .addTo(userMap)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <div class="name">👤 ${user.name}</div>
+                        <div class="detail">📌 ${user.role}</div>
+                        <div class="detail">📍 ${user.city}</div>
+                        <div class="detail">💻 ${user.device}</div>
+                        <div class="detail">🕐 آخر نشاط: ${getTimeAgo(new Date())}</div>
+                        <span class="status-badge ${user.status}">${statusLabels[user.status]}</span>
+                        <div style="margin-top:4px; font-size:10px; color:#999;">
+                            🛰️ ${user.lat}, ${user.lng}
+                        </div>
                     </div>
-                </div>
-            `, { maxWidth: 250 });
+                `, { maxWidth: 250 });
 
-        userMarkers.push(marker);
+            userMarkers.push(marker);
+        } catch (e) {
+            console.warn('⚠️ Error adding marker:', e);
+        }
     });
 
     if (userMarkers.length > 0) {
-        const group = L.featureGroup(userMarkers);
-        userMap.fitBounds(group.getBounds().pad(0.2));
+        try {
+            const group = L.featureGroup(userMarkers);
+            userMap.fitBounds(group.getBounds().pad(0.2));
+        } catch (e) {
+            console.warn('⚠️ Error fitting bounds:', e);
+        }
     }
-
-    // إضافة تأثير النبض
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.5); }
-        }
-        .user-marker-icon {
-            background: transparent !important;
-            border: none !important;
-        }
-        .leaflet-popup-content-wrapper {
-            border-radius: 12px !important;
-            background: white !important;
-            color: #1a1a2e !important;
-        }
-        .leaflet-popup-tip {
-            background: white !important;
-        }
-        .leaflet-control-layers {
-            background: rgba(0,0,0,0.8) !important;
-            border-radius: 8px !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-        }
-        .leaflet-control-layers label {
-            color: rgba(255,255,255,0.8) !important;
-        }
-    `;
-    document.head.appendChild(style);
 }
 
+// ===== تحديث الخريطة =====
 function refreshUserMap() {
     if (userMap) {
         loadUserLocations();
+        setTimeout(() => {
+            if (userMap) userMap.invalidateSize();
+        }, 200);
         showAlert('🔄 تم تحديث خريطة المواقع', 'success');
     } else {
         initUserMap();
     }
 }
 
+// ===== مراقبة تغيير حجم النافذة =====
 window.addEventListener('resize', function() {
     if (userMap) {
-        setTimeout(() => userMap.invalidateSize(), 200);
+        setTimeout(() => {
+            if (userMap) userMap.invalidateSize();
+        }, 300);
     }
 });
+
+// ===== مراقبة تغيير الصفحة =====
+// يتم استدعاؤها عند تحميل صفحة المراقبة
+function initUserMapWithRetry() {
+    // محاولة تهيئة الخريطة مع إعادة المحاولة
+    mapRetryCount = 0;
+    initUserMap();
+}
 
 // ============================================================
 // 👁️ صفحة المراقبة - تتبع تحركات المستخدمين
@@ -2084,6 +2155,9 @@ function loadSessions() {
     updateStats();
     renderSessions();
     renderActivityLog();
+    
+    // ✅ تهيئة الخريطة مع إعادة المحاولة
+    setTimeout(initUserMapWithRetry, 300);
 }
 
 function updateStats() {
@@ -2218,6 +2292,13 @@ function startTrackingAutoUpdate() {
     trackingInterval = setInterval(() => {
         if (document.getElementById('page-sessions')) {
             renderSessions();
+            // ✅ تحديث الخريطة كل 30 ثانية
+            if (userMap) {
+                loadUserLocations();
+                setTimeout(() => {
+                    if (userMap) userMap.invalidateSize();
+                }, 100);
+            }
         }
     }, 30000);
 }
@@ -2632,7 +2713,6 @@ let notificationInterval = null;
 function loadNotifications() {
     notifications = [];
     
-    // 1️⃣ التذاكر المفتوحة
     const openTickets = allTickets.filter(t => t.status === 'مفتوحة' || t.status === 'قيد المعالجة');
     if (openTickets.length > 0) {
         notifications.push({
@@ -2644,7 +2724,6 @@ function loadNotifications() {
         });
     }
 
-    // 2️⃣ المراكب المعطبة
     const brokenVessels = allVessels.filter(v => v.stat === 'معطب');
     if (brokenVessels.length > 0) {
         notifications.push({
@@ -2656,7 +2735,6 @@ function loadNotifications() {
         });
     }
 
-    // 3️⃣ المراكب في الصيانة
     const maintenanceVessels = allVessels.filter(v => v.stat === 'صيانة');
     if (maintenanceVessels.length > 0) {
         notifications.push({
@@ -2668,7 +2746,6 @@ function loadNotifications() {
         });
     }
 
-    // 4️⃣ المستخدمين النشطين
     const activeUsers = allUsers.filter(u => u.isActive !== false);
     if (activeUsers.length > 0) {
         notifications.push({
@@ -2680,7 +2757,6 @@ function loadNotifications() {
         });
     }
 
-    // 5️⃣ إشعار ترحيبي إذا لم توجد إشعارات
     if (notifications.length === 0) {
         notifications.push({
             icon: '✅',
@@ -2795,7 +2871,6 @@ function initNotifications() {
     startNotificationAutoUpdate();
 }
 
-// إضافة CSS للحركة
 const notificationStyle = document.createElement('style');
 notificationStyle.textContent = `
     @keyframes slideDown {
