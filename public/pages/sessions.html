@@ -10,6 +10,36 @@
             padding: 20px;
         }
 
+        .sessions-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
+
+        .stat-card.online .number { color: #4ade80; }
+        .stat-card.total .number { color: #60a5fa; }
+        .stat-card.today .number { color: #fbbf24; }
+
         .sessions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -22,18 +52,24 @@
             border-radius: 12px;
             padding: 16px;
             border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s;
+        }
+
+        .session-card:hover {
+            background: rgba(255,255,255,0.05);
         }
 
         .session-card .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .session-card .user-name {
             font-weight: bold;
             color: rgba(255,255,255,0.8);
+            font-size: 15px;
         }
 
         .session-card .user-role {
@@ -48,11 +84,15 @@
             font-size: 13px;
             color: rgba(255,255,255,0.5);
             margin: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .session-card .info i {
-            margin-left: 6px;
-            width: 16px;
+            width: 18px;
+            text-align: center;
+            font-size: 12px;
         }
 
         .session-card .status {
@@ -63,149 +103,203 @@
             margin-top: 6px;
         }
 
-        .status.active {
+        .status.online {
             background: rgba(74,222,128,0.15);
             color: #4ade80;
         }
 
-        .status.inactive {
+        .status.offline {
             background: rgba(248,113,113,0.15);
             color: #f87171;
         }
 
-        /* ===== خريطة مصغرة ===== */
-        .mini-map-container {
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 20px;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-
-        .mini-map-container h3 {
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .mini-map {
-            width: 100%;
-            height: 200px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: rgba(255,255,255,0.2);
-            font-size: 14px;
-            border: 1px dashed rgba(255,255,255,0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .mini-map .map-placeholder {
-            text-align: center;
-        }
-
-        .mini-map .map-placeholder i {
-            font-size: 48px;
-            display: block;
-            margin-bottom: 8px;
-            opacity: 0.3;
-        }
-
-        /* ===== تتبع المراكب ===== */
-        .tracking-section {
-            margin-top: 20px;
-        }
-
-        .tracking-section h3 {
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-            margin-bottom: 12px;
-        }
-
-        .tracking-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-        }
-
-        .tracking-item {
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .tracking-item .vessel-name {
-            font-weight: bold;
-            color: rgba(255,255,255,0.7);
-            font-size: 13px;
-        }
-
-        .tracking-item .vessel-status {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-
-        .tracking-item .vessel-status.online {
-            background: rgba(74,222,128,0.15);
-            color: #4ade80;
-        }
-
-        .tracking-item .vessel-status.offline {
-            background: rgba(248,113,113,0.15);
-            color: #f87171;
-        }
-
-        .tracking-item .vessel-status.maintenance {
+        .status.idle {
             background: rgba(251,191,36,0.15);
             color: #fbbf24;
         }
 
-        .tracking-item .vessel-location {
-            font-size: 11px;
+        /* ===== سجل التحركات ===== */
+        .activity-log {
+            margin-top: 20px;
+        }
+
+        .activity-log h3 {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .activity-log table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .activity-log th {
+            text-align: right;
+            padding: 10px 12px;
             color: rgba(255,255,255,0.3);
+            font-weight: normal;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 11px;
+        }
+
+        .activity-log td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .activity-log .action {
+            font-weight: bold;
+        }
+
+        .activity-log .action.login { color: #4ade80; }
+        .activity-log .action.logout { color: #f87171; }
+        .activity-log .action.view { color: #60a5fa; }
+        .activity-log .action.edit { color: #fbbf24; }
+        .activity-log .action.delete { color: #f87171; }
+        .activity-log .action.add { color: #4ade80; }
+
+        .activity-log .time {
+            color: rgba(255,255,255,0.2);
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .scrollable-table {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .scrollable-table::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollable-table::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+        }
+        .scrollable-table::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section input,
+        .filter-section select {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+        }
+
+        .filter-section input:focus,
+        .filter-section select:focus {
+            outline: none;
+            border-color: rgba(96,165,250,0.3);
+        }
+
+        .filter-section input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+
+        .filter-section select option {
+            background: #1a1a2e;
+        }
+
+        .clear-filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .clear-filter-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
     </style>
 </head>
 <body>
     <div class="sessions-container">
-        <h2 style="margin-bottom: 4px;">👁️ المراقبة</h2>
-        <p style="opacity:0.4; font-size:14px; margin-bottom:20px;">مراقبة المستخدمين النشطين وتتبع المراكب</p>
+        <h2 style="margin-bottom: 4px;">👁️ مراقبة المستخدمين</h2>
+        <p style="opacity:0.4; font-size:14px; margin-bottom:20px;">مراقبة تحركات المستخدمين والجلسات النشطة</p>
+
+        <!-- ===== الإحصائيات ===== -->
+        <div class="sessions-stats" id="sessionsStats">
+            <div class="stat-card online">
+                <div class="number" id="onlineCount">0</div>
+                <div class="label">🟢 متصلون الآن</div>
+            </div>
+            <div class="stat-card total">
+                <div class="number" id="totalUsers">0</div>
+                <div class="label">👥 إجمالي المستخدمين</div>
+            </div>
+            <div class="stat-card today">
+                <div class="number" id="todayActivity">0</div>
+                <div class="label">📊 نشاط اليوم</div>
+            </div>
+        </div>
 
         <!-- ===== الجلسات النشطة ===== -->
+        <h3 style="color:rgba(255,255,255,0.6); font-size:14px; margin-bottom:12px;">🟢 المستخدمين النشطين</h3>
         <div class="sessions-grid" id="sessionsGrid">
-            <div style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">
-                ⏳ جاري تحميل الجلسات...
-            </div>
+            <div class="no-data">⏳ جاري تحميل الجلسات...</div>
         </div>
 
-        <!-- ===== خريطة مصغرة ===== -->
-        <div class="mini-map-container">
-            <h3>🗺️ موقع المراكب على الخريطة</h3>
-            <div class="mini-map" id="miniMap">
-                <div class="map-placeholder">
-                    <i class="fas fa-map"></i>
-                    <span>خريطة تتبع المراكب</span>
-                    <br>
-                    <small style="opacity:0.5;">يتم تحديث المواقع تلقائياً</small>
+        <!-- ===== سجل التحركات ===== -->
+        <div class="activity-log">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                <h3 style="margin:0;">📋 سجل التحركات</h3>
+                <div class="filter-section">
+                    <input type="text" id="searchActivity" placeholder="🔍 بحث..." oninput="filterActivity()">
+                    <select id="filterAction" onchange="filterActivity()">
+                        <option value="">جميع الإجراءات</option>
+                        <option value="تسجيل دخول">تسجيل دخول</option>
+                        <option value="تسجيل خروج">تسجيل خروج</option>
+                        <option value="عرض">عرض</option>
+                        <option value="تعديل">تعديل</option>
+                        <option value="إضافة">إضافة</option>
+                        <option value="حذف">حذف</option>
+                    </select>
+                    <button class="clear-filter-btn" onclick="clearFilters()">🗑️ مسح</button>
                 </div>
             </div>
-        </div>
-
-        <!-- ===== تتبع المراكب ===== -->
-        <div class="tracking-section">
-            <h3>🚢 تتبع المراكب</h3>
-            <div class="tracking-grid" id="trackingGrid">
-                <div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2); grid-column: 1 / -1;">
-                    ⏳ جاري تحميل بيانات المراكب...
-                </div>
+            <div class="scrollable-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>الإجراء</th>
+                            <th>الصفحة</th>
+                            <th>الوقت</th>
+                            <th>الجهاز</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityBody">
+                        <tr><td colspan="5" class="no-data">⏳ جاري تحميل السجل...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
