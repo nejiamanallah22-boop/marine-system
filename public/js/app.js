@@ -1920,3 +1920,207 @@ console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
 console.log('👤 حسابات: admin, manager, editor, viewer');
 console.log('🔑 كلمة المرور: 123456');
+// ============================================================
+// 🤖 الذكاء الاصطناعي
+// ============================================================
+
+function askAI(userMessage) {
+    const input = document.getElementById('chatInput');
+    const chatBox = document.getElementById('chatBox');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    
+    // الحصول على النص من الإدخال أو من المعامل
+    let message = userMessage || input?.value?.trim();
+    if (!message) {
+        showAlert('⚠️ الرجاء كتابة سؤال', 'warning');
+        return;
+    }
+
+    // إضافة رسالة المستخدم
+    addMessage('user', message);
+
+    // مسح حقل الإدخال
+    if (input) input.value = '';
+
+    // تعطيل الزر
+    if (sendBtn) sendBtn.disabled = true;
+
+    // إظهار مؤشر الكتابة
+    if (typingIndicator) typingIndicator.style.display = 'block';
+
+    // التمرير للأسفل
+    scrollChatToBottom();
+
+    // محاكاة معالجة الطلب (يمكن استبدالها بـ API حقيقي)
+    setTimeout(() => {
+        const response = generateAIResponse(message);
+        addMessage('ai', response);
+        
+        // إخفاء مؤشر الكتابة
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        if (sendBtn) sendBtn.disabled = false;
+        scrollChatToBottom();
+    }, 500 + Math.random() * 1000);
+}
+
+function addMessage(type, content) {
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    
+    const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
+    const time = new Date().toLocaleTimeString('ar-TN');
+
+    messageDiv.innerHTML = `
+        <div class="sender">${sender}</div>
+        <div class="content">${content}</div>
+        <div class="time">${time}</div>
+    `;
+
+    chatBox.appendChild(messageDiv);
+}
+
+function scrollChatToBottom() {
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
+function generateAIResponse(message) {
+    const msg = message.toLowerCase();
+    
+    // ===== تحليل البيانات الحالية =====
+    const totalVessels = allVessels.length;
+    const readyVessels = allVessels.filter(v => v.stat === 'صالح').length;
+    const brokenVessels = allVessels.filter(v => v.stat === 'معطب').length;
+    const maintenanceVessels = allVessels.filter(v => v.stat === 'صيانة').length;
+    const totalMaintenance = allMaintenance.length;
+    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+
+    const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
+
+    // ===== أنماط الردود =====
+
+    // 1️⃣ أسئلة الترحيب
+    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
+        return `👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟<br><br>
+        يمكنك أن تسألني عن:<br>
+        • 📊 حالة المراكب<br>
+        • 🔧 إحصائيات الصيانة<br>
+        • 🔮 توقع الأعطال<br>
+        • 💡 نصائح لتحسين الأداء`;
+    }
+
+    // 2️⃣ عدد المراكب الصالحة
+    if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
+        return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
+        نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
+        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}`;
+    }
+
+    // 3️⃣ عدد المراكب المعطبة
+    if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
+        const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
+        return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
+        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}`;
+    }
+
+    // 4️⃣ إحصائيات الصيانة
+    if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
+        const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
+        const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
+        return `🔧 إحصائيات الصيانة:<br>
+        • 📊 إجمالي السجلات: <strong>${totalMaintenance}</strong><br>
+        • ✅ مكتملة: <strong>${completed}</strong><br>
+        • 🔄 قيد الإنجاز: <strong>${inProgress}</strong><br>
+        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong>`;
+    }
+
+    // 5️⃣ توقع الأعطال
+    if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
+        const highRisk = allVessels.filter(v => {
+            const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
+            return age > 12 && v.stat === 'صالح';
+        });
+        
+        const recommendations = highRisk.length > 0 
+            ? `⚠️ هناك ${highRisk.length} مركب يحتاج إلى فحص:<br>${highRisk.map(v => `• ${v.name}`).join('<br>')}`
+            : '✅ جميع المراكب في حالة جيدة';
+        
+        return `🔮 توقع الأعطال:<br><br>
+        • المراكب المعطبة حالياً: ${brokenVessels}<br>
+        • المراكب في الصيانة: ${maintenanceVessels}<br>
+        • ${recommendations}`;
+    }
+
+    // 6️⃣ تقرير شامل
+    if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
+        return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
+        🚢 <strong>المراكب:</strong><br>
+        • المجموع: ${totalVessels}<br>
+        • صالح: ${readyVessels} (${readyPercent}%)<br>
+        • معطب: ${brokenVessels}<br>
+        • صيانة: ${maintenanceVessels}<br><br>
+        🔧 <strong>الصيانة:</strong><br>
+        • إجمالي السجلات: ${totalMaintenance}<br>
+        • التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت<br><br>
+        📌 <strong>التوصيات:</strong><br>
+        ${readyPercent < 70 ? '• ⚠️ يوصى بتحسين نسبة الجاهزية' : '• ✅ الأداء جيد'}<br>
+        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}`;
+    }
+
+    // 7️⃣ الوحدات البحرية
+    if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
+        const units = {};
+        allVessels.forEach(v => {
+            if (v.supp) {
+                units[v.supp] = (units[v.supp] || 0) + 1;
+            }
+        });
+        let unitText = Object.entries(units)
+            .map(([unit, count]) => `• ${unit}: ${count} مركب`)
+            .join('<br>');
+        return `🏭 <strong>الوحدات البحرية</strong><br><br>
+        ${unitText || 'لا توجد وحدات مسجلة'}`;
+    }
+
+    // 8️⃣ نصائح تحسين
+    if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
+        const tips = [];
+        if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
+        if (brokenVessels > 3) tips.push('• 🔧 تخصيص فرق لإصلاح المراكب المعطبة');
+        if (totalCost > 10000) tips.push('• 💰 مراجعة عقود الصيانة لتقليل التكاليف');
+        if (tips.length === 0) tips.push('• ✅ الأداء ممتاز، استمر في الصيانة الدورية');
+        tips.push('• 📊 استخدام الذكاء الاصطناعي لتحليل الأعطال المتكررة');
+        
+        return `💡 <strong>نصائح لتحسين الأداء</strong><br><br>
+        ${tips.join('<br>')}`;
+    }
+
+    // 9️⃣ مساعدة
+    if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
+        return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
+        إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
+        • 🚢 "كم عدد المراكب الصالحة؟"<br>
+        • ⚠️ "عرض المراكب المعطبة"<br>
+        • 🔧 "إحصائيات الصيانة"<br>
+        • 🔮 "توقع الأعطال القادمة"<br>
+        • 📊 "تقرير شامل عن الأسطول"<br>
+        • 💡 "نصائح لتحسين الأداء"<br>
+        • 🏭 "الوحدات البحرية"`;
+    }
+
+    // 🔟 رد افتراضي
+    return `🤔 لم أفهم سؤالك بالكامل.<br><br>
+    يمكنك أن تسألني عن:<br>
+    • 📊 حالة المراكب والجاهزية<br>
+    • 🔧 إحصائيات الصيانة والتكاليف<br>
+    • 🔮 توقع الأعطال<br>
+    • 💡 نصائح لتحسين الأداء<br>
+    • 🏭 معلومات عن الوحدات البحرية<br><br>
+    أو اكتب "مساعدة" لعرض جميع الخيارات.`;
+}
