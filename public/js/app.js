@@ -103,7 +103,15 @@ function initPage(pageName) {
 }
 
 function initAIAssistant() {
-    console.log('🤖 AI Assistant initialized');
+    console.log('🤖 AI Assistant initialized with voice support');
+    loadVoices();
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = initSpeechRecognition();
+        console.log('🎤 Speech recognition ready');
+    } else {
+        console.warn('⚠️ Speech recognition not supported');
+    }
 }
 
 function initTrackingPage() {
@@ -541,7 +549,23 @@ function getDemoVessels() {
         { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
         { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
         { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
-        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' }
+        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
+        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
+        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
+        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
+        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
+        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
+        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
+        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
+        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
+        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
+        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
+        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
+        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
+        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
+        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
+        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
+        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
     ];
 }
 
@@ -864,7 +888,7 @@ function clearUserInputs() {
 }
 
 // ============================================================
-// 🚢 دوال المراكب (مع خادم MongoDB)
+// 🚢 دوال المراكب (مع خادم MongoDB) - نسخة مُصححة
 // ============================================================
 
 function addItem() {
@@ -874,15 +898,16 @@ function addItem() {
         return;
     }
     
-    const name = document.getElementById('iName')?.value;
+    const name = document.getElementById('iName')?.value?.trim();
     if (!name) {
         showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
+        document.getElementById('iName')?.focus();
         return;
     }
     
     const data = {
         name: name,
-        num: document.getElementById('iNum')?.value || '',
+        num: document.getElementById('iNum')?.value?.trim() || '',
         len: parseFloat(document.getElementById('iLen')?.value) || 0,
         cat: document.getElementById('iCat')?.value || 'البروق',
         reg: document.getElementById('iReg')?.value || '',
@@ -900,6 +925,14 @@ function addItem() {
     const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
     const method = editingVesselId ? 'PUT' : 'POST';
     
+    const addBtn = document.querySelector('[onclick="addItem()"]');
+    if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.textContent = '⏳ جاري الحفظ...';
+    }
+    
+    showAlert('⏳ جاري حفظ المركب...', 'info');
+    
     fetch(url, {
         method: method,
         headers: {
@@ -908,20 +941,39 @@ function addItem() {
         },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
+    .then(async res => {
+        const responseData = await res.json();
+        if (!res.ok) {
+            throw new Error(responseData.error || 'فشل حفظ المركب');
+        }
+        return responseData;
+    })
     .then(data => {
         if (data.success) {
-            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
+            showAlert(editingVesselId ? '✅ تم تحديث المركب بنجاح' : '✅ تم إضافة المركب بنجاح', 'success');
             editingVesselId = null;
             clearVesselInputs();
             loadVessels();
+            
+            const btn = document.querySelector('[onclick="addItem()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 إضافة مركب';
+            }
         } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+            showAlert('❌ ' + (data.error || 'خطأ في حفظ المركب'), 'danger');
         }
     })
     .catch(err => {
-        console.error('Error:', err);
-        showAlert('❌ خطأ في العملية', 'danger');
+        console.error('Error saving vessel:', err);
+        showAlert('❌ ' + err.message, 'danger');
+    })
+    .finally(() => {
+        const btn = document.querySelector('[onclick="addItem()"]');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = editingVesselId ? '💾 تحديث مركب' : '💾 إضافة مركب';
+        }
     });
 }
 
@@ -933,12 +985,16 @@ function editVessel(id) {
     }
     
     editingVesselId = id;
+    
     document.getElementById('iName').value = vessel.name || '';
     document.getElementById('iNum').value = vessel.num || '';
     document.getElementById('iLen').value = vessel.len || 0;
     document.getElementById('iCat').value = vessel.cat || 'البروق';
     document.getElementById('iReg').value = vessel.reg || '';
+    
+    updateZones();
     document.getElementById('iZone').value = vessel.zone || '';
+    
     document.getElementById('iPort').value = vessel.port || '';
     document.getElementById('iSupp').value = vessel.supp || '';
     document.getElementById('iStat').value = vessel.stat || 'صالح';
@@ -948,25 +1004,50 @@ function editVessel(id) {
     document.getElementById('iRef').value = vessel.ref || '';
     document.getElementById('iRepairer').value = vessel.repairer || '';
     
+    const btn = document.querySelector('[onclick="addItem()"]');
+    if (btn) {
+        btn.textContent = '💾 تحديث مركب';
+    }
+    
+    const form = document.querySelector('.fleet-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.style.border = '2px solid #fbbf24';
+        form.style.boxShadow = '0 0 20px rgba(251,191,36,0.3)';
+        setTimeout(() => {
+            form.style.border = '1px solid rgba(255,255,255,0.1)';
+            form.style.boxShadow = 'none';
+        }, 3000);
+    }
+    
     showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
 }
 
 function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المركب؟')) return;
+    
     const token = getToken();
     if (!token) {
         showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
+    showAlert('⏳ جاري الحذف...', 'info');
+    
     fetch('/api/vessels/' + id, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'فشل حذف المركب');
+        }
+        return data;
+    })
     .then(data => {
         if (data.success) {
-            showAlert('✅ تم الحذف', 'success');
+            showAlert('✅ تم حذف المركب بنجاح', 'success');
             loadVessels();
         } else {
             showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
@@ -974,7 +1055,7 @@ function deleteVessel(id) {
     })
     .catch(err => {
         console.error('Delete error:', err);
-        showAlert('❌ خطأ في الحذف', 'danger');
+        showAlert('❌ ' + err.message, 'danger');
     });
 }
 
@@ -993,6 +1074,13 @@ function clearVesselInputs() {
     document.getElementById('iEnd').value = '';
     document.getElementById('iRef').value = '';
     document.getElementById('iRepairer').value = '';
+    
+    const btn = document.querySelector('[onclick="addItem()"]');
+    if (btn) {
+        btn.textContent = '💾 إضافة مركب';
+        btn.disabled = false;
+    }
+    
     editingVesselId = null;
 }
 
@@ -1000,14 +1088,16 @@ function updateZones() {
     const reg = document.getElementById('iReg')?.value;
     const zoneSelect = document.getElementById('iZone');
     if (!zoneSelect) return;
+    
     const zones = {
         'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة', 'نابل', 'قليبية'],
         'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
         'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
     };
+    
     const options = zones[reg] || ['المنطقة غير محددة'];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    zoneSelect.innerHTML = '<option value="">📍 اختر المنطقة</option>';
     options.forEach(z => {
         zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
     });
@@ -1388,11 +1478,23 @@ function renderEfficiencyTables(vessels) {
     const container = document.getElementById('efficiencyTablesContainer');
     if (!container) return;
     let html = renderGeneralEfficiencyTable(vessels);
-    const regions = { 'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'], 'الساحل': ['سوسة', 'المنستير', 'المهدية'], 'الوسط': ['صفاقس', 'قابس', 'جربة'], 'الجنوب': ['جرجيس', 'بن قردان'] };
+    
+    const regions = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة', 'نابل', 'قليبية'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
+    };
+    
     Object.keys(regions).forEach(region => {
-        const regionVessels = vessels.filter(v => regions[region].some(city => v.zone?.includes(city)));
-        if (regionVessels.length > 0) html += renderRegionEfficiencyTable(regionVessels, region);
+        const regionVessels = vessels.filter(v => 
+            regions[region].some(city => v.zone?.includes(city))
+        );
+        if (regionVessels.length > 0) {
+            html += renderRegionEfficiencyTable(regionVessels, region);
+        }
     });
+    
     container.innerHTML = html;
 }
 
@@ -1617,6 +1719,185 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
+// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
+// ============================================================
+
+let recognition = null;
+let isListening = false;
+let lastResponseText = '';
+
+function speakText(text) {
+    const cleanText = text.replace(/<[^>]*>/g, '').trim();
+    
+    if (!cleanText) {
+        showAlert('⚠️ لا يوجد نص للتحدث', 'warning');
+        return;
+    }
+
+    lastResponseText = cleanText;
+
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ar-SA';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        const voices = window.speechSynthesis.getVoices();
+        const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
+        if (arabicVoice) {
+            utterance.voice = arabicVoice;
+        }
+
+        showAlert('🔊 جاري التحدث...', 'info');
+
+        utterance.onend = function() {
+            showAlert('✅ انتهى التحدث', 'success');
+        };
+
+        utterance.onerror = function() {
+            showAlert('❌ خطأ في تشغيل الصوت', 'danger');
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } else {
+        showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
+    }
+}
+
+function speakLastResponse() {
+    if (lastResponseText) {
+        speakText(lastResponseText);
+    } else {
+        const messages = document.querySelectorAll('.chat-message.ai .content');
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            speakText(lastMessage.textContent);
+        } else {
+            showAlert('⚠️ لا يوجد رد سابق للتحدث', 'warning');
+        }
+    }
+}
+
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showAlert('❌ متصفحك لا يدعم خاصية التعرف على الصوت', 'danger');
+        return null;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function() {
+        isListening = true;
+        document.getElementById('micBtn')?.classList.add('listening');
+        document.getElementById('micBtn').innerHTML = '⏹️';
+        document.getElementById('voiceStatus').style.display = 'block';
+        document.getElementById('voiceStatus').className = 'voice-status active';
+        document.getElementById('voiceStatusText').textContent = '🎤 جاري الاستماع... تحدث الآن';
+        showAlert('🎤 جاري الاستماع...', 'info');
+    };
+
+    recognition.onresult = function(event) {
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0].transcript.trim();
+        
+        document.getElementById('voiceStatusText').textContent = `📝 ${transcript}`;
+
+        if (result.isFinal) {
+            document.getElementById('chatInput').value = transcript;
+            document.getElementById('voiceStatusText').textContent = `✅ تم التعرف على: ${transcript}`;
+            
+            setTimeout(() => {
+                askAI(transcript);
+                stopVoiceInput();
+            }, 500);
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        
+        let errorMessage = '❌ حدث خطأ في التعرف على الصوت';
+        if (event.error === 'not-allowed') {
+            errorMessage = '❌ الرجاء السماح للتطبيق باستخدام الميكروفون';
+        } else if (event.error === 'no-speech') {
+            errorMessage = '⚠️ لم يتم سماع أي صوت، حاول مرة أخرى';
+        }
+        
+        showAlert(errorMessage, 'danger');
+        stopVoiceInput();
+    };
+
+    recognition.onend = function() {
+        stopVoiceInput();
+    };
+
+    return recognition;
+}
+
+function toggleVoiceInput() {
+    if (isListening) {
+        stopVoiceInput();
+    } else {
+        startVoiceInput();
+    }
+}
+
+function startVoiceInput() {
+    if (!recognition) {
+        recognition = initSpeechRecognition();
+        if (!recognition) return;
+    }
+
+    try {
+        recognition.start();
+        isListening = true;
+    } catch (error) {
+        console.error('Start recognition error:', error);
+        showAlert('❌ خطأ في تشغيل الميكروفون', 'danger');
+    }
+}
+
+function stopVoiceInput() {
+    if (recognition) {
+        try {
+            recognition.stop();
+        } catch (error) {
+            console.error('Stop recognition error:', error);
+        }
+    }
+    
+    isListening = false;
+    const micBtn = document.getElementById('micBtn');
+    if (micBtn) {
+        micBtn.classList.remove('listening');
+        micBtn.innerHTML = '🎤';
+    }
+    const voiceStatus = document.getElementById('voiceStatus');
+    if (voiceStatus) {
+        voiceStatus.className = 'voice-status';
+        voiceStatus.style.display = 'none';
+    }
+}
+
+function loadVoices() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = function() {
+            window.speechSynthesis.getVoices();
+        };
+    }
+}
+
+// ============================================================
 // 🤖 الذكاء الاصطناعي - المساعد الذكي
 // ============================================================
 
@@ -1657,9 +1938,21 @@ function addMessage(type, content) {
     const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
     const time = new Date().toLocaleTimeString('ar-TN');
 
+    let contentHTML = content;
+    if (type === 'ai') {
+        contentHTML = `
+            ${content}
+            <br>
+            <button class="audio-btn" onclick="speakText(this.parentElement.textContent.replace(/[🔊استماع]/g, '').trim())">
+                🔊 استماع
+            </button>
+        `;
+        lastResponseText = content.replace(/<[^>]*>/g, '').trim();
+    }
+
     messageDiv.innerHTML = `
         <div class="sender">${sender}</div>
-        <div class="content">${content}</div>
+        <div class="content">${contentHTML}</div>
         <div class="time">${time}</div>
     `;
 
@@ -1684,7 +1977,6 @@ function generateAIResponse(message) {
     const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
     const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
 
-    // 1️⃣ أسئلة الترحيب
     if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
         return `👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟<br><br>
         يمكنك أن تسألني عن:<br>
@@ -1694,21 +1986,18 @@ function generateAIResponse(message) {
         • 💡 نصائح لتحسين الأداء`;
     }
 
-    // 2️⃣ عدد المراكب الصالحة
     if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
         return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
         نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
         ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}`;
     }
 
-    // 3️⃣ عدد المراكب المعطبة
     if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
         const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
         return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
         ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}`;
     }
 
-    // 4️⃣ إحصائيات الصيانة
     if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
         const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
         const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
@@ -1719,7 +2008,6 @@ function generateAIResponse(message) {
         • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong>`;
     }
 
-    // 5️⃣ توقع الأعطال
     if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
         const highRisk = allVessels.filter(v => {
             const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
@@ -1736,7 +2024,6 @@ function generateAIResponse(message) {
         • ${recommendations}`;
     }
 
-    // 6️⃣ تقرير شامل
     if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
         return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
         🚢 <strong>المراكب:</strong><br>
@@ -1752,7 +2039,6 @@ function generateAIResponse(message) {
         ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}`;
     }
 
-    // 7️⃣ الوحدات البحرية
     if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
         const units = {};
         allVessels.forEach(v => {
@@ -1767,7 +2053,6 @@ function generateAIResponse(message) {
         ${unitText || 'لا توجد وحدات مسجلة'}`;
     }
 
-    // 8️⃣ نصائح تحسين
     if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
         const tips = [];
         if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
@@ -1780,7 +2065,6 @@ function generateAIResponse(message) {
         ${tips.join('<br>')}`;
     }
 
-    // 9️⃣ مساعدة
     if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
         return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
         إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
@@ -1793,7 +2077,6 @@ function generateAIResponse(message) {
         • 🏭 "الوحدات البحرية"`;
     }
 
-    // 🔟 رد افتراضي
     return `🤔 لم أفهم سؤالك بالكامل.<br><br>
     يمكنك أن تسألني عن:<br>
     • 📊 حالة المراكب والجاهزية<br>
@@ -1823,251 +2106,4 @@ function initMap() {
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin@example.com / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
-// ============================================================
-// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
-// ============================================================
-
-// متغيرات الصوت
-let recognition = null;
-let isListening = false;
-let lastResponseText = '';
-
-// ===== دالة تحويل النص إلى كلام (Text-to-Speech) =====
-function speakText(text) {
-    // إزالة علامات HTML
-    const cleanText = text.replace(/<[^>]*>/g, '').trim();
-    
-    if (!cleanText) {
-        showAlert('⚠️ لا يوجد نص للتحدث', 'warning');
-        return;
-    }
-
-    // حفظ النص الأخير
-    lastResponseText = cleanText;
-
-    // استخدام Web Speech API
-    if ('speechSynthesis' in window) {
-        // إيقاف أي كلام سابق
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'ar-SA'; // اللغة العربية
-        utterance.rate = 0.9; // سرعة الكلام
-        utterance.pitch = 1; // نبرة الصوت
-        utterance.volume = 1; // مستوى الصوت
-
-        // اختيار صوت عربي إذا كان متاحاً
-        const voices = window.speechSynthesis.getVoices();
-        const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-        if (arabicVoice) {
-            utterance.voice = arabicVoice;
-        }
-
-        // إظهار إشعار أثناء التحدث
-        showAlert('🔊 جاري التحدث...', 'info');
-
-        utterance.onend = function() {
-            showAlert('✅ انتهى التحدث', 'success');
-        };
-
-        utterance.onerror = function() {
-            showAlert('❌ خطأ في تشغيل الصوت', 'danger');
-        };
-
-        window.speechSynthesis.speak(utterance);
-    } else {
-        showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
-    }
-}
-
-// ===== دالة تشغيل آخر رد =====
-function speakLastResponse() {
-    if (lastResponseText) {
-        speakText(lastResponseText);
-    } else {
-        // البحث عن آخر رسالة من المساعد
-        const messages = document.querySelectorAll('.chat-message.ai .content');
-        if (messages.length > 0) {
-            const lastMessage = messages[messages.length - 1];
-            speakText(lastMessage.textContent);
-        } else {
-            showAlert('⚠️ لا يوجد رد سابق للتحدث', 'warning');
-        }
-    }
-}
-
-// ===== دالة تحويل الكلام إلى نص (Speech-to-Text) =====
-function initSpeechRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        showAlert('❌ متصفحك لا يدعم خاصية التعرف على الصوت', 'danger');
-        return null;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    
-    recognition.lang = 'ar-SA'; // اللغة العربية
-    recognition.continuous = false; // التوقف بعد كل جملة
-    recognition.interimResults = true; // عرض النتائج المؤقتة
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = function() {
-        isListening = true;
-        document.getElementById('micBtn')?.classList.add('listening');
-        document.getElementById('micBtn').innerHTML = '⏹️';
-        document.getElementById('voiceStatus').style.display = 'block';
-        document.getElementById('voiceStatus').textContent = '🎤 جاري الاستماع... تحدث الآن';
-        showAlert('🎤 جاري الاستماع...', 'info');
-    };
-
-    recognition.onresult = function(event) {
-        const result = event.results[event.results.length - 1];
-        const transcript = result[0].transcript.trim();
-        
-        // عرض النص المؤقت
-        document.getElementById('voiceStatus').textContent = `📝 ${transcript}`;
-
-        if (result.isFinal) {
-            // النص النهائي
-            document.getElementById('chatInput').value = transcript;
-            document.getElementById('voiceStatus').textContent = `✅ تم التعرف على: ${transcript}`;
-            
-            // إرسال السؤال تلقائياً
-            setTimeout(() => {
-                askAI(transcript);
-                stopVoiceInput();
-            }, 500);
-        }
-    };
-
-    recognition.onerror = function(event) {
-        console.error('Speech recognition error:', event.error);
-        
-        let errorMessage = '❌ حدث خطأ في التعرف على الصوت';
-        if (event.error === 'not-allowed') {
-            errorMessage = '❌ الرجاء السماح للتطبيق باستخدام الميكروفون';
-        } else if (event.error === 'no-speech') {
-            errorMessage = '⚠️ لم يتم سماع أي صوت، حاول مرة أخرى';
-        }
-        
-        showAlert(errorMessage, 'danger');
-        stopVoiceInput();
-    };
-
-    recognition.onend = function() {
-        stopVoiceInput();
-    };
-
-    return recognition;
-}
-
-// ===== تشغيل/إيقاف الاستماع =====
-function toggleVoiceInput() {
-    if (isListening) {
-        stopVoiceInput();
-    } else {
-        startVoiceInput();
-    }
-}
-
-function startVoiceInput() {
-    if (!recognition) {
-        recognition = initSpeechRecognition();
-        if (!recognition) return;
-    }
-
-    try {
-        recognition.start();
-        isListening = true;
-    } catch (error) {
-        console.error('Start recognition error:', error);
-        showAlert('❌ خطأ في تشغيل الميكروفون', 'danger');
-    }
-}
-
-function stopVoiceInput() {
-    if (recognition) {
-        try {
-            recognition.stop();
-        } catch (error) {
-            console.error('Stop recognition error:', error);
-        }
-    }
-    
-    isListening = false;
-    const micBtn = document.getElementById('micBtn');
-    if (micBtn) {
-        micBtn.classList.remove('listening');
-        micBtn.innerHTML = '🎤';
-    }
-    document.getElementById('voiceStatus').style.display = 'none';
-    document.getElementById('voiceStatus').textContent = '';
-}
-
-// ===== تحميل الأصوات العربية =====
-function loadVoices() {
-    if ('speechSynthesis' in window) {
-        // تحميل الأصوات
-        window.speechSynthesis.getVoices();
-        // تحديث الأصوات عند تغييرها
-        window.speechSynthesis.onvoiceschanged = function() {
-            window.speechSynthesis.getVoices();
-        };
-    }
-}
-
-// ===== تهيئة الصوت عند تحميل الصفحة =====
-function initAIAssistant() {
-    console.log('🤖 AI Assistant initialized with voice support');
-    loadVoices();
-    
-    // تهيئة التعرف على الصوت
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        recognition = initSpeechRecognition();
-        console.log('🎤 Speech recognition ready');
-    } else {
-        console.warn('⚠️ Speech recognition not supported');
-    }
-}
-
-// ===== تحديث دالة addMessage لإضافة زر الصوت =====
-// استبدل دالة addMessage الموجودة بهذه النسخة
-function addMessage(type, content) {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${type}`;
-    
-    const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = new Date().toLocaleTimeString('ar-TN');
-
-    let contentHTML = content;
-    
-    // إضافة زر الصوت لرسائل المساعد
-    if (type === 'ai') {
-        contentHTML = `
-            ${content}
-            <br>
-            <button class="audio-btn" onclick="speakText(this.parentElement.textContent.trim())">
-                🔊 استماع
-            </button>
-        `;
-        // حفظ النص الأخير
-        lastResponseText = content.replace(/<[^>]*>/g, '').trim();
-    }
-
-    messageDiv.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${contentHTML}</div>
-        <div class="time">${time}</div>
-    `;
-
-    chatBox.appendChild(messageDiv);
-    
-    // تشغيل صوت تلقائي لرسائل المساعد
-    if (type === 'ai') {
-        // تشغيل الصوت تلقائياً (اختياري)
-        // speakText(content.replace(/<[^>]*>/g, '').trim());
-    }
-}
+console.log('🎤 ميزات الصوت: تحدث مع المساعد واستمع للردود');
