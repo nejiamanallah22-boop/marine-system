@@ -492,15 +492,327 @@ function loadTickets() {
     .catch(err => console.error('Load tickets error:', err));
 }
 
-function loadUsers() {
-    // ✅ استخدام بيانات تجريبية مباشرة (بدون خادم)
-    allUsers = [
-        { id: '1', name: 'مدير النظام', email: 'admin@example.com', role: 'مسؤول', isActive: true, createdAt: new Date().toISOString() },
-        { id: '2', name: 'مدير العمليات', email: 'manager@example.com', role: 'مشرف', isActive: true, createdAt: new Date().toISOString() },
-        { id: '3', name: 'محرر', email: 'editor@example.com', role: 'محرر', isActive: true, createdAt: new Date().toISOString() },
-        { id: '4', name: 'مشاهد', email: 'viewer@example.com', role: 'مشاهد', isActive: true, createdAt: new Date().toISOString() }
+// ============================================================
+// 👥 دوال المستخدمين (مصححة: تدعم الوضع التجريبي Demo)
+// ============================================================
+
+function getDemoUsers() {
+    return [
+        { id: '1', name: 'مدير النظام', email: 'admin@example.com', role: 'مسؤول', isActive: true, createdAt: '2026-01-01' },
+        { id: '2', name: 'مدير العمليات', email: 'manager@example.com', role: 'مشرف', isActive: true, createdAt: '2026-01-01' },
+        { id: '3', name: 'محرر', email: 'editor@example.com', role: 'محرر', isActive: true, createdAt: '2026-01-01' },
+        { id: '4', name: 'مشاهد', email: 'viewer@example.com', role: 'مشاهد', isActive: true, createdAt: '2026-01-01' }
     ];
-    renderUsersTable();
+}
+
+function loadUsers() {
+    const token = getToken();
+    if (token && token.startsWith('demo-token')) {
+        if (!allUsers || allUsers.length === 0) allUsers = getDemoUsers();
+        renderUsersTable();
+        return;
+    }
+    if (!token) return;
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        allUsers = data || [];
+        console.log('✅ Users loaded:', allUsers.length);
+        renderUsersTable();
+    })
+    .catch(err => console.error('Load users error:', err));
+}
+
+function addUser() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        document.getElementById('uName')?.focus();
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        document.getElementById('uEmail')?.focus();
+        return;
+    }
+    if (!password || password.length < 4) {
+        showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
+        document.getElementById('uPassword')?.focus();
+        return;
+    }
+    
+    // ===== وضع تجريبي: إضافة محلية بدون خادم =====
+    if (token.startsWith('demo-token')) {
+        if (allUsers.some(u => u.email === email)) {
+            showAlert('❌ البريد الإلكتروني مستخدم بالفعل', 'danger');
+            return;
+        }
+        const newUser = {
+            id: Date.now().toString(),
+            name, email, role: role || 'مشاهد',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+        allUsers.push(newUser);
+        renderUsersTable();
+        clearUserInputs();
+        showAlert('✅ تم إضافة المستخدم بنجاح (وضع تجريبي)', 'success');
+        return;
+    }
+    
+    // تعطيل الزر لمنع الإرسال المتكرر
+    const addBtn = document.querySelector('[onclick="addUser()"]');
+    if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.textContent = '⏳ جاري الإضافة...';
+    }
+    
+    fetch('/api/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, email, password, role: role || 'مشاهد' })
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'فشل إضافة المستخدم');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
+            clearUserInputs();
+            loadUsers(); // تحديث الجدول
+            
+            // إغلاق النموذج إذا كان موجوداً
+            const modal = document.getElementById('addUserModal');
+            if (modal) modal.style.display = 'none';
+            
+            // إعادة تعيين زر الإضافة
+            const btn = document.querySelector('[onclick="addUser()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 إضافة مستخدم';
+            }
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+            const btn = document.querySelector('[onclick="addUser()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 إضافة مستخدم';
+            }
+        }
+    })
+    .catch(err => {
+        console.error('Add user error:', err);
+        showAlert('❌ ' + err.message, 'danger');
+        const btn = document.querySelector('[onclick="addUser()"]');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '💾 إضافة مستخدم';
+        }
+    });
+}
+
+function editUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const fillForm = (user) => {
+        document.getElementById('uName').value = user.name || '';
+        document.getElementById('uEmail').value = user.email || '';
+        document.getElementById('uPassword').value = '';
+        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
+        document.getElementById('uRole').value = user.role || 'مشاهد';
+        
+        const addBtn = document.querySelector('[onclick="addUser()"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 تحديث المستخدم';
+            addBtn.onclick = function() { updateUser(id); };
+        }
+        
+        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
+    };
+    
+    if (token.startsWith('demo-token')) {
+        const user = allUsers.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        fillForm(user);
+        return;
+    }
+    
+    fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(users => {
+        const user = users.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        fillForm(user);
+    })
+    .catch(err => {
+        console.error('Edit user error:', err);
+        showAlert('❌ خطأ في تحميل بيانات المستخدم', 'danger');
+    });
+}
+
+function updateUser(id) {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const name = document.getElementById('uName')?.value.trim();
+    const email = document.getElementById('uEmail')?.value.trim();
+    const password = document.getElementById('uPassword')?.value.trim();
+    const role = document.getElementById('uRole')?.value;
+    
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        return;
+    }
+    if (!email) {
+        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        return;
+    }
+    
+    const resetBtn = () => {
+        const addBtn = document.querySelector('[onclick*="updateUser"]');
+        if (addBtn) {
+            addBtn.textContent = '💾 إضافة مستخدم';
+            addBtn.onclick = addUser;
+            addBtn.disabled = false;
+        }
+    };
+    
+    if (token.startsWith('demo-token')) {
+        const user = allUsers.find(u => u.id === id);
+        if (!user) {
+            showAlert('⚠️ المستخدم غير موجود', 'warning');
+            return;
+        }
+        user.name = name;
+        user.email = email;
+        user.role = role;
+        renderUsersTable();
+        clearUserInputs();
+        resetBtn();
+        showAlert('✅ تم تحديث المستخدم بنجاح (وضع تجريبي)', 'success');
+        return;
+    }
+    
+    const data = { name, email, role };
+    if (password && password.length >= 4) {
+        data.password = password;
+    }
+    
+    const updateBtn = document.querySelector('[onclick*="updateUser"]');
+    if (updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = '⏳ جاري التحديث...';
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'فشل تحديث المستخدم');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
+            clearUserInputs();
+            resetBtn();
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+            const btn = document.querySelector('[onclick*="updateUser"]');
+            if (btn) btn.disabled = false;
+        }
+    })
+    .catch(err => {
+        console.error('Update user error:', err);
+        showAlert('❌ ' + err.message, 'danger');
+        const btn = document.querySelector('[onclick*="updateUser"]');
+        if (btn) btn.disabled = false;
+    });
+}
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    if (token.startsWith('demo-token')) {
+        allUsers = allUsers.filter(u => u.id !== id);
+        renderUsersTable();
+        showAlert('✅ تم حذف المستخدم (وضع تجريبي)', 'success');
+        return;
+    }
+    
+    fetch('/api/users/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم حذف المستخدم', 'success');
+            loadUsers();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showAlert('❌ خطأ في حذف المستخدم', 'danger');
+    });
+}
+
+function clearUserInputs() {
+    document.getElementById('uName').value = '';
+    document.getElementById('uEmail').value = '';
+    document.getElementById('uPassword').value = '';
+    document.getElementById('uPassword').placeholder = 'كلمة المرور';
+    document.getElementById('uRole').value = 'مشاهد';
 }
 
 function loadNotes() {
@@ -783,136 +1095,6 @@ function renderNotes() {
             <small style="color:rgba(255,255,255,0.3);">${n.date || ''} | ${n.createdBy || 'مجهول'}</small>
         </div>
     `).join('');
-}
-
-// ============================================================
-// 👥 دوال المستخدمين (نسخة تعمل بدون خادم)
-// ============================================================
-
-function addUser() {
-    const name = document.getElementById('uName')?.value.trim();
-    const email = document.getElementById('uEmail')?.value.trim();
-    const password = document.getElementById('uPassword')?.value.trim();
-    const role = document.getElementById('uRole')?.value;
-    
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
-        document.getElementById('uName')?.focus();
-        return;
-    }
-    if (!email) {
-        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
-        document.getElementById('uEmail')?.focus();
-        return;
-    }
-    if (!password || password.length < 4) {
-        showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
-        document.getElementById('uPassword')?.focus();
-        return;
-    }
-    
-    // إضافة مستخدم محلياً
-    const newUser = {
-        id: 'user-' + Date.now(),
-        name: name,
-        email: email,
-        role: role || 'مشاهد',
-        isActive: true,
-        createdAt: new Date().toISOString()
-    };
-    
-    allUsers.push(newUser);
-    renderUsersTable();
-    clearUserInputs();
-    showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
-    
-    // إغلاق النموذج إذا كان موجوداً
-    const modal = document.getElementById('addUserModal');
-    if (modal) modal.style.display = 'none';
-    
-    // إعادة تعيين زر الإضافة
-    const addBtn = document.querySelector('[onclick="addUser()"]');
-    if (addBtn) {
-        addBtn.disabled = false;
-        addBtn.textContent = '💾 إضافة مستخدم';
-    }
-}
-
-function editUser(id) {
-    const user = allUsers.find(u => u.id === id);
-    if (!user) {
-        showAlert('⚠️ المستخدم غير موجود', 'warning');
-        return;
-    }
-    
-    document.getElementById('uName').value = user.name || '';
-    document.getElementById('uEmail').value = user.email || '';
-    document.getElementById('uPassword').value = '';
-    document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
-    document.getElementById('uRole').value = user.role || 'مشاهد';
-    
-    // تغيير زر الإضافة إلى زر تحديث
-    const addBtn = document.querySelector('[onclick="addUser()"]');
-    if (addBtn) {
-        addBtn.textContent = '💾 تحديث المستخدم';
-        addBtn.onclick = function() { updateUser(id); };
-    }
-    
-    showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
-}
-
-function updateUser(id) {
-    const name = document.getElementById('uName')?.value.trim();
-    const email = document.getElementById('uEmail')?.value.trim();
-    const password = document.getElementById('uPassword')?.value.trim();
-    const role = document.getElementById('uRole')?.value;
-    
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
-        return;
-    }
-    if (!email) {
-        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
-        return;
-    }
-    
-    const index = allUsers.findIndex(u => u.id === id);
-    if (index === -1) {
-        showAlert('⚠️ المستخدم غير موجود', 'warning');
-        return;
-    }
-    
-    allUsers[index].name = name;
-    allUsers[index].email = email;
-    allUsers[index].role = role || 'مشاهد';
-    
-    renderUsersTable();
-    clearUserInputs();
-    showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
-    
-    // إعادة تعيين زر الإضافة
-    const addBtn = document.querySelector('[onclick*="updateUser"]');
-    if (addBtn) {
-        addBtn.textContent = '💾 إضافة مستخدم';
-        addBtn.onclick = addUser;
-        addBtn.disabled = false;
-    }
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    
-    allUsers = allUsers.filter(u => u.id !== id);
-    renderUsersTable();
-    showAlert('✅ تم حذف المستخدم', 'success');
-}
-
-function clearUserInputs() {
-    document.getElementById('uName').value = '';
-    document.getElementById('uEmail').value = '';
-    document.getElementById('uPassword').value = '';
-    document.getElementById('uPassword').placeholder = 'كلمة المرور';
-    document.getElementById('uRole').value = 'مشاهد';
 }
 
 // ============================================================
