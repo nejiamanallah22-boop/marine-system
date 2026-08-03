@@ -92,11 +92,13 @@ function initPage(pageName) {
         case 'maintenance': loadMaintenance(); break;
         case 'efficiency': loadVessels(); break;
         case 'support': loadTickets(); break;
-        case 'tracking': initTrackingPage(); break;
-        case 'map': setTimeout(initMap, 100); break;
         case 'users': loadUsers(); break;
         case 'notes': loadNotes(); break;
-        case 'sessions': loadSessions(); break;
+        case 'sessions': 
+            loadSessions(); 
+            startTrackingAutoUpdate(); 
+            setTimeout(initUserMap, 500); 
+            break;
         case 'ai-assistant': initAIAssistant(); break;
         default: console.log('⚠️ Unknown page:', pageName);
     }
@@ -114,27 +116,12 @@ function initAIAssistant() {
     }
 }
 
-function initTrackingPage() {
-    if (document.getElementById('page-tracking')) {
-        if (typeof initTrackingMap === 'function') {
-            setTimeout(initTrackingMap, 300);
-        }
-        if (typeof initTrackingSocket === 'function') {
-            setTimeout(initTrackingSocket, 500);
-        }
-        if (typeof startContinuousTracking === 'function') {
-            setTimeout(startContinuousTracking, 1000);
-        }
-    }
-}
-
 function showPage(pageName) {
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     const btns = document.querySelectorAll('.nav-btn');
     const pageMap = {
         'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 
-        'sessions': 9, 'ai-assistant': 10
+        'support': 4, 'users': 5, 'notes': 6, 'sessions': 7, 'ai-assistant': 8
     };
     if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
         btns[pageMap[pageName]].classList.add('active');
@@ -510,16 +497,6 @@ function loadNotes() {
     });
 }
 
-function loadSessions() {
-    const token = getToken();
-    if (!token) return;
-    if (document.getElementById('page-sessions')) {
-        if (typeof refreshSessions === 'function') {
-            refreshSessions();
-        }
-    }
-}
-
 function renderAllTables() {
     renderMainTable();
     renderMaintenanceTables();
@@ -691,7 +668,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (مع خادم MongoDB)
+// 👥 دوال المستخدمين
 // ============================================================
 
 function addUser() {
@@ -888,7 +865,7 @@ function clearUserInputs() {
 }
 
 // ============================================================
-// 🚢 دوال المراكب (مع خادم MongoDB)
+// 🚢 دوال المراكب
 // ============================================================
 
 function addItem() {
@@ -1104,7 +1081,7 @@ function updateZones() {
 }
 
 // ============================================================
-// 🔧 دوال الصيانة (مع خادم MongoDB)
+// 🔧 دوال الصيانة
 // ============================================================
 
 function updateMaintenanceVessels() {
@@ -1719,6 +1696,404 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
+// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت
+// ============================================================
+
+let userMap = null;
+let userMarkers = [];
+let mapInitialized = false;
+
+function initUserMap() {
+    const mapContainer = document.getElementById('userMap');
+    if (!mapContainer) return;
+
+    if (userMap) {
+        userMap.invalidateSize();
+        return;
+    }
+
+    const tunisiaCenter = [33.8869, 9.5375];
+
+    userMap = L.map('userMap', {
+        center: tunisiaCenter,
+        zoom: 7,
+        zoomControl: true,
+        fadeAnimation: true,
+        attributionControl: true
+    });
+
+    // طبقة الساتلايت من Esri
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
+        maxZoom: 19,
+        minZoom: 3
+    }).addTo(userMap);
+
+    // طبقة الشوارع
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    });
+
+    // طبقة الساتلايت من Google
+    const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        attribution: '&copy; Google',
+        maxZoom: 20,
+        subdomains: ['mt1', 'mt2', 'mt3']
+    });
+
+    const baseLayers = {
+        "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri',
+            maxZoom: 19
+        }),
+        "🛰️ ساتلايت (Google)": googleSatellite,
+        "🗺️ خريطة عادية": streetLayer
+    };
+
+    L.control.layers(baseLayers).addTo(userMap);
+    L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
+    L.control.zoom({ position: 'topright' }).addTo(userMap);
+
+    mapInitialized = true;
+    loadUserLocations();
+
+    setTimeout(() => {
+        if (userMap) userMap.invalidateSize();
+    }, 500);
+}
+
+function loadUserLocations() {
+    if (!userMap) return;
+
+    userMarkers.forEach(marker => userMap.removeLayer(marker));
+    userMarkers = [];
+
+    // مواقع المستخدمين (سيتم استبدالها ببيانات حقيقية من الخادم لاحقاً)
+    const userLocations = [
+        { name: 'مدير النظام', role: 'مسؤول', status: 'online', lat: 36.8065, lng: 10.1815, city: 'تونس', device: 'Chrome/Windows' },
+        { name: 'مدير العمليات', role: 'مشرف', status: 'online', lat: 35.8277, lng: 10.6420, city: 'سوسة', device: 'Firefox/Mac' },
+        { name: 'محرر', role: 'محرر', status: 'idle', lat: 34.7396, lng: 10.7600, city: 'صفاقس', device: 'Safari/iPhone' },
+        { name: 'مشاهد', role: 'مشاهد', status: 'offline', lat: 33.8869, lng: 9.5375, city: 'القيروان', device: 'Edge/Windows' },
+        { name: 'فني صيانة', role: 'محرر', status: 'online', lat: 37.2744, lng: 9.8739, city: 'بنزرت', device: 'Chrome/Android' }
+    ];
+
+    const statusColors = {
+        'online': '#4ade80',
+        'idle': '#fbbf24',
+        'offline': '#f87171'
+    };
+
+    const statusLabels = {
+        'online': '🟢 نشط',
+        'idle': '🟡 غير نشط',
+        'offline': '🔴 غير متصل'
+    };
+
+    userLocations.forEach(user => {
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div style="
+                    background: rgba(0,0,0,0.8);
+                    border-radius: 12px;
+                    padding: 4px 10px 4px 6px;
+                    border: 2px solid ${statusColors[user.status]};
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                    font-size: 11px;
+                    color: white;
+                    white-space: nowrap;
+                    font-family: 'Cairo', sans-serif;
+                ">
+                    <span style="
+                        width: 8px;
+                        height: 8px;
+                        border-radius: 50%;
+                        background: ${statusColors[user.status]};
+                        display: inline-block;
+                        animation: ${user.status === 'online' ? 'pulse 1.5s infinite' : 'none'};
+                    "></span>
+                    ${user.name}
+                    <span style="font-size:9px; opacity:0.5;">${user.role}</span>
+                </div>
+            `,
+            iconSize: [120, 30],
+            iconAnchor: [60, 15],
+            className: 'user-marker-icon'
+        });
+
+        const marker = L.marker([user.lat, user.lng], { icon: icon })
+            .addTo(userMap)
+            .bindPopup(`
+                <div class="popup-content">
+                    <div class="name">👤 ${user.name}</div>
+                    <div class="detail">📌 ${user.role}</div>
+                    <div class="detail">📍 ${user.city}</div>
+                    <div class="detail">💻 ${user.device}</div>
+                    <div class="detail">🕐 آخر نشاط: ${getTimeAgo(new Date())}</div>
+                    <span class="status-badge ${user.status}">${statusLabels[user.status]}</span>
+                    <div style="margin-top:4px; font-size:10px; color:#999;">
+                        🛰️ ${user.lat}, ${user.lng}
+                    </div>
+                </div>
+            `, { maxWidth: 250 });
+
+        userMarkers.push(marker);
+    });
+
+    if (userMarkers.length > 0) {
+        const group = L.featureGroup(userMarkers);
+        userMap.fitBounds(group.getBounds().pad(0.2));
+    }
+
+    // إضافة تأثير النبض
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.5); }
+        }
+        .user-marker-icon {
+            background: transparent !important;
+            border: none !important;
+        }
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px !important;
+            background: white !important;
+            color: #1a1a2e !important;
+        }
+        .leaflet-popup-tip {
+            background: white !important;
+        }
+        .leaflet-control-layers {
+            background: rgba(0,0,0,0.8) !important;
+            border-radius: 8px !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        .leaflet-control-layers label {
+            color: rgba(255,255,255,0.8) !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function refreshUserMap() {
+    if (userMap) {
+        loadUserLocations();
+        showAlert('🔄 تم تحديث خريطة المواقع', 'success');
+    } else {
+        initUserMap();
+    }
+}
+
+window.addEventListener('resize', function() {
+    if (userMap) {
+        setTimeout(() => userMap.invalidateSize(), 200);
+    }
+});
+
+// ============================================================
+// 👁️ صفحة المراقبة - تتبع تحركات المستخدمين
+// ============================================================
+
+let activityLog = [];
+let sessionsData = [];
+let trackingInterval = null;
+
+function initActivityData() {
+    const users = [
+        { name: 'مدير النظام', role: 'مسؤول' },
+        { name: 'مدير العمليات', role: 'مشرف' },
+        { name: 'محرر', role: 'محرر' },
+        { name: 'مشاهد', role: 'مشاهد' },
+        { name: 'فني صيانة', role: 'محرر' }
+    ];
+
+    const actions = ['تسجيل دخول', 'تسجيل خروج', 'عرض', 'تعديل', 'إضافة', 'حذف'];
+    const pages = ['لوحة التحكم', 'الأسطول', 'الصيانة', 'الجاهزية', 'الدعم', 'المستخدمين', 'المذكرات', 'المساعد الذكي'];
+    const devices = ['Chrome / Windows', 'Firefox / Mac', 'Safari / iPhone', 'Edge / Windows', 'Chrome / Android'];
+
+    for (let i = 0; i < 50; i++) {
+        const user = users[Math.floor(Math.random() * users.length)];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        const page = pages[Math.floor(Math.random() * pages.length)];
+        const device = devices[Math.floor(Math.random() * devices.length)];
+        
+        const date = new Date();
+        date.setHours(date.getHours() - Math.floor(Math.random() * 72));
+        
+        activityLog.push({
+            id: i + 1,
+            user: user.name,
+            role: user.role,
+            action: action,
+            page: page,
+            device: device,
+            time: date,
+            ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
+        });
+    }
+
+    activityLog.sort((a, b) => b.time - a.time);
+
+    sessionsData = [
+        { id: 1, name: 'مدير النظام', role: 'مسؤول', ip: '192.168.1.1', device: 'Chrome / Windows', lastActive: new Date(), status: 'online' },
+        { id: 2, name: 'مدير العمليات', role: 'مشرف', ip: '192.168.1.2', device: 'Firefox / Mac', lastActive: new Date(Date.now() - 300000), status: 'online' },
+        { id: 3, name: 'محرر', role: 'محرر', ip: '192.168.1.3', device: 'Safari / iPhone', lastActive: new Date(Date.now() - 900000), status: 'idle' },
+        { id: 4, name: 'مشاهد', role: 'مشاهد', ip: '192.168.1.4', device: 'Edge / Windows', lastActive: new Date(Date.now() - 3600000), status: 'offline' }
+    ];
+}
+
+function loadSessions() {
+    if (activityLog.length === 0) {
+        initActivityData();
+    }
+
+    updateStats();
+    renderSessions();
+    renderActivityLog();
+}
+
+function updateStats() {
+    const online = sessionsData.filter(s => s.status === 'online').length;
+    const total = sessionsData.length;
+    const today = activityLog.filter(a => {
+        const today = new Date();
+        return a.time.getDate() === today.getDate() &&
+               a.time.getMonth() === today.getMonth() &&
+               a.time.getFullYear() === today.getFullYear();
+    }).length;
+
+    document.getElementById('onlineCount').textContent = online;
+    document.getElementById('totalUsers').textContent = total;
+    document.getElementById('todayActivity').textContent = today;
+}
+
+function renderSessions() {
+    const container = document.getElementById('sessionsGrid');
+    if (!container) return;
+
+    if (sessionsData.length === 0) {
+        container.innerHTML = '<div class="no-data">🚫 لا توجد جلسات نشطة</div>';
+        return;
+    }
+
+    const statusLabels = {
+        'online': '🟢 نشط',
+        'idle': '🟡 غير نشط',
+        'offline': '🔴 غير متصل'
+    };
+
+    const statusClass = {
+        'online': 'online',
+        'idle': 'idle',
+        'offline': 'offline'
+    };
+
+    container.innerHTML = sessionsData.map(s => {
+        const timeAgo = getTimeAgo(s.lastActive);
+        return `
+            <div class="session-card">
+                <div class="header">
+                    <span class="user-name">${s.name}</span>
+                    <span class="user-role">${s.role}</span>
+                </div>
+                <div class="info"><i class="fas fa-laptop"></i> ${s.device}</div>
+                <div class="info"><i class="fas fa-network-wired"></i> ${s.ip}</div>
+                <div class="info"><i class="fas fa-clock"></i> آخر نشاط: ${timeAgo}</div>
+                <span class="status ${statusClass[s.status]}">${statusLabels[s.status]}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderActivityLog(filteredData) {
+    const tbody = document.getElementById('activityBody');
+    if (!tbody) return;
+
+    const data = filteredData || activityLog;
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data">🚫 لا توجد سجلات</td></tr>';
+        return;
+    }
+
+    const actionClass = {
+        'تسجيل دخول': 'login',
+        'تسجيل خروج': 'logout',
+        'عرض': 'view',
+        'تعديل': 'edit',
+        'إضافة': 'add',
+        'حذف': 'delete'
+    };
+
+    tbody.innerHTML = data.slice(0, 100).map(a => `
+        <tr>
+            <td><strong>${a.user}</strong> <span style="font-size:11px; color:rgba(255,255,255,0.2);">${a.role}</span></td>
+            <td><span class="action ${actionClass[a.action] || ''}">${a.action}</span></td>
+            <td>${a.page}</td>
+            <td>${a.ip}</td>
+            <td class="time">${formatTime(a.time)}</td>
+        </tr>
+    `).join('');
+}
+
+function filterActivity() {
+    const search = document.getElementById('searchActivity')?.value?.toLowerCase() || '';
+    const action = document.getElementById('filterAction')?.value || '';
+
+    let filtered = activityLog;
+
+    if (search) {
+        filtered = filtered.filter(a => 
+            a.user.toLowerCase().includes(search) ||
+            a.page.toLowerCase().includes(search) ||
+            a.action.includes(search)
+        );
+    }
+
+    if (action) {
+        filtered = filtered.filter(a => a.action === action);
+    }
+
+    renderActivityLog(filtered);
+}
+
+function clearFilters() {
+    document.getElementById('searchActivity').value = '';
+    document.getElementById('filterAction').value = '';
+    renderActivityLog(activityLog);
+}
+
+function getTimeAgo(date) {
+    const diff = Date.now() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'الآن';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    return `منذ ${days} يوم`;
+}
+
+function formatTime(date) {
+    return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function startTrackingAutoUpdate() {
+    if (trackingInterval) clearInterval(trackingInterval);
+    trackingInterval = setInterval(() => {
+        if (document.getElementById('page-sessions')) {
+            renderSessions();
+        }
+    }, 30000);
+}
+
+// ============================================================
 // 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
 // ============================================================
 
@@ -1898,7 +2273,7 @@ function loadVoices() {
 }
 
 // ============================================================
-// 🤖 الذكاء الاصطناعي - المساعد الذكي (مُحدّث مع المطور)
+// 🤖 الذكاء الاصطناعي - المساعد الذكي
 // ============================================================
 
 function askAI(userMessage) {
@@ -1977,10 +2352,8 @@ function generateAIResponse(message) {
     const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
     const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
 
-    // ===== معلومات المطور =====
     const developerInfo = `المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي`;
 
-    // 1️⃣ السؤال عن من صنع التطبيق
     if (msg.includes('من صنع') || msg.includes('صانع') || msg.includes('مطور') || 
         msg.includes('المبرمج') || msg.includes('الذي صنع') || msg.includes('صمم') ||
         msg.includes('من عمل') || msg.includes('المبدع') || msg.includes('الوكيل') ||
@@ -1992,30 +2365,6 @@ function generateAIResponse(message) {
         🔹 <em>${developerInfo} هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.</em>`;
     }
 
-    // 2️⃣ السؤال عن المبرمج أو الوكيل
-    if (msg.includes('أمان الله') || msg.includes('ناجي') || msg.includes('الوكيل') || 
-        msg.includes('المبرمج') || msg.includes('المطور') || msg.includes('المبدع') ||
-        msg.includes('الحرس الوطني')) {
-        return `👨‍💻 <strong>${developerInfo}</strong><br><br>
-        🏅 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.<br>
-        🚀 تم تصميم هذا النظام بخبرة عالية وجودة استثنائية.<br>
-        📌 يتميز بالدقة والاحترافية والالتزام بأعلى المعايير.<br><br>
-        💡 <em>"منظومة الوسائل البحرية" هي نتاج إبداع ${developerInfo}.</em>`;
-    }
-
-    // 3️⃣ السؤال عن التطبيق بشكل عام
-    if (msg.includes('التطبيق') || msg.includes('النظام') || msg.includes('البرنامج') || 
-        msg.includes('منظومة') || msg.includes('الأسطول')) {
-        if (msg.includes('من') || msg.includes('صنع') || msg.includes('مطور') || 
-            msg.includes('مبرمج') || msg.includes('مصمم')) {
-            return `🌟 هذا النظام من تطوير <strong>${developerInfo}</strong><br><br>
-            🏆 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة البحرية والإدارية.<br>
-            📌 تم تصميم هذا النظام بجودة عالية ودقة متناهية.<br><br>
-            💡 <em>للتواصل مع المطور: ${developerInfo}</em>`;
-        }
-    }
-
-    // 4️⃣ أسئلة الترحيب
     if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً') || msg.includes('هلو')) {
         return `👋 وعليكم السلام ورحمة الله وبركاته!<br><br>
         أنا المساعد الذكي لمنظومة الوسائل البحرية.<br><br>
@@ -2031,7 +2380,6 @@ function generateAIResponse(message) {
         • 👨‍💻 من صنع هذا التطبيق`;
     }
 
-    // 5️⃣ عدد المراكب الصالحة
     if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
         return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
         نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
@@ -2039,7 +2387,6 @@ function generateAIResponse(message) {
         📌 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 6️⃣ عدد المراكب المعطبة
     if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
         const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
         return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
@@ -2047,7 +2394,6 @@ function generateAIResponse(message) {
         🔹 نظام متابعة الأسطول من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 7️⃣ إحصائيات الصيانة
     if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
         const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
         const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
@@ -2059,7 +2405,6 @@ function generateAIResponse(message) {
         🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 8️⃣ توقع الأعطال
     if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
         const highRisk = allVessels.filter(v => {
             const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
@@ -2077,7 +2422,6 @@ function generateAIResponse(message) {
         📌 نظام متابعة وتوقع الأعطال من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 9️⃣ تقرير شامل
     if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
         return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
         🚢 <strong>المراكب:</strong><br>
@@ -2094,7 +2438,6 @@ function generateAIResponse(message) {
         🔹 هذا التقرير من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 🔟 الوحدات البحرية
     if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
         const units = {};
         allVessels.forEach(v => {
@@ -2110,7 +2453,6 @@ function generateAIResponse(message) {
         🔹 نظام متابعة الوحدات من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 1️⃣1️⃣ نصائح تحسين
     if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
         const tips = [];
         if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
@@ -2125,7 +2467,6 @@ function generateAIResponse(message) {
         🔹 تم إعداد هذه النصائح بواسطة <strong>${developerInfo}</strong>`;
     }
 
-    // 1️⃣2️⃣ مساعدة
     if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
         return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
         إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
@@ -2140,7 +2481,6 @@ function generateAIResponse(message) {
         🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
     }
 
-    // 1️⃣3️⃣ رد افتراضي
     return `🤔 لم أفهم سؤالك بالكامل.<br><br>
     يمكنك أن تسألني عن:<br>
     • 📊 حالة المراكب والجاهزية<br>
@@ -2174,216 +2514,4 @@ console.log('📝 استخدم admin@example.com / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
 console.log('🎤 ميزات الصوت: تحدث مع المساعد واستمع للردود');
 console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
-// ============================================================
-// 👁️ صفحة المراقبة - تتبع تحركات المستخدمين
-// ============================================================
-
-// بيانات وهمية لسجل التحركات
-let activityLog = [];
-let sessionsData = [];
-
-// تهيئة البيانات التجريبية
-function initActivityData() {
-    const users = [
-        { name: 'مدير النظام', role: 'مسؤول' },
-        { name: 'مدير العمليات', role: 'مشرف' },
-        { name: 'محرر', role: 'محرر' },
-        { name: 'مشاهد', role: 'مشاهد' },
-        { name: 'فني صيانة', role: 'محرر' }
-    ];
-
-    const actions = ['تسجيل دخول', 'تسجيل خروج', 'عرض', 'تعديل', 'إضافة', 'حذف'];
-    const pages = ['لوحة التحكم', 'الأسطول', 'الصيانة', 'الجاهزية', 'الدعم', 'المستخدمين', 'المذكرات', 'المساعد الذكي'];
-    const devices = ['Chrome / Windows', 'Firefox / Mac', 'Safari / iPhone', 'Edge / Windows', 'Chrome / Android'];
-
-    // إنشاء سجل عشوائي للأيام الثلاثة الماضية
-    for (let i = 0; i < 50; i++) {
-        const user = users[Math.floor(Math.random() * users.length)];
-        const action = actions[Math.floor(Math.random() * actions.length)];
-        const page = pages[Math.floor(Math.random() * pages.length)];
-        const device = devices[Math.floor(Math.random() * devices.length)];
-        
-        const date = new Date();
-        date.setHours(date.getHours() - Math.floor(Math.random() * 72));
-        
-        activityLog.push({
-            id: i + 1,
-            user: user.name,
-            role: user.role,
-            action: action,
-            page: page,
-            device: device,
-            time: date,
-            ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
-        });
-    }
-
-    // ترتيب من الأحدث للأقدم
-    activityLog.sort((a, b) => b.time - a.time);
-
-    // إنشاء جلسات نشطة
-    sessionsData = [
-        { id: 1, name: 'مدير النظام', role: 'مسؤول', ip: '192.168.1.1', device: 'Chrome / Windows', lastActive: new Date(), status: 'online' },
-        { id: 2, name: 'مدير العمليات', role: 'مشرف', ip: '192.168.1.2', device: 'Firefox / Mac', lastActive: new Date(Date.now() - 300000), status: 'online' },
-        { id: 3, name: 'محرر', role: 'محرر', ip: '192.168.1.3', device: 'Safari / iPhone', lastActive: new Date(Date.now() - 900000), status: 'idle' },
-        { id: 4, name: 'مشاهد', role: 'مشاهد', ip: '192.168.1.4', device: 'Edge / Windows', lastActive: new Date(Date.now() - 3600000), status: 'offline' }
-    ];
-}
-
-// ===== تحميل صفحة المراقبة =====
-function loadSessions() {
-    // تهيئة البيانات إذا كانت فارغة
-    if (activityLog.length === 0) {
-        initActivityData();
-    }
-
-    updateStats();
-    renderSessions();
-    renderActivityLog();
-}
-
-// ===== تحديث الإحصائيات =====
-function updateStats() {
-    const online = sessionsData.filter(s => s.status === 'online').length;
-    const total = sessionsData.length;
-    const today = activityLog.filter(a => {
-        const today = new Date();
-        return a.time.getDate() === today.getDate() &&
-               a.time.getMonth() === today.getMonth() &&
-               a.time.getFullYear() === today.getFullYear();
-    }).length;
-
-    document.getElementById('onlineCount').textContent = online;
-    document.getElementById('totalUsers').textContent = total;
-    document.getElementById('todayActivity').textContent = today;
-}
-
-// ===== عرض الجلسات النشطة =====
-function renderSessions() {
-    const container = document.getElementById('sessionsGrid');
-    if (!container) return;
-
-    if (sessionsData.length === 0) {
-        container.innerHTML = '<div class="no-data">🚫 لا توجد جلسات نشطة</div>';
-        return;
-    }
-
-    const statusLabels = {
-        'online': '🟢 نشط',
-        'idle': '🟡 غير نشط',
-        'offline': '🔴 غير متصل'
-    };
-
-    const statusClass = {
-        'online': 'online',
-        'idle': 'idle',
-        'offline': 'offline'
-    };
-
-    container.innerHTML = sessionsData.map(s => {
-        const timeAgo = getTimeAgo(s.lastActive);
-        return `
-            <div class="session-card">
-                <div class="header">
-                    <span class="user-name">${s.name}</span>
-                    <span class="user-role">${s.role}</span>
-                </div>
-                <div class="info"><i class="fas fa-laptop"></i> ${s.device}</div>
-                <div class="info"><i class="fas fa-network-wired"></i> ${s.ip}</div>
-                <div class="info"><i class="fas fa-clock"></i> آخر نشاط: ${timeAgo}</div>
-                <span class="status ${statusClass[s.status]}">${statusLabels[s.status]}</span>
-            </div>
-        `;
-    }).join('');
-}
-
-// ===== عرض سجل التحركات =====
-function renderActivityLog(filteredData) {
-    const tbody = document.getElementById('activityBody');
-    if (!tbody) return;
-
-    const data = filteredData || activityLog;
-
-    if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="no-data">🚫 لا توجد سجلات</td></tr>';
-        return;
-    }
-
-    const actionClass = {
-        'تسجيل دخول': 'login',
-        'تسجيل خروج': 'logout',
-        'عرض': 'view',
-        'تعديل': 'edit',
-        'إضافة': 'add',
-        'حذف': 'delete'
-    };
-
-    tbody.innerHTML = data.slice(0, 100).map(a => `
-        <tr>
-            <td><strong>${a.user}</strong> <span style="font-size:11px; color:rgba(255,255,255,0.2);">${a.role}</span></td>
-            <td><span class="action ${actionClass[a.action] || ''}">${a.action}</span></td>
-            <td>${a.page}</td>
-            <td class="time">${formatTime(a.time)}</td>
-            <td style="font-size:12px; color:rgba(255,255,255,0.3);">${a.device}</td>
-        </tr>
-    `).join('');
-}
-
-// ===== تصفية السجل =====
-function filterActivity() {
-    const search = document.getElementById('searchActivity')?.value?.toLowerCase() || '';
-    const action = document.getElementById('filterAction')?.value || '';
-
-    let filtered = activityLog;
-
-    if (search) {
-        filtered = filtered.filter(a => 
-            a.user.toLowerCase().includes(search) ||
-            a.page.toLowerCase().includes(search) ||
-            a.action.includes(search)
-        );
-    }
-
-    if (action) {
-        filtered = filtered.filter(a => a.action === action);
-    }
-
-    renderActivityLog(filtered);
-}
-
-// ===== مسح الفلاتر =====
-function clearFilters() {
-    document.getElementById('searchActivity').value = '';
-    document.getElementById('filterAction').value = '';
-    renderActivityLog(activityLog);
-}
-
-// ===== دوال مساعدة =====
-function getTimeAgo(date) {
-    const diff = Date.now() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'الآن';
-    if (minutes < 60) return `منذ ${minutes} دقيقة`;
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    return `منذ ${days} يوم`;
-}
-
-function formatTime(date) {
-    return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-}
-
-// ===== تحديث تلقائي كل 30 ثانية =====
-let trackingInterval = null;
-
-function startTrackingAutoUpdate() {
-    if (trackingInterval) clearInterval(trackingInterval);
-    trackingInterval = setInterval(() => {
-        if (document.getElementById('page-sessions')) {
-            // تحديث الأوقات النسبية فقط
-            renderSessions();
-        }
-    }, 30000);
-}
+console.log('🗺️ خريطة تتبع المستخدمين بالساتلايت جاهزة!');
