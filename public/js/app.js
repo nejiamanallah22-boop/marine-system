@@ -18,6 +18,13 @@ let chartDoughnut = null;
 let dashChart = null;
 let dashLineChart = null;
 
+// متغيرات الخريطة
+let userMap = null;
+let userMarkers = [];
+let mapInitialized = false;
+let mapRetryCount = 0;
+let mapRefreshInterval = null;
+
 // ============================================================
 // منع الدخول التلقائي
 // ============================================================
@@ -115,13 +122,288 @@ function initPage(pageName) {
         case 'sessions': 
             loadSessions(); 
             startTrackingAutoUpdate(); 
-            setTimeout(initUserMap, 500); 
+            setTimeout(function() {
+                initUserMap();
+                startMapAutoRefresh();
+            }, 1000);
             break;
         case 'ai-assistant': 
             initAIAssistant(); 
             break;
         default: 
             console.log('⚠️ Unknown page:', pageName);
+    }
+}
+
+// ===== بدء تحديث الخريطة التلقائي =====
+function startMapAutoRefresh() {
+    if (mapRefreshInterval) {
+        clearInterval(mapRefreshInterval);
+    }
+    mapRefreshInterval = setInterval(function() {
+        if (document.getElementById('page-sessions')) {
+            if (userMap) {
+                try {
+                    userMap.invalidateSize();
+                    loadUserLocations();
+                    console.log('🔄 Map refreshed automatically');
+                } catch(e) {
+                    console.warn('⚠️ Map refresh error:', e);
+                    reinitMap();
+                }
+            } else {
+                initUserMap();
+            }
+        }
+    }, 30000);
+}
+
+function reinitMap() {
+    console.log('🔄 Reinitializing map...');
+    if (userMap) {
+        try {
+            userMap.remove();
+        } catch(e) {}
+        userMap = null;
+    }
+    userMarkers = [];
+    mapInitialized = false;
+    setTimeout(initUserMap, 500);
+}
+
+// ============================================================
+// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت
+// ============================================================
+
+function initUserMap() {
+    console.log('🗺️ Initializing map...');
+    
+    const mapContainer = document.getElementById('userMap');
+    if (!mapContainer) {
+        console.warn('⚠️ Map container not found, retrying...');
+        if (mapRetryCount < 10) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 500);
+        }
+        return;
+    }
+
+    if (userMap) {
+        console.log('🔄 Map already exists, refreshing...');
+        try {
+            userMap.invalidateSize();
+            loadUserLocations();
+        } catch(e) {
+            console.warn('⚠️ Error refreshing map:', e);
+            userMap = null;
+            mapInitialized = false;
+            setTimeout(initUserMap, 300);
+        }
+        return;
+    }
+
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ Leaflet not loaded, retrying...');
+        if (mapRetryCount < 5) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 1000);
+        }
+        return;
+    }
+
+    const tunisiaCenter = [33.8869, 9.5375];
+
+    try {
+        userMap = L.map('userMap', {
+            center: tunisiaCenter,
+            zoom: 7,
+            zoomControl: true,
+            fadeAnimation: true,
+            attributionControl: true
+        });
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
+            maxZoom: 19,
+            minZoom: 3
+        }).addTo(userMap);
+
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        });
+
+        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google',
+            maxZoom: 20,
+            subdomains: ['mt1', 'mt2', 'mt3']
+        });
+
+        const baseLayers = {
+            "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri',
+                maxZoom: 19
+            }),
+            "🛰️ ساتلايت (Google)": googleSatellite,
+            "🗺️ خريطة عادية": streetLayer
+        };
+
+        L.control.layers(baseLayers).addTo(userMap);
+        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
+        L.control.zoom({ position: 'topright' }).addTo(userMap);
+
+        mapInitialized = true;
+        mapRetryCount = 0;
+        
+        loadUserLocations();
+
+        setTimeout(() => {
+            if (userMap) {
+                userMap.invalidateSize();
+                console.log('✅ Map size updated');
+            }
+        }, 500);
+
+        if (!window._mapResizeHandler) {
+            window._mapResizeHandler = function() {
+                if (userMap) {
+                    setTimeout(() => {
+                        try {
+                            userMap.invalidateSize();
+                        } catch(e) {}
+                    }, 300);
+                }
+            };
+            window.addEventListener('resize', window._mapResizeHandler);
+        }
+
+        console.log('✅ Map initialized successfully');
+
+    } catch (error) {
+        console.error('❌ Error initializing map:', error);
+        if (mapRetryCount < 3) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 1000);
+        }
+    }
+}
+
+function loadUserLocations() {
+    if (!userMap) {
+        console.warn('⚠️ Map not initialized, cannot load locations');
+        return;
+    }
+
+    try {
+        userMarkers.forEach(marker => {
+            try {
+                userMap.removeLayer(marker);
+            } catch (e) {}
+        });
+    } catch(e) {}
+    userMarkers = [];
+
+    const userLocations = [
+        { name: 'مدير النظام', role: 'مسؤول', status: 'online', lat: 36.8065, lng: 10.1815, city: 'تونس', device: 'Chrome/Windows' },
+        { name: 'مدير العمليات', role: 'مشرف', status: 'online', lat: 35.8277, lng: 10.6420, city: 'سوسة', device: 'Firefox/Mac' },
+        { name: 'محرر', role: 'محرر', status: 'idle', lat: 34.7396, lng: 10.7600, city: 'صفاقس', device: 'Safari/iPhone' },
+        { name: 'مشاهد', role: 'مشاهد', status: 'offline', lat: 33.8869, lng: 9.5375, city: 'القيروان', device: 'Edge/Windows' },
+        { name: 'فني صيانة', role: 'محرر', status: 'online', lat: 37.2744, lng: 9.8739, city: 'بنزرت', device: 'Chrome/Android' }
+    ];
+
+    const statusColors = {
+        'online': '#4ade80',
+        'idle': '#fbbf24',
+        'offline': '#f87171'
+    };
+
+    const statusLabels = {
+        'online': '🟢 نشط',
+        'idle': '🟡 غير نشط',
+        'offline': '🔴 غير متصل'
+    };
+
+    userLocations.forEach(user => {
+        try {
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `
+                    <div style="
+                        background: rgba(0,0,0,0.8);
+                        border-radius: 12px;
+                        padding: 4px 10px 4px 6px;
+                        border: 2px solid ${statusColors[user.status]};
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                        font-size: 11px;
+                        color: white;
+                        white-space: nowrap;
+                        font-family: 'Cairo', sans-serif;
+                    ">
+                        <span style="
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background: ${statusColors[user.status]};
+                            display: inline-block;
+                            animation: ${user.status === 'online' ? 'pulse 1.5s infinite' : 'none'};
+                        "></span>
+                        ${user.name}
+                        <span style="font-size:9px; opacity:0.5;">${user.role}</span>
+                    </div>
+                `,
+                iconSize: [120, 30],
+                iconAnchor: [60, 15],
+                className: 'user-marker-icon'
+            });
+
+            const marker = L.marker([user.lat, user.lng], { icon: icon })
+                .addTo(userMap)
+                .bindPopup(`
+                    <div class="popup-content">
+                        <div class="name">👤 ${user.name}</div>
+                        <div class="detail">📌 ${user.role}</div>
+                        <div class="detail">📍 ${user.city}</div>
+                        <div class="detail">💻 ${user.device}</div>
+                        <div class="detail">🕐 آخر نشاط: ${getTimeAgo(new Date())}</div>
+                        <span class="status-badge ${user.status}">${statusLabels[user.status]}</span>
+                        <div style="margin-top:4px; font-size:10px; color:#999;">
+                            🛰️ ${user.lat}, ${user.lng}
+                        </div>
+                    </div>
+                `, { maxWidth: 250 });
+
+            userMarkers.push(marker);
+        } catch(e) {
+            console.warn('⚠️ Error adding marker for user:', user.name, e);
+        }
+    });
+
+    if (userMarkers.length > 0) {
+        try {
+            const group = L.featureGroup(userMarkers);
+            userMap.fitBounds(group.getBounds().pad(0.2));
+        } catch(e) {
+            console.warn('⚠️ Error fitting bounds:', e);
+        }
+    }
+}
+
+function refreshUserMap() {
+    if (userMap) {
+        loadUserLocations();
+        setTimeout(() => {
+            if (userMap) {
+                try {
+                    userMap.invalidateSize();
+                } catch(e) {}
+            }
+        }, 200);
+        showAlert('🔄 تم تحديث خريطة المواقع', 'success');
+    } else {
+        initUserMap();
     }
 }
 
@@ -323,10 +605,8 @@ function doLogin() {
             updateUserDisplay();
             loadAllData();
             
-            // ✅ تحميل لوحة التحكم فوراً مع تحديث واجهتها
             setTimeout(() => {
                 loadPage('dashboard');
-                // ✅ تفعيل زر لوحة التحكم
                 document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
                 const dashboardBtn = document.querySelector('.nav-btn[onclick="showPage(\'dashboard\')"]');
                 if (dashboardBtn) dashboardBtn.classList.add('active');
@@ -362,6 +642,11 @@ function doLogout() {
     if (notificationInterval) {
         clearInterval(notificationInterval);
         notificationInterval = null;
+    }
+    
+    if (mapRefreshInterval) {
+        clearInterval(mapRefreshInterval);
+        mapRefreshInterval = null;
     }
     
     const token = getToken();
@@ -405,7 +690,6 @@ function loadAllData() {
     loadUsers();
 }
 
-// ===== تحميل المراكب =====
 function loadVessels() {
     const token = getToken();
     if (!token) {
@@ -434,7 +718,6 @@ function loadVessels() {
     });
 }
 
-// ===== تحميل سجلات الصيانة =====
 function loadMaintenance() {
     const token = getToken();
     if (!token) {
@@ -464,7 +747,6 @@ function loadMaintenance() {
     });
 }
 
-// ===== تحميل التذاكر =====
 function loadTickets() {
     const token = getToken();
     if (!token) {
@@ -528,7 +810,6 @@ function loadTickets() {
     });
 }
 
-// ===== تحميل المستخدمين =====
 function loadUsers() {
     const token = getToken();
     if (!token) {
@@ -557,7 +838,6 @@ function loadUsers() {
     });
 }
 
-// ===== تحميل المذكرات =====
 function loadNotes() {
     const token = getToken();
     if (!token) {
@@ -1896,224 +2176,6 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
-// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت
-// ============================================================
-
-let userMap = null;
-let userMarkers = [];
-let mapInitialized = false;
-let mapRetryCount = 0;
-
-function initUserMap() {
-    const mapContainer = document.getElementById('userMap');
-    if (!mapContainer) {
-        console.warn('⚠️ Map container not found, retrying...');
-        if (mapRetryCount < 5) {
-            mapRetryCount++;
-            setTimeout(initUserMap, 500);
-        }
-        return;
-    }
-
-    if (userMap) {
-        console.log('🔄 Map already exists, refreshing size...');
-        setTimeout(() => {
-            userMap.invalidateSize();
-            loadUserLocations();
-        }, 200);
-        return;
-    }
-
-    const tunisiaCenter = [33.8869, 9.5375];
-
-    try {
-        userMap = L.map('userMap', {
-            center: tunisiaCenter,
-            zoom: 7,
-            zoomControl: true,
-            fadeAnimation: true,
-            attributionControl: true
-        });
-
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
-            maxZoom: 19,
-            minZoom: 3
-        }).addTo(userMap);
-
-        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-            maxZoom: 19
-        });
-
-        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            attribution: '&copy; Google',
-            maxZoom: 20,
-            subdomains: ['mt1', 'mt2', 'mt3']
-        });
-
-        const baseLayers = {
-            "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '&copy; Esri',
-                maxZoom: 19
-            }),
-            "🛰️ ساتلايت (Google)": googleSatellite,
-            "🗺️ خريطة عادية": streetLayer
-        };
-
-        L.control.layers(baseLayers).addTo(userMap);
-        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
-        L.control.zoom({ position: 'topright' }).addTo(userMap);
-
-        mapInitialized = true;
-        mapRetryCount = 0;
-        
-        loadUserLocations();
-
-        setTimeout(() => {
-            if (userMap) userMap.invalidateSize();
-        }, 500);
-
-        console.log('✅ Map initialized successfully');
-
-    } catch (error) {
-        console.error('❌ Error initializing map:', error);
-        if (mapRetryCount < 3) {
-            mapRetryCount++;
-            setTimeout(initUserMap, 1000);
-        }
-    }
-}
-
-function loadUserLocations() {
-    if (!userMap) {
-        console.warn('⚠️ Map not initialized, cannot load locations');
-        return;
-    }
-
-    userMarkers.forEach(marker => {
-        try {
-            userMap.removeLayer(marker);
-        } catch (e) {
-            console.warn('⚠️ Error removing marker:', e);
-        }
-    });
-    userMarkers = [];
-
-    const userLocations = [
-        { name: 'مدير النظام', role: 'مسؤول', status: 'online', lat: 36.8065, lng: 10.1815, city: 'تونس', device: 'Chrome/Windows' },
-        { name: 'مدير العمليات', role: 'مشرف', status: 'online', lat: 35.8277, lng: 10.6420, city: 'سوسة', device: 'Firefox/Mac' },
-        { name: 'محرر', role: 'محرر', status: 'idle', lat: 34.7396, lng: 10.7600, city: 'صفاقس', device: 'Safari/iPhone' },
-        { name: 'مشاهد', role: 'مشاهد', status: 'offline', lat: 33.8869, lng: 9.5375, city: 'القيروان', device: 'Edge/Windows' },
-        { name: 'فني صيانة', role: 'محرر', status: 'online', lat: 37.2744, lng: 9.8739, city: 'بنزرت', device: 'Chrome/Android' }
-    ];
-
-    const statusColors = {
-        'online': '#4ade80',
-        'idle': '#fbbf24',
-        'offline': '#f87171'
-    };
-
-    const statusLabels = {
-        'online': '🟢 نشط',
-        'idle': '🟡 غير نشط',
-        'offline': '🔴 غير متصل'
-    };
-
-    userLocations.forEach(user => {
-        const icon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `
-                <div style="
-                    background: rgba(0,0,0,0.8);
-                    border-radius: 12px;
-                    padding: 4px 10px 4px 6px;
-                    border: 2px solid ${statusColors[user.status]};
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-                    font-size: 11px;
-                    color: white;
-                    white-space: nowrap;
-                    font-family: 'Cairo', sans-serif;
-                ">
-                    <span style="
-                        width: 8px;
-                        height: 8px;
-                        border-radius: 50%;
-                        background: ${statusColors[user.status]};
-                        display: inline-block;
-                        animation: ${user.status === 'online' ? 'pulse 1.5s infinite' : 'none'};
-                    "></span>
-                    ${user.name}
-                    <span style="font-size:9px; opacity:0.5;">${user.role}</span>
-                </div>
-            `,
-            iconSize: [120, 30],
-            iconAnchor: [60, 15],
-            className: 'user-marker-icon'
-        });
-
-        try {
-            const marker = L.marker([user.lat, user.lng], { icon: icon })
-                .addTo(userMap)
-                .bindPopup(`
-                    <div class="popup-content">
-                        <div class="name">👤 ${user.name}</div>
-                        <div class="detail">📌 ${user.role}</div>
-                        <div class="detail">📍 ${user.city}</div>
-                        <div class="detail">💻 ${user.device}</div>
-                        <div class="detail">🕐 آخر نشاط: ${getTimeAgo(new Date())}</div>
-                        <span class="status-badge ${user.status}">${statusLabels[user.status]}</span>
-                        <div style="margin-top:4px; font-size:10px; color:#999;">
-                            🛰️ ${user.lat}, ${user.lng}
-                        </div>
-                    </div>
-                `, { maxWidth: 250 });
-
-            userMarkers.push(marker);
-        } catch (e) {
-            console.warn('⚠️ Error adding marker:', e);
-        }
-    });
-
-    if (userMarkers.length > 0) {
-        try {
-            const group = L.featureGroup(userMarkers);
-            userMap.fitBounds(group.getBounds().pad(0.2));
-        } catch (e) {
-            console.warn('⚠️ Error fitting bounds:', e);
-        }
-    }
-}
-
-function refreshUserMap() {
-    if (userMap) {
-        loadUserLocations();
-        setTimeout(() => {
-            if (userMap) userMap.invalidateSize();
-        }, 200);
-        showAlert('🔄 تم تحديث خريطة المواقع', 'success');
-    } else {
-        initUserMap();
-    }
-}
-
-window.addEventListener('resize', function() {
-    if (userMap) {
-        setTimeout(() => {
-            if (userMap) userMap.invalidateSize();
-        }, 300);
-    }
-});
-
-function initUserMapWithRetry() {
-    mapRetryCount = 0;
-    initUserMap();
-}
-
-// ============================================================
 // 👁️ صفحة المراقبة - تتبع تحركات المستخدمين
 // ============================================================
 
@@ -2174,7 +2236,8 @@ function loadSessions() {
     renderSessions();
     renderActivityLog();
     
-    setTimeout(initUserMapWithRetry, 300);
+    setTimeout(initUserMap, 500);
+    setTimeout(startMapAutoRefresh, 1000);
 }
 
 function updateStats() {
@@ -2288,47 +2351,23 @@ function clearFilters() {
     renderActivityLog(activityLog);
 }
 
-function getTimeAgo(date) {
-    const diff = Date.now() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'الآن';
-    if (minutes < 60) return `منذ ${minutes} دقيقة`;
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    return `منذ ${days} يوم`;
-}
-
-function formatTime(date) {
-    return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-}
-
 function startTrackingAutoUpdate() {
     if (trackingInterval) clearInterval(trackingInterval);
     trackingInterval = setInterval(() => {
         if (document.getElementById('page-sessions')) {
             renderSessions();
-            if (userMap) {
-                loadUserLocations();
-                setTimeout(() => {
-                    if (userMap) userMap.invalidateSize();
-                }, 100);
-            }
         }
     }, 30000);
 }
 
 // ============================================================
-// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech) - نسخة محسنة
+// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
 // ============================================================
 
 let recognition = null;
 let isListening = false;
 let lastResponseText = '';
-let speechSynth = window.speechSynthesis;
 
-// ===== دالة التحدث المحسنة =====
 function speakText(text) {
     const cleanText = text.replace(/<[^>]*>/g, '').trim();
     
@@ -2339,82 +2378,63 @@ function speakText(text) {
 
     lastResponseText = cleanText;
 
-    if (!('speechSynthesis' in window)) {
-        showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
-        return;
-    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
 
-    // ✅ إيقاف أي كلام سابق
-    window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ar-SA';
+        utterance.rate = 0.85;
+        utterance.pitch = 1.0;
+        utterance.volume = 1;
 
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    
-    // ✅ إعدادات الصوت المحسنة للوضوح
-    utterance.lang = 'ar-SA';           // اللغة العربية
-    utterance.rate = 0.85;              // سرعة أبطأ للوضوح (0.7-0.9)
-    utterance.pitch = 1.0;              // نبرة طبيعية
-    utterance.volume = 1;               // أعلى مستوى صوت
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoices = [
+            'Microsoft Zira Arabic',
+            'Microsoft Naheel Arabic',
+            'Google العربية',
+            'Samantha',
+            'Maged',
+            'Zira',
+            'ar-SA'
+        ];
 
-    // ✅ اختيار أفضل صوت عربي متاح
-    const voices = window.speechSynthesis.getVoices();
-    
-    // ترتيب تفضيل الأصوات العربية
-    const preferredVoices = [
-        'Microsoft Zira Arabic',        // Windows - صوت نسائي واضح
-        'Microsoft Naheel Arabic',      // Windows - صوت ذكوري
-        'Google العربية',               // Chrome
-        'Samantha',                     // Mac (يدعم العربية)
-        'Maged',                        // Mac
-        'Zira',                         // Windows
-        'ar-SA',                        // أي صوت عربي
-    ];
-
-    let selectedVoice = null;
-    
-    // البحث عن أفضل صوت متاح
-    for (const preferred of preferredVoices) {
-        const found = voices.find(v => 
-            v.name.includes(preferred) || 
-            v.lang.startsWith('ar')
-        );
-        if (found) {
-            selectedVoice = found;
-            break;
+        let selectedVoice = null;
+        for (const preferred of preferredVoices) {
+            const found = voices.find(v => 
+                v.name.includes(preferred) || 
+                v.lang.startsWith('ar')
+            );
+            if (found) {
+                selectedVoice = found;
+                break;
+            }
         }
+
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.startsWith('ar')) || null;
+        }
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            console.log('🎤 Using voice:', selectedVoice.name);
+        }
+
+        showAlert('🔊 جاري التحدث...', 'info');
+
+        utterance.onend = function() {
+            showAlert('✅ انتهى التحدث', 'success');
+        };
+
+        utterance.onerror = function() {
+            showAlert('❌ خطأ في تشغيل الصوت', 'danger');
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } else {
+        showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
     }
-
-    // إذا لم نجد صوتاً، نختار أول صوت عربي
-    if (!selectedVoice) {
-        selectedVoice = voices.find(v => v.lang.startsWith('ar')) || null;
-    }
-
-    if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        console.log('🎤 Using voice:', selectedVoice.name);
-    }
-
-    // ✅ إظهار إشعار أثناء التحدث
-    showAlert('🔊 جاري التحدث...', 'info');
-
-    utterance.onstart = function() {
-        console.log('🔊 Speaking started');
-    };
-
-    utterance.onend = function() {
-        console.log('✅ Speaking finished');
-        showAlert('✅ انتهى التحدث', 'success');
-    };
-
-    utterance.onerror = function(event) {
-        console.error('❌ Speech error:', event);
-        showAlert('❌ خطأ في تشغيل الصوت', 'danger');
-    };
-
-    // ✅ تشغيل الصوت
-    window.speechSynthesis.speak(utterance);
 }
 
-// ===== دالة تشغيل آخر رد =====
 function speakLastResponse() {
     if (lastResponseText) {
         speakText(lastResponseText);
@@ -2429,23 +2449,16 @@ function speakLastResponse() {
     }
 }
 
-// ===== تحميل الأصوات =====
 function loadVoices() {
     if ('speechSynthesis' in window) {
-        // محاولة تحميل الأصوات
         let voices = window.speechSynthesis.getVoices();
-        
         if (voices.length === 0) {
-            // إذا لم تكن الأصوات محملة، ننتظر
             window.speechSynthesis.onvoiceschanged = function() {
                 voices = window.speechSynthesis.getVoices();
-                console.log('🎤 Voices loaded:', voices.length);
-                // تخزين الأصوات في متغير عام للاستخدام
                 window.availableVoices = voices;
             };
         } else {
             window.availableVoices = voices;
-            console.log('🎤 Voices available:', voices.length);
         }
     }
 }
@@ -2609,7 +2622,6 @@ function addMessage(type, content) {
         `;
         lastResponseText = content.replace(/<[^>]*>/g, '').trim();
         
-        // ✅ تشغيل الصوت تلقائياً للردود الطويلة
         const cleanText = content.replace(/<[^>]*>/g, '').trim();
         if (cleanText.length > 20) {
             setTimeout(() => speakText(cleanText), 300);
