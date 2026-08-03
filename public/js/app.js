@@ -1823,3 +1823,251 @@ function initMap() {
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin@example.com / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
+// ============================================================
+// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
+// ============================================================
+
+// متغيرات الصوت
+let recognition = null;
+let isListening = false;
+let lastResponseText = '';
+
+// ===== دالة تحويل النص إلى كلام (Text-to-Speech) =====
+function speakText(text) {
+    // إزالة علامات HTML
+    const cleanText = text.replace(/<[^>]*>/g, '').trim();
+    
+    if (!cleanText) {
+        showAlert('⚠️ لا يوجد نص للتحدث', 'warning');
+        return;
+    }
+
+    // حفظ النص الأخير
+    lastResponseText = cleanText;
+
+    // استخدام Web Speech API
+    if ('speechSynthesis' in window) {
+        // إيقاف أي كلام سابق
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'ar-SA'; // اللغة العربية
+        utterance.rate = 0.9; // سرعة الكلام
+        utterance.pitch = 1; // نبرة الصوت
+        utterance.volume = 1; // مستوى الصوت
+
+        // اختيار صوت عربي إذا كان متاحاً
+        const voices = window.speechSynthesis.getVoices();
+        const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
+        if (arabicVoice) {
+            utterance.voice = arabicVoice;
+        }
+
+        // إظهار إشعار أثناء التحدث
+        showAlert('🔊 جاري التحدث...', 'info');
+
+        utterance.onend = function() {
+            showAlert('✅ انتهى التحدث', 'success');
+        };
+
+        utterance.onerror = function() {
+            showAlert('❌ خطأ في تشغيل الصوت', 'danger');
+        };
+
+        window.speechSynthesis.speak(utterance);
+    } else {
+        showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
+    }
+}
+
+// ===== دالة تشغيل آخر رد =====
+function speakLastResponse() {
+    if (lastResponseText) {
+        speakText(lastResponseText);
+    } else {
+        // البحث عن آخر رسالة من المساعد
+        const messages = document.querySelectorAll('.chat-message.ai .content');
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            speakText(lastMessage.textContent);
+        } else {
+            showAlert('⚠️ لا يوجد رد سابق للتحدث', 'warning');
+        }
+    }
+}
+
+// ===== دالة تحويل الكلام إلى نص (Speech-to-Text) =====
+function initSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showAlert('❌ متصفحك لا يدعم خاصية التعرف على الصوت', 'danger');
+        return null;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    
+    recognition.lang = 'ar-SA'; // اللغة العربية
+    recognition.continuous = false; // التوقف بعد كل جملة
+    recognition.interimResults = true; // عرض النتائج المؤقتة
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function() {
+        isListening = true;
+        document.getElementById('micBtn')?.classList.add('listening');
+        document.getElementById('micBtn').innerHTML = '⏹️';
+        document.getElementById('voiceStatus').style.display = 'block';
+        document.getElementById('voiceStatus').textContent = '🎤 جاري الاستماع... تحدث الآن';
+        showAlert('🎤 جاري الاستماع...', 'info');
+    };
+
+    recognition.onresult = function(event) {
+        const result = event.results[event.results.length - 1];
+        const transcript = result[0].transcript.trim();
+        
+        // عرض النص المؤقت
+        document.getElementById('voiceStatus').textContent = `📝 ${transcript}`;
+
+        if (result.isFinal) {
+            // النص النهائي
+            document.getElementById('chatInput').value = transcript;
+            document.getElementById('voiceStatus').textContent = `✅ تم التعرف على: ${transcript}`;
+            
+            // إرسال السؤال تلقائياً
+            setTimeout(() => {
+                askAI(transcript);
+                stopVoiceInput();
+            }, 500);
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        
+        let errorMessage = '❌ حدث خطأ في التعرف على الصوت';
+        if (event.error === 'not-allowed') {
+            errorMessage = '❌ الرجاء السماح للتطبيق باستخدام الميكروفون';
+        } else if (event.error === 'no-speech') {
+            errorMessage = '⚠️ لم يتم سماع أي صوت، حاول مرة أخرى';
+        }
+        
+        showAlert(errorMessage, 'danger');
+        stopVoiceInput();
+    };
+
+    recognition.onend = function() {
+        stopVoiceInput();
+    };
+
+    return recognition;
+}
+
+// ===== تشغيل/إيقاف الاستماع =====
+function toggleVoiceInput() {
+    if (isListening) {
+        stopVoiceInput();
+    } else {
+        startVoiceInput();
+    }
+}
+
+function startVoiceInput() {
+    if (!recognition) {
+        recognition = initSpeechRecognition();
+        if (!recognition) return;
+    }
+
+    try {
+        recognition.start();
+        isListening = true;
+    } catch (error) {
+        console.error('Start recognition error:', error);
+        showAlert('❌ خطأ في تشغيل الميكروفون', 'danger');
+    }
+}
+
+function stopVoiceInput() {
+    if (recognition) {
+        try {
+            recognition.stop();
+        } catch (error) {
+            console.error('Stop recognition error:', error);
+        }
+    }
+    
+    isListening = false;
+    const micBtn = document.getElementById('micBtn');
+    if (micBtn) {
+        micBtn.classList.remove('listening');
+        micBtn.innerHTML = '🎤';
+    }
+    document.getElementById('voiceStatus').style.display = 'none';
+    document.getElementById('voiceStatus').textContent = '';
+}
+
+// ===== تحميل الأصوات العربية =====
+function loadVoices() {
+    if ('speechSynthesis' in window) {
+        // تحميل الأصوات
+        window.speechSynthesis.getVoices();
+        // تحديث الأصوات عند تغييرها
+        window.speechSynthesis.onvoiceschanged = function() {
+            window.speechSynthesis.getVoices();
+        };
+    }
+}
+
+// ===== تهيئة الصوت عند تحميل الصفحة =====
+function initAIAssistant() {
+    console.log('🤖 AI Assistant initialized with voice support');
+    loadVoices();
+    
+    // تهيئة التعرف على الصوت
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        recognition = initSpeechRecognition();
+        console.log('🎤 Speech recognition ready');
+    } else {
+        console.warn('⚠️ Speech recognition not supported');
+    }
+}
+
+// ===== تحديث دالة addMessage لإضافة زر الصوت =====
+// استبدل دالة addMessage الموجودة بهذه النسخة
+function addMessage(type, content) {
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    
+    const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
+    const time = new Date().toLocaleTimeString('ar-TN');
+
+    let contentHTML = content;
+    
+    // إضافة زر الصوت لرسائل المساعد
+    if (type === 'ai') {
+        contentHTML = `
+            ${content}
+            <br>
+            <button class="audio-btn" onclick="speakText(this.parentElement.textContent.trim())">
+                🔊 استماع
+            </button>
+        `;
+        // حفظ النص الأخير
+        lastResponseText = content.replace(/<[^>]*>/g, '').trim();
+    }
+
+    messageDiv.innerHTML = `
+        <div class="sender">${sender}</div>
+        <div class="content">${contentHTML}</div>
+        <div class="time">${time}</div>
+    `;
+
+    chatBox.appendChild(messageDiv);
+    
+    // تشغيل صوت تلقائي لرسائل المساعد
+    if (type === 'ai') {
+        // تشغيل الصوت تلقائياً (اختياري)
+        // speakText(content.replace(/<[^>]*>/g, '').trim());
+    }
+}
