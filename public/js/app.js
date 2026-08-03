@@ -579,6 +579,7 @@ function doLogin() {
         loginBtn.textContent = '⏳ جاري الدخول...';
     }
     
+    // ✅ استخدام السيرفر مباشرة وليس الوضع التجريبي
     fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -2002,7 +2003,7 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard) - نسخة آمنة
+// 📊 لوحة التحكم (Dashboard) - نسخة آمنة ومستقرة
 // ============================================================
 
 function loadDashboard() {
