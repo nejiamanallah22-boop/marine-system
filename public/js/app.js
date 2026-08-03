@@ -790,7 +790,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (كاملة)
+// 👥 دوال المستخدمين (المُصححة)
 // ============================================================
 
 function addUser() {
@@ -807,15 +807,25 @@ function addUser() {
     
     if (!name) {
         showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        document.getElementById('uName')?.focus();
         return;
     }
     if (!email) {
         showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        document.getElementById('uEmail')?.focus();
         return;
     }
     if (!password || password.length < 4) {
         showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
+        document.getElementById('uPassword')?.focus();
         return;
+    }
+    
+    // تعطيل الزر لمنع الإرسال المتكرر
+    const addBtn = document.querySelector('[onclick="addUser()"]');
+    if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.textContent = '⏳ جاري الإضافة...';
     }
     
     fetch('/api/users', {
@@ -824,21 +834,48 @@ function addUser() {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify({ name, email, password, role })
+        body: JSON.stringify({ name, email, password, role: role || 'مشاهد' })
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'فشل إضافة المستخدم');
+        }
+        return data;
+    })
     .then(data => {
         if (data.success) {
             showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
             clearUserInputs();
-            loadUsers();
+            loadUsers(); // تحديث الجدول
+            
+            // إغلاق النموذج إذا كان موجوداً
+            const modal = document.getElementById('addUserModal');
+            if (modal) modal.style.display = 'none';
+            
+            // إعادة تعيين زر الإضافة
+            const btn = document.querySelector('[onclick="addUser()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 إضافة مستخدم';
+            }
         } else {
             showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
+            const btn = document.querySelector('[onclick="addUser()"]');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 إضافة مستخدم';
+            }
         }
     })
     .catch(err => {
         console.error('Add user error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+        showAlert('❌ ' + err.message, 'danger');
+        const btn = document.querySelector('[onclick="addUser()"]');
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = '💾 إضافة مستخدم';
+        }
     });
 }
 
@@ -906,6 +943,12 @@ function updateUser(id) {
         data.password = password;
     }
     
+    const updateBtn = document.querySelector('[onclick*="updateUser"]');
+    if (updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = '⏳ جاري التحديث...';
+    }
+    
     fetch('/api/users/' + id, {
         method: 'PUT',
         headers: {
@@ -914,24 +957,36 @@ function updateUser(id) {
         },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || 'فشل تحديث المستخدم');
+        }
+        return data;
+    })
     .then(data => {
         if (data.success) {
             showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
             clearUserInputs();
+            
             const addBtn = document.querySelector('[onclick*="updateUser"]');
             if (addBtn) {
                 addBtn.textContent = '💾 إضافة مستخدم';
                 addBtn.onclick = addUser;
+                addBtn.disabled = false;
             }
             loadUsers();
         } else {
             showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+            const btn = document.querySelector('[onclick*="updateUser"]');
+            if (btn) btn.disabled = false;
         }
     })
     .catch(err => {
         console.error('Update user error:', err);
-        showAlert('❌ خطأ في تحديث المستخدم', 'danger');
+        showAlert('❌ ' + err.message, 'danger');
+        const btn = document.querySelector('[onclick*="updateUser"]');
+        if (btn) btn.disabled = false;
     });
 }
 
@@ -965,6 +1020,7 @@ function clearUserInputs() {
     document.getElementById('uName').value = '';
     document.getElementById('uEmail').value = '';
     document.getElementById('uPassword').value = '';
+    document.getElementById('uPassword').placeholder = 'كلمة المرور';
     document.getElementById('uRole').value = 'مشاهد';
 }
 
