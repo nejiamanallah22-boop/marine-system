@@ -439,6 +439,7 @@ function loadTickets() {
         allTickets = data || [];
         console.log('✅ Tickets loaded from DB:', allTickets.length);
         renderTickets();
+        updateTicketStats();
     })
     .catch(err => {
         console.error('Load tickets error:', err);
@@ -634,37 +635,144 @@ function renderUsersTable() {
     `).join('');
 }
 
+// ============================================================
+// 🛟 صفحة الدعم - دوال التذاكر
+// ============================================================
+
 function renderTickets() {
     const container = document.getElementById('ticketsList');
     if (!container) return;
+    
     if (!allTickets || allTickets.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد تذاكر</div>';
+        container.innerHTML = `
+            <div class="no-tickets">
+                <i class="fas fa-inbox"></i>
+                لا توجد تذاكر
+            </div>
+        `;
         return;
     }
-    container.innerHTML = allTickets.map(t => `
-        <div style="background:rgba(255,255,255,0.02); padding:12px; margin:8px 0; border-radius:8px; border-right:3px solid ${t.status === 'مغلقة' ? '#4ade80' : '#fbbf24'};">
-            <h4 style="color:rgba(255,255,255,0.8); margin:0;">${t.subject}</h4>
-            <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${t.message}</p>
-            <small style="color:rgba(255,255,255,0.3);">${t.date || ''} | ${t.userName || 'مجهول'}</small>
-            <span style="background:rgba(251,191,36,0.1); color:#fbbf24; padding:2px 12px; border-radius:10px; font-size:11px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
+    
+    const statusMap = {
+        'مفتوحة': 'open',
+        'قيد المعالجة': 'progress',
+        'مغلقة': 'closed'
+    };
+    
+    const statusLabels = {
+        'مفتوحة': '🟡 مفتوحة',
+        'قيد المعالجة': '🔵 قيد المعالجة',
+        'مغلقة': '🟢 مغلقة'
+    };
+    
+    const priorityColors = {
+        'منخفضة': 'low',
+        'متوسطة': 'medium',
+        'عالية': 'high',
+        'عاجلة': 'urgent'
+    };
+    
+    const priorityIcons = {
+        'منخفضة': '🟢',
+        'متوسطة': '🟡',
+        'عالية': '🟠',
+        'عاجلة': '🔴'
+    };
+    
+    container.innerHTML = allTickets.slice().reverse().map(t => `
+        <div class="ticket-item" style="border-right-color: ${t.status === 'مغلقة' ? '#4ade80' : t.status === 'قيد المعالجة' ? '#60a5fa' : '#fbbf24'};">
+            <div class="ticket-header">
+                <span class="ticket-subject">${t.subject}</span>
+                <span class="ticket-priority ${priorityColors[t.priority] || 'medium'}">${priorityIcons[t.priority] || '🟡'} ${t.priority || 'متوسطة'}</span>
+            </div>
+            <div class="ticket-message">${t.message}</div>
+            <div class="ticket-footer">
+                <span class="user-info">
+                    <i class="fas fa-user" style="opacity:0.3;"></i> ${t.userName || 'مجهول'}
+                    <span style="opacity:0.3; margin:0 4px;">|</span>
+                    <i class="fas fa-calendar" style="opacity:0.3;"></i> ${t.date || ''}
+                </span>
+                <span class="ticket-status ${statusMap[t.status] || 'open'}">${statusLabels[t.status] || '🟡 مفتوحة'}</span>
+            </div>
         </div>
     `).join('');
 }
 
-function renderNotes() {
-    const container = document.getElementById('notesListContainer');
-    if (!container) return;
-    if (!allNotes || allNotes.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد مذكرات</div>';
+function updateTicketStats() {
+    const total = allTickets.length;
+    const open = allTickets.filter(t => t.status === 'مفتوحة').length;
+    const progress = allTickets.filter(t => t.status === 'قيد المعالجة').length;
+    const closed = allTickets.filter(t => t.status === 'مغلقة').length;
+    
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statOpen').textContent = open;
+    document.getElementById('statProgress').textContent = progress;
+    document.getElementById('statClosed').textContent = closed;
+    document.getElementById('ticketCount').textContent = total + ' تذكرة';
+}
+
+function sendTicket(event) {
+    event.preventDefault();
+    
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
-    container.innerHTML = allNotes.map(n => `
-        <div style="background:rgba(255,255,255,0.02); padding:12px; margin:8px 0; border-radius:8px; border-right:3px solid #60a5fa;">
-            <h4 style="color:rgba(255,255,255,0.8); margin:0;">${n.title}</h4>
-            <p style="color:rgba(255,255,255,0.5); margin:5px 0; font-size:13px;">${n.content}</p>
-            <small style="color:rgba(255,255,255,0.3);">${n.date || ''} | ${n.createdBy || 'مجهول'}</small>
-        </div>
-    `).join('');
+    
+    const subject = document.getElementById('ticketSubject')?.value.trim();
+    const message = document.getElementById('ticketMessage')?.value.trim();
+    const priority = document.getElementById('ticketPriority')?.value || 'متوسطة';
+    
+    if (!subject || !message) {
+        showAlert('⚠️ الرجاء ملء جميع الحقول', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('sendTicketBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ جاري الإرسال...';
+    }
+    
+    const data = {
+        subject: subject,
+        message: message,
+        priority: priority,
+        status: 'مفتوحة',
+        userName: currentUser?.name || 'مجهول',
+        date: new Date().toISOString().split('T')[0]
+    };
+    
+    fetch('/api/tickets', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إرسال التذكرة بنجاح', 'success');
+            document.getElementById('ticketSubject').value = '';
+            document.getElementById('ticketMessage').value = '';
+            loadTickets();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإرسال'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Send ticket error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '📨 إرسال التذكرة';
+        }
+    });
 }
 
 // ============================================================
