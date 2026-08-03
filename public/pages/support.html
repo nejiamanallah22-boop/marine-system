@@ -6,133 +6,254 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الدعم الفني</title>
     <style>
+        /* ===== الأساسيات ===== */
         .support-container {
             padding: 20px;
-            max-width: 900px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
+        /* ===== الهيدر الاحترافي ===== */
         .support-header {
-            background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(74,222,128,0.05));
-            border-radius: 16px;
-            padding: 24px 30px;
+            background: linear-gradient(135deg, rgba(96,165,250,0.1), rgba(74,222,128,0.05));
+            border-radius: 20px;
+            padding: 30px 35px;
             border: 1px solid rgba(255,255,255,0.06);
-            margin-bottom: 24px;
-            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .support-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(96,165,250,0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .support-header .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .support-header .title-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .support-header .title-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(96,165,250,0.2), rgba(74,222,128,0.1));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 1px solid rgba(255,255,255,0.06);
         }
 
         .support-header .title {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            color: rgba(255,255,255,0.9);
-            margin-bottom: 4px;
+            color: rgba(255,255,255,0.95);
         }
 
         .support-header .subtitle {
-            font-size: 14px;
-            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
         }
 
-        .support-header .developer-info {
-            margin-top: 12px;
-            padding: 12px 20px;
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
+        .support-header .developer-badge {
+            background: rgba(255,255,255,0.04);
+            border-radius: 14px;
+            padding: 14px 22px;
             border: 1px solid rgba(255,255,255,0.05);
-            display: inline-block;
+            text-align: center;
+            min-width: 200px;
         }
 
-        .support-header .developer-info .name {
-            font-size: 16px;
+        .support-header .developer-badge .name {
+            font-size: 15px;
             font-weight: bold;
             color: #fbbf24;
         }
 
-        .support-header .developer-info .contact {
-            font-size: 13px;
-            color: rgba(255,255,255,0.5);
-            margin-top: 4px;
-        }
-
-        .support-header .developer-info .contact i {
-            margin-left: 6px;
-            width: 18px;
+        .support-header .developer-badge .role {
+            font-size: 11px;
             color: rgba(255,255,255,0.3);
         }
 
-        .support-header .developer-info .contact a {
+        .support-header .developer-badge .contact {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 4px;
+        }
+
+        .support-header .developer-badge .contact i {
+            margin-left: 4px;
+            width: 16px;
+        }
+
+        .support-header .developer-badge .contact a {
             color: #60a5fa;
             text-decoration: none;
         }
 
-        .support-header .developer-info .contact a:hover {
+        .support-header .developer-badge .contact a:hover {
             text-decoration: underline;
         }
 
+        /* ===== إحصائيات ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 14px 18px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s;
+        }
+
+        .stat-item:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-item .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 2px;
+        }
+
+        .stat-item.total .number { color: #60a5fa; }
+        .stat-item.open .number { color: #fbbf24; }
+        .stat-item.progress .number { color: #60a5fa; }
+        .stat-item.closed .number { color: #4ade80; }
+
+        /* ===== الشبكة ===== */
         .support-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
         }
 
         .support-card {
             background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 22px;
             border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s;
         }
 
-        .support-card h4 {
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-            margin-bottom: 12px;
+        .support-card:hover {
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .support-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .support-card .card-header h4 {
+            color: rgba(255,255,255,0.7);
+            font-size: 15px;
+            margin: 0;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .support-card h4 i {
-            font-size: 16px;
+        .support-card .card-header .badge-count {
+            background: rgba(255,255,255,0.05);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
         }
 
+        /* ===== عناصر التذاكر ===== */
         .ticket-item {
             background: rgba(255,255,255,0.02);
-            padding: 12px 16px;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border-radius: 10px;
             margin-bottom: 10px;
             border-right: 3px solid rgba(251,191,36,0.3);
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .ticket-item:hover {
             background: rgba(255,255,255,0.04);
+            transform: translateX(-3px);
+        }
+
+        .ticket-item .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .ticket-item .ticket-subject {
             font-weight: bold;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.85);
             font-size: 14px;
         }
 
         .ticket-item .ticket-message {
             font-size: 13px;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.35);
             margin: 4px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .ticket-item .ticket-meta {
+        .ticket-item .ticket-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 6px;
+            margin-top: 8px;
             font-size: 11px;
             color: rgba(255,255,255,0.2);
         }
 
+        .ticket-item .ticket-footer .user-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .ticket-item .ticket-status {
-            padding: 2px 10px;
-            border-radius: 10px;
+            padding: 2px 12px;
+            border-radius: 12px;
             font-size: 10px;
+            font-weight: bold;
         }
 
         .ticket-status.open {
@@ -150,31 +271,33 @@
             color: #4ade80;
         }
 
+        .ticket-priority {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+        }
+
+        .ticket-priority.low { color: #4ade80; }
+        .ticket-priority.medium { color: #fbbf24; }
+        .ticket-priority.high { color: #f97316; }
+        .ticket-priority.urgent { color: #f87171; }
+
         .no-tickets {
             text-align: center;
-            padding: 20px;
-            color: rgba(255,255,255,0.2);
+            padding: 30px 20px;
+            color: rgba(255,255,255,0.15);
         }
 
-        .support-form {
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            margin-top: 20px;
+        .no-tickets i {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+            opacity: 0.3;
         }
 
-        .support-form h4 {
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        /* ===== نموذج الإرسال ===== */
         .support-form .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .support-form .form-group label {
@@ -182,6 +305,7 @@
             font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin-bottom: 4px;
+            font-weight: bold;
         }
 
         .support-form .form-group input,
@@ -189,7 +313,7 @@
         .support-form .form-group select {
             width: 100%;
             padding: 10px 14px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.03);
             color: white;
@@ -204,6 +328,7 @@
             outline: none;
             border-color: rgba(96,165,250,0.3);
             background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 20px rgba(96,165,250,0.05);
         }
 
         .support-form .form-group textarea {
@@ -216,9 +341,9 @@
         }
 
         .support-form .btn-submit {
-            padding: 10px 30px;
+            padding: 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             background: linear-gradient(135deg, #60a5fa, #3b82f6);
             color: white;
             cursor: pointer;
@@ -227,67 +352,198 @@
             transition: all 0.3s;
             width: 100%;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .support-form .btn-submit:hover {
-            transform: scale(1.01);
-            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(96,165,250,0.2);
         }
 
         .support-form .btn-submit:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
-        /* تحسين للشاشات الصغيرة */
-        @media (max-width: 768px) {
+        /* ===== شريط التمرير ===== */
+        .tickets-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            padding-left: 4px;
+        }
+
+        .tickets-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .tickets-scroll::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+        }
+
+        .tickets-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+        }
+
+        .tickets-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* ===== تحسين للشاشات الصغيرة ===== */
+        @media (max-width: 992px) {
             .support-grid {
                 grid-template-columns: 1fr;
             }
-            .support-header .developer-info .contact {
-                font-size: 12px;
+
+            .support-header .header-content {
+                flex-direction: column;
+                text-align: center;
             }
+
+            .support-header .title-section {
+                flex-direction: column;
+            }
+
+            .support-header .developer-badge {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .support-container {
+                padding: 12px;
+            }
+
+            .support-header {
+                padding: 20px;
+            }
+
+            .support-header .title {
+                font-size: 18px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .support-card {
+                padding: 16px;
+            }
+        }
+
+        /* ===== تأثيرات ===== */
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-left: 4px;
+        }
+
+        .pulse-dot.online {
+            background: #4ade80;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
     </style>
 </head>
 <body>
     <div class="support-container">
-        <!-- ===== الهيدر ===== -->
+        <!-- ===== الهيدر الاحترافي ===== -->
         <div class="support-header">
-            <div class="title">🛟 مركز الدعم الفني</div>
-            <div class="subtitle">نظام متابعة وإدارة الأسطول البحري</div>
-            <div class="developer-info">
-                <div class="name">👨‍💻 الوكيل أمان الله ناجي</div>
-                <div class="contact">
-                    <i class="fas fa-phone"></i> 29659945 &nbsp;|&nbsp;
-                    <i class="fas fa-envelope"></i> <a href="mailto:nejiamanallah22@gmail.com">nejiamanallah22@gmail.com</a>
+            <div class="header-content">
+                <div class="title-section">
+                    <div class="title-icon">🛟</div>
+                    <div>
+                        <div class="title">مركز الدعم الفني</div>
+                        <div class="subtitle">نظام متابعة وإدارة الأسطول البحري</div>
+                    </div>
+                </div>
+                <div class="developer-badge">
+                    <div class="name">👨‍💻 الوكيل أمان الله ناجي</div>
+                    <div class="role">المطور والمشرف العام</div>
+                    <div class="contact">
+                        <i class="fas fa-phone"></i> 29659945 &nbsp;|&nbsp;
+                        <i class="fas fa-envelope"></i> <a href="mailto:nejiamanallah22@gmail.com">nejiamanallah22@gmail.com</a>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== قائمة التذاكر ===== -->
+        <!-- ===== إحصائيات ===== -->
+        <div class="stats-row" id="ticketStats">
+            <div class="stat-item total">
+                <div class="number" id="statTotal">0</div>
+                <div class="label">📊 المجموع</div>
+            </div>
+            <div class="stat-item open">
+                <div class="number" id="statOpen">0</div>
+                <div class="label">🟡 مفتوحة</div>
+            </div>
+            <div class="stat-item progress">
+                <div class="number" id="statProgress">0</div>
+                <div class="label">🔵 قيد المعالجة</div>
+            </div>
+            <div class="stat-item closed">
+                <div class="number" id="statClosed">0</div>
+                <div class="label">🟢 مغلقة</div>
+            </div>
+        </div>
+
+        <!-- ===== المحتوى الرئيسي ===== -->
         <div class="support-grid">
+            <!-- ===== قائمة التذاكر ===== -->
             <div class="support-card">
-                <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
-                <div id="ticketsList">
-                    <div class="no-tickets">⏳ جاري تحميل التذاكر...</div>
+                <div class="card-header">
+                    <h4><i class="fas fa-ticket-alt" style="color:#fbbf24;"></i> تذاكر الدعم</h4>
+                    <span class="badge-count" id="ticketCount">0 تذكرة</span>
+                </div>
+                <div class="tickets-scroll" id="ticketsScroll">
+                    <div id="ticketsList">
+                        <div class="no-tickets">
+                            <i class="fas fa-inbox"></i>
+                            لا توجد تذاكر
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- ===== نموذج إرسال تذكرة ===== -->
             <div class="support-card">
-                <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إرسال تذكرة جديدة</h4>
-                <form id="ticketForm" onsubmit="sendTicket(event)">
+                <div class="card-header">
+                    <h4><i class="fas fa-pen" style="color:#60a5fa;"></i> إنشاء تذكرة جديدة</h4>
+                    <span class="badge-count">📨 جديد</span>
+                </div>
+                <form class="support-form" id="ticketForm" onsubmit="sendTicket(event)">
                     <div class="form-group">
                         <label>✏️ الموضوع</label>
-                        <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة" required>
+                        <input type="text" id="ticketSubject" placeholder="أدخل موضوع التذكرة..." required>
                     </div>
                     <div class="form-group">
-                        <label>📝 الرسالة</label>
-                        <textarea id="ticketMessage" placeholder="اكتب تفاصيل مشكلتك هنا..." required></textarea>
+                        <label>📝 وصف المشكلة</label>
+                        <textarea id="ticketMessage" placeholder="اكتب تفاصيل مشكلتك بالتفصيل..." required></textarea>
                     </div>
                     <div class="form-group">
-                        <label>🔵 الأولوية</label>
+                        <label>🔵 مستوى الأولوية</label>
                         <select id="ticketPriority">
                             <option value="منخفضة">🟢 منخفضة</option>
                             <option value="متوسطة" selected>🟡 متوسطة</option>
@@ -295,7 +551,9 @@
                             <option value="عاجلة">🔴 عاجلة</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-submit" id="sendTicketBtn">📨 إرسال التذكرة</button>
+                    <button type="submit" class="btn-submit" id="sendTicketBtn">
+                        📨 إرسال التذكرة
+                    </button>
                 </form>
             </div>
         </div>
