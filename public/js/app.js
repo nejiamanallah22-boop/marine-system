@@ -73,7 +73,6 @@ function loadPage(pageName) {
             div.innerHTML = html;
             container.appendChild(div);
             
-            // ✅ تأخير بسيط لضمان تحميل DOM قبل تهيئة الصفحة
             setTimeout(() => {
                 initPage(pageName);
             }, 100);
@@ -278,7 +277,7 @@ function debounce(func, wait) {
 }
 
 // ============================================================
-// المصادقة (نسخة مصححة)
+// المصادقة
 // ============================================================
 
 function doLogin() {
@@ -324,10 +323,14 @@ function doLogin() {
             updateUserDisplay();
             loadAllData();
             
-            // ✅ تحميل لوحة التحكم بعد تأكيد تحميل البيانات
+            // ✅ تحميل لوحة التحكم فوراً مع تحديث واجهتها
             setTimeout(() => {
                 loadPage('dashboard');
-            }, 300);
+                // ✅ تفعيل زر لوحة التحكم
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                const dashboardBtn = document.querySelector('.nav-btn[onclick="showPage(\'dashboard\')"]');
+                if (dashboardBtn) dashboardBtn.classList.add('active');
+            }, 200);
             
             startActivityTracking();
             initNotifications();
@@ -1719,17 +1722,15 @@ function getCategoriesData(vessels) {
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard) - نسخة مصححة
+// 📊 لوحة التحكم (Dashboard)
 // ============================================================
 
 function loadDashboard() {
     console.log('📊 Loading dashboard...');
     
-    // ✅ التأكد من وجود العناصر
     const dashTotal = document.getElementById('dashTotal');
     if (!dashTotal) {
         console.log('⚠️ Dashboard elements not found, waiting...');
-        // محاولة مرة أخرى بعد 500ms
         setTimeout(loadDashboard, 500);
         return;
     }
@@ -2319,13 +2320,15 @@ function startTrackingAutoUpdate() {
 }
 
 // ============================================================
-// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech)
+// 🎤 ميزات الصوت (Speech-to-Text & Text-to-Speech) - نسخة محسنة
 // ============================================================
 
 let recognition = null;
 let isListening = false;
 let lastResponseText = '';
+let speechSynth = window.speechSynthesis;
 
+// ===== دالة التحدث المحسنة =====
 function speakText(text) {
     const cleanText = text.replace(/<[^>]*>/g, '').trim();
     
@@ -2336,37 +2339,82 @@ function speakText(text) {
 
     lastResponseText = cleanText;
 
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'ar-SA';
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        const voices = window.speechSynthesis.getVoices();
-        const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-        if (arabicVoice) {
-            utterance.voice = arabicVoice;
-        }
-
-        showAlert('🔊 جاري التحدث...', 'info');
-
-        utterance.onend = function() {
-            showAlert('✅ انتهى التحدث', 'success');
-        };
-
-        utterance.onerror = function() {
-            showAlert('❌ خطأ في تشغيل الصوت', 'danger');
-        };
-
-        window.speechSynthesis.speak(utterance);
-    } else {
+    if (!('speechSynthesis' in window)) {
         showAlert('❌ متصفحك لا يدعم خاصية النطق', 'danger');
+        return;
     }
+
+    // ✅ إيقاف أي كلام سابق
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // ✅ إعدادات الصوت المحسنة للوضوح
+    utterance.lang = 'ar-SA';           // اللغة العربية
+    utterance.rate = 0.85;              // سرعة أبطأ للوضوح (0.7-0.9)
+    utterance.pitch = 1.0;              // نبرة طبيعية
+    utterance.volume = 1;               // أعلى مستوى صوت
+
+    // ✅ اختيار أفضل صوت عربي متاح
+    const voices = window.speechSynthesis.getVoices();
+    
+    // ترتيب تفضيل الأصوات العربية
+    const preferredVoices = [
+        'Microsoft Zira Arabic',        // Windows - صوت نسائي واضح
+        'Microsoft Naheel Arabic',      // Windows - صوت ذكوري
+        'Google العربية',               // Chrome
+        'Samantha',                     // Mac (يدعم العربية)
+        'Maged',                        // Mac
+        'Zira',                         // Windows
+        'ar-SA',                        // أي صوت عربي
+    ];
+
+    let selectedVoice = null;
+    
+    // البحث عن أفضل صوت متاح
+    for (const preferred of preferredVoices) {
+        const found = voices.find(v => 
+            v.name.includes(preferred) || 
+            v.lang.startsWith('ar')
+        );
+        if (found) {
+            selectedVoice = found;
+            break;
+        }
+    }
+
+    // إذا لم نجد صوتاً، نختار أول صوت عربي
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('ar')) || null;
+    }
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('🎤 Using voice:', selectedVoice.name);
+    }
+
+    // ✅ إظهار إشعار أثناء التحدث
+    showAlert('🔊 جاري التحدث...', 'info');
+
+    utterance.onstart = function() {
+        console.log('🔊 Speaking started');
+    };
+
+    utterance.onend = function() {
+        console.log('✅ Speaking finished');
+        showAlert('✅ انتهى التحدث', 'success');
+    };
+
+    utterance.onerror = function(event) {
+        console.error('❌ Speech error:', event);
+        showAlert('❌ خطأ في تشغيل الصوت', 'danger');
+    };
+
+    // ✅ تشغيل الصوت
+    window.speechSynthesis.speak(utterance);
 }
 
+// ===== دالة تشغيل آخر رد =====
 function speakLastResponse() {
     if (lastResponseText) {
         speakText(lastResponseText);
@@ -2377,6 +2425,27 @@ function speakLastResponse() {
             speakText(lastMessage.textContent);
         } else {
             showAlert('⚠️ لا يوجد رد سابق للتحدث', 'warning');
+        }
+    }
+}
+
+// ===== تحميل الأصوات =====
+function loadVoices() {
+    if ('speechSynthesis' in window) {
+        // محاولة تحميل الأصوات
+        let voices = window.speechSynthesis.getVoices();
+        
+        if (voices.length === 0) {
+            // إذا لم تكن الأصوات محملة، ننتظر
+            window.speechSynthesis.onvoiceschanged = function() {
+                voices = window.speechSynthesis.getVoices();
+                console.log('🎤 Voices loaded:', voices.length);
+                // تخزين الأصوات في متغير عام للاستخدام
+                window.availableVoices = voices;
+            };
+        } else {
+            window.availableVoices = voices;
+            console.log('🎤 Voices available:', voices.length);
         }
     }
 }
@@ -2488,15 +2557,6 @@ function stopVoiceInput() {
     }
 }
 
-function loadVoices() {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.getVoices();
-        window.speechSynthesis.onvoiceschanged = function() {
-            window.speechSynthesis.getVoices();
-        };
-    }
-}
-
 // ============================================================
 // 🤖 الذكاء الاصطناعي - المساعد الذكي
 // ============================================================
@@ -2548,6 +2608,12 @@ function addMessage(type, content) {
             </button>
         `;
         lastResponseText = content.replace(/<[^>]*>/g, '').trim();
+        
+        // ✅ تشغيل الصوت تلقائياً للردود الطويلة
+        const cleanText = content.replace(/<[^>]*>/g, '').trim();
+        if (cleanText.length > 20) {
+            setTimeout(() => speakText(cleanText), 300);
+        }
     }
 
     messageDiv.innerHTML = `
