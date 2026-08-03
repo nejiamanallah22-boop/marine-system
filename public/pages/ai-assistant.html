@@ -1,190 +1,398 @@
-// ============================================================
-// 🤖 الذكاء الاصطناعي - المساعد الذكي (مُحدّث)
-// ============================================================
-
-function generateAIResponse(message) {
-    const msg = message.toLowerCase();
-    
-    const totalVessels = allVessels.length;
-    const readyVessels = allVessels.filter(v => v.stat === 'صالح').length;
-    const brokenVessels = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenanceVessels = allVessels.filter(v => v.stat === 'صيانة').length;
-    const totalMaintenance = allMaintenance.length;
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
-
-    // ===== معلومات المطور =====
-    const developerInfo = `المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي`;
-
-    // 1️⃣ السؤال عن من صنع التطبيق
-    if (msg.includes('من صنع') || msg.includes('صانع') || msg.includes('مطور') || 
-        msg.includes('المبرمج') || msg.includes('الذي صنع') || msg.includes('صمم') ||
-        msg.includes('من عمل') || msg.includes('المبدع') || msg.includes('الوكيل') ||
-        msg.includes('الحرس')) {
-        return `🌟 <strong>تم تطوير هذا النظام بواسطة:</strong><br><br>
-        👨‍💻 <strong>${developerInfo}</strong><br><br>
-        🏆 هذا التطبيق هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة البحرية.<br>
-        📌 يتميز النظام بالدقة والاحترافية والجودة العالية.<br><br>
-        🔹 <em>${developerInfo} هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.</em>`;
-    }
-
-    // 2️⃣ السؤال عن المبرمج أو الوكيل
-    if (msg.includes('أمان الله') || msg.includes('ناجي') || msg.includes('الوكيل') || 
-        msg.includes('المبرمج') || msg.includes('المطور') || msg.includes('المبدع') ||
-        msg.includes('الحرس الوطني')) {
-        return `👨‍💻 <strong>${developerInfo}</strong><br><br>
-        🏅 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.<br>
-        🚀 تم تصميم هذا النظام بخبرة عالية وجودة استثنائية.<br>
-        📌 يتميز بالدقة والاحترافية والالتزام بأعلى المعايير.<br><br>
-        💡 <em>"منظومة الوسائل البحرية" هي نتاج إبداع ${developerInfo}.</em>`;
-    }
-
-    // 3️⃣ السؤال عن التطبيق بشكل عام
-    if (msg.includes('التطبيق') || msg.includes('النظام') || msg.includes('البرنامج') || 
-        msg.includes('منظومة') || msg.includes('الأسطول')) {
-        if (msg.includes('من') || msg.includes('صنع') || msg.includes('مطور') || 
-            msg.includes('مبرمج') || msg.includes('مصمم')) {
-            return `🌟 هذا النظام من تطوير <strong>${developerInfo}</strong><br><br>
-            🏆 هو مبرمج محترف ومبدع في مجال تطوير الأنظمة البحرية والإدارية.<br>
-            📌 تم تصميم هذا النظام بجودة عالية ودقة متناهية.<br><br>
-            💡 <em>للتواصل مع المطور: ${developerInfo}</em>`;
+<!-- public/pages/ai-assistant.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المساعد الذكي</title>
+    <style>
+        .ai-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
         }
-    }
 
-    // 4️⃣ أسئلة الترحيب
-    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً') || msg.includes('هلو')) {
-        return `👋 وعليكم السلام ورحمة الله وبركاته!<br><br>
-        أنا المساعد الذكي لمنظومة الوسائل البحرية.<br><br>
-        تم تطوير هذا النظام بواسطة:<br>
-        🌟 <strong>${developerInfo}</strong><br><br>
-        كيف يمكنني مساعدتك اليوم؟<br>
-        يمكنك أن تسألني عن:<br>
-        • 📊 حالة المراكب والجاهزية<br>
-        • 🔧 إحصائيات الصيانة والتكاليف<br>
-        • 🔮 توقع الأعطال<br>
-        • 💡 نصائح لتحسين الأداء<br>
-        • 🏭 الوحدات البحرية<br>
-        • 👨‍💻 من صنع هذا التطبيق`;
-    }
+        .chat-box {
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
 
-    // 5️⃣ عدد المراكب الصالحة
-    if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
-        return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
-        نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
-        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}<br><br>
-        📌 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
-    }
+        .chat-message {
+            margin: 8px 0;
+            padding: 10px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
 
-    // 6️⃣ عدد المراكب المعطبة
-    if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
-        const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
-        return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
-        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}<br><br>
-        🔹 نظام متابعة الأسطول من تطوير <strong>${developerInfo}</strong>`;
-    }
+        .chat-message.user {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
+            margin-left: auto;
+            text-align: right;
+        }
 
-    // 7️⃣ إحصائيات الصيانة
-    if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
-        const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-        const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
-        return `🔧 إحصائيات الصيانة:<br>
-        • 📊 إجمالي السجلات: <strong>${totalMaintenance}</strong><br>
-        • ✅ مكتملة: <strong>${completed}</strong><br>
-        • 🔄 قيد الإنجاز: <strong>${inProgress}</strong><br>
-        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong><br><br>
-        🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
-    }
+        .chat-message.ai {
+            background: rgba(74,222,128,0.08);
+            border: 1px solid rgba(74,222,128,0.15);
+            margin-right: auto;
+        }
 
-    // 8️⃣ توقع الأعطال
-    if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
-        const highRisk = allVessels.filter(v => {
-            const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
-            return age > 12 && v.stat === 'صالح';
-        });
-        
-        const recommendations = highRisk.length > 0 
-            ? `⚠️ هناك ${highRisk.length} مركب يحتاج إلى فحص:<br>${highRisk.map(v => `• ${v.name}`).join('<br>')}`
-            : '✅ جميع المراكب في حالة جيدة';
-        
-        return `🔮 توقع الأعطال:<br><br>
-        • المراكب المعطبة حالياً: ${brokenVessels}<br>
-        • المراكب في الصيانة: ${maintenanceVessels}<br>
-        • ${recommendations}<br><br>
-        📌 نظام متابعة وتوقع الأعطال من تطوير <strong>${developerInfo}</strong>`;
-    }
+        .chat-message .sender {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-bottom: 4px;
+        }
 
-    // 9️⃣ تقرير شامل
-    if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
-        return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
-        🚢 <strong>المراكب:</strong><br>
-        • المجموع: ${totalVessels}<br>
-        • صالح: ${readyVessels} (${readyPercent}%)<br>
-        • معطب: ${brokenVessels}<br>
-        • صيانة: ${maintenanceVessels}<br><br>
-        🔧 <strong>الصيانة:</strong><br>
-        • إجمالي السجلات: ${totalMaintenance}<br>
-        • التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت<br><br>
-        📌 <strong>التوصيات:</strong><br>
-        ${readyPercent < 70 ? '• ⚠️ يوصى بتحسين نسبة الجاهزية' : '• ✅ الأداء جيد'}<br>
-        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}<br><br>
-        🔹 هذا التقرير من تطوير <strong>${developerInfo}</strong>`;
-    }
+        .chat-message .content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
 
-    // 🔟 الوحدات البحرية
-    if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
-        const units = {};
-        allVessels.forEach(v => {
-            if (v.supp) {
-                units[v.supp] = (units[v.supp] || 0) + 1;
+        .chat-message .time {
+            font-size: 10px;
+            opacity: 0.3;
+            margin-top: 4px;
+        }
+
+        .chat-message .audio-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: rgba(255,255,255,0.5);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 6px;
+            transition: all 0.3s;
+        }
+
+        .chat-message .audio-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            min-width: 150px;
+        }
+
+        .chat-input-area input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .chat-input-area input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .chat-input-area button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            color: white;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .chat-input-area button:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .chat-input-area button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-input-area .mic-btn {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            min-width: 50px;
+        }
+
+        .chat-input-area .mic-btn.listening {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            animation: pulse 1s infinite;
+        }
+
+        .chat-input-area .speaker-btn {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            min-width: 50px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ai-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ai-feature-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ai-feature-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-2px);
+            border-color: rgba(96,165,250,0.3);
+        }
+
+        .ai-feature-card .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .ai-feature-card .label {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 16px;
+            background: rgba(74,222,128,0.05);
+            border-radius: 12px;
+            max-width: 60px;
+            margin: 8px 0;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(74,222,128,0.5);
+            animation: typing 1.4s infinite both;
+            margin: 0 2px;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-10px); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-actions button {
+            padding: 6px 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .quick-actions button:hover {
+            background: rgba(96,165,250,0.1);
+            border-color: rgba(96,165,250,0.3);
+            color: white;
+        }
+
+        .voice-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            margin-top: 8px;
+            display: none;
+            padding: 8px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .voice-status.active {
+            display: block;
+            color: #4ade80;
+            border-color: rgba(74,222,128,0.2);
+        }
+
+        .voice-status .status-icon {
+            font-size: 18px;
+            margin-left: 8px;
+        }
+
+        /* تحسينات للشاشات الصغيرة */
+        @media (max-width: 600px) {
+            .chat-input-area {
+                flex-wrap: wrap;
             }
-        });
-        let unitText = Object.entries(units)
-            .map(([unit, count]) => `• ${unit}: ${count} مركب`)
-            .join('<br>');
-        return `🏭 <strong>الوحدات البحرية</strong><br><br>
-        ${unitText || 'لا توجد وحدات مسجلة'}<br><br>
-        🔹 نظام متابعة الوحدات من تطوير <strong>${developerInfo}</strong>`;
-    }
+            .chat-input-area input {
+                min-width: 100%;
+                order: 1;
+            }
+            .chat-input-area button {
+                flex: 1;
+                min-width: 60px;
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+            .ai-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
 
-    // 1️⃣1️⃣ نصائح تحسين
-    if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
-        const tips = [];
-        if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
-        if (brokenVessels > 3) tips.push('• 🔧 تخصيص فرق لإصلاح المراكب المعطبة');
-        if (totalCost > 10000) tips.push('• 💰 مراجعة عقود الصيانة لتقليل التكاليف');
-        if (tips.length === 0) tips.push('• ✅ الأداء ممتاز، استمر في الصيانة الدورية');
-        tips.push('• 📊 استخدام الذكاء الاصطناعي لتحليل الأعطال المتكررة');
-        tips.push(`• 👨‍💻 الاستعانة بخبرات ${developerInfo} لتطوير النظام`);
-        
-        return `💡 <strong>نصائح لتحسين الأداء</strong><br><br>
-        ${tips.join('<br>')}<br><br>
-        🔹 تم إعداد هذه النصائح بواسطة <strong>${developerInfo}</strong>`;
-    }
+        /* شريط التمرير المخصص */
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-box::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+        }
+        .chat-box::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .chat-box::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.2);
+        }
 
-    // 1️⃣2️⃣ مساعدة
-    if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
-        return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
-        إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
-        • 🚢 "كم عدد المراكب الصالحة؟"<br>
-        • ⚠️ "عرض المراكب المعطبة"<br>
-        • 🔧 "إحصائيات الصيانة"<br>
-        • 🔮 "توقع الأعطال القادمة"<br>
-        • 📊 "تقرير شامل عن الأسطول"<br>
-        • 💡 "نصائح لتحسين الأداء"<br>
-        • 🏭 "الوحدات البحرية"<br>
-        • 👨‍💻 "من صنع هذا التطبيق"<br><br>
-        🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
-    }
+        /* زر تطوير بواسطة */
+        .developer-credit {
+            text-align: center;
+            margin-top: 16px;
+            padding: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
 
-    // 1️⃣3️⃣ رد افتراضي
-    return `🤔 لم أفهم سؤالك بالكامل.<br><br>
-    يمكنك أن تسألني عن:<br>
-    • 📊 حالة المراكب والجاهزية<br>
-    • 🔧 إحصائيات الصيانة والتكاليف<br>
-    • 🔮 توقع الأعطال<br>
-    • 💡 نصائح لتحسين الأداء<br>
-    • 🏭 معلومات عن الوحدات البحرية<br>
-    • 👨‍💻 من صنع هذا التطبيق<br><br>
-    أو اكتب "مساعدة" لعرض جميع الخيارات.<br><br>
-    🔹 هذا النظام من تطوير <strong>${developerInfo}</strong>`;
-}
+        .developer-credit strong {
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-container">
+        <h2 style="margin-bottom: 4px;">🤖 المساعد الذكي</h2>
+        <p style="opacity:0.4; font-size:14px; margin-bottom:20px;">اسألني عن المراكب، الصيانة، أو الإحصائيات</p>
+
+        <div class="ai-features-grid">
+            <div class="ai-feature-card" onclick="askAI('عرض تقرير عن حالة المراكب')">
+                <div class="icon">📊</div>
+                <div class="label">تقرير المراكب</div>
+            </div>
+            <div class="ai-feature-card" onclick="askAI('عرض إحصائيات الصيانة')">
+                <div class="icon">🔧</div>
+                <div class="label">إحصائيات الصيانة</div>
+            </div>
+            <div class="ai-feature-card" onclick="askAI('توقع الأعطال القادمة')">
+                <div class="icon">🔮</div>
+                <div class="label">توقع الأعطال</div>
+            </div>
+            <div class="ai-feature-card" onclick="askAI('نصائح لتحسين الجاهزية')">
+                <div class="icon">💡</div>
+                <div class="label">نصائح تحسين</div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button onclick="askAI('كم عدد المراكب الصالحة؟')">🚢 الصالحة</button>
+            <button onclick="askAI('كم عدد المراكب المعطبة؟')">⚠️ المعطبة</button>
+            <button onclick="askAI('عرض تكاليف الصيانة')">💰 التكاليف</button>
+            <button onclick="askAI('تقرير عن الوحدات البحرية')">🏭 الوحدات</button>
+            <button onclick="askAI('مساعدة')">❓ مساعدة</button>
+            <button onclick="askAI('من صنع هذا التطبيق؟')">👨‍💻 المطور</button>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="chat-message ai">
+                <div class="sender">🤖 المساعد الذكي</div>
+                <div class="content">
+                    👋 مرحباً! أنا مساعدك الذكي.<br><br>
+                    اسألني عن:<br>
+                    • 🚢 حالة المراكب والجاهزية<br>
+                    • 🔧 سجلات وتكاليف الصيانة<br>
+                    • 🔮 توقع الأعطال<br>
+                    • 💡 نصائح لتحسين الأداء<br>
+                    • 👨‍💻 من صنع هذا التطبيق<br><br>
+                    🎤 يمكنك التحدث معي باستخدام الميكروفون
+                </div>
+                <div class="time">الآن</div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span><span></span><span></span>
+        </div>
+
+        <div class="voice-status" id="voiceStatus">
+            <span class="status-icon">🎤</span>
+            <span id="voiceStatusText">جاري الاستماع... تحدث الآن</span>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." onkeypress="if(event.key==='Enter') askAI()">
+            <button onclick="askAI()" id="sendBtn">إرسال</button>
+            <button class="mic-btn" id="micBtn" onclick="toggleVoiceInput()" title="تحدث معي 🎤">
+                🎤
+            </button>
+            <button class="speaker-btn" onclick="speakLastResponse()" title="استماع للرد الأخير 🔊">
+                🔊
+            </button>
+        </div>
+
+        <div style="text-align:center; margin-top:12px; opacity:0.2; font-size:11px;">
+            🎤 اضغط على الميكروفون للتحدث &nbsp;|&nbsp; 🔊 اضغط على السماعة للاستماع
+        </div>
+
+        <div class="developer-credit">
+            تم تطوير هذا النظام بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
+        </div>
+    </div>
+</body>
+</html>
