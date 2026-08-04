@@ -2,35 +2,6 @@
 console.log('✅ App loaded');
 
 // ============================================================
-// استيراد الملفات (يتم تحميلها تلقائياً في المتصفح)
-// ============================================================
-
-// 1️⃣ الملفات الأساسية
-// core/config.js
-// core/helpers.js
-// core/auth.js
-
-// 2️⃣ دوال تحميل الصفحات
-// pages/loaders.js
-
-// 3️⃣ صفحات التطبيق
-// pages/dashboard.js
-// pages/fleet.js
-// pages/maintenance.js
-// pages/efficiency.js
-// pages/support.js
-// pages/users.js
-// pages/notes.js
-// pages/sessions.js
-// pages/ai-assistant.js
-
-// 4️⃣ المكتبات المساعدة
-// lib/charts.js
-// lib/map.js
-// lib/notifications.js
-// lib/file-import.js
-
-// ============================================================
 // تهيئة التطبيق
 // ============================================================
 
@@ -65,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// دوال تحميل الصفحات (تبقى هنا)
+// دوال تحميل الصفحات
 // ============================================================
 
 function loadPage(pageName) {
@@ -180,8 +151,26 @@ function refreshAllPages() {
     showAlert('✅ تم تحديث الصفحة', 'success');
 }
 
+function initTrackingPage() {
+    if (document.getElementById('page-tracking')) {
+        if (typeof initTrackingMap === 'function') {
+            setTimeout(initTrackingMap, 300);
+        }
+        if (typeof initTrackingSocket === 'function') {
+            setTimeout(initTrackingSocket, 500);
+        }
+        if (typeof startContinuousTracking === 'function') {
+            setTimeout(startContinuousTracking, 1000);
+        }
+    }
+}
+
+function initMap() {
+    console.log('🗺️ Initializing map...');
+}
+
 // ============================================================
-// دوال تحميل البيانات (تبقى هنا)
+// تحميل البيانات
 // ============================================================
 
 function loadAllData() {
@@ -192,12 +181,25 @@ function loadAllData() {
     loadUsers();
 }
 
-// ... باقي دوال تحميل البيانات كما هي ...
+function renderAllTables() {
+    renderMainTable();
+    renderMaintenanceTables();
+    updateMaintenanceVessels();
+    renderEfficiency();
+    if (document.getElementById('page-dashboard')) {
+        if (typeof loadDashboard === 'function') {
+            setTimeout(loadDashboard, 100);
+        }
+    }
+}
 
 // ============================================================
-// نهاية الملف - إشعار التشغيل
+// تشغيل التطبيق
 // ============================================================
 
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
 console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
+console.log('🗺️ خريطة تتبع المستخدمين بالساتلايت جاهزة!');
+console.log('🔔 نظام الإشعارات يعمل!');
+console.log('📂 ميزة استيراد الملفات (Excel/CSV/PDF) جاهزة!');
