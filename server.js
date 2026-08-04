@@ -1,4 +1,4 @@
-// server.js - نسخة متصلة بـ MongoDB (بدون JSON)
+// server.js - النسخة الكاملة مع نظام الصلاحيات
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -8,7 +8,17 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
-// تحميل المتغيرات البيئية
+// استيراد نظام الصلاحيات
+const { 
+    PERMISSIONS,
+    hasPermission, 
+    getPermissionsByRole,
+    isAdmin,
+    isRegionalEditor,
+    isMaintenanceTech,
+    isViewer 
+} = require('./server/config/permissions');
+
 dotenv.config();
 
 const app = express();
@@ -56,12 +66,21 @@ mongoose.connect(process.env.MONGODB_URI, {
 // 📦 نماذج MongoDB (Schemas)
 // ============================================================
 
-// ----- نموذج المستخدم -----
+// ----- نموذج المستخدم مع إضافة region -----
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['مسؤول', 'مشرف', 'محرر', 'مشاهد'], default: 'مشاهد' },
+    role: { 
+        type: String, 
+        enum: ['مسؤول', 'محرر إقليمي', 'فني صيانة', 'مشاهد'], 
+        default: 'مشاهد' 
+    },
+    region: { 
+        type: String, 
+        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', ''],
+        default: '' 
+    },
     isActive: { type: Boolean, default: true },
     createdAt: { type: Date, default: Date.now },
     lastLogin: { type: Date }
@@ -80,13 +99,13 @@ UserSchema.methods.comparePassword = async function(password) {
 
 const User = mongoose.model('User', UserSchema);
 
-// ----- نموذج المركب -----
+// ----- نموذج المركب مع إضافة region -----
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true },
     num: { type: String },
     len: { type: Number, default: 0 },
     cat: { type: String, default: 'البروق' },
-    reg: { type: String, default: 'الشمال' },
+    reg: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
     zone: { type: String },
     port: { type: String },
     supp: { type: String },
@@ -96,6 +115,8 @@ const VesselSchema = new mongoose.Schema({
     eDate: { type: String },
     ref: { type: String },
     repairer: { type: String },
+    region: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -132,6 +153,7 @@ const TicketSchema = new mongoose.Schema({
     status: { type: String, enum: ['مفتوحة', 'قيد المعالجة', 'مغلقة'], default: 'مفتوحة' },
     userName: { type: String },
     date: { type: String },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -149,12 +171,12 @@ const NoteSchema = new mongoose.Schema({
 const Note = mongoose.model('Note', NoteSchema);
 
 // ============================================================
-// 🔐 دوال المصادقة
+// 🔐 دوال المصادقة والصلاحيات (Middleware)
 // ============================================================
 
 function generateToken(user) {
     return jwt.sign(
-        { id: user._id, email: user.email, role: user.role },
+        { id: user._id, email: user.email, role: user.role, region: user.region || '' },
         JWT_SECRET,
         { expiresIn: '7d' }
     );
@@ -176,9 +198,9 @@ function authenticate(req, res, next) {
     
     const token = authHeader.substring(7);
     
-    // دعم التوكن التجريبي (للحسابات التجريبية)
+    // دعم التوكن التجريبي
     if (token.startsWith('demo-token-')) {
-        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول' };
+        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
         return next();
     }
     
@@ -191,8 +213,60 @@ function authenticate(req, res, next) {
     next();
 }
 
+// ===== دوال التحقق من الصلاحيات =====
+
+function checkPermission(permission) {
+    return (req, res, next) => {
+        const userRole = req.user?.role;
+        if (!userRole) {
+            return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+        }
+        if (hasPermission(permission, userRole)) {
+            next();
+        } else {
+            res.status(403).json({ success: false, error: '❌ ليس لديك صلاحية لهذه العملية' });
+        }
+    };
+}
+
+function requireAdmin(req, res, next) {
+    const userRole = req.user?.role;
+    if (!userRole) {
+        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+    }
+    if (isAdmin(userRole)) {
+        next();
+    } else {
+        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية مسؤول' });
+    }
+}
+
+function requireAdminOrRegionalEditor(req, res, next) {
+    const userRole = req.user?.role;
+    if (!userRole) {
+        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+    }
+    if (isAdmin(userRole) || isRegionalEditor(userRole)) {
+        next();
+    } else {
+        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية محرر إقليمي' });
+    }
+}
+
+function requireMaintenanceTech(req, res, next) {
+    const userRole = req.user?.role;
+    if (!userRole) {
+        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+    }
+    if (isMaintenanceTech(userRole) || isAdmin(userRole)) {
+        next();
+    } else {
+        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية فني صيانة' });
+    }
+}
+
 // ============================================================
-// 🚀 دوال API
+// 🚀 دوال API مع الصلاحيات
 // ============================================================
 
 // ---------- المصادقة ----------
@@ -231,8 +305,8 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// ---------- المستخدمين ----------
-app.get('/api/users', authenticate, async (req, res) => {
+// ---------- المستخدمين (مسؤول فقط) ----------
+app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
         res.json(users);
@@ -241,9 +315,9 @@ app.get('/api/users', authenticate, async (req, res) => {
     }
 });
 
-app.post('/api/users', authenticate, async (req, res) => {
+app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, region } = req.body;
         
         if (!name || !email || !password) {
             return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
@@ -254,7 +328,13 @@ app.post('/api/users', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
         }
         
-        const user = new User({ name, email, password, role: role || 'مشاهد' });
+        const user = new User({ 
+            name, 
+            email, 
+            password, 
+            role: role || 'مشاهد',
+            region: region || ''
+        });
         await user.save();
         
         const { password: _, ...userWithoutPassword } = user.toObject();
@@ -266,7 +346,7 @@ app.post('/api/users', authenticate, async (req, res) => {
     }
 });
 
-app.put('/api/users/:id', authenticate, async (req, res) => {
+app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -287,7 +367,7 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
     }
 });
 
-app.delete('/api/users/:id', authenticate, async (req, res) => {
+app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         
@@ -306,10 +386,19 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
     }
 });
 
-// ---------- المراكب ----------
-app.get('/api/vessels', async (req, res) => {
+// ---------- المراكب (مع صلاحيات) ----------
+app.get('/api/vessels', authenticate, async (req, res) => {
     try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
+        const userRole = req.user?.role;
+        const userRegion = req.user?.region;
+        let query = {};
+        
+        // محرر إقليمي يرى مراكب إقليمه فقط
+        if (isRegionalEditor(userRole) && !isAdmin(userRole)) {
+            query.region = userRegion;
+        }
+        
+        const vessels = await Vessel.find(query).sort({ createdAt: -1 });
         res.json(vessels);
     } catch (error) {
         console.error('Get vessels error:', error);
@@ -317,8 +406,13 @@ app.get('/api/vessels', async (req, res) => {
     }
 });
 
-app.post('/api/vessels', authenticate, async (req, res) => {
+app.post('/api/vessels', authenticate, requireAdminOrRegionalEditor, async (req, res) => {
     try {
+        // التأكد من أن المركب يضاف في إقليم المستخدم
+        if (isRegionalEditor(req.user?.role)) {
+            req.body.region = req.user.region;
+        }
+        
         const vessel = new Vessel(req.body);
         await vessel.save();
         res.json({ success: true, vessel });
@@ -328,20 +422,28 @@ app.post('/api/vessels', authenticate, async (req, res) => {
     }
 });
 
-app.put('/api/vessels/:id', authenticate, async (req, res) => {
+app.put('/api/vessels/:id', authenticate, requireAdminOrRegionalEditor, async (req, res) => {
     try {
         const { id } = req.params;
-        const vessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
+        const vessel = await Vessel.findById(id);
+        
         if (!vessel) {
             return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
         }
-        res.json({ success: true, vessel });
+        
+        // التحقق من أن المحرر الإقليمي يعدل مراكب إقليمه فقط
+        if (isRegionalEditor(req.user?.role) && vessel.region !== req.user.region) {
+            return res.status(403).json({ success: false, error: '❌ ليس لديك صلاحية لتعديل مراكب هذا الإقليم' });
+        }
+        
+        const updatedVessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
+        res.json({ success: true, vessel: updatedVessel });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في تحديث المركب' });
     }
 });
 
-app.delete('/api/vessels/:id', authenticate, async (req, res) => {
+app.delete('/api/vessels/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const vessel = await Vessel.findByIdAndDelete(id);
@@ -355,7 +457,7 @@ app.delete('/api/vessels/:id', authenticate, async (req, res) => {
 });
 
 // ---------- الصيانة ----------
-app.get('/api/maintenance', async (req, res) => {
+app.get('/api/maintenance', authenticate, checkPermission('maintenance:read'), async (req, res) => {
     try {
         const records = await Maintenance.find().sort({ createdAt: -1 });
         res.json(records);
@@ -364,7 +466,7 @@ app.get('/api/maintenance', async (req, res) => {
     }
 });
 
-app.post('/api/maintenance', authenticate, async (req, res) => {
+app.post('/api/maintenance', authenticate, requireMaintenanceTech, async (req, res) => {
     try {
         const record = new Maintenance(req.body);
         await record.save();
@@ -374,7 +476,7 @@ app.post('/api/maintenance', authenticate, async (req, res) => {
     }
 });
 
-app.put('/api/maintenance/:id', authenticate, async (req, res) => {
+app.put('/api/maintenance/:id', authenticate, requireMaintenanceTech, async (req, res) => {
     try {
         const { id } = req.params;
         const record = await Maintenance.findByIdAndUpdate(id, req.body, { new: true });
@@ -387,7 +489,7 @@ app.put('/api/maintenance/:id', authenticate, async (req, res) => {
     }
 });
 
-app.delete('/api/maintenance/:id', authenticate, async (req, res) => {
+app.delete('/api/maintenance/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const record = await Maintenance.findByIdAndDelete(id);
@@ -401,7 +503,7 @@ app.delete('/api/maintenance/:id', authenticate, async (req, res) => {
 });
 
 // ---------- التذاكر ----------
-app.get('/api/tickets', async (req, res) => {
+app.get('/api/tickets', authenticate, checkPermission('tickets:read'), async (req, res) => {
     try {
         const tickets = await Ticket.find().sort({ createdAt: -1 });
         res.json(tickets);
@@ -410,9 +512,12 @@ app.get('/api/tickets', async (req, res) => {
     }
 });
 
-app.post('/api/tickets', authenticate, async (req, res) => {
+app.post('/api/tickets', authenticate, checkPermission('tickets:create'), async (req, res) => {
     try {
-        const ticket = new Ticket(req.body);
+        const ticket = new Ticket({
+            ...req.body,
+            createdBy: req.user.id
+        });
         await ticket.save();
         res.json({ success: true, ticket });
     } catch (error) {
@@ -420,7 +525,7 @@ app.post('/api/tickets', authenticate, async (req, res) => {
     }
 });
 
-app.put('/api/tickets/:id', authenticate, async (req, res) => {
+app.put('/api/tickets/:id', authenticate, checkPermission('tickets:update'), async (req, res) => {
     try {
         const { id } = req.params;
         const ticket = await Ticket.findByIdAndUpdate(id, req.body, { new: true });
@@ -434,7 +539,7 @@ app.put('/api/tickets/:id', authenticate, async (req, res) => {
 });
 
 // ---------- المذكرات ----------
-app.get('/api/notes', async (req, res) => {
+app.get('/api/notes', authenticate, checkPermission('notes:read'), async (req, res) => {
     try {
         const notes = await Note.find().sort({ createdAt: -1 });
         res.json(notes);
@@ -443,7 +548,7 @@ app.get('/api/notes', async (req, res) => {
     }
 });
 
-app.post('/api/notes', authenticate, async (req, res) => {
+app.post('/api/notes', authenticate, checkPermission('notes:create'), async (req, res) => {
     try {
         const note = new Note(req.body);
         await note.save();
@@ -453,7 +558,7 @@ app.post('/api/notes', authenticate, async (req, res) => {
     }
 });
 
-app.put('/api/notes/:id', authenticate, async (req, res) => {
+app.put('/api/notes/:id', authenticate, checkPermission('notes:update'), async (req, res) => {
     try {
         const { id } = req.params;
         const note = await Note.findByIdAndUpdate(id, req.body, { new: true });
@@ -466,7 +571,7 @@ app.put('/api/notes/:id', authenticate, async (req, res) => {
     }
 });
 
-app.delete('/api/notes/:id', authenticate, async (req, res) => {
+app.delete('/api/notes/:id', authenticate, requireAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const note = await Note.findByIdAndDelete(id);
@@ -479,6 +584,16 @@ app.delete('/api/notes/:id', authenticate, async (req, res) => {
     }
 });
 
+// ---------- المراقبة (مسؤول فقط) ----------
+app.get('/api/sessions', authenticate, requireAdmin, async (req, res) => {
+    try {
+        // منطق عرض الجلسات
+        res.json({ success: true, message: 'جلسات المستخدمين' });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '❌ خطأ' });
+    }
+});
+
 // ============================================================
 // 📄 تهيئة المستخدمين الافتراضيين
 // ============================================================
@@ -488,10 +603,16 @@ async function initDefaultUsers() {
         const count = await User.countDocuments();
         if (count === 0) {
             const defaultUsers = [
-                { name: 'مدير النظام', email: 'admin', password: '123456', role: 'مسؤول' },
-                { name: 'مدير العمليات', email: 'manager', password: '123456', role: 'مشرف' },
-                { name: 'محرر', email: 'editor', password: '123456', role: 'محرر' },
-                { name: 'مشاهد', email: 'viewer', password: '123456', role: 'مشاهد' }
+                { name: 'مدير النظام', email: 'admin', password: '123456', role: 'مسؤول', region: '' },
+                { name: 'محرر الشمال', email: 'north', password: '123456', role: 'محرر إقليمي', region: 'الشمال' },
+                { name: 'محرر الساحل', email: 'coast', password: '123456', role: 'محرر إقليمي', region: 'الساحل' },
+                { name: 'محرر الوسط', email: 'center', password: '123456', role: 'محرر إقليمي', region: 'الوسط' },
+                { name: 'محرر الجنوب', email: 'south', password: '123456', role: 'محرر إقليمي', region: 'الجنوب' },
+                { name: 'فني تونس', email: 'tech.tunis', password: '123456', role: 'فني صيانة', region: '' },
+                { name: 'فني المنستير', email: 'tech.monastir', password: '123456', role: 'فني صيانة', region: '' },
+                { name: 'فني صفاقس', email: 'tech.sfax', password: '123456', role: 'فني صيانة', region: '' },
+                { name: 'فني جرجيس', email: 'tech.zarzis', password: '123456', role: 'فني صيانة', region: '' },
+                { name: 'مشاهد', email: 'viewer', password: '123456', role: 'مشاهد', region: '' }
             ];
             
             for (const userData of defaultUsers) {
@@ -499,10 +620,18 @@ async function initDefaultUsers() {
                 await user.save();
             }
             console.log('✅ تم إنشاء المستخدمين الافتراضيين في MongoDB');
-            console.log('   👑 admin   / 123456 (مسؤول)');
-            console.log('   ⭐ manager / 123456 (مشرف)');
-            console.log('   ✏️ editor  / 123456 (محرر)');
-            console.log('   👀 viewer  / 123456 (مشاهد)');
+            console.log('========================================');
+            console.log('👑 مسؤول: admin / 123456');
+            console.log('📍 محرر الشمال: north / 123456');
+            console.log('📍 محرر الساحل: coast / 123456');
+            console.log('📍 محرر الوسط: center / 123456');
+            console.log('📍 محرر الجنوب: south / 123456');
+            console.log('🔧 فني تونس: tech.tunis / 123456');
+            console.log('🔧 فني المنستير: tech.monastir / 123456');
+            console.log('🔧 فني صفاقس: tech.sfax / 123456');
+            console.log('🔧 فني جرجيس: tech.zarzis / 123456');
+            console.log('👀 مشاهد: viewer / 123456');
+            console.log('========================================');
         } else {
             console.log(`✅ يوجد ${count} مستخدمين في قاعدة البيانات`);
         }
@@ -541,10 +670,8 @@ app.listen(PORT, () => {
     console.log('========================================');
     console.log('📝 حسابات الدخول:');
     console.log('   👑 admin   / 123456 (مسؤول كامل)');
-    console.log('   ⭐ manager / 123456 (مشرف)');
-    console.log('   ✏️ editor  / 123456 (محرر)');
-    console.log('   👀 viewer  / 123456 (مشاهد)');
     console.log('========================================');
     console.log('📊 قاعدة البيانات: MongoDB ✅');
+    console.log('🔐 نظام الصلاحيات: مفعل ✅');
     console.log('========================================');
 });
