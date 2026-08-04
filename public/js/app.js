@@ -1,12 +1,8 @@
 // public/js/app.js
-// ============================================================
-// 📦 التطبيق الكامل - النسخة الأصلية + المساعد الذكي
-// ============================================================
-
 console.log('✅ App loaded');
 
 // ============================================================
-// 🔐 دوال تسجيل الدخول
+// تهيئة التطبيق
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -40,87 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// 🔐 دالة تسجيل الدخول
-// ============================================================
-
-function doLogin() {
-    const username = document.getElementById('username')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
-    const loginError = document.getElementById('loginError');
-    
-    if (!username || !password) {
-        if (loginError) {
-            loginError.textContent = '❌ الرجاء إدخال اسم المستخدم وكلمة المرور';
-            loginError.style.display = 'block';
-        }
-        return;
-    }
-    
-    const validUsers = {
-        'admin': { password: '123456', role: 'مسؤول', name: 'مدير النظام' },
-        'north': { password: '123456', role: 'محرر إقليمي', name: 'محرر الشمال' },
-        'coast': { password: '123456', role: 'محرر إقليمي', name: 'محرر الساحل' },
-        'center': { password: '123456', role: 'محرر إقليمي', name: 'محرر الوسط' },
-        'south': { password: '123456', role: 'محرر إقليمي', name: 'محرر الجنوب' },
-        'viewer': { password: '123456', role: 'مشاهد', name: 'مشاهد' }
-    };
-    
-    if (validUsers[username] && validUsers[username].password === password) {
-        const user = validUsers[username];
-        localStorage.setItem('authToken', 'demo-token-' + username);
-        localStorage.setItem('user', JSON.stringify({ 
-            username: username, 
-            role: user.role, 
-            name: user.name 
-        }));
-        
-        const loginOverlay = document.getElementById('loginOverlay');
-        const mainApp = document.getElementById('mainApp');
-        if (loginOverlay) loginOverlay.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'block';
-        
-        loadPage('dashboard');
-        
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userNameDisplay) userNameDisplay.textContent = user.name + ' (' + user.role + ')';
-        
-        updatePermissions(user.role);
-        
-        if (loginError) loginError.style.display = 'none';
-    } else {
-        if (loginError) {
-            loginError.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
-            loginError.style.display = 'block';
-        }
-    }
-}
-
-function updatePermissions(role) {
-    const adminButtons = document.querySelectorAll('.admin-only');
-    const editorButtons = document.querySelectorAll('.editor-only');
-    const techButtons = document.querySelectorAll('.tech-only');
-    
-    if (role === 'مسؤول') {
-        adminButtons.forEach(el => el.style.display = '');
-        editorButtons.forEach(el => el.style.display = '');
-        techButtons.forEach(el => el.style.display = '');
-    } else if (role === 'محرر إقليمي') {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = '');
-        techButtons.forEach(el => el.style.display = '');
-    } else if (role === 'فني صيانة') {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = 'none');
-        techButtons.forEach(el => el.style.display = '');
-    } else {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = 'none');
-        techButtons.forEach(el => el.style.display = 'none');
-    }
-}
-
-// ============================================================
-// 📄 دوال تحميل الصفحات
+// دوال تحميل الصفحات
 // ============================================================
 
 function loadPage(pageName) {
@@ -159,37 +75,42 @@ function initPage(pageName) {
     console.log('📄 Initializing page:', pageName);
     switch(pageName) {
         case 'dashboard': 
-            if (typeof loadDashboard === 'function') loadDashboard(); 
+            loadDashboard(); 
             break;
         case 'fleet': 
-            if (typeof loadVessels === 'function') loadVessels(); 
+            loadVessels(); 
             break;
         case 'maintenance': 
-            if (typeof loadMaintenance === 'function') loadMaintenance(); 
+            loadMaintenance(); 
             break;
         case 'efficiency': 
-            if (typeof loadVessels === 'function') loadVessels(); 
+            loadVessels(); 
             break;
         case 'support': 
-            if (typeof loadTickets === 'function') loadTickets(); 
-            break;
-        case 'users': 
-            if (typeof loadUsers === 'function') loadUsers(); 
-            break;
-        case 'notes': 
-            if (typeof loadNotes === 'function') loadNotes(); 
-            break;
-        case 'sessions': 
-            if (typeof loadSessions === 'function') loadSessions(); 
-            break;
-        case 'map': 
-            if (typeof initMap === 'function') initMap(); 
+            loadTickets(); 
             break;
         case 'tracking': 
-            if (typeof initTrackingPage === 'function') initTrackingPage(); 
+            initTrackingPage(); 
+            break;
+        case 'map': 
+            setTimeout(initMap, 100); 
+            break;
+        case 'users': 
+            loadUsers(); 
+            break;
+        case 'notes': 
+            loadNotes(); 
+            break;
+        case 'sessions': 
+            loadSessions(); 
+            startTrackingAutoUpdate(); 
+            setTimeout(function() {
+                initUserMap();
+                startMapAutoRefresh();
+            }, 800);
             break;
         case 'ai-assistant': 
-            if (typeof initAIAssistant === 'function') initAIAssistant(); 
+            initAIAssistant(); 
             break;
         default: 
             console.log('⚠️ Unknown page:', pageName);
@@ -219,6 +140,143 @@ function toggleSidebar() {
     if (sidebar) sidebar.classList.toggle('open');
 }
 
+function refreshAllPages() {
+    const currentPage = document.querySelector('.page-content');
+    if (currentPage) {
+        const pageName = currentPage.id.replace('page-', '');
+        loadPage(pageName);
+    } else {
+        loadPage('dashboard');
+    }
+    showAlert('✅ تم تحديث الصفحة', 'success');
+}
+
+function initTrackingPage() {
+    if (document.getElementById('page-tracking')) {
+        if (typeof initTrackingMap === 'function') {
+            setTimeout(initTrackingMap, 300);
+        }
+        if (typeof initTrackingSocket === 'function') {
+            setTimeout(initTrackingSocket, 500);
+        }
+        if (typeof startContinuousTracking === 'function') {
+            setTimeout(startContinuousTracking, 1000);
+        }
+    }
+}
+
+function initMap() {
+    console.log('🗺️ Initializing map...');
+}
+
+// ============================================================
+// تحميل البيانات
+// ============================================================
+
+function loadAllData() {
+    loadVessels();
+    loadMaintenance();
+    loadTickets();
+    loadNotes();
+    loadUsers();
+}
+
+function renderAllTables() {
+    renderMainTable();
+    renderMaintenanceTables();
+    updateMaintenanceVessels();
+    renderEfficiency();
+    if (document.getElementById('page-dashboard')) {
+        if (typeof loadDashboard === 'function') {
+            setTimeout(loadDashboard, 100);
+        }
+    }
+}
+
+// ============================================================
+// دوال تسجيل الدخول
+// ============================================================
+
+function doLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const loginError = document.getElementById('loginError');
+    
+    if (!username || !password) {
+        if (loginError) {
+            loginError.textContent = '❌ الرجاء إدخال اسم المستخدم وكلمة المرور';
+            loginError.style.display = 'block';
+        }
+        return;
+    }
+    
+    // حسابات تجريبية
+    const validUsers = {
+        'admin': { password: '123456', role: 'مسؤول', name: 'مدير النظام' },
+        'north': { password: '123456', role: 'محرر إقليمي', name: 'محرر الشمال' },
+        'coast': { password: '123456', role: 'محرر إقليمي', name: 'محرر الساحل' },
+        'center': { password: '123456', role: 'محرر إقليمي', name: 'محرر الوسط' },
+        'south': { password: '123456', role: 'محرر إقليمي', name: 'محرر الجنوب' },
+        'viewer': { password: '123456', role: 'مشاهد', name: 'مشاهد' }
+    };
+    
+    if (validUsers[username] && validUsers[username].password === password) {
+        const user = validUsers[username];
+        localStorage.setItem('authToken', 'demo-token-' + username);
+        localStorage.setItem('user', JSON.stringify({ 
+            username: username, 
+            role: user.role, 
+            name: user.name 
+        }));
+        
+        const loginOverlay = document.getElementById('loginOverlay');
+        const mainApp = document.getElementById('mainApp');
+        if (loginOverlay) loginOverlay.style.display = 'none';
+        if (mainApp) mainApp.style.display = 'block';
+        
+        // تحميل الصفحة الرئيسية
+        loadPage('dashboard');
+        
+        // تحديث اسم المستخدم في الواجهة
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        if (userNameDisplay) userNameDisplay.textContent = user.name + ' (' + user.role + ')';
+        
+        // إظهار أزرار حسب الصلاحيات
+        updatePermissions(user.role);
+        
+        if (loginError) loginError.style.display = 'none';
+    } else {
+        if (loginError) {
+            loginError.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+            loginError.style.display = 'block';
+        }
+    }
+}
+
+function updatePermissions(role) {
+    const adminButtons = document.querySelectorAll('.admin-only');
+    const editorButtons = document.querySelectorAll('.editor-only');
+    const techButtons = document.querySelectorAll('.tech-only');
+    
+    if (role === 'مسؤول') {
+        adminButtons.forEach(el => el.style.display = '');
+        editorButtons.forEach(el => el.style.display = '');
+        techButtons.forEach(el => el.style.display = '');
+    } else if (role === 'محرر إقليمي') {
+        adminButtons.forEach(el => el.style.display = 'none');
+        editorButtons.forEach(el => el.style.display = '');
+        techButtons.forEach(el => el.style.display = '');
+    } else if (role === 'فني صيانة') {
+        adminButtons.forEach(el => el.style.display = 'none');
+        editorButtons.forEach(el => el.style.display = 'none');
+        techButtons.forEach(el => el.style.display = '');
+    } else {
+        adminButtons.forEach(el => el.style.display = 'none');
+        editorButtons.forEach(el => el.style.display = 'none');
+        techButtons.forEach(el => el.style.display = 'none');
+    }
+}
+
 function logout() {
     if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         localStorage.clear();
@@ -227,451 +285,80 @@ function logout() {
 }
 
 // ============================================================
-// 📊 دوال تحميل البيانات (النماذج الأولية)
+// دوال عرض التنبيهات
 // ============================================================
 
-function loadDashboard() {
-    console.log('📊 Loading dashboard...');
-    // يمكن إضافة كود dashboard هنا
-}
-
-function loadVessels() {
-    console.log('🚢 Loading vessels...');
-    // يمكن إضافة كود vessels هنا
-}
-
-function loadMaintenance() {
-    console.log('🔧 Loading maintenance...');
-    // يمكن إضافة كود maintenance هنا
-}
-
-function loadTickets() {
-    console.log('🎫 Loading tickets...');
-    // يمكن إضافة كود tickets هنا
-}
-
-function loadUsers() {
-    console.log('👥 Loading users...');
-    // يمكن إضافة كود users هنا
-}
-
-function loadNotes() {
-    console.log('📝 Loading notes...');
-    // يمكن إضافة كود notes هنا
-}
-
-function loadSessions() {
-    console.log('🔄 Loading sessions...');
-    // يمكن إضافة كود sessions هنا
-}
-
-function initMap() {
-    console.log('🗺️ Initializing map...');
-}
-
-function initTrackingPage() {
-    console.log('📍 Initializing tracking...');
-}
-
-// ============================================================
-// 🧠 المساعد الذكي - AI ASSISTANT
-// ============================================================
-
-const API_BASE = '/api/ai';
-let conversationId = null;
-let isProcessing = false;
-let isListening = false;
-let recognition = null;
-let lastResponse = null;
-
-async function askAI(message) {
-    const chatInput = document.getElementById('chatInput');
-    const chatBox = document.getElementById('chatBox');
-    const sendBtn = document.getElementById('sendBtn');
-    const typingIndicator = document.getElementById('typingIndicator');
-    
-    if (!chatInput) {
-        console.error('❌ chatInput not found');
-        return;
-    }
-    
-    const question = message || chatInput.value.trim();
-    
-    if (!question) {
-        showToast('❌ الرجاء كتابة سؤال', 'error');
-        return;
-    }
-    
-    if (isProcessing) {
-        showToast('⏳ جاري معالجة طلب سابق...', 'warning');
-        return;
-    }
-    
-    addAIMessage('user', question, chatBox);
-    chatInput.value = '';
-    chatInput.disabled = true;
-    if (sendBtn) sendBtn.disabled = true;
-    
-    isProcessing = true;
-    showTypingAI(true, typingIndicator);
-    
-    try {
-        const token = localStorage.getItem('authToken') || null;
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        
-        const response = await fetch(`${API_BASE}/ask`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                message: question,
-                conversationId: conversationId,
-                language: 'ar'
-            })
-        });
-        
-        showTypingAI(false, typingIndicator);
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error || `خطأ ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            conversationId = data.conversationId;
-            lastResponse = data.response;
-            addAIMessage('ai', data.response, chatBox);
-        } else {
-            throw new Error(data.error || 'حدث خطأ غير معروف');
-        }
-        
-    } catch (error) {
-        showTypingAI(false, typingIndicator);
-        console.error('❌ AI Error:', error);
-        addAIMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`, chatBox);
-    }
-    
-    isProcessing = false;
-    chatInput.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    chatInput.focus();
-}
-
-function addAIMessage(role, content, chatBox) {
-    if (!chatBox) return;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${role}`;
-    
-    const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    
-    let formattedContent = content.replace(/\n/g, '<br>');
-    
-    messageDiv.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${formattedContent}</div>
-        <div class="time">${time}</div>
-        ${role === 'ai' ? `
-            <div class="actions">
-                <button onclick="copyAIMessage(this)">📋 نسخ</button>
-                <button onclick="speakTextFromBtn(this)">🔊 استماع</button>
-            </div>
-        ` : ''}
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.textContent = message;
+    alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 9999;
+        font-family: 'Cairo', sans-serif;
+        font-size: 14px;
+        background: ${type === 'success' ? 'rgba(74,222,128,0.15)' : 'rgba(96,165,250,0.15)'};
+        border: 1px solid ${type === 'success' ? 'rgba(74,222,128,0.2)' : 'rgba(96,165,250,0.2)'};
+        color: ${type === 'success' ? '#4ade80' : '#60a5fa'};
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     `;
-    
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function copyAIMessage(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    navigator.clipboard.writeText(content).then(() => {
-        const original = btn.textContent;
-        btn.textContent = '✅ تم النسخ';
-        setTimeout(() => btn.textContent = original, 1500);
-    }).catch(() => {
-        const range = document.createRange();
-        range.selectNode(btn.closest('.message').querySelector('.content'));
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-        document.execCommand('copy');
-        const original = btn.textContent;
-        btn.textContent = '✅ تم النسخ';
-        setTimeout(() => btn.textContent = original, 1500);
-    });
-}
-
-function speakTextFromBtn(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    speakTextAI(content);
-}
-
-function speakTextAI(text) {
-    if (!('speechSynthesis' in window)) {
-        showToast('❌ المتصفح لا يدعم النطق', 'error');
-        return;
-    }
-    
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-}
-
-function speakLastResponse() {
-    if (lastResponse) {
-        speakTextAI(lastResponse);
-        return;
-    }
-    
-    const chatBox = document.getElementById('chatBox');
-    if (chatBox) {
-        const messages = chatBox.querySelectorAll('.message.ai');
-        if (messages.length > 0) {
-            const last = messages[messages.length - 1];
-            const content = last.querySelector('.content');
-            if (content) {
-                speakTextAI(content.textContent);
-                return;
-            }
-        }
-    }
-    showToast('لا يوجد رد للاستماع', 'warning');
-}
-
-function toggleVoiceInput() {
-    const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    
-    if (!hasSpeechRecognition) {
-        showToast('❌ استخدم Chrome للميكروفون', 'error');
-        return;
-    }
-    
-    if (isListening) {
-        stopVoiceInput();
-        return;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    
-    recognition.onstart = function() {
-        isListening = true;
-        const micBtn = document.getElementById('micBtn');
-        if (micBtn) {
-            micBtn.classList.add('listening');
-            micBtn.textContent = '⏹️';
-        }
-        const voiceStatus = document.getElementById('voiceStatus');
-        if (voiceStatus) {
-            voiceStatus.classList.add('active');
-            voiceStatus.innerHTML = '🎤 جاري الاستماع... تحدث الآن';
-        }
-        document.getElementById('chatInput').placeholder = '🎤 استمع...';
-    };
-    
-    recognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                document.getElementById('chatInput').value = transcript;
-                const voiceStatus = document.getElementById('voiceStatus');
-                if (voiceStatus) {
-                    voiceStatus.innerHTML = `✅ تم التعرف: "${transcript}"`;
-                }
-                setTimeout(() => {
-                    if (transcript.trim()) {
-                        askAI();
-                    }
-                }, 500);
-            } else {
-                document.getElementById('chatInput').value = transcript;
-                const voiceStatus = document.getElementById('voiceStatus');
-                if (voiceStatus) {
-                    voiceStatus.innerHTML = `✍️ ${transcript}`;
-                }
-            }
-        }
-    };
-    
-    recognition.onerror = function(event) {
-        console.warn('Voice error:', event.error);
-        if (event.error === 'not-allowed') {
-            showToast('❌ الرجاء السماح باستخدام الميكروفون', 'error');
-        } else if (event.error === 'no-speech') {
-            showToast('⏳ لم يتم سماع صوت، حاول مرة أخرى', 'warning');
-        }
-        stopVoiceInput();
-    };
-    
-    recognition.onend = function() {
-        stopVoiceInput();
-    };
-    
-    recognition.start();
-}
-
-function stopVoiceInput() {
-    isListening = false;
-    const micBtn = document.getElementById('micBtn');
-    if (micBtn) {
-        micBtn.classList.remove('listening');
-        micBtn.textContent = '🎤';
-    }
-    const voiceStatus = document.getElementById('voiceStatus');
-    if (voiceStatus) {
-        voiceStatus.classList.remove('active');
-        voiceStatus.innerHTML = '';
-    }
-    document.getElementById('chatInput').placeholder = 'اكتب سؤالك هنا...';
-    if (recognition) {
-        try {
-            recognition.stop();
-        } catch (e) {}
-    }
-}
-
-function showTypingAI(show, indicator) {
-    if (!indicator) indicator = document.getElementById('typingIndicator');
-    if (indicator) {
-        indicator.classList.toggle('active', show);
-        const chatBox = document.getElementById('chatBox');
-        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-    }
-}
-
-function clearChat() {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-    
-    if (chatBox.querySelectorAll('.message').length === 0) return;
-    
-    if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-        chatBox.innerHTML = '';
-        conversationId = null;
-        lastResponse = null;
-        
-        const welcomeDiv = document.createElement('div');
-        welcomeDiv.className = 'message ai';
-        welcomeDiv.innerHTML = `
-            <div class="sender">🤖 المساعد الذكي</div>
-            <div class="content">👋 مرحباً! تم مسح المحادثة.<br><br>💬 اكتب سؤالك أو استخدم الأزرار السريعة!</div>
-            <div class="time">الآن</div>
-        `;
-        chatBox.appendChild(welcomeDiv);
-        
-        showToast('🗑️ تم مسح المحادثة', 'info');
-    }
-}
-
-function showToast(message, type = 'info') {
-    const existing = document.querySelector('.toast-notification');
-    if (existing) existing.remove();
-    
-    const toast = document.createElement('div');
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    document.body.appendChild(alertDiv);
     
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transition = 'opacity 0.3s';
+        setTimeout(() => alertDiv.remove(), 300);
     }, 3000);
 }
 
+// ============================================================
+// دوال المساعد الذكي (AI Assistant)
+// ============================================================
+
 function initAIAssistant() {
-    console.log('🤖 AI Assistant initializing...');
-    checkHealthAI();
+    console.log('🤖 Initializing AI Assistant...');
     
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.key === 'Enter') {
-            e.preventDefault();
+    // إضافة مستمع لأزرار المساعد
+    const sendBtn = document.getElementById('sendBtn');
+    const chatInput = document.getElementById('chatInput');
+    
+    if (sendBtn) {
+        sendBtn.addEventListener('click', function() {
             askAI();
-        }
-        if (e.key === 'Escape' && isListening) {
-            stopVoiceInput();
-        }
-        if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-            e.preventDefault();
-            toggleVoiceInput();
-        }
-        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-            e.preventDefault();
-            speakLastResponse();
-        }
-    });
+        });
+    }
+    
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                askAI();
+            }
+        });
+    }
+    
+    // تحميل رسالة الترحيب
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox && chatBox.children.length === 0) {
+        addAIMessage('ai', '👋 مرحباً! أنا المساعد الذكي. كيف يمكنني مساعدتك؟');
+    }
     
     console.log('✅ AI Assistant ready!');
 }
 
-async function checkHealthAI() {
-    try {
-        const response = await fetch(`${API_BASE}/health`);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Server healthy:', data);
-            const statusDot = document.getElementById('statusDot');
-            const statusText = document.getElementById('statusText');
-            if (statusDot) statusDot.className = 'status-dot';
-            if (statusText) statusText.textContent = 'متصل';
-        }
-    } catch (error) {
-        console.warn('⚠️ Cannot connect to server');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-        if (statusDot) statusDot.className = 'status-dot offline';
-        if (statusText) statusText.textContent = 'غير متصل';
-    }
-}
-
 // ============================================================
-// 🔄 EXPOSE FUNCTIONS TO GLOBAL
+// تشغيل التطبيق
 // ============================================================
 
-// دوال التطبيق الأساسية
-window.doLogin = doLogin;
-window.loadPage = loadPage;
-window.showPage = showPage;
-window.toggleSidebar = toggleSidebar;
-window.logout = logout;
-window.updatePermissions = updatePermissions;
-
-// دوال تحميل البيانات
-window.loadDashboard = loadDashboard;
-window.loadVessels = loadVessels;
-window.loadMaintenance = loadMaintenance;
-window.loadTickets = loadTickets;
-window.loadUsers = loadUsers;
-window.loadNotes = loadNotes;
-window.loadSessions = loadSessions;
-window.initMap = initMap;
-window.initTrackingPage = initTrackingPage;
-
-// دوال المساعد الذكي
-window.askAI = askAI;
-window.toggleVoiceInput = toggleVoiceInput;
-window.speakLastResponse = speakLastResponse;
-window.clearChat = clearChat;
-window.copyAIMessage = copyAIMessage;
-window.speakTextFromBtn = speakTextFromBtn;
-window.initAIAssistant = initAIAssistant;
-
-// ============================================================
-// 🚀 رسالة التشغيل
-// ============================================================
-
-console.log('✅ التطبيق جاهز!');
+console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
-console.log('📌 الصفحات المتاحة: dashboard, fleet, maintenance, efficiency, support, users, notes, sessions, map, tracking, ai-assistant');
-console.log('🤖 دوال المساعد الذكي: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
-console.log('👨‍💻 تم التطوير بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
+console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
+console.log('🗺️ خريطة تتبع المستخدمين بالساتلايت جاهزة!');
+console.log('🔔 نظام الإشعارات يعمل!');
+console.log('📂 ميزة استيراد الملفات (Excel/CSV/PDF) جاهزة!');
+console.log('🤖 ميزة المساعد الذكي (AI) جاهزة!');
