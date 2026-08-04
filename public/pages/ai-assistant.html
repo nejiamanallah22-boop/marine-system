@@ -1,10 +1,9 @@
-<!-- public/pages/ai-assistant.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المساعد الذكي v6.0</title>
+    <title>المساعد الذكي v6.2</title>
     <style>
         /* ============================================================
            🎨 STYLES - Enhanced Version
@@ -55,6 +54,9 @@
             border: 1px solid rgba(96,165,250,0.2);
             color: #60a5fa;
             -webkit-text-fill-color: #60a5fa;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .ai-header .status-dot {
@@ -63,13 +65,47 @@
             height: 8px;
             border-radius: 50%;
             background: #4ade80;
-            margin-right: 6px;
             animation: pulse-dot 2s infinite;
+        }
+
+        .ai-header .status-dot.offline {
+            background: #f87171;
         }
 
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
+        }
+
+        /* ===== Quick Actions ===== */
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-actions .q-btn {
+            padding: 6px 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .quick-actions .q-btn:hover {
+            background: rgba(96,165,250,0.08);
+            border-color: rgba(96,165,250,0.2);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .quick-actions .q-btn:active {
+            transform: scale(0.97);
         }
 
         /* ===== Chat Box ===== */
@@ -119,13 +155,23 @@
 
         .chat-message .content {
             font-size: 14px;
-            line-height: 1.7;
+            line-height: 1.8;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
 
         .chat-message .content strong {
             color: rgba(255,255,255,0.8);
+        }
+
+        .chat-message .content ul, 
+        .chat-message .content ol {
+            padding-right: 20px;
+            margin: 8px 0;
+        }
+
+        .chat-message .content li {
+            margin: 4px 0;
         }
 
         .chat-message .time {
@@ -283,6 +329,15 @@
             animation: pulse-mic 1s infinite;
         }
 
+        .chat-input-area .btn-mic.supported {
+            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+        }
+
+        .chat-input-area .btn-mic.unsupported {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         .chat-input-area .btn-speaker {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white;
@@ -295,7 +350,7 @@
             box-shadow: 0 4px 20px rgba(251,191,36,0.3);
         }
 
-        .chat-input-area .btn-mic:hover:not(:disabled) {
+        .chat-input-area .btn-mic:hover:not(:disabled):not(.unsupported) {
             transform: scale(1.03);
             box-shadow: 0 4px 20px rgba(248,113,113,0.3);
         }
@@ -316,37 +371,6 @@
         @keyframes pulse-mic {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
-        }
-
-        /* ===== Quick Actions ===== */
-        .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .quick-actions .q-btn {
-            padding: 6px 16px;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-            font-size: 12px;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
-        }
-
-        .quick-actions .q-btn:hover {
-            background: rgba(96,165,250,0.08);
-            border-color: rgba(96,165,250,0.2);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .quick-actions .q-btn:active {
-            transform: scale(0.97);
         }
 
         /* ===== Voice Status ===== */
@@ -501,12 +525,6 @@
             border: 1px solid rgba(96,165,250,0.1);
         }
 
-        .upload-section .file-info {
-            font-size: 11px;
-            color: rgba(255,255,255,0.15);
-            margin-top: 4px;
-        }
-
         /* ===== Imported Data ===== */
         .imported-data {
             display: none;
@@ -550,10 +568,6 @@
             padding: 6px 12px;
             color: rgba(255,255,255,0.5);
             border-bottom: 1px solid rgba(255,255,255,0.02);
-        }
-
-        .imported-data .data-preview tr:hover td {
-            background: rgba(255,255,255,0.02);
         }
 
         .imported-data .data-actions {
@@ -615,6 +629,47 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== Toast Notification ===== */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            max-width: 90%;
+            text-align: center;
+            background: rgba(10,14,23,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            font-weight: 500;
+            animation: fadeIn 0.3s ease;
+            border: 1px solid;
+        }
+
+        .toast-notification.error {
+            color: #f87171;
+            border-color: rgba(248,113,113,0.2);
+        }
+
+        .toast-notification.warning {
+            color: #fbbf24;
+            border-color: rgba(251,191,36,0.2);
+        }
+
+        .toast-notification.success {
+            color: #4ade80;
+            border-color: rgba(74,222,128,0.2);
+        }
+
+        .toast-notification.info {
+            color: #60a5fa;
+            border-color: rgba(96,165,250,0.2);
         }
 
         /* ===== Scrollbar ===== */
@@ -735,10 +790,10 @@
     <div class="ai-container">
         <!-- ===== Header ===== -->
         <div class="ai-header">
-            <h2>🤖 المساعد الذكي v6.0</h2>
-            <span class="badge">
-                <span class="status-dot"></span>
-                متصل
+            <h2>🤖 المساعد الذكي v6.2</h2>
+            <span class="badge" id="statusBadge">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">متصل</span>
             </span>
         </div>
 
@@ -748,9 +803,10 @@
             <button class="q-btn" onclick="askAI('كم عدد المراكب المعطبة؟')">⚠️ المعطبة</button>
             <button class="q-btn" onclick="askAI('عرض تكاليف الصيانة')">💰 التكاليف</button>
             <button class="q-btn" onclick="askAI('تقرير عن الوحدات البحرية')">🏭 الوحدات</button>
+            <button class="q-btn" onclick="askAI('ما هو الذكاء الاصطناعي؟')">🧠 AI</button>
+            <button class="q-btn" onclick="askAI('ما هي عاصمة تونس؟')">🌍 جغرافيا</button>
             <button class="q-btn" onclick="askAI('مساعدة')">❓ مساعدة</button>
-            <button class="q-btn" onclick="askAI('من صنع هذا التطبيق؟')">👨‍💻 المطور</button>
-            <button class="q-btn" onclick="clearChat()">🗑️ مسح المحادثة</button>
+            <button class="q-btn" onclick="clearChat()">🗑️ مسح</button>
         </div>
 
         <!-- ===== Upload Section ===== -->
@@ -779,20 +835,26 @@
         <!-- ===== Chat Box ===== -->
         <div class="chat-box" id="chatBox">
             <div class="chat-message ai">
-                <div class="sender">🤖 المساعد الذكي v6.0</div>
+                <div class="sender">🤖 المساعد الذكي v6.2</div>
                 <div class="content">
-                    👋 مرحباً! أنا مساعدك الذكي المتطور.<br><br>
+                    👋 مرحباً! أنا <strong>نظامي</strong>، المساعد الذكي المتطور.<br><br>
+
                     <strong>📌 يمكنني مساعدتك في:</strong><br>
                     • 🚢 إحصائيات المراكب والجاهزية<br>
                     • 🔧 سجلات وتكاليف الصيانة<br>
                     • 🔮 توقع الأعطال وتحليل الأداء<br>
                     • 💡 نصائح لتحسين الكفاءة<br>
-                    • 📊 تقارير متقدمة عن الأسطول<br><br>
+                    • 🌍 أي سؤال عام في العالم!<br><br>
+
+                    <strong>🎤 ميزات الصوت:</strong><br>
+                    • اضغط على 🎤 وتحدث معي<br>
+                    • اضغط على 🔊 لسماع الرد<br><br>
+
                     <strong>📂 ميزات متقدمة:</strong><br>
-                    • رفع ملفات Excel/CSV/PDF لاستيراد البيانات<br>
-                    • الإدخال الصوتي 🎤<br>
-                    • الاستماع إلى الردود 🔊<br><br>
-                    <em>💬 اكتب سؤالك أو اختر من الأزرار السريعة!</em>
+                    • رفع ملفات Excel/CSV/PDF<br>
+                    • حفظ المحادثات تلقائياً<br><br>
+
+                    <em>💬 اكتب سؤالك أو استخدم الأزرار السريعة!</em>
                 </div>
                 <div class="time">الآن</div>
             </div>
@@ -827,12 +889,12 @@
         <div class="developer-credit">
             تم تطوير هذا النظام بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
             <br>
-            <span style="opacity:0.3; font-size:10px;">الإصدار 6.0.0 | جميع الحقوق محفوظة © 2026</span>
+            <span style="opacity:0.3; font-size:10px;">الإصدار 6.2.0 | جميع الحقوق محفوظة © 2026</span>
         </div>
     </div>
 
     <!-- ============================================================
-         📜 JAVASCRIPT - Enhanced Version
+         📜 JAVASCRIPT - Full Version
          ============================================================ -->
     <script>
         // ============================================================
@@ -881,7 +943,10 @@
             uploadStatus: document.getElementById('uploadStatus'),
             importedData: document.getElementById('importedData'),
             dataPreview: document.getElementById('dataPreview'),
-            uploadSection: document.getElementById('uploadSection')
+            uploadSection: document.getElementById('uploadSection'),
+            statusBadge: document.getElementById('statusBadge'),
+            statusDot: document.getElementById('statusDot'),
+            statusText: document.getElementById('statusText')
         };
 
         // ============================================================
@@ -911,6 +976,7 @@
         }
 
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
@@ -932,6 +998,20 @@
             DOM.uploadStatus.textContent = '';
         }
 
+        function setOnlineStatus(online) {
+            if (online) {
+                DOM.statusDot.className = 'status-dot';
+                DOM.statusText.textContent = 'متصل';
+                DOM.statusBadge.style.borderColor = 'rgba(74,222,128,0.2)';
+                DOM.statusBadge.style.color = '#4ade80';
+            } else {
+                DOM.statusDot.className = 'status-dot offline';
+                DOM.statusText.textContent = 'غير متصل';
+                DOM.statusBadge.style.borderColor = 'rgba(248,113,113,0.2)';
+                DOM.statusBadge.style.color = '#f87171';
+            }
+        }
+
         // ============================================================
         // 💬 CHAT FUNCTIONS
         // ============================================================
@@ -942,14 +1022,20 @@
             
             const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
             
+            // تحويل النص إلى HTML مع دعم القوائم
+            let formattedContent = escapeHtml(content);
+            // تحويل النقاط إلى قوائم
+            formattedContent = formattedContent.replace(/\n• /g, '\n• ');
+            formattedContent = formattedContent.replace(/\n/g, '<br>');
+            
             messageDiv.innerHTML = `
                 <div class="sender">${sender}</div>
-                <div class="content">${content}</div>
+                <div class="content">${formattedContent}</div>
                 <div class="time">${formatTime(timestamp)}</div>
                 ${role === 'ai' ? `
                     <div class="actions">
                         <button class="copy-btn" onclick="copyMessage(this)">📋 نسخ</button>
-                        <button class="speak-btn" onclick="speakText(this)">🔊 استماع</button>
+                        <button class="speak-btn" onclick="speakTextFromBtn(this)">🔊 استماع</button>
                     </div>
                 ` : ''}
             `;
@@ -982,149 +1068,26 @@
             });
         }
 
-        function speakText(btn) {
+        function speakTextFromBtn(btn) {
             const content = btn.closest('.chat-message').querySelector('.content').textContent;
-            speak(content);
-        }
-
-        function speakLastResponse() {
-            if (state.lastResponse) {
-                speak(state.lastResponse);
-            } else {
-                // البحث عن آخر رد من المساعد
-                const messages = DOM.chatBox.querySelectorAll('.chat-message.ai');
-                if (messages.length > 0) {
-                    const last = messages[messages.length - 1];
-                    const content = last.querySelector('.content').textContent;
-                    speak(content);
-                } else {
-                    showToast('لا يوجد رد للاستماع', 'warning');
-                }
-            }
-        }
-
-        function speak(text) {
-            if (!window.speechSynthesis) {
-                showToast('ميزة النطق غير مدعومة في هذا المتصفح', 'error');
-                return;
-            }
-            
-            // إيقاف أي نطق سابق
-            window.speechSynthesis.cancel();
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = CONFIG.VOICE_LANG;
-            utterance.rate = CONFIG.SPEECH_RATE;
-            utterance.pitch = CONFIG.SPEECH_PITCH;
-            
-            // محاولة اختيار صوت عربي
-            const voices = window.speechSynthesis.getVoices();
-            const arabicVoice = voices.find(v => v.lang.includes('ar'));
-            if (arabicVoice) {
-                utterance.voice = arabicVoice;
-            }
-            
-            window.speechSynthesis.speak(utterance);
-        }
-
-        function clearChat() {
-            if (state.messages.length === 0) return;
-            
-            if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-                DOM.chatBox.innerHTML = '';
-                state.messages = [];
-                state.conversationId = null;
-                state.lastResponse = null;
-                
-                // إعادة رسالة الترحيب
-                addMessage('ai', 
-                    '👋 مرحباً! تم مسح المحادثة.\n\n' +
-                    '💬 اكتب سؤالك أو اختر من الأزرار السريعة!'
-                );
-                
-                showToast('🗑️ تم مسح المحادثة', 'info');
-            }
+            speakText(content);
         }
 
         // ============================================================
-        // 🤖 ASK AI
+        // 🎤 SPEECH RECOGNITION (Voice Input)
         // ============================================================
         
-        async function askAI(message) {
-            const input = DOM.chatInput;
-            const question = message || input.value.trim();
-            
-            if (!question) {
-                showToast('❌ الرجاء كتابة سؤال', 'error');
-                return;
-            }
-            
-            if (state.isProcessing) {
-                showToast('⏳ جاري معالجة طلب سابق...', 'warning');
-                return;
-            }
-            
-            // إظهار رسالة المستخدم
-            addMessage('user', escapeHtml(question));
-            input.value = '';
-            input.disabled = true;
-            DOM.sendBtn.disabled = true;
-            
-            state.isProcessing = true;
-            showTyping(true);
-            
-            try {
-                const response = await fetch(`${CONFIG.API_BASE}/ask`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        message: question,
-                        conversationId: state.conversationId,
-                        language: 'ar'
-                    })
-                });
-                
-                showTyping(false);
-                
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.error || `خطأ ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    state.conversationId = data.conversationId;
-                    state.lastResponse = data.response;
-                    addMessage('ai', data.response);
-                    
-                    if (CONFIG.AUTO_SPEAK) {
-                        speak(data.response);
-                    }
-                } else {
-                    throw new Error(data.error || 'حدث خطأ غير معروف');
-                }
-                
-            } catch (error) {
-                showTyping(false);
-                addMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`);
-                console.error('AI Error:', error);
-            }
-            
-            state.isProcessing = false;
-            input.disabled = false;
-            DOM.sendBtn.disabled = false;
-            input.focus();
-        }
+        const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+        const hasSpeechSynthesis = 'speechSynthesis' in window;
 
-        // ============================================================
-        // 🎤 VOICE INPUT
-        // ============================================================
-        
-        function initVoiceRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                DOM.micBtn.style.display = 'none';
-                showToast('🎤 ميزة الصوت غير مدعومة في هذا المتصفح', 'error');
+        console.log('🎤 Speech Recognition:', hasSpeechRecognition ? '✅' : '❌');
+        console.log('🔊 Speech Synthesis:', hasSpeechSynthesis ? '✅' : '❌');
+
+        function initSpeechRecognition() {
+            if (!hasSpeechRecognition) {
+                DOM.micBtn.className = 'btn btn-mic unsupported';
+                DOM.micBtn.title = 'المتصفح لا يدعم خاصية الصوت';
+                showToast('❌ المتصفح لا يدعم خاصية الصوت', 'error');
                 return false;
             }
             
@@ -1170,6 +1133,8 @@
                     showToast('❌ الرجاء السماح بالوصول إلى الميكروفون', 'error');
                 } else if (event.error === 'no-speech') {
                     showToast('⏳ لم يتم سماع صوت، حاول مرة أخرى', 'warning');
+                } else if (event.error === 'audio-capture') {
+                    showToast('⚠️ لا يوجد ميكروفون متصل', 'error');
                 } else {
                     showToast(`⚠️ خطأ في الصوت: ${event.error}`, 'error');
                 }
@@ -1180,12 +1145,13 @@
                 stopVoiceInput();
             };
             
+            DOM.micBtn.className = 'btn btn-mic supported';
             return true;
         }
 
         function toggleVoiceInput() {
             if (!state.recognition) {
-                if (!initVoiceRecognition()) return;
+                if (!initSpeechRecognition()) return;
             }
             
             if (state.isListening) {
@@ -1200,7 +1166,6 @@
             try {
                 state.recognition.start();
             } catch (e) {
-                // إذا كان التعرف قيد التشغيل بالفعل
                 if (e.message.includes('already started')) {
                     stopVoiceInput();
                     setTimeout(() => startVoiceInput(), 200);
@@ -1217,13 +1182,188 @@
             DOM.micBtn.textContent = '🎤';
             DOM.voiceStatus.classList.remove('active');
             DOM.chatInput.placeholder = 'اكتب سؤالك هنا...';
-            
             if (state.recognition) {
                 try {
                     state.recognition.stop();
-                } catch (e) {
-                    // تجاهل
+                } catch (e) {}
+            }
+        }
+
+        // ============================================================
+        // 🔊 SPEECH SYNTHESIS (Voice Output)
+        // ============================================================
+        
+        let speechSynth = null;
+
+        function initSpeechSynthesis() {
+            if (!hasSpeechSynthesis) {
+                DOM.speakerBtn.className = 'btn btn-speaker unsupported';
+                DOM.speakerBtn.title = 'المتصفح لا يدعم خاصية النطق';
+                showToast('❌ المتصفح لا يدعم خاصية النطق', 'error');
+                return false;
+            }
+            speechSynth = window.speechSynthesis;
+            return true;
+        }
+
+        function speakText(text) {
+            if (!speechSynth) {
+                if (!initSpeechSynthesis()) return;
+            }
+            
+            // إيقاف أي نطق سابق
+            speechSynth.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = CONFIG.VOICE_LANG;
+            utterance.rate = CONFIG.SPEECH_RATE;
+            utterance.pitch = CONFIG.SPEECH_PITCH;
+            
+            // اختيار صوت عربي
+            const voices = speechSynth.getVoices();
+            const arabicVoice = voices.find(v => v.lang.includes('ar'));
+            if (arabicVoice) {
+                utterance.voice = arabicVoice;
+            }
+            
+            utterance.onstart = function() {
+                DOM.speakerBtn.textContent = '⏹️';
+                DOM.speakerBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+            };
+            
+            utterance.onend = function() {
+                DOM.speakerBtn.textContent = '🔊';
+                DOM.speakerBtn.style.background = '';
+            };
+            
+            utterance.onerror = function(e) {
+                console.warn('Speech error:', e);
+                DOM.speakerBtn.textContent = '🔊';
+                DOM.speakerBtn.style.background = '';
+                showToast('⚠️ خطأ في النطق', 'error');
+            };
+            
+            speechSynth.speak(utterance);
+        }
+
+        function speakLastResponse() {
+            // البحث عن آخر رد من المساعد
+            const messages = document.querySelectorAll('.chat-message.ai');
+            if (messages.length > 0) {
+                const last = messages[messages.length - 1];
+                const content = last.querySelector('.content');
+                if (content) {
+                    speakText(content.textContent);
+                    return;
                 }
+            }
+            showToast('لا يوجد رد للاستماع', 'warning');
+        }
+
+        // ============================================================
+        // 🤖 ASK AI
+        // ============================================================
+        
+        async function askAI(message) {
+            const input = DOM.chatInput;
+            const question = message || input.value.trim();
+            
+            if (!question) {
+                showToast('❌ الرجاء كتابة سؤال', 'error');
+                return;
+            }
+            
+            if (state.isProcessing) {
+                showToast('⏳ جاري معالجة طلب سابق...', 'warning');
+                return;
+            }
+            
+            // إظهار رسالة المستخدم
+            addMessage('user', question);
+            input.value = '';
+            input.disabled = true;
+            DOM.sendBtn.disabled = true;
+            
+            state.isProcessing = true;
+            showTyping(true);
+            
+            try {
+                const response = await fetch(`${CONFIG.API_BASE}/ask`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        message: question,
+                        conversationId: state.conversationId,
+                        language: 'ar'
+                    })
+                });
+                
+                showTyping(false);
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error || `خطأ ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    state.conversationId = data.conversationId;
+                    state.lastResponse = data.response;
+                    addMessage('ai', data.response);
+                    
+                    setOnlineStatus(true);
+                    
+                    if (CONFIG.AUTO_SPEAK) {
+                        speakText(data.response);
+                    }
+                    
+                    // عرض حالة الـ AI
+                    if (data.aiStatus) {
+                        const status = [];
+                        if (data.aiStatus.gemini) status.push('Gemini');
+                        if (data.aiStatus.openai) status.push('OpenAI');
+                        if (status.length > 0) {
+                            console.log(`🤖 AI Powered by: ${status.join(' + ')}`);
+                        }
+                    }
+                } else {
+                    throw new Error(data.error || 'حدث خطأ غير معروف');
+                }
+                
+            } catch (error) {
+                showTyping(false);
+                setOnlineStatus(false);
+                addMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`);
+                console.error('AI Error:', error);
+            }
+            
+            state.isProcessing = false;
+            input.disabled = false;
+            DOM.sendBtn.disabled = false;
+            input.focus();
+        }
+
+        // ============================================================
+        // 🗑️ CLEAR CHAT
+        // ============================================================
+        
+        function clearChat() {
+            if (state.messages.length === 0) return;
+            
+            if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+                DOM.chatBox.innerHTML = '';
+                state.messages = [];
+                state.conversationId = null;
+                state.lastResponse = null;
+                
+                // إعادة رسالة الترحيب
+                addMessage('ai', 
+                    '👋 مرحباً! تم مسح المحادثة.\n\n' +
+                    '💬 اكتب سؤالك أو استخدم الأزرار السريعة!'
+                );
+                
+                showToast('🗑️ تم مسح المحادثة', 'info');
             }
         }
 
@@ -1246,12 +1386,12 @@
             ];
             
             if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv|pdf)$/i)) {
-                showToast('❌ نوع الملف غير مدعوم. يدعم: Excel, CSV, PDF', 'error');
+                showToast('❌ نوع الملف غير مدعوم', 'error');
                 return;
             }
             
             DOM.uploadBtn.disabled = true;
-            setStatus('⏳ جاري رفع الملف ومعالجته...', 'info');
+            setStatus('⏳ جاري رفع الملف...', 'info');
             
             const formData = new FormData();
             formData.append('file', file);
@@ -1276,7 +1416,7 @@
                     state.uploadedData = data.data;
                     state.uploadedFileName = file.name;
                     showPreview(data.data);
-                    setStatus(`✅ تم استيراد ${data.count || 0} سجل بنجاح`, 'success');
+                    setStatus(`✅ تم استيراد ${data.count || 0} سجل`, 'success');
                     showToast(`✅ تم استيراد ${data.count || 0} سجل`, 'success');
                 } else {
                     throw new Error(data.error || 'فشل الاستيراد');
@@ -1352,15 +1492,13 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    setStatus(`✅ تم تسجيل ${data.count || 0} سجل بنجاح`, 'success');
+                    setStatus(`✅ تم تسجيل ${data.count || 0} سجل`, 'success');
                     showToast(`✅ تم تسجيل ${data.count || 0} سجل`, 'success');
                     DOM.importedData.classList.remove('show');
                     state.uploadedData = null;
                     state.uploadedFileName = null;
                     DOM.fileInput.value = '';
-                    
-                    // تحديث المحادثة
-                    addMessage('ai', `📊 تم استيراد ${data.count || 0} سجل بنجاح!\nيمكنك الآن سؤالي عن البيانات المستوردة.`);
+                    addMessage('ai', `📊 تم استيراد ${data.count || 0} سجل بنجاح!`);
                 } else {
                     throw new Error(data.error || 'فشل التسجيل');
                 }
@@ -1392,40 +1530,6 @@
             const toast = document.createElement('div');
             toast.className = `toast-notification ${type}`;
             toast.textContent = message;
-            
-            Object.assign(toast.style, {
-                position: 'fixed',
-                bottom: '20px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                padding: '12px 24px',
-                borderRadius: '12px',
-                fontFamily: "'Cairo', sans-serif",
-                fontSize: '14px',
-                zIndex: '9999',
-                maxWidth: '90%',
-                textAlign: 'center',
-                animation: 'fadeIn 0.3s ease',
-                backgroundColor: type === 'error' ? 'rgba(248,113,113,0.15)' :
-                              type === 'warning' ? 'rgba(251,191,36,0.15)' :
-                              type === 'success' ? 'rgba(74,222,128,0.15)' :
-                              'rgba(96,165,250,0.15)',
-                border: `1px solid ${
-                    type === 'error' ? 'rgba(248,113,113,0.2)' :
-                    type === 'warning' ? 'rgba(251,191,36,0.2)' :
-                    type === 'success' ? 'rgba(74,222,128,0.2)' :
-                    'rgba(96,165,250,0.2)'
-                }`,
-                color: type === 'error' ? '#f87171' :
-                       type === 'warning' ? '#fbbf24' :
-                       type === 'success' ? '#4ade80' :
-                       '#60a5fa',
-                backdropFilter: 'blur(10px)',
-                background: 'rgba(10,14,23,0.95)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                fontWeight: '500'
-            });
-            
             document.body.appendChild(toast);
             
             setTimeout(() => {
@@ -1464,7 +1568,7 @@
         // ============================================================
         
         document.addEventListener('keydown', (e) => {
-            // Ctrl + Enter لإرسال
+            // Ctrl+Enter لإرسال
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 askAI();
@@ -1475,26 +1579,17 @@
                 stopVoiceInput();
             }
             
-            // Ctrl + Shift + V للصوت
+            // Ctrl+Shift+V للصوت
             if (e.ctrlKey && e.shiftKey && e.key === 'V') {
                 e.preventDefault();
                 toggleVoiceInput();
             }
             
-            // Ctrl + Shift + S للنطق
+            // Ctrl+Shift+S للنطق
             if (e.ctrlKey && e.shiftKey && e.key === 'S') {
                 e.preventDefault();
                 speakLastResponse();
             }
-        });
-
-        // ============================================================
-        // 🔄 AUTO-RESIZE CHAT INPUT
-        // ============================================================
-        
-        DOM.chatInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
         });
 
         // ============================================================
@@ -1508,9 +1603,7 @@
                     messages: state.messages.slice(-CONFIG.MAX_HISTORY)
                 };
                 localStorage.setItem('ai_chat_state', JSON.stringify(data));
-            } catch (e) {
-                // تجاهل
-            }
+            } catch (e) {}
         }
 
         function loadState() {
@@ -1521,16 +1614,13 @@
                 const data = JSON.parse(raw);
                 state.conversationId = data.conversationId;
                 
-                // استعادة الرسائل
                 if (data.messages && data.messages.length > 0) {
                     DOM.chatBox.innerHTML = '';
                     data.messages.forEach(msg => {
                         addMessage(msg.role, msg.content, new Date(msg.timestamp));
                     });
                 }
-            } catch (e) {
-                // تجاهل
-            }
+            } catch (e) {}
         }
 
         // حفظ الحالة كل 5 ثواني
@@ -1540,28 +1630,67 @@
         // 🚀 INITIALIZATION
         // ============================================================
         
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
             // تحميل الحالة السابقة
             loadState();
             
             // تهيئة الصوت
-            initVoiceRecognition();
+            initSpeechRecognition();
+            initSpeechSynthesis();
             
             // تحميل الأصوات
-            if (window.speechSynthesis) {
-                window.speechSynthesis.getVoices();
-                window.speechSynthesis.onvoiceschanged = () => {
-                    window.speechSynthesis.getVoices();
+            if (speechSynth) {
+                speechSynth.getVoices();
+                speechSynth.onvoiceschanged = function() {
+                    speechSynth.getVoices();
                 };
             }
             
-            console.log('🤖 AI Assistant v6.0 initialized');
+            // التحقق من الاتصال بالخادم
+            checkHealth();
+            
+            console.log('✅ AI Assistant v6.2 initialized');
+            console.log(`🎤 Speech: ${hasSpeechRecognition ? '✅' : '❌'}`);
+            console.log(`🔊 Speech Synthesis: ${hasSpeechSynthesis ? '✅' : '❌'}`);
             console.log('📌 Shortcuts:');
             console.log('  • Ctrl+Enter → Send');
             console.log('  • Ctrl+Shift+V → Voice input');
             console.log('  • Ctrl+Shift+S → Speak last response');
             console.log('  • Escape → Cancel voice input');
         });
+
+        // ============================================================
+        // 🏥 HEALTH CHECK
+        // ============================================================
+        
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setOnlineStatus(true);
+                    console.log('✅ Server is healthy:', data);
+                    
+                    // عرض حالة الـ AI
+                    if (data.ai) {
+                        const status = [];
+                        if (data.ai.gemini?.enabled) status.push('Gemini ✅');
+                        if (data.ai.openai?.enabled) status.push('OpenAI ✅');
+                        if (status.length > 0) {
+                            console.log(`🤖 AI Providers: ${status.join(' | ')}`);
+                        } else {
+                            console.warn('⚠️ No AI providers configured!');
+                        }
+                    }
+                } else {
+                    setOnlineStatus(false);
+                    console.warn('⚠️ Server is offline');
+                }
+            } catch (error) {
+                setOnlineStatus(false);
+                console.warn('⚠️ Cannot connect to server:', error.message);
+            }
+        }
 
         // ============================================================
         // 🧹 CLEANUP
@@ -1572,14 +1701,14 @@
             if (state.recognition) {
                 try {
                     state.recognition.abort();
-                } catch (e) {
-                    // تجاهل
-                }
+                } catch (e) {}
             }
-            window.speechSynthesis?.cancel();
+            if (speechSynth) {
+                speechSynth.cancel();
+            }
         });
 
-        console.log('🚀 AI Assistant v6.0 loaded successfully!');
+        console.log('🚀 AI Assistant v6.2 loaded successfully!');
     </script>
 </body>
 </html>
