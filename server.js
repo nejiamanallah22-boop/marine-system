@@ -1,186 +1,36 @@
-// server.js - النسخة الكاملة مع نظام الصلاحيات
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+// server/routes/ai.js
+// ============================================================
+// 🤖 Marine System AI Assistant v6.0 Enterprise
+// متوافق مع نظام الصلاحيات الحالي
+// ============================================================
 
-// استيراد نظام الصلاحيات
-const { 
-    PERMISSIONS,
-    hasPermission, 
-    getPermissionsByRole,
-    isAdmin,
-    isRegionalEditor,
-    isMaintenanceTech,
-    isViewer 
-} = require('./server/config/permissions');
+const express = require("express");
+const router = express.Router();
+const mongoose = require("mongoose");
+const crypto = require("crypto");
+const NodeCache = require("node-cache");
+const sanitizeHtml = require("sanitize-html");
+const { body, validationResult } = require("express-validator");
+const winston = require("winston");
+const DailyRotateFile = require("winston-daily-rotate-file");
+const { v4: uuidv4 } = require("uuid");
 
-dotenv.config();
+// ============================================================
+// 📦 MODELS
+// ============================================================
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+const Vessel = require("../models/Vessel");
+const Maintenance = require("../models/Maintenance");
+const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
+
+// ============================================================
+// 🔐 MIDDLEWARE - استيراد نظام الصلاحيات من السيرفر الرئيسي
+// ============================================================
+
+// ملاحظة: يتم استيراد دوال المصادقة من الملف الرئيسي
+// لكننا سنعيد تعريفها هنا للتوافق
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ملفات ثابتة
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/css', express.static(path.join(__dirname, 'public/css')));
-app.use('/js', express.static(path.join(__dirname, 'public/js')));
-app.use('/pages', express.static(path.join(__dirname, 'public/pages')));
-app.use('/images', express.static(path.join(__dirname, 'public/images')));
-
-// ============================================================
-// 📁 الاتصال بقاعدة البيانات MongoDB
-// ============================================================
-
-console.log('🔄 جاري الاتصال بـ MongoDB...');
-
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-})
-.then(() => {
-    console.log('✅ MongoDB connected successfully');
-    initDefaultUsers();
-})
-.catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.log('⚠️ يرجى التحقق من:');
-    console.log('   1. الرابط في ملف .env');
-    console.log('   2. اسم المستخدم وكلمة المرور');
-    console.log('   3. عنوان IP مسموح به في MongoDB Atlas');
-    process.exit(1);
-});
-
-// ============================================================
-// 📦 نماذج MongoDB (Schemas)
-// ============================================================
-
-// ----- نموذج المستخدم مع إضافة region -----
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { 
-        type: String, 
-        enum: ['مسؤول', 'محرر إقليمي', 'فني صيانة', 'مشاهد'], 
-        default: 'مشاهد' 
-    },
-    region: { 
-        type: String, 
-        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', ''],
-        default: '' 
-    },
-    isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
-    lastLogin: { type: Date }
-});
-
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
-
-UserSchema.methods.comparePassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
-};
-
-const User = mongoose.model('User', UserSchema);
-
-// ----- نموذج المركب مع إضافة region -----
-const VesselSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    num: { type: String },
-    len: { type: Number, default: 0 },
-    cat: { type: String, default: 'البروق' },
-    reg: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
-    zone: { type: String },
-    port: { type: String },
-    supp: { type: String },
-    stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
-    break: { type: String, default: '' },
-    fDate: { type: String },
-    eDate: { type: String },
-    ref: { type: String },
-    repairer: { type: String },
-    region: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Vessel = mongoose.model('Vessel', VesselSchema);
-
-// ----- نموذج الصيانة -----
-const MaintenanceSchema = new mongoose.Schema({
-    vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel', required: true },
-    vesselName: { type: String },
-    type: { type: String, enum: ['كبرى', 'دورية', 'عادية', 'طارئة'], default: 'عادية' },
-    unit: { type: String },
-    technician: { type: String, required: true },
-    description: { type: String, required: true },
-    repair: { type: String, default: '' },
-    faultType: { type: String, default: 'أخرى' },
-    cost: { type: Number, default: 0 },
-    notes: { type: String, default: '' },
-    parts: [{ name: String, quantity: Number, price: Number }],
-    status: { type: String, enum: ['قيد الإنجاز', 'مكتملة', 'ملغية'], default: 'قيد الإنجاز' },
-    date: { type: String },
-    startDate: { type: String },
-    endDate: { type: String },
-    createdBy: { type: String },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
-
-// ----- نموذج التذكرة -----
-const TicketSchema = new mongoose.Schema({
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
-    priority: { type: String, enum: ['منخفضة', 'متوسطة', 'عالية', 'عاجلة'], default: 'متوسطة' },
-    status: { type: String, enum: ['مفتوحة', 'قيد المعالجة', 'مغلقة'], default: 'مفتوحة' },
-    userName: { type: String },
-    date: { type: String },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Ticket = mongoose.model('Ticket', TicketSchema);
-
-// ----- نموذج المذكرة -----
-const NoteSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    createdBy: { type: String },
-    date: { type: String },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Note = mongoose.model('Note', NoteSchema);
-
-// ============================================================
-// 🔐 دوال المصادقة والصلاحيات (Middleware)
-// ============================================================
-
-function generateToken(user) {
-    return jwt.sign(
-        { id: user._id, email: user.email, role: user.role, region: user.region || '' },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-}
 
 function verifyToken(token) {
     try {
@@ -193,485 +43,854 @@ function verifyToken(token) {
 function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+        return res.status(401).json({ 
+            success: false, 
+            error: '❌ الرجاء تسجيل الدخول',
+            code: 'UNAUTHORIZED'
+        });
     }
     
     const token = authHeader.substring(7);
     
     // دعم التوكن التجريبي
     if (token.startsWith('demo-token-')) {
-        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
+        req.user = { 
+            id: 'demo-user-id', 
+            email: 'admin@example.com', 
+            role: 'مسؤول', 
+            region: '' 
+        };
         return next();
     }
     
     const decoded = verifyToken(token);
     if (!decoded) {
-        return res.status(401).json({ success: false, error: '❌ توكن غير صالح' });
+        return res.status(401).json({ 
+            success: false, 
+            error: '❌ توكن غير صالح',
+            code: 'INVALID_TOKEN'
+        });
     }
     
     req.user = decoded;
     next();
 }
 
-// ===== دوال التحقق من الصلاحيات =====
+// ============================================================
+// 🔐 PERMISSIONS - متوافق مع نظام الصلاحيات الحالي
+// ============================================================
 
-function checkPermission(permission) {
+const PERMISSIONS = {
+    "مسؤول": {
+        level: 100,
+        viewAll: true,
+        analyze: true,
+        export: true,
+        delete: true,
+        manageUsers: true,
+        manageSystem: true,
+        maxMessages: 200
+    },
+    "محرر إقليمي": {
+        level: 80,
+        viewAll: false,
+        analyze: true,
+        export: true,
+        delete: false,
+        manageUsers: false,
+        manageSystem: false,
+        maxMessages: 100
+    },
+    "فني صيانة": {
+        level: 50,
+        viewAll: false,
+        analyze: true,
+        export: false,
+        delete: false,
+        manageUsers: false,
+        manageSystem: false,
+        maxMessages: 50
+    },
+    "مشاهد": {
+        level: 20,
+        viewAll: false,
+        analyze: false,
+        export: false,
+        delete: false,
+        manageUsers: false,
+        manageSystem: false,
+        maxMessages: 20
+    }
+};
+
+function getPermissions(role) {
+    return PERMISSIONS[role] || PERMISSIONS["مشاهد"];
+}
+
+function hasPermission(req, permission) {
+    const perms = getPermissions(req.user?.role);
+    return perms[permission] === true;
+}
+
+function requirePermission(permission) {
     return (req, res, next) => {
-        const userRole = req.user?.role;
-        if (!userRole) {
-            return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                error: "❌ الرجاء تسجيل الدخول",
+                code: "UNAUTHORIZED"
+            });
         }
-        if (hasPermission(permission, userRole)) {
-            next();
-        } else {
-            res.status(403).json({ success: false, error: '❌ ليس لديك صلاحية لهذه العملية' });
+        if (hasPermission(req, permission)) {
+            return next();
         }
+        return res.status(403).json({
+            success: false,
+            error: "❌ ليس لديك صلاحية لهذه العملية",
+            code: "FORBIDDEN"
+        });
     };
 }
 
-function requireAdmin(req, res, next) {
-    const userRole = req.user?.role;
-    if (!userRole) {
-        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
+// ============================================================
+// ⚠️ ENCRYPTION KEY
+// ============================================================
+
+const ENCRYPTION_KEY = (() => {
+    const key = process.env.ENCRYPTION_KEY;
+    if (!key) {
+        console.error("❌ FATAL: ENCRYPTION_KEY environment variable is required");
+        console.error("📌 Generate with: node -e \"console.log(crypto.randomBytes(32).toString('hex'))\"");
+        // استخدام مفتاح مؤقت للتطوير فقط
+        return crypto.randomBytes(32).toString('hex');
     }
-    if (isAdmin(userRole)) {
-        next();
-    } else {
-        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية مسؤول' });
+    return key;
+})();
+
+const IV_LENGTH = 16;
+const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
+
+function encrypt(text) {
+    if (!text) return null;
+    try {
+        const iv = crypto.randomBytes(IV_LENGTH);
+        const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+        let encrypted = cipher.update(text, 'utf8');
+        encrypted = Buffer.concat([encrypted, cipher.final()]);
+        const authTag = cipher.getAuthTag();
+        return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted.toString('hex');
+    } catch (error) {
+        console.error("Encryption error:", error);
+        return null;
     }
 }
 
-function requireAdminOrRegionalEditor(req, res, next) {
-    const userRole = req.user?.role;
-    if (!userRole) {
-        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
-    }
-    if (isAdmin(userRole) || isRegionalEditor(userRole)) {
-        next();
-    } else {
-        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية محرر إقليمي' });
-    }
-}
-
-function requireMaintenanceTech(req, res, next) {
-    const userRole = req.user?.role;
-    if (!userRole) {
-        return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
-    }
-    if (isMaintenanceTech(userRole) || isAdmin(userRole)) {
-        next();
-    } else {
-        res.status(403).json({ success: false, error: '❌ هذه العملية تتطلب صلاحية فني صيانة' });
+function decrypt(text) {
+    if (!text) return null;
+    try {
+        const parts = text.split(':');
+        if (parts.length !== 3) return null;
+        const iv = Buffer.from(parts[0], 'hex');
+        const authTag = Buffer.from(parts[1], 'hex');
+        const encryptedText = Buffer.from(parts[2], 'hex');
+        const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
+        decipher.setAuthTag(authTag);
+        let decrypted = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        return decrypted.toString('utf8');
+    } catch (error) {
+        console.error("Decryption error:", error);
+        return null;
     }
 }
 
 // ============================================================
-// 🚀 دوال API مع الصلاحيات
+// 📝 LOGGER
 // ============================================================
 
-// ---------- المصادقة ----------
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: '❌ البريد وكلمة المرور مطلوبة' });
-        }
-        
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-        }
-        
-        const isValid = await user.comparePassword(password);
-        if (!isValid) {
-            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-        }
-        
-        if (!user.isActive) {
-            return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
-        }
-        
-        user.lastLogin = new Date();
-        await user.save();
-        
-        const token = generateToken(user);
-        const { password: _, ...userWithoutPassword } = user.toObject();
-        res.json({ success: true, token, user: userWithoutPassword });
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في تسجيل الدخول' });
-    }
-});
-
-// ---------- المستخدمين (مسؤول فقط) ----------
-app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: '❌ خطأ في تحميل المستخدمين' });
-    }
-});
-
-app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { name, email, password, role, region } = req.body;
-        
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
-        }
-        
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
-        }
-        
-        const user = new User({ 
-            name, 
-            email, 
-            password, 
-            role: role || 'مشاهد',
-            region: region || ''
-        });
-        await user.save();
-        
-        const { password: _, ...userWithoutPassword } = user.toObject();
-        res.json({ success: true, user: userWithoutPassword });
-        
-    } catch (error) {
-        console.error('Add user error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة المستخدم' });
-    }
-});
-
-app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updates = req.body;
-        
-        if (updates.password) {
-            const salt = await bcrypt.genSalt(10);
-            updates.password = await bcrypt.hash(updates.password, salt);
-        }
-        
-        const user = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password');
-        if (!user) {
-            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-        }
-        res.json({ success: true, user });
-        
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المستخدم' });
-    }
-});
-
-app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        if (id === req.user.id) {
-            return res.status(400).json({ success: false, error: '❌ لا يمكنك حذف حسابك' });
-        }
-        
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
-            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-        }
-        res.json({ success: true });
-        
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف المستخدم' });
-    }
-});
-
-// ---------- المراكب (مع صلاحيات) ----------
-app.get('/api/vessels', authenticate, async (req, res) => {
-    try {
-        const userRole = req.user?.role;
-        const userRegion = req.user?.region;
-        let query = {};
-        
-        // محرر إقليمي يرى مراكب إقليمه فقط
-        if (isRegionalEditor(userRole) && !isAdmin(userRole)) {
-            query.region = userRegion;
-        }
-        
-        const vessels = await Vessel.find(query).sort({ createdAt: -1 });
-        res.json(vessels);
-    } catch (error) {
-        console.error('Get vessels error:', error);
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/vessels', authenticate, requireAdminOrRegionalEditor, async (req, res) => {
-    try {
-        // التأكد من أن المركب يضاف في إقليم المستخدم
-        if (isRegionalEditor(req.user?.role)) {
-            req.body.region = req.user.region;
-        }
-        
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        res.json({ success: true, vessel });
-    } catch (error) {
-        console.error('Add vessel error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة المركب' });
-    }
-});
-
-app.put('/api/vessels/:id', authenticate, requireAdminOrRegionalEditor, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const vessel = await Vessel.findById(id);
-        
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-        }
-        
-        // التحقق من أن المحرر الإقليمي يعدل مراكب إقليمه فقط
-        if (isRegionalEditor(req.user?.role) && vessel.region !== req.user.region) {
-            return res.status(403).json({ success: false, error: '❌ ليس لديك صلاحية لتعديل مراكب هذا الإقليم' });
-        }
-        
-        const updatedVessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
-        res.json({ success: true, vessel: updatedVessel });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المركب' });
-    }
-});
-
-app.delete('/api/vessels/:id', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const vessel = await Vessel.findByIdAndDelete(id);
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف المركب' });
-    }
-});
-
-// ---------- الصيانة ----------
-app.get('/api/maintenance', authenticate, checkPermission('maintenance:read'), async (req, res) => {
-    try {
-        const records = await Maintenance.find().sort({ createdAt: -1 });
-        res.json(records);
-    } catch (error) {
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/maintenance', authenticate, requireMaintenanceTech, async (req, res) => {
-    try {
-        const record = new Maintenance(req.body);
-        await record.save();
-        res.json({ success: true, record });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة سجل الصيانة' });
-    }
-});
-
-app.put('/api/maintenance/:id', authenticate, requireMaintenanceTech, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const record = await Maintenance.findByIdAndUpdate(id, req.body, { new: true });
-        if (!record) {
-            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-        }
-        res.json({ success: true, record });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث سجل الصيانة' });
-    }
-});
-
-app.delete('/api/maintenance/:id', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const record = await Maintenance.findByIdAndDelete(id);
-        if (!record) {
-            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف سجل الصيانة' });
-    }
-});
-
-// ---------- التذاكر ----------
-app.get('/api/tickets', authenticate, checkPermission('tickets:read'), async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json(tickets);
-    } catch (error) {
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/tickets', authenticate, checkPermission('tickets:create'), async (req, res) => {
-    try {
-        const ticket = new Ticket({
-            ...req.body,
-            createdBy: req.user.id
-        });
-        await ticket.save();
-        res.json({ success: true, ticket });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة التذكرة' });
-    }
-});
-
-app.put('/api/tickets/:id', authenticate, checkPermission('tickets:update'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const ticket = await Ticket.findByIdAndUpdate(id, req.body, { new: true });
-        if (!ticket) {
-            return res.status(404).json({ success: false, error: '❌ التذكرة غير موجودة' });
-        }
-        res.json({ success: true, ticket });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث التذكرة' });
-    }
-});
-
-// ---------- المذكرات ----------
-app.get('/api/notes', authenticate, checkPermission('notes:read'), async (req, res) => {
-    try {
-        const notes = await Note.find().sort({ createdAt: -1 });
-        res.json(notes);
-    } catch (error) {
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/notes', authenticate, checkPermission('notes:create'), async (req, res) => {
-    try {
-        const note = new Note(req.body);
-        await note.save();
-        res.json({ success: true, note });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة المذكرة' });
-    }
-});
-
-app.put('/api/notes/:id', authenticate, checkPermission('notes:update'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const note = await Note.findByIdAndUpdate(id, req.body, { new: true });
-        if (!note) {
-            return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
-        }
-        res.json({ success: true, note });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المذكرة' });
-    }
-});
-
-app.delete('/api/notes/:id', authenticate, requireAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const note = await Note.findByIdAndDelete(id);
-        if (!note) {
-            return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف المذكرة' });
-    }
-});
-
-// ---------- المراقبة (مسؤول فقط) ----------
-app.get('/api/sessions', authenticate, requireAdmin, async (req, res) => {
-    try {
-        // منطق عرض الجلسات
-        res.json({ success: true, message: 'جلسات المستخدمين' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ' });
-    }
+const logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || "info",
+    format: winston.format.combine(
+        winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+    ),
+    defaultMeta: { service: "marine-ai" },
+    transports: [
+        new winston.transports.Console({
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.simple()
+            )
+        }),
+        new DailyRotateFile({
+            filename: "logs/ai-%DATE%.log",
+            datePattern: "YYYY-MM-DD",
+            maxSize: "20m",
+            maxFiles: "30d",
+            format: winston.format.combine(
+                winston.format.timestamp(),
+                winston.format.json()
+            )
+        })
+    ]
 });
 
 // ============================================================
-// 📄 تهيئة المستخدمين الافتراضيين
+// ⚡ CACHE SYSTEM
 // ============================================================
 
-async function initDefaultUsers() {
+const aiCache = new NodeCache({
+    stdTTL: 300,
+    checkperiod: 60,
+    useClones: false
+});
+
+let fleetCache = {
+    data: null,
+    version: 0,
+    timestamp: 0,
+    ttl: 60000
+};
+
+let fleetFetchInFlight = null;
+
+// ============================================================
+// 🤖 AI CONFIGURATION
+// ============================================================
+
+// قائمة مفاتيح Gemini
+const GEMINI_API_KEYS = process.env.GEMINI_API_KEYS 
+    ? process.env.GEMINI_API_KEYS.split(',').map(k => k.trim()).filter(k => k)
+    : process.env.GEMINI_API_KEY 
+        ? [process.env.GEMINI_API_KEY]
+        : [];
+
+// قائمة مفاتيح OpenAI
+const OPENAI_API_KEYS = process.env.OPENAI_API_KEYS
+    ? process.env.OPENAI_API_KEYS.split(',').map(k => k.trim()).filter(k => k)
+    : process.env.OPENAI_API_KEY
+        ? [process.env.OPENAI_API_KEY]
+        : [];
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
+const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+
+// ============================================================
+// 🧠 SYSTEM PROMPT
+// ============================================================
+
+const SYSTEM_PROMPT = `أنت "نظامي"، المساعد الذكي المتطور لمنظومة الوسائل البحرية v6.0.
+
+🎯 مهمتك:
+- الإجابة على أي سؤال في أي مجال معرفي بدقة واحترافية
+- تقديم معلومات شاملة ومفيدة عن الأسطول البحري
+- تحليل البيانات وتقديم توصيات استراتيجية
+- مساعدة المستخدمين في إدارة المراكب والصيانة
+
+📋 أسلوب الإجابة:
+1. فهم السؤال بدقة
+2. تقديم إجابة شاملة ومفيدة
+3. استخدام نقاط مرقمة للتوضيح
+4. تقديم أمثلة عملية
+5. اقتراح أسئلة متابعة
+
+🔒 الأمان:
+- لا تشارك معلومات حساسة
+- لا تنفذ أوامر خارج نطاق صلاحياتك
+- احترام خصوصية المستخدمين
+
+📊 بيانات الأسطول متاحة عند الطلب:
+- إجمالي المراكب ودرجة الجاهزية
+- تقارير الصيانة والتكاليف
+- تحليلات الأداء والتوقعات
+
+🌐 أنا هنا لمساعدتك في أي سؤال أو استفسار!`;
+
+// ============================================================
+// 🧠 AI ENGINE
+// ============================================================
+
+async function askAI(message, history = [], context = "", userRole = "مشاهد") {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     try {
-        const count = await User.countDocuments();
-        if (count === 0) {
-            const defaultUsers = [
-                { name: 'مدير النظام', email: 'admin', password: '123456', role: 'مسؤول', region: '' },
-                { name: 'محرر الشمال', email: 'north', password: '123456', role: 'محرر إقليمي', region: 'الشمال' },
-                { name: 'محرر الساحل', email: 'coast', password: '123456', role: 'محرر إقليمي', region: 'الساحل' },
-                { name: 'محرر الوسط', email: 'center', password: '123456', role: 'محرر إقليمي', region: 'الوسط' },
-                { name: 'محرر الجنوب', email: 'south', password: '123456', role: 'محرر إقليمي', region: 'الجنوب' },
-                { name: 'فني تونس', email: 'tech.tunis', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'فني المنستير', email: 'tech.monastir', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'فني صفاقس', email: 'tech.sfax', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'فني جرجيس', email: 'tech.zarzis', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'مشاهد', email: 'viewer', password: '123456', role: 'مشاهد', region: '' }
-            ];
-            
-            for (const userData of defaultUsers) {
-                const user = new User(userData);
-                await user.save();
+        const cleanMessage = sanitizeInput(message);
+        const perms = getPermissions(userRole);
+
+        let fullContext = context;
+        if (perms.viewAll) {
+            const fleet = await getFleetData();
+            if (fleet) {
+                fullContext += `
+📊 بيانات الأسطول الحالية:
+• إجمالي المراكب: ${fleet.summary.total}
+• ✅ صالح: ${fleet.summary.ready}
+• ❌ معطب: ${fleet.summary.broken}
+• 🔧 صيانة: ${fleet.summary.maintenance}
+• 📈 نسبة الجاهزية: ${fleet.summary.readiness}%
+`;
             }
-            console.log('✅ تم إنشاء المستخدمين الافتراضيين في MongoDB');
-            console.log('========================================');
-            console.log('👑 مسؤول: admin / 123456');
-            console.log('📍 محرر الشمال: north / 123456');
-            console.log('📍 محرر الساحل: coast / 123456');
-            console.log('📍 محرر الوسط: center / 123456');
-            console.log('📍 محرر الجنوب: south / 123456');
-            console.log('🔧 فني تونس: tech.tunis / 123456');
-            console.log('🔧 فني المنستير: tech.monastir / 123456');
-            console.log('🔧 فني صفاقس: tech.sfax / 123456');
-            console.log('🔧 فني جرجيس: tech.zarzis / 123456');
-            console.log('👀 مشاهد: viewer / 123456');
-            console.log('========================================');
-        } else {
-            console.log(`✅ يوجد ${count} مستخدمين في قاعدة البيانات`);
         }
+
+        // محاولة استخدام Gemini
+        if (GEMINI_API_KEYS.length > 0) {
+            try {
+                const result = await callGemini(cleanMessage, history, fullContext, controller.signal);
+                if (result) {
+                    clearTimeout(timeout);
+                    return result;
+                }
+            } catch (error) {
+                logger.warn("Gemini API failed:", error.message);
+            }
+        }
+
+        // محاولة استخدام OpenAI
+        if (OPENAI_API_KEYS.length > 0) {
+            try {
+                const result = await callOpenAI(cleanMessage, history, fullContext, controller.signal);
+                if (result) {
+                    clearTimeout(timeout);
+                    return result;
+                }
+            } catch (error) {
+                logger.warn("OpenAI API failed:", error.message);
+            }
+        }
+
+        clearTimeout(timeout);
+        return await generateFallbackResponse(cleanMessage, userRole);
+
     } catch (error) {
-        console.error('❌ Error creating default users:', error);
+        clearTimeout(timeout);
+        logger.error("AI Engine error:", error);
+        return "⚠️ عذراً، حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.";
     }
 }
 
 // ============================================================
-// 📄 تقديم الصفحات
+// Gemini API Call
 // ============================================================
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+async function callGemini(message, history, context, signal) {
+    const apiKey = GEMINI_API_KEYS[0];
+    if (!apiKey) throw new Error("No Gemini API key");
 
-app.get('/pages/:page', (req, res) => {
-    const page = req.params.page;
-    const filePath = path.join(__dirname, 'public', 'pages', `${page}.html`);
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send('Page not found');
+    let fullPrompt = context || "";
+    if (history.length > 0) {
+        fullPrompt += `\n\n📝 تاريخ المحادثة:\n`;
+        history.slice(-5).forEach(h => {
+            fullPrompt += `${h.role === 'user' ? '👤 المستخدم' : '🤖 نظامي'}: ${h.content}\n`;
+        });
     }
-});
+    fullPrompt += `\n\n❓ السؤال: ${message}`;
+
+    const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal,
+            body: JSON.stringify({
+                contents: [{
+                    role: "user",
+                    parts: [{ text: fullPrompt }]
+                }],
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: 1000,
+                    topP: 0.95,
+                    topK: 40
+                }
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(`Gemini error: ${response.status} - ${error.error?.message || ''}`);
+    }
+
+    const data = await response.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+}
 
 // ============================================================
-// 🚀 تشغيل الخادم
+// OpenAI API Call
 // ============================================================
 
-app.listen(PORT, () => {
-    console.log('========================================');
-    console.log('🚀 نظام إدارة الأسطول البحري');
-    console.log('========================================');
-    console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
-    console.log('========================================');
-    console.log('📝 حسابات الدخول:');
-    console.log('   👑 admin   / 123456 (مسؤول كامل)');
-    console.log('========================================');
-    console.log('📊 قاعدة البيانات: MongoDB ✅');
-    console.log('🔐 نظام الصلاحيات: مفعل ✅');
-    console.log('========================================');
-});
+async function callOpenAI(message, history, context, signal) {
+    const apiKey = OPENAI_API_KEYS[0];
+    if (!apiKey) throw new Error("No OpenAI API key");
+
+    const messages = [
+        { role: "system", content: SYSTEM_PROMPT },
+        ...(context ? [{ role: "system", content: context }] : []),
+        ...history.slice(-5).map(h => ({
+            role: h.role === "assistant" ? "assistant" : "user",
+            content: h.content
+        })),
+        { role: "user", content: message }
+    ];
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`
+        },
+        signal,
+        body: JSON.stringify({
+            model: OPENAI_MODEL,
+            messages,
+            temperature: 0.7,
+            max_tokens: 1000
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(`OpenAI error: ${response.status} - ${error.error?.message || ''}`);
+    }
+
+    const data = await response.json();
+    return data?.choices?.[0]?.message?.content || null;
+}
+
+// ============================================================
+// 🧠 FALLBACK RESPONSES
+// ============================================================
+
+async function generateFallbackResponse(message, userRole = "مشاهد") {
+    const msg = message.toLowerCase().trim();
+    const fleet = await getFleetData();
+    const s = fleet?.summary || { total: 0, readiness: 0 };
+
+    // تحية
+    if (msg.match(/^(مرحبا|السلام|اهلاً|هلو|hi|hello|hey|صباح|مساء)/i)) {
+        return `👋 مرحباً بك! أنا "نظامي"، المساعد الذكي.\n\n` +
+               `📊 معلومات الأسطول:\n` +
+               `• 🚢 إجمالي المراكب: ${s.total}\n` +
+               `• ✅ نسبة الجاهزية: ${s.readiness}%\n\n` +
+               `💡 اكتب "مساعدة" لمعرفة ما يمكنني فعله.`;
+    }
+
+    // إحصائيات الأسطول
+    if (msg.match(/كم مركب|عدد المراكب|إحصائيات|الجاهزية|الأسطول/i)) {
+        if (!fleet) return "⚠️ عذراً، لا يمكنني الوصول إلى بيانات الأسطول حالياً.";
+        return `🚢 إحصائيات الأسطول:\n` +
+               `• 🚢 المجموع: ${s.total}\n` +
+               `• ✅ صالح: ${s.ready}\n` +
+               `• ❌ معطب: ${s.broken}\n` +
+               `• 🔧 صيانة: ${s.maintenance}\n` +
+               `• 📊 الجاهزية: ${s.readiness}%`;
+    }
+
+    // الصيانة
+    if (msg.match(/صيانة|تكاليف|تكلفة|maintenance|cost/i)) {
+        if (!fleet) return "⚠️ عذراً، لا يمكنني الوصول إلى بيانات الصيانة.";
+        const maintenance = fleet.maintenance;
+        const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+        const completed = maintenance.filter(r => r.status === "مكتملة").length;
+        const inProgress = maintenance.filter(r => r.status === "قيد الإنجاز").length;
+        return `🔧 إحصائيات الصيانة:\n` +
+               `• 📊 إجمالي السجلات: ${maintenance.length}\n` +
+               `• ✅ مكتملة: ${completed}\n` +
+               `• 🔄 قيد الإنجاز: ${inProgress}\n` +
+               `• 💰 التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت`;
+    }
+
+    // المساعدة
+    if (msg.match(/مساعدة|help|كيف|ماذا يمكنك/i)) {
+        return `❓ كيف يمكنني مساعدتك؟\n\n` +
+               `📚 يمكنني الإجابة عن:\n` +
+               `• 🌊 الأسئلة البحرية والمعلوماتية\n` +
+               `• 📊 إحصائيات الأسطول\n` +
+               `• 🔧 معلومات الصيانة\n` +
+               `• 💡 النصائح والإرشادات\n\n` +
+               `💬 اكتب سؤالك وسأجيبك بأفضل ما لدي!`;
+    }
+
+    // المطور
+    if (msg.match(/من صنع|المطور|المبرمج|developer/i)) {
+        return `🌟 تم تطوير منظومة الوسائل البحرية بواسطة فريق متخصص.\n\n` +
+               `🏆 هذا النظام هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة الإدارية والبحرية.\n` +
+               `📌 يتميز النظام بالدقة والاحترافية والجودة العالية.\n\n` +
+               `💡 الإصدار v6.0 يدعم الإجابة على أي سؤال في أي مجال معرفي.`;
+    }
+
+    // أي سؤال آخر
+    return `🤔 سؤال جيد! \n\n` +
+           `للحصول على إجابة دقيقة، أحتاج إلى:\n` +
+           `1️⃣ اتصال بالإنترنت\n` +
+           `2️⃣ مفاتيح API مفعلة (Gemini أو OpenAI)\n\n` +
+           `📌 الأسئلة التي يمكنني الإجابة عليها حالياً:\n` +
+           `• إحصائيات الأسطول\n` +
+           `• معلومات الصيانة\n` +
+           `• الأسئلة العامة الأساسية\n\n` +
+           `💡 اسألني عن "مساعدة" لعرض الخيارات المتاحة.`;
+}
+
+// ============================================================
+// 🧰 HELPERS
+// ============================================================
+
+function sanitizeInput(value) {
+    if (!value) return "";
+    return sanitizeHtml(String(value).substring(0, 2000), {
+        allowedTags: [],
+        allowedAttributes: {},
+        disallowedTagsMode: "discard"
+    });
+}
+
+function validateRequest(req, res, next) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        logger.warn("Validation failed", {
+            errors: errors.array(),
+            userId: req.user?.id
+        });
+        return res.status(400).json({
+            success: false,
+            error: errors.array()[0].msg,
+            code: "VALIDATION_ERROR"
+        });
+    }
+    next();
+}
+
+function asyncHandler(fn) {
+    return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
+function isValidObjectId(id) {
+    return mongoose.Types.ObjectId.isValid(id);
+}
+
+function buildCacheKey(userId, message, fleetVersion) {
+    const hash = crypto
+        .createHash("sha256")
+        .update(`${userId}:${message}:${fleetVersion}`)
+        .digest("hex");
+    return `ai_${hash}`;
+}
+
+// ============================================================
+// 📊 FLEET DATA
+// ============================================================
+
+async function fetchFleetDataFromDb() {
+    try {
+        const [vessels, maintenance] = await Promise.all([
+            Vessel.find()
+                .select("name num stat cat fDate zone supp region")
+                .limit(200)
+                .lean(),
+            Maintenance.find()
+                .select("vesselName type status cost date technician parts")
+                .sort({ createdAt: -1 })
+                .limit(100)
+                .lean()
+        ]);
+
+        const total = vessels.length;
+        const ready = vessels.filter(v => v.stat === "صالح").length;
+        const broken = vessels.filter(v => v.stat === "معطب").length;
+        const maintenanceCount = vessels.filter(v => v.stat === "صيانة").length;
+
+        const now = Date.now();
+        const version = now;
+
+        const data = {
+            version,
+            summary: {
+                total,
+                ready,
+                broken,
+                maintenance: maintenanceCount,
+                readiness: total > 0 ? Math.round((ready / total) * 100) : 0
+            },
+            vessels: vessels.slice(0, 50),
+            maintenance: maintenance.slice(0, 30),
+            timestamp: now
+        };
+
+        fleetCache = { data, version, timestamp: now, ttl: fleetCache.ttl };
+        logger.info("Fleet data refreshed", { version, vessels: total });
+        return data;
+    } catch (error) {
+        logger.error("Failed to fetch fleet data:", error);
+        throw error;
+    }
+}
+
+async function getFleetData(forceRefresh = false) {
+    try {
+        const now = Date.now();
+        const isFresh = fleetCache.data && (now - fleetCache.timestamp) < fleetCache.ttl;
+
+        if (!forceRefresh && isFresh) {
+            return fleetCache.data;
+        }
+
+        if (!fleetFetchInFlight) {
+            fleetFetchInFlight = fetchFleetDataFromDb().finally(() => {
+                fleetFetchInFlight = null;
+            });
+        }
+
+        return await fleetFetchInFlight;
+    } catch (error) {
+        logger.error("Fleet data error:", error);
+        return fleetCache.data || null;
+    }
+}
+
+// ============================================================
+// 💾 MESSAGE MANAGEMENT
+// ============================================================
+
+const MAX_MESSAGES_PER_CONVERSATION = 100;
+const MESSAGE_RETENTION_DAYS = 30;
+
+async function saveMessagesWithLimit(conversationId, userId, userMessage, assistantMessage) {
+    try {
+        await Message.insertMany([
+            {
+                conversationId,
+                userId,
+                role: "user",
+                content: userMessage,
+                timestamp: new Date()
+            },
+            {
+                conversationId,
+                userId,
+                role: "assistant",
+                content: assistantMessage,
+                timestamp: new Date()
+            }
+        ]);
+
+        // تنظيف المحادثات القديمة
+        await cleanupConversations(conversationId);
+    } catch (error) {
+        logger.error("Failed to save messages:", error);
+    }
+}
+
+async function cleanupConversations(conversationId) {
+    try {
+        const count = await Message.countDocuments({ conversationId });
+        
+        if (count > MAX_MESSAGES_PER_CONVERSATION) {
+            const toDelete = count - MAX_MESSAGES_PER_CONVERSATION;
+            const oldestMessages = await Message.find({ conversationId })
+                .sort({ timestamp: 1 })
+                .limit(toDelete)
+                .select('_id');
+            
+            const idsToDelete = oldestMessages.map(m => m._id);
+            await Message.deleteMany({ _id: { $in: idsToDelete } });
+        }
+
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - MESSAGE_RETENTION_DAYS);
+        await Message.deleteMany({
+            conversationId,
+            timestamp: { $lt: cutoffDate }
+        });
+    } catch (error) {
+        logger.error("Failed to cleanup conversations:", error);
+    }
+}
+
+// ============================================================
+// 🚀 API ROUTES
+// ============================================================
+
+const validateMessage = [
+    body("message")
+        .trim()
+        .isLength({ min: 1, max: 2000 })
+        .withMessage("الرسالة يجب أن تكون بين 1 و 2000 حرف"),
+    body("conversationId")
+        .optional()
+        .custom(value => isValidObjectId(value))
+        .withMessage("معرّف المحادثة غير صالح")
+];
+
+// ============================================================
+// POST /ask - Ask AI Assistant
+// ============================================================
+
+router.post("/ask", authenticate, validateMessage, validateRequest, asyncHandler(async (req, res) => {
+    const startTime = Date.now();
+    const requestId = uuidv4();
+
+    try {
+        const { message, conversationId } = req.body;
+        const userId = req.user.id;
+        const role = req.user.role;
+
+        logger.info("AI request received", {
+            requestId,
+            userId,
+            conversationId,
+            messageLength: message.length
+        });
+
+        const cleanMessage = sanitizeInput(message);
+        if (!cleanMessage || cleanMessage.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: "❌ الرسالة فارغة أو غير صالحة",
+                code: "INVALID_MESSAGE"
+            });
+        }
+
+        // التحقق من الكاش
+        const fleet = await getFleetData();
+        const cacheKey = buildCacheKey(userId, cleanMessage, fleet?.version || 0);
+        const cached = aiCache.get(cacheKey);
+
+        if (cached) {
+            logger.info("Cache hit", { requestId });
+            return res.json({
+                success: true,
+                response: cached,
+                cached: true,
+                requestId,
+                responseTime: Date.now() - startTime,
+                version: "6.0.0"
+            });
+        }
+
+        // جلب المحادثة السابقة
+        let conversation = null;
+        let history = [];
+
+        if (conversationId) {
+            conversation = await Conversation.findOne({ _id: conversationId, userId });
+            if (conversation) {
+                history = await Message.find({ conversationId: conversation._id })
+                    .sort({ timestamp: -1 })
+                    .limit(5)
+                    .lean();
+                history = history.reverse();
+            }
+        }
+
+        // بناء السياق حسب صلاحيات المستخدم
+        let context = "";
+        const perms = getPermissions(role);
+        if (perms.viewAll && fleet) {
+            context = `📊 بيانات الأسطول الحالية:\n` +
+                     `• المجموع: ${fleet.summary.total}\n` +
+                     `• صالح: ${fleet.summary.ready}\n` +
+                     `• معطب: ${fleet.summary.broken}\n` +
+                     `• صيانة: ${fleet.summary.maintenance}\n` +
+                     `• الجاهزية: ${fleet.summary.readiness}%\n`;
+        }
+
+        // توليد الرد
+        const answer = await askAI(cleanMessage, history, context, role);
+
+        // تخزين في الكاش
+        aiCache.set(cacheKey, answer, 300);
+
+        // حفظ المحادثة
+        if (!conversation) {
+            conversation = new Conversation({
+                userId,
+                title: cleanMessage.substring(0, 50) + (cleanMessage.length > 50 ? "..." : "")
+            });
+            await conversation.save();
+        } else {
+            conversation.updatedAt = new Date();
+            await conversation.save();
+        }
+
+        // حفظ الرسائل
+        await saveMessagesWithLimit(conversation._id, userId, cleanMessage, answer);
+
+        const responseTime = Date.now() - startTime;
+        logger.info("AI response sent", {
+            requestId,
+            userId,
+            conversationId: conversation._id,
+            responseTime,
+            responseLength: answer.length
+        });
+
+        res.json({
+            success: true,
+            response: answer,
+            conversationId: conversation._id,
+            requestId,
+            responseTime,
+            version: "6.0.0",
+            cached: false
+        });
+
+    } catch (error) {
+        logger.error("AI ask error:", {
+            requestId,
+            userId: req.user?.id,
+            error: error.message,
+            stack: error.stack
+        });
+
+        res.status(500).json({
+            success: false,
+            error: "❌ حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.",
+            code: "INTERNAL_ERROR",
+            requestId
+        });
+    }
+}));
+
+// ============================================================
+// GET /health - Health Check
+// ============================================================
+
+router.get("/health", asyncHandler(async (req, res) => {
+    try {
+        const fleet = await getFleetData();
+        res.json({
+            success: true,
+            status: "healthy",
+            version: "6.0.0",
+            timestamp: new Date().toISOString(),
+            uptimeSeconds: Math.round(process.uptime()),
+            cache: {
+                fleet: !!fleet,
+                ai: aiCache.keys().length
+            },
+            ai: {
+                gemini: {
+                    enabled: GEMINI_API_KEYS.length > 0,
+                    keyCount: GEMINI_API_KEYS.length,
+                    model: GEMINI_MODEL
+                },
+                openai: {
+                    enabled: OPENAI_API_KEYS.length > 0,
+                    keyCount: OPENAI_API_KEYS.length,
+                    model: OPENAI_MODEL
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            status: "unhealthy",
+            error: error.message
+        });
+    }
+}));
+
+module.exports = router;
