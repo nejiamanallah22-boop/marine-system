@@ -267,9 +267,6 @@
             background: linear-gradient(135deg, #4ade80, #22c55e);
             animation: pulse-mic 1s infinite;
         }
-        .chat-input-area .btn-mic.supported {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-        }
         .chat-input-area .btn-mic.unsupported {
             opacity: 0.3;
             cursor: not-allowed;
@@ -320,182 +317,6 @@
             color: #4ade80;
             border-color: rgba(74,222,128,0.15);
             background: rgba(74,222,128,0.05);
-        }
-        .upload-section {
-            background: rgba(255,255,255,0.02);
-            border-radius: 14px;
-            padding: 16px;
-            border: 2px dashed rgba(255,255,255,0.04);
-            margin-bottom: 16px;
-        }
-        .upload-section:hover {
-            border-color: rgba(96,165,250,0.15);
-            background: rgba(255,255,255,0.03);
-        }
-        .upload-section .upload-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .upload-section .upload-header h4 {
-            color: rgba(255,255,255,0.5);
-            margin: 0;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .upload-section .upload-area {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .upload-section input[type="file"] {
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
-            background: rgba(255,255,255,0.02);
-            color: white;
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            flex: 1;
-            min-width: 150px;
-        }
-        .upload-section input[type="file"]::file-selector-button {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 6px;
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        .upload-section input[type="file"]::file-selector-button:hover {
-            background: rgba(96,165,250,0.25);
-        }
-        .upload-section .upload-btn {
-            padding: 8px 24px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-            color: white;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .upload-section .upload-btn:hover:not(:disabled) {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(74,222,128,0.2);
-        }
-        .upload-section .upload-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .upload-section .upload-status {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 8px;
-            display: none;
-            padding: 6px 12px;
-            border-radius: 8px;
-        }
-        .upload-section .upload-status.show {
-            display: block;
-        }
-        .upload-section .upload-status.success {
-            color: #4ade80;
-            background: rgba(74,222,128,0.05);
-            border: 1px solid rgba(74,222,128,0.1);
-        }
-        .upload-section .upload-status.error {
-            color: #f87171;
-            background: rgba(248,113,113,0.05);
-            border: 1px solid rgba(248,113,113,0.1);
-        }
-        .upload-section .file-info {
-            font-size: 11px;
-            color: rgba(255,255,255,0.15);
-            margin-top: 4px;
-        }
-        .imported-data {
-            display: none;
-            background: rgba(255,255,255,0.02);
-            border-radius: 14px;
-            padding: 16px;
-            margin-top: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        .imported-data.show {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
-        .imported-data .data-preview {
-            max-height: 250px;
-            overflow-y: auto;
-            margin-top: 8px;
-            border-radius: 8px;
-        }
-        .imported-data .data-preview table {
-            width: 100%;
-            font-size: 12px;
-            border-collapse: collapse;
-        }
-        .imported-data .data-preview th {
-            text-align: right;
-            padding: 8px 12px;
-            color: rgba(255,255,255,0.3);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-weight: normal;
-            position: sticky;
-            top: 0;
-            background: #0a0e17;
-        }
-        .imported-data .data-preview td {
-            padding: 6px 12px;
-            color: rgba(255,255,255,0.5);
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-        }
-        .imported-data .data-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        .imported-data .data-actions .confirm-btn {
-            padding: 8px 28px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-            color: white;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .imported-data .data-actions .confirm-btn:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(74,222,128,0.2);
-        }
-        .imported-data .data-actions .cancel-btn {
-            padding: 8px 28px;
-            border: none;
-            border-radius: 10px;
-            background: rgba(248,113,113,0.1);
-            color: #f87171;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .imported-data .data-actions .cancel-btn:hover {
-            background: rgba(248,113,113,0.2);
         }
         .developer-credit {
             text-align: center;
@@ -575,47 +396,20 @@
             <button class="q-btn" onclick="askAI('كم عدد المراكب الصالحة؟')">🚢 الصالحة</button>
             <button class="q-btn" onclick="askAI('كم عدد المراكب المعطبة؟')">⚠️ المعطبة</button>
             <button class="q-btn" onclick="askAI('عرض تكاليف الصيانة')">💰 التكاليف</button>
-            <button class="q-btn" onclick="askAI('تقرير عن الوحدات البحرية')">🏭 الوحدات</button>
             <button class="q-btn" onclick="askAI('ما هو الذكاء الاصطناعي؟')">🧠 AI</button>
             <button class="q-btn" onclick="askAI('ما هي عاصمة تونس؟')">🌍 جغرافيا</button>
             <button class="q-btn" onclick="askAI('مساعدة')">❓ مساعدة</button>
             <button class="q-btn" onclick="clearChat()">🗑️ مسح</button>
         </div>
 
-        <div class="upload-section" id="uploadSection">
-            <div class="upload-header">
-                <h4>📂 استيراد بيانات من ملف</h4>
-                <span class="file-info">الملفات المدعومة: Excel, CSV, PDF</span>
-            </div>
-            <div class="upload-area">
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.pdf">
-                <button class="upload-btn" id="uploadBtn" onclick="uploadFile()">📤 رفع واستيراد</button>
-            </div>
-            <div class="upload-status" id="uploadStatus"></div>
-        </div>
-
-        <div class="imported-data" id="importedData">
-            <h4 style="color:rgba(255,255,255,0.5); font-size:14px; margin:0;">📋 البيانات المستوردة</h4>
-            <div class="data-preview" id="dataPreview"></div>
-            <div class="data-actions">
-                <button class="confirm-btn" onclick="confirmImport()">✅ تأكيد وتسجيل</button>
-                <button class="cancel-btn" onclick="cancelImport()">❌ إلغاء</button>
-            </div>
-        </div>
-
         <div class="chat-box" id="chatBox">
             <div class="chat-message ai">
-                <div class="sender">🤖 المساعد الذكي v6.5</div>
+                <div class="sender">🤖 المساعد الذكي</div>
                 <div class="content">
-                    👋 مرحباً! أنا <strong>نظامي</strong>، المساعد الذكي المتطور.<br><br>
-                    <strong>📌 يمكنني مساعدتك في:</strong><br>
-                    • 🚢 إحصائيات المراكب والجاهزية<br>
-                    • 🔧 سجلات وتكاليف الصيانة<br>
-                    • 🌍 أي سؤال عام في العالم!<br><br>
-                    <strong>🎤 ميزات الصوت:</strong><br>
-                    • اضغط على 🎤 وتحدث معي<br>
-                    • اضغط على 🔊 لسماع الرد<br><br>
-                    <em>💬 اكتب سؤالك أو استخدم الأزرار السريعة!</em>
+                    👋 مرحباً! أنا <strong>نظامي</strong>، المساعد الذكي.<br><br>
+                    📌 اسألني عن أي شيء!<br>
+                    🎤 اضغط على زر الميكروفون لتتحدث معي<br>
+                    🔊 اضغط على زر السماعة لسماع الرد
                 </div>
                 <div class="time">الآن</div>
             </div>
@@ -634,7 +428,7 @@
             <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." 
                    onkeypress="if(event.key==='Enter') askAI()">
             <button class="btn btn-send" id="sendBtn" onclick="askAI()">📨 إرسال</button>
-            <button class="btn btn-mic supported" id="micBtn" onclick="toggleVoiceInput()" title="تحدث معي 🎤">
+            <button class="btn btn-mic" id="micBtn" onclick="toggleVoiceInput()" title="تحدث معي 🎤">
                 🎤
             </button>
             <button class="btn btn-speaker" id="speakerBtn" onclick="speakLastResponse()" title="استماع للرد الأخير 🔊">
@@ -646,78 +440,44 @@
         <div class="developer-credit">
             تم تطوير هذا النظام بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
             <br>
-            <span style="opacity:0.3; font-size:10px;">الإصدار 6.5.0 | جميع الحقوق محفوظة © 2026</span>
+            <span style="opacity:0.3; font-size:10px;">الإصدار 6.5.0</span>
         </div>
     </div>
 
-    <!-- ============================================================
-         📜 JAVASCRIPT - VERSION 6.5 FULLY WORKING
-         ============================================================ -->
     <script>
         // ============================================================
-        // 🔐 CONFIGURATION
+        // 🔧 CONFIGURATION
         // ============================================================
-        
-        const CONFIG = {
-            API_BASE: '/api/ai',
-            MAX_HISTORY: 50,
-            VOICE_LANG: 'ar-SA',
-            SPEECH_RATE: 0.9,
-            SPEECH_PITCH: 1,
-            AUTO_SPEAK: false
-        };
+        const API_BASE = '/api/ai';
+        let conversationId = null;
+        let isProcessing = false;
+        let isListening = false;
+        let recognition = null;
+        let lastResponse = null;
 
         // ============================================================
-        // 📦 STATE
+        // 🔧 DOM REFS
         // ============================================================
-        
-        let state = {
-            conversationId: null,
-            messages: [],
-            isProcessing: false,
-            isListening: false,
-            recognition: null,
-            lastResponse: null,
-            uploadedData: null,
-            uploadedFileName: null
-        };
-
-        // ============================================================
-        // 🚀 DOM REFS
-        // ============================================================
-        
-        const DOM = {
-            chatBox: document.getElementById('chatBox'),
-            chatInput: document.getElementById('chatInput'),
-            sendBtn: document.getElementById('sendBtn'),
-            micBtn: document.getElementById('micBtn'),
-            speakerBtn: document.getElementById('speakerBtn'),
-            typingIndicator: document.getElementById('typingIndicator'),
-            voiceStatus: document.getElementById('voiceStatus'),
-            voiceStatusText: document.getElementById('voiceStatusText'),
-            fileInput: document.getElementById('fileInput'),
-            uploadBtn: document.getElementById('uploadBtn'),
-            uploadStatus: document.getElementById('uploadStatus'),
-            importedData: document.getElementById('importedData'),
-            dataPreview: document.getElementById('dataPreview'),
-            uploadSection: document.getElementById('uploadSection'),
-            statusBadge: document.getElementById('statusBadge'),
-            statusDot: document.getElementById('statusDot'),
-            statusText: document.getElementById('statusText')
-        };
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const speakerBtn = document.getElementById('speakerBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const voiceStatusText = document.getElementById('voiceStatusText');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
 
         // ============================================================
         // 🔧 UTILITY FUNCTIONS
         // ============================================================
-        
         function getToken() {
-            return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || null;
+            return localStorage.getItem('authToken') || null;
         }
 
         function getHeaders() {
-            const headers = {
-                'Content-Type': 'application/json'
-            };
+            const headers = { 'Content-Type': 'application/json' };
             const token = getToken();
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
@@ -726,10 +486,7 @@
         }
 
         function formatTime(date) {
-            return new Date(date).toLocaleTimeString('ar-SA', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            return new Date(date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
         }
 
         function escapeHtml(text) {
@@ -740,39 +497,39 @@
         }
 
         function showTyping(show) {
-            DOM.typingIndicator.classList.toggle('active', show);
-            DOM.chatBox.scrollTop = DOM.chatBox.scrollHeight;
-        }
-
-        function setStatus(message, type = 'info') {
-            const status = DOM.uploadStatus;
-            status.textContent = message;
-            status.className = 'upload-status show ' + type;
-        }
-
-        function clearStatus() {
-            DOM.uploadStatus.className = 'upload-status';
-            DOM.uploadStatus.textContent = '';
+            typingIndicator.classList.toggle('active', show);
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function setOnlineStatus(online) {
             if (online) {
-                DOM.statusDot.className = 'status-dot';
-                DOM.statusText.textContent = 'متصل';
-                DOM.statusBadge.style.borderColor = 'rgba(74,222,128,0.2)';
-                DOM.statusBadge.style.color = '#4ade80';
+                statusDot.className = 'status-dot';
+                statusText.textContent = 'متصل';
             } else {
-                DOM.statusDot.className = 'status-dot offline';
-                DOM.statusText.textContent = 'غير متصل';
-                DOM.statusBadge.style.borderColor = 'rgba(248,113,113,0.2)';
-                DOM.statusBadge.style.color = '#f87171';
+                statusDot.className = 'status-dot offline';
+                statusText.textContent = 'غير متصل';
             }
+        }
+
+        function showToast(message, type = 'info') {
+            const existing = document.querySelector('.toast-notification');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // ============================================================
         // 💬 CHAT FUNCTIONS
         // ============================================================
-        
         function addMessage(role, content, timestamp = new Date()) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${role}`;
@@ -794,11 +551,8 @@
                 ` : ''}
             `;
             
-            DOM.chatBox.appendChild(messageDiv);
-            DOM.chatBox.scrollTop = DOM.chatBox.scrollHeight;
-            
-            state.messages.push({ role, content, timestamp });
-            
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
             return messageDiv;
         }
 
@@ -828,7 +582,6 @@
         // ============================================================
         // 🎤 SPEECH RECOGNITION (Voice Input)
         // ============================================================
-        
         const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
         const hasSpeechSynthesis = 'speechSynthesis' in window;
 
@@ -837,76 +590,73 @@
 
         function initSpeechRecognition() {
             if (!hasSpeechRecognition) {
-                DOM.micBtn.className = 'btn btn-mic unsupported';
-                DOM.micBtn.title = 'المتصفح لا يدعم خاصية الصوت';
+                micBtn.className = 'btn btn-mic unsupported';
+                micBtn.title = 'المتصفح لا يدعم خاصية الصوت';
                 showToast('❌ استخدم Chrome أو Edge للميكروفون', 'error');
                 return false;
             }
             
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            state.recognition = new SpeechRecognition();
-            state.recognition.lang = CONFIG.VOICE_LANG;
-            state.recognition.continuous = false;
-            state.recognition.interimResults = true;
-            state.recognition.maxAlternatives = 1;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
             
-            state.recognition.onstart = () => {
-                state.isListening = true;
-                DOM.micBtn.classList.add('listening');
-                DOM.micBtn.textContent = '⏹️';
-                DOM.voiceStatus.classList.add('active');
-                DOM.voiceStatusText.textContent = '🎤 جاري الاستماع... تحدث الآن';
-                DOM.chatInput.placeholder = '🎤 استمع...';
+            recognition.onstart = function() {
+                isListening = true;
+                micBtn.classList.add('listening');
+                micBtn.textContent = '⏹️';
+                voiceStatus.classList.add('active');
+                voiceStatusText.textContent = '🎤 جاري الاستماع... تحدث الآن';
+                chatInput.placeholder = '🎤 استمع...';
                 showToast('🎤 جاري الاستماع...', 'info');
             };
             
-            state.recognition.onresult = (event) => {
+            recognition.onresult = function(event) {
                 let transcript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     transcript += event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
-                        DOM.chatInput.value = transcript;
-                        DOM.voiceStatusText.textContent = `✅ تم التعرف: "${transcript}"`;
+                        chatInput.value = transcript;
+                        voiceStatusText.textContent = `✅ تم التعرف: "${transcript}"`;
                         setTimeout(() => {
                             if (transcript.trim()) {
                                 askAI();
                             }
                         }, 500);
                     } else {
-                        DOM.chatInput.value = transcript;
-                        DOM.voiceStatusText.textContent = `✍️ ${transcript}`;
+                        chatInput.value = transcript;
+                        voiceStatusText.textContent = `✍️ ${transcript}`;
                     }
                 }
             };
             
-            state.recognition.onerror = (event) => {
+            recognition.onerror = function(event) {
                 console.warn('Voice error:', event.error);
                 if (event.error === 'not-allowed') {
                     showToast('❌ الرجاء السماح بالوصول إلى الميكروفون', 'error');
                 } else if (event.error === 'no-speech') {
                     showToast('⏳ لم يتم سماع صوت، حاول مرة أخرى', 'warning');
-                } else if (event.error === 'audio-capture') {
-                    showToast('⚠️ لا يوجد ميكروفون متصل', 'error');
                 } else {
                     showToast(`⚠️ خطأ في الصوت: ${event.error}`, 'error');
                 }
                 stopVoiceInput();
             };
             
-            state.recognition.onend = () => {
+            recognition.onend = function() {
                 stopVoiceInput();
             };
             
-            DOM.micBtn.className = 'btn btn-mic supported';
             return true;
         }
 
         function toggleVoiceInput() {
-            if (!state.recognition) {
+            if (!recognition) {
                 if (!initSpeechRecognition()) return;
             }
             
-            if (state.isListening) {
+            if (isListening) {
                 stopVoiceInput();
             } else {
                 // طلب إذن الميكروفون
@@ -915,8 +665,7 @@
                         .then(() => {
                             startVoiceInput();
                         })
-                        .catch((err) => {
-                            console.warn('Microphone permission denied:', err);
+                        .catch(() => {
                             showToast('❌ الرجاء السماح باستخدام الميكروفون', 'error');
                         });
                 } else {
@@ -926,9 +675,9 @@
         }
 
         function startVoiceInput() {
-            if (!state.recognition) return;
+            if (!recognition) return;
             try {
-                state.recognition.start();
+                recognition.start();
             } catch (e) {
                 if (e.message.includes('already started')) {
                     stopVoiceInput();
@@ -941,14 +690,14 @@
         }
 
         function stopVoiceInput() {
-            state.isListening = false;
-            DOM.micBtn.classList.remove('listening');
-            DOM.micBtn.textContent = '🎤';
-            DOM.voiceStatus.classList.remove('active');
-            DOM.chatInput.placeholder = 'اكتب سؤالك هنا...';
-            if (state.recognition) {
+            isListening = false;
+            micBtn.classList.remove('listening');
+            micBtn.textContent = '🎤';
+            voiceStatus.classList.remove('active');
+            chatInput.placeholder = 'اكتب سؤالك هنا...';
+            if (recognition) {
                 try {
-                    state.recognition.stop();
+                    recognition.stop();
                 } catch (e) {}
             }
         }
@@ -956,13 +705,12 @@
         // ============================================================
         // 🔊 SPEECH SYNTHESIS (Voice Output)
         // ============================================================
-        
         let speechSynth = null;
 
         function initSpeechSynthesis() {
             if (!hasSpeechSynthesis) {
-                DOM.speakerBtn.className = 'btn btn-speaker unsupported';
-                DOM.speakerBtn.title = 'المتصفح لا يدعم خاصية النطق';
+                speakerBtn.className = 'btn btn-speaker unsupported';
+                speakerBtn.title = 'المتصفح لا يدعم خاصية النطق';
                 showToast('❌ المتصفح لا يدعم خاصية النطق', 'error');
                 return false;
             }
@@ -975,15 +723,13 @@
                 if (!initSpeechSynthesis()) return;
             }
             
-            // إيقاف أي نطق سابق
             speechSynth.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = CONFIG.VOICE_LANG;
-            utterance.rate = CONFIG.SPEECH_RATE;
-            utterance.pitch = CONFIG.SPEECH_PITCH;
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
             
-            // اختيار صوت عربي
             const voices = speechSynth.getVoices();
             const arabicVoice = voices.find(v => v.lang.includes('ar'));
             if (arabicVoice) {
@@ -991,19 +737,19 @@
             }
             
             utterance.onstart = function() {
-                DOM.speakerBtn.textContent = '⏹️';
-                DOM.speakerBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+                speakerBtn.textContent = '⏹️';
+                speakerBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
             };
             
             utterance.onend = function() {
-                DOM.speakerBtn.textContent = '🔊';
-                DOM.speakerBtn.style.background = '';
+                speakerBtn.textContent = '🔊';
+                speakerBtn.style.background = '';
             };
             
             utterance.onerror = function(e) {
                 console.warn('Speech error:', e);
-                DOM.speakerBtn.textContent = '🔊';
-                DOM.speakerBtn.style.background = '';
+                speakerBtn.textContent = '🔊';
+                speakerBtn.style.background = '';
                 showToast('⚠️ خطأ في النطق', 'error');
             };
             
@@ -1011,6 +757,11 @@
         }
 
         function speakLastResponse() {
+            if (lastResponse) {
+                speakText(lastResponse);
+                return;
+            }
+            
             const messages = document.querySelectorAll('.chat-message.ai');
             if (messages.length > 0) {
                 const last = messages[messages.length - 1];
@@ -1024,11 +775,10 @@
         }
 
         // ============================================================
-        // 🤖 ASK AI - MAIN FUNCTION
+        // 🤖 ASK AI
         // ============================================================
-        
         async function askAI(message) {
-            const input = DOM.chatInput;
+            const input = chatInput;
             const question = message || input.value.trim();
             
             if (!question) {
@@ -1036,27 +786,26 @@
                 return;
             }
             
-            if (state.isProcessing) {
+            if (isProcessing) {
                 showToast('⏳ جاري معالجة طلب سابق...', 'warning');
                 return;
             }
             
-            // إظهار رسالة المستخدم
             addMessage('user', question);
             input.value = '';
             input.disabled = true;
-            DOM.sendBtn.disabled = true;
+            sendBtn.disabled = true;
             
-            state.isProcessing = true;
+            isProcessing = true;
             showTyping(true);
             
             try {
-                const response = await fetch(`${CONFIG.API_BASE}/ask`, {
+                const response = await fetch(`${API_BASE}/ask`, {
                     method: 'POST',
                     headers: getHeaders(),
                     body: JSON.stringify({
                         message: question,
-                        conversationId: state.conversationId,
+                        conversationId: conversationId,
                         language: 'ar'
                     })
                 });
@@ -1071,14 +820,10 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    state.conversationId = data.conversationId;
-                    state.lastResponse = data.response;
+                    conversationId = data.conversationId;
+                    lastResponse = data.response;
                     addMessage('ai', data.response);
                     setOnlineStatus(true);
-                    
-                    if (CONFIG.AUTO_SPEAK) {
-                        speakText(data.response);
-                    }
                 } else {
                     throw new Error(data.error || 'حدث خطأ غير معروف');
                 }
@@ -1090,24 +835,20 @@
                 console.error('AI Error:', error);
             }
             
-            state.isProcessing = false;
+            isProcessing = false;
             input.disabled = false;
-            DOM.sendBtn.disabled = false;
+            sendBtn.disabled = false;
             input.focus();
         }
 
         // ============================================================
         // 🗑️ CLEAR CHAT
         // ============================================================
-        
         function clearChat() {
-            if (state.messages.length === 0) return;
-            
             if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-                DOM.chatBox.innerHTML = '';
-                state.messages = [];
-                state.conversationId = null;
-                state.lastResponse = null;
+                chatBox.innerHTML = '';
+                conversationId = null;
+                lastResponse = null;
                 
                 addMessage('ai', 
                     '👋 مرحباً! تم مسح المحادثة.\n\n' +
@@ -1119,199 +860,14 @@
         }
 
         // ============================================================
-        // 📂 FILE UPLOAD
-        // ============================================================
-        
-        async function uploadFile() {
-            const file = DOM.fileInput.files[0];
-            if (!file) {
-                showToast('❌ الرجاء اختيار ملف أولاً', 'error');
-                return;
-            }
-            
-            DOM.uploadBtn.disabled = true;
-            setStatus('⏳ جاري رفع الملف...', 'info');
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            try {
-                const response = await fetch(`${CONFIG.API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': getHeaders()['Authorization'] || ''
-                    },
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.error || `خطأ ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    state.uploadedData = data.data;
-                    state.uploadedFileName = file.name;
-                    showPreview(data.data);
-                    setStatus(`✅ تم استيراد ${data.count || 0} سجل`, 'success');
-                    showToast(`✅ تم استيراد ${data.count || 0} سجل`, 'success');
-                } else {
-                    throw new Error(data.error || 'فشل الاستيراد');
-                }
-                
-            } catch (error) {
-                setStatus(`❌ ${error.message}`, 'error');
-                showToast(`❌ ${error.message}`, 'error');
-                console.error('Upload error:', error);
-            }
-            
-            DOM.uploadBtn.disabled = false;
-        }
-
-        function showPreview(data) {
-            DOM.importedData.classList.add('show');
-            
-            if (!data || data.length === 0) {
-                DOM.dataPreview.innerHTML = '<p style="color:rgba(255,255,255,0.3);">لا توجد بيانات للعرض</p>';
-                return;
-            }
-            
-            const headers = Object.keys(data[0]);
-            
-            let html = '<table>';
-            html += '<thead><tr>';
-            headers.forEach(h => {
-                html += `<th>${escapeHtml(h)}</th>`;
-            });
-            html += '</tr></thead><tbody>';
-            
-            data.slice(0, 20).forEach(row => {
-                html += '<tr>';
-                headers.forEach(h => {
-                    html += `<td>${escapeHtml(String(row[h] || '').substring(0, 50))}</td>`;
-                });
-                html += '</tr>';
-            });
-            
-            if (data.length > 20) {
-                html += `<tr><td colspan="${headers.length}" style="text-align:center;color:rgba(255,255,255,0.2);">
-                    ... وعرض ${data.length - 20} سجل إضافي
-                </td></tr>`;
-            }
-            
-            html += '</tbody></table>';
-            DOM.dataPreview.innerHTML = html;
-        }
-
-        async function confirmImport() {
-            if (!state.uploadedData) {
-                showToast('❌ لا توجد بيانات للتسجيل', 'error');
-                return;
-            }
-            
-            setStatus('⏳ جاري تسجيل البيانات...', 'info');
-            
-            try {
-                const response = await fetch(`${CONFIG.API_BASE}/import`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        data: state.uploadedData,
-                        filename: state.uploadedFileName
-                    })
-                });
-                
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.error || `خطأ ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    setStatus(`✅ تم تسجيل ${data.count || 0} سجل`, 'success');
-                    showToast(`✅ تم تسجيل ${data.count || 0} سجل`, 'success');
-                    DOM.importedData.classList.remove('show');
-                    state.uploadedData = null;
-                    state.uploadedFileName = null;
-                    DOM.fileInput.value = '';
-                    addMessage('ai', `📊 تم استيراد ${data.count || 0} سجل بنجاح!`);
-                } else {
-                    throw new Error(data.error || 'فشل التسجيل');
-                }
-                
-            } catch (error) {
-                setStatus(`❌ ${error.message}`, 'error');
-                showToast(`❌ ${error.message}`, 'error');
-                console.error('Import error:', error);
-            }
-        }
-
-        function cancelImport() {
-            DOM.importedData.classList.remove('show');
-            state.uploadedData = null;
-            state.uploadedFileName = null;
-            DOM.fileInput.value = '';
-            clearStatus();
-            showToast('❌ تم إلغاء الاستيراد', 'info');
-        }
-
-        // ============================================================
-        // 🍞 TOAST NOTIFICATIONS
-        // ============================================================
-        
-        function showToast(message, type = 'info') {
-            const existing = document.querySelector('.toast-notification');
-            if (existing) existing.remove();
-            
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // ============================================================
-        // 🚀 DRAG AND DROP
-        // ============================================================
-        
-        DOM.uploadSection.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            DOM.uploadSection.classList.add('dragover');
-        });
-        
-        DOM.uploadSection.addEventListener('dragleave', () => {
-            DOM.uploadSection.classList.remove('dragover');
-        });
-        
-        DOM.uploadSection.addEventListener('drop', (e) => {
-            e.preventDefault();
-            DOM.uploadSection.classList.remove('dragover');
-            
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                DOM.fileInput.files = files;
-                showToast(`📂 تم اختيار الملف: ${files[0].name}`, 'success');
-            }
-        });
-
-        // ============================================================
         // ⚡ KEYBOARD SHORTCUTS
         // ============================================================
-        
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 askAI();
             }
-            if (e.key === 'Escape' && state.isListening) {
+            if (e.key === 'Escape' && isListening) {
                 stopVoiceInput();
             }
             if (e.ctrlKey && e.shiftKey && e.key === 'V') {
@@ -1325,47 +881,33 @@
         });
 
         // ============================================================
-        // 📱 SAVE/LOAD STATE
+        // 🏥 HEALTH CHECK
         // ============================================================
-        
-        function saveState() {
+        async function checkHealth() {
             try {
-                const data = {
-                    conversationId: state.conversationId,
-                    messages: state.messages.slice(-CONFIG.MAX_HISTORY)
-                };
-                localStorage.setItem('ai_chat_state', JSON.stringify(data));
-            } catch (e) {}
-        }
-
-        function loadState() {
-            try {
-                const raw = localStorage.getItem('ai_chat_state');
-                if (!raw) return;
-                
-                const data = JSON.parse(raw);
-                state.conversationId = data.conversationId;
-                
-                if (data.messages && data.messages.length > 0) {
-                    DOM.chatBox.innerHTML = '';
-                    data.messages.forEach(msg => {
-                        addMessage(msg.role, msg.content, new Date(msg.timestamp));
-                    });
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setOnlineStatus(true);
+                    console.log('✅ Server is healthy:', data);
+                } else {
+                    setOnlineStatus(false);
                 }
-            } catch (e) {}
+            } catch (error) {
+                setOnlineStatus(false);
+                console.warn('⚠️ Cannot connect to server:', error.message);
+            }
         }
-
-        setInterval(saveState, 5000);
 
         // ============================================================
         // 🚀 INITIALIZATION
         // ============================================================
-        
         document.addEventListener('DOMContentLoaded', function() {
-            loadState();
+            // تهيئة الصوت
             initSpeechRecognition();
             initSpeechSynthesis();
             
+            // تحميل الأصوات
             if (speechSynth) {
                 speechSynth.getVoices();
                 speechSynth.onvoiceschanged = function() {
@@ -1373,6 +915,7 @@
                 };
             }
             
+            // التحقق من الصحة
             checkHealth();
             
             console.log('✅ AI Assistant v6.5 initialized');
@@ -1386,43 +929,12 @@
         });
 
         // ============================================================
-        // 🏥 HEALTH CHECK
-        // ============================================================
-        
-        async function checkHealth() {
-            try {
-                const response = await fetch(`${CONFIG.API_BASE}/health`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setOnlineStatus(true);
-                    console.log('✅ Server is healthy:', data);
-                    if (data.ai) {
-                        const status = [];
-                        if (data.ai.gemini?.enabled) status.push('Gemini ✅');
-                        if (data.ai.openai?.enabled) status.push('OpenAI ✅');
-                        if (status.length > 0) {
-                            console.log(`🤖 AI Providers: ${status.join(' | ')}`);
-                        }
-                    }
-                } else {
-                    setOnlineStatus(false);
-                    console.warn('⚠️ Server is offline');
-                }
-            } catch (error) {
-                setOnlineStatus(false);
-                console.warn('⚠️ Cannot connect to server:', error.message);
-            }
-        }
-
-        // ============================================================
         // 🧹 CLEANUP
         // ============================================================
-        
-        window.addEventListener('beforeunload', () => {
-            saveState();
-            if (state.recognition) {
+        window.addEventListener('beforeunload', function() {
+            if (recognition) {
                 try {
-                    state.recognition.abort();
+                    recognition.abort();
                 } catch (e) {}
             }
             if (speechSynth) {
@@ -1431,6 +943,7 @@
         });
 
         console.log('🚀 AI Assistant v6.5 loaded successfully!');
+        console.log('📌 Functions available: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
     </script>
 </body>
 </html>
