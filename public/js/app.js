@@ -18,6 +18,13 @@ let chartDoughnut = null;
 let dashChart = null;
 let dashLineChart = null;
 
+// متغيرات الخريطة
+let userMap = null;
+let userMarkers = [];
+let mapInitialized = false;
+let mapRetryCount = 0;
+let mapRefreshInterval = null;
+
 // ============================================================
 // منع الدخول التلقائي
 // ============================================================
@@ -96,7 +103,14 @@ function initPage(pageName) {
         case 'map': setTimeout(initMap, 100); break;
         case 'users': loadUsers(); break;
         case 'notes': loadNotes(); break;
-        case 'sessions': loadSessions(); break;
+        case 'sessions': 
+            loadSessions(); 
+            startTrackingAutoUpdate(); 
+            setTimeout(function() {
+                initUserMap();
+                startMapAutoRefresh();
+            }, 800);
+            break;
         case 'ai-assistant': initAIAssistant(); break;
         default: console.log('⚠️ Unknown page:', pageName);
     }
@@ -381,6 +395,11 @@ function doLogout() {
         activityInterval = null;
     }
     
+    if (mapRefreshInterval) {
+        clearInterval(mapRefreshInterval);
+        mapRefreshInterval = null;
+    }
+    
     const token = getToken();
     if (token && !token.startsWith('demo-token')) {
         fetch('/api/auth/logout', {
@@ -507,7 +526,6 @@ function loadTickets() {
 }
 
 function loadUsers() {
-    // ✅ استخدام بيانات تجريبية مباشرة (بدون خادم)
     allUsers = [
         { id: '1', name: 'مدير النظام', email: 'admin@example.com', role: 'مسؤول', isActive: true, createdAt: new Date().toISOString() },
         { id: '2', name: 'مدير العمليات', email: 'manager@example.com', role: 'مشرف', isActive: true, createdAt: new Date().toISOString() },
@@ -532,8 +550,6 @@ function loadNotes() {
 }
 
 function loadSessions() {
-    const token = getToken();
-    if (!token) return;
     if (document.getElementById('page-sessions')) {
         if (typeof refreshSessions === 'function') {
             refreshSessions();
@@ -800,7 +816,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (مع دعم الوضع التجريبي)
+// 👥 دوال المستخدمين
 // ============================================================
 
 function addUser() {
@@ -1267,9 +1283,9 @@ function updateZones() {
     if (!zoneSelect) return;
     const zones = {
         'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
+        'الساحل': ['سوسة', 'المنستير', 'المهدية'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة'],
+        'الجنوب': ['جرجيس', 'بن قردان']
     };
     const options = zones[reg] || ['المنطقة غير محددة'];
     zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
@@ -1902,206 +1918,484 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
-// 🤖 الذكاء الاصطناعي - المساعد الذكي
+// 🗺️ خريطة تتبع مواقع المستخدمين بالساتلايت
 // ============================================================
 
-function askAI(userMessage) {
-    const input = document.getElementById('chatInput');
-    const chatBox = document.getElementById('chatBox');
-    const sendBtn = document.getElementById('sendBtn');
-    const typingIndicator = document.getElementById('typingIndicator');
+function initUserMap() {
+    console.log('🗺️ Initializing map...');
     
-    let message = userMessage || input?.value?.trim();
-    if (!message) {
-        showAlert('⚠️ الرجاء كتابة سؤال', 'warning');
+    const mapContainer = document.getElementById('userMap');
+    if (!mapContainer) {
+        console.warn('⚠️ Map container not found, retrying...');
+        if (mapRetryCount < 10) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 500);
+        }
         return;
     }
 
-    addMessage('user', message);
-    if (input) input.value = '';
-    if (sendBtn) sendBtn.disabled = true;
-    if (typingIndicator) typingIndicator.style.display = 'block';
-    scrollChatToBottom();
-
-    setTimeout(() => {
-        const response = generateAIResponse(message);
-        addMessage('ai', response);
-        if (typingIndicator) typingIndicator.style.display = 'none';
-        if (sendBtn) sendBtn.disabled = false;
-        scrollChatToBottom();
-    }, 500 + Math.random() * 1000);
-}
-
-function addMessage(type, content) {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${type}`;
-    
-    const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = new Date().toLocaleTimeString('ar-TN');
-
-    let contentHTML = content;
-    if (type === 'ai') {
-        contentHTML = `
-            ${content}
-            <br>
-            <button class="audio-btn" onclick="speakText(this.parentElement.textContent.replace(/[🔊استماع]/g, '').trim())">
-                🔊 استماع
-            </button>
-        `;
-        lastResponseText = content.replace(/<[^>]*>/g, '').trim();
+    if (userMap) {
+        console.log('🔄 Map already exists, refreshing...');
+        try {
+            userMap.invalidateSize();
+            loadUserLocations();
+        } catch(e) {
+            console.warn('⚠️ Error refreshing map:', e);
+            userMap = null;
+            mapInitialized = false;
+            setTimeout(initUserMap, 300);
+        }
+        return;
     }
 
-    messageDiv.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${contentHTML}</div>
-        <div class="time">${time}</div>
-    `;
-
-    chatBox.appendChild(messageDiv);
-}
-
-function scrollChatToBottom() {
-    const chatBox = document.getElementById('chatBox');
-    if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-}
-
-function generateAIResponse(message) {
-    const msg = message.toLowerCase();
-    
-    const totalVessels = allVessels.length;
-    const readyVessels = allVessels.filter(v => v.stat === 'صالح').length;
-    const brokenVessels = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenanceVessels = allVessels.filter(v => v.stat === 'صيانة').length;
-    const totalMaintenance = allMaintenance.length;
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
-
-    const developerInfo = `المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي`;
-
-    if (msg.includes('من صنع') || msg.includes('صانع') || msg.includes('مطور') || 
-        msg.includes('المبرمج') || msg.includes('الذي صنع') || msg.includes('صمم') ||
-        msg.includes('من عمل') || msg.includes('المبدع') || msg.includes('الوكيل') ||
-        msg.includes('الحرس') || msg.includes('أمان الله') || msg.includes('ناجي')) {
-        return `🌟 <strong>تم تطوير هذا النظام بواسطة:</strong><br><br>
-        👨‍💻 <strong>${developerInfo}</strong><br><br>
-        🏆 هذا التطبيق هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة البحرية.<br>
-        📌 يتميز النظام بالدقة والاحترافية والجودة العالية.<br><br>
-        🔹 <em>${developerInfo} هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.</em>`;
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ Leaflet not loaded, retrying...');
+        if (mapRetryCount < 5) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 1000);
+        }
+        return;
     }
 
-    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً') || msg.includes('هلو')) {
-        return `👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟<br><br>
-        يمكنك أن تسألني عن:<br>
-        • 📊 حالة المراكب<br>
-        • 🔧 إحصائيات الصيانة<br>
-        • 🔮 توقع الأعطال<br>
-        • 💡 نصائح لتحسين الأداء`;
-    }
+    const tunisiaCenter = [33.8869, 9.5375];
 
-    if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
-        return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
-        نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
-        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}`;
-    }
-
-    if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
-        const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
-        return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
-        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}`;
-    }
-
-    if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
-        const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-        const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
-        return `🔧 إحصائيات الصيانة:<br>
-        • 📊 إجمالي السجلات: <strong>${totalMaintenance}</strong><br>
-        • ✅ مكتملة: <strong>${completed}</strong><br>
-        • 🔄 قيد الإنجاز: <strong>${inProgress}</strong><br>
-        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong>`;
-    }
-
-    if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
-        const highRisk = allVessels.filter(v => {
-            const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
-            return age > 12 && v.stat === 'صالح';
+    try {
+        userMap = L.map('userMap', {
+            center: tunisiaCenter,
+            zoom: 7,
+            zoomControl: true,
+            fadeAnimation: true,
+            attributionControl: true
         });
-        
-        const recommendations = highRisk.length > 0 
-            ? `⚠️ هناك ${highRisk.length} مركب يحتاج إلى فحص:<br>${highRisk.map(v => `• ${v.name}`).join('<br>')}`
-            : '✅ جميع المراكب في حالة جيدة';
-        
-        return `🔮 توقع الأعطال:<br><br>
-        • المراكب المعطبة حالياً: ${brokenVessels}<br>
-        • المراكب في الصيانة: ${maintenanceVessels}<br>
-        • ${recommendations}`;
-    }
 
-    if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
-        return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
-        🚢 <strong>المراكب:</strong><br>
-        • المجموع: ${totalVessels}<br>
-        • صالح: ${readyVessels} (${readyPercent}%)<br>
-        • معطب: ${brokenVessels}<br>
-        • صيانة: ${maintenanceVessels}<br><br>
-        🔧 <strong>الصيانة:</strong><br>
-        • إجمالي السجلات: ${totalMaintenance}<br>
-        • التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت<br><br>
-        📌 <strong>التوصيات:</strong><br>
-        ${readyPercent < 70 ? '• ⚠️ يوصى بتحسين نسبة الجاهزية' : '• ✅ الأداء جيد'}<br>
-        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}`;
-    }
+        // طبقة الساتلايت من Esri
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a> | Satellite',
+            maxZoom: 19,
+            minZoom: 3
+        }).addTo(userMap);
 
-    if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
-        const units = {};
-        allVessels.forEach(v => {
-            if (v.supp) {
-                units[v.supp] = (units[v.supp] || 0) + 1;
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        });
+
+        const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            attribution: '&copy; Google',
+            maxZoom: 20,
+            subdomains: ['mt1', 'mt2', 'mt3']
+        });
+
+        const baseLayers = {
+            "🛰️ ساتلايت (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri',
+                maxZoom: 19
+            }),
+            "🛰️ ساتلايت (Google)": googleSatellite,
+            "🗺️ خريطة عادية": streetLayer
+        };
+
+        L.control.layers(baseLayers).addTo(userMap);
+        L.control.scale({ position: 'bottomright', metric: true, imperial: false }).addTo(userMap);
+        L.control.zoom({ position: 'topright' }).addTo(userMap);
+
+        mapInitialized = true;
+        mapRetryCount = 0;
+        
+        loadUserLocations();
+
+        setTimeout(() => {
+            if (userMap) {
+                userMap.invalidateSize();
+                console.log('✅ Map size updated');
             }
+        }, 500);
+
+        if (!window._mapResizeHandler) {
+            window._mapResizeHandler = function() {
+                if (userMap) {
+                    setTimeout(() => {
+                        try {
+                            userMap.invalidateSize();
+                        } catch(e) {}
+                    }, 300);
+                }
+            };
+            window.addEventListener('resize', window._mapResizeHandler);
+        }
+
+        console.log('✅ Map initialized successfully');
+
+    } catch (error) {
+        console.error('❌ Error initializing map:', error);
+        if (mapRetryCount < 3) {
+            mapRetryCount++;
+            setTimeout(initUserMap, 1000);
+        }
+    }
+}
+
+// ===== بدء تحديث الخريطة التلقائي =====
+function startMapAutoRefresh() {
+    if (mapRefreshInterval) {
+        clearInterval(mapRefreshInterval);
+    }
+    mapRefreshInterval = setInterval(function() {
+        if (document.getElementById('page-sessions')) {
+            if (userMap) {
+                try {
+                    userMap.invalidateSize();
+                    loadUserLocations();
+                    console.log('🔄 Map refreshed automatically');
+                } catch(e) {
+                    console.warn('⚠️ Map refresh error:', e);
+                }
+            }
+        }
+    }, 30000);
+}
+
+function loadUserLocations() {
+    if (!userMap) {
+        console.warn('⚠️ Map not initialized, cannot load locations');
+        return;
+    }
+
+    try {
+        userMarkers.forEach(marker => {
+            try {
+                userMap.removeLayer(marker);
+            } catch (e) {}
         });
-        let unitText = Object.entries(units)
-            .map(([unit, count]) => `• ${unit}: ${count} مركب`)
-            .join('<br>');
-        return `🏭 <strong>الوحدات البحرية</strong><br><br>
-        ${unitText || 'لا توجد وحدات مسجلة'}`;
-    }
+    } catch(e) {}
+    userMarkers = [];
 
-    if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
-        const tips = [];
-        if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
-        if (brokenVessels > 3) tips.push('• 🔧 تخصيص فرق لإصلاح المراكب المعطبة');
-        if (totalCost > 10000) tips.push('• 💰 مراجعة عقود الصيانة لتقليل التكاليف');
-        if (tips.length === 0) tips.push('• ✅ الأداء ممتاز، استمر في الصيانة الدورية');
-        tips.push('• 📊 استخدام الذكاء الاصطناعي لتحليل الأعطال المتكررة');
+    // بيانات المستخدمين مع مواقعهم
+    const userLocations = [
+        { name: 'مدير النظام', role: 'مسؤول', status: 'online', lat: 36.8065, lng: 10.1815, city: 'تونس', device: 'Chrome / Windows', ip: '192.168.1.1', lastActive: 'الآن' },
+        { name: 'مدير العمليات', role: 'مشرف', status: 'online', lat: 35.8277, lng: 10.6420, city: 'سوسة', device: 'Firefox / Mac', ip: '192.168.1.2', lastActive: 'منذ 5 دقائق' },
+        { name: 'محرر', role: 'محرر', status: 'idle', lat: 34.7396, lng: 10.7600, city: 'صفاقس', device: 'Safari / iPhone', ip: '192.168.1.3', lastActive: 'منذ 15 دقيقة' },
+        { name: 'مشاهد', role: 'مشاهد', status: 'offline', lat: 33.8869, lng: 9.5375, city: 'القيروان', device: 'Edge / Windows', ip: '192.168.1.4', lastActive: 'منذ ساعة' },
+        { name: 'فني صيانة', role: 'محرر', status: 'online', lat: 37.2744, lng: 9.8739, city: 'بنزرت', device: 'Chrome / Android', ip: '192.168.1.5', lastActive: 'منذ دقيقتين' }
+    ];
+
+    const statusColors = {
+        'online': '#4ade80',
+        'idle': '#fbbf24',
+        'offline': '#f87171'
+    };
+
+    const statusLabels = {
+        'online': '🟢 نشط',
+        'idle': '🟡 غير نشط',
+        'offline': '🔴 غير متصل'
+    };
+
+    userLocations.forEach(user => {
+        try {
+            const icon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `
+                    <div style="
+                        background: rgba(0,0,0,0.85);
+                        border-radius: 12px;
+                        padding: 6px 12px 6px 8px;
+                        border: 2px solid ${statusColors[user.status]};
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+                        font-size: 12px;
+                        color: white;
+                        white-space: nowrap;
+                        font-family: 'Cairo', sans-serif;
+                        backdrop-filter: blur(4px);
+                    ">
+                        <span style="
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 50%;
+                            background: ${statusColors[user.status]};
+                            display: inline-block;
+                            animation: ${user.status === 'online' ? 'pulse 1.5s infinite' : 'none'};
+                            box-shadow: 0 0 10px ${statusColors[user.status]}40;
+                        "></span>
+                        <span style="font-weight:bold;">${user.name}</span>
+                        <span style="font-size:10px; opacity:0.6;">${user.role}</span>
+                    </div>
+                `,
+                iconSize: [150, 35],
+                iconAnchor: [75, 17],
+                className: 'user-marker-icon'
+            });
+
+            const popupContent = `
+                <div style="text-align:right; font-family:'Cairo',sans-serif; min-width:200px; padding:4px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:8px;">
+                        <div style="font-size:28px;">👤</div>
+                        <div>
+                            <div style="font-weight:bold; font-size:16px; color:#1a1a2e;">${user.name}</div>
+                            <div style="font-size:12px; color:#666;">${user.role}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:13px; color:#444; line-height:1.8;">
+                        <div>📍 <strong>${user.city}</strong></div>
+                        <div>💻 ${user.device}</div>
+                        <div>🌐 ${user.ip}</div>
+                        <div>🕐 ${user.lastActive}</div>
+                        <div style="margin-top:6px;">
+                            <span class="status-badge ${user.status}" style="padding:2px 12px; border-radius:10px; font-size:11px; background:${statusColors[user.status]}20; color:${statusColors[user.status]};">
+                                ${statusLabels[user.status]}
+                            </span>
+                        </div>
+                        <div style="margin-top:4px; font-size:10px; color:#999;">
+                            🛰️ ${user.lat}, ${user.lng}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const marker = L.marker([user.lat, user.lng], { icon: icon })
+                .addTo(userMap)
+                .bindPopup(popupContent, { maxWidth: 280 });
+
+            userMarkers.push(marker);
+        } catch(e) {
+            console.warn('⚠️ Error adding marker for user:', user.name, e);
+        }
+    });
+
+    if (userMarkers.length > 0) {
+        try {
+            const group = L.featureGroup(userMarkers);
+            userMap.fitBounds(group.getBounds().pad(0.2));
+        } catch(e) {
+            console.warn('⚠️ Error fitting bounds:', e);
+        }
+    }
+}
+
+function refreshUserMap() {
+    if (userMap) {
+        loadUserLocations();
+        setTimeout(() => {
+            if (userMap) {
+                try {
+                    userMap.invalidateSize();
+                } catch(e) {}
+            }
+        }, 200);
+        showAlert('🔄 تم تحديث خريطة المواقع', 'success');
+    } else {
+        initUserMap();
+    }
+}
+
+// ============================================================
+// 👁️ صفحة المراقبة - تتبع تحركات المستخدمين
+// ============================================================
+
+let activityLog = [];
+let sessionsData = [];
+let trackingInterval = null;
+
+function initActivityData() {
+    const users = [
+        { name: 'مدير النظام', role: 'مسؤول' },
+        { name: 'مدير العمليات', role: 'مشرف' },
+        { name: 'محرر', role: 'محرر' },
+        { name: 'مشاهد', role: 'مشاهد' },
+        { name: 'فني صيانة', role: 'محرر' }
+    ];
+
+    const actions = ['تسجيل دخول', 'تسجيل خروج', 'عرض', 'تعديل', 'إضافة', 'حذف'];
+    const pages = ['لوحة التحكم', 'الأسطول', 'الصيانة', 'الجاهزية', 'الدعم', 'المستخدمين', 'المذكرات', 'المساعد الذكي'];
+    const devices = ['Chrome / Windows', 'Firefox / Mac', 'Safari / iPhone', 'Edge / Windows', 'Chrome / Android'];
+
+    for (let i = 0; i < 50; i++) {
+        const user = users[Math.floor(Math.random() * users.length)];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        const page = pages[Math.floor(Math.random() * pages.length)];
+        const device = devices[Math.floor(Math.random() * devices.length)];
         
-        return `💡 <strong>نصائح لتحسين الأداء</strong><br><br>
-        ${tips.join('<br>')}`;
+        const date = new Date();
+        date.setHours(date.getHours() - Math.floor(Math.random() * 72));
+        
+        activityLog.push({
+            id: i + 1,
+            user: user.name,
+            role: user.role,
+            action: action,
+            page: page,
+            device: device,
+            time: date,
+            ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`
+        });
     }
 
-    if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
-        return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
-        إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
-        • 🚢 "كم عدد المراكب الصالحة؟"<br>
-        • ⚠️ "عرض المراكب المعطبة"<br>
-        • 🔧 "إحصائيات الصيانة"<br>
-        • 🔮 "توقع الأعطال القادمة"<br>
-        • 📊 "تقرير شامل عن الأسطول"<br>
-        • 💡 "نصائح لتحسين الأداء"<br>
-        • 🏭 "الوحدات البحرية"`;
+    activityLog.sort((a, b) => b.time - a.time);
+
+    sessionsData = [
+        { id: 1, name: 'مدير النظام', role: 'مسؤول', ip: '192.168.1.1', device: 'Chrome / Windows', lastActive: new Date(), status: 'online' },
+        { id: 2, name: 'مدير العمليات', role: 'مشرف', ip: '192.168.1.2', device: 'Firefox / Mac', lastActive: new Date(Date.now() - 300000), status: 'online' },
+        { id: 3, name: 'محرر', role: 'محرر', ip: '192.168.1.3', device: 'Safari / iPhone', lastActive: new Date(Date.now() - 900000), status: 'idle' },
+        { id: 4, name: 'مشاهد', role: 'مشاهد', ip: '192.168.1.4', device: 'Edge / Windows', lastActive: new Date(Date.now() - 3600000), status: 'offline' }
+    ];
+}
+
+function loadSessions() {
+    if (activityLog.length === 0) {
+        initActivityData();
     }
 
-    return `🤔 لم أفهم سؤالك بالكامل.<br><br>
-    يمكنك أن تسألني عن:<br>
-    • 📊 حالة المراكب والجاهزية<br>
-    • 🔧 إحصائيات الصيانة والتكاليف<br>
-    • 🔮 توقع الأعطال<br>
-    • 💡 نصائح لتحسين الأداء<br>
-    • 🏭 معلومات عن الوحدات البحرية<br><br>
-    أو اكتب "مساعدة" لعرض جميع الخيارات.`;
+    updateStats();
+    renderSessions();
+    renderActivityLog();
+    
+    setTimeout(initUserMap, 500);
+    setTimeout(startMapAutoRefresh, 1000);
+}
+
+function updateStats() {
+    const online = sessionsData.filter(s => s.status === 'online').length;
+    const total = sessionsData.length;
+    const today = activityLog.filter(a => {
+        const today = new Date();
+        return a.time.getDate() === today.getDate() &&
+               a.time.getMonth() === today.getMonth() &&
+               a.time.getFullYear() === today.getFullYear();
+    }).length;
+
+    document.getElementById('onlineCount').textContent = online;
+    document.getElementById('totalUsers').textContent = total;
+    document.getElementById('todayActivity').textContent = today;
+}
+
+function renderSessions() {
+    const container = document.getElementById('sessionsGrid');
+    if (!container) return;
+
+    if (sessionsData.length === 0) {
+        container.innerHTML = '<div class="no-data">🚫 لا توجد جلسات نشطة</div>';
+        return;
+    }
+
+    const statusLabels = {
+        'online': '🟢 نشط',
+        'idle': '🟡 غير نشط',
+        'offline': '🔴 غير متصل'
+    };
+
+    const statusClass = {
+        'online': 'online',
+        'idle': 'idle',
+        'offline': 'offline'
+    };
+
+    container.innerHTML = sessionsData.map(s => {
+        const timeAgo = getTimeAgo(s.lastActive);
+        return `
+            <div class="session-card">
+                <div class="header">
+                    <span class="user-name">${s.name}</span>
+                    <span class="user-role">${s.role}</span>
+                </div>
+                <div class="info"><i class="fas fa-laptop"></i> ${s.device}</div>
+                <div class="info"><i class="fas fa-network-wired"></i> ${s.ip}</div>
+                <div class="info"><i class="fas fa-clock"></i> آخر نشاط: ${timeAgo}</div>
+                <span class="status ${statusClass[s.status]}">${statusLabels[s.status]}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderActivityLog(filteredData) {
+    const tbody = document.getElementById('activityBody');
+    if (!tbody) return;
+
+    const data = filteredData || activityLog;
+
+    if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="no-data">🚫 لا توجد سجلات</td></tr>';
+        return;
+    }
+
+    const actionClass = {
+        'تسجيل دخول': 'login',
+        'تسجيل خروج': 'logout',
+        'عرض': 'view',
+        'تعديل': 'edit',
+        'إضافة': 'add',
+        'حذف': 'delete'
+    };
+
+    tbody.innerHTML = data.slice(0, 100).map(a => `
+        <tr>
+            <td><strong>${a.user}</strong> <span style="font-size:11px; color:rgba(255,255,255,0.2);">${a.role}</span></td>
+            <td><span class="action ${actionClass[a.action] || ''}">${a.action}</span></td>
+            <td>${a.page}</td>
+            <td>${a.ip}</td>
+            <td class="time">${formatTime(a.time)}</td>
+        </tr>
+    `).join('');
+}
+
+function filterActivity() {
+    const search = document.getElementById('searchActivity')?.value?.toLowerCase() || '';
+    const action = document.getElementById('filterAction')?.value || '';
+
+    let filtered = activityLog;
+
+    if (search) {
+        filtered = filtered.filter(a => 
+            a.user.toLowerCase().includes(search) ||
+            a.page.toLowerCase().includes(search) ||
+            a.action.includes(search)
+        );
+    }
+
+    if (action) {
+        filtered = filtered.filter(a => a.action === action);
+    }
+
+    renderActivityLog(filtered);
+}
+
+function clearFilters() {
+    document.getElementById('searchActivity').value = '';
+    document.getElementById('filterAction').value = '';
+    renderActivityLog(activityLog);
+}
+
+function getTimeAgo(date) {
+    const diff = Date.now() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'الآن';
+    if (minutes < 60) return `منذ ${minutes} دقيقة`;
+    if (hours < 24) return `منذ ${hours} ساعة`;
+    return `منذ ${days} يوم`;
+}
+
+function formatTime(date) {
+    return date.toLocaleDateString('ar-TN') + ' ' + date.toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function startTrackingAutoUpdate() {
+    if (trackingInterval) clearInterval(trackingInterval);
+    trackingInterval = setInterval(() => {
+        if (document.getElementById('page-sessions')) {
+            renderSessions();
+            if (userMap) {
+                loadUserLocations();
+                setTimeout(() => {
+                    if (userMap) userMap.invalidateSize();
+                }, 100);
+            }
+        }
+    }, 30000);
 }
 
 // ============================================================
@@ -2315,6 +2609,209 @@ function stopVoiceInput() {
 }
 
 // ============================================================
+// 🤖 الذكاء الاصطناعي - المساعد الذكي
+// ============================================================
+
+function askAI(userMessage) {
+    const input = document.getElementById('chatInput');
+    const chatBox = document.getElementById('chatBox');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    
+    let message = userMessage || input?.value?.trim();
+    if (!message) {
+        showAlert('⚠️ الرجاء كتابة سؤال', 'warning');
+        return;
+    }
+
+    addMessage('user', message);
+    if (input) input.value = '';
+    if (sendBtn) sendBtn.disabled = true;
+    if (typingIndicator) typingIndicator.style.display = 'block';
+    scrollChatToBottom();
+
+    setTimeout(() => {
+        const response = generateAIResponse(message);
+        addMessage('ai', response);
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        if (sendBtn) sendBtn.disabled = false;
+        scrollChatToBottom();
+    }, 500 + Math.random() * 1000);
+}
+
+function addMessage(type, content) {
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    
+    const sender = type === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
+    const time = new Date().toLocaleTimeString('ar-TN');
+
+    let contentHTML = content;
+    if (type === 'ai') {
+        contentHTML = `
+            ${content}
+            <br>
+            <button class="audio-btn" onclick="speakText(this.parentElement.textContent.replace(/[🔊استماع]/g, '').trim())">
+                🔊 استماع
+            </button>
+        `;
+        lastResponseText = content.replace(/<[^>]*>/g, '').trim();
+    }
+
+    messageDiv.innerHTML = `
+        <div class="sender">${sender}</div>
+        <div class="content">${contentHTML}</div>
+        <div class="time">${time}</div>
+    `;
+
+    chatBox.appendChild(messageDiv);
+}
+
+function scrollChatToBottom() {
+    const chatBox = document.getElementById('chatBox');
+    if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
+function generateAIResponse(message) {
+    const msg = message.toLowerCase();
+    
+    const totalVessels = allVessels.length;
+    const readyVessels = allVessels.filter(v => v.stat === 'صالح').length;
+    const brokenVessels = allVessels.filter(v => v.stat === 'معطب').length;
+    const maintenanceVessels = allVessels.filter(v => v.stat === 'صيانة').length;
+    const totalMaintenance = allMaintenance.length;
+    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+    const readyPercent = totalVessels > 0 ? Math.round((readyVessels / totalVessels) * 100) : 0;
+
+    const developerInfo = `المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي`;
+
+    if (msg.includes('من صنع') || msg.includes('صانع') || msg.includes('مطور') || 
+        msg.includes('المبرمج') || msg.includes('الذي صنع') || msg.includes('صمم') ||
+        msg.includes('من عمل') || msg.includes('المبدع') || msg.includes('الوكيل') ||
+        msg.includes('الحرس') || msg.includes('أمان الله') || msg.includes('ناجي')) {
+        return `🌟 <strong>تم تطوير هذا النظام بواسطة:</strong><br><br>
+        👨‍💻 <strong>${developerInfo}</strong><br><br>
+        🏆 هذا التطبيق هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة البحرية.<br>
+        📌 يتميز النظام بالدقة والاحترافية والجودة العالية.<br><br>
+        🔹 <em>${developerInfo} هو مبرمج محترف ومبدع في مجال تطوير الأنظمة الإدارية والبحرية.</em>`;
+    }
+
+    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً') || msg.includes('هلو')) {
+        return `👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟<br><br>
+        يمكنك أن تسألني عن:<br>
+        • 📊 حالة المراكب<br>
+        • 🔧 إحصائيات الصيانة<br>
+        • 🔮 توقع الأعطال<br>
+        • 💡 نصائح لتحسين الأداء`;
+    }
+
+    if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
+        return `🚢 عدد المراكب الصالحة: <strong>${readyVessels}</strong> من أصل ${totalVessels}<br>
+        نسبة الجاهزية: <strong>${readyPercent}%</strong><br><br>
+        ${readyPercent >= 70 ? '✅ الأداء جيد جداً' : '⚠️ هناك مجال للتحسين'}`;
+    }
+
+    if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
+        const brokenList = allVessels.filter(v => v.stat === 'معطب').map(v => v.name).join('، ');
+        return `⚠️ عدد المراكب المعطبة: <strong>${brokenVessels}</strong><br>
+        ${brokenVessels > 0 ? `المراكب المعطبة: ${brokenList}` : '✅ لا توجد مراكب معطبة حالياً'}`;
+    }
+
+    if (msg.includes('صيانة') || msg.includes('تكاليف') || msg.includes('تكلفة')) {
+        const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
+        const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
+        return `🔧 إحصائيات الصيانة:<br>
+        • 📊 إجمالي السجلات: <strong>${totalMaintenance}</strong><br>
+        • ✅ مكتملة: <strong>${completed}</strong><br>
+        • 🔄 قيد الإنجاز: <strong>${inProgress}</strong><br>
+        • 💰 التكلفة الإجمالية: <strong>${totalCost.toLocaleString()} د.ت</strong>`;
+    }
+
+    if (msg.includes('توقع') || msg.includes('متوقع') || msg.includes('تنبؤ')) {
+        const highRisk = allVessels.filter(v => {
+            const age = v.fDate ? (new Date() - new Date(v.fDate)) / (1000 * 60 * 60 * 24 * 30) : 0;
+            return age > 12 && v.stat === 'صالح';
+        });
+        
+        const recommendations = highRisk.length > 0 
+            ? `⚠️ هناك ${highRisk.length} مركب يحتاج إلى فحص:<br>${highRisk.map(v => `• ${v.name}`).join('<br>')}`
+            : '✅ جميع المراكب في حالة جيدة';
+        
+        return `🔮 توقع الأعطال:<br><br>
+        • المراكب المعطبة حالياً: ${brokenVessels}<br>
+        • المراكب في الصيانة: ${maintenanceVessels}<br>
+        • ${recommendations}`;
+    }
+
+    if (msg.includes('تقرير') || msg.includes('ملخص') || msg.includes('شامل')) {
+        return `📊 <strong>تقرير شامل عن الأسطول</strong><br><br>
+        🚢 <strong>المراكب:</strong><br>
+        • المجموع: ${totalVessels}<br>
+        • صالح: ${readyVessels} (${readyPercent}%)<br>
+        • معطب: ${brokenVessels}<br>
+        • صيانة: ${maintenanceVessels}<br><br>
+        🔧 <strong>الصيانة:</strong><br>
+        • إجمالي السجلات: ${totalMaintenance}<br>
+        • التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت<br><br>
+        📌 <strong>التوصيات:</strong><br>
+        ${readyPercent < 70 ? '• ⚠️ يوصى بتحسين نسبة الجاهزية' : '• ✅ الأداء جيد'}<br>
+        ${brokenVessels > 0 ? '• ⚠️ يجب إصلاح المراكب المعطبة' : '• ✅ لا توجد مراكب معطبة'}`;
+    }
+
+    if (msg.includes('وحدة') || msg.includes('وحدات') || msg.includes('إسناد')) {
+        const units = {};
+        allVessels.forEach(v => {
+            if (v.supp) {
+                units[v.supp] = (units[v.supp] || 0) + 1;
+            }
+        });
+        let unitText = Object.entries(units)
+            .map(([unit, count]) => `• ${unit}: ${count} مركب`)
+            .join('<br>');
+        return `🏭 <strong>الوحدات البحرية</strong><br><br>
+        ${unitText || 'لا توجد وحدات مسجلة'}`;
+    }
+
+    if (msg.includes('نصائح') || msg.includes('تحسين') || msg.includes('تطوير')) {
+        const tips = [];
+        if (readyPercent < 70) tips.push('• ⚠️ زيادة الصيانة الدورية لتحسين الجاهزية');
+        if (brokenVessels > 3) tips.push('• 🔧 تخصيص فرق لإصلاح المراكب المعطبة');
+        if (totalCost > 10000) tips.push('• 💰 مراجعة عقود الصيانة لتقليل التكاليف');
+        if (tips.length === 0) tips.push('• ✅ الأداء ممتاز، استمر في الصيانة الدورية');
+        tips.push('• 📊 استخدام الذكاء الاصطناعي لتحليل الأعطال المتكررة');
+        
+        return `💡 <strong>نصائح لتحسين الأداء</strong><br><br>
+        ${tips.join('<br>')}`;
+    }
+
+    if (msg.includes('مساعدة') || msg.includes('كيف') || msg.includes('طريقة')) {
+        return `❓ <strong>كيف يمكنني مساعدتك؟</strong><br><br>
+        إليك بعض الأمثلة لما يمكنك سؤالي عنه:<br><br>
+        • 🚢 "كم عدد المراكب الصالحة؟"<br>
+        • ⚠️ "عرض المراكب المعطبة"<br>
+        • 🔧 "إحصائيات الصيانة"<br>
+        • 🔮 "توقع الأعطال القادمة"<br>
+        • 📊 "تقرير شامل عن الأسطول"<br>
+        • 💡 "نصائح لتحسين الأداء"<br>
+        • 🏭 "الوحدات البحرية"`;
+    }
+
+    return `🤔 لم أفهم سؤالك بالكامل.<br><br>
+    يمكنك أن تسألني عن:<br>
+    • 📊 حالة المراكب والجاهزية<br>
+    • 🔧 إحصائيات الصيانة والتكاليف<br>
+    • 🔮 توقع الأعطال<br>
+    • 💡 نصائح لتحسين الأداء<br>
+    • 🏭 معلومات عن الوحدات البحرية<br><br>
+    أو اكتب "مساعدة" لعرض جميع الخيارات.`;
+}
+
+// ============================================================
 // 🔔 نظام الإشعارات (Notifications)
 // ============================================================
 
@@ -2523,3 +3020,5 @@ console.log('📝 استخدم admin / 123456 للدخول');
 console.log('🤖 المساعد الذكي جاهز للتحدث معك!');
 console.log('🎤 ميزات الصوت: تحدث مع المساعد واستمع للردود');
 console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
+console.log('🗺️ خريطة تتبع المستخدمين بالساتلايت جاهزة!');
+console.log('🔔 نظام الإشعارات يعمل!');
