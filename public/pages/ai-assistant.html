@@ -444,7 +444,45 @@
         </div>
     </div>
 
+    <!-- ============================================================
+         📜 JAVASCRIPT - COMPLETE VERSION
+         ============================================================ -->
     <script>
+        // ============================================================
+        // 🎤 CHECK MICROPHONE SUPPORT
+        // ============================================================
+        
+        // تحقق من دعم الصوت في المتصفح
+        const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+        const hasSpeechSynthesis = 'speechSynthesis' in window;
+
+        console.log('🎤 Speech Recognition:', hasSpeechRecognition ? '✅' : '❌');
+        console.log('🔊 Speech Synthesis:', hasSpeechSynthesis ? '✅' : '❌');
+
+        if (!hasSpeechRecognition) {
+            const micBtn = document.getElementById('micBtn');
+            micBtn.style.display = 'none';
+            // عرض رسالة للمستخدم
+            const warningDiv = document.createElement('div');
+            warningDiv.style.cssText = `
+                background: rgba(248,113,113,0.1);
+                border: 1px solid rgba(248,113,113,0.2);
+                border-radius: 10px;
+                padding: 10px 16px;
+                margin-bottom: 12px;
+                color: #f87171;
+                font-size: 13px;
+                text-align: center;
+            `;
+            warningDiv.innerHTML = '⚠️ <strong>الميكروفون غير مدعوم في هذا المتصفح.</strong> استخدم <strong>Google Chrome</strong> أو <strong>Microsoft Edge</strong> للحصول على أفضل تجربة.';
+            document.querySelector('.ai-container').insertBefore(warningDiv, document.querySelector('.quick-actions'));
+        }
+
+        if (!hasSpeechSynthesis) {
+            const speakerBtn = document.getElementById('speakerBtn');
+            speakerBtn.style.display = 'none';
+        }
+
         // ============================================================
         // 🔧 CONFIGURATION
         // ============================================================
@@ -582,17 +620,8 @@
         // ============================================================
         // 🎤 SPEECH RECOGNITION (Voice Input)
         // ============================================================
-        const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-        const hasSpeechSynthesis = 'speechSynthesis' in window;
-
-        console.log('🎤 Speech Recognition:', hasSpeechRecognition ? '✅' : '❌');
-        console.log('🔊 Speech Synthesis:', hasSpeechSynthesis ? '✅' : '❌');
-
         function initSpeechRecognition() {
             if (!hasSpeechRecognition) {
-                micBtn.className = 'btn btn-mic unsupported';
-                micBtn.title = 'المتصفح لا يدعم خاصية الصوت';
-                showToast('❌ استخدم Chrome أو Edge للميكروفون', 'error');
                 return false;
             }
             
@@ -653,13 +682,15 @@
 
         function toggleVoiceInput() {
             if (!recognition) {
-                if (!initSpeechRecognition()) return;
+                if (!initSpeechRecognition()) {
+                    showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
+                    return;
+                }
             }
             
             if (isListening) {
                 stopVoiceInput();
             } else {
-                // طلب إذن الميكروفون
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                     navigator.mediaDevices.getUserMedia({ audio: true })
                         .then(() => {
@@ -709,9 +740,6 @@
 
         function initSpeechSynthesis() {
             if (!hasSpeechSynthesis) {
-                speakerBtn.className = 'btn btn-speaker unsupported';
-                speakerBtn.title = 'المتصفح لا يدعم خاصية النطق';
-                showToast('❌ المتصفح لا يدعم خاصية النطق', 'error');
                 return false;
             }
             speechSynth = window.speechSynthesis;
@@ -720,7 +748,10 @@
 
         function speakText(text) {
             if (!speechSynth) {
-                if (!initSpeechSynthesis()) return;
+                if (!initSpeechSynthesis()) {
+                    showToast('❌ المتصفح لا يدعم النطق', 'error');
+                    return;
+                }
             }
             
             speechSynth.cancel();
