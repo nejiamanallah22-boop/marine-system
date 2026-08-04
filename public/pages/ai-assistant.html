@@ -440,19 +440,18 @@
         <div class="developer-credit">
             تم تطوير هذا النظام بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
             <br>
-            <span style="opacity:0.3; font-size:10px;">الإصدار 6.5.0</span>
+            <span style="opacity:0.3; font-size:10px;">الإصدار 6.5.0 | يعمل بـ Gemini AI</span>
         </div>
     </div>
 
     <!-- ============================================================
-         📜 JAVASCRIPT - COMPLETE VERSION
+         📜 JAVASCRIPT - VERSION WITH DEBUG
          ============================================================ -->
     <script>
         // ============================================================
         // 🎤 CHECK MICROPHONE SUPPORT
         // ============================================================
         
-        // تحقق من دعم الصوت في المتصفح
         const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
         const hasSpeechSynthesis = 'speechSynthesis' in window;
 
@@ -462,7 +461,6 @@
         if (!hasSpeechRecognition) {
             const micBtn = document.getElementById('micBtn');
             micBtn.style.display = 'none';
-            // عرض رسالة للمستخدم
             const warningDiv = document.createElement('div');
             warningDiv.style.cssText = `
                 background: rgba(248,113,113,0.1);
@@ -806,7 +804,7 @@
         }
 
         // ============================================================
-        // 🤖 ASK AI
+        // 🤖 ASK AI - MAIN FUNCTION
         // ============================================================
         async function askAI(message) {
             const input = chatInput;
@@ -822,6 +820,7 @@
                 return;
             }
             
+            // إضافة رسالة المستخدم
             addMessage('user', question);
             input.value = '';
             input.disabled = true;
@@ -831,6 +830,8 @@
             showTyping(true);
             
             try {
+                console.log(`📤 إرسال: ${question}`);
+                
                 const response = await fetch(`${API_BASE}/ask`, {
                     method: 'POST',
                     headers: getHeaders(),
@@ -845,10 +846,12 @@
                 
                 if (!response.ok) {
                     const error = await response.json().catch(() => ({}));
+                    console.error('❌ HTTP Error:', response.status, error);
                     throw new Error(error.error || `خطأ ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log('✅ الرد:', data);
                 
                 if (data.success) {
                     conversationId = data.conversationId;
@@ -862,8 +865,8 @@
             } catch (error) {
                 showTyping(false);
                 setOnlineStatus(false);
+                console.error('❌ AI Error:', error);
                 addMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`);
-                console.error('AI Error:', error);
             }
             
             isProcessing = false;
@@ -921,8 +924,12 @@
                     const data = await response.json();
                     setOnlineStatus(true);
                     console.log('✅ Server is healthy:', data);
+                    if (data.gemini && data.gemini.key === '✅ مفعل') {
+                        console.log('🤖 Gemini AI is ACTIVE!');
+                    }
                 } else {
                     setOnlineStatus(false);
+                    console.warn('⚠️ Server returned error:', response.status);
                 }
             } catch (error) {
                 setOnlineStatus(false);
