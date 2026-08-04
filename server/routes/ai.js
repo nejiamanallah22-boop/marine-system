@@ -119,7 +119,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-// التحقق من المفتاح - الآن يجب أن يكون صحيحاً
+// التحقق من المفتاح
 const HAS_GEMINI = GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && GEMINI_API_KEY !== 'AIzaSyYourGeminiKeyHere';
 const HAS_OPENAI = OPENAI_API_KEY && OPENAI_API_KEY.length > 10;
 
@@ -204,7 +204,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الأولى: Gemini API (مع المفتاح الحقيقي)
+        // 🔥 المحاولة الأولى: Gemini API
         // ============================================================
         if (HAS_GEMINI) {
             try {
@@ -221,7 +221,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الثانية: OpenAI (إذا كان مفعلاً)
+        // 🔥 المحاولة الثانية: OpenAI
         // ============================================================
         if (HAS_OPENAI) {
             try {
@@ -238,7 +238,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الثالثة: Local Fallback (ذكي)
+        // 🔥 المحاولة الثالثة: Local Fallback
         // ============================================================
         clearTimeout(timeout);
         logger.warn("⚠️ جميع APIs فشلت، استخدام Local Fallback");
@@ -358,7 +358,7 @@ async function callOpenAI(message, history, context, signal) {
 }
 
 // ============================================================
-// 🧠 SMART LOCAL RESPONSE - مع معرفة واسعة
+// 🧠 SMART LOCAL RESPONSE
 // ============================================================
 
 async function generateSmartResponse(message, userRole = "مشاهد") {
@@ -434,19 +434,7 @@ async function generateSmartResponse(message, userRole = "مشاهد") {
                `🤖 يعمل النظام بواسطة Google Gemini AI.`;
     }
 
-    // ===== معلومات عامة =====
-    if (msg.match(/تونس|الجزائر|مصر|المغرب|ليبيا|موريتانيا|السعودية|الإمارات|قطر|الكويت|عمان|البحرين|العراق|سوريا|الأردن|فلسطين|لبنان|اليمن|الصومال|جيبوتي|السودان/i)) {
-        const country = msg.match(/تونس|الجزائر|مصر|المغرب|ليبيا|موريتانيا|السعودية|الإمارات|قطر|الكويت|عمان|البحرين|العراق|سوريا|الأردن|فلسطين|لبنان|اليمن|الصومال|جيبوتي|السودان/i)[0];
-        return `🌍 <strong>معلومات عن ${country}</strong>\n\n` +
-               `هذه معلومات عامة. للحصول على تفاصيل أكثر، يمكنك سؤالي عن:\n` +
-               `• العاصمة والمدن الرئيسية\n` +
-               `• التاريخ والحضارة\n` +
-               `• الاقتصاد والثقافة\n` +
-               `• المعالم السياحية\n\n` +
-               `💬 اسألني سؤالاً محدداً عن ${country} وسأجيبك بتفصيل!`;
-    }
-
-    // ===== أي سؤال آخر - رد ذكي =====
+    // ===== أي سؤال آخر =====
     return `🤔 سؤال ممتاز! \n\n` +
            `للحصول على إجابة دقيقة وشاملة، أحتاج إلى الاتصال بـ Gemini AI.\n\n` +
            `📌 <strong>معلومات عن الأسطول:</strong>\n` +
