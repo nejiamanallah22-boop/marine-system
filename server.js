@@ -1,4 +1,4 @@
-// server.js - نسخة متصلة بـ MongoDB
+// server.js - نسخة متصلة بـ MongoDB (بدون JSON)
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -31,22 +31,25 @@ app.use('/images', express.static(path.join(__dirname, 'public/images')));
 // 📁 الاتصال بقاعدة البيانات MongoDB
 // ============================================================
 
-let useMongoDB = false;
+console.log('🔄 جاري الاتصال بـ MongoDB...');
 
 mongoose.connect(process.env.MONGODB_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
 })
 .then(() => {
     console.log('✅ MongoDB connected successfully');
-    useMongoDB = true;
     initDefaultUsers();
 })
 .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    console.log('⚠️ Using JSON files as fallback...');
-    useMongoDB = false;
-    initDefaultUsersJSON();
+    console.error('❌ MongoDB connection error:', err.message);
+    console.log('⚠️ يرجى التحقق من:');
+    console.log('   1. الرابط في ملف .env');
+    console.log('   2. اسم المستخدم وكلمة المرور');
+    console.log('   3. عنوان IP مسموح به في MongoDB Atlas');
+    process.exit(1);
 });
 
 // ============================================================
@@ -66,7 +69,8 @@ const UserSchema = new mongoose.Schema({
 
 UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
 });
 
@@ -145,48 +149,12 @@ const NoteSchema = new mongoose.Schema({
 const Note = mongoose.model('Note', NoteSchema);
 
 // ============================================================
-// 📁 دوال JSON (للاحتياط)
-// ============================================================
-
-const DB_PATH = path.join(__dirname, 'data');
-const USERS_FILE = path.join(DB_PATH, 'users.json');
-const VESSELS_FILE = path.join(DB_PATH, 'vessels.json');
-const MAINTENANCE_FILE = path.join(DB_PATH, 'maintenance.json');
-const TICKETS_FILE = path.join(DB_PATH, 'tickets.json');
-const NOTES_FILE = path.join(DB_PATH, 'notes.json');
-
-if (!fs.existsSync(DB_PATH)) {
-    fs.mkdirSync(DB_PATH, { recursive: true });
-}
-
-function readData(filePath, defaultData = []) {
-    try {
-        if (!fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
-            return defaultData;
-        }
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch {
-        return defaultData;
-    }
-}
-
-function writeData(filePath, data) {
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-// ============================================================
 // 🔐 دوال المصادقة
 // ============================================================
 
 function generateToken(user) {
     return jwt.sign(
-        { id: user._id || user.id, email: user.email, role: user.role },
+        { id: user._id, email: user.email, role: user.role },
         JWT_SECRET,
         { expiresIn: '7d' }
     );
@@ -208,7 +176,7 @@ function authenticate(req, res, next) {
     
     const token = authHeader.substring(7);
     
-    // دعم التوكن التجريبي
+    // دعم التوكن التجريبي (للحسابات التجريبية)
     if (token.startsWith('demo-token-')) {
         req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول' };
         return next();
@@ -227,16 +195,47 @@ function authenticate(req, res, next) {
 // 🚀 دوال API
 // ============================================================
 
+// ---------- المصادقة ----------
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({ success: false, error: '❌ البريد وكلمة المرور مطلوبة' });
+        }
+        
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
+        }
+        
+        const isValid = await user.comparePassword(password);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
+        }
+        
+        if (!user.isActive) {
+            return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
+        }
+        
+        user.lastLogin = new Date();
+        await user.save();
+        
+        const token = generateToken(user);
+        const { password: _, ...userWithoutPassword } = user.toObject();
+        res.json({ success: true, token, user: userWithoutPassword });
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ success: false, error: '❌ خطأ في تسجيل الدخول' });
+    }
+});
+
 // ---------- المستخدمين ----------
 app.get('/api/users', authenticate, async (req, res) => {
     try {
-        if (useMongoDB) {
-            const users = await User.find().select('-password');
-            res.json(users);
-        } else {
-            const users = readData(USERS_FILE).map(({ password, ...user }) => user);
-            res.json(users);
-        }
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.json(users);
     } catch (error) {
         res.status(500).json({ error: '❌ خطأ في تحميل المستخدمين' });
     }
@@ -250,41 +249,17 @@ app.post('/api/users', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
         }
         
-        if (useMongoDB) {
-            const existingUser = await User.findOne({ email });
-            if (existingUser) {
-                return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
-            }
-            
-            const user = new User({ name, email, password, role: role || 'مشاهد' });
-            await user.save();
-            
-            const { password: _, ...userWithoutPassword } = user.toObject();
-            res.json({ success: true, user: userWithoutPassword });
-        } else {
-            const users = readData(USERS_FILE);
-            if (users.find(u => u.email === email)) {
-                return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
-            }
-            
-            const salt = bcrypt.genSaltSync(10);
-            const hashedPassword = bcrypt.hashSync(password, salt);
-            
-            const newUser = {
-                id: Date.now().toString(),
-                name,
-                email,
-                password: hashedPassword,
-                role: role || 'مشاهد',
-                isActive: true,
-                createdAt: new Date().toISOString()
-            };
-            users.push(newUser);
-            writeData(USERS_FILE, users);
-            
-            const { password: _, ...userWithoutPassword } = newUser;
-            res.json({ success: true, user: userWithoutPassword });
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
         }
+        
+        const user = new User({ name, email, password, role: role || 'مشاهد' });
+        await user.save();
+        
+        const { password: _, ...userWithoutPassword } = user.toObject();
+        res.json({ success: true, user: userWithoutPassword });
+        
     } catch (error) {
         console.error('Add user error:', error);
         res.status(500).json({ success: false, error: '❌ خطأ في إضافة المستخدم' });
@@ -296,30 +271,17 @@ app.put('/api/users/:id', authenticate, async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
         
-        if (useMongoDB) {
-            if (updates.password) {
-                updates.password = await bcrypt.hash(updates.password, 10);
-            }
-            const user = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password');
-            if (!user) {
-                return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-            }
-            res.json({ success: true, user });
-        } else {
-            const users = readData(USERS_FILE);
-            const index = users.findIndex(u => u.id === id);
-            if (index === -1) {
-                return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-            }
-            if (updates.password) {
-                const salt = bcrypt.genSaltSync(10);
-                updates.password = bcrypt.hashSync(updates.password, salt);
-            }
-            users[index] = { ...users[index], ...updates };
-            writeData(USERS_FILE, users);
-            const { password, ...userWithoutPassword } = users[index];
-            res.json({ success: true, user: userWithoutPassword });
+        if (updates.password) {
+            const salt = await bcrypt.genSalt(10);
+            updates.password = await bcrypt.hash(updates.password, salt);
         }
+        
+        const user = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password');
+        if (!user) {
+            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
+        }
+        res.json({ success: true, user });
+        
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في تحديث المستخدم' });
     }
@@ -333,21 +295,12 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: '❌ لا يمكنك حذف حسابك' });
         }
         
-        if (useMongoDB) {
-            const user = await User.findByIdAndDelete(id);
-            if (!user) {
-                return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-            }
-            res.json({ success: true });
-        } else {
-            const users = readData(USERS_FILE);
-            const filtered = users.filter(u => u.id !== id);
-            if (filtered.length === users.length) {
-                return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-            }
-            writeData(USERS_FILE, filtered);
-            res.json({ success: true });
+        const user = await User.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
         }
+        res.json({ success: true });
+        
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في حذف المستخدم' });
     }
@@ -356,35 +309,21 @@ app.delete('/api/users/:id', authenticate, async (req, res) => {
 // ---------- المراكب ----------
 app.get('/api/vessels', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const vessels = await Vessel.find().sort({ createdAt: -1 });
-            res.json(vessels);
-        } else {
-            res.json(readData(VESSELS_FILE));
-        }
+        const vessels = await Vessel.find().sort({ createdAt: -1 });
+        res.json(vessels);
     } catch (error) {
+        console.error('Get vessels error:', error);
         res.status(500).json([]);
     }
 });
 
 app.post('/api/vessels', authenticate, async (req, res) => {
     try {
-        if (useMongoDB) {
-            const vessel = new Vessel(req.body);
-            await vessel.save();
-            res.json({ success: true, vessel });
-        } else {
-            const vessels = readData(VESSELS_FILE);
-            const newVessel = {
-                id: vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 1,
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            vessels.push(newVessel);
-            writeData(VESSELS_FILE, vessels);
-            res.json({ success: true, vessel: newVessel });
-        }
+        const vessel = new Vessel(req.body);
+        await vessel.save();
+        res.json({ success: true, vessel });
     } catch (error) {
+        console.error('Add vessel error:', error);
         res.status(500).json({ success: false, error: '❌ خطأ في إضافة المركب' });
     }
 });
@@ -392,22 +331,11 @@ app.post('/api/vessels', authenticate, async (req, res) => {
 app.put('/api/vessels/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        if (useMongoDB) {
-            const vessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
-            if (!vessel) {
-                return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-            }
-            res.json({ success: true, vessel });
-        } else {
-            const vessels = readData(VESSELS_FILE);
-            const index = vessels.findIndex(v => v.id === parseInt(id));
-            if (index === -1) {
-                return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-            }
-            vessels[index] = { ...vessels[index], ...req.body };
-            writeData(VESSELS_FILE, vessels);
-            res.json({ success: true, vessel: vessels[index] });
+        const vessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
+        if (!vessel) {
+            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
         }
+        res.json({ success: true, vessel });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في تحديث المركب' });
     }
@@ -416,21 +344,11 @@ app.put('/api/vessels/:id', authenticate, async (req, res) => {
 app.delete('/api/vessels/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        if (useMongoDB) {
-            const vessel = await Vessel.findByIdAndDelete(id);
-            if (!vessel) {
-                return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-            }
-            res.json({ success: true });
-        } else {
-            const vessels = readData(VESSELS_FILE);
-            const filtered = vessels.filter(v => v.id !== parseInt(id));
-            if (filtered.length === vessels.length) {
-                return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-            }
-            writeData(VESSELS_FILE, filtered);
-            res.json({ success: true });
+        const vessel = await Vessel.findByIdAndDelete(id);
+        if (!vessel) {
+            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
         }
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في حذف المركب' });
     }
@@ -439,12 +357,8 @@ app.delete('/api/vessels/:id', authenticate, async (req, res) => {
 // ---------- الصيانة ----------
 app.get('/api/maintenance', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const records = await Maintenance.find().sort({ createdAt: -1 });
-            res.json(records);
-        } else {
-            res.json(readData(MAINTENANCE_FILE));
-        }
+        const records = await Maintenance.find().sort({ createdAt: -1 });
+        res.json(records);
     } catch (error) {
         res.status(500).json([]);
     }
@@ -452,21 +366,9 @@ app.get('/api/maintenance', async (req, res) => {
 
 app.post('/api/maintenance', authenticate, async (req, res) => {
     try {
-        if (useMongoDB) {
-            const record = new Maintenance(req.body);
-            await record.save();
-            res.json({ success: true, record });
-        } else {
-            const records = readData(MAINTENANCE_FILE);
-            const newRecord = {
-                id: records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1,
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            records.push(newRecord);
-            writeData(MAINTENANCE_FILE, records);
-            res.json({ success: true, record: newRecord });
-        }
+        const record = new Maintenance(req.body);
+        await record.save();
+        res.json({ success: true, record });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في إضافة سجل الصيانة' });
     }
@@ -475,22 +377,11 @@ app.post('/api/maintenance', authenticate, async (req, res) => {
 app.put('/api/maintenance/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        if (useMongoDB) {
-            const record = await Maintenance.findByIdAndUpdate(id, req.body, { new: true });
-            if (!record) {
-                return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-            }
-            res.json({ success: true, record });
-        } else {
-            const records = readData(MAINTENANCE_FILE);
-            const index = records.findIndex(r => r.id === parseInt(id));
-            if (index === -1) {
-                return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-            }
-            records[index] = { ...records[index], ...req.body };
-            writeData(MAINTENANCE_FILE, records);
-            res.json({ success: true, record: records[index] });
+        const record = await Maintenance.findByIdAndUpdate(id, req.body, { new: true });
+        if (!record) {
+            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
         }
+        res.json({ success: true, record });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في تحديث سجل الصيانة' });
     }
@@ -499,21 +390,11 @@ app.put('/api/maintenance/:id', authenticate, async (req, res) => {
 app.delete('/api/maintenance/:id', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
-        if (useMongoDB) {
-            const record = await Maintenance.findByIdAndDelete(id);
-            if (!record) {
-                return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-            }
-            res.json({ success: true });
-        } else {
-            const records = readData(MAINTENANCE_FILE);
-            const filtered = records.filter(r => r.id !== parseInt(id));
-            if (filtered.length === records.length) {
-                return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-            }
-            writeData(MAINTENANCE_FILE, filtered);
-            res.json({ success: true });
+        const record = await Maintenance.findByIdAndDelete(id);
+        if (!record) {
+            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
         }
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في حذف سجل الصيانة' });
     }
@@ -522,12 +403,8 @@ app.delete('/api/maintenance/:id', authenticate, async (req, res) => {
 // ---------- التذاكر ----------
 app.get('/api/tickets', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const tickets = await Ticket.find().sort({ createdAt: -1 });
-            res.json(tickets);
-        } else {
-            res.json(readData(TICKETS_FILE));
-        }
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
+        res.json(tickets);
     } catch (error) {
         res.status(500).json([]);
     }
@@ -535,35 +412,32 @@ app.get('/api/tickets', async (req, res) => {
 
 app.post('/api/tickets', authenticate, async (req, res) => {
     try {
-        if (useMongoDB) {
-            const ticket = new Ticket(req.body);
-            await ticket.save();
-            res.json({ success: true, ticket });
-        } else {
-            const tickets = readData(TICKETS_FILE);
-            const newTicket = {
-                id: tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1,
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            tickets.push(newTicket);
-            writeData(TICKETS_FILE, tickets);
-            res.json({ success: true, ticket: newTicket });
-        }
+        const ticket = new Ticket(req.body);
+        await ticket.save();
+        res.json({ success: true, ticket });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في إضافة التذكرة' });
+    }
+});
+
+app.put('/api/tickets/:id', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await Ticket.findByIdAndUpdate(id, req.body, { new: true });
+        if (!ticket) {
+            return res.status(404).json({ success: false, error: '❌ التذكرة غير موجودة' });
+        }
+        res.json({ success: true, ticket });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '❌ خطأ في تحديث التذكرة' });
     }
 });
 
 // ---------- المذكرات ----------
 app.get('/api/notes', async (req, res) => {
     try {
-        if (useMongoDB) {
-            const notes = await Note.find().sort({ createdAt: -1 });
-            res.json(notes);
-        } else {
-            res.json(readData(NOTES_FILE));
-        }
+        const notes = await Note.find().sort({ createdAt: -1 });
+        res.json(notes);
     } catch (error) {
         res.status(500).json([]);
     }
@@ -571,74 +445,37 @@ app.get('/api/notes', async (req, res) => {
 
 app.post('/api/notes', authenticate, async (req, res) => {
     try {
-        if (useMongoDB) {
-            const note = new Note(req.body);
-            await note.save();
-            res.json({ success: true, note });
-        } else {
-            const notes = readData(NOTES_FILE);
-            const newNote = {
-                id: notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1,
-                ...req.body,
-                createdAt: new Date().toISOString()
-            };
-            notes.push(newNote);
-            writeData(NOTES_FILE, notes);
-            res.json({ success: true, note: newNote });
-        }
+        const note = new Note(req.body);
+        await note.save();
+        res.json({ success: true, note });
     } catch (error) {
         res.status(500).json({ success: false, error: '❌ خطأ في إضافة المذكرة' });
     }
 });
 
-// ---------- المصادقة ----------
-app.post('/api/auth/login', async (req, res) => {
+app.put('/api/notes/:id', authenticate, async (req, res) => {
     try {
-        const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: '❌ البريد وكلمة المرور مطلوبة' });
+        const { id } = req.params;
+        const note = await Note.findByIdAndUpdate(id, req.body, { new: true });
+        if (!note) {
+            return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
         }
-        
-        let user;
-        if (useMongoDB) {
-            user = await User.findOne({ email });
-            if (!user) {
-                return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-            }
-            const isValid = await user.comparePassword(password);
-            if (!isValid) {
-                return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-            }
-            if (!user.isActive) {
-                return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
-            }
-            user.lastLogin = new Date();
-            await user.save();
-            
-            const token = generateToken(user);
-            const { password: _, ...userWithoutPassword } = user.toObject();
-            res.json({ success: true, token, user: userWithoutPassword });
-        } else {
-            const users = readData(USERS_FILE);
-            user = users.find(u => u.email === email);
-            if (!user) {
-                return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-            }
-            if (!bcrypt.compareSync(password, user.password)) {
-                return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-            }
-            if (!user.isActive) {
-                return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
-            }
-            
-            const token = generateToken(user);
-            const { password: _, ...userWithoutPassword } = user;
-            res.json({ success: true, token, user: userWithoutPassword });
-        }
+        res.json({ success: true, note });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في تسجيل الدخول' });
+        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المذكرة' });
+    }
+});
+
+app.delete('/api/notes/:id', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const note = await Note.findByIdAndDelete(id);
+        if (!note) {
+            return res.status(404).json({ success: false, error: '❌ المذكرة غير موجودة' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: '❌ خطأ في حذف المذكرة' });
     }
 });
 
@@ -648,11 +485,6 @@ app.post('/api/auth/login', async (req, res) => {
 
 async function initDefaultUsers() {
     try {
-        if (!useMongoDB) {
-            initDefaultUsersJSON();
-            return;
-        }
-        
         const count = await User.countDocuments();
         if (count === 0) {
             const defaultUsers = [
@@ -667,34 +499,15 @@ async function initDefaultUsers() {
                 await user.save();
             }
             console.log('✅ تم إنشاء المستخدمين الافتراضيين في MongoDB');
-            console.log('   admin / 123456 (مسؤول)');
-            console.log('   manager / 123456 (مشرف)');
-            console.log('   editor / 123456 (محرر)');
-            console.log('   viewer / 123456 (مشاهد)');
+            console.log('   👑 admin   / 123456 (مسؤول)');
+            console.log('   ⭐ manager / 123456 (مشرف)');
+            console.log('   ✏️ editor  / 123456 (محرر)');
+            console.log('   👀 viewer  / 123456 (مشاهد)');
+        } else {
+            console.log(`✅ يوجد ${count} مستخدمين في قاعدة البيانات`);
         }
     } catch (error) {
-        console.error('Error creating default users:', error);
-    }
-}
-
-function initDefaultUsersJSON() {
-    const users = readData(USERS_FILE);
-    if (users.length === 0) {
-        const salt = bcrypt.genSaltSync(10);
-        const hashedPassword = bcrypt.hashSync('123456', salt);
-        
-        const defaultUsers = [
-            { id: '1', name: 'مدير النظام', email: 'admin', password: hashedPassword, role: 'مسؤول', isActive: true, createdAt: new Date().toISOString() },
-            { id: '2', name: 'مدير العمليات', email: 'manager', password: hashedPassword, role: 'مشرف', isActive: true, createdAt: new Date().toISOString() },
-            { id: '3', name: 'محرر', email: 'editor', password: hashedPassword, role: 'محرر', isActive: true, createdAt: new Date().toISOString() },
-            { id: '4', name: 'مشاهد', email: 'viewer', password: hashedPassword, role: 'مشاهد', isActive: true, createdAt: new Date().toISOString() }
-        ];
-        writeData(USERS_FILE, defaultUsers);
-        console.log('✅ تم إنشاء المستخدمين الافتراضيين (JSON)');
-        console.log('   admin / 123456 (مسؤول)');
-        console.log('   manager / 123456 (مشرف)');
-        console.log('   editor / 123456 (محرر)');
-        console.log('   viewer / 123456 (مشاهد)');
+        console.error('❌ Error creating default users:', error);
     }
 }
 
@@ -732,6 +545,6 @@ app.listen(PORT, () => {
     console.log('   ✏️ editor  / 123456 (محرر)');
     console.log('   👀 viewer  / 123456 (مشاهد)');
     console.log('========================================');
-    console.log(`📊 قاعدة البيانات: ${useMongoDB ? 'MongoDB ✅' : 'JSON Files ⚠️'}`);
+    console.log('📊 قاعدة البيانات: MongoDB ✅');
     console.log('========================================');
 });
