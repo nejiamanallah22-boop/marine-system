@@ -1,13 +1,14 @@
 // public/js/app.js
 // ============================================================
-// 🤖 AI ASSISTANT - COMPLETE APPLICATION v6.5
+// 🤖 إضافة دالة المساعد الذكي إلى التطبيق الحالي
 // ============================================================
 
 console.log('✅ App loaded');
 
 // ============================================================
-// 🔧 AI CONFIGURATION
+// 🧠 AI ASSISTANT FUNCTIONS - تضاف إلى التطبيق الحالي
 // ============================================================
+
 const API_BASE = '/api/ai';
 let conversationId = null;
 let isProcessing = false;
@@ -16,104 +17,117 @@ let recognition = null;
 let lastResponse = null;
 
 // ============================================================
-// 🚀 DOM REFS - سيتم تعيينها بعد تحميل الصفحة
+// 💬 ASK AI - الدالة الرئيسية
 // ============================================================
-let chatBox, chatInput, sendBtn, micBtn, speakerBtn;
-let typingIndicator, voiceStatus, voiceStatusText, statusDot, statusText;
-
-// ============================================================
-// 🔧 UTILITY FUNCTIONS
-// ============================================================
-function getToken() {
-    return localStorage.getItem('authToken') || null;
-}
-
-function getHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-    const token = getToken();
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+async function askAI(message) {
+    const chatInput = document.getElementById('chatInput');
+    const chatBox = document.getElementById('chatBox');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingIndicator = document.getElementById('typingIndicator');
+    
+    if (!chatInput) {
+        console.error('❌ chatInput not found');
+        return;
     }
-    return headers;
-}
-
-function formatTime(date) {
-    return new Date(date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showTyping(show) {
-    if (typingIndicator) {
-        typingIndicator.classList.toggle('active', show);
-        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    
+    const question = message || chatInput.value.trim();
+    
+    if (!question) {
+        alert('❌ الرجاء كتابة سؤال');
+        return;
     }
-}
-
-function setOnlineStatus(online) {
-    if (statusDot && statusText) {
-        if (online) {
-            statusDot.className = 'status-dot';
-            statusText.textContent = 'متصل';
-        } else {
-            statusDot.className = 'status-dot offline';
-            statusText.textContent = 'غير متصل';
+    
+    if (isProcessing) {
+        alert('⏳ جاري معالجة طلب سابق...');
+        return;
+    }
+    
+    // إضافة رسالة المستخدم
+    addMessage('user', question, chatBox);
+    chatInput.value = '';
+    chatInput.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    
+    isProcessing = true;
+    showTyping(true, typingIndicator);
+    
+    try {
+        const token = localStorage.getItem('authToken') || null;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        
+        const response = await fetch(`${API_BASE}/ask`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                message: question,
+                conversationId: conversationId,
+                language: 'ar'
+            })
+        });
+        
+        showTyping(false, typingIndicator);
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error || `خطأ ${response.status}`);
         }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            conversationId = data.conversationId;
+            lastResponse = data.response;
+            addMessage('ai', data.response, chatBox);
+        } else {
+            throw new Error(data.error || 'حدث خطأ غير معروف');
+        }
+        
+    } catch (error) {
+        showTyping(false, typingIndicator);
+        console.error('❌ AI Error:', error);
+        addMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`, chatBox);
     }
-}
-
-function showToast(message, type = 'info') {
-    const existing = document.querySelector('.toast-notification');
-    if (existing) existing.remove();
     
-    const toast = document.createElement('div');
-    toast.className = `toast-notification ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    isProcessing = false;
+    chatInput.disabled = false;
+    if (sendBtn) sendBtn.disabled = false;
+    chatInput.focus();
 }
 
 // ============================================================
-// 💬 CHAT FUNCTIONS
+// 💬 ADD MESSAGE - إضافة رسالة إلى الشات
 // ============================================================
-function addMessage(role, content, timestamp = new Date()) {
+function addMessage(role, content, chatBox) {
     if (!chatBox) return;
     
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
     
     const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
+    const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
     
-    let formattedContent = escapeHtml(content);
-    formattedContent = formattedContent.replace(/\n/g, '<br>');
+    let formattedContent = content.replace(/\n/g, '<br>');
     
     messageDiv.innerHTML = `
         <div class="sender">${sender}</div>
         <div class="content">${formattedContent}</div>
-        <div class="time">${formatTime(timestamp)}</div>
+        <div class="time">${time}</div>
         ${role === 'ai' ? `
             <div class="actions">
-                <button class="copy-btn" onclick="copyMessage(this)">📋 نسخ</button>
-                <button class="speak-btn" onclick="speakTextFromBtn(this)">🔊 استماع</button>
+                <button onclick="copyMessage(this)">📋 نسخ</button>
+                <button onclick="speakTextFromBtn(this)">🔊 استماع</button>
             </div>
         ` : ''}
     `;
     
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
-    return messageDiv;
 }
 
+// ============================================================
+// 📋 COPY MESSAGE
+// ============================================================
 function copyMessage(btn) {
     const content = btn.closest('.message').querySelector('.content').textContent;
     navigator.clipboard.writeText(content).then(() => {
@@ -132,202 +146,26 @@ function copyMessage(btn) {
     });
 }
 
+// ============================================================
+// 🔊 SPEAK TEXT - نطق النص
+// ============================================================
 function speakTextFromBtn(btn) {
     const content = btn.closest('.message').querySelector('.content').textContent;
     speakText(content);
 }
 
-// ============================================================
-// 🎤 SPEECH RECOGNITION (Voice Input)
-// ============================================================
-function initSpeechRecognition() {
-    const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    
-    if (!hasSpeechRecognition) {
-        if (micBtn) {
-            micBtn.style.display = 'none';
-        }
-        return false;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-    
-    recognition.onstart = function() {
-        isListening = true;
-        if (micBtn) {
-            micBtn.classList.add('listening');
-            micBtn.textContent = '⏹️';
-        }
-        if (voiceStatus) {
-            voiceStatus.classList.add('active');
-            voiceStatusText.textContent = '🎤 جاري الاستماع... تحدث الآن';
-        }
-        if (chatInput) chatInput.placeholder = '🎤 استمع...';
-        showToast('🎤 جاري الاستماع...', 'info');
-    };
-    
-    recognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                if (chatInput) chatInput.value = transcript;
-                if (voiceStatusText) voiceStatusText.textContent = `✅ تم التعرف: "${transcript}"`;
-                setTimeout(() => {
-                    if (transcript.trim()) {
-                        askAI();
-                    }
-                }, 500);
-            } else {
-                if (chatInput) chatInput.value = transcript;
-                if (voiceStatusText) voiceStatusText.textContent = `✍️ ${transcript}`;
-            }
-        }
-    };
-    
-    recognition.onerror = function(event) {
-        console.warn('Voice error:', event.error);
-        if (event.error === 'not-allowed') {
-            showToast('❌ الرجاء السماح بالوصول إلى الميكروفون', 'error');
-        } else if (event.error === 'no-speech') {
-            showToast('⏳ لم يتم سماع صوت، حاول مرة أخرى', 'warning');
-        } else {
-            showToast(`⚠️ خطأ في الصوت: ${event.error}`, 'error');
-        }
-        stopVoiceInput();
-    };
-    
-    recognition.onend = function() {
-        stopVoiceInput();
-    };
-    
-    return true;
-}
-
-function toggleVoiceInput() {
-    if (!recognition) {
-        if (!initSpeechRecognition()) {
-            showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
-            return;
-        }
-    }
-    
-    if (isListening) {
-        stopVoiceInput();
-    } else {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(() => {
-                    startVoiceInput();
-                })
-                .catch(() => {
-                    showToast('❌ الرجاء السماح باستخدام الميكروفون', 'error');
-                });
-        } else {
-            startVoiceInput();
-        }
-    }
-}
-
-function startVoiceInput() {
-    if (!recognition) return;
-    try {
-        recognition.start();
-    } catch (e) {
-        if (e.message.includes('already started')) {
-            stopVoiceInput();
-            setTimeout(() => startVoiceInput(), 200);
-        } else {
-            console.error('Voice start error:', e);
-            showToast('⚠️ خطأ في تشغيل الميكروفون', 'error');
-        }
-    }
-}
-
-function stopVoiceInput() {
-    isListening = false;
-    if (micBtn) {
-        micBtn.classList.remove('listening');
-        micBtn.textContent = '🎤';
-    }
-    if (voiceStatus) {
-        voiceStatus.classList.remove('active');
-    }
-    if (chatInput) chatInput.placeholder = 'اكتب سؤالك هنا...';
-    if (recognition) {
-        try {
-            recognition.stop();
-        } catch (e) {}
-    }
-}
-
-// ============================================================
-// 🔊 SPEECH SYNTHESIS (Voice Output)
-// ============================================================
-let speechSynth = null;
-
-function initSpeechSynthesis() {
-    const hasSpeechSynthesis = 'speechSynthesis' in window;
-    if (!hasSpeechSynthesis) {
-        if (speakerBtn) {
-            speakerBtn.style.display = 'none';
-        }
-        return false;
-    }
-    speechSynth = window.speechSynthesis;
-    return true;
-}
-
 function speakText(text) {
-    if (!speechSynth) {
-        if (!initSpeechSynthesis()) {
-            showToast('❌ المتصفح لا يدعم النطق', 'error');
-            return;
-        }
+    if (!('speechSynthesis' in window)) {
+        alert('❌ المتصفح لا يدعم النطق');
+        return;
     }
     
-    speechSynth.cancel();
-    
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ar-SA';
     utterance.rate = 0.9;
     utterance.pitch = 1;
-    
-    const voices = speechSynth.getVoices();
-    const arabicVoice = voices.find(v => v.lang.includes('ar'));
-    if (arabicVoice) {
-        utterance.voice = arabicVoice;
-    }
-    
-    utterance.onstart = function() {
-        if (speakerBtn) {
-            speakerBtn.textContent = '⏹️';
-            speakerBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
-        }
-    };
-    
-    utterance.onend = function() {
-        if (speakerBtn) {
-            speakerBtn.textContent = '🔊';
-            speakerBtn.style.background = '';
-        }
-    };
-    
-    utterance.onerror = function(e) {
-        console.warn('Speech error:', e);
-        if (speakerBtn) {
-            speakerBtn.textContent = '🔊';
-            speakerBtn.style.background = '';
-        }
-        showToast('⚠️ خطأ في النطق', 'error');
-    };
-    
-    speechSynth.speak(utterance);
+    window.speechSynthesis.speak(utterance);
 }
 
 function speakLastResponse() {
@@ -336,6 +174,7 @@ function speakLastResponse() {
         return;
     }
     
+    const chatBox = document.getElementById('chatBox');
     if (chatBox) {
         const messages = chatBox.querySelectorAll('.message.ai');
         if (messages.length > 0) {
@@ -347,191 +186,203 @@ function speakLastResponse() {
             }
         }
     }
-    showToast('لا يوجد رد للاستماع', 'warning');
+    alert('لا يوجد رد للاستماع');
 }
 
 // ============================================================
-// 🤖 ASK AI - MAIN FUNCTION
+// 🎤 TOGGLE VOICE INPUT - تفعيل الميكروفون
 // ============================================================
-async function askAI(message) {
-    if (!chatInput) return;
+function toggleVoiceInput() {
+    const hasSpeechRecognition = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
     
-    const question = message || chatInput.value.trim();
-    
-    if (!question) {
-        showToast('❌ الرجاء كتابة سؤال', 'error');
+    if (!hasSpeechRecognition) {
+        alert('❌ المتصفح لا يدعم الميكروفون. استخدم Chrome.');
         return;
     }
     
-    if (isProcessing) {
-        showToast('⏳ جاري معالجة طلب سابق...', 'warning');
+    if (isListening) {
+        stopVoiceInput();
         return;
     }
     
-    // إضافة رسالة المستخدم
-    addMessage('user', question);
-    chatInput.value = '';
-    chatInput.disabled = true;
-    if (sendBtn) sendBtn.disabled = true;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = true;
     
-    isProcessing = true;
-    showTyping(true);
+    recognition.onstart = function() {
+        isListening = true;
+        const micBtn = document.getElementById('micBtn');
+        if (micBtn) {
+            micBtn.classList.add('listening');
+            micBtn.textContent = '⏹️';
+        }
+        const voiceStatus = document.getElementById('voiceStatus');
+        if (voiceStatus) {
+            voiceStatus.classList.add('active');
+            voiceStatus.innerHTML = '🎤 جاري الاستماع... تحدث الآن';
+        }
+        document.getElementById('chatInput').placeholder = '🎤 استمع...';
+    };
     
-    try {
-        console.log(`📤 إرسال: ${question}`);
-        
-        const response = await fetch(`${API_BASE}/ask`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({
-                message: question,
-                conversationId: conversationId,
-                language: 'ar'
-            })
-        });
-        
-        showTyping(false);
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            console.error('❌ HTTP Error:', response.status, error);
-            throw new Error(error.error || `خطأ ${response.status}`);
+    recognition.onresult = function(event) {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                document.getElementById('chatInput').value = transcript;
+                const voiceStatus = document.getElementById('voiceStatus');
+                if (voiceStatus) {
+                    voiceStatus.innerHTML = `✅ تم التعرف: "${transcript}"`;
+                }
+                setTimeout(() => {
+                    if (transcript.trim()) {
+                        askAI();
+                    }
+                }, 500);
+            } else {
+                document.getElementById('chatInput').value = transcript;
+                const voiceStatus = document.getElementById('voiceStatus');
+                if (voiceStatus) {
+                    voiceStatus.innerHTML = `✍️ ${transcript}`;
+                }
+            }
         }
-        
-        const data = await response.json();
-        console.log('✅ الرد:', data);
-        
-        if (data.success) {
-            conversationId = data.conversationId;
-            lastResponse = data.response;
-            addMessage('ai', data.response);
-            setOnlineStatus(true);
-        } else {
-            throw new Error(data.error || 'حدث خطأ غير معروف');
+    };
+    
+    recognition.onerror = function(event) {
+        console.warn('Voice error:', event.error);
+        if (event.error === 'not-allowed') {
+            alert('❌ الرجاء السماح بالوصول إلى الميكروفون');
+        } else if (event.error === 'no-speech') {
+            alert('⏳ لم يتم سماع صوت، حاول مرة أخرى');
         }
-        
-    } catch (error) {
-        showTyping(false);
-        setOnlineStatus(false);
-        console.error('❌ AI Error:', error);
-        addMessage('ai', `⚠️ عذراً، حدث خطأ: ${error.message}`);
+        stopVoiceInput();
+    };
+    
+    recognition.onend = function() {
+        stopVoiceInput();
+    };
+    
+    recognition.start();
+}
+
+function stopVoiceInput() {
+    isListening = false;
+    const micBtn = document.getElementById('micBtn');
+    if (micBtn) {
+        micBtn.classList.remove('listening');
+        micBtn.textContent = '🎤';
     }
-    
-    isProcessing = false;
-    chatInput.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    chatInput.focus();
+    const voiceStatus = document.getElementById('voiceStatus');
+    if (voiceStatus) {
+        voiceStatus.classList.remove('active');
+        voiceStatus.innerHTML = '';
+    }
+    document.getElementById('chatInput').placeholder = 'اكتب سؤالك هنا...';
+    if (recognition) {
+        try {
+            recognition.stop();
+        } catch (e) {}
+    }
+}
+
+// ============================================================
+// 🌀 TYPING INDICATOR
+// ============================================================
+function showTyping(show, indicator) {
+    if (!indicator) indicator = document.getElementById('typingIndicator');
+    if (indicator) {
+        indicator.classList.toggle('active', show);
+        const chatBox = document.getElementById('chatBox');
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+    }
 }
 
 // ============================================================
 // 🗑️ CLEAR CHAT
 // ============================================================
 function clearChat() {
-    if (chatBox) {
-        if (chatBox.querySelectorAll('.message').length === 0) return;
+    const chatBox = document.getElementById('chatBox');
+    if (!chatBox) return;
+    
+    if (chatBox.querySelectorAll('.message').length === 0) return;
+    
+    if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+        chatBox.innerHTML = '';
+        conversationId = null;
+        lastResponse = null;
         
-        if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-            chatBox.innerHTML = '';
-            conversationId = null;
-            lastResponse = null;
-            
-            addMessage('ai', 
-                '👋 مرحباً! تم مسح المحادثة.\n\n' +
-                '💬 اكتب سؤالك أو استخدم الأزرار السريعة!'
-            );
-            
-            showToast('🗑️ تم مسح المحادثة', 'info');
-        }
+        // إعادة رسالة الترحيب
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'message ai';
+        welcomeDiv.innerHTML = `
+            <div class="sender">🤖 المساعد الذكي</div>
+            <div class="content">👋 مرحباً! تم مسح المحادثة.<br><br>💬 اكتب سؤالك أو استخدم الأزرار السريعة!</div>
+            <div class="time">الآن</div>
+        `;
+        chatBox.appendChild(welcomeDiv);
+        
+        alert('🗑️ تم مسح المحادثة');
     }
 }
 
 // ============================================================
-// 🏥 HEALTH CHECK
+// 🏥 CHECK HEALTH
 // ============================================================
 async function checkHealth() {
     try {
         const response = await fetch(`${API_BASE}/health`);
         if (response.ok) {
             const data = await response.json();
-            setOnlineStatus(true);
-            console.log('✅ Server is healthy:', data);
-            if (data.gemini && data.gemini.key === '✅ مفعل') {
-                console.log('🤖 Gemini AI is ACTIVE!');
-            }
-        } else {
-            setOnlineStatus(false);
-            console.warn('⚠️ Server returned error:', response.status);
+            console.log('✅ Server healthy:', data);
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            if (statusDot) statusDot.className = 'status-dot';
+            if (statusText) statusText.textContent = 'متصل';
         }
     } catch (error) {
-        setOnlineStatus(false);
-        console.warn('⚠️ Cannot connect to server:', error.message);
+        console.warn('⚠️ Cannot connect to server');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        if (statusDot) statusDot.className = 'status-dot offline';
+        if (statusText) statusText.textContent = 'غير متصل';
     }
 }
 
 // ============================================================
-// 🚀 INITIALIZE AI ASSISTANT
+// 🚀 INITIALIZE
 // ============================================================
 function initAIAssistant() {
-    console.log('🤖 Initializing AI Assistant...');
-    
-    // تعيين DOM REFS
-    chatBox = document.getElementById('chatBox');
-    chatInput = document.getElementById('chatInput');
-    sendBtn = document.getElementById('sendBtn');
-    micBtn = document.getElementById('micBtn');
-    speakerBtn = document.getElementById('speakerBtn');
-    typingIndicator = document.getElementById('typingIndicator');
-    voiceStatus = document.getElementById('voiceStatus');
-    voiceStatusText = document.getElementById('voiceStatusText');
-    statusDot = document.getElementById('statusDot');
-    statusText = document.getElementById('statusText');
-    
-    // تهيئة الصوت
-    initSpeechRecognition();
-    initSpeechSynthesis();
-    
-    // تحميل الأصوات
-    if (speechSynth) {
-        speechSynth.getVoices();
-        speechSynth.onvoiceschanged = function() {
-            speechSynth.getVoices();
-        };
-    }
-    
-    // التحقق من الصحة
+    console.log('🤖 AI Assistant initializing...');
     checkHealth();
     
-    console.log('✅ AI Assistant initialized');
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            askAI();
+        }
+        if (e.key === 'Escape' && isListening) {
+            stopVoiceInput();
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'V') {
+            e.preventDefault();
+            toggleVoiceInput();
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            speakLastResponse();
+        }
+    });
+    
+    console.log('✅ AI Assistant ready!');
     console.log('📌 Functions: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
 }
 
 // ============================================================
-// ⚡ KEYBOARD SHORTCUTS (Global)
-// ============================================================
-document.addEventListener('keydown', function(e) {
-    // Ctrl+Enter لإرسال
-    if (e.ctrlKey && e.key === 'Enter') {
-        e.preventDefault();
-        askAI();
-    }
-    // Escape لإيقاف الميكروفون
-    if (e.key === 'Escape' && isListening) {
-        stopVoiceInput();
-    }
-    // Ctrl+Shift+V للصوت
-    if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-        e.preventDefault();
-        toggleVoiceInput();
-    }
-    // Ctrl+Shift+S للنطق
-    if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-        e.preventDefault();
-        speakLastResponse();
-    }
-});
-
-// ============================================================
-// 🔄 EXPOSE FUNCTIONS TO GLOBAL SCOPE (للوصول من HTML)
+// 🔄 EXPOSE FUNCTIONS TO GLOBAL
 // ============================================================
 window.askAI = askAI;
 window.toggleVoiceInput = toggleVoiceInput;
@@ -539,20 +390,20 @@ window.speakLastResponse = speakLastResponse;
 window.clearChat = clearChat;
 window.copyMessage = copyMessage;
 window.speakTextFromBtn = speakTextFromBtn;
+window.initAIAssistant = initAIAssistant;
 
 // ============================================================
 // 🧹 CLEANUP
 // ============================================================
 window.addEventListener('beforeunload', function() {
     if (recognition) {
-        try {
-            recognition.abort();
-        } catch (e) {}
+        try { recognition.abort(); } catch(e) {}
     }
-    if (speechSynth) {
-        speechSynth.cancel();
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
     }
 });
 
-console.log('🚀 AI Assistant v6.5 loaded successfully!');
-console.log('📌 Functions available: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
+console.log('✅ AI Assistant functions loaded successfully!');
+console.log('📌 استخدم admin / 123456 للدخول');
+console.log('👨‍💻 تم التطوير بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
