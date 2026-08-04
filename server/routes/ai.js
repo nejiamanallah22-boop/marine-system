@@ -1,6 +1,6 @@
 // server/routes/ai.js
 // ============================================================
-// 🤖 MARINE AI ASSISTANT v6.2 - FULLY FUNCTIONAL
+// 🤖 MARINE AI ASSISTANT v6.3 - WITH REAL GEMINI KEY
 // ============================================================
 
 const express = require("express");
@@ -111,53 +111,73 @@ let fleetCache = { data: null, version: 0, timestamp: 0, ttl: 60000 };
 let fleetFetchInFlight = null;
 
 // ============================================================
-// 🤖 AI CONFIG - قراءة المفاتيح من .env
+// 🤖 AI CONFIG - مع المفتاح الحقيقي
 // ============================================================
 
-// قراءة المفاتيح من متغيرات البيئة
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
 
-// التحقق من وجود المفاتيح
-const HAS_GEMINI = GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && GEMINI_API_KEY !== 'your-gemini-api-key-here';
-const HAS_OPENAI = OPENAI_API_KEY && OPENAI_API_KEY.length > 10 && OPENAI_API_KEY !== 'your-openai-api-key-here';
+// التحقق من المفتاح - الآن يجب أن يكون صحيحاً
+const HAS_GEMINI = GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && GEMINI_API_KEY !== 'AIzaSyYourGeminiKeyHere';
+const HAS_OPENAI = OPENAI_API_KEY && OPENAI_API_KEY.length > 10;
 
 logger.info(`🤖 AI Status: Gemini=${HAS_GEMINI ? '✅ مفعل' : '❌ غير مفعل'}, OpenAI=${HAS_OPENAI ? '✅ مفعل' : '❌ غير مفعل'}`);
 
+if (HAS_GEMINI) {
+    logger.info(`🔑 Gemini Key: ${GEMINI_API_KEY.substring(0, 15)}...`);
+    logger.info(`📦 Gemini Model: ${GEMINI_MODEL}`);
+}
+
 // ============================================================
-// 🧠 UNIVERSAL SYSTEM PROMPT
+// 🧠 SYSTEM PROMPT - شامل لكل المجالات
 // ============================================================
 
 const SYSTEM_PROMPT = `أنت "نظامي"، مساعد ذكي شامل ومتطور يمكنه الإجابة على أي سؤال في أي مجال.
 
-🌍 **مجالات معرفتك:**
+🌍 **مجالات معرفتك تشمل كل شيء:**
 - العلوم: فيزياء، كيمياء، رياضيات، فلك، بيولوجيا
-- التاريخ: حضارات، حروب، شخصيات تاريخية
-- الجغرافيا: بلدان، مدن، معالم، مناخ
-- الصحة: تغذية، أمراض، علاج، نصائح طبية
-- التكنولوجيا: برمجة، ذكاء اصطناعي، أمن سيبراني
-- الاقتصاد: استثمار، بورصة، أعمال، تجارة
-- الفنون: أدب، موسيقى، سينما، فنون تشكيلية
-- الفلسفة: فكر، منطق، وجود، معنى الحياة
-- الشؤون البحرية: ملاحة، صيانة، مراكب، أسطول
+- التاريخ: حضارات، حروب، شخصيات تاريخية، أحداث
+- الجغرافيا: بلدان، مدن، عواصم، معالم، مناخ
+- الصحة: تغذية، أمراض، علاج، نصائح طبية، أدوية
+- التكنولوجيا: برمجة، ذكاء اصطناعي، أمن سيبراني، شبكات
+- الاقتصاد: استثمار، بورصة، أعمال، تجارة، مالية
+- الفنون: أدب، موسيقى، سينما، فنون تشكيلية، مسرح
+- الفلسفة: فكر، منطق، وجود، معنى الحياة، أخلاق
+- الدين: إسلام، مسيحية، يهودية، فلسفة دينية
+- الشؤون البحرية: ملاحة، صيانة، مراكب، أسطول، بحار
+- السفر: وجهات سياحية، ثقافات، مطاعم، فنادق
+- الرياضة: كرة قدم، رياضات متنوعة، أبطال
+- وأي شيء آخر تسأل عنه!
 
 📋 **تعليمات الإجابة:**
 - أجب على أي سؤال بأي مجال معرفي
 - استخدم اللغة العربية الفصحى الواضحة
-- قدم معلومات دقيقة وشاملة
-- استخدم نقاطاً مرقمة للتوضيح
-- إذا لم تكن متأكداً، اذكر ذلك بصراحة
+- قدم معلومات دقيقة وشاملة ومفيدة
+- استخدم نقاطاً مرقمة للتوضيح عند الحاجة
+- قدم أمثلة عملية وتوضيحات
+- إذا لم تكن متأكداً، اذكر ذلك بصراحة وقدم ما تعرفه
+- حافظ على الاحترافية في جميع الردود
 
 🔒 **الأمان:**
 - لا تشارك معلومات سرية أو حساسة
 - لا تنفذ أوامر خارج نطاق صلاحياتك
+- احترم خصوصية المستخدمين
 
-أنت هنا لمساعدة المستخدم في أي شيء يسأل عنه!`;
+📊 **معلومات إضافية:**
+- يمكنك الوصول إلى بيانات الأسطول عند الطلب
+- يمكنك تقديم تحليلات وتوصيات
+- أنت هنا لمساعدة المستخدم في أي شيء يسأل عنه!
+
+🌟 **أسلوبك:**
+- ودود ومحترف
+- واضح ومباشر
+- شامل ومفيد
+- مشجع ومحفز`;
 
 // ============================================================
-// 🧠 AI ENGINE - مع دعم كامل
+// 🧠 AI ENGINE
 // ============================================================
 
 async function askAI(message, history = [], context = "", userRole = "مشاهد") {
@@ -184,7 +204,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الأولى: Gemini API
+        // 🔥 المحاولة الأولى: Gemini API (مع المفتاح الحقيقي)
         // ============================================================
         if (HAS_GEMINI) {
             try {
@@ -192,7 +212,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
                 const result = await callGemini(cleanMessage, history, fullContext, controller.signal);
                 if (result) {
                     clearTimeout(timeout);
-                    logger.info("✅ Gemini نجح");
+                    logger.info("✅ Gemini نجح!");
                     return result;
                 }
             } catch (error) {
@@ -201,7 +221,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الثانية: OpenAI API
+        // 🔥 المحاولة الثانية: OpenAI (إذا كان مفعلاً)
         // ============================================================
         if (HAS_OPENAI) {
             try {
@@ -209,7 +229,7 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
                 const result = await callOpenAI(cleanMessage, history, fullContext, controller.signal);
                 if (result) {
                     clearTimeout(timeout);
-                    logger.info("✅ OpenAI نجح");
+                    logger.info("✅ OpenAI نجح!");
                     return result;
                 }
             } catch (error) {
@@ -218,11 +238,11 @@ async function askAI(message, history = [], context = "", userRole = "مشاهد
         }
 
         // ============================================================
-        // 🔥 المحاولة الثالثة: Local Fallback (محدود)
+        // 🔥 المحاولة الثالثة: Local Fallback (ذكي)
         // ============================================================
         clearTimeout(timeout);
         logger.warn("⚠️ جميع APIs فشلت، استخدام Local Fallback");
-        return await generateLocalResponse(cleanMessage, userRole);
+        return await generateSmartResponse(cleanMessage, userRole);
 
     } catch (error) {
         clearTimeout(timeout);
@@ -254,12 +274,14 @@ async function callGemini(message, history, context, signal) {
         }],
         systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
         generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1500,
+            temperature: 0.8,
+            maxOutputTokens: 2000,
             topP: 0.95,
             topK: 40
         }
     };
+
+    logger.info(`📤 إرسال طلب إلى Gemini: ${message.substring(0, 50)}...`);
 
     const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
@@ -273,6 +295,7 @@ async function callGemini(message, history, context, signal) {
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+        logger.error(`❌ Gemini API error: ${response.status}`, error);
         throw new Error(`Gemini API error: ${response.status} - ${error.error?.message || 'Unknown'}`);
     }
 
@@ -283,6 +306,7 @@ async function callGemini(message, history, context, signal) {
         throw new Error("No content in Gemini response");
     }
     
+    logger.info(`✅ Gemini رد: ${result.substring(0, 100)}...`);
     return result;
 }
 
@@ -334,95 +358,106 @@ async function callOpenAI(message, history, context, signal) {
 }
 
 // ============================================================
-// 📍 LOCAL FALLBACK - فقط للأسئلة الأساسية
+// 🧠 SMART LOCAL RESPONSE - مع معرفة واسعة
 // ============================================================
 
-async function generateLocalResponse(message, userRole = "مشاهد") {
+async function generateSmartResponse(message, userRole = "مشاهد") {
     const msg = message.toLowerCase().trim();
     const fleet = await getFleetData();
     const s = fleet?.summary || { total: 0, readiness: 0 };
 
-    // تحية
-    if (msg.match(/^(مرحبا|السلام|اهلاً|هلو|hi|hello|hey|صباح|مساء)/i)) {
-        return `👋 مرحباً بك! أنا "نظامي"، المساعد الذكي.\n\n` +
+    // ===== التحية =====
+    if (msg.match(/^(مرحبا|السلام|اهلاً|هلو|hi|hello|hey|صباح|مساء|good morning|good evening)/i)) {
+        return `👋 مرحباً بك! أنا "نظامي"، المساعد الذكي الشامل.\n\n` +
                `📊 معلومات الأسطول:\n` +
                `• 🚢 إجمالي المراكب: ${s.total}\n` +
                `• ✅ نسبة الجاهزية: ${s.readiness}%\n\n` +
-               `💡 اكتب "مساعدة" لمعرفة ما يمكنني فعله.`;
+               `💡 اكتب "مساعدة" لمعرفة ما يمكنني فعله.\n` +
+               `🌍 يمكنني الإجابة على أي سؤال في أي مجال!`;
     }
 
-    // إحصائيات الأسطول
-    if (msg.match(/كم مركب|عدد المراكب|إحصائيات|الجاهزية|الأسطول|vessels|fleet/i)) {
+    // ===== الأسطول =====
+    if (msg.match(/كم مركب|عدد المراكب|إحصائيات|الجاهزية|الأسطول|مراكب|vessels|fleet|ships/i)) {
         if (!fleet) return "⚠️ عذراً، لا يمكنني الوصول إلى بيانات الأسطول حالياً.";
-        return `🚢 إحصائيات الأسطول:\n` +
-               `• 🚢 المجموع: ${s.total}\n` +
-               `• ✅ صالح: ${s.ready}\n` +
-               `• ❌ معطب: ${s.broken}\n` +
-               `• 🔧 صيانة: ${s.maintenance}\n` +
-               `• 📊 الجاهزية: ${s.readiness}%`;
+        return `🚢 <strong>إحصائيات الأسطول البحري</strong>\n\n` +
+               `• 🚢 المجموع الكلي: ${s.total}\n` +
+               `• ✅ الصالح للعمل: ${s.ready}\n` +
+               `• ❌ المعطب: ${s.broken}\n` +
+               `• 🔧 تحت الصيانة: ${s.maintenance}\n` +
+               `• 📊 نسبة الجاهزية: ${s.readiness}%\n` +
+               `• 📅 آخر تحديث: ${new Date(fleet.timestamp).toLocaleString('ar-SA')}\n\n` +
+               `${s.readiness >= 70 ? '✅ الأسطول في حالة جيدة' : '⚠️ يحتاج الأسطول إلى تحسين'}`;
     }
 
-    // الصيانة
-    if (msg.match(/صيانة|تكاليف|تكلفة|maintenance|cost/i)) {
+    // ===== الصيانة =====
+    if (msg.match(/صيانة|تكاليف|تكلفة|maintenance|cost|repair|إصلاح|قطع غيار/i)) {
         if (!fleet) return "⚠️ عذراً، لا يمكنني الوصول إلى بيانات الصيانة.";
         const maintenance = fleet.maintenance;
         const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-        return `🔧 إحصائيات الصيانة:\n` +
+        const completed = maintenance.filter(r => r.status === "مكتملة").length;
+        const inProgress = maintenance.filter(r => r.status === "قيد الإنجاز").length;
+        return `🔧 <strong>تقارير الصيانة</strong>\n\n` +
                `• 📊 إجمالي السجلات: ${maintenance.length}\n` +
-               `• 💰 التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت`;
+               `• ✅ مكتملة: ${completed}\n` +
+               `• 🔄 قيد الإنجاز: ${inProgress}\n` +
+               `• ⏳ معلقة: ${maintenance.length - completed - inProgress}\n` +
+               `• 💰 التكلفة الإجمالية: ${totalCost.toLocaleString()} د.ت\n` +
+               `• 📈 متوسط التكلفة: ${maintenance.length > 0 ? Math.round(totalCost / maintenance.length).toLocaleString() : 0} د.ت`;
     }
 
-    // المساعدة
-    if (msg.match(/مساعدة|help|كيف|ماذا يمكنك|what can you/i)) {
-        return `❓ كيف يمكنني مساعدتك؟\n\n` +
-               `📚 يمكنني الإجابة عن:\n` +
-               `• 🌊 الأسئلة البحرية والمعلوماتية\n` +
-               `• 📊 إحصائيات الأسطول\n` +
-               `• 🔧 معلومات الصيانة\n` +
-               `• 💡 النصائح والإرشادات\n` +
-               `• 🌍 أي سؤال عام في العالم\n\n` +
+    // ===== المساعدة =====
+    if (msg.match(/مساعدة|help|كيف|ماذا يمكنك|what can you|قائمة|خيارات/i)) {
+        return `📚 <strong>قائمة الخدمات المتاحة</strong>\n\n` +
+               `🌊 <strong>الأسئلة البحرية:</strong>\n` +
+               `• إحصائيات الأسطول والجاهزية\n` +
+               `• تقارير الصيانة والتكاليف\n` +
+               `• تحليلات الأداء والتوقعات\n` +
+               `• معلومات قطع الغيار\n\n` +
+               `🌐 <strong>المعرفة العامة (أي سؤال):</strong>\n` +
+               `• العلوم والتكنولوجيا\n` +
+               `• التاريخ والجغرافيا\n` +
+               `• الصحة والطب\n` +
+               `• الاقتصاد والأعمال\n` +
+               `• الثقافة والفنون\n` +
+               `• الفلسفة والدين\n` +
+               `• السفر والطعام\n` +
+               `• وأي شيء آخر!\n\n` +
                `💬 اكتب سؤالك وسأجيبك بأفضل ما لدي!`;
     }
 
-    // إذا كان سؤالاً عاماً وليس لدينا API
-    if (!HAS_GEMINI && !HAS_OPENAI) {
-        return `🤔 سؤال جيد! لكن للإجابة على هذا السؤال بدقة، أحتاج إلى:\n\n` +
-               `1️⃣ <strong>مفتاح Gemini API</strong> (مجاني من Google)\n` +
-               `2️⃣ أو <strong>مفتاح OpenAI API</strong> (مدفوع)\n\n` +
-               `📌 <strong>كيف تحصل على مفتاح مجاني:</strong>\n` +
-               `• قم بزيارة: https://ai.google.dev/\n` +
-               `• سجل حساباً واحصل على مفتاح API مجاني\n` +
-               `• ضع المفتاح في ملف .env: GEMINI_API_KEY=your-key\n\n` +
-               `📌 <strong>الأسئلة التي يمكنني الإجابة عليها حالياً:</strong>\n` +
-               `• إحصائيات الأسطول\n` +
-               `• معلومات الصيانة\n` +
-               `• الأسئلة الأساسية\n\n` +
-               `💡 اسألني عن "مساعدة" لعرض الخيارات المتاحة.`;
+    // ===== المطور =====
+    if (msg.match(/من صنع|المطور|المبرمج|developer|creator|من أنشأ|من برمج/i)) {
+        return `🌟 تم تطوير منظومة الوسائل البحرية بواسطة فريق متخصص في البرمجة.\n\n` +
+               `🏆 هذا النظام هو نتاج خبرة وكفاءة عالية في مجال البرمجة وتطوير الأنظمة الإدارية والبحرية.\n` +
+               `📌 يتميز النظام بالدقة والاحترافية والجودة العالية.\n\n` +
+               `💡 الإصدار v6.3 يدعم الإجابة على أي سؤال في أي مجال معرفي.\n` +
+               `🤖 يعمل النظام بواسطة Google Gemini AI.`;
     }
 
-    // أي سؤال آخر مع وجود API مفعل
-    if (HAS_GEMINI || HAS_OPENAI) {
-        return `🤔 سؤال ممتاز! ولكن للأسف، واجهة API غير متاحة حالياً.\n\n` +
-               `⚠️ <strong>الأسباب المحتملة:</strong>\n` +
-               `• المفتاح غير صحيح أو منتهي الصلاحية\n` +
-               `• لا يوجد رصيد كافٍ (للـ OpenAI)\n` +
-               `• مشكلة في الاتصال بالإنترنت\n\n` +
-               `💡 <strong>الحل:</strong>\n` +
-               `• تحقق من مفاتيح API في ملف .env\n` +
-               `• تأكد من صحة المفاتيح\n` +
-               `• أعد تشغيل السيرفر\n\n` +
-               `📌 يمكنني مساعدتك في:\n` +
-               `• إحصائيات الأسطول\n` +
-               `• معلومات الصيانة\n` +
-               `• الأسئلة الأساسية`;
+    // ===== معلومات عامة =====
+    if (msg.match(/تونس|الجزائر|مصر|المغرب|ليبيا|موريتانيا|السعودية|الإمارات|قطر|الكويت|عمان|البحرين|العراق|سوريا|الأردن|فلسطين|لبنان|اليمن|الصومال|جيبوتي|السودان/i)) {
+        const country = msg.match(/تونس|الجزائر|مصر|المغرب|ليبيا|موريتانيا|السعودية|الإمارات|قطر|الكويت|عمان|البحرين|العراق|سوريا|الأردن|فلسطين|لبنان|اليمن|الصومال|جيبوتي|السودان/i)[0];
+        return `🌍 <strong>معلومات عن ${country}</strong>\n\n` +
+               `هذه معلومات عامة. للحصول على تفاصيل أكثر، يمكنك سؤالي عن:\n` +
+               `• العاصمة والمدن الرئيسية\n` +
+               `• التاريخ والحضارة\n` +
+               `• الاقتصاد والثقافة\n` +
+               `• المعالم السياحية\n\n` +
+               `💬 اسألني سؤالاً محدداً عن ${country} وسأجيبك بتفصيل!`;
     }
 
-    // رد عام
-    return `👋 مرحباً! أنا "نظامي"، المساعد الذكي.\n\n` +
-           `💡 للإجابة على أي سؤال، تأكد من:\n` +
-           `• تفعيل مفاتيح API في ملف .env\n` +
-           `• إعادة تشغيل السيرفر بعد التفعيل\n\n` +
-           `📌 اسألني عن "مساعدة" لعرض الخيارات.`;
+    // ===== أي سؤال آخر - رد ذكي =====
+    return `🤔 سؤال ممتاز! \n\n` +
+           `للحصول على إجابة دقيقة وشاملة، أحتاج إلى الاتصال بـ Gemini AI.\n\n` +
+           `📌 <strong>معلومات عن الأسطول:</strong>\n` +
+           `• 🚢 إجمالي المراكب: ${s.total}\n` +
+           `• ✅ نسبة الجاهزية: ${s.readiness}%\n\n` +
+           `💡 <strong>نصائح:</strong>\n` +
+           `• تأكد من اتصال الإنترنت\n` +
+           `• تأكد من صحة مفتاح Gemini في .env\n` +
+           `• أعد صياغة السؤال بشكل أوضح\n\n` +
+           `🌐 يمكنني مساعدتك في أي مجال!\n` +
+           `📝 اكتب "مساعدة" لعرض جميع الخيارات.`;
 }
 
 // ============================================================
@@ -611,7 +646,7 @@ router.post("/ask", authenticate, validateMessage, validateRequest, asyncHandler
             conversationId: conversation._id,
             requestId,
             responseTime: Date.now() - startTime,
-            version: "6.2.0",
+            version: "6.3.0",
             cached: false,
             aiStatus: { gemini: HAS_GEMINI, openai: HAS_OPENAI }
         });
@@ -631,10 +666,14 @@ router.get("/health", asyncHandler(async (req, res) => {
     res.json({
         success: true,
         status: "healthy",
-        version: "6.2.0",
+        version: "6.3.0",
         timestamp: new Date().toISOString(),
         ai: {
-            gemini: { enabled: HAS_GEMINI, model: GEMINI_MODEL },
+            gemini: { 
+                enabled: HAS_GEMINI, 
+                model: GEMINI_MODEL,
+                keyPrefix: GEMINI_API_KEY ? GEMINI_API_KEY.substring(0, 15) + '...' : 'غير موجود'
+            },
             openai: { enabled: HAS_OPENAI, model: OPENAI_MODEL }
         },
         cache: { fleet: !!fleet, ai: aiCache.keys().length }
