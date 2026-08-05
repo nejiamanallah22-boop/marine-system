@@ -35,7 +35,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_sy
   })
   .catch(err => console.error('❌ MongoDB connection error:', err.message));
 
-// ========== تعريف النماذج (مرة واحدة فقط) ==========
+// ========== تعريف النماذج ==========
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -94,7 +94,6 @@ const MessageSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
-// ========== منع إعادة تعريف النماذج ==========
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
 const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance', MaintenanceSchema);
@@ -104,10 +103,6 @@ const Message = mongoose.models.Message || mongoose.model('Message', MessageSche
 // ========== دوال المصادقة ==========
 function generateToken(user) {
   return jwt.sign({ id: user._id, email: user.email, role: user.role, region: user.region || '' }, JWT_SECRET, { expiresIn: '7d' });
-}
-
-function verifyToken(token) {
-  try { return jwt.verify(token, JWT_SECRET); } catch { return null; }
 }
 
 async function authenticate(req, res, next) {
@@ -121,13 +116,14 @@ async function authenticate(req, res, next) {
     req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
     return next();
   }
-  const decoded = verifyToken(token);
-  if (!decoded) {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
     req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
-    return next();
+    next();
   }
-  req.user = decoded;
-  next();
 }
 
 // ========== API Routes ==========
@@ -169,12 +165,15 @@ app.get('/api/maintenance', authenticate, async (req, res) => {
   }
 });
 
-// ========== AI Routes (المباشر) ==========
+// ========== 🤖 AI Routes ==========
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+console.log(`🔑 Gemini API Key: ${GEMINI_API_KEY ? '✅ موجود' : '❌ غير موجود'}`);
 
 const aiRouter = express.Router();
 
-// ذاكرة مؤقتة للمحادثات
+// ذاكرة المحادثات
 const conversationMemory = {};
 
 aiRouter.post('/ask', async (req, res) => {
@@ -184,15 +183,20 @@ aiRouter.post('/ask', async (req, res) => {
     
     console.log(`📤 سؤال: ${message}`);
     
-    // محاولة استخدام Gemini إذا كان المفتاح موجوداً
     let response = null;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     
+    // ✅ محاولة استخدام Gemini
     if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10) {
       try {
         const { GoogleGenerativeAI } = require('@google/generative-ai');
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ 
+          model: "gemini-2.0-flash-exp",
+          generationConfig: {
+            temperature: 0.8,
+            maxOutputTokens: 2000,
+          }
+        });
         
         const chat = model.startChat({
           history: conversationId && conversationMemory[conversationId] ? conversationMemory[conversationId] : []
@@ -202,48 +206,48 @@ aiRouter.post('/ask', async (req, res) => {
         response = result.response.text();
         
         // حفظ المحادثة
-        if (conversationId) {
+        if (conversationId && response) {
           if (!conversationMemory[conversationId]) conversationMemory[conversationId] = [];
           conversationMemory[conversationId].push({ role: 'user', parts: [{ text: message }] });
           conversationMemory[conversationId].push({ role: 'model', parts: [{ text: response }] });
-          // تحديد حجم الذاكرة
           if (conversationMemory[conversationId].length > 20) {
             conversationMemory[conversationId] = conversationMemory[conversationId].slice(-20);
           }
         }
         
-        console.log(`✅ رد Gemini: ${response.substring(0, 50)}...`);
+        console.log(`✅ Gemini رد: ${response.substring(0, 50)}...`);
       } catch (error) {
         console.warn('⚠️ Gemini error:', error.message);
       }
     }
     
-    // إذا فشل Gemini، استخدم الردود المحلية
+    // ✅ إذا فشل Gemini، استخدم الردود المحلية الذكية
     if (!response) {
       const msg = message.toLowerCase();
-      if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-        response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
-      } else if (msg.includes('تونس') || msg.includes('عاصمة')) {
-        response = `🇹🇳 **معلومات عن تونس**\n\n• العاصمة: مدينة تونس\n• اللغة الرسمية: العربية\n• العملة: الدينار التونسي (TND)\n• المساحة: 163,610 كم²\n• عدد السكان: ~12 مليون نسمة\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت، قابس`;
+      
+      // الأسئلة الشائعة
+      if (msg.includes('تونس') || msg.includes('اين تونس')) {
+        response = `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
       } else if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
-        response = `🧠 **الذكاء الاصطناعي**\n\nالذكاء الاصطناعي هو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل المساعدات الصوتية)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، Siri، Alexa`;
+        response = `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
+      } else if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
+        response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
       } else if (msg.includes('مساعدة') || msg.includes('help')) {
-        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول (تونس، مصر، السعودية...)\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة وتطوير البرمجيات\n• التاريخ والجغرافيا\n• الصحة والطب\n• وأي شيء آخر!\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
+        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
       } else if (msg.includes('برمجة') || msg.includes('كود')) {
-        response = `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n• PHP - تطوير الويب الخلفي\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
+        response = `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
       } else {
-        response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
+        response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
       }
     }
     
-    // إنشاء معرف محادثة جديد إذا لم يكن موجوداً
     const newConversationId = conversationId || 'conv_' + Date.now().toString(36);
     
     res.json({
       success: true,
       response: response,
       conversationId: newConversationId,
-      version: "23.0.0-simple"
+      version: "23.0.0"
     });
   } catch (error) {
     console.error('❌ AI Error:', error);
@@ -259,11 +263,11 @@ aiRouter.get('/health', (req, res) => {
     success: true,
     status: "healthy",
     version: "23.0.0",
+    gemini: GEMINI_API_KEY ? "✅ مفعل" : "❌ غير مفعل",
     timestamp: new Date().toISOString()
   });
 });
 
-// استخدام مسار AI مباشرة
 app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
@@ -281,7 +285,7 @@ app.get('/pages/:page', (req, res) => {
   }
 });
 
-// ========== Init Default Users ==========
+// ========== Init Users ==========
 async function initDefaultUsers() {
   try {
     const count = await User.countDocuments();
@@ -311,7 +315,7 @@ app.listen(PORT, () => {
   console.log('🚀 نظام إدارة الأسطول البحري v23');
   console.log('========================================');
   console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
-  console.log(`✅ البيئة: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`✅ Gemini: ${GEMINI_API_KEY ? '✅ مفعل' : '❌ غير مفعل'}`);
   console.log('========================================');
   console.log('📝 حسابات الدخول:');
   console.log('   👑 admin   / 123456 (مسؤول كامل)');
