@@ -1,364 +1,471 @@
 // public/js/app.js
+// ============================================================
+// 🤖 AI ASSISTANT - MAIN APPLICATION v23
+// ============================================================
+
 console.log('✅ App loaded');
 
 // ============================================================
-// تهيئة التطبيق
+// 🔧 CONFIGURATION
 // ============================================================
-
-document.addEventListener('DOMContentLoaded', function() {
-    const loginOverlay = document.getElementById('loginOverlay');
-    const mainApp = document.getElementById('mainApp');
-    
-    if (loginOverlay) loginOverlay.style.display = 'flex';
-    if (mainApp) mainApp.style.display = 'none';
-    
-    localStorage.clear();
-    
-    const username = document.getElementById('username');
-    const password = document.getElementById('password');
-    if (username) username.value = '';
-    if (password) password.value = '';
-    
-    if (password) {
-        password.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                doLogin();
-            }
-        });
-    }
-    if (username) {
-        username.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                if (password) password.focus();
-            }
-        });
-    }
-});
+const API_BASE = '/api/ai';
+let conversationId = null;
+let isProcessing = false;
+let isListening = false;
+let recognition = null;
+let lastResponse = null;
 
 // ============================================================
-// دوال تحميل الصفحات
+// 🚀 DOM REFS
 // ============================================================
+const chatBox = document.getElementById('chatBox');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
+const speakerBtn = document.getElementById('speakerBtn');
+const typingIndicator = document.getElementById('typingIndicator');
+const voiceStatus = document.getElementById('voiceStatus');
+const voiceStatusText = document.getElementById('voiceStatusText');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
 
-function loadPage(pageName) {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-    document.querySelectorAll('.page-content').forEach(el => el.remove());
-    
-    fetch(`/pages/${pageName}.html`)
-        .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
-            return res.text();
-        })
-        .then(html => {
-            const div = document.createElement('div');
-            div.className = 'page-content';
-            div.id = 'page-' + pageName;
-            div.innerHTML = html;
-            container.appendChild(div);
-            
-            setTimeout(() => {
-                initPage(pageName);
-            }, 100);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#f87171;">
-                    ❌ خطأ في تحميل الصفحة: ${pageName}
-                    <br><small>${err.message}</small>
-                </div>
-            `;
-        });
+// ============================================================
+// 🔧 UTILITY FUNCTIONS
+// ============================================================
+function getToken() {
+    return localStorage.getItem('authToken') || null;
 }
 
-function initPage(pageName) {
-    console.log('📄 Initializing page:', pageName);
-    switch(pageName) {
-        case 'dashboard': 
-            loadDashboard(); 
-            break;
-        case 'fleet': 
-            loadVessels(); 
-            break;
-        case 'maintenance': 
-            loadMaintenance(); 
-            break;
-        case 'efficiency': 
-            loadVessels(); 
-            break;
-        case 'support': 
-            loadTickets(); 
-            break;
-        case 'tracking': 
-            initTrackingPage(); 
-            break;
-        case 'map': 
-            setTimeout(initMap, 100); 
-            break;
-        case 'users': 
-            loadUsers(); 
-            break;
-        case 'notes': 
-            loadNotes(); 
-            break;
-        case 'sessions': 
-            loadSessions(); 
-            startTrackingAutoUpdate(); 
-            setTimeout(function() {
-                initUserMap();
-                startMapAutoRefresh();
-            }, 800);
-            break;
-        case 'ai-assistant': 
-            initAIAssistant(); 
-            break;
-        default: 
-            console.log('⚠️ Unknown page:', pageName);
+function getHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = getToken();
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
     }
+    return headers;
 }
 
-function showPage(pageName) {
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    const btns = document.querySelectorAll('.nav-btn');
-    const pageMap = {
-        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 
-        'sessions': 9, 'ai-assistant': 10
-    };
-    if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
-        btns[pageMap[pageName]].classList.add('active');
-    }
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar && window.innerWidth <= 992) {
-        sidebar.classList.remove('open');
-    }
-    loadPage(pageName);
+function formatTime(date) {
+    return new Date(date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
 }
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.toggle('open');
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-function refreshAllPages() {
-    const currentPage = document.querySelector('.page-content');
-    if (currentPage) {
-        const pageName = currentPage.id.replace('page-', '');
-        loadPage(pageName);
+function showTyping(show) {
+    typingIndicator.classList.toggle('active', show);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function setOnline(online) {
+    if (online) {
+        statusDot.className = 'dot';
+        statusText.textContent = 'متصل';
     } else {
-        loadPage('dashboard');
-    }
-    showAlert('✅ تم تحديث الصفحة', 'success');
-}
-
-function initTrackingPage() {
-    if (document.getElementById('page-tracking')) {
-        if (typeof initTrackingMap === 'function') {
-            setTimeout(initTrackingMap, 300);
-        }
-        if (typeof initTrackingSocket === 'function') {
-            setTimeout(initTrackingSocket, 500);
-        }
-        if (typeof startContinuousTracking === 'function') {
-            setTimeout(startContinuousTracking, 1000);
-        }
+        statusDot.className = 'dot offline';
+        statusText.textContent = 'غير متصل';
     }
 }
 
-function initMap() {
-    console.log('🗺️ Initializing map...');
-}
-
-// ============================================================
-// تحميل البيانات
-// ============================================================
-
-function loadAllData() {
-    loadVessels();
-    loadMaintenance();
-    loadTickets();
-    loadNotes();
-    loadUsers();
-}
-
-function renderAllTables() {
-    renderMainTable();
-    renderMaintenanceTables();
-    updateMaintenanceVessels();
-    renderEfficiency();
-    if (document.getElementById('page-dashboard')) {
-        if (typeof loadDashboard === 'function') {
-            setTimeout(loadDashboard, 100);
-        }
-    }
-}
-
-// ============================================================
-// دوال تسجيل الدخول
-// ============================================================
-
-function doLogin() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const loginError = document.getElementById('loginError');
-    
-    if (!username || !password) {
-        if (loginError) {
-            loginError.textContent = '❌ الرجاء إدخال اسم المستخدم وكلمة المرور';
-            loginError.style.display = 'block';
-        }
-        return;
-    }
-    
-    // حسابات تجريبية
-    const validUsers = {
-        'admin': { password: '123456', role: 'مسؤول', name: 'مدير النظام' },
-        'north': { password: '123456', role: 'محرر إقليمي', name: 'محرر الشمال' },
-        'coast': { password: '123456', role: 'محرر إقليمي', name: 'محرر الساحل' },
-        'center': { password: '123456', role: 'محرر إقليمي', name: 'محرر الوسط' },
-        'south': { password: '123456', role: 'محرر إقليمي', name: 'محرر الجنوب' },
-        'viewer': { password: '123456', role: 'مشاهد', name: 'مشاهد' }
-    };
-    
-    if (validUsers[username] && validUsers[username].password === password) {
-        const user = validUsers[username];
-        localStorage.setItem('authToken', 'demo-token-' + username);
-        localStorage.setItem('user', JSON.stringify({ 
-            username: username, 
-            role: user.role, 
-            name: user.name 
-        }));
-        
-        const loginOverlay = document.getElementById('loginOverlay');
-        const mainApp = document.getElementById('mainApp');
-        if (loginOverlay) loginOverlay.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'block';
-        
-        // تحميل الصفحة الرئيسية
-        loadPage('dashboard');
-        
-        // تحديث اسم المستخدم في الواجهة
-        const userNameDisplay = document.getElementById('userNameDisplay');
-        if (userNameDisplay) userNameDisplay.textContent = user.name + ' (' + user.role + ')';
-        
-        // إظهار أزرار حسب الصلاحيات
-        updatePermissions(user.role);
-        
-        if (loginError) loginError.style.display = 'none';
-    } else {
-        if (loginError) {
-            loginError.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
-            loginError.style.display = 'block';
-        }
-    }
-}
-
-function updatePermissions(role) {
-    const adminButtons = document.querySelectorAll('.admin-only');
-    const editorButtons = document.querySelectorAll('.editor-only');
-    const techButtons = document.querySelectorAll('.tech-only');
-    
-    if (role === 'مسؤول') {
-        adminButtons.forEach(el => el.style.display = '');
-        editorButtons.forEach(el => el.style.display = '');
-        techButtons.forEach(el => el.style.display = '');
-    } else if (role === 'محرر إقليمي') {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = '');
-        techButtons.forEach(el => el.style.display = '');
-    } else if (role === 'فني صيانة') {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = 'none');
-        techButtons.forEach(el => el.style.display = '');
-    } else {
-        adminButtons.forEach(el => el.style.display = 'none');
-        editorButtons.forEach(el => el.style.display = 'none');
-        techButtons.forEach(el => el.style.display = 'none');
-    }
-}
-
-function logout() {
-    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-// ============================================================
-// دوال عرض التنبيهات
-// ============================================================
-
-function showAlert(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-    alertDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 12px 24px;
-        border-radius: 8px;
-        z-index: 9999;
-        font-family: 'Cairo', sans-serif;
-        font-size: 14px;
-        background: ${type === 'success' ? 'rgba(74,222,128,0.15)' : 'rgba(96,165,250,0.15)'};
-        border: 1px solid ${type === 'success' ? 'rgba(74,222,128,0.2)' : 'rgba(96,165,250,0.2)'};
-        color: ${type === 'success' ? '#4ade80' : '#60a5fa'};
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    `;
-    document.body.appendChild(alertDiv);
-    
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
     setTimeout(() => {
-        alertDiv.style.opacity = '0';
-        alertDiv.style.transition = 'opacity 0.3s';
-        setTimeout(() => alertDiv.remove(), 300);
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
 // ============================================================
-// دوال المساعد الذكي (AI Assistant)
+// 💬 CHAT FUNCTIONS
 // ============================================================
+function addMessage(role, content, timestamp = new Date()) {
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
+    let formatted = escapeHtml(content).replace(/\n/g, '<br>');
+    div.innerHTML = `
+        <div class="sender">${sender}</div>
+        <div class="content">${formatted}</div>
+        <div class="time">${formatTime(timestamp)}</div>
+        ${role === 'ai' ? `
+            <div class="actions">
+                <button onclick="copyMessage(this)">📋 نسخ</button>
+                <button onclick="speakTextFromBtn(this)">🔊 استماع</button>
+            </div>
+        ` : ''}
+    `;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
-function initAIAssistant() {
-    console.log('🤖 Initializing AI Assistant...');
-    
-    // إضافة مستمع لأزرار المساعد
-    const sendBtn = document.getElementById('sendBtn');
-    const chatInput = document.getElementById('chatInput');
-    
-    if (sendBtn) {
-        sendBtn.addEventListener('click', function() {
-            askAI();
-        });
-    }
-    
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                askAI();
-            }
-        });
-    }
-    
-    // تحميل رسالة الترحيب
-    const chatBox = document.getElementById('chatBox');
-    if (chatBox && chatBox.children.length === 0) {
-        addAIMessage('ai', '👋 مرحباً! أنا المساعد الذكي. كيف يمكنني مساعدتك؟');
-    }
-    
-    console.log('✅ AI Assistant ready!');
+function copyMessage(btn) {
+    const content = btn.closest('.message').querySelector('.content').textContent;
+    navigator.clipboard.writeText(content).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✅ تم النسخ';
+        setTimeout(() => btn.textContent = orig, 1500);
+    }).catch(() => {
+        const range = document.createRange();
+        range.selectNode(btn.closest('.message').querySelector('.content'));
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        const orig = btn.textContent;
+        btn.textContent = '✅ تم النسخ';
+        setTimeout(() => btn.textContent = orig, 1500);
+    });
+}
+
+function speakTextFromBtn(btn) {
+    const content = btn.closest('.message').querySelector('.content').textContent;
+    speakText(content);
 }
 
 // ============================================================
-// تشغيل التطبيق
+// 🎤 VOICE INPUT
 // ============================================================
+const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+const hasSynth = 'speechSynthesis' in window;
 
-console.log('✅ تم تحميل التطبيق بالكامل');
-console.log('📝 استخدم admin / 123456 للدخول');
-console.log('👨‍💻 تم تطوير هذا النظام بواسطة: المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي');
-console.log('🗺️ خريطة تتبع المستخدمين بالساتلايت جاهزة!');
-console.log('🔔 نظام الإشعارات يعمل!');
-console.log('📂 ميزة استيراد الملفات (Excel/CSV/PDF) جاهزة!');
-console.log('🤖 ميزة المساعد الذكي (AI) جاهزة!');
+console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
+console.log('🔊 Speech Synthesis:', hasSynth ? '✅' : '❌');
+
+if (!hasSpeech) {
+    micBtn.className = 'btn btn-mic unsupported';
+    micBtn.title = 'المتصفح لا يدعم الميكروفون';
+}
+
+if (!hasSynth) {
+    speakerBtn.className = 'btn btn-speaker unsupported';
+    speakerBtn.title = 'المتصفح لا يدعم النطق';
+}
+
+function initSpeech() {
+    if (!hasSpeech) return false;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onstart = function() {
+        isListening = true;
+        micBtn.classList.add('listening');
+        micBtn.textContent = '⏹️';
+        voiceStatus.classList.add('active');
+        voiceStatusText.textContent = '🎤 جاري الاستماع...';
+        chatInput.placeholder = '🎤 استمع...';
+        showToast('🎤 جاري الاستماع...', 'info');
+    };
+
+    recognition.onresult = function(event) {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                chatInput.value = transcript;
+                voiceStatusText.textContent = '✅ تم التعرف: "' + transcript + '"';
+                setTimeout(() => {
+                    if (transcript.trim()) askAI();
+                }, 500);
+            } else {
+                chatInput.value = transcript;
+                voiceStatusText.textContent = '✍️ ' + transcript;
+            }
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.warn('Voice error:', event.error);
+        if (event.error === 'not-allowed') {
+            showToast('❌ الرجاء السماح بالميكروفون', 'error');
+        } else if (event.error === 'no-speech') {
+            showToast('⏳ لم يتم سماع صوت', 'warning');
+        }
+        stopVoice();
+    };
+
+    recognition.onend = function() {
+        stopVoice();
+    };
+
+    return true;
+}
+
+function toggleVoice() {
+    if (!recognition) {
+        if (!initSpeech()) {
+            showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
+            return;
+        }
+    }
+    if (isListening) {
+        stopVoice();
+    } else {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => startVoice())
+                .catch(() => showToast('❌ الرجاء السماح بالميكروفون', 'error'));
+        } else {
+            startVoice();
+        }
+    }
+}
+
+function startVoice() {
+    if (!recognition) return;
+    try { recognition.start(); } catch (e) {
+        if (e.message.includes('already started')) {
+            stopVoice();
+            setTimeout(() => startVoice(), 200);
+        }
+    }
+}
+
+function stopVoice() {
+    isListening = false;
+    micBtn.classList.remove('listening');
+    micBtn.textContent = '🎤';
+    voiceStatus.classList.remove('active');
+    chatInput.placeholder = 'اكتب سؤالك هنا...';
+    if (recognition) {
+        try { recognition.stop(); } catch (e) {}
+    }
+}
+
+// ============================================================
+// 🔊 SPEECH OUTPUT
+// ============================================================
+let synth = null;
+
+function initSynth() {
+    if (!hasSynth) return false;
+    synth = window.speechSynthesis;
+    return true;
+}
+
+function speakText(text) {
+    if (!synth) {
+        if (!initSynth()) {
+            showToast('❌ المتصفح لا يدعم النطق', 'error');
+            return;
+        }
+    }
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ar-SA';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    const voices = synth.getVoices();
+    const arabic = voices.find(v => v.lang.includes('ar'));
+    if (arabic) utterance.voice = arabic;
+    utterance.onstart = function() {
+        speakerBtn.textContent = '⏹️';
+        speakerBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+    };
+    utterance.onend = function() {
+        speakerBtn.textContent = '🔊';
+        speakerBtn.style.background = '';
+    };
+    utterance.onerror = function() {
+        speakerBtn.textContent = '🔊';
+        speakerBtn.style.background = '';
+    };
+    synth.speak(utterance);
+}
+
+function speakLast() {
+    if (lastResponse) { speakText(lastResponse); return; }
+    const msgs = chatBox.querySelectorAll('.message.ai');
+    if (msgs.length > 0) {
+        const last = msgs[msgs.length - 1];
+        const content = last.querySelector('.content');
+        if (content) { speakText(content.textContent); return; }
+    }
+    showToast('لا يوجد رد للاستماع', 'warning');
+}
+
+// ============================================================
+// 🤖 ASK AI
+// ============================================================
+async function askAI(message) {
+    const input = chatInput;
+    const question = message || input.value.trim();
+    if (!question) { showToast('❌ الرجاء كتابة سؤال', 'error'); return; }
+    if (isProcessing) { showToast('⏳ جاري معالجة طلب سابق...', 'warning'); return; }
+
+    addMessage('user', question);
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+
+    isProcessing = true;
+    showTyping(true);
+
+    try {
+        const response = await fetch(API_BASE + '/ask', {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({
+                message: question,
+                conversationId: conversationId,
+                language: 'ar'
+            })
+        });
+
+        showTyping(false);
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error || 'خطأ ' + response.status);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            conversationId = data.conversationId;
+            lastResponse = data.response;
+            addMessage('ai', data.response);
+            setOnline(true);
+        } else {
+            throw new Error(data.error || 'حدث خطأ غير معروف');
+        }
+
+    } catch (error) {
+        showTyping(false);
+        setOnline(false);
+        addMessage('ai', '⚠️ عذراً، حدث خطأ: ' + error.message);
+        console.error('AI Error:', error);
+    }
+
+    isProcessing = false;
+    input.disabled = false;
+    sendBtn.disabled = false;
+    input.focus();
+}
+
+// ============================================================
+// 🗑️ CLEAR CHAT
+// ============================================================
+function clearChat() {
+    if (chatBox.querySelectorAll('.message').length === 0) return;
+    if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+        chatBox.innerHTML = '';
+        conversationId = null;
+        lastResponse = null;
+        addMessage('ai', '👋 مرحباً! تم مسح المحادثة.\n\n💬 اكتب سؤالك أو استخدم الأزرار السريعة!');
+        showToast('🗑️ تم مسح المحادثة', 'info');
+    }
+}
+
+// ============================================================
+// 📂 UPLOAD FILE
+// ============================================================
+async function uploadFile() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) { showToast('❌ الرجاء اختيار ملف', 'error'); return; }
+
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    uploadBtn.disabled = true;
+    uploadStatus.className = 'upload-status show info';
+    uploadStatus.textContent = '⏳ جاري رفع الملف...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch(API_BASE + '/upload', {
+            method: 'POST',
+            headers: { 'Authorization': getHeaders()['Authorization'] || '' },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error || 'خطأ ' + response.status);
+        }
+
+        const data = await response.json();
+        uploadStatus.className = 'upload-status show success';
+        uploadStatus.textContent = '✅ تم رفع واستيراد ' + (data.count || 0) + ' سجل';
+        showToast('✅ تم استيراد البيانات', 'success');
+
+    } catch (error) {
+        uploadStatus.className = 'upload-status show error';
+        uploadStatus.textContent = '❌ ' + error.message;
+        showToast('❌ ' + error.message, 'error');
+    }
+
+    uploadBtn.disabled = false;
+}
+
+// ============================================================
+// ⌨️ KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); askAI(); }
+    if (e.key === 'Escape' && isListening) { stopVoice(); }
+    if (e.ctrlKey && e.shiftKey && e.key === 'V') { e.preventDefault(); toggleVoice(); }
+    if (e.ctrlKey && e.shiftKey && e.key === 'S') { e.preventDefault(); speakLast(); }
+});
+
+// ============================================================
+// 🏥 HEALTH CHECK
+// ============================================================
+async function checkHealth() {
+    try {
+        const response = await fetch(API_BASE + '/health');
+        if (response.ok) {
+            const data = await response.json();
+            setOnline(true);
+            console.log('✅ Server healthy:', data);
+        } else {
+            setOnline(false);
+        }
+    } catch (error) {
+        setOnline(false);
+        console.warn('⚠️ Cannot connect to server');
+    }
+}
+
+// ============================================================
+// 🚀 INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    initSpeech();
+    initSynth();
+    if (synth) {
+        synth.getVoices();
+        synth.onvoiceschanged = function() { synth.getVoices(); };
+    }
+    checkHealth();
+    console.log('✅ AI Assistant v23 loaded');
+    console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
+    console.log('🔊 Speech Synthesis:', hasSynth ? '✅' : '❌');
+    console.log('📌 Shortcuts: Ctrl+Enter, Ctrl+Shift+V, Ctrl+Shift+S');
+});
+
+// ============================================================
+// 🧹 CLEANUP
+// ============================================================
+window.addEventListener('beforeunload', function() {
+    if (recognition) {
+        try { recognition.abort(); } catch (e) {}
+    }
+    if (synth) { synth.cancel(); }
+});
+
+console.log('🚀 AI Assistant v23 loaded');
+console.log('📌 Functions: askAI(), toggleVoice(), speakLast(), clearChat()');
