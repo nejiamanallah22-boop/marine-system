@@ -69,14 +69,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_sy
 })
 .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
-    console.log('⚠️ يرجى التحقق من:');
-    console.log('   1. الرابط في ملف .env');
-    console.log('   2. اسم المستخدم وكلمة المرور');
-    console.log('   3. عنوان IP مسموح به في MongoDB Atlas');
 });
 
 // ============================================================
-// 📦 MODELS
+// 📦 MODELS - مع منع إعادة التعريف
 // ============================================================
 
 // ----- User Model -----
@@ -111,7 +107,7 @@ UserSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model('User', UserSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 // ----- Vessel Model -----
 const VesselSchema = new mongoose.Schema({
@@ -134,7 +130,7 @@ const VesselSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-const Vessel = mongoose.model('Vessel', VesselSchema);
+const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
 
 // ----- Maintenance Model -----
 const MaintenanceSchema = new mongoose.Schema({
@@ -160,7 +156,7 @@ const MaintenanceSchema = new mongoose.Schema({
 MaintenanceSchema.index({ vesselName: 1, createdAt: -1 });
 MaintenanceSchema.index({ status: 1, createdAt: -1 });
 
-const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
+const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance', MaintenanceSchema);
 
 // ----- Conversation Model -----
 const ConversationSchema = new mongoose.Schema({
@@ -174,7 +170,7 @@ const ConversationSchema = new mongoose.Schema({
 
 ConversationSchema.index({ userId: 1, updatedAt: -1 });
 
-const Conversation = mongoose.model('Conversation', ConversationSchema);
+const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
 
 // ----- Message Model -----
 const MessageSchema = new mongoose.Schema({
@@ -188,7 +184,7 @@ const MessageSchema = new mongoose.Schema({
 MessageSchema.index({ conversationId: 1, userId: 1, timestamp: -1 });
 MessageSchema.index({ userId: 1, timestamp: -1 });
 
-const Message = mongoose.model('Message', MessageSchema);
+const Message = mongoose.models.Message || mongoose.model('Message', MessageSchema);
 
 // ============================================================
 // 🔐 AUTH MIDDLEWARE
@@ -236,7 +232,6 @@ async function authenticate(req, res, next) {
         return next();
     }
     
-    // التحقق من tokenVersion
     try {
         const freshUser = await User.findById(decoded.id).lean();
         if (freshUser && freshUser.tokenVersion !== undefined && decoded.tokenVersion !== freshUser.tokenVersion) {
@@ -534,7 +529,6 @@ if (fs.existsSync(aiRoutesPath)) {
         try {
             const { message } = req.body;
             
-            // ردود ذكية بسيطة
             let response = "🤔 شكراً على سؤالك!\n\n";
             
             if (message.includes('مرحبا') || message.includes('السلام')) {
