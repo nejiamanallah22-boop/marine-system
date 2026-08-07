@@ -1,0 +1,111 @@
+# ============================================================
+# .gitignore - ملفات يجب تجاهلها
+# ============================================================
+
+# 🔐 ملفات البيئة والمفاتيح
+.env
+.env.*
+.env.local
+.env.production
+.env.development
+.env.test
+
+# 🔑 مفاتيح وشهادات
+*.key
+*.pem
+*.crt
+*.csr
+*.p12
+*.pfx
+*.der
+secrets/
+keys/
+credentials.json
+service-account.json
+
+# 📦 الاعتماديات
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 🗄️ قاعدة البيانات
+*.db
+*.sqlite
+*.sqlite3
+*.mongodb
+data/
+dump/
+
+# 📊 السجلات
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# 🔥 ملفات مؤقتة
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 📁 ملفات التحميل
+uploads/
+downloads/
+temp/
+tmp/
+
+# 🧪 تغطية الاختبارات
+coverage/
+.nyc_output/
+*.lcov
+
+# 📦 ملفات البناء
+dist/
+build/
+out/
+*.min.js
+*.min.css
+
+# 🐳 Docker
+docker-compose.override.yml
+.dockerignore
+
+# 🔍 IDE
+.vscode/
+.idea/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 📱 Mobile
+*.ipa
+*.apk
+*.aab
+
+# 🔄 Backup
+*.bak
+*.backup
+backups/
+*.tar.gz
+*.zip
+*.rar
+
+# 📝 تقارير
+reports/
+*.pdf
+*.xlsx
+*.csv
+
+# 🔒 ملفات التهيئة الحساسة
+config/local.js
+config/development.js
+config/production.js
