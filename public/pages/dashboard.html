@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 لوحة التحكم - نظام الأسطول البحري</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>📊 لوحة التحكم</title>
     <style>
         * {
             margin: 0;
@@ -13,17 +11,17 @@
             box-sizing: border-box;
         }
         body {
-            font-family: 'Tajawal', 'Segoe UI', sans-serif;
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
             background: #0a0a1a;
             color: #ffffff;
             padding: 20px;
             min-height: 100vh;
         }
-        .page-container {
+        .container {
             max-width: 1400px;
             margin: 0 auto;
         }
-        .page-header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -32,21 +30,13 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .page-header h1 {
+        .header h1 {
             font-size: 24px;
-            font-weight: 700;
             color: #60a5fa;
         }
-        .page-header .subtitle {
+        .header .subtitle {
             color: rgba(255,255,255,0.3);
             font-size: 13px;
-        }
-        .page-header .update-time {
-            background: rgba(255,255,255,0.04);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: rgba(255,255,255,0.4);
         }
         .refresh-btn {
             padding: 6px 14px;
@@ -61,11 +51,9 @@
             background: rgba(255,255,255,0.08);
             color: white;
         }
-
-        /* بطاقات الإحصائيات */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
@@ -73,7 +61,7 @@
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
             border-radius: 14px;
-            padding: 18px 20px;
+            padding: 16px 18px;
             transition: all 0.3s;
         }
         .stat-card:hover {
@@ -89,20 +77,12 @@
             color: rgba(255,255,255,0.4);
             margin-top: 4px;
         }
-        .stat-card .icon {
-            font-size: 20px;
-            opacity: 0.3;
-            float: left;
-        }
         .stat-total .number { color: #60a5fa; }
         .stat-ready .number { color: #4ade80; }
         .stat-maintenance .number { color: #fbbf24; }
         .stat-broken .number { color: #f87171; }
         .stat-cost .number { color: #f5d76e; }
-        .stat-count .number { color: #a78bfa; }
         .stat-percent .number { color: #34d399; }
-
-        /* الرسوم البيانية */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -120,18 +100,10 @@
             font-size: 14px;
             margin-bottom: 12px;
         }
-        .chart-container {
-            height: 200px;
-            width: 100%;
-            position: relative;
-        }
-        .chart-container canvas {
-            height: 200px !important;
-            max-height: 200px !important;
+        .chart-card canvas {
             width: 100% !important;
+            height: 200px !important;
         }
-
-        /* النشاطات */
         .activity-container {
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
@@ -156,10 +128,6 @@
         .activity-item:hover {
             background: rgba(255,255,255,0.02);
         }
-        .activity-item .icon {
-            font-size: 18px;
-            opacity: 0.5;
-        }
         .activity-item .time {
             margin-right: auto;
             font-size: 11px;
@@ -170,78 +138,14 @@
             padding: 20px;
             color: rgba(255,255,255,0.2);
         }
-
-        /* صورة المركب */
-        .vessel-image {
-            background: rgba(255,255,255,0.02);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            width: 200px;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .vessel-image .gradient {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at center, rgba(14,165,233,0.05) 0%, transparent 70%);
-        }
-        .vessel-image svg {
-            width: 170px;
-            height: 170px;
-            position: relative;
-            z-index: 1;
-        }
-        .vessel-image .label {
-            position: absolute;
-            bottom: 10px;
-            color: rgba(255,255,255,0.15);
-            font-size: 12px;
-            font-weight: 300;
-        }
-
-        /* تنسيق عام */
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .flex-center {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .gap-20 { gap: 20px; }
-        .mt-20 { margin-top: 20px; }
-        .mb-20 { margin-bottom: 20px; }
-        .w-full { width: 100%; }
-
-        /* استجابة */
         @media (max-width: 768px) {
-            .vessel-image {
-                width: 100%;
-                min-height: 150px;
-            }
-            .vessel-image svg {
-                width: 120px;
-                height: 120px;
-            }
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             .charts-grid {
                 grid-template-columns: 1fr;
             }
-            .page-header h1 {
+            .header h1 {
                 font-size: 20px;
             }
         }
@@ -256,108 +160,56 @@
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <!-- رأس الصفحة -->
-        <div class="page-header">
+    <div class="container">
+        <div class="header">
             <div>
                 <h1>📊 لوحة التحكم</h1>
                 <div class="subtitle">نظرة عامة على أداء الأسطول البحري</div>
             </div>
-            <div class="flex-center">
-                <span class="update-time">🕐 آخر تحديث: <span id="lastUpdate">الآن</span></span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:12px; color:rgba(255,255,255,0.3);">🕐 <span id="lastUpdate">الآن</span></span>
                 <button class="refresh-btn" onclick="refreshDashboard()">🔄 تحديث</button>
             </div>
         </div>
 
-        <!-- صورة المركب + البطاقات -->
-        <div style="display:grid; grid-template-columns:auto 1fr; gap:25px; margin:20px 0; align-items:stretch;">
-            <div class="vessel-image">
-                <div class="gradient"></div>
-                <svg viewBox="0 0 300 200">
-                    <rect x="0" y="130" width="300" height="70" fill="rgba(14,165,233,0.05)"/>
-                    <path d="M 0,140 Q 40,132 80,140 Q 120,148 160,140 Q 200,132 240,140 Q 280,148 300,140" fill="none" stroke="rgba(14,165,233,0.15)" stroke-width="2">
-                        <animate attributeName="d" dur="3s" repeatCount="indefinite" values="M 0,140 Q 40,132 80,140 Q 120,148 160,140 Q 200,132 240,140 Q 280,148 300,140;M 0,142 Q 40,150 80,142 Q 120,134 160,142 Q 200,150 240,142 Q 280,134 300,142;M 0,140 Q 40,132 80,140 Q 120,148 160,140 Q 200,132 240,140 Q 280,148 300,140"/>
-                    </path>
-                    <path d="M 40,130 Q 70,145 150,148 Q 230,145 260,130 Q 240,120 150,118 Q 60,120 40,130 Z" fill="rgba(50,100,180,0.25)" stroke="rgba(50,100,180,0.4)" stroke-width="2"/>
-                    <rect x="60" y="105" width="180" height="20" rx="3" fill="rgba(200,200,220,0.1)" stroke="rgba(200,200,220,0.2)" stroke-width="1.5"/>
-                    <rect x="120" y="85" width="60" height="22" rx="4" fill="rgba(200,200,220,0.12)" stroke="rgba(200,200,220,0.2)" stroke-width="1.5"/>
-                    <rect x="132" y="78" width="36" height="10" rx="3" fill="rgba(200,200,220,0.08)" stroke="rgba(200,200,220,0.15)" stroke-width="1"/>
-                    <rect x="138" y="62" width="24" height="18" rx="2" fill="rgba(200,200,220,0.08)" stroke="rgba(200,200,220,0.15)" stroke-width="1"/>
-                    <circle cx="150" cy="58" r="10" fill="rgba(14,165,233,0.06)" stroke="rgba(14,165,233,0.15)" stroke-width="1.5"/>
-                    <circle cx="150" cy="58" r="5" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.2)" stroke-width="1"/>
-                    <circle cx="150" cy="58" r="2" fill="rgba(14,165,233,0.25)">
-                        <animate attributeName="r" dur="2s" values="2;4;2" repeatCount="indefinite"/>
-                        <animate attributeName="opacity" dur="2s" values="0.25;0.05;0.25" repeatCount="indefinite"/>
-                    </circle>
-                    <line x1="150" y1="48" x2="150" y2="25" stroke="rgba(200,200,220,0.15)" stroke-width="1.5"/>
-                    <circle cx="150" cy="23" r="3" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.15)" stroke-width="1">
-                        <animate attributeName="opacity" dur="1.5s" values="0.1;0.3;0.1" repeatCount="indefinite"/>
-                    </circle>
-                    <text x="150" y="175" text-anchor="middle" font-family="Cairo" font-size="12" fill="rgba(255,255,255,0.15)" font-weight="300">⚓ الحرس البحري</text>
-                </svg>
-            </div>
-
-            <!-- البطاقات -->
-            <div class="stats-grid" style="margin:0;">
-                <div class="stat-card stat-total">
-                    <span class="icon">🚢</span>
-                    <div class="number" id="dashTotal">0</div>
-                    <div class="label">إجمالي المراكب</div>
-                </div>
-                <div class="stat-card stat-ready">
-                    <span class="icon">✅</span>
-                    <div class="number" id="dashReady">0</div>
-                    <div class="label">جاهز للخدمة</div>
-                </div>
-                <div class="stat-card stat-maintenance">
-                    <span class="icon">🔧</span>
-                    <div class="number" id="dashMaintenance">0</div>
-                    <div class="label">تحت الصيانة</div>
-                </div>
-                <div class="stat-card stat-broken">
-                    <span class="icon">❌</span>
-                    <div class="number" id="dashBroken">0</div>
-                    <div class="label">معطل</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- إحصائيات متقدمة -->
         <div class="stats-grid">
-            <div class="stat-card stat-cost">
-                <span class="icon">💰</span>
-                <div class="number" id="dashTotalCost">0 د.ت</div>
-                <div class="label">إجمالي تكاليف الصيانة</div>
+            <div class="stat-card stat-total">
+                <div class="number" id="dashTotal">0</div>
+                <div class="label">🚢 إجمالي المراكب</div>
             </div>
-            <div class="stat-card stat-count">
-                <span class="icon">📋</span>
-                <div class="number" id="dashMaintenanceCount">0</div>
-                <div class="label">إجمالي سجلات الصيانة</div>
+            <div class="stat-card stat-ready">
+                <div class="number" id="dashReady">0</div>
+                <div class="label">✅ صالح</div>
+            </div>
+            <div class="stat-card stat-maintenance">
+                <div class="number" id="dashMaintenance">0</div>
+                <div class="label">🔧 صيانة</div>
+            </div>
+            <div class="stat-card stat-broken">
+                <div class="number" id="dashBroken">0</div>
+                <div class="label">❌ معطب</div>
             </div>
             <div class="stat-card stat-percent">
-                <span class="icon">📊</span>
                 <div class="number" id="dashReadyPercent">0%</div>
-                <div class="label">نسبة الجاهزية</div>
+                <div class="label">📊 نسبة الجاهزية</div>
+            </div>
+            <div class="stat-card stat-cost">
+                <div class="number" id="dashTotalCost">0 د.ت</div>
+                <div class="label">💰 تكاليف الصيانة</div>
             </div>
         </div>
 
-        <!-- الرسوم البيانية -->
         <div class="charts-grid">
             <div class="chart-card">
                 <h4>📊 توزيع الحالات</h4>
-                <div class="chart-container">
-                    <canvas id="dashChart"></canvas>
-                </div>
+                <canvas id="dashChart"></canvas>
             </div>
             <div class="chart-card">
-                <h4>📈 تطور الجاهزية (آخر 6 أشهر)</h4>
-                <div class="chart-container">
-                    <canvas id="dashLineChart"></canvas>
-                </div>
+                <h4>📈 تطور الجاهزية</h4>
+                <canvas id="dashLineChart"></canvas>
             </div>
         </div>
 
-        <!-- النشاطات -->
         <div class="activity-container">
             <h4>🔄 آخر النشاطات</h4>
             <div id="dashActivity">
@@ -366,30 +218,23 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // ============================================================
-        // Dashboard - الكود الكامل
-        // ============================================================
-
         let dashChart = null;
         let dashLineChart = null;
 
-        // ============================================================
-        // تحديث لوحة التحكم
-        // ============================================================
         function refreshDashboard() {
             console.log('📊 Refreshing dashboard...');
-
+            
             const token = localStorage.getItem('token');
             if (!token) {
-                console.warn('⚠️ No token found, redirecting to login');
-                window.location.href = '/login.html';
+                console.warn('⚠️ No token found');
                 return;
             }
 
             // جلب المراكب
             fetch('/api/vessels', {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': 'Bearer ' + token }
             })
             .then(res => {
                 if (!res.ok) throw new Error('Failed to fetch vessels');
@@ -398,73 +243,56 @@
             .then(vessels => {
                 // جلب الصيانة
                 fetch('/api/maintenance', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': 'Bearer ' + token }
                 })
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to fetch maintenance');
                     return res.json();
                 })
                 .then(maintenance => {
-                    updateDashboardUI(vessels, maintenance);
+                    updateUI(vessels, maintenance);
                 })
-                .catch(() => {
-                    updateDashboardUI(vessels, []);
-                });
+                .catch(() => updateUI(vessels, []));
             })
             .catch(err => {
-                console.error('❌ Error loading data:', err);
-                // محاولة استخدام البيانات المحلية
-                const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
-                const maintenance = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
-                updateDashboardUI(vessels, maintenance);
+                console.error('❌ Error:', err);
+                // استخدام بيانات تجريبية
+                const demo = getDemoData();
+                updateUI(demo.vessels, demo.maintenance);
             });
         }
 
-        // ============================================================
-        // تحديث واجهة المستخدم
-        // ============================================================
-        function updateDashboardUI(vessels, maintenance) {
+        function updateUI(vessels, maintenance) {
             const total = vessels.length;
             const ready = vessels.filter(v => v.stat === 'صالح').length;
             const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const maintenanceCount = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            const maintenanceCount = vessels.filter(v => v.stat === 'صيانة').length;
             const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
             const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-            const totalMaintenance = maintenance.length;
 
-            console.log('📊 Stats:', { total, ready, broken, maintenanceCount, readyPercent, totalCost, totalMaintenance });
-
-            // تحديث الأرقام
             document.getElementById('dashTotal').textContent = total;
             document.getElementById('dashReady').textContent = ready;
             document.getElementById('dashBroken').textContent = broken;
             document.getElementById('dashMaintenance').textContent = maintenanceCount;
             document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
             document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-            document.getElementById('dashMaintenanceCount').textContent = totalMaintenance;
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ar-TN');
 
-            // تحديث الرسوم البيانية
-            setTimeout(() => renderDashboardCharts(vessels), 200);
-
-            // تحديث النشاطات
-            updateDashboardActivity(vessels, maintenance);
+            // الرسوم البيانية
+            renderCharts(vessels);
+            renderActivity(vessels, maintenance);
         }
 
-        // ============================================================
-        // الرسوم البيانية
-        // ============================================================
-        function renderDashboardCharts(vessels) {
+        function renderCharts(vessels) {
             const ready = vessels.filter(v => v.stat === 'صالح').length;
             const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
+            const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
 
-            // رسم بياني دائري
             try {
-                const dashCanvas = document.getElementById('dashChart');
-                if (dashCanvas) {
+                const canvas = document.getElementById('dashChart');
+                if (canvas) {
                     if (dashChart) dashChart.destroy();
-                    dashChart = new Chart(dashCanvas, {
+                    dashChart = new Chart(canvas, {
                         type: 'doughnut',
                         data: {
                             labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
@@ -482,52 +310,40 @@
                             plugins: {
                                 legend: {
                                     position: 'bottom',
-                                    labels: {
-                                        color: 'rgba(255,255,255,0.6)',
-                                        font: { size: 11 }
-                                    }
+                                    labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } }
                                 }
                             }
                         }
                     });
                 }
-            } catch (e) {
-                console.log('⚠️ Chart error:', e);
+            } catch(e) {
+                console.log('Chart error:', e);
             }
 
-            // رسم بياني خطي
             try {
                 const lineCanvas = document.getElementById('dashLineChart');
                 if (lineCanvas) {
                     if (dashLineChart) dashLineChart.destroy();
-
-                    // بيانات افتراضية - يمكن استبدالها ببيانات حقيقية من الخادم
-                    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-                    const readyData = [12, 14, 13, 16, 18, 20];
-                    const brokenData = [5, 4, 6, 3, 4, 2];
-
                     dashLineChart = new Chart(lineCanvas, {
                         type: 'line',
                         data: {
-                            labels: months,
+                            labels: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'],
                             datasets: [
                                 {
                                     label: 'صالح',
-                                    data: readyData,
+                                    data: [12, 14, 13, 16, 18, 20],
                                     borderColor: '#4ade80',
                                     backgroundColor: 'rgba(74,222,128,0.1)',
                                     fill: true,
-                                    tension: 0.4,
-                                    pointBackgroundColor: '#4ade80'
+                                    tension: 0.4
                                 },
                                 {
                                     label: 'معطب',
-                                    data: brokenData,
+                                    data: [5, 4, 6, 3, 4, 2],
                                     borderColor: '#f87171',
                                     backgroundColor: 'rgba(248,113,113,0.1)',
                                     fill: true,
-                                    tension: 0.4,
-                                    pointBackgroundColor: '#f87171'
+                                    tension: 0.4
                                 }
                             ]
                         },
@@ -537,93 +353,76 @@
                             plugins: {
                                 legend: {
                                     position: 'bottom',
-                                    labels: {
-                                        color: 'rgba(255,255,255,0.6)',
-                                        font: { size: 11 }
-                                    }
+                                    labels: { color: 'rgba(255,255,255,0.6)', font: { size: 11 } }
                                 }
                             },
                             scales: {
-                                x: {
-                                    ticks: { color: 'rgba(255,255,255,0.3)' }
-                                },
-                                y: {
-                                    ticks: { color: 'rgba(255,255,255,0.3)' },
-                                    beginAtZero: true
-                                }
+                                x: { ticks: { color: 'rgba(255,255,255,0.3)' } },
+                                y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true }
                             }
                         }
                     });
                 }
-            } catch (e) {
-                console.log('⚠️ Line chart error:', e);
+            } catch(e) {
+                console.log('Line chart error:', e);
             }
         }
 
-        // ============================================================
-        // النشاطات
-        // ============================================================
-        function updateDashboardActivity(vessels, maintenance) {
+        function renderActivity(vessels, maintenance) {
             const container = document.getElementById('dashActivity');
             if (!container) return;
 
             const activities = [];
-
-            // نشاطات الصيانة
             maintenance.slice(0, 5).forEach(r => {
                 activities.push({
                     icon: '🔧',
-                    text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`,
+                    text: `صيانة ${r.vesselName || 'مركب'}`,
                     time: new Date(r.createdAt).toLocaleDateString('ar-TN') || 'اليوم'
                 });
             });
-
-            // المراكب المعطبة
             vessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
                 activities.push({
                     icon: '⚠️',
-                    text: `المركب ${v.name} أصبح معطباً`,
+                    text: `المركب ${v.name} معطب`,
                     time: new Date(v.createdAt).toLocaleDateString('ar-TN') || 'اليوم'
                 });
             });
 
             if (activities.length === 0) {
-                container.innerHTML = '<div class="activity-empty">📭 لا توجد نشاطات حديثة</div>';
+                container.innerHTML = '<div class="activity-empty">📭 لا توجد نشاطات</div>';
                 return;
             }
 
             container.innerHTML = activities.map(a => `
                 <div class="activity-item">
-                    <span class="icon">${a.icon}</span>
+                    <span>${a.icon}</span>
                     <span>${a.text}</span>
                     <span class="time">${a.time}</span>
                 </div>
             `).join('');
         }
 
-        // ============================================================
-        // تحميل الصفحة
-        // ============================================================
+        function getDemoData() {
+            return {
+                vessels: [
+                    { name: 'البروق 1', stat: 'صالح', zone: 'بنزرت', createdAt: new Date() },
+                    { name: 'البروق 2', stat: 'صالح', zone: 'سوسة', createdAt: new Date() },
+                    { name: 'البروق 3', stat: 'معطب', zone: 'صفاقس', createdAt: new Date() },
+                    { name: 'البروق 4', stat: 'صيانة', zone: 'المنستير', createdAt: new Date() },
+                ],
+                maintenance: [
+                    { vesselName: 'البروق 3', cost: 1200, status: 'مكتملة', createdAt: new Date() },
+                    { vesselName: 'البروق 4', cost: 500, status: 'قيد الإنجاز', createdAt: new Date() },
+                ]
+            };
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📊 Dashboard initializing...');
-
-            // التحقق من التوكن
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.warn('⚠️ No token found, redirecting to login');
-                window.location.href = '/login.html';
-                return;
-            }
-
-            // تحميل البيانات
-            setTimeout(refreshDashboard, 300);
-            setTimeout(refreshDashboard, 1000);
-
-            // تحديث تلقائي كل 30 ثانية
+            console.log('📊 Dashboard loaded');
+            setTimeout(refreshDashboard, 500);
             setInterval(refreshDashboard, 30000);
         });
 
-        // دالة للوصول من console
         window.refreshDashboard = refreshDashboard;
     </script>
 </body>
