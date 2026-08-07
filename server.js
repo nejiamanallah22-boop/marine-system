@@ -314,13 +314,8 @@ aiRouter.post('/ask', async (req, res) => {
     
     if (!response) {
       const msg = message.toLowerCase();
-      
-      if (msg.includes('تونس') || msg.includes('اين تونس')) {
-        response = `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا...`;
-      } else if (msg.includes('مرحبا') || msg.includes('السلام')) {
+      if (msg.includes('مرحبا') || msg.includes('السلام')) {
         response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي.";
-      } else if (msg.includes('مساعدة')) {
-        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• التاريخ`;
       } else {
         response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
       }
@@ -364,7 +359,7 @@ app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
 // ============================================================
-// 📄 Page Routes - الصفحات الرئيسية ✅ تم إصلاحها
+// 📄 PAGE ROUTES - هذا هو الحل لمشكلة Cannot GET
 // ============================================================
 
 // ✅ الصفحة الرئيسية
@@ -372,7 +367,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ مسارات الصفحات مباشرة
+// ✅ مسارات الصفحات مباشرة (هذا هو المهم!)
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard.html'));
 });
@@ -397,7 +392,7 @@ app.get('/ai-assistant', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pages', 'ai-assistant.html'));
 });
 
-// ✅ مسار عام للصفحات
+// ✅ مسار عام للصفحات (اختياري)
 app.get('/pages/:page', (req, res) => {
   const pageName = req.params.page;
   const filePath = path.join(__dirname, 'public', 'pages', `${pageName}.html`);
