@@ -1,7 +1,4 @@
-// ============================================================
-// 🚀 نظام إدارة الأسطول البحري - server.js
-// ============================================================
-
+// server.js - نسخة كاملة مع جميع المسارات
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -17,20 +14,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
-// ============================================================
 // Middleware
-// ============================================================
-
 app.use(cors({ origin: '*', credentials: true }));
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ============================================================
-// ✅ الملفات الثابتة (Static Files) - الأهم!
-// ============================================================
-
+// الملفات الثابتة
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
@@ -264,7 +255,7 @@ app.post('/api/maintenance', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI Routes - المساعد الذكي
+// 🤖 AI Routes
 // ============================================================
 
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
@@ -287,7 +278,6 @@ aiRouter.post('/ask', async (req, res) => {
     
     let response = null;
     
-    // ✅ محاولة استخدام Gemini
     if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && !GEMINI_API_KEY.includes('your_')) {
       try {
         const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -322,28 +312,17 @@ aiRouter.post('/ask', async (req, res) => {
       }
     }
     
-    // ✅ إذا فشل Gemini، استخدم الردود المحلية
     if (!response) {
       const msg = message.toLowerCase();
       
       if (msg.includes('تونس') || msg.includes('اين تونس')) {
-        response = `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
-      } else if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
-        response = `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
-      } else if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-        response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
-      } else if (msg.includes('مساعدة') || msg.includes('help')) {
-        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
-      } else if (msg.includes('برمجة') || msg.includes('كود')) {
-        response = `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
-      } else if (msg.includes('تاريخ') || msg.includes('تاريخ تونس')) {
-        response = `📜 **التاريخ**\n\nتونس لها تاريخ عريق:\n• قرطاج: تأسست عام 814 ق.م\n• الحضارة البونيقية\n• الفتح الإسلامي عام 647م\n• الدولة الحفصية\n• الحماية الفرنسية 1881-1956\n• الاستقلال 1956`;
-      } else if (msg.includes('بحر') || msg.includes('بحري') || msg.includes('أسطول')) {
-        const vessels = await Vessel.find().countDocuments();
-        const maintenance = await Maintenance.find().countDocuments();
-        response = `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: ${vessels || 0} مركب\n• الصيانة: ${maintenance || 0} سجل`;
+        response = `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا...`;
+      } else if (msg.includes('مرحبا') || msg.includes('السلام')) {
+        response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي.";
+      } else if (msg.includes('مساعدة')) {
+        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• التاريخ`;
       } else {
-        response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
+        response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
       }
     }
     
@@ -385,7 +364,7 @@ app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
 // ============================================================
-// 📄 Page Routes - الصفحات الرئيسية (الأهم!)
+// 📄 Page Routes - الصفحات الرئيسية ✅ تم إصلاحها
 // ============================================================
 
 // ✅ الصفحة الرئيسية
@@ -393,25 +372,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ✅ جميع الصفحات في مجلد pages
-app.get('/pages/:page', (req, res) => {
-  const pageName = req.params.page;
-  const filePath = path.join(__dirname, 'public', 'pages', `${pageName}.html`);
-  
-  console.log(`📄 Loading page: ${pageName}`);
-  
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <h1>⚠️ الصفحة غير موجودة</h1>
-      <p>الصفحة المطلوبة: ${pageName}</p>
-      <a href="/">🏠 العودة للرئيسية</a>
-    `);
-  }
-});
-
-// ✅ روابط مختصرة للصفحات الرئيسية
+// ✅ مسارات الصفحات مباشرة
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard.html'));
 });
@@ -436,8 +397,19 @@ app.get('/ai-assistant', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pages', 'ai-assistant.html'));
 });
 
+// ✅ مسار عام للصفحات
+app.get('/pages/:page', (req, res) => {
+  const pageName = req.params.page;
+  const filePath = path.join(__dirname, 'public', 'pages', `${pageName}.html`);
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`<h1>⚠️ الصفحة غير موجودة</h1><p>${pageName}</p><a href="/">🏠 العودة</a>`);
+  }
+});
+
 // ============================================================
-// تهيئة المستخدمين الافتراضيين
+// تهيئة المستخدمين
 // ============================================================
 
 async function initDefaultUsers() {
@@ -446,10 +418,6 @@ async function initDefaultUsers() {
     if (count === 0) {
       const defaultUsers = [
         { name: 'مدير النظام', email: 'admin', password: 'Admin@2024#Secure', role: 'مسؤول', region: '' },
-        { name: 'محرر الشمال', email: 'north', password: 'North@2024#Secure', role: 'محرر إقليمي', region: 'الشمال' },
-        { name: 'محرر الساحل', email: 'coast', password: 'Coast@2024#Secure', role: 'محرر إقليمي', region: 'الساحل' },
-        { name: 'محرر الوسط', email: 'center', password: 'Center@2024#Secure', role: 'محرر إقليمي', region: 'الوسط' },
-        { name: 'محرر الجنوب', email: 'south', password: 'South@2024#Secure', role: 'محرر إقليمي', region: 'الجنوب' },
         { name: 'مشاهد', email: 'viewer', password: 'Viewer@2024#Secure', role: 'مشاهد', region: '' }
       ];
       for (const userData of defaultUsers) {
