@@ -28,7 +28,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ============================================================
-// الملفات الثابتة
+// ✅ الملفات الثابتة (Static Files) - الأهم!
 // ============================================================
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -264,7 +264,7 @@ app.post('/api/maintenance', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI Routes
+// 🤖 AI Routes - المساعد الذكي
 // ============================================================
 
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
@@ -385,7 +385,7 @@ app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
 // ============================================================
-// 📄 Page Routes - الصفحات الرئيسية
+// 📄 Page Routes - الصفحات الرئيسية (الأهم!)
 // ============================================================
 
 // ✅ الصفحة الرئيسية
@@ -403,65 +403,11 @@ app.get('/pages/:page', (req, res) => {
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
-    // ✅ إذا لم توجد الصفحة، أنشئها تلقائياً
-    const defaultPage = `
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageName}</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <style>
-        body { 
-            background: #0a0a12; 
-            color: white; 
-            font-family: 'Tajawal', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        .page-container {
-            max-width: 600px;
-            width: 100%;
-            background: rgba(255,255,255,0.02);
-            border-radius: 20px;
-            padding: 40px;
-            border: 1px solid rgba(255,255,255,0.05);
-            text-align: center;
-        }
-        h1 { color: #60a5fa; font-size: 28px; margin-bottom: 10px; }
-        p { color: rgba(255,255,255,0.5); }
-        .icon { font-size: 64px; display: block; margin: 20px 0; }
-        .btn {
-            display: inline-block;
-            padding: 12px 30px;
-            background: rgba(14,165,233,0.15);
-            border: 1px solid rgba(14,165,233,0.3);
-            border-radius: 12px;
-            color: #60a5fa;
-            text-decoration: none;
-            margin-top: 20px;
-        }
-        .btn:hover { background: rgba(14,165,233,0.25); }
-    </style>
-</head>
-<body>
-    <div class="page-container">
-        <span class="icon">📄</span>
-        <h1>${pageName}</h1>
-        <p>هذه الصفحة قيد الإنشاء</p>
-        <p style="font-size:12px; color:rgba(255,255,255,0.2);">public/pages/${pageName}.html</p>
-        <a href="/" class="btn">🏠 العودة للرئيسية</a>
-    </div>
-</body>
-</html>
-    `;
-    fs.writeFileSync(filePath, defaultPage);
-    res.send(defaultPage);
+    res.status(404).send(`
+      <h1>⚠️ الصفحة غير موجودة</h1>
+      <p>الصفحة المطلوبة: ${pageName}</p>
+      <a href="/">🏠 العودة للرئيسية</a>
+    `);
   }
 });
 
