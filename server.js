@@ -1,4 +1,3 @@
-# استخدم النسخة التي كانت تعمل من قبل
 cat > server.js << 'EOF'
 require('dotenv').config();
 const express = require('express');
@@ -36,7 +35,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_sy
   })
   .catch(err => console.error('❌ MongoDB connection error:', err.message));
 
-// ========== تعريف النماذج ==========
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -98,7 +96,6 @@ const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
 const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance', MaintenanceSchema);
 const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
 
-// ========== دوال المصادقة ==========
 function generateToken(user) {
   return jwt.sign({ id: user._id, email: user.email, role: user.role, region: user.region || '' }, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -124,7 +121,6 @@ async function authenticate(req, res, next) {
   }
 }
 
-// ========== API Routes ==========
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -215,7 +211,6 @@ app.post('/api/maintenance', authenticate, async (req, res) => {
   }
 });
 
-// ========== 🤖 AI Routes ==========
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 console.log(`🔑 Gemini API Key: ${GEMINI_API_KEY ? '✅ موجود' : '❌ غير موجود'}`);
@@ -267,7 +262,6 @@ aiRouter.get('/health', (req, res) => {
 app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
-// ========== Page Routes ==========
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -278,7 +272,6 @@ app.get('/pages/:page', (req, res) => {
   else res.status(404).send('Page not found');
 });
 
-// ========== Init Users ==========
 async function initDefaultUsers() {
   try {
     const count = await User.countDocuments();
