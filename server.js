@@ -1,5 +1,5 @@
 // ============================================================
-// 🚀 AI COMMANDER ENTERPRISE - server.js (نسخة كاملة لـ Render)
+// 🚀 نظام إدارة الأسطول البحري - server.js
 // ============================================================
 
 require('dotenv').config();
@@ -27,6 +27,10 @@ app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// ============================================================
+// الملفات الثابتة
+// ============================================================
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
@@ -47,10 +51,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_sy
   .catch(err => console.error('❌ MongoDB connection error:', err.message));
 
 // ============================================================
-// نماذج البيانات (جميع النماذج المطلوبة)
+// نماذج البيانات
 // ============================================================
 
-// ✅ 1. نموذج المستخدم
+// ✅ نموذج المستخدم
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -73,7 +77,7 @@ UserSchema.methods.comparePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
 
-// ✅ 2. نموذج المركب
+// ✅ نموذج المركب
 const VesselSchema = new mongoose.Schema({
   name: { type: String, required: true },
   num: { type: String },
@@ -85,7 +89,7 @@ const VesselSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// ✅ 3. نموذج الصيانة
+// ✅ نموذج الصيانة
 const MaintenanceSchema = new mongoose.Schema({
   vesselName: { type: String },
   type: { type: String, enum: ['كبرى', 'دورية', 'عادية', 'طارئة'], default: 'عادية' },
@@ -96,12 +100,12 @@ const MaintenanceSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// ✅ 4. نموذج المحادثة
+// ✅ نموذج المحادثة
 const ConversationSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   title: { type: String, default: 'محادثة جديدة' },
   messages: [{
-    role: { type: String, enum: ['user', 'assistant', 'system'] },
+    role: { type: String, enum: ['user', 'assistant'] },
     content: { type: String },
     timestamp: { type: Date, default: Date.now }
   }],
@@ -110,59 +114,14 @@ const ConversationSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-// ✅ 5. نموذج الرسالة (للتواصل مع المساعد)
-const MessageSchema = new mongoose.Schema({
-  conversationId: { type: String, required: true },
-  userId: { type: String, required: true },
-  role: { type: String, enum: ['user', 'assistant', 'system'], required: true },
-  content: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now }
-});
-
-// ✅ 6. نموذج التوقع (للتنبؤات)
-const PredictionSchema = new mongoose.Schema({
-  vesselId: { type: String, required: true },
-  type: { type: String, enum: ['failure', 'maintenance', 'performance'], default: 'failure' },
-  confidence: { type: Number, min: 0, max: 1 },
-  prediction: { type: String },
-  details: { type: mongoose.Schema.Types.Mixed },
-  createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date }
-});
-
-// ✅ 7. نموذج الإشعارات
-const NotificationSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  type: { type: String, enum: ['info', 'warning', 'error', 'success'], default: 'info' },
-  isRead: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
-});
-
-// ✅ 8. نموذج سجل التدقيق
-const AuditLogSchema = new mongoose.Schema({
-  userId: { type: String },
-  action: { type: String, required: true },
-  resource: { type: String },
-  details: { type: mongoose.Schema.Types.Mixed },
-  ip: { type: String },
-  userAgent: { type: String },
-  timestamp: { type: Date, default: Date.now }
-});
-
-// ✅ إنشاء جميع النماذج
+// ✅ إنشاء النماذج
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
 const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance', MaintenanceSchema);
 const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
-const Message = mongoose.models.Message || mongoose.model('Message', MessageSchema);
-const Prediction = mongoose.models.Prediction || mongoose.model('Prediction', PredictionSchema);
-const Notification = mongoose.models.Notification || mongoose.model('Notification', NotificationSchema);
-const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', AuditLogSchema);
 
 // ============================================================
-// دوال المصادقة والصلاحيات
+// دوال المصادقة
 // ============================================================
 
 function generateToken(user) {
@@ -194,24 +153,8 @@ async function authenticate(req, res, next) {
   }
 }
 
-// ✅ التحقق من الصلاحيات
-function checkRole(allowedRoles) {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ success: false, error: 'غير مصرح' });
-    }
-    if (req.user.role === 'مسؤول') {
-      return next();
-    }
-    if (allowedRoles && allowedRoles.includes(req.user.role)) {
-      return next();
-    }
-    return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-  };
-}
-
 // ============================================================
-// API Routes - المصادقة
+// API Routes
 // ============================================================
 
 // ✅ تسجيل الدخول
@@ -243,125 +186,23 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// ✅ تسجيل مستخدم جديد
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { name, email, password, role, region } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
-    }
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ success: false, error: '❌ البريد موجود مسبقاً' });
-    }
-    const user = new User({ name, email, password, role: role || 'مشاهد', region: region || '' });
-    await user.save();
-    const token = generateToken(user);
-    const { password: _, ...userWithoutPassword } = user.toObject();
-    res.status(201).json({ success: true, token, user: userWithoutPassword });
-  } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, error: '❌ خطأ في التسجيل' });
-  }
-});
-
-// ✅ تسجيل الخروج
-app.post('/api/auth/logout', authenticate, async (req, res) => {
-  res.json({ success: true, message: 'تم تسجيل الخروج' });
-});
-
-// ✅ التحقق من التوكن
-app.get('/api/auth/verify', authenticate, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
-    res.json({ success: true, user });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ تغيير كلمة المرور
-app.put('/api/auth/change-password', authenticate, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
-    }
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
-    }
-    const isValid = await user.comparePassword(currentPassword);
-    if (!isValid) {
-      return res.status(401).json({ success: false, error: '❌ كلمة المرور الحالية غير صحيحة' });
-    }
-    user.password = newPassword;
-    await user.save();
-    res.json({ success: true, message: '✅ تم تغيير كلمة المرور' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ============================================================
-// API Routes - المراكب
-// ============================================================
-
-// ✅ جلب جميع المراكب
+// ✅ جلب المراكب
 app.get('/api/vessels', authenticate, async (req, res) => {
   try {
-    const query = {};
-    if (req.user.region && req.user.role !== 'مسؤول') {
-      query.region = req.user.region;
-    }
-    const vessels = await Vessel.find(query).sort({ createdAt: -1 });
+    const vessels = await Vessel.find().sort({ createdAt: -1 });
     res.json(vessels);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json([]);
   }
 });
 
-// ✅ إضافة مركب جديد
-app.post('/api/vessels', authenticate, checkRole(['مسؤول', 'محرر إقليمي']), async (req, res) => {
+// ✅ جلب الصيانة
+app.get('/api/maintenance', authenticate, async (req, res) => {
   try {
-    const vessel = new Vessel(req.body);
-    await vessel.save();
-    res.status(201).json({ success: true, data: vessel });
+    const records = await Maintenance.find().sort({ createdAt: -1 });
+    res.json(records);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ تحديث مركب
-app.put('/api/vessels/:id', authenticate, checkRole(['مسؤول', 'محرر إقليمي']), async (req, res) => {
-  try {
-    const vessel = await Vessel.findOneAndUpdate(
-      { _id: req.params.id },
-      req.body,
-      { new: true }
-    );
-    if (!vessel) {
-      return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-    }
-    res.json({ success: true, data: vessel });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ حذف مركب
-app.delete('/api/vessels/:id', authenticate, checkRole(['مسؤول']), async (req, res) => {
-  try {
-    const vessel = await Vessel.findByIdAndDelete(req.params.id);
-    if (!vessel) {
-      return res.status(404).json({ success: false, error: 'المركب غير موجود' });
-    }
-    res.json({ success: true, message: 'تم الحذف' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json([]);
   }
 });
 
@@ -372,146 +213,58 @@ app.get('/api/vessels/stats', authenticate, async (req, res) => {
     const ready = await Vessel.countDocuments({ stat: 'صالح' });
     const broken = await Vessel.countDocuments({ stat: 'معطب' });
     const maintenance = await Vessel.countDocuments({ stat: 'صيانة' });
-    res.json({
-      total,
-      ready,
-      broken,
-      maintenance,
-      readiness: total > 0 ? Math.round((ready / total) * 100) : 0
-    });
+    res.json({ total, ready, broken, maintenance });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ total: 0, ready: 0, broken: 0, maintenance: 0 });
   }
 });
 
-// ============================================================
-// API Routes - الصيانة
-// ============================================================
-
-// ✅ جلب جميع سجلات الصيانة
-app.get('/api/maintenance', authenticate, async (req, res) => {
+// ✅ إضافة مركب
+app.post('/api/vessels', authenticate, async (req, res) => {
   try {
-    const records = await Maintenance.find().sort({ createdAt: -1 });
-    res.json(records);
+    const vessel = new Vessel(req.body);
+    await vessel.save();
+    res.status(201).json(vessel);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ تحديث مركب
+app.put('/api/vessels/:id', authenticate, async (req, res) => {
+  try {
+    const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+    res.json(vessel);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ حذف مركب
+app.delete('/api/vessels/:id', authenticate, async (req, res) => {
+  try {
+    const vessel = await Vessel.findByIdAndDelete(req.params.id);
+    if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
 // ✅ إضافة سجل صيانة
-app.post('/api/maintenance', authenticate, checkRole(['مسؤول', 'محرر إقليمي', 'فني صيانة']), async (req, res) => {
+app.post('/api/maintenance', authenticate, async (req, res) => {
   try {
     const record = new Maintenance(req.body);
     await record.save();
-    res.status(201).json({ success: true, data: record });
+    res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ تحديث سجل صيانة
-app.put('/api/maintenance/:id', authenticate, checkRole(['مسؤول', 'محرر إقليمي', 'فني صيانة']), async (req, res) => {
-  try {
-    const record = await Maintenance.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!record) {
-      return res.status(404).json({ success: false, error: 'السجل غير موجود' });
-    }
-    res.json({ success: true, data: record });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ حذف سجل صيانة
-app.delete('/api/maintenance/:id', authenticate, checkRole(['مسؤول']), async (req, res) => {
-  try {
-    const record = await Maintenance.findByIdAndDelete(req.params.id);
-    if (!record) {
-      return res.status(404).json({ success: false, error: 'السجل غير موجود' });
-    }
-    res.json({ success: true, message: 'تم الحذف' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ إحصائيات الصيانة
-app.get('/api/maintenance/stats', authenticate, async (req, res) => {
-  try {
-    const total = await Maintenance.countDocuments();
-    const completed = await Maintenance.countDocuments({ status: 'مكتملة' });
-    const inProgress = await Maintenance.countDocuments({ status: 'قيد الإنجاز' });
-    const cancelled = await Maintenance.countDocuments({ status: 'ملغية' });
-    const totalCost = await Maintenance.aggregate([
-      { $group: { _id: null, total: { $sum: '$cost' } } }
-    ]);
-    res.json({
-      total,
-      completed,
-      inProgress,
-      cancelled,
-      totalCost: totalCost[0]?.total || 0,
-      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
 // ============================================================
-// API Routes - المحادثات
-// ============================================================
-
-// ✅ جلب محادثات المستخدم
-app.get('/api/conversations', authenticate, async (req, res) => {
-  try {
-    const conversations = await Conversation.find({ userId: req.user.id || 'anonymous' })
-      .sort({ updatedAt: -1 })
-      .limit(50);
-    res.json(conversations);
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ جلب محادثة محددة
-app.get('/api/conversations/:id', authenticate, async (req, res) => {
-  try {
-    const conversation = await Conversation.findOne({
-      _id: req.params.id,
-      userId: req.user.id || 'anonymous'
-    });
-    if (!conversation) {
-      return res.status(404).json({ success: false, error: 'المحادثة غير موجودة' });
-    }
-    res.json(conversation);
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ حذف محادثة
-app.delete('/api/conversations/:id', authenticate, async (req, res) => {
-  try {
-    const conversation = await Conversation.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user.id || 'anonymous'
-    });
-    if (!conversation) {
-      return res.status(404).json({ success: false, error: 'المحادثة غير موجودة' });
-    }
-    res.json({ success: true, message: 'تم الحذف' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ============================================================
-// 🤖 AI Routes - المساعد الذكي
+// 🤖 AI Routes
 // ============================================================
 
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
@@ -519,15 +272,13 @@ console.log('🔄 جاري تحميل مسارات الذكاء الاصطناع
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 console.log(`🔑 Gemini API Key: ${GEMINI_API_KEY ? '✅ موجود' : '❌ غير موجود'}`);
 
-// ذاكرة المحادثات
 const conversationMemory = {};
 
 const aiRouter = express.Router();
 
-// ✅ نقطة الدردشة الرئيسية
 aiRouter.post('/ask', async (req, res) => {
   try {
-    const { message, conversationId, userId } = req.body;
+    const { message, conversationId } = req.body;
     if (!message) {
       return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
     }
@@ -535,7 +286,6 @@ aiRouter.post('/ask', async (req, res) => {
     console.log(`📤 سؤال: ${message.substring(0, 50)}...`);
     
     let response = null;
-    let usedProvider = null;
     
     // ✅ محاولة استخدام Gemini
     if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && !GEMINI_API_KEY.includes('your_')) {
@@ -556,7 +306,6 @@ aiRouter.post('/ask', async (req, res) => {
         
         const result = await chat.sendMessage(message);
         response = result.response.text();
-        usedProvider = 'gemini';
         
         if (conversationId && response) {
           if (!conversationMemory[conversationId]) conversationMemory[conversationId] = [];
@@ -573,159 +322,50 @@ aiRouter.post('/ask', async (req, res) => {
       }
     }
     
-    // ✅ إذا فشل Gemini، استخدم الردود المحلية الذكية
+    // ✅ إذا فشل Gemini، استخدم الردود المحلية
     if (!response) {
-      response = generateLocalResponse(message);
-      usedProvider = 'local';
-      console.log(`✅ Local رد: ${response.substring(0, 50)}...`);
+      const msg = message.toLowerCase();
+      
+      if (msg.includes('تونس') || msg.includes('اين تونس')) {
+        response = `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
+      } else if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
+        response = `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
+      } else if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
+        response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
+      } else if (msg.includes('مساعدة') || msg.includes('help')) {
+        response = `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
+      } else if (msg.includes('برمجة') || msg.includes('كود')) {
+        response = `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
+      } else if (msg.includes('تاريخ') || msg.includes('تاريخ تونس')) {
+        response = `📜 **التاريخ**\n\nتونس لها تاريخ عريق:\n• قرطاج: تأسست عام 814 ق.م\n• الحضارة البونيقية\n• الفتح الإسلامي عام 647م\n• الدولة الحفصية\n• الحماية الفرنسية 1881-1956\n• الاستقلال 1956`;
+      } else if (msg.includes('بحر') || msg.includes('بحري') || msg.includes('أسطول')) {
+        const vessels = await Vessel.find().countDocuments();
+        const maintenance = await Maintenance.find().countDocuments();
+        response = `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: ${vessels || 0} مركب\n• الصيانة: ${maintenance || 0} سجل`;
+      } else {
+        response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
+      }
     }
     
-    // ✅ حفظ المحادثة
-    if (response) {
-      try {
-        const convId = conversationId || `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        
-        let conversation = await Conversation.findOne({ 
-          _id: conversationId,
-          userId: userId || 'anonymous'
-        });
-        
-        if (!conversation) {
-          conversation = new Conversation({
-            userId: userId || 'anonymous',
-            title: message.substring(0, 50) + '...',
-            messages: []
-          });
-        }
-        
-        conversation.messages.push(
-          { role: 'user', content: message, timestamp: new Date() },
-          { role: 'assistant', content: response, timestamp: new Date() }
-        );
-        conversation.messageCount = conversation.messages.length;
-        conversation.updatedAt = new Date();
-        
-        if (conversation.messages.length > 50) {
-          conversation.messages = conversation.messages.slice(-50);
-        }
-        
-        await conversation.save();
-        
-        const newConversationId = conversationId || conversation._id.toString();
-        
-        res.json({
-          success: true,
-          response: response,
-          conversationId: newConversationId,
-          provider: usedProvider,
-          timestamp: new Date()
-        });
-      } catch (dbError) {
-        console.warn('⚠️ DB save error:', dbError.message);
-        res.json({
-          success: true,
-          response: response,
-          conversationId: conversationId || 'temp_' + Date.now(),
-          provider: usedProvider,
-          timestamp: new Date()
-        });
-      }
-    } else {
-      res.json({
-        success: true,
-        response: "🤔 عذراً، لم أتمكن من معالجة سؤالك. يرجى المحاولة مرة أخرى.",
-        conversationId: conversationId || 'temp_' + Date.now(),
-        provider: 'none',
-        timestamp: new Date()
-      });
-    }
+    const newConversationId = conversationId || 'conv_' + Date.now().toString(36);
+    
+    res.json({
+      success: true,
+      response: response,
+      conversationId: newConversationId,
+      provider: response ? 'gemini' : 'local',
+      version: "5.0.0"
+    });
   } catch (error) {
     console.error('❌ AI Error:', error);
     res.status(500).json({
       success: false,
       error: error.message,
-      response: "❌ حدث خطأ في معالجة طلبك"
+      response: "❌ حدث خطأ. يرجى المحاولة مرة أخرى."
     });
   }
 });
 
-// ✅ دالة توليد ردود محلية
-function generateLocalResponse(message) {
-  const msg = message.toLowerCase();
-  
-  const responses = {
-    'تونس': `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`,
-    
-    'الذكاء': `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`,
-    
-    'مرحبا': "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟",
-    
-    'السلام': "🕌 وعليكم السلام ورحمة الله وبركاته! كيف يمكنني مساعدتك؟",
-    
-    'مساعدة': `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`,
-    
-    'برمجة': `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`,
-    
-    'تاريخ': `📜 **التاريخ**\n\nتونس لها تاريخ عريق:\n• قرطاج: تأسست عام 814 ق.م\n• الحضارة البونيقية\n• الفتح الإسلامي عام 647م\n• الدولة الحفصية\n• الحماية الفرنسية 1881-1956\n• الاستقلال 1956`,
-    
-    'بحر': `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: نظام متكامل للإدارة\n• الصيانة: متابعة دورية`
-  };
-  
-  for (const [key, value] of Object.entries(responses)) {
-    if (msg.includes(key)) {
-      return value;
-    }
-  }
-  
-  return `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة باستخدام الذكاء الاصطناعي، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول 🌍\n• الذكاء الاصطناعي 🧠\n• البرمجة 💻\n• التاريخ 📜\n• الشؤون البحرية 🌊\n\n🔹 **اسألني أي شيء!**`;
-}
-
-// ✅ نقطة جلب المحادثات
-aiRouter.get('/conversations', authenticate, async (req, res) => {
-  try {
-    const conversations = await Conversation.find({ 
-      userId: req.user.id || 'anonymous' 
-    }).sort({ updatedAt: -1 }).limit(50);
-    res.json({ success: true, data: conversations });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ نقطة جلب محادثة محددة
-aiRouter.get('/conversation/:id', authenticate, async (req, res) => {
-  try {
-    const conversation = await Conversation.findOne({
-      _id: req.params.id,
-      userId: req.user.id || 'anonymous'
-    });
-    if (!conversation) {
-      return res.status(404).json({ success: false, error: 'المحادثة غير موجودة' });
-    }
-    res.json({ success: true, data: conversation });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ نقطة حذف محادثة
-aiRouter.delete('/conversation/:id', authenticate, async (req, res) => {
-  try {
-    const result = await Conversation.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user.id || 'anonymous'
-    });
-    if (!result) {
-      return res.status(404).json({ success: false, error: 'المحادثة غير موجودة' });
-    }
-    conversationMemory.delete(req.params.id);
-    res.json({ success: true, message: 'تم حذف المحادثة' });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ نقطة صحة النظام
 aiRouter.get('/health', (req, res) => {
   const hasValidGemini = GEMINI_API_KEY && 
                         GEMINI_API_KEY.length > 10 && 
@@ -741,25 +381,113 @@ aiRouter.get('/health', (req, res) => {
   });
 });
 
-// ✅ استخدام الراوتر
 app.use('/api/ai', aiRouter);
 console.log('✅ تم تحميل مسارات AI بنجاح');
 
 // ============================================================
-// Routes للصفحات
+// 📄 Page Routes - الصفحات الرئيسية
 // ============================================================
 
+// ✅ الصفحة الرئيسية
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ✅ جميع الصفحات في مجلد pages
 app.get('/pages/:page', (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'pages', `${req.params.page}.html`);
+  const pageName = req.params.page;
+  const filePath = path.join(__dirname, 'public', 'pages', `${pageName}.html`);
+  
+  console.log(`📄 Loading page: ${pageName}`);
+  
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
-    res.status(404).send('Page not found');
+    // ✅ إذا لم توجد الصفحة، أنشئها تلقائياً
+    const defaultPage = `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${pageName}</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body { 
+            background: #0a0a12; 
+            color: white; 
+            font-family: 'Tajawal', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .page-container {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+        }
+        h1 { color: #60a5fa; font-size: 28px; margin-bottom: 10px; }
+        p { color: rgba(255,255,255,0.5); }
+        .icon { font-size: 64px; display: block; margin: 20px 0; }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: rgba(14,165,233,0.15);
+            border: 1px solid rgba(14,165,233,0.3);
+            border-radius: 12px;
+            color: #60a5fa;
+            text-decoration: none;
+            margin-top: 20px;
+        }
+        .btn:hover { background: rgba(14,165,233,0.25); }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <span class="icon">📄</span>
+        <h1>${pageName}</h1>
+        <p>هذه الصفحة قيد الإنشاء</p>
+        <p style="font-size:12px; color:rgba(255,255,255,0.2);">public/pages/${pageName}.html</p>
+        <a href="/" class="btn">🏠 العودة للرئيسية</a>
+    </div>
+</body>
+</html>
+    `;
+    fs.writeFileSync(filePath, defaultPage);
+    res.send(defaultPage);
   }
+});
+
+// ✅ روابط مختصرة للصفحات الرئيسية
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'dashboard.html'));
+});
+
+app.get('/fleet', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'fleet.html'));
+});
+
+app.get('/maintenance', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'maintenance.html'));
+});
+
+app.get('/readiness', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'readiness.html'));
+});
+
+app.get('/users', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'users.html'));
+});
+
+app.get('/ai-assistant', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'pages', 'ai-assistant.html'));
 });
 
 // ============================================================
@@ -805,6 +533,14 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('📝 حسابات الدخول:');
   console.log('   👑 admin   / Admin@2024#Secure (مسؤول كامل)');
   console.log('   👀 viewer  / Viewer@2024#Secure (مشاهد)');
+  console.log('========================================');
+  console.log('📄 الصفحات المتاحة:');
+  console.log('   /dashboard    - لوحة التحكم');
+  console.log('   /fleet        - الأسطول');
+  console.log('   /maintenance  - الصيانة');
+  console.log('   /readiness    - الجاهزية');
+  console.log('   /users        - المستخدمين');
+  console.log('   /ai-assistant - المساعد الذكي');
   console.log('========================================');
 });
 
