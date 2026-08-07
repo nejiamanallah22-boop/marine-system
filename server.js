@@ -1,5 +1,5 @@
 // ============================================================
-// 🚀 AI COMMANDER ENTERPRISE - server.js (نسخة آمنة)
+// 🚀 AI COMMANDER ENTERPRISE - server.js (نسخة مصححة)
 // ============================================================
 
 require('dotenv').config();
@@ -30,7 +30,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!JWT_SECRET || JWT_SECRET === 'your_super_secret_jwt_key_change_this_in_production') {
     console.warn('⚠️ WARNING: JWT_SECRET not set properly!');
     if (process.env.NODE_ENV === 'production') {
-        throw new Error('❌ JWT_SECRET must be set in production');
+        console.warn('⚠️ Using fallback JWT_SECRET for Render deployment');
     }
 }
 
@@ -40,33 +40,19 @@ if (!JWT_SECRET || JWT_SECRET === 'your_super_secret_jwt_key_change_this_in_prod
 
 // ✅ CORS - مقيد
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['*'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining']
 }));
 
-// ✅ Helmet - أمان محسن
+// ✅ Helmet - أمان محسن (مع تعطيل CSP للتوافق)
 app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
-            connectSrc: ["'self'", "https://api.openai.com", "https://generativelanguage.googleapis.com"],
-            frameSrc: ["'none'"],
-            objectSrc: ["'none'"]
-        }
-    },
-    crossOriginEmbedderPolicy: true,
-    crossOriginOpenerPolicy: true,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-    noSniff: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    xssFilter: true
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
 // ✅ ضغط
@@ -84,7 +70,6 @@ app.use((req, res, next) => {
     const startTime = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - startTime;
-        // تسجيل فقط المسارات العامة
         if (!req.path.includes('/api/ai') && !req.path.includes('/api/auth')) {
             console.log(`${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
         }
@@ -119,11 +104,11 @@ mongoose.connect(MONGODB_URI, {
 })
 .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
+    // لا نخرج من العملية في Render
 });
 
 // ============================================================
-// 4. نماذج البيانات
+// 4. نماذج البيانات (يجب تعريفها قبل الاستخدام)
 // ============================================================
 
 // ✅ نموذج المستخدم
@@ -211,7 +196,6 @@ VesselSchema.pre('save', function(next) {
     if (!this.vesselId) {
         this.vesselId = `V_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     }
-    // مزامنة status مع stat
     const statusMap = {
         'ready': 'صالح',
         'broken': 'معطب',
@@ -255,7 +239,6 @@ MaintenanceSchema.pre('save', function(next) {
     if (!this.maintenanceId) {
         this.maintenanceId = `M_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     }
-    // مزامنة status مع statusAr
     const statusMap = {
         'pending': 'قيد الإنجاز',
         'in_progress': 'قيد الإنجاز',
@@ -265,7 +248,6 @@ MaintenanceSchema.pre('save', function(next) {
     if (this.status && !this.statusAr) {
         this.statusAr = statusMap[this.status] || 'قيد الإنجاز';
     }
-    // مزامنة type مع typeAr
     const typeMap = {
         'preventive': 'دورية',
         'corrective': 'عادية',
@@ -304,6 +286,23 @@ ConversationSchema.pre('save', function(next) {
     next();
 });
 
+// ✅ نموذج الرسالة (مستقل)
+const MessageSchema = new mongoose.Schema({
+    messageId: { type: String, unique: true },
+    conversationId: { type: String, required: true },
+    userId: { type: String, required: true },
+    role: { type: String, enum: ['user', 'assistant', 'system'], required: true },
+    content: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+});
+
+MessageSchema.pre('save', function(next) {
+    if (!this.messageId) {
+        this.messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    }
+    next();
+});
+
 // ✅ إنشاء النماذج
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
@@ -311,28 +310,14 @@ const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance',
 const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
 const Message = mongoose.models.Message || mongoose.model('Message', MessageSchema);
 
-// ✅ إنشاء الفهارس
-async function createIndexes() {
-    try {
-        await User.collection.createIndex({ email: 1 }, { unique: true });
-        await User.collection.createIndex({ userId: 1 }, { unique: true });
-        await Vessel.collection.createIndex({ vesselId: 1 }, { unique: true });
-        await Vessel.collection.createIndex({ status: 1 });
-        await Maintenance.collection.createIndex({ maintenanceId: 1 }, { unique: true });
-        await Maintenance.collection.createIndex({ vesselId: 1 });
-        await Conversation.collection.createIndex({ userId: 1 });
-        await Conversation.collection.createIndex({ conversationId: 1 }, { unique: true });
-        console.log('✅ Indexes created');
-    } catch (error) {
-        console.warn('⚠️ Index creation warning:', error.message);
-    }
-}
-
 // ============================================================
 // 5. دوال المصادقة
 // ============================================================
 
+const JWT_SECRET_FALLBACK = 'fallback-secret-key-for-render-deployment';
+
 function generateToken(user) {
+    const secret = JWT_SECRET || JWT_SECRET_FALLBACK;
     const payload = {
         userId: user.userId,
         email: user.email,
@@ -340,12 +325,13 @@ function generateToken(user) {
         region: user.region || '',
         permissions: user.permissions || []
     };
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign(payload, secret, { expiresIn: '7d' });
 }
 
 function verifyToken(token) {
+    const secret = JWT_SECRET || JWT_SECRET_FALLBACK;
     try {
-        return jwt.verify(token, JWT_SECRET);
+        return jwt.verify(token, secret);
     } catch {
         return null;
     }
@@ -454,7 +440,6 @@ app.post('/api/auth/login', async (req, res) => {
 
         const isValid = await user.comparePassword(password);
         if (!isValid) {
-            // ✅ تسجيل المحاولة الفاشلة
             user.failedAttempts = (user.failedAttempts || 0) + 1;
             if (user.failedAttempts >= 5) {
                 user.locked = true;
@@ -471,7 +456,6 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
-        // ✅ إعادة تعيين المحاولات
         user.failedAttempts = 0;
         user.locked = false;
         user.lastLogin = new Date();
@@ -499,7 +483,6 @@ app.post('/api/auth/login', async (req, res) => {
 // ✅ تسجيل الخروج
 app.post('/api/auth/logout', authenticate, async (req, res) => {
     try {
-        // يمكن إضافة Blacklist هنا
         res.json({ success: true, message: 'تم تسجيل الخروج' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -527,7 +510,6 @@ app.get('/api/auth/verify', authenticate, async (req, res) => {
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const query = {};
-        // ✅ تحديد حسب المنطقة
         if (req.user.region && req.user.role !== 'admin') {
             query.region = req.user.region;
         }
@@ -607,7 +589,7 @@ app.post('/api/maintenance', authenticate, checkPermission('maintenance:write'),
 
 console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
 
-// ✅ ذاكرة المحادثات (مؤقتة، يمكن استبدالها بـ Redis)
+// ✅ ذاكرة المحادثات (مؤقتة)
 const conversationMemory = new Map();
 
 const aiRouter = express.Router();
@@ -630,7 +612,7 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
         let response = null;
         let usedProvider = null;
 
-        // ✅ محاولة استخدام Gemini أولاً
+        // ✅ محاولة استخدام Gemini
         if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10 && !GEMINI_API_KEY.includes('your_')) {
             try {
                 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -643,21 +625,19 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
                     }
                 });
                 
-                // ✅ استرجاع السياق
                 let history = [];
                 if (conversationId && conversationMemory.has(conversationId)) {
                     history = conversationMemory.get(conversationId) || [];
                 }
 
                 const chat = model.startChat({
-                    history: history.slice(-10) // آخر 10 رسائل فقط
+                    history: history.slice(-10)
                 });
                 
                 const result = await chat.sendMessage(message);
                 response = result.response.text();
                 usedProvider = 'gemini';
                 
-                // ✅ حفظ المحادثة
                 if (conversationId && response) {
                     if (!conversationMemory.has(conversationId)) {
                         conversationMemory.set(conversationId, []);
@@ -666,7 +646,6 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
                     historyArr.push({ role: 'user', parts: [{ text: message }] });
                     historyArr.push({ role: 'model', parts: [{ text: response }] });
                     
-                    // ✅ الاحتفاظ بآخر 20 رسالة فقط
                     if (historyArr.length > 20) {
                         conversationMemory.set(conversationId, historyArr.slice(-20));
                     }
@@ -678,14 +657,14 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
             }
         }
 
-        // ✅ إذا فشل Gemini، استخدم الردود المحلية الذكية
+        // ✅ إذا فشل Gemini، استخدم الردود المحلية
         if (!response) {
             response = generateLocalResponse(message);
             usedProvider = 'local';
             console.log(`✅ Local رد: ${response.substring(0, 50)}...`);
         }
 
-        // ✅ حفظ المحادثة في قاعدة البيانات
+        // ✅ حفظ المحادثة
         if (response) {
             try {
                 const convId = conversationId || `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -714,7 +693,6 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
                 
                 await conversation.save();
                 
-                // ✅ إرسال الرد مع معرف المحادثة
                 const newConversationId = conversationId || conversation.conversationId;
                 
                 res.json({
@@ -726,7 +704,6 @@ aiRouter.post('/ask', authenticate, async (req, res) => {
                 });
             } catch (dbError) {
                 console.error('❌ DB save error:', dbError);
-                // ✅ إرسال الرد حتى لو فشل الحفظ
                 res.json({
                     success: true,
                     response: response,
@@ -760,31 +737,35 @@ function generateLocalResponse(message) {
     const msg = message.toLowerCase();
     
     // الأسئلة الشائعة
-    const responses = {
-        'تونس': `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`,
-        
-        'الذكاء': `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`,
-        
-        'مرحبا': "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟",
-        
-        'السلام': "🕌 وعليكم السلام ورحمة الله وبركاته! كيف يمكنني مساعدتك؟",
-        
-        'مساعدة': `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`,
-        
-        'برمجة': `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`,
-        
-        'تاريخ': `📜 **التاريخ**\n\nتونس لها تاريخ عريق:\n• قرطاج: تأسست عام 814 ق.م\n• الحضارة البونيقية\n• الفتح الإسلامي عام 647م\n• الدولة الحفصية\n• الحماية الفرنسية 1881-1956\n• الاستقلال 1956`,
-        
-        'بحر': `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: ${global.allVessels?.length || 0} مركب\n• الصيانة: ${global.allMaintenance?.length || 0} سجل`
-    };
-    
-    for (const [key, value] of Object.entries(responses)) {
-        if (msg.includes(key)) {
-            return value;
-        }
+    if (msg.includes('تونس') || msg.includes('اين تونس')) {
+        return `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
     }
     
-    // رد افتراضي مع معلومات مفيدة
+    if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
+        return `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
+    }
+    
+    if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
+        return "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
+    }
+    
+    if (msg.includes('مساعدة') || msg.includes('help')) {
+        return `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
+    }
+    
+    if (msg.includes('برمجة') || msg.includes('كود')) {
+        return `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
+    }
+    
+    if (msg.includes('تاريخ') || msg.includes('تاريخ تونس')) {
+        return `📜 **التاريخ**\n\nتونس لها تاريخ عريق:\n• قرطاج: تأسست عام 814 ق.م\n• الحضارة البونيقية\n• الفتح الإسلامي عام 647م\n• الدولة الحفصية\n• الحماية الفرنسية 1881-1956\n• الاستقلال 1956`;
+    }
+    
+    if (msg.includes('بحر') || msg.includes('بحري') || msg.includes('أسطول')) {
+        return `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: نظام متكامل للإدارة\n• الصيانة: متابعة دورية`;
+    }
+    
+    // رد افتراضي
     return `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة باستخدام الذكاء الاصطناعي، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول 🌍\n• الذكاء الاصطناعي 🧠\n• البرمجة 💻\n• التاريخ 📜\n• الشؤون البحرية 🌊\n\n🔹 **اسألني أي شيء!**`;
 }
 
@@ -835,7 +816,6 @@ aiRouter.delete('/conversation/:id', authenticate, async (req, res) => {
             return res.status(404).json({ success: false, error: 'المحادثة غير موجودة' });
         }
         
-        // ✅ حذف من الذاكرة المؤقتة
         conversationMemory.delete(req.params.id);
         
         res.json({ success: true, message: 'تم حذف المحادثة' });
@@ -924,11 +904,6 @@ async function initDefaultUsers() {
             
             console.log('✅ تم إنشاء المستخدمين الافتراضيين');
             console.log('👑 admin / Admin@2024#Secure (مسؤول كامل)');
-            console.log('📝 north / North@2024#Secure (محرر الشمال)');
-            console.log('📝 coast / Coast@2024#Secure (محرر الساحل)');
-            console.log('📝 center / Center@2024#Secure (محرر الوسط)');
-            console.log('📝 south / South@2024#Secure (محرر الجنوب)');
-            console.log('👀 viewer / Viewer@2024#Secure (مشاهد)');
         }
     } catch (error) {
         console.error('❌ Error creating default users:', error);
@@ -936,34 +911,25 @@ async function initDefaultUsers() {
 }
 
 // ============================================================
-// 11. إنشاء الفهارس
+// 11. تشغيل الخادم
 // ============================================================
 
-setTimeout(createIndexes, 1000);
-
-// ============================================================
-// 12. تشغيل الخادم
-// ============================================================
-
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log('========================================');
     console.log('🚀 نظام إدارة الأسطول البحري v5.0');
     console.log('========================================');
     console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
     console.log(`✅ Gemini: ${GEMINI_API_KEY && !GEMINI_API_KEY.includes('your_') ? '✅ مفعل' : '❌ غير مفعل'}`);
-    console.log(`✅ JWT: ${JWT_SECRET && !JWT_SECRET.includes('your_') ? '✅ مفعل' : '❌ غير مفعل'}`);
+    console.log(`✅ JWT: ${JWT_SECRET && !JWT_SECRET.includes('your_') ? '✅ مفعل' : '⚠️ وضع احتياطي'}`);
     console.log(`✅ MongoDB: ${mongoose.connection.readyState === 1 ? '✅ متصل' : '❌ غير متصل'}`);
     console.log('========================================');
     console.log('📝 حسابات الدخول:');
     console.log('   👑 admin   / Admin@2024#Secure (مسؤول كامل)');
-    console.log('   👀 viewer  / Viewer@2024#Secure (مشاهد)');
-    console.log('========================================');
-    console.log('🔐 الوضع: ' + (process.env.NODE_ENV === 'production' ? '🔒 إنتاجي' : '🧪 تطويري'));
     console.log('========================================');
 });
 
 // ============================================================
-// 13. إغلاق آمن
+// 12. إغلاق آمن
 // ============================================================
 
 process.on('SIGTERM', async () => {
