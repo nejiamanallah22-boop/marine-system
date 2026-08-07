@@ -1,50 +1,22 @@
-// server.js
-// ============================================================
-// 🚀 MARINE SYSTEM - ENTERPRISE EDITION v23
-// ============================================================
-
-require('dotenv').config();
+// server.js - خادم التطبيق بالكامل
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
-const helmet = require('helmet');
-const compression = require('compression');
-
-// ============================================================
-// 🚀 EXPRESS APP
-// ============================================================
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 
-// ============================================================
-// 🔐 MIDDLEWARE
-// ============================================================
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://marine-system-71eo.onrender.com', 'http://localhost:3000', 'http://localhost:3001'] 
-        : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'],
-    credentials: true
-}));
-
-app.use(helmet({
-    contentSecurityPolicy: false
-}));
-
-app.use(compression());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
+// ملفات ثابتة
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/css', express.static(path.join(__dirname, 'public/css')));
 app.use('/js', express.static(path.join(__dirname, 'public/js')));
@@ -52,153 +24,245 @@ app.use('/pages', express.static(path.join(__dirname, 'public/pages')));
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 
 // ============================================================
-// 📁 DATABASE CONNECTION
+// 📁 قاعدة البيانات (JSON)
 // ============================================================
 
-console.log('🔄 جاري الاتصال بـ MongoDB...');
+const DB_PATH = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DB_PATH, 'users.json');
+const VESSELS_FILE = path.join(DB_PATH, 'vessels.json');
+const MAINTENANCE_FILE = path.join(DB_PATH, 'maintenance.json');
+const TICKETS_FILE = path.join(DB_PATH, 'tickets.json');
+const NOTES_FILE = path.join(DB_PATH, 'notes.json');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_system', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-})
-.then(() => {
-    console.log('✅ MongoDB connected successfully');
-    initDefaultUsers();
-})
-.catch(err => {
-    console.error('❌ MongoDB connection error:', err.message);
-});
+if (!fs.existsSync(DB_PATH)) {
+    fs.mkdirSync(DB_PATH, { recursive: true });
+}
 
-// ============================================================
-// 📦 MODELS
-// ============================================================
+function readData(filePath, defaultData = []) {
+    try {
+        if (!fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+            return defaultData;
+        }
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch {
+        return defaultData;
+    }
+}
 
-// ----- User Model -----
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { 
-        type: String, 
-        enum: ['مسؤول', 'محرر إقليمي', 'فني صيانة', 'قائد وحدة', 'ضابط عمليات', 'ضابط ملاحة', 'مشاهد'], 
-        default: 'مشاهد' 
-    },
-    region: { 
-        type: String, 
-        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', ''],
-        default: '' 
-    },
-    tokenVersion: { type: Number, default: 0 },
-    isActive: { type: Boolean, default: true },
-    lastLogin: { type: Date },
-    createdAt: { type: Date, default: Date.now }
-});
-
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
-
-UserSchema.methods.comparePassword = async function(password) {
-    return await bcrypt.compare(password, this.password);
-};
-
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
-
-// ----- Vessel Model -----
-const VesselSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    num: { type: String },
-    len: { type: Number, default: 0 },
-    cat: { type: String, default: 'البروق' },
-    reg: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
-    zone: { type: String },
-    port: { type: String },
-    supp: { type: String },
-    stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
-    break: { type: String, default: '' },
-    fDate: { type: String },
-    eDate: { type: String },
-    ref: { type: String },
-    repairer: { type: String },
-    region: { type: String, enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'], default: 'الشمال' },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    createdAt: { type: Date, default: Date.now }
-});
-
-const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
-
-// ----- Maintenance Model -----
-const MaintenanceSchema = new mongoose.Schema({
-    vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel', required: true },
-    vesselName: { type: String },
-    type: { type: String, enum: ['كبرى', 'دورية', 'عادية', 'طارئة'], default: 'عادية' },
-    unit: { type: String },
-    technician: { type: String, required: true },
-    description: { type: String, required: true },
-    repair: { type: String, default: '' },
-    faultType: { type: String, default: 'أخرى' },
-    cost: { type: Number, default: 0 },
-    notes: { type: String, default: '' },
-    parts: [{ name: String, quantity: Number, price: Number }],
-    status: { type: String, enum: ['قيد الإنجاز', 'مكتملة', 'ملغية'], default: 'قيد الإنجاز' },
-    date: { type: String },
-    startDate: { type: String },
-    endDate: { type: String },
-    createdBy: { type: String },
-    createdAt: { type: Date, default: Date.now }
-});
-
-MaintenanceSchema.index({ vesselName: 1, createdAt: -1 });
-MaintenanceSchema.index({ status: 1, createdAt: -1 });
-
-const Maintenance = mongoose.models.Maintenance || mongoose.model('Maintenance', MaintenanceSchema);
-
-// ----- Conversation Model -----
-const ConversationSchema = new mongoose.Schema({
-    userId: { type: String, required: true, index: true },
-    title: { type: String, default: 'محادثة جديدة' },
-    messageCount: { type: Number, default: 0 },
-    updatedAt: { type: Date, default: Date.now }
-}, {
-    timestamps: { createdAt: 'createdAt' }
-});
-
-ConversationSchema.index({ userId: 1, updatedAt: -1 });
-
-const Conversation = mongoose.models.Conversation || mongoose.model('Conversation', ConversationSchema);
-
-// ----- Message Model -----
-const MessageSchema = new mongoose.Schema({
-    conversationId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Conversation' },
-    userId: { type: String, required: true },
-    role: { type: String, enum: ['user', 'assistant'], required: true },
-    content: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now }
-});
-
-MessageSchema.index({ conversationId: 1, userId: 1, timestamp: -1 });
-MessageSchema.index({ userId: 1, timestamp: -1 });
-
-const Message = mongoose.models.Message || mongoose.model('Message', MessageSchema);
+function writeData(filePath, data) {
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        return true;
+    } catch {
+        return false;
+    }
+}
 
 // ============================================================
-// 🔐 AUTH MIDDLEWARE
+// 👤 دوال المستخدمين
+// ============================================================
+
+function getUsers() {
+    return readData(USERS_FILE);
+}
+
+function getUserByEmail(email) {
+    return getUsers().find(u => u.email === email);
+}
+
+function getUserById(id) {
+    return getUsers().find(u => u.id === id);
+}
+
+function createUser(userData) {
+    const users = getUsers();
+    const newUser = {
+        id: uuidv4(),
+        ...userData,
+        createdAt: new Date().toISOString(),
+        isActive: true
+    };
+    users.push(newUser);
+    writeData(USERS_FILE, users);
+    return newUser;
+}
+
+function updateUser(id, updates) {
+    const users = getUsers();
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) return null;
+    users[index] = { ...users[index], ...updates };
+    writeData(USERS_FILE, users);
+    return users[index];
+}
+
+function deleteUser(id) {
+    const users = getUsers();
+    const filtered = users.filter(u => u.id !== id);
+    if (filtered.length === users.length) return false;
+    writeData(USERS_FILE, filtered);
+    return true;
+}
+
+// ============================================================
+// 🚢 دوال المراكب
+// ============================================================
+
+function getVessels() {
+    return readData(VESSELS_FILE);
+}
+
+function getVesselById(id) {
+    const vessels = getVessels();
+    return vessels.find(v => v.id === id);
+}
+
+function createVessel(vesselData) {
+    const vessels = getVessels();
+    const newVessel = {
+        id: vessels.length > 0 ? Math.max(...vessels.map(v => v.id)) + 1 : 1,
+        ...vesselData,
+        createdAt: new Date().toISOString()
+    };
+    vessels.push(newVessel);
+    writeData(VESSELS_FILE, vessels);
+    return newVessel;
+}
+
+function updateVessel(id, updates) {
+    const vessels = getVessels();
+    const index = vessels.findIndex(v => v.id === id);
+    if (index === -1) return null;
+    vessels[index] = { ...vessels[index], ...updates };
+    writeData(VESSELS_FILE, vessels);
+    return vessels[index];
+}
+
+function deleteVessel(id) {
+    const vessels = getVessels();
+    const filtered = vessels.filter(v => v.id !== id);
+    if (filtered.length === vessels.length) return false;
+    writeData(VESSELS_FILE, filtered);
+    return true;
+}
+
+// ============================================================
+// 🔧 دوال الصيانة
+// ============================================================
+
+function getMaintenance() {
+    return readData(MAINTENANCE_FILE);
+}
+
+function getMaintenanceById(id) {
+    const records = getMaintenance();
+    return records.find(r => r.id === id);
+}
+
+function createMaintenance(data) {
+    const records = getMaintenance();
+    const newRecord = {
+        id: records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1,
+        ...data,
+        createdAt: new Date().toISOString()
+    };
+    records.push(newRecord);
+    writeData(MAINTENANCE_FILE, records);
+    return newRecord;
+}
+
+function updateMaintenance(id, updates) {
+    const records = getMaintenance();
+    const index = records.findIndex(r => r.id === id);
+    if (index === -1) return null;
+    records[index] = { ...records[index], ...updates };
+    writeData(MAINTENANCE_FILE, records);
+    return records[index];
+}
+
+function deleteMaintenance(id) {
+    const records = getMaintenance();
+    const filtered = records.filter(r => r.id !== id);
+    if (filtered.length === records.length) return false;
+    writeData(MAINTENANCE_FILE, filtered);
+    return true;
+}
+
+// ============================================================
+// 🎫 دوال التذاكر
+// ============================================================
+
+function getTickets() {
+    return readData(TICKETS_FILE);
+}
+
+function createTicket(data) {
+    const tickets = getTickets();
+    const newTicket = {
+        id: tickets.length > 0 ? Math.max(...tickets.map(t => t.id)) + 1 : 1,
+        ...data,
+        status: data.status || 'قيد المعالجة',
+        createdAt: new Date().toISOString()
+    };
+    tickets.push(newTicket);
+    writeData(TICKETS_FILE, tickets);
+    return newTicket;
+}
+
+function updateTicket(id, updates) {
+    const tickets = getTickets();
+    const index = tickets.findIndex(t => t.id === id);
+    if (index === -1) return null;
+    tickets[index] = { ...tickets[index], ...updates };
+    writeData(TICKETS_FILE, tickets);
+    return tickets[index];
+}
+
+// ============================================================
+// 📝 دوال المذكرات
+// ============================================================
+
+function getNotes() {
+    return readData(NOTES_FILE);
+}
+
+function createNote(data) {
+    const notes = getNotes();
+    const newNote = {
+        id: notes.length > 0 ? Math.max(...notes.map(n => n.id)) + 1 : 1,
+        ...data,
+        createdAt: new Date().toISOString()
+    };
+    notes.push(newNote);
+    writeData(NOTES_FILE, notes);
+    return newNote;
+}
+
+function updateNote(id, updates) {
+    const notes = getNotes();
+    const index = notes.findIndex(n => n.id === id);
+    if (index === -1) return null;
+    notes[index] = { ...notes[index], ...updates };
+    writeData(NOTES_FILE, notes);
+    return notes[index];
+}
+
+function deleteNote(id) {
+    const notes = getNotes();
+    const filtered = notes.filter(n => n.id !== id);
+    if (filtered.length === notes.length) return false;
+    writeData(NOTES_FILE, filtered);
+    return true;
+}
+
+// ============================================================
+// 🔐 دوال المصادقة
 // ============================================================
 
 function generateToken(user) {
     return jwt.sign(
-        { 
-            id: user._id, 
-            email: user.email, 
-            role: user.role, 
-            region: user.region || '',
-            tokenVersion: user.tokenVersion || 0
-        },
+        { id: user.id, email: user.email, role: user.role },
         JWT_SECRET,
         { expiresIn: '7d' }
     );
@@ -212,402 +276,309 @@ function verifyToken(token) {
     }
 }
 
-async function authenticate(req, res, next) {
+function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
-        return next();
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     
     const token = authHeader.substring(7);
-    
-    if (token.startsWith('demo-token-')) {
-        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
-        return next();
-    }
-    
     const decoded = verifyToken(token);
     if (!decoded) {
-        req.user = { id: 'demo-user-id', email: 'admin@example.com', role: 'مسؤول', region: '' };
-        return next();
+        return res.status(401).json({ success: false, error: 'Invalid token' });
     }
     
-    try {
-        const freshUser = await User.findById(decoded.id).lean();
-        if (freshUser && freshUser.tokenVersion !== undefined && decoded.tokenVersion !== freshUser.tokenVersion) {
-            return res.status(401).json({
-                success: false,
-                error: "❌ تم إلغاء التوكن، يرجى تسجيل الدخول مرة أخرى",
-                code: "TOKEN_REVOKED"
-            });
-        }
-        req.user = decoded;
-        next();
-    } catch (error) {
-        req.user = decoded;
-        next();
-    }
+    req.user = decoded;
+    next();
 }
 
-// ============================================================
-// 🔐 PERMISSIONS
-// ============================================================
-
-const PERMISSIONS = {
-    "مسؤول": { level: 100, viewAll: true, maxMessages: 200 },
-    "محرر إقليمي": { level: 80, viewAll: false, maxMessages: 100 },
-    "فني صيانة": { level: 50, viewAll: false, maxMessages: 50 },
-    "قائد وحدة": { level: 60, viewAll: false, maxMessages: 80 },
-    "ضابط عمليات": { level: 40, viewAll: false, maxMessages: 60 },
-    "ضابط ملاحة": { level: 30, viewAll: false, maxMessages: 40 },
-    "مشاهد": { level: 20, viewAll: false, maxMessages: 20 }
-};
-
-function getPermissions(role) {
-    return PERMISSIONS[role] || PERMISSIONS["مشاهد"];
-}
-
-function hasPermission(req, permission) {
-    const perms = getPermissions(req.user?.role);
-    return perms[permission] === true;
-}
-
-function requirePermission(permission) {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ success: false, error: '❌ الرجاء تسجيل الدخول' });
-        }
-        if (hasPermission(req, permission)) {
-            return next();
-        }
-        return res.status(403).json({ success: false, error: '❌ ليس لديك صلاحية لهذه العملية' });
-    };
-}
-
-// ============================================================
-// 🚀 API ROUTES
-// ============================================================
-
-// ----- Auth -----
-app.post('/api/auth/login', async (req, res) => {
-    try {
-        const { email, password } = req.body;
+// تهيئة المستخدمين الافتراضيين
+function initDefaultUsers() {
+    const users = getUsers();
+    if (users.length === 0) {
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync('123456', salt);
         
-        if (!email || !password) {
-            return res.status(400).json({ success: false, error: '❌ البريد وكلمة المرور مطلوبة' });
-        }
-        
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-        }
-        
-        const isValid = await user.comparePassword(password);
-        if (!isValid) {
-            return res.status(401).json({ success: false, error: '❌ بيانات غير صحيحة' });
-        }
-        
-        if (!user.isActive) {
-            return res.status(401).json({ success: false, error: '❌ الحساب معطل' });
-        }
-        
-        user.lastLogin = new Date();
-        await user.save();
-        
-        const token = generateToken(user);
-        const { password: _, ...userWithoutPassword } = user.toObject();
-        res.json({ success: true, token, user: userWithoutPassword });
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في تسجيل الدخول' });
-    }
-});
-
-// ----- Users -----
-app.get('/api/users', authenticate, requirePermission('manageUsers'), async (req, res) => {
-    try {
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: '❌ خطأ في تحميل المستخدمين' });
-    }
-});
-
-app.post('/api/users', authenticate, requirePermission('manageUsers'), async (req, res) => {
-    try {
-        const { name, email, password, role, region } = req.body;
-        
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, error: '❌ جميع الحقول مطلوبة' });
-        }
-        
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ success: false, error: '❌ البريد الإلكتروني مستخدم' });
-        }
-        
-        const user = new User({ 
-            name, 
-            email, 
-            password, 
-            role: role || 'مشاهد',
-            region: region || ''
-        });
-        await user.save();
-        
-        const { password: _, ...userWithoutPassword } = user.toObject();
-        res.json({ success: true, user: userWithoutPassword });
-        
-    } catch (error) {
-        console.error('Add user error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة المستخدم' });
-    }
-});
-
-app.put('/api/users/:id', authenticate, requirePermission('manageUsers'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const updates = req.body;
-        
-        if (updates.password) {
-            const salt = await bcrypt.genSalt(10);
-            updates.password = await bcrypt.hash(updates.password, salt);
-        }
-        
-        const user = await User.findByIdAndUpdate(id, updates, { new: true }).select('-password');
-        if (!user) {
-            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-        }
-        res.json({ success: true, user });
-        
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المستخدم' });
-    }
-});
-
-app.delete('/api/users/:id', authenticate, requirePermission('manageUsers'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        if (id === req.user.id) {
-            return res.status(400).json({ success: false, error: '❌ لا يمكنك حذف حسابك' });
-        }
-        
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
-            return res.status(404).json({ success: false, error: '❌ المستخدم غير موجود' });
-        }
-        res.json({ success: true });
-        
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف المستخدم' });
-    }
-});
-
-// ----- Vessels -----
-app.get('/api/vessels', authenticate, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json(vessels);
-    } catch (error) {
-        console.error('Get vessels error:', error);
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/vessels', authenticate, requirePermission('editVessels'), async (req, res) => {
-    try {
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        res.json({ success: true, vessel });
-    } catch (error) {
-        console.error('Add vessel error:', error);
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة المركب' });
-    }
-});
-
-app.put('/api/vessels/:id', authenticate, requirePermission('editVessels'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const vessel = await Vessel.findByIdAndUpdate(id, req.body, { new: true });
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-        }
-        res.json({ success: true, vessel });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث المركب' });
-    }
-});
-
-app.delete('/api/vessels/:id', authenticate, requirePermission('deleteVessels'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const vessel = await Vessel.findByIdAndDelete(id);
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: '❌ المركب غير موجود' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف المركب' });
-    }
-});
-
-// ----- Maintenance -----
-app.get('/api/maintenance', authenticate, async (req, res) => {
-    try {
-        const records = await Maintenance.find().sort({ createdAt: -1 });
-        res.json(records);
-    } catch (error) {
-        res.status(500).json([]);
-    }
-});
-
-app.post('/api/maintenance', authenticate, requirePermission('editMaintenance'), async (req, res) => {
-    try {
-        const record = new Maintenance(req.body);
-        await record.save();
-        res.json({ success: true, record });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في إضافة سجل الصيانة' });
-    }
-});
-
-app.put('/api/maintenance/:id', authenticate, requirePermission('editMaintenance'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const record = await Maintenance.findByIdAndUpdate(id, req.body, { new: true });
-        if (!record) {
-            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-        }
-        res.json({ success: true, record });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في تحديث سجل الصيانة' });
-    }
-});
-
-app.delete('/api/maintenance/:id', authenticate, requirePermission('deleteMaintenance'), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const record = await Maintenance.findByIdAndDelete(id);
-        if (!record) {
-            return res.status(404).json({ success: false, error: '❌ السجل غير موجود' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: '❌ خطأ في حذف سجل الصيانة' });
-    }
-});
-
-// ============================================================
-// 🤖 AI ROUTES
-// ============================================================
-
-console.log('🔄 جاري تحميل مسارات الذكاء الاصطناعي...');
-
-const aiRouter = express.Router();
-
-// ذاكرة مؤقتة للمحادثات
-const conversationMemory = {};
-
-aiRouter.post('/ask', async (req, res) => {
-    try {
-        const { message, conversationId } = req.body;
-        if (!message) return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-        
-        console.log(`📤 سؤال: ${message}`);
-        
-        let response = null;
-        const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-        
-        // محاولة استخدام Gemini إذا كان المفتاح موجوداً
-        if (GEMINI_API_KEY && GEMINI_API_KEY.length > 10) {
-            try {
-                const { GoogleGenerativeAI } = require('@google/generative-ai');
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                const model = genAI.getGenerativeModel({ 
-                    model: "gemini-2.0-flash-exp",
-                    generationConfig: {
-                        temperature: 0.8,
-                        maxOutputTokens: 2000,
-                    }
-                });
-                
-                const chat = model.startChat({
-                    history: conversationId && conversationMemory[conversationId] ? conversationMemory[conversationId] : []
-                });
-                
-                const result = await chat.sendMessage(message);
-                response = result.response.text();
-                
-                // حفظ المحادثة
-                if (conversationId && response) {
-                    if (!conversationMemory[conversationId]) conversationMemory[conversationId] = [];
-                    conversationMemory[conversationId].push({ role: 'user', parts: [{ text: message }] });
-                    conversationMemory[conversationId].push({ role: 'model', parts: [{ text: response }] });
-                    if (conversationMemory[conversationId].length > 20) {
-                        conversationMemory[conversationId] = conversationMemory[conversationId].slice(-20);
-                    }
-                }
-                
-                console.log(`✅ Gemini رد: ${response.substring(0, 50)}...`);
-            } catch (error) {
-                console.warn('⚠️ Gemini error:', error.message);
+        const defaultUsers = [
+            {
+                id: uuidv4(),
+                name: 'مدير النظام',
+                email: 'admin',
+                password: hashedPassword,
+                role: 'مسؤول',
+                isActive: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: uuidv4(),
+                name: 'مدير العمليات',
+                email: 'manager',
+                password: hashedPassword,
+                role: 'مشرف',
+                isActive: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: uuidv4(),
+                name: 'محرر',
+                email: 'editor',
+                password: hashedPassword,
+                role: 'محرر',
+                isActive: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: uuidv4(),
+                name: 'مشاهد',
+                email: 'viewer',
+                password: hashedPassword,
+                role: 'مشاهد',
+                isActive: true,
+                createdAt: new Date().toISOString()
             }
-        }
-        
-        // إذا فشل Gemini، استخدم الردود المحلية
-        if (!response) {
-            const msg = message.toLowerCase();
-            if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-                response = "👋 مرحباً بك! أنا **نظامي**، المساعد الذكي. كيف يمكنني مساعدتك اليوم؟";
-            } else if (msg.includes('تونس') || msg.includes('عاصمة')) {
-                response = `🇹🇳 **معلومات عن تونس**\n\n• العاصمة: مدينة تونس\n• اللغة الرسمية: العربية\n• العملة: الدينار التونسي (TND)\n• المساحة: 163,610 كم²\n• عدد السكان: ~12 مليون نسمة\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت، قابس`;
-            } else if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
-                response = `🧠 **الذكاء الاصطناعي**\n\nالذكاء الاصطناعي هو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل المساعدات الصوتية)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، Siri، Alexa`;
-            } else if (msg.includes('مساعدة') || msg.includes('help')) {
-                response = `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول (تونس، مصر، السعودية...)\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة وتطوير البرمجيات\n• التاريخ والجغرافيا\n• الصحة والطب\n• وأي شيء آخر!\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة`;
-            } else if (msg.includes('برمجة') || msg.includes('كود')) {
-                response = `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n• PHP - تطوير الويب الخلفي\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
-            } else if (msg.includes('من صنع') || msg.includes('المطور') || msg.includes('المبرمج')) {
-                response = `🌟 **المطور**\n\nتم تطوير هذا النظام بواسطة:\n👨‍💻 **المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي**\n\n💡 الإصدار: v23\n📅 السنة: 2026\n\nجميع الحقوق محفوظة © 2026`;
-            } else {
-                response = `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول\n• الذكاء الاصطناعي\n• البرمجة\n• وأي شيء آخر!`;
-            }
-        }
-        
-        const newConversationId = conversationId || 'conv_' + Date.now().toString(36);
-        
-        res.json({
-            success: true,
-            response: response,
-            conversationId: newConversationId,
-            version: "23.0.0"
-        });
-    } catch (error) {
-        console.error('❌ AI Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
+        ];
+        writeData(USERS_FILE, defaultUsers);
+        console.log('✅ تم إنشاء المستخدمين الافتراضيين:');
+        console.log('   admin / 123456 (مسؤول)');
+        console.log('   manager / 123456 (مشرف)');
+        console.log('   editor / 123456 (محرر)');
+        console.log('   viewer / 123456 (مشاهد)');
     }
-});
+}
 
-aiRouter.get('/health', (req, res) => {
+// ============================================================
+// 🚀 API Routes
+// ============================================================
+
+// ---------- المصادقة ----------
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ success: false, error: 'Email and password required' });
+    }
+    
+    const user = getUserByEmail(email);
+    if (!user) {
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    if (!bcrypt.compareSync(password, user.password)) {
+        return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+    
+    if (!user.isActive) {
+        return res.status(401).json({ success: false, error: 'Account is disabled' });
+    }
+    
+    const token = generateToken(user);
+    const { password: _, ...userWithoutPassword } = user;
+    
     res.json({
         success: true,
-        status: "healthy",
-        version: "23.0.0",
-        gemini: process.env.GEMINI_API_KEY ? "✅ مفعل" : "❌ غير مفعل",
-        timestamp: new Date().toISOString()
+        token: token,
+        user: userWithoutPassword
     });
 });
 
-app.use('/api/ai', aiRouter);
-console.log('✅ تم تحميل مسارات AI بنجاح');
+app.post('/api/auth/change-password', authenticate, (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const user = getUserById(req.user.id);
+    
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    if (!bcrypt.compareSync(currentPassword, user.password)) {
+        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+    }
+    
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(newPassword, salt);
+    updateUser(user.id, { password: hashedPassword });
+    
+    res.json({ success: true, message: 'Password changed successfully' });
+});
+
+// ---------- المستخدمين ----------
+app.get('/api/users', authenticate, (req, res) => {
+    const users = getUsers().map(({ password, ...user }) => user);
+    res.json(users);
+});
+
+app.post('/api/users', authenticate, (req, res) => {
+    const { name, email, password, role } = req.body;
+    
+    if (!name || !email || !password) {
+        return res.status(400).json({ success: false, error: 'Name, email and password required' });
+    }
+    
+    if (getUserByEmail(email)) {
+        return res.status(400).json({ success: false, error: 'Email already exists' });
+    }
+    
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+    
+    const user = createUser({
+        name,
+        email,
+        password: hashedPassword,
+        role: role || 'مشاهد'
+    });
+    
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ success: true, user: userWithoutPassword });
+});
+
+app.put('/api/users/:id', authenticate, (req, res) => {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    if (updates.password) {
+        const salt = bcrypt.genSaltSync(10);
+        updates.password = bcrypt.hashSync(updates.password, salt);
+    }
+    
+    const user = updateUser(id, updates);
+    if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    const { password: _, ...userWithoutPassword } = user;
+    res.json({ success: true, user: userWithoutPassword });
+});
+
+app.delete('/api/users/:id', authenticate, (req, res) => {
+    const { id } = req.params;
+    
+    if (id === req.user.id) {
+        return res.status(400).json({ success: false, error: 'Cannot delete yourself' });
+    }
+    
+    const deleted = deleteUser(id);
+    if (!deleted) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    res.json({ success: true });
+});
+
+// ---------- المراكب ----------
+app.get('/api/vessels', (req, res) => {
+    // لا تحتاج مصادقة للقراءة (يمكن تغييرها)
+    res.json(getVessels());
+});
+
+app.get('/api/vessels/:id', (req, res) => {
+    const vessel = getVesselById(parseInt(req.params.id));
+    if (!vessel) {
+        return res.status(404).json({ success: false, error: 'Vessel not found' });
+    }
+    res.json(vessel);
+});
+
+app.post('/api/vessels', authenticate, (req, res) => {
+    const vessel = createVessel(req.body);
+    res.json({ success: true, vessel });
+});
+
+app.put('/api/vessels/:id', authenticate, (req, res) => {
+    const vessel = updateVessel(parseInt(req.params.id), req.body);
+    if (!vessel) {
+        return res.status(404).json({ success: false, error: 'Vessel not found' });
+    }
+    res.json({ success: true, vessel });
+});
+
+app.delete('/api/vessels/:id', authenticate, (req, res) => {
+    const deleted = deleteVessel(parseInt(req.params.id));
+    if (!deleted) {
+        return res.status(404).json({ success: false, error: 'Vessel not found' });
+    }
+    res.json({ success: true });
+});
+
+// ---------- الصيانة ----------
+app.get('/api/maintenance', (req, res) => {
+    res.json(getMaintenance());
+});
+
+app.get('/api/maintenance/:id', (req, res) => {
+    const record = getMaintenanceById(parseInt(req.params.id));
+    if (!record) {
+        return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+    res.json(record);
+});
+
+app.post('/api/maintenance', authenticate, (req, res) => {
+    const record = createMaintenance(req.body);
+    res.json({ success: true, record });
+});
+
+app.put('/api/maintenance/:id', authenticate, (req, res) => {
+    const record = updateMaintenance(parseInt(req.params.id), req.body);
+    if (!record) {
+        return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+    res.json({ success: true, record });
+});
+
+app.delete('/api/maintenance/:id', authenticate, (req, res) => {
+    const deleted = deleteMaintenance(parseInt(req.params.id));
+    if (!deleted) {
+        return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+    res.json({ success: true });
+});
+
+// ---------- التذاكر ----------
+app.get('/api/tickets', (req, res) => {
+    res.json(getTickets());
+});
+
+app.post('/api/tickets', authenticate, (req, res) => {
+    const ticket = createTicket(req.body);
+    res.json({ success: true, ticket });
+});
+
+app.put('/api/tickets/:id', authenticate, (req, res) => {
+    const ticket = updateTicket(parseInt(req.params.id), req.body);
+    if (!ticket) {
+        return res.status(404).json({ success: false, error: 'Ticket not found' });
+    }
+    res.json({ success: true, ticket });
+});
+
+// ---------- المذكرات ----------
+app.get('/api/notes', (req, res) => {
+    res.json(getNotes());
+});
+
+app.post('/api/notes', authenticate, (req, res) => {
+    const note = createNote(req.body);
+    res.json({ success: true, note });
+});
+
+app.put('/api/notes/:id', authenticate, (req, res) => {
+    const note = updateNote(parseInt(req.params.id), req.body);
+    if (!note) {
+        return res.status(404).json({ success: false, error: 'Note not found' });
+    }
+    res.json({ success: true, note });
+});
+
+app.delete('/api/notes/:id', authenticate, (req, res) => {
+    const deleted = deleteNote(parseInt(req.params.id));
+    if (!deleted) {
+        return res.status(404).json({ success: false, error: 'Note not found' });
+    }
+    res.json({ success: true });
+});
 
 // ============================================================
-// 📄 PAGE ROUTES
+// 📄 تقديم الصفحات
 // ============================================================
 
 app.get('/', (req, res) => {
@@ -625,58 +596,23 @@ app.get('/pages/:page', (req, res) => {
 });
 
 // ============================================================
-// 🔧 INIT DEFAULT USERS
+// 🚀 تشغيل الخادم
 // ============================================================
 
-async function initDefaultUsers() {
-    try {
-        const count = await User.countDocuments();
-        if (count === 0) {
-            const defaultUsers = [
-                { name: 'مدير النظام', email: 'admin', password: '123456', role: 'مسؤول', region: '' },
-                { name: 'محرر الشمال', email: 'north', password: '123456', role: 'محرر إقليمي', region: 'الشمال' },
-                { name: 'محرر الساحل', email: 'coast', password: '123456', role: 'محرر إقليمي', region: 'الساحل' },
-                { name: 'محرر الوسط', email: 'center', password: '123456', role: 'محرر إقليمي', region: 'الوسط' },
-                { name: 'محرر الجنوب', email: 'south', password: '123456', role: 'محرر إقليمي', region: 'الجنوب' },
-                { name: 'فني تونس', email: 'tech.tunis', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'فني المنستير', email: 'tech.monastir', password: '123456', role: 'فني صيانة', region: '' },
-                { name: 'مشاهد', email: 'viewer', password: '123456', role: 'مشاهد', region: '' }
-            ];
-            
-            for (const userData of defaultUsers) {
-                const user = new User(userData);
-                await user.save();
-            }
-            console.log('✅ تم إنشاء المستخدمين الافتراضيين');
-            console.log('========================================');
-            console.log('👑 مسؤول: admin / 123456');
-            console.log('📍 محرر الشمال: north / 123456');
-            console.log('📍 محرر الساحل: coast / 123456');
-            console.log('📍 محرر الوسط: center / 123456');
-            console.log('📍 محرر الجنوب: south / 123456');
-            console.log('🔧 فني تونس: tech.tunis / 123456');
-            console.log('👀 مشاهد: viewer / 123456');
-            console.log('========================================');
-        }
-    } catch (error) {
-        console.error('❌ Error creating default users:', error);
-    }
-}
-
-// ============================================================
-// 🚀 START SERVER
-// ============================================================
+initDefaultUsers();
 
 app.listen(PORT, () => {
     console.log('========================================');
-    console.log('🚀 نظام إدارة الأسطول البحري v23');
+    console.log('🚀 نظام إدارة الأسطول البحري');
     console.log('========================================');
     console.log(`✅ الخادم يعمل على: http://localhost:${PORT}`);
-    console.log(`✅ البيئة: ${process.env.NODE_ENV || 'development'}`);
     console.log('========================================');
-    console.log('📝 حسابات الدخول:');
+    console.log('📝 حسابات الدخول التجريبية:');
     console.log('   👑 admin   / 123456 (مسؤول كامل)');
+    console.log('   ⭐ manager / 123456 (مشرف)');
+    console.log('   ✏️ editor  / 123456 (محرر)');
+    console.log('   👀 viewer  / 123456 (مشاهد)');
+    console.log('========================================');
+    console.log('📁 قاعدة البيانات: data/');
     console.log('========================================');
 });
-
-module.exports = app;
