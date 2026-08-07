@@ -1,25 +1,27 @@
 // public/js/app.js
+// ============================================================
+// 📦 MARINE SYSTEM - MAIN APPLICATION
+// ============================================================
+
 console.log('✅ App loaded');
 
+// ============================================================
+// 📦 STATE
+// ============================================================
+
 let allVessels = [];
+let allMaintenance = [];
 let allUsers = [];
 let allTickets = [];
 let allNotes = [];
-let allMaintenance = [];
 let currentUser = null;
 let editingVesselId = null;
 let editingMaintenanceId = null;
 let activityInterval = null;
 let sessionId = null;
 
-// متغيرات الرسوم البيانية
-let chartCategory = null;
-let chartDoughnut = null;
-let dashChart = null;
-let dashLineChart = null;
-
 // ============================================================
-// منع الدخول التلقائي
+// 🔐 LOGIN
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -53,130 +55,152 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================================
-// دوال تحميل الصفحات
+// 🔐 DO LOGIN
 // ============================================================
 
-function loadPage(pageName) {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-    document.querySelectorAll('.page-content').forEach(el => el.remove());
+function doLogin() {
+    console.log('🔄 محاولة تسجيل الدخول...');
     
-    fetch(`/pages/${pageName}.html`)
-        .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
-            return res.text();
-        })
-        .then(html => {
-            const div = document.createElement('div');
-            div.className = 'page-content';
-            div.id = 'page-' + pageName;
-            div.innerHTML = html;
-            container.appendChild(div);
-            initPage(pageName);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#f87171;">
-                    ❌ خطأ في تحميل الصفحة: ${pageName}
-                    <br><small>${err.message}</small>
-                </div>
-            `;
-        });
-}
-
-function initPage(pageName) {
-    console.log('📄 Initializing page:', pageName);
-    switch(pageName) {
-        case 'dashboard': 
-            if (typeof loadDashboard === 'function') loadDashboard(); 
-            break;
-        case 'fleet': 
-            if (typeof loadVessels === 'function') loadVessels(); 
-            break;
-        case 'maintenance': 
-            if (typeof loadMaintenance === 'function') loadMaintenance(); 
-            break;
-        case 'efficiency': 
-            if (typeof loadVessels === 'function') loadVessels(); 
-            break;
-        case 'support': 
-            if (typeof loadTickets === 'function') loadTickets(); 
-            break;
-        case 'tracking': 
-            if (typeof initTrackingPage === 'function') initTrackingPage(); 
-            break;
-        case 'map': 
-            if (typeof initMap === 'function') setTimeout(initMap, 100); 
-            break;
-        case 'users': 
-            if (typeof loadUsers === 'function') loadUsers(); 
-            break;
-        case 'notes': 
-            if (typeof loadNotes === 'function') loadNotes(); 
-            break;
-        case 'sessions': 
-            if (typeof loadSessions === 'function') loadSessions(); 
-            break;
-        case 'ai-assistant': 
-            if (typeof initAIAssistant === 'function') setTimeout(initAIAssistant, 300); 
-            break;
-        default: 
-            console.log('⚠️ Unknown page:', pageName);
+    const username = document.getElementById('username')?.value?.trim();
+    const password = document.getElementById('password')?.value?.trim();
+    
+    if (!username || !password) {
+        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
+        return;
     }
-}
-
-function initTrackingPage() {
-    if (document.getElementById('page-tracking')) {
-        if (typeof initTrackingMap === 'function') {
-            setTimeout(initTrackingMap, 300);
-        }
-        if (typeof initTrackingSocket === 'function') {
-            setTimeout(initTrackingSocket, 500);
-        }
-        if (typeof startContinuousTracking === 'function') {
-            setTimeout(startContinuousTracking, 1000);
-        }
+    
+    const loginBtn = document.querySelector('#loginOverlay .login-btn');
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '⏳ جاري الدخول...';
     }
-}
-
-function showPage(pageName) {
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    const btns = document.querySelectorAll('.nav-btn');
-    const pageMap = {
-        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 'sessions': 9,
-        'ai-assistant': 10
+    
+    // ===== حسابات تجريبية =====
+    const demoUsers = {
+        'admin': {
+            password: '123456',
+            user: { id: '1', name: 'مدير النظام', role: 'مسؤول', email: 'admin@example.com' }
+        },
+        'north': {
+            password: '123456',
+            user: { id: '2', name: 'محرر الشمال', role: 'محرر إقليمي', email: 'north@example.com' }
+        },
+        'coast': {
+            password: '123456',
+            user: { id: '3', name: 'محرر الساحل', role: 'محرر إقليمي', email: 'coast@example.com' }
+        },
+        'viewer': {
+            password: '123456',
+            user: { id: '4', name: 'مشاهد', role: 'مشاهد', email: 'viewer@example.com' }
+        }
     };
-    if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
-        btns[pageMap[pageName]].classList.add('active');
-    }
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar && window.innerWidth <= 992) {
-        sidebar.classList.remove('open');
-    }
-    loadPage(pageName);
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.toggle('open');
-}
-
-function refreshAllPages() {
-    const currentPage = document.querySelector('.page-content');
-    if (currentPage) {
-        const pageName = currentPage.id.replace('page-', '');
-        loadPage(pageName);
-    } else {
+    
+    if (demoUsers[username] && demoUsers[username].password === password) {
+        console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
+        const userData = demoUsers[username].user;
+        localStorage.setItem('token', 'demo-token-' + Date.now());
+        localStorage.setItem('authToken', 'demo-token-' + Date.now());
+        localStorage.setItem('user', JSON.stringify(userData));
+        currentUser = userData;
+        sessionId = 'demo-session-' + Date.now();
+        
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        updateUserDisplay();
+        loadAllData();
         loadPage('dashboard');
+        startActivityTracking();
+        showAlert('✅ مرحباً ' + userData.name + '!', 'success');
+        
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '🚀 دخول';
+        }
+        return;
     }
-    showAlert('✅ تم تحديث الصفحة', 'success');
+    
+    // ===== الاتصال بالخادم =====
+    fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email: username, password: password })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('فشل الاتصال بالخادم');
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            currentUser = data.user;
+            sessionId = data.session?.sessionId || null;
+            
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            
+            updateUserDisplay();
+            loadAllData();
+            loadPage('dashboard');
+            startActivityTracking();
+            showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
+        } else {
+            showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Login error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم: ' + err.message, 'danger');
+    })
+    .finally(() => {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = '🚀 دخول';
+        }
+    });
 }
 
 // ============================================================
-// دوال مساعدة
+// 🔐 LOGOUT
 // ============================================================
+
+function doLogout() {
+    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    if (activityInterval) {
+        clearInterval(activityInterval);
+        activityInterval = null;
+    }
+    
+    const token = getToken();
+    if (token && !token.startsWith('demo-token')) {
+        fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+        }).catch(err => console.log('Logout error:', err));
+    }
+    
+    localStorage.clear();
+    location.reload();
+}
+
+// ============================================================
+// 🧰 UTILITY FUNCTIONS
+// ============================================================
+
+function getToken() {
+    return localStorage.getItem('token') || localStorage.getItem('authToken');
+}
+
+function getUser() {
+    try {
+        return JSON.parse(localStorage.getItem('user'));
+    } catch {
+        return null;
+    }
+}
 
 function showAlert(message, type = 'info') {
     const colors = {
@@ -213,37 +237,23 @@ function showAlert(message, type = 'info') {
     }, 4000);
 }
 
-function getToken() {
-    return localStorage.getItem('token');
-}
-
-function getUser() {
-    try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch {
-        return null;
+function updateUserDisplay() {
+    const display = document.getElementById('userRoleDisplay');
+    const nameDisplay = document.getElementById('userNameDisplay');
+    const roleBadge = document.getElementById('userRoleBadge');
+    
+    if (display && currentUser) {
+        const roleEmojis = { 'مسؤول': '👑', 'مشرف': '⭐', 'محرر': '✏️', 'مشاهد': '👀', 'محرر إقليمي': '📍' };
+        if (nameDisplay) nameDisplay.textContent = currentUser.name;
+        if (roleBadge) roleBadge.textContent = (roleEmojis[currentUser.role] || '👤') + ' ' + currentUser.role;
     }
 }
 
-function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function scrollToBottom() {
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-}
-
-// ============================================================
-// 🕐 مراقبة النشاط
-// ============================================================
-
 function startActivityTracking() {
     if (activityInterval) clearInterval(activityInterval);
-    
     activityInterval = setInterval(() => {
         const token = getToken();
         if (!token) return;
-        
         fetch('/api/auth/activity', {
             method: 'POST',
             headers: {
@@ -252,178 +262,128 @@ function startActivityTracking() {
             }
         }).catch(err => console.log('Activity tracking error:', err));
     }, 30000);
-    
-    document.addEventListener('click', logActivity);
-    document.addEventListener('keydown', logActivity);
-    document.addEventListener('scroll', debounce(logActivity, 5000));
 }
 
-function logActivity() {
-    const token = getToken();
-    if (!token) return;
-    
-    fetch('/api/auth/activity', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        }
-    }).catch(err => console.log('Activity log error:', err));
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('open');
 }
 
-function debounce(func, wait) {
-    let timeout;
-    return function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, arguments), wait);
+// ============================================================
+// 📄 PAGE LOADING
+// ============================================================
+
+function showPage(pageName) {
+    // تحديث الأزرار النشطة
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    const btns = document.querySelectorAll('.nav-btn');
+    const pageMap = {
+        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
+        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 'sessions': 9,
+        'ai-assistant': 10
     };
+    if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
+        btns[pageMap[pageName]].classList.add('active');
+    }
+    
+    // إغلاق القائمة الجانبية في الشاشات الصغيرة
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 992) {
+        sidebar.classList.remove('open');
+    }
+    
+    loadPage(pageName);
 }
 
-// ============================================================
-// المصادقة
-// ============================================================
-
-function doLogin() {
-    console.log('🔄 محاولة تسجيل الدخول...');
+function loadPage(pageName) {
+    const container = document.getElementById('pageContainer');
+    if (!container) return;
     
-    const username = document.getElementById('username')?.value?.trim();
-    const password = document.getElementById('password')?.value?.trim();
+    // إزالة المحتوى القديم
+    document.querySelectorAll('.page-content').forEach(el => el.remove());
     
-    if (!username || !password) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
-    }
+    console.log(`📄 Loading page: ${pageName}`);
     
-    const loginBtn = document.querySelector('#loginOverlay .login-btn');
-    if (loginBtn) {
-        loginBtn.disabled = true;
-        loginBtn.textContent = '⏳ جاري الدخول...';
-    }
-    
-    // ===== حسابات تجريبية =====
-    const demoUsers = {
-        'admin': {
-            password: '123456',
-            user: { id: '1', name: 'مدير النظام', role: 'مسؤول', email: 'admin@example.com' }
-        },
-        'manager': {
-            password: '123456',
-            user: { id: '2', name: 'مدير العمليات', role: 'مشرف', email: 'manager@example.com' }
-        },
-        'editor': {
-            password: '123456',
-            user: { id: '3', name: 'محرر', role: 'محرر', email: 'editor@example.com' }
-        },
-        'viewer': {
-            password: '123456',
-            user: { id: '4', name: 'مشاهد', role: 'مشاهد', email: 'viewer@example.com' }
-        }
-    };
-    
-    if (demoUsers[username] && demoUsers[username].password === password) {
-        console.log('✅ دخول تجريبي ناجح للمستخدم:', username);
-        const userData = demoUsers[username].user;
-        localStorage.setItem('token', 'demo-token-' + Date.now());
-        localStorage.setItem('user', JSON.stringify(userData));
-        currentUser = userData;
-        sessionId = 'demo-session-' + Date.now();
-        
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        
-        updateUserDisplay();
-        loadAllData();
-        loadPage('dashboard');
-        startActivityTracking();
-        showAlert('✅ مرحباً ' + userData.name + '!', 'success');
-        
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '🚀 دخول';
-        }
-        return;
-    }
-    
-    // ===== الاتصال بالخادم =====
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email: username, password: password })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('فشل الاتصال بالخادم');
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            currentUser = data.user;
-            sessionId = data.session?.sessionId || null;
+    // محاولة تحميل الصفحة
+    fetch(`/pages/${pageName}.html`)
+        .then(res => {
+            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
+            return res.text();
+        })
+        .then(html => {
+            const div = document.createElement('div');
+            div.className = 'page-content';
+            div.id = 'page-' + pageName;
+            div.innerHTML = html;
+            container.appendChild(div);
             
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            updateUserDisplay();
-            loadAllData();
-            loadPage('dashboard');
-            startActivityTracking();
-            showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
-        } else {
-            showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Login error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم: ' + err.message, 'danger');
-    })
-    .finally(() => {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '🚀 دخول';
-        }
-    });
+            // تهيئة الصفحة بعد التحميل
+            setTimeout(() => {
+                initPage(pageName);
+            }, 100);
+        })
+        .catch(err => {
+            console.error('❌ Error loading page:', err);
+            container.innerHTML = `
+                <div class="error-page" style="text-align:center; padding:60px 20px; color:#f87171;">
+                    <div style="font-size:60px; margin-bottom:20px;">📄</div>
+                    <h3 style="font-size:20px; margin-bottom:10px;">⚠️ الصفحة غير موجودة</h3>
+                    <p style="color:rgba(255,255,255,0.3);">${err.message}</p>
+                    <button onclick="loadPage('dashboard')" style="margin-top:20px; padding:10px 24px; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.2); border-radius:10px; color:#60a5fa; cursor:pointer;">
+                        📊 العودة إلى لوحة التحكم
+                    </button>
+                </div>
+            `;
+        });
 }
 
-function doLogout() {
-    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
-    
-    if (activityInterval) {
-        clearInterval(activityInterval);
-        activityInterval = null;
-    }
-    
-    const token = getToken();
-    if (token && !token.startsWith('demo-token')) {
-        fetch('/api/auth/logout', {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token }
-        }).catch(err => console.log('Logout error:', err));
-    }
-    
-    localStorage.clear();
-    location.reload();
-}
-
-function updateUserDisplay() {
-    const display = document.getElementById('userRoleDisplay');
-    if (display && currentUser) {
-        const roleEmojis = { 'مسؤول': '👑', 'مشرف': '⭐', 'محرر': '✏️', 'مشاهد': '👀' };
-        display.innerHTML = `
-            <i class="fas fa-user-circle"></i> 
-            ${currentUser.name} 
-            <span style="font-size:12px; background:rgba(255,255,255,0.06); padding:2px 12px; border-radius:10px;">
-                ${roleEmojis[currentUser.role] || '👤'} ${currentUser.role}
-            </span>
-            <button onclick="doLogout()" style="margin-left:8px; padding:2px 10px; border:none; border-radius:8px; background:rgba(248,113,113,0.15); color:#f87171; cursor:pointer; font-size:11px;">
-                🚪 خروج
-            </button>
-        `;
+function initPage(pageName) {
+    console.log('📄 Initializing page:', pageName);
+    switch(pageName) {
+        case 'dashboard': 
+            if (typeof refreshDashboard === 'function') {
+                setTimeout(refreshDashboard, 300);
+            } else {
+                console.warn('⚠️ refreshDashboard not defined');
+            }
+            break;
+        case 'fleet': 
+            if (typeof loadVessels === 'function') loadVessels(); 
+            break;
+        case 'maintenance': 
+            if (typeof loadMaintenance === 'function') loadMaintenance(); 
+            break;
+        case 'efficiency': 
+            if (typeof loadVessels === 'function') loadVessels(); 
+            break;
+        case 'support': 
+            if (typeof loadTickets === 'function') loadTickets(); 
+            break;
+        case 'tracking': 
+            if (typeof initTrackingPage === 'function') initTrackingPage(); 
+            break;
+        case 'map': 
+            if (typeof initMap === 'function') setTimeout(initMap, 100); 
+            break;
+        case 'users': 
+            if (typeof loadUsers === 'function') loadUsers(); 
+            break;
+        case 'notes': 
+            if (typeof loadNotes === 'function') loadNotes(); 
+            break;
+        case 'sessions': 
+            if (typeof loadSessions === 'function') loadSessions(); 
+            break;
+        case 'ai-assistant': 
+            if (typeof initAIAssistant === 'function') setTimeout(initAIAssistant, 300); 
+            break;
+        default: 
+            console.log('⚠️ Unknown page:', pageName);
     }
 }
 
 // ============================================================
-// تحميل البيانات
+// 📊 LOAD DATA
 // ============================================================
 
 function loadAllData() {
@@ -436,12 +396,6 @@ function loadAllData() {
 
 function loadVessels() {
     const token = getToken();
-    if (token && token.startsWith('demo-token')) {
-        allVessels = getDemoVessels();
-        renderAllTables();
-        return;
-    }
-    
     if (!token) {
         allVessels = getDemoVessels();
         renderAllTables();
@@ -469,17 +423,9 @@ function loadVessels() {
 
 function loadMaintenance() {
     const token = getToken();
-    if (token && token.startsWith('demo-token')) {
-        allMaintenance = getDemoMaintenance();
-        renderMaintenanceTables();
-        updateYearFilter();
-        return;
-    }
-    
     if (!token) {
         allMaintenance = getDemoMaintenance();
         renderMaintenanceTables();
-        updateYearFilter();
         return;
     }
     
@@ -494,13 +440,11 @@ function loadMaintenance() {
         allMaintenance = data || [];
         console.log('✅ Maintenance loaded:', allMaintenance.length);
         renderMaintenanceTables();
-        updateYearFilter();
     })
     .catch(err => {
         console.error('Load maintenance error:', err);
         allMaintenance = getDemoMaintenance();
         renderMaintenanceTables();
-        updateYearFilter();
     });
 }
 
@@ -557,14 +501,18 @@ function loadSessions() {
     }
 }
 
+// ============================================================
+// 📊 RENDER TABLES
+// ============================================================
+
 function renderAllTables() {
     renderMainTable();
     renderMaintenanceTables();
     updateMaintenanceVessels();
     renderEfficiency();
     if (document.getElementById('page-dashboard')) {
-        if (typeof loadDashboard === 'function') {
-            setTimeout(loadDashboard, 100);
+        if (typeof refreshDashboard === 'function') {
+            setTimeout(refreshDashboard, 100);
         }
     }
 }
@@ -575,159 +523,6 @@ function renderMaintenanceTables() {
     updateMaintenanceStats();
     renderMaintenanceUnits();
 }
-
-// ============================================================
-// بيانات تجريبية
-// ============================================================
-
-function getDemoVessels() {
-    return [
-        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزر特', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
-        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
-        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
-        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
-        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
-        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
-        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
-        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
-        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
-        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
-        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
-        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
-        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
-        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
-        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
-        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
-        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
-        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
-        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
-        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
-        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
-    ];
-}
-
-function getDemoMaintenance() {
-    return [
-        {
-            id: 1,
-            vesselId: 4,
-            vesselName: 'البروق 4',
-            type: 'كبرى',
-            unit: 'وحدة الصيانة والإسناد البحري تونس',
-            technician: 'فني 1',
-            description: 'عطل في المحرك الرئيسي',
-            repair: 'تم تغيير طلمبة الزيت والمضخة',
-            faultType: 'محرك',
-            cost: 4500,
-            notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
-            status: 'مكتملة',
-            date: '2026-01-20',
-            startDate: '2026-01-15',
-            endDate: '2026-01-20',
-            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }],
-            createdBy: 'Admin'
-        },
-        {
-            id: 2,
-            vesselId: 9,
-            vesselName: 'صقر 2',
-            type: 'دورية',
-            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
-            technician: 'فني 2',
-            description: 'صيانة دورية للمحرك',
-            repair: 'تم تغيير الزيوت والفلتر',
-            faultType: 'محرك',
-            cost: 300,
-            notes: 'تم تغيير الزيوت والفلتر',
-            status: 'مكتملة',
-            date: '2026-05-15',
-            startDate: '2026-05-14',
-            endDate: '2026-05-15',
-            parts: [{ name: 'زيت محرك', quantity: 5, price: 100 }, { name: 'فلتر هواء', quantity: 1, price: 300 }],
-            createdBy: 'Admin'
-        },
-        {
-            id: 3,
-            vesselId: 14,
-            vesselName: 'خافر 2',
-            type: 'كبرى',
-            unit: 'وحدة الصيانة والإسناد البحري المنستير',
-            technician: 'فني 3',
-            description: 'إصلاح شامل للهيكل',
-            repair: 'تم تغيير ألواح الهيكل والدهان',
-            faultType: 'هيكل',
-            cost: 5000,
-            notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
-            status: 'مكتملة',
-            date: '2026-01-10',
-            startDate: '2026-01-05',
-            endDate: '2026-01-10',
-            parts: [{ name: 'ألواح فولاذ', quantity: 10, price: 350 }, { name: 'دهان مضاد للصدأ', quantity: 5, price: 200 }],
-            createdBy: 'Admin'
-        },
-        {
-            id: 4,
-            vesselId: 6,
-            vesselName: 'البروق 6',
-            type: 'عادية',
-            unit: 'وحدة الصيانة والإسناد البحري جرجيس',
-            technician: 'فني 4',
-            description: 'عطل في النظام الكهربائي',
-            repair: 'تم تغيير البطاريات والكابلات',
-            faultType: 'كهرباء',
-            cost: 1200,
-            notes: 'تم تغيير البطاريات والكابلات',
-            status: 'مكتملة',
-            date: '2026-02-05',
-            startDate: '2026-02-03',
-            endDate: '2026-02-05',
-            parts: [{ name: 'بطارية', quantity: 2, price: 450 }, { name: 'كابلات', quantity: 3, price: 100 }],
-            createdBy: 'Admin'
-        },
-        {
-            id: 5,
-            vesselId: 19,
-            vesselName: 'زورق مزدوج 3',
-            type: 'طارئة',
-            unit: 'وحدة الصيانة والإسناد البحري تونس',
-            technician: 'فني 1',
-            description: 'عطل في نظام التوجيه',
-            repair: 'تم تغيير طرمبة التوجيه',
-            faultType: 'توجيه',
-            cost: 1800,
-            notes: 'تم تغيير طرمبة التوجيه بالكامل',
-            status: 'قيد الإنجاز',
-            date: '2026-02-10',
-            startDate: '2026-02-08',
-            endDate: null,
-            parts: [{ name: 'طرمبة توجيه', quantity: 1, price: 1500 }, { name: 'زيت هيدروليك', quantity: 3, price: 100 }],
-            createdBy: 'Admin'
-        },
-        {
-            id: 6,
-            vesselId: 11,
-            vesselName: 'صقر 4',
-            type: 'كبرى',
-            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
-            technician: 'فني 2',
-            description: 'عطل في نظام التبريد',
-            repair: 'تم تغيير الراديتر والمراوح',
-            faultType: 'تبريد',
-            cost: 3200,
-            notes: 'تم تغيير نظام التبريد بالكامل',
-            status: 'مكتملة',
-            date: '2026-07-15',
-            startDate: '2026-07-10',
-            endDate: '2026-07-15',
-            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }],
-            createdBy: 'Admin'
-        }
-    ];
-}
-
-// ============================================================
-// عرض الجداول الأساسية
-// ============================================================
 
 function renderMainTable() {
     const tbody = document.getElementById('mainBody');
@@ -816,7 +611,408 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين (كاملة)
+// 📊 MAINTENANCE FUNCTIONS
+// ============================================================
+
+function renderGeneralMaintenance() {
+    const container = document.getElementById('generalMaintenanceContainer');
+    if (!container) return;
+    const vessels = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
+    if (vessels.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#4ade80;">✅ لا توجد مراكب معطبة</div>';
+        return;
+    }
+    let html = '<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفئة</th><th>الحالة</th><th>العطل</th><th>المسؤول</th><th>إجراءات</th></tr></thead><tbody>';
+    vessels.forEach(v => {
+        html += `<tr>
+            <td><strong>${v.name}</strong></td>
+            <td>${v.cat || '-'}</td>
+            <td><span class="status-badge status-broken">${v.stat}</span></td>
+            <td>${v.break || '-'}</td>
+            <td>${v.repairer || '-'}</td>
+            <td>
+                <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
+                <button class="btn-sm btn-success" onclick="fixVessel(${v.id})">✅ إصلاح</button>
+            </td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function renderHistoryMaintenance() {
+    const container = document.getElementById('historyMaintenanceContainer');
+    if (!container) return;
+    const records = allMaintenance.filter(r => r.status === 'مكتملة' || r.status === 'ملغية');
+    if (records.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>';
+        return;
+    }
+    let html = '<div class="scrollable-table"><table><thead><tr><th>التاريخ</th><th>المركب</th><th>نوع الصيانة</th><th>العطل</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>';
+    records.slice().reverse().forEach(r => {
+        const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
+        html += `<tr>
+            <td>${r.date || '-'}</td>
+            <td><strong>${vesselName}</strong></td>
+            <td>${r.type || '-'}</td>
+            <td>${r.description || '-'}</td>
+            <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
+            <td><span class="status-badge status-closed">✅ ${r.status}</span></td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function updateMaintenanceStats() {
+    const container = document.getElementById('maintenanceStats');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="maintenance-stats">
+            <div class="stat-box stat-total"><h4>${allMaintenance.length}</h4><p>📊 المجموع</p></div>
+            <div class="stat-box stat-progress"><h4>${allMaintenance.filter(r => r.status === 'قيد الإنجاز').length}</h4><p>🔄 قيد الإنجاز</p></div>
+            <div class="stat-box stat-completed"><h4>${allMaintenance.filter(r => r.status === 'مكتملة').length}</h4><p>✅ مكتملة</p></div>
+            <div class="stat-box stat-cancelled"><h4>${allMaintenance.filter(r => r.status === 'ملغية').length}</h4><p>❌ ملغية</p></div>
+        </div>
+    `;
+}
+
+function renderMaintenanceUnits() {
+    const container = document.getElementById('maintenanceUnitsContainer');
+    if (!container) return;
+    const units = ['وحدة الصيانة والإسناد البحري تونس', 'وحدة الصيانة والإسناد البحري صفاقس', 'وحدة الصيانة والإسناد البحري المنستير', 'وحدة الصيانة والإسناد البحري جرجيس', 'شركة خاصة'];
+    let html = '';
+    units.forEach(unit => {
+        const records = allMaintenance.filter(r => r.unit === unit);
+        html += `
+            <div class="region-table-card">
+                <div class="region-table-header">🏭 ${unit} <span style="font-size:12px; color:rgba(255,255,255,0.3);">📊 ${records.length} سجل</span></div>
+                ${records.length === 0 ? '<div style="text-align:center; padding:10px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>' :
+                `<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفني</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>
+                ${records.slice().reverse().map(r => `
+                    <tr><td>${r.vesselName || '-'}</td><td>${r.technician || '-'}</td><td>${r.cost ? r.cost + ' د.ت' : '-'}</td><td>${r.status || '-'}</td></tr>
+                `).join('')}</tbody></table></div>`}
+            </div>
+        `;
+    });
+    container.innerHTML = html;
+}
+
+function updateMaintenanceVessels() {
+    const select = document.getElementById('mVesselId');
+    if (!select) return;
+    select.innerHTML = '<option value="">اختر المركب</option>';
+    allVessels.forEach(v => {
+        select.innerHTML += `<option value="${v.id}">${v.name} (${v.num || 'بدون رقم'})</option>`;
+    });
+}
+
+function fixVessel(vesselId) {
+    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    fetch('/api/vessels/' + vesselId, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ stat: 'صالح' })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم إصلاح المركب', 'success');
+            loadAllData();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Fix vessel error:', err);
+        showAlert('❌ خطأ في إصلاح المركب', 'danger');
+    });
+}
+
+function openMaintenanceFile(vesselId) {
+    const vessel = allVessels.find(v => v.id === vesselId);
+    if (!vessel) return;
+    showAlert(`📂 فتح ملف المركب: ${vessel.name}`, 'info');
+}
+
+// ============================================================
+// 📊 EFFICIENCY
+// ============================================================
+
+function renderEfficiency() {
+    const vessels = allVessels || [];
+    const countEl = document.getElementById('effCount');
+    if (countEl) countEl.textContent = vessels.length;
+    renderEfficiencyTables(vessels);
+    updateEfficiencyStats(vessels);
+}
+
+function updateEfficiencyStats(vessels) {
+    const container = document.getElementById('efficiencyStats');
+    if (!container) return;
+    const total = vessels.length;
+    const ready = vessels.filter(v => v.stat === 'صالح').length;
+    const broken = vessels.filter(v => v.stat === 'معطب').length;
+    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+    container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:8px; margin:8px 0;">
+            <div class="stat-card" style="padding:8px 12px;"><div style="font-size:18px; font-weight:bold; color:#60a5fa;">${total}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">🚢 المجموع</div></div>
+            <div class="stat-card" style="padding:8px 12px; border-color:rgba(74,222,128,0.1);"><div style="font-size:18px; font-weight:bold; color:#4ade80;">${ready}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">✅ صالح</div></div>
+            <div class="stat-card" style="padding:8px 12px; border-color:rgba(251,191,36,0.1);"><div style="font-size:18px; font-weight:bold; color:#fbbf24;">${maintenance}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">🔧 صيانة</div></div>
+            <div class="stat-card" style="padding:8px 12px; border-color:rgba(248,113,113,0.1);"><div style="font-size:18px; font-weight:bold; color:#f87171;">${broken}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">❌ معطب</div></div>
+        </div>
+    `;
+}
+
+function renderEfficiencyTables(vessels) {
+    const container = document.getElementById('efficiencyTablesContainer');
+    if (!container) return;
+    let html = renderGeneralEfficiencyTable(vessels);
+    const regions = { 'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'], 'الساحل': ['سوسة', 'المنستير', 'المهدية'], 'الوسط': ['صفاقس', 'قابس', 'جربة'], 'الجنوب': ['جرجيس', 'بن قردان'] };
+    Object.keys(regions).forEach(region => {
+        const regionVessels = vessels.filter(v => regions[region].some(city => v.zone?.includes(city)));
+        if (regionVessels.length > 0) html += renderRegionEfficiencyTable(regionVessels, region);
+    });
+    container.innerHTML = html;
+}
+
+function renderGeneralEfficiencyTable(vessels) {
+    const categories = getCategoriesData(vessels);
+    let html = `<div class="stat-card" style="padding:12px; margin:10px 0;"><h4 style="color:rgba(255,255,255,0.6); font-size:13px;">📋 النجاعة العامة حسب الفئات</h4><div class="scrollable-table"><table><thead><tr><th>الفئة</th><th style="color:#4ade80;">صالح</th><th style="color:#f87171;">معطب</th><th style="color:#fbbf24;">صيانة</th><th>الإجمالي</th><th>النسبة</th></tr></thead><tbody>`;
+    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
+    const order = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    order.forEach(cat => {
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const pct = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready; totalBroken += data.broken; totalMaintenance += data.maintenance; totalAll += data.total;
+        html += `<tr><td><strong>${cat}</strong></td><td style="color:#4ade80;">${data.ready}</td><td style="color:#f87171;">${data.broken}</td><td style="color:#fbbf24;">${data.maintenance}</td><td>${data.total}</td><td>${pct}%</td></tr>`;
+    });
+    const totalPct = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
+    html += `<tr style="border-top:2px solid rgba(255,255,255,0.1);"><td><strong>المجموع</strong></td><td style="color:#4ade80;">${totalReady}</td><td style="color:#f87171;">${totalBroken}</td><td style="color:#fbbf24;">${totalMaintenance}</td><td>${totalAll}</td><td>${totalPct}%</td></tr>`;
+    html += '</tbody></table></div></div>';
+    return html;
+}
+
+function renderRegionEfficiencyTable(vessels, regionName) {
+    const categories = getCategoriesData(vessels);
+    let html = `<div class="stat-card" style="padding:12px; margin:10px 0;"><h4 style="color:rgba(255,255,255,0.6); font-size:13px;">📋 إقليم الحرس البحري بال${regionName}</h4><div class="scrollable-table"><table><thead><tr><th>الفئة</th><th style="color:#4ade80;">صالح</th><th style="color:#f87171;">معطب</th><th style="color:#fbbf24;">صيانة</th><th>الإجمالي</th><th>النسبة</th></tr></thead><tbody>`;
+    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
+    const order = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
+    order.forEach(cat => {
+        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        const pct = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
+        totalReady += data.ready; totalBroken += data.broken; totalMaintenance += data.maintenance; totalAll += data.total;
+        html += `<tr><td><strong>${cat}</strong></td><td style="color:#4ade80;">${data.ready}</td><td style="color:#f87171;">${data.broken}</td><td style="color:#fbbf24;">${data.maintenance}</td><td>${data.total}</td><td>${pct}%</td></tr>`;
+    });
+    const totalPct = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
+    html += `<tr style="border-top:2px solid rgba(255,255,255,0.1);"><td><strong>المجموع</strong></td><td style="color:#4ade80;">${totalReady}</td><td style="color:#f87171;">${totalBroken}</td><td style="color:#fbbf24;">${totalMaintenance}</td><td>${totalAll}</td><td>${totalPct}%</td></tr>`;
+    html += '</tbody></table></div></div>';
+    return html;
+}
+
+function getCategoriesData(vessels) {
+    const categories = {};
+    vessels.forEach(v => {
+        const cat = v.cat || 'غير مصنف';
+        if (!categories[cat]) categories[cat] = { ready: 0, broken: 0, maintenance: 0, total: 0 };
+        categories[cat].total++;
+        if (v.stat === 'صالح') categories[cat].ready++;
+        else if (v.stat === 'معطب') categories[cat].broken++;
+        else if (v.stat === 'صيانة') categories[cat].maintenance++;
+    });
+    return categories;
+}
+
+// ============================================================
+// 📊 VESSEL CRUD
+// ============================================================
+
+function addItem() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    const name = document.getElementById('iName')?.value;
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
+        return;
+    }
+    const data = {
+        name: name,
+        num: document.getElementById('iNum')?.value || '',
+        len: parseFloat(document.getElementById('iLen')?.value) || 0,
+        cat: document.getElementById('iCat')?.value || 'البروق',
+        reg: document.getElementById('iReg')?.value || 'الشمال',
+        zone: document.getElementById('iZone')?.value || '',
+        port: document.getElementById('iPort')?.value || '',
+        supp: document.getElementById('iSupp')?.value || '',
+        stat: document.getElementById('iStat')?.value || 'صالح',
+        break: document.getElementById('iBreak')?.value || '',
+        fDate: document.getElementById('iDate')?.value || '',
+        eDate: document.getElementById('iEnd')?.value || '',
+        ref: document.getElementById('iRef')?.value || '',
+        repairer: document.getElementById('iRepairer')?.value || ''
+    };
+    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
+    const method = editingVesselId ? 'PUT' : 'POST';
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
+            editingVesselId = null;
+            clearVesselInputs();
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showAlert('❌ خطأ في العملية', 'danger');
+    });
+}
+
+function editVessel(id) {
+    const vessel = allVessels.find(v => v.id === id);
+    if (!vessel) {
+        showAlert('⚠️ المركب غير موجود', 'warning');
+        return;
+    }
+    
+    const elements = {
+        iName: document.getElementById('iName'),
+        iNum: document.getElementById('iNum'),
+        iLen: document.getElementById('iLen'),
+        iCat: document.getElementById('iCat'),
+        iReg: document.getElementById('iReg'),
+        iZone: document.getElementById('iZone'),
+        iPort: document.getElementById('iPort'),
+        iSupp: document.getElementById('iSupp'),
+        iStat: document.getElementById('iStat'),
+        iBreak: document.getElementById('iBreak'),
+        iDate: document.getElementById('iDate'),
+        iEnd: document.getElementById('iEnd'),
+        iRef: document.getElementById('iRef'),
+        iRepairer: document.getElementById('iRepairer')
+    };
+    
+    Object.keys(elements).forEach(key => {
+        if (!elements[key]) {
+            console.error(`❌ Element ${key} not found`);
+            showAlert('⚠️ تأكد من وجود جميع حقول المركب', 'warning');
+            return;
+        }
+    });
+    
+    editingVesselId = vessel.id;
+    elements.iName.value = vessel.name || '';
+    elements.iNum.value = vessel.num || '';
+    elements.iLen.value = vessel.len || 0;
+    elements.iCat.value = vessel.cat || 'البروق';
+    elements.iReg.value = vessel.reg || 'الشمال';
+    elements.iZone.value = vessel.zone || '';
+    elements.iPort.value = vessel.port || '';
+    elements.iSupp.value = vessel.supp || '';
+    elements.iStat.value = vessel.stat || 'صالح';
+    elements.iBreak.value = vessel.break || '';
+    elements.iDate.value = vessel.fDate || '';
+    elements.iEnd.value = vessel.eDate || '';
+    elements.iRef.value = vessel.ref || '';
+    elements.iRepairer.value = vessel.repairer || '';
+    
+    const form = document.querySelector('.fleet-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        form.style.border = '2px solid #fbbf24';
+        form.style.boxShadow = '0 0 20px rgba(251,191,36,0.3)';
+        setTimeout(() => {
+            form.style.border = '1px solid rgba(255,255,255,0.1)';
+            form.style.boxShadow = 'none';
+        }, 3000);
+    }
+    
+    showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
+}
+
+function deleteVessel(id) {
+    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    fetch('/api/vessels/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم الحذف', 'success');
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete error:', err);
+        showAlert('❌ خطأ في الحذف', 'danger');
+    });
+}
+
+function clearVesselInputs() {
+    document.getElementById('iName').value = '';
+    document.getElementById('iNum').value = '';
+    document.getElementById('iLen').value = '';
+    document.getElementById('iCat').value = 'البروق';
+    document.getElementById('iReg').value = 'الشمال';
+    document.getElementById('iZone').value = '';
+    document.getElementById('iPort').value = '';
+    document.getElementById('iSupp').value = '';
+    document.getElementById('iStat').value = 'صالح';
+    document.getElementById('iBreak').value = '';
+    document.getElementById('iDate').value = '';
+    document.getElementById('iEnd').value = '';
+    document.getElementById('iRef').value = '';
+    document.getElementById('iRepairer').value = '';
+}
+
+function updateZones() {
+    const reg = document.getElementById('iReg')?.value;
+    const zoneSelect = document.getElementById('iZone');
+    if (!zoneSelect) return;
+    const zones = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
+    };
+    const options = zones[reg] || ['المنطقة غير محددة'];
+    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    options.forEach(z => {
+        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
+    });
+}
+
+// ============================================================
+// 📊 USERS CRUD
 // ============================================================
 
 function addUser() {
@@ -995,197 +1191,8 @@ function clearUserInputs() {
 }
 
 // ============================================================
-// دوال المراكب
+// 📊 MAINTENANCE CRUD
 // ============================================================
-
-function addItem() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    const name = document.getElementById('iName')?.value;
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
-        return;
-    }
-    const data = {
-        name: name,
-        num: document.getElementById('iNum')?.value || '',
-        len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value || '',
-        zone: document.getElementById('iZone')?.value || '',
-        port: document.getElementById('iPort')?.value || '',
-        supp: document.getElementById('iSupp')?.value || '',
-        stat: document.getElementById('iStat')?.value || 'صالح',
-        break: document.getElementById('iBreak')?.value || '',
-        fDate: document.getElementById('iDate')?.value || '',
-        eDate: document.getElementById('iEnd')?.value || '',
-        ref: document.getElementById('iRef')?.value || '',
-        repairer: document.getElementById('iRepairer')?.value || ''
-    };
-    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
-    const method = editingVesselId ? 'PUT' : 'POST';
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
-            editingVesselId = null;
-            clearVesselInputs();
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showAlert('❌ خطأ في العملية', 'danger');
-    });
-}
-
-function editVessel(id) {
-    console.log('✏️ Editing vessel with ID:', id);
-    const vessel = allVessels.find(v => v.id === id);
-    if (!vessel) {
-        showAlert('⚠️ المركب غير موجود', 'warning');
-        return;
-    }
-    
-    const elements = {
-        iName: document.getElementById('iName'),
-        iNum: document.getElementById('iNum'),
-        iLen: document.getElementById('iLen'),
-        iReg: document.getElementById('iReg'),
-        iZone: document.getElementById('iZone'),
-        iPort: document.getElementById('iPort'),
-        iSupp: document.getElementById('iSupp'),
-        iStat: document.getElementById('iStat'),
-        iBreak: document.getElementById('iBreak'),
-        iDate: document.getElementById('iDate'),
-        iEnd: document.getElementById('iEnd'),
-        iRef: document.getElementById('iRef'),
-        iRepairer: document.getElementById('iRepairer')
-    };
-    
-    let missingElements = [];
-    Object.keys(elements).forEach(key => {
-        if (!elements[key]) missingElements.push(key);
-    });
-    
-    if (missingElements.length > 0) {
-        console.error('❌ عناصر مفقودة:', missingElements);
-        showAlert('⚠️ تأكد من وجود جميع حقول المركب', 'warning');
-        return;
-    }
-    
-    editingVesselId = vessel.id;
-    elements.iName.value = vessel.name || '';
-    elements.iNum.value = vessel.num || '';
-    elements.iLen.value = vessel.len || 0;
-    elements.iReg.value = vessel.reg || '';
-    elements.iZone.value = vessel.zone || '';
-    elements.iPort.value = vessel.port || '';
-    elements.iSupp.value = vessel.supp || '';
-    elements.iStat.value = vessel.stat || 'صالح';
-    elements.iBreak.value = vessel.break || '';
-    elements.iDate.value = vessel.fDate || '';
-    elements.iEnd.value = vessel.eDate || '';
-    elements.iRef.value = vessel.ref || '';
-    elements.iRepairer.value = vessel.repairer || '';
-    
-    const form = document.querySelector('.fleet-form');
-    if (form) {
-        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        form.style.border = '2px solid #fbbf24';
-        form.style.boxShadow = '0 0 20px rgba(251,191,36,0.3)';
-        setTimeout(() => {
-            form.style.border = '1px solid rgba(255,255,255,0.1)';
-            form.style.boxShadow = 'none';
-        }, 3000);
-    }
-    
-    showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
-}
-
-function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم الحذف', 'success');
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete error:', err);
-        showAlert('❌ خطأ في الحذف', 'danger');
-    });
-}
-
-function clearVesselInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
-    document.getElementById('iRepairer').value = '';
-}
-
-function updateZones() {
-    const reg = document.getElementById('iReg')?.value;
-    const zoneSelect = document.getElementById('iZone');
-    if (!zoneSelect) return;
-    const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
-    };
-    const options = zones[reg] || ['المنطقة غير محددة'];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
-    options.forEach(z => {
-        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
-    });
-}
-
-// ============================================================
-// دوال الصيانة
-// ============================================================
-
-function updateMaintenanceVessels() {
-    const select = document.getElementById('mVesselId');
-    if (!select) return;
-    select.innerHTML = '<option value="">اختر المركب</option>';
-    allVessels.forEach(v => {
-        select.innerHTML += `<option value="${v.id}">${v.name} (${v.num || 'بدون رقم'})</option>`;
-    });
-}
 
 function toggleMaintenanceForm() {
     const form = document.getElementById('maintenanceForm');
@@ -1256,21 +1263,6 @@ function saveMaintenance() {
     }
     
     const vessel = allVessels.find(v => v.id == vesselId);
-    if (vessel && vessel.stat === 'صالح') {
-        fetch('/api/vessels/' + vesselId, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ 
-                stat: 'معطب',
-                break: description,
-                fDate: startDate || new Date().toISOString().split('T')[0]
-            })
-        }).catch(err => console.error('Error updating vessel status:', err));
-    }
-    
     const data = {
         vesselId: parseFloat(vesselId),
         vesselName: vessel ? vessel.name : '',
@@ -1318,506 +1310,99 @@ function saveMaintenance() {
     });
 }
 
-function renderGeneralMaintenance() {
-    const container = document.getElementById('generalMaintenanceContainer');
-    if (!container) return;
-    const vessels = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
-    if (vessels.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:#4ade80;">✅ لا توجد مراكب معطبة</div>';
-        return;
-    }
-    let html = '<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفئة</th><th>الحالة</th><th>العطل</th><th>المسؤول</th><th>إجراءات</th></tr></thead><tbody>';
-    vessels.forEach(v => {
-        html += `<tr>
-            <td><strong>${v.name}</strong></td>
-            <td>${v.cat || '-'}</td>
-            <td><span class="status-badge status-broken">${v.stat}</span></td>
-            <td>${v.break || '-'}</td>
-            <td>${v.repairer || '-'}</td>
-            <td>
-                <button class="btn-sm btn-primary" onclick="openMaintenanceFile(${v.id})">📂 فتح</button>
-                <button class="btn-sm btn-success" onclick="fixVessel(${v.id})">✅ إصلاح</button>
-            </td>
-        </tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
+// ============================================================
+// 📊 DEMO DATA
+// ============================================================
+
+function getDemoVessels() {
+    return [
+        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
+        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
+        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
+        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
+        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
+        { id: 6, name: 'البروق 6', num: 'B006', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'قابس', port: 'قابس', supp: 'الوحدة 3', stat: 'معطب', break: 'عطل كهربائي', fDate: '2026-02-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 3' },
+        { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
+        { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
+        { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
+        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
+        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
+        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
+        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
+        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
+        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' }
+    ];
 }
 
-function fixVessel(vesselId) {
-    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + vesselId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+function getDemoMaintenance() {
+    return [
+        {
+            id: 1,
+            vesselId: 4,
+            vesselName: 'البروق 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في المحرك الرئيسي',
+            repair: 'تم تغيير طلمبة الزيت والمضخة',
+            faultType: 'محرك',
+            cost: 4500,
+            notes: 'تم تغيير طلمبة الزيت والمضخة بالكامل',
+            status: 'مكتملة',
+            date: '2026-01-20',
+            startDate: '2026-01-15',
+            endDate: '2026-01-20',
+            parts: [{ name: 'طلمبة زيت', quantity: 1, price: 1200 }, { name: 'مضخة ماء', quantity: 1, price: 800 }],
+            createdBy: 'Admin'
         },
-        body: JSON.stringify({ stat: 'صالح' })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إصلاح المركب', 'success');
-            loadAllData();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Fix vessel error:', err);
-        showAlert('❌ خطأ في إصلاح المركب', 'danger');
-    });
-}
-
-function openMaintenanceFile(vesselId) {
-    const vessel = allVessels.find(v => v.id === vesselId);
-    if (!vessel) return;
-    showAlert(`📂 فتح ملف المركب: ${vessel.name}`, 'info');
-}
-
-function renderHistoryMaintenance() {
-    const container = document.getElementById('historyMaintenanceContainer');
-    if (!container) return;
-    const records = allMaintenance.filter(r => r.status === 'مكتملة' || r.status === 'ملغية');
-    if (records.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>';
-        return;
-    }
-    let html = '<div class="scrollable-table"><table><thead><tr><th>التاريخ</th><th>المركب</th><th>نوع الصيانة</th><th>العطل</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>';
-    records.slice().reverse().forEach(r => {
-        const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
-        html += `<tr>
-            <td>${r.date || '-'}</td>
-            <td><strong>${vesselName}</strong></td>
-            <td>${r.type || '-'}</td>
-            <td>${r.description || '-'}</td>
-            <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-            <td><span class="status-badge status-closed">✅ ${r.status}</span></td>
-        </tr>`;
-    });
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-}
-
-function updateYearFilter() {
-    const select = document.getElementById('filterYear');
-    if (!select) return;
-    const years = new Set();
-    allMaintenance.forEach(r => { if (r.date) years.add(r.date.split('-')[0]); });
-    select.innerHTML = '<option value="">الكل</option>';
-    Array.from(years).sort().reverse().forEach(year => {
-        select.innerHTML += `<option value="${year}">${year}</option>`;
-    });
-}
-
-function applyHistoryFilters() { renderHistoryMaintenance(); }
-function resetHistoryFilters() { renderHistoryMaintenance(); showAlert('✅ تم إلغاء الفلترة', 'success'); }
-
-function updateMaintenanceStats() {
-    const container = document.getElementById('maintenanceStats');
-    if (!container) return;
-    container.innerHTML = `
-        <div class="maintenance-stats">
-            <div class="stat-box stat-total"><h4>${allMaintenance.length}</h4><p>📊 المجموع</p></div>
-            <div class="stat-box stat-progress"><h4>${allMaintenance.filter(r => r.status === 'قيد الإنجاز').length}</h4><p>🔄 قيد الإنجاز</p></div>
-            <div class="stat-box stat-completed"><h4>${allMaintenance.filter(r => r.status === 'مكتملة').length}</h4><p>✅ مكتملة</p></div>
-            <div class="stat-box stat-cancelled"><h4>${allMaintenance.filter(r => r.status === 'ملغية').length}</h4><p>❌ ملغية</p></div>
-        </div>
-    `;
-}
-
-function renderMaintenanceUnits() {
-    const container = document.getElementById('maintenanceUnitsContainer');
-    if (!container) return;
-    const units = ['وحدة الصيانة والإسناد البحري تونس', 'وحدة الصيانة والإسناد البحري صفاقس', 'وحدة الصيانة والإسناد البحري المنستير', 'وحدة الصيانة والإسناد البحري جرجيس', 'شركة خاصة'];
-    let html = '';
-    units.forEach(unit => {
-        const records = allMaintenance.filter(r => r.unit === unit);
-        html += `
-            <div class="region-table-card">
-                <div class="region-table-header">🏭 ${unit} <span style="font-size:12px; color:rgba(255,255,255,0.3);">📊 ${records.length} سجل</span></div>
-                ${records.length === 0 ? '<div style="text-align:center; padding:10px; color:rgba(255,255,255,0.2);">🚫 لا توجد سجلات</div>' :
-                `<div class="scrollable-table"><table><thead><tr><th>المركب</th><th>الفني</th><th>التكلفة</th><th>الحالة</th></tr></thead><tbody>
-                ${records.slice().reverse().map(r => `
-                    <tr><td>${r.vesselName || '-'}</td><td>${r.technician || '-'}</td><td>${r.cost ? r.cost + ' د.ت' : '-'}</td><td>${r.status || '-'}</td></tr>
-                `).join('')}</tbody></table></div>`}
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-// ============================================================
-// 📊 صفحة الجاهزية
-// ============================================================
-
-function renderEfficiency() {
-    const vessels = allVessels || [];
-    const countEl = document.getElementById('effCount');
-    if (countEl) countEl.textContent = vessels.length;
-    renderEfficiencyTables(vessels);
-    updateEfficiencyStats(vessels);
-    setTimeout(() => renderCharts(vessels), 200);
-}
-
-function updateEfficiencyStats(vessels) {
-    const container = document.getElementById('efficiencyStats');
-    if (!container) return;
-    const total = vessels.length;
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    container.innerHTML = `
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:8px; margin:8px 0;">
-            <div class="stat-card" style="padding:8px 12px;"><div style="font-size:18px; font-weight:bold; color:#60a5fa;">${total}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">🚢 المجموع</div></div>
-            <div class="stat-card" style="padding:8px 12px; border-color:rgba(74,222,128,0.1);"><div style="font-size:18px; font-weight:bold; color:#4ade80;">${ready}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">✅ صالح</div></div>
-            <div class="stat-card" style="padding:8px 12px; border-color:rgba(251,191,36,0.1);"><div style="font-size:18px; font-weight:bold; color:#fbbf24;">${maintenance}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">🔧 صيانة</div></div>
-            <div class="stat-card" style="padding:8px 12px; border-color:rgba(248,113,113,0.1);"><div style="font-size:18px; font-weight:bold; color:#f87171;">${broken}</div><div style="color:rgba(255,255,255,0.3); font-size:10px;">❌ معطب</div></div>
-        </div>
-    `;
-}
-
-function renderCharts(vessels) {
-    renderCategoryChart(vessels);
-    renderDoughnutChart(vessels);
-}
-
-function renderCategoryChart(vessels) {
-    const canvas = document.getElementById('chartCategory');
-    if (!canvas) return;
-    canvas.style.height = '110px';
-    canvas.style.width = '100%';
-    
-    const categories = {};
-    vessels.forEach(v => {
-        const cat = v.cat || 'غير مصنف';
-        if (!categories[cat]) categories[cat] = { ready: 0, broken: 0, maintenance: 0 };
-        if (v.stat === 'صالح') categories[cat].ready++;
-        else if (v.stat === 'معطب') categories[cat].broken++;
-        else if (v.stat === 'صيانة') categories[cat].maintenance++;
-    });
-    
-    const labels = Object.keys(categories);
-    if (chartCategory) chartCategory.destroy();
-    
-    chartCategory = new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'صالح', data: labels.map(cat => categories[cat].ready), backgroundColor: 'rgba(74,222,128,0.7)', borderColor: '#4ade80', borderWidth: 1, barThickness: 12 },
-                { label: 'معطب', data: labels.map(cat => categories[cat].broken), backgroundColor: 'rgba(248,113,113,0.7)', borderColor: '#f87171', borderWidth: 1, barThickness: 12 },
-                { label: 'صيانة', data: labels.map(cat => categories[cat].maintenance), backgroundColor: 'rgba(251,191,36,0.7)', borderColor: '#fbbf24', borderWidth: 1, barThickness: 12 }
-            ]
+        {
+            id: 2,
+            vesselId: 9,
+            vesselName: 'صقر 2',
+            type: 'دورية',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'صيانة دورية للمحرك',
+            repair: 'تم تغيير الزيوت والفلتر',
+            faultType: 'محرك',
+            cost: 300,
+            notes: 'تم تغيير الزيوت والفلتر',
+            status: 'مكتملة',
+            date: '2026-05-15',
+            startDate: '2026-05-14',
+            endDate: '2026-05-15',
+            parts: [{ name: 'زيت محرك', quantity: 5, price: 100 }, { name: 'فلتر هواء', quantity: 1, price: 300 }],
+            createdBy: 'Admin'
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: { duration: 0 },
-            plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 7 }, color: 'rgba(255,255,255,0.4)' } }
-            },
-            scales: {
-                x: { grid: { display: false }, ticks: { font: { size: 7 }, color: 'rgba(255,255,255,0.4)' } },
-                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 6 }, color: 'rgba(255,255,255,0.4)' } }
-            }
+        {
+            id: 3,
+            vesselId: 14,
+            vesselName: 'خافر 2',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري المنستير',
+            technician: 'فني 3',
+            description: 'إصلاح شامل للهيكل',
+            repair: 'تم تغيير ألواح الهيكل والدهان',
+            faultType: 'هيكل',
+            cost: 5000,
+            notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
+            status: 'مكتملة',
+            date: '2026-01-10',
+            startDate: '2026-01-05',
+            endDate: '2026-01-10',
+            parts: [{ name: 'ألواح فولاذ', quantity: 10, price: 350 }, { name: 'دهان مضاد للصدأ', quantity: 5, price: 200 }],
+            createdBy: 'Admin'
         }
-    });
-}
-
-function renderDoughnutChart(vessels) {
-    const canvas = document.getElementById('chartDoughnut');
-    if (!canvas) return;
-    canvas.style.height = '110px';
-    canvas.style.width = '100%';
-    
-    const ready = vessels.filter(v => v.stat === 'صالح').length;
-    const broken = vessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
-    
-    if (chartDoughnut) chartDoughnut.destroy();
-    
-    chartDoughnut = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels: ['صالح', 'معطب', 'صيانة'],
-            datasets: [{
-                data: [ready, broken, maintenance],
-                backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
-                borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '50%',
-            animation: { duration: 0 },
-            plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 7 }, color: 'rgba(255,255,255,0.4)' } }
-            }
-        }
-    });
-}
-
-function renderEfficiencyTables(vessels) {
-    const container = document.getElementById('efficiencyTablesContainer');
-    if (!container) return;
-    let html = renderGeneralEfficiencyTable(vessels);
-    const regions = { 'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'], 'الساحل': ['سوسة', 'المنستير', 'المهدية'], 'الوسط': ['صفاقس', 'قابس', 'جربة'], 'الجنوب': ['جرجيس', 'بن قردان'] };
-    Object.keys(regions).forEach(region => {
-        const regionVessels = vessels.filter(v => regions[region].some(city => v.zone?.includes(city)));
-        if (regionVessels.length > 0) html += renderRegionEfficiencyTable(regionVessels, region);
-    });
-    container.innerHTML = html;
-}
-
-function renderGeneralEfficiencyTable(vessels) {
-    const categories = getCategoriesData(vessels);
-    let html = `<div class="stat-card" style="padding:12px; margin:10px 0;"><h4 style="color:rgba(255,255,255,0.6); font-size:13px;">📋 النجاعة العامة حسب الفئات</h4><div class="scrollable-table"><table><thead><tr><th>الفئة</th><th style="color:#4ade80;">صالح</th><th style="color:#f87171;">معطب</th><th style="color:#fbbf24;">صيانة</th><th>الإجمالي</th><th>النسبة</th></tr></thead><tbody>`;
-    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    const order = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    order.forEach(cat => {
-        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
-        const pct = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-        totalReady += data.ready; totalBroken += data.broken; totalMaintenance += data.maintenance; totalAll += data.total;
-        html += `<tr><td><strong>${cat}</strong></td><td style="color:#4ade80;">${data.ready}</td><td style="color:#f87171;">${data.broken}</td><td style="color:#fbbf24;">${data.maintenance}</td><td>${data.total}</td><td>${pct}%</td></tr>`;
-    });
-    const totalPct = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
-    html += `<tr style="border-top:2px solid rgba(255,255,255,0.1);"><td><strong>المجموع</strong></td><td style="color:#4ade80;">${totalReady}</td><td style="color:#f87171;">${totalBroken}</td><td style="color:#fbbf24;">${totalMaintenance}</td><td>${totalAll}</td><td>${totalPct}%</td></tr>`;
-    html += '</tbody></table></div></div>';
-    return html;
-}
-
-function renderRegionEfficiencyTable(vessels, regionName) {
-    const categories = getCategoriesData(vessels);
-    let html = `<div class="stat-card" style="padding:12px; margin:10px 0;"><h4 style="color:rgba(255,255,255,0.6); font-size:13px;">📋 إقليم الحرس البحري بال${regionName}</h4><div class="scrollable-table"><table><thead><tr><th>الفئة</th><th style="color:#4ade80;">صالح</th><th style="color:#f87171;">معطب</th><th style="color:#fbbf24;">صيانة</th><th>الإجمالي</th><th>النسبة</th></tr></thead><tbody>`;
-    let totalReady = 0, totalBroken = 0, totalMaintenance = 0, totalAll = 0;
-    const order = ['البروق', 'صقور', 'خوافر', 'طوافات', 'زوارق مزدوجة'];
-    order.forEach(cat => {
-        const data = categories[cat] || { ready: 0, broken: 0, maintenance: 0, total: 0 };
-        const pct = data.total > 0 ? Math.round((data.ready / data.total) * 100) : 0;
-        totalReady += data.ready; totalBroken += data.broken; totalMaintenance += data.maintenance; totalAll += data.total;
-        html += `<tr><td><strong>${cat}</strong></td><td style="color:#4ade80;">${data.ready}</td><td style="color:#f87171;">${data.broken}</td><td style="color:#fbbf24;">${data.maintenance}</td><td>${data.total}</td><td>${pct}%</td></tr>`;
-    });
-    const totalPct = totalAll > 0 ? Math.round((totalReady / totalAll) * 100) : 0;
-    html += `<tr style="border-top:2px solid rgba(255,255,255,0.1);"><td><strong>المجموع</strong></td><td style="color:#4ade80;">${totalReady}</td><td style="color:#f87171;">${totalBroken}</td><td style="color:#fbbf24;">${totalMaintenance}</td><td>${totalAll}</td><td>${totalPct}%</td></tr>`;
-    html += '</tbody></table></div></div>';
-    return html;
-}
-
-function getCategoriesData(vessels) {
-    const categories = {};
-    vessels.forEach(v => {
-        const cat = v.cat || 'غير مصنف';
-        if (!categories[cat]) categories[cat] = { ready: 0, broken: 0, maintenance: 0, total: 0 };
-        categories[cat].total++;
-        if (v.stat === 'صالح') categories[cat].ready++;
-        else if (v.stat === 'معطب') categories[cat].broken++;
-        else if (v.stat === 'صيانة') categories[cat].maintenance++;
-    });
-    return categories;
+    ];
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard)
+// 🎤 AI ASSISTANT - Basic
 // ============================================================
 
-function loadDashboard() {
-    console.log('📊 Loading dashboard...');
-    
-    const dashTotal = document.getElementById('dashTotal');
-    if (!dashTotal) {
-        console.log('⚠️ Dashboard elements not found, skipping...');
-        return;
-    }
-    
-    const total = allVessels.length;
-    const ready = allVessels.filter(v => v.stat === 'صالح').length;
-    const broken = allVessels.filter(v => v.stat === 'معطب').length;
-    const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
-    const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
-    const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const maintenanceCount = allMaintenance.length;
-    
-    document.getElementById('dashTotal').textContent = total;
-    document.getElementById('dashReady').textContent = ready;
-    document.getElementById('dashBroken').textContent = broken;
-    document.getElementById('dashMaintenance').textContent = maintenance;
-    document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
-    document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-    document.getElementById('dashMaintenanceCount').textContent = maintenanceCount;
-    
-    const now = new Date();
-    document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-TN');
-    
-    setTimeout(() => {
-        renderDashboardCharts();
-    }, 200);
-}
-
-function renderDashboardCharts() {
-    try {
-        const dashCanvas = document.getElementById('dashChart');
-        if (dashCanvas) {
-            dashCanvas.style.height = '200px';
-            dashCanvas.style.width = '100%';
-            if (dashChart) dashChart.destroy();
-            
-            const ready = allVessels.filter(v => v.stat === 'صالح').length;
-            const broken = allVessels.filter(v => v.stat === 'معطب').length;
-            const maintenance = allVessels.filter(v => v.stat === 'صيانة' || v.stat === 'خارج الخدمة').length;
-            
-            dashChart = new Chart(dashCanvas, {
-                type: 'doughnut',
-                data: {
-                    labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
-                    datasets: [{
-                        data: [ready, broken, maintenance],
-                        backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
-                        borderColor: ['#4ade80', '#f87171', '#fbbf24'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%',
-                    plugins: {
-                        legend: { 
-                            position: 'bottom', 
-                            labels: { 
-                                color: 'rgba(255,255,255,0.6)', 
-                                font: { size: 11 } 
-                            } 
-                        }
-                    }
-                }
-            });
-        }
-    } catch(e) {
-        console.log('⚠️ Dashboard chart error:', e);
-    }
-    
-    try {
-        const lineCanvas = document.getElementById('dashLineChart');
-        if (lineCanvas) {
-            lineCanvas.style.height = '200px';
-            lineCanvas.style.width = '100%';
-            if (dashLineChart) dashLineChart.destroy();
-            
-            const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-            const readyData = [12, 14, 13, 16, 18, 20];
-            const brokenData = [5, 4, 6, 3, 4, 2];
-            
-            dashLineChart = new Chart(lineCanvas, {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [
-                        { 
-                            label: 'صالح', 
-                            data: readyData, 
-                            borderColor: '#4ade80', 
-                            backgroundColor: 'rgba(74,222,128,0.1)', 
-                            fill: true, 
-                            tension: 0.4, 
-                            pointBackgroundColor: '#4ade80' 
-                        },
-                        { 
-                            label: 'معطب', 
-                            data: brokenData, 
-                            borderColor: '#f87171', 
-                            backgroundColor: 'rgba(248,113,113,0.1)', 
-                            fill: true, 
-                            tension: 0.4, 
-                            pointBackgroundColor: '#f87171' 
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { 
-                            position: 'bottom', 
-                            labels: { 
-                                color: 'rgba(255,255,255,0.6)', 
-                                font: { size: 11 } 
-                            } 
-                        } 
-                    },
-                    scales: { 
-                        x: { 
-                            ticks: { color: 'rgba(255,255,255,0.3)' } 
-                        }, 
-                        y: { 
-                            ticks: { color: 'rgba(255,255,255,0.3)' }, 
-                            beginAtZero: true 
-                        } 
-                    }
-                }
-            });
-        }
-    } catch(e) {
-        console.log('⚠️ Dashboard line chart error:', e);
-    }
-    
-    updateDashboardActivity();
-}
-
-function updateDashboardActivity() {
-    const container = document.getElementById('dashActivity');
-    if (!container) return;
-    
-    const activities = [];
-    allMaintenance.slice(0, 5).forEach(r => {
-        activities.push({ icon: '🔧', text: `صيانة ${r.vesselName || 'مركب'} - ${r.type || 'عادية'}`, time: r.date || 'اليوم' });
-    });
-    allVessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
-        activities.push({ icon: '⚠️', text: `المركب ${v.name} أصبح معطباً`, time: v.fDate || 'اليوم' });
-    });
-    
-    if (activities.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">لا توجد نشاطات حديثة</div>';
-        return;
-    }
-    
-    container.innerHTML = activities.map(a => `
-        <div class="activity-item">
-            <span class="activity-icon">${a.icon}</span>
-            <span>${a.text}</span>
-            <span class="activity-time">${a.time}</span>
-        </div>
-    `).join('');
-}
-
-// ============================================================
-// دوال إضافية
-// ============================================================
-
-function exportEfficiencyData() {
-    showAlert('✅ تم تصدير البيانات', 'success');
-}
-
-function initMap() {
-    console.log('🗺️ Initializing map...');
-}
-
-// ============================================================
-// 🤖 AI ASSISTANT - إضافة إلى التطبيق الأصلي
-// ============================================================
-
-// دالة تهيئة المساعد الذكي
 function initAIAssistant() {
     console.log('🤖 AI Assistant initialized');
     
-    // ربط الأزرار إذا كانت موجودة
     const sendBtn = document.getElementById('sendBtn');
     const chatInput = document.getElementById('chatInput');
     const micBtn = document.getElementById('micBtn');
@@ -1825,274 +1410,96 @@ function initAIAssistant() {
     const clearBtn = document.getElementById('clearBtn');
     
     if (sendBtn) {
-        sendBtn.onclick = function() {
-            askAI();
-        };
+        sendBtn.onclick = function() { askAI(); };
     }
-    
     if (chatInput) {
         chatInput.onkeypress = function(e) {
-            if (e.key === 'Enter') {
-                askAI();
-            }
+            if (e.key === 'Enter') { askAI(); }
         };
     }
-    
     if (micBtn) {
-        micBtn.onclick = function() {
-            toggleVoiceInput();
-        };
+        micBtn.onclick = function() { toggleVoiceInput(); };
     }
-    
     if (speakerBtn) {
-        speakerBtn.onclick = function() {
-            speakLastResponse();
-        };
+        speakerBtn.onclick = function() { speakLastResponse(); };
     }
-    
     if (clearBtn) {
-        clearBtn.onclick = function() {
-            clearChat();
-        };
+        clearBtn.onclick = function() { clearChat(); };
     }
 }
 
-// ============================================================
-// 💬 دوال المساعد الذكي
-// ============================================================
-
-const AI_API_BASE = '/api/ai';
-let aiConversationId = null;
-let aiProcessing = false;
-let aiLastResponse = null;
-
-async function askAI(message) {
+function askAI() {
     const chatInput = document.getElementById('chatInput');
-    const chatBox = document.getElementById('chatBox');
-    const sendBtn = document.getElementById('sendBtn');
-    const typingIndicator = document.getElementById('typingIndicator');
-    
     if (!chatInput) return;
-    
-    const question = message || chatInput.value.trim();
-    if (!question) {
+    const message = chatInput.value.trim();
+    if (!message) {
         showAlert('❌ الرجاء كتابة سؤال', 'warning');
         return;
     }
-    
-    if (aiProcessing) {
-        showAlert('⏳ جاري معالجة طلب سابق...', 'warning');
-        return;
-    }
-    
-    // إضافة رسالة المستخدم
-    addAIMessage('user', question);
-    chatInput.value = '';
-    chatInput.disabled = true;
-    if (sendBtn) sendBtn.disabled = true;
-    
-    aiProcessing = true;
-    if (typingIndicator) typingIndicator.classList.add('active');
-    
-    try {
-        const token = getToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        
-        const response = await fetch(AI_API_BASE + '/ask', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                message: question,
-                conversationId: aiConversationId,
-                language: 'ar'
-            })
-        });
-        
-        if (typingIndicator) typingIndicator.classList.remove('active');
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error || 'خطأ ' + response.status);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            aiConversationId = data.conversationId;
-            aiLastResponse = data.response;
-            addAIMessage('ai', data.response);
-        } else {
-            throw new Error(data.error || 'حدث خطأ غير معروف');
-        }
-        
-    } catch (error) {
-        if (typingIndicator) typingIndicator.classList.remove('active');
-        addAIMessage('ai', '⚠️ عذراً، حدث خطأ: ' + error.message);
-        console.error('AI Error:', error);
-    }
-    
-    aiProcessing = false;
-    chatInput.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    chatInput.focus();
+    showAlert('🤖 جاري معالجة سؤالك...', 'info');
+    setTimeout(() => {
+        showAlert('✅ هذا رد تجريبي: ' + message, 'success');
+    }, 1000);
 }
 
-function addAIMessage(role, content, timestamp = new Date()) {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-    
-    const div = document.createElement('div');
-    div.className = 'message ' + role;
-    const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = timestamp.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    
-    div.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${content.replace(/\n/g, '<br>')}</div>
-        <div class="time">${time}</div>
-        ${role === 'ai' ? `
-            <div class="actions">
-                <button onclick="copyAIMessage(this)">📋 نسخ</button>
-                <button onclick="speakAIText(this)">🔊 استماع</button>
-            </div>
-        ` : ''}
-    `;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function copyAIMessage(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    navigator.clipboard.writeText(content).then(() => {
-        const orig = btn.textContent;
-        btn.textContent = '✅ تم النسخ';
-        setTimeout(() => btn.textContent = orig, 1500);
-    });
-}
-
-function speakAIText(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    speakText(content);
-}
-
-function speakText(text) {
-    if (!('speechSynthesis' in window)) {
-        showAlert('❌ المتصفح لا يدعم النطق', 'warning');
-        return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
+function toggleVoiceInput() {
+    showAlert('🎤 ميزة الصوت قيد التطوير', 'info');
 }
 
 function speakLastResponse() {
-    if (aiLastResponse) {
-        speakText(aiLastResponse);
-        return;
-    }
-    showAlert('لا يوجد رد للاستماع', 'warning');
+    showAlert('🔊 ميزة النطق قيد التطوير', 'info');
 }
 
 function clearChat() {
     const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-    if (chatBox.querySelectorAll('.message').length === 0) return;
-    if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
+    if (chatBox) {
         chatBox.innerHTML = '';
-        aiConversationId = null;
-        aiLastResponse = null;
         showAlert('🗑️ تم مسح المحادثة', 'success');
     }
 }
 
 // ============================================================
-// 🎤 ميزة الصوت
+// 🚀 EXPOSE GLOBALLY
 // ============================================================
 
-let aiRecognition = null;
-let aiListening = false;
-
-function toggleVoiceInput() {
-    const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    if (!hasSpeech) {
-        showAlert('❌ المتصفح لا يدعم الميكروفون', 'warning');
-        return;
-    }
-    
-    if (aiListening) {
-        stopVoiceInput();
-        return;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    aiRecognition = new SpeechRecognition();
-    aiRecognition.lang = 'ar-SA';
-    aiRecognition.continuous = false;
-    aiRecognition.interimResults = true;
-    
-    aiRecognition.onstart = function() {
-        aiListening = true;
-        const micBtn = document.getElementById('micBtn');
-        if (micBtn) {
-            micBtn.textContent = '⏹️';
-            micBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
-        }
-        showAlert('🎤 جاري الاستماع...', 'info');
-    };
-    
-    aiRecognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                const chatInput = document.getElementById('chatInput');
-                if (chatInput) {
-                    chatInput.value = transcript;
-                    setTimeout(() => {
-                        if (transcript.trim()) askAI();
-                    }, 300);
-                }
-            }
-        }
-    };
-    
-    aiRecognition.onerror = function(event) {
-        console.warn('Voice error:', event.error);
-        if (event.error === 'not-allowed') {
-            showAlert('❌ الرجاء السماح بالميكروفون', 'warning');
-        }
-        stopVoiceInput();
-    };
-    
-    aiRecognition.onend = function() {
-        stopVoiceInput();
-    };
-    
-    aiRecognition.start();
-}
-
-function stopVoiceInput() {
-    aiListening = false;
-    const micBtn = document.getElementById('micBtn');
-    if (micBtn) {
-        micBtn.textContent = '🎤';
-        micBtn.style.background = '';
-    }
-    if (aiRecognition) {
-        try { aiRecognition.stop(); } catch(e) {}
-    }
-}
+window.doLogin = doLogin;
+window.doLogout = doLogout;
+window.showPage = showPage;
+window.loadPage = loadPage;
+window.toggleSidebar = toggleSidebar;
+window.loadVessels = loadVessels;
+window.loadMaintenance = loadMaintenance;
+window.loadUsers = loadUsers;
+window.loadTickets = loadTickets;
+window.loadNotes = loadNotes;
+window.addItem = addItem;
+window.editVessel = editVessel;
+window.deleteVessel = deleteVessel;
+window.clearVesselInputs = clearVesselInputs;
+window.updateZones = updateZones;
+window.addUser = addUser;
+window.editUser = editUser;
+window.updateUser = updateUser;
+window.deleteUser = deleteUser;
+window.clearUserInputs = clearUserInputs;
+window.toggleMaintenanceForm = toggleMaintenanceForm;
+window.addPart = addPart;
+window.removePart = removePart;
+window.saveMaintenance = saveMaintenance;
+window.fixVessel = fixVessel;
+window.openMaintenanceFile = openMaintenanceFile;
+window.initAIAssistant = initAIAssistant;
+window.askAI = askAI;
+window.toggleVoiceInput = toggleVoiceInput;
+window.speakLastResponse = speakLastResponse;
+window.clearChat = clearChat;
+window.refreshDashboard = typeof refreshDashboard !== 'undefined' ? refreshDashboard : function() { console.log('📊 Dashboard refresh not available'); };
 
 // ============================================================
-// تشغيل التطبيق
+// 📋 LOG
 // ============================================================
 
 console.log('✅ تم تحميل التطبيق بالكامل');
 console.log('📝 استخدم admin / 123456 للدخول');
-console.log('👤 حسابات: admin, manager, editor, viewer');
+console.log('👤 حسابات: admin, north, coast, viewer');
 console.log('🔑 كلمة المرور: 123456');
-console.log('🤖 دوال المساعد: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
