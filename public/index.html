@@ -1,3 +1,6 @@
+cd ~/marine-system
+
+# استعادة index.html من النسخة الاحتياطية أو إعادة كتابته
 cat > public/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -5,27 +8,14 @@ cat > public/index.html << 'EOF'
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/css/style.css">
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
-    <!-- SheetJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- PDF.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
-<!-- ===== شاشة الدخول ===== -->
+<!-- شاشة الدخول -->
 <div id="loginOverlay">
     <div class="login-box">
         <div class="login-logo">
@@ -45,9 +35,7 @@ cat > public/index.html << 'EOF'
             <i class="fas fa-lock input-icon"></i>
             <input type="password" id="password" placeholder="كلمة المرور">
         </div>
-        <button class="login-btn" onclick="doLogin()">
-            <span>🚀</span> دخول
-        </button>
+        <button class="login-btn" onclick="doLogin()">🚀 دخول</button>
         <div id="loginError" class="error-msg"></div>
         <div class="login-footer">
             <span>نظام إدارة وإسناد الوحدات البحرية</span>
@@ -56,110 +44,103 @@ cat > public/index.html << 'EOF'
     </div>
 </div>
 
-<!-- ===== التطبيق الرئيسي ===== -->
+<!-- التطبيق الرئيسي -->
 <div id="mainApp" style="display:none;">
-    
-    <!-- ===== الهيدر ===== -->
     <header>
         <div class="header-left">
             <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-            <h1>
-                <span>⚓</span>
-                منظومة الوسائل البحرية
-                <span class="developer-tag">الوكيل أمان الله ناجي</span>
-            </h1>
+            <h1>⚓ منظومة الوسائل البحرية <span class="developer-tag">الوكيل أمان الله ناجي</span></h1>
         </div>
         <div class="header-right">
-            <span class="notification-icon" onclick="toggleNotifications()">
-                🔔 <span class="notification-badge" id="notificationBadge">0</span>
-            </span>
             <span class="role-badge" id="userRoleDisplay">👤</span>
-            <button class="btn-outline-white" onclick="window.print()"><i class="fas fa-print"></i></button>
-            <button class="btn-outline-white" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
-            <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            <button class="btn-outline-white" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
-    <!-- ===== الشريط الجانبي ===== -->
     <nav class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <span>⚓</span>
-            <span>الأسطول البحري</span>
-        </div>
-        <!-- ✅ تغيير جميع الروابط إلى مسارات مباشرة -->
-        <button class="nav-btn active" onclick="location.href='/pages/dashboard.html'">
-            <i class="fas fa-chart-pie"></i> لوحة التحكم
-        </button>
-        <button class="nav-btn" onclick="location.href='/pages/fleet.html'">
-            <i class="fas fa-ship"></i> الأسطول
-        </button>
-        <button class="nav-btn" onclick="location.href='/pages/maintenance.html'">
-            <i class="fas fa-wrench"></i> الصيانة
-        </button>
-        <button class="nav-btn" onclick="location.href='/pages/readiness.html'">
-            <i class="fas fa-chart-line"></i> الجاهزية
-        </button>
-        <button class="nav-btn" onclick="location.href='/pages/users.html'">
-            <i class="fas fa-users"></i> المستخدمين
-        </button>
-        <button class="nav-btn" onclick="location.href='/pages/ai-assistant.html'">
-            <i class="fas fa-robot"></i> 🤖 المساعد الذكي
-        </button>
-        <div class="sidebar-footer">
-            <span>الوكيل أمان الله ناجي</span>
-        </div>
+        <div class="sidebar-brand">⚓ الأسطول البحري</div>
+        <button class="nav-btn active" onclick="showPage('dashboard')"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
+        <button class="nav-btn" onclick="showPage('fleet')"><i class="fas fa-ship"></i> الأسطول</button>
+        <button class="nav-btn" onclick="showPage('maintenance')"><i class="fas fa-wrench"></i> الصيانة</button>
+        <button class="nav-btn" onclick="showPage('ai-assistant')"><i class="fas fa-robot"></i> المساعد الذكي</button>
+        <div class="sidebar-footer">الوكيل أمان الله ناجي</div>
     </nav>
 
-    <!-- ===== المحتوى الرئيسي ===== -->
     <div class="main-content">
-        <div id="pageContainer">
-            <!-- سيتم تحميل المحتوى هنا -->
-            <script>
-                // تحميل الصفحة الافتراضية
-                const currentPath = window.location.pathname;
-                if (currentPath === '/' || currentPath === '/index.html') {
-                    window.location.href = '/pages/dashboard.html';
-                }
-            </script>
-        </div>
+        <div id="pageContainer"></div>
     </div>
 </div>
 
-<!-- ===== أزرار التمرير ===== -->
-<div class="scroll-buttons">
-    <button class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-chevron-up"></i></button>
-    <button class="scroll-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})"><i class="fas fa-chevron-down"></i></button>
-</div>
+<script>
+// ============================================================
+// دوال أساسية
+// ============================================================
 
-<!-- ===== النوافذ المنبثقة ===== -->
-<div id="passwordModal" class="modal-overlay">
-    <div class="modal-box">
-        <h3>🔑 تغيير كلمة المرور</h3>
-        <p id="modalUserName"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        <div class="modal-actions">
-            <button class="btn-save" onclick="saveNewPassword()">حفظ</button>
-            <button class="btn-cancel" onclick="closePasswordModal()">إلغاء</button>
-        </div>
-    </div>
-</div>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
 
-<!-- ===== تحميل ملفات JavaScript ===== -->
-<script src="/js/core/config.js"></script>
-<script src="/js/core/helpers.js"></script>
-<script src="/js/core/auth.js"></script>
-<script src="/js/lib/charts.js"></script>
-<script src="/js/lib/map.js"></script>
-<script src="/js/lib/notifications.js"></script>
-<script src="/js/lib/file-import.js"></script>
-<script src="/js/pages/dashboard.js"></script>
-<script src="/js/pages/fleet.js"></script>
-<script src="/js/pages/maintenance.js"></script>
-<script src="/js/pages/efficiency.js"></script>
-<script src="/js/pages/users.js"></script>
-<script src="/js/pages/ai-assistant.js"></script>
-<script src="/js/app.js"></script>
+function doLogin() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    if (username === 'admin' && password === 'Admin@2024#Secure') {
+        localStorage.setItem('token', 'demo-token');
+        localStorage.setItem('user', JSON.stringify({ name: 'مدير النظام', role: 'مسؤول' }));
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('userRoleDisplay').textContent = '👤 مدير النظام (مسؤول)';
+        showPage('dashboard');
+    } else {
+        alert('❌ بيانات غير صحيحة');
+    }
+}
+
+function doLogout() {
+    localStorage.clear();
+    location.reload();
+}
+
+function showPage(page) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        if (b.textContent.includes(page === 'dashboard' ? 'لوحة التحكم' : 
+            page === 'fleet' ? 'الأسطول' : 
+            page === 'maintenance' ? 'الصيانة' : 'المساعد الذكي')) {
+            b.classList.add('active');
+        }
+    });
+    
+    const container = document.getElementById('pageContainer');
+    container.innerHTML = `<div style="text-align:center;padding:50px;color:#60a5fa;font-size:24px;">📄 جاري تحميل ${page}...</div>`;
+    
+    fetch(`/pages/${page}.html`)
+        .then(res => res.text())
+        .then(html => {
+            container.innerHTML = html;
+        })
+        .catch(() => {
+            container.innerHTML = `
+                <div style="text-align:center;padding:50px;">
+                    <h2 style="color:#f87171;">❌ الصفحة غير موجودة</h2>
+                    <p style="color:rgba(255,255,255,0.4);">${page}.html</p>
+                    <button onclick="showPage('dashboard')" style="padding:10px 30px;background:#60a5fa;border:none;border-radius:10px;color:white;cursor:pointer;">🏠 العودة</button>
+                </div>
+            `;
+        });
+}
+
+// تحميل الصفحة الافتراضية
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('token')) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        document.getElementById('userRoleDisplay').textContent = `👤 ${user.name || 'مدير النظام'} (${user.role || 'مسؤول'})`;
+        showPage('dashboard');
+    }
+});
+</script>
 
 </body>
 </html>
