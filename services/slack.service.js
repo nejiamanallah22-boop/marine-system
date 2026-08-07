@@ -1,141 +1,150 @@
 // ============================================================
-// 🤖 AI PROVIDERS CONFIGURATION
+// 💬 SLACK SERVICE - مع دعم آمن
 // ============================================================
 
-class AIProvidersConfig {
+const axios = require('axios');
+const { logger } = require('../utils/logger');
+
+class SlackService {
     constructor() {
-        // جميع المفاتيح من متغيرات البيئة
-        this.providers = this.loadProviders();
-        this.strategy = process.env.AI_STRATEGY || 'failover';
-        this.maxTokens = parseInt(process.env.MAX_TOKENS) || 4000;
-        this.temperature = parseFloat(process.env.TEMPERATURE) || 0.7;
-        this.timeout = parseInt(process.env.AI_TIMEOUT) || 30000;
-        this.retryAttempts = parseInt(process.env.AI_RETRY_ATTEMPTS) || 3;
-        this.retryDelay = parseInt(process.env.AI_RETRY_DELAY) || 1000;
-    }
-
-    loadProviders() {
-        const providers = [];
-
-        // 1. Gemini Flash
-        if (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
-            providers.push({
-                name: 'gemini',
-                type: 'gemini',
-                apiKey: process.env.GEMINI_API_KEY,
-                model: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
-                maxTokens: parseInt(process.env.GEMINI_MAX_TOKENS) || 4000,
-                temperature: parseFloat(process.env.GEMINI_TEMPERATURE) || 0.7,
-                priority: 1
-            });
-        }
-
-        // 2. Gemini Pro
-        if (process.env.GEMINI_PRO_API_KEY && process.env.GEMINI_PRO_API_KEY !== 'your_gemini_pro_api_key_here') {
-            providers.push({
-                name: 'gemini-pro',
-                type: 'gemini',
-                apiKey: process.env.GEMINI_PRO_API_KEY,
-                model: process.env.GEMINI_PRO_MODEL || 'gemini-1.5-pro',
-                maxTokens: parseInt(process.env.GEMINI_PRO_MAX_TOKENS) || 8000,
-                priority: 2
-            });
-        }
-
-        // 3. OpenAI
-        if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
-            providers.push({
-                name: 'openai',
-                type: 'openai',
-                apiKey: process.env.OPENAI_API_KEY,
-                model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-                maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 4000,
-                temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
-                organization: process.env.OPENAI_ORG_ID,
-                priority: 3
-            });
-        }
-
-        // 4. OpenAI GPT-4
-        if (process.env.OPENAI_GPT4_API_KEY && process.env.OPENAI_GPT4_API_KEY !== 'your_openai_gpt4_api_key_here') {
-            providers.push({
-                name: 'openai-gpt4',
-                type: 'openai',
-                apiKey: process.env.OPENAI_GPT4_API_KEY,
-                model: process.env.OPENAI_GPT4_MODEL || 'gpt-4-turbo-preview',
-                maxTokens: parseInt(process.env.OPENAI_GPT4_MAX_TOKENS) || 8000,
-                priority: 4
-            });
-        }
-
-        // 5. DeepSeek
-        if (process.env.DEEPSEEK_API_KEY && process.env.DEEPSEEK_API_KEY !== 'your_deepseek_api_key_here') {
-            providers.push({
-                name: 'deepseek',
-                type: 'deepseek',
-                apiKey: process.env.DEEPSEEK_API_KEY,
-                model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-                maxTokens: parseInt(process.env.DEEPSEEK_MAX_TOKENS) || 4000,
-                temperature: parseFloat(process.env.DEEPSEEK_TEMPERATURE) || 0.7,
-                priority: 5
-            });
-        }
-
-        // 6. Claude
-        if (process.env.CLAUDE_API_KEY && process.env.CLAUDE_API_KEY !== 'your_claude_api_key_here') {
-            providers.push({
-                name: 'claude',
-                type: 'claude',
-                apiKey: process.env.CLAUDE_API_KEY,
-                model: process.env.CLAUDE_MODEL || 'claude-3-opus-20240229',
-                maxTokens: parseInt(process.env.CLAUDE_MAX_TOKENS) || 10000,
-                priority: 6
-            });
-        }
-
-        // ترتيب حسب الأولوية
-        providers.sort((a, b) => (a.priority || 0) - (b.priority || 0));
-
-        return providers;
-    }
-
-    getActiveProviders() {
-        return this.providers;
-    }
-
-    getProvider(name) {
-        return this.providers.find(p => p.name === name);
-    }
-
-    getDefaultProvider() {
-        return this.providers[0] || null;
-    }
-
-    hasProvider(name) {
-        return this.providers.some(p => p.name === name);
-    }
-
-    getProviderCount() {
-        return this.providers.length;
-    }
-
-    // التحقق من صحة المفاتيح
-    validateKeys() {
-        const issues = [];
+        // ✅ القراءة من متغيرات البيئة فقط
+        this.webhookUrl = process.env.SLACK_WEBHOOK || null;
+        this.enabled = !!this.webhookUrl && this.webhookUrl !== 'your_slack_webhook_here';
         
-        for (const provider of this.providers) {
-            if (!provider.apiKey || provider.apiKey.startsWith('your_')) {
-                issues.push(`⚠️ ${provider.name}: API key not configured properly`);
+        // التحقق من التهيئة
+        if (this.enabled) {
+            // التحقق من صحة الـ URL (بدون تسجيله في logs)
+            if (!this.webhookUrl.startsWith('https://hooks.slack.com/services/')) {
+                logger.warn('⚠️ Invalid Slack webhook URL format');
+                this.enabled = false;
+            } else {
+                logger.info('✅ Slack service initialized');
             }
+        } else {
+            logger.info('ℹ️ Slack service disabled (no webhook configured)');
+        }
+    }
+
+    // إرسال رسالة إلى Slack
+    async sendMessage(message, options = {}) {
+        if (!this.enabled) {
+            logger.debug('Slack service disabled, skipping message');
+            return false;
         }
 
-        if (issues.length > 0) {
-            console.warn('⚠️ AI Provider Issues:');
-            issues.forEach(issue => console.warn(issue));
-        }
+        try {
+            const payload = {
+                text: message,
+                username: options.username || 'AI Commander',
+                icon_emoji: options.icon || '⚓',
+                channel: options.channel || '#general',
+                attachments: options.attachments || []
+            };
 
-        return issues;
+            // ⚠️ لا تسجل الـ webhook في logs
+            logger.info(`📨 Sending Slack message: ${message.substring(0, 50)}...`);
+
+            const response = await axios.post(this.webhookUrl, payload, {
+                timeout: 5000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 200) {
+                logger.info('✅ Slack message sent successfully');
+                return true;
+            } else {
+                logger.error(`❌ Slack error: ${response.status}`);
+                return false;
+            }
+
+        } catch (error) {
+            logger.error('❌ Slack service error:', error.message);
+            // لا تسجل التفاصيل الحساسة
+            return false;
+        }
+    }
+
+    // إرسال تنبيه
+    async sendAlert(title, message, level = 'warning') {
+        const emojis = {
+            'info': 'ℹ️',
+            'warning': '⚠️',
+            'error': '🚨',
+            'success': '✅'
+        };
+
+        const color = {
+            'info': '#3498db',
+            'warning': '#f39c12',
+            'error': '#e74c3c',
+            'success': '#2ecc71'
+        };
+
+        return await this.sendMessage(
+            `${emojis[level] || '📢'} *${title}*`,
+            {
+                attachments: [{
+                    color: color[level] || '#3498db',
+                    text: message,
+                    fields: [
+                        {
+                            title: '🕐 Time',
+                            value: new Date().toISOString(),
+                            short: true
+                        },
+                        {
+                            title: '📊 Level',
+                            value: level.toUpperCase(),
+                            short: true
+                        }
+                    ]
+                }]
+            }
+        );
+    }
+
+    // إرسال تقرير
+    async sendReport(report) {
+        if (!this.enabled) return false;
+
+        const attachments = report.sections?.map(section => ({
+            title: section.title,
+            text: section.content,
+            color: section.color || '#3498db',
+            fields: section.fields || []
+        })) || [];
+
+        return await this.sendMessage(
+            `📊 *${report.title || 'System Report'}*`,
+            { attachments }
+        );
+    }
+
+    // التحقق من صحة التهيئة
+    isEnabled() {
+        return this.enabled;
+    }
+
+    // إعادة تهيئة الخدمة (لتحديث webhook)
+    reconfigure(webhookUrl) {
+        if (webhookUrl && webhookUrl.startsWith('https://hooks.slack.com/services/')) {
+            this.webhookUrl = webhookUrl;
+            this.enabled = true;
+            logger.info('✅ Slack service reconfigured');
+            return true;
+        } else {
+            logger.warn('⚠️ Invalid Slack webhook URL provided');
+            return false;
+        }
+    }
+
+    // تعطيل الخدمة
+    disable() {
+        this.enabled = false;
+        logger.info('ℹ️ Slack service disabled');
     }
 }
 
-module.exports = new AIProvidersConfig();
+module.exports = new SlackService();
