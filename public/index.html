@@ -1,4 +1,4 @@
-<!-- public/index.html -->
+cat > public/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -12,16 +12,15 @@
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
-    <!-- SheetJS لقراءة Excel -->
+    <!-- SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- PDF.js لقراءة PDF -->
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
@@ -76,7 +75,7 @@
             </span>
             <span class="role-badge" id="userRoleDisplay">👤</span>
             <button class="btn-outline-white" onclick="window.print()"><i class="fas fa-print"></i></button>
-            <button class="btn-outline-white" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i></button>
+            <button class="btn-outline-white" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
             <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
@@ -87,31 +86,23 @@
             <span>⚓</span>
             <span>الأسطول البحري</span>
         </div>
-        <button class="nav-btn active" onclick="showPage('dashboard')">
+        <!-- ✅ تغيير جميع الروابط إلى مسارات مباشرة -->
+        <button class="nav-btn active" onclick="location.href='/pages/dashboard.html'">
             <i class="fas fa-chart-pie"></i> لوحة التحكم
         </button>
-        <button class="nav-btn" onclick="showPage('fleet')">
+        <button class="nav-btn" onclick="location.href='/pages/fleet.html'">
             <i class="fas fa-ship"></i> الأسطول
         </button>
-        <button class="nav-btn" onclick="showPage('maintenance')">
+        <button class="nav-btn" onclick="location.href='/pages/maintenance.html'">
             <i class="fas fa-wrench"></i> الصيانة
         </button>
-        <button class="nav-btn" onclick="showPage('efficiency')">
+        <button class="nav-btn" onclick="location.href='/pages/readiness.html'">
             <i class="fas fa-chart-line"></i> الجاهزية
         </button>
-        <button class="nav-btn" onclick="showPage('support')">
-            <i class="fas fa-headset"></i> الدعم
-        </button>
-        <button class="nav-btn" onclick="showPage('users')">
+        <button class="nav-btn" onclick="location.href='/pages/users.html'">
             <i class="fas fa-users"></i> المستخدمين
         </button>
-        <button class="nav-btn" onclick="showPage('notes')">
-            <i class="fas fa-sticky-note"></i> Note Verbale
-        </button>
-        <button class="nav-btn" onclick="showPage('sessions')">
-            <i class="fas fa-users-cog"></i> المراقبة
-        </button>
-        <button class="nav-btn" onclick="showPage('ai-assistant')">
+        <button class="nav-btn" onclick="location.href='/pages/ai-assistant.html'">
             <i class="fas fa-robot"></i> 🤖 المساعد الذكي
         </button>
         <div class="sidebar-footer">
@@ -121,14 +112,23 @@
 
     <!-- ===== المحتوى الرئيسي ===== -->
     <div class="main-content">
-        <div id="pageContainer"></div>
+        <div id="pageContainer">
+            <!-- سيتم تحميل المحتوى هنا -->
+            <script>
+                // تحميل الصفحة الافتراضية
+                const currentPath = window.location.pathname;
+                if (currentPath === '/' || currentPath === '/index.html') {
+                    window.location.href = '/pages/dashboard.html';
+                }
+            </script>
+        </div>
     </div>
 </div>
 
 <!-- ===== أزرار التمرير ===== -->
 <div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()"><i class="fas fa-chevron-up"></i></button>
-    <button class="scroll-btn" onclick="scrollToBottom()"><i class="fas fa-chevron-down"></i></button>
+    <button class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><i class="fas fa-chevron-up"></i></button>
+    <button class="scroll-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})"><i class="fas fa-chevron-down"></i></button>
 </div>
 
 <!-- ===== النوافذ المنبثقة ===== -->
@@ -146,31 +146,21 @@
 </div>
 
 <!-- ===== تحميل ملفات JavaScript ===== -->
-
-<!-- ✅ 1️⃣ الملفات الأساسية (core) -->
 <script src="/js/core/config.js"></script>
 <script src="/js/core/helpers.js"></script>
 <script src="/js/core/auth.js"></script>
-
-<!-- ✅ 2️⃣ المكتبات المساعدة (lib) -->
 <script src="/js/lib/charts.js"></script>
 <script src="/js/lib/map.js"></script>
 <script src="/js/lib/notifications.js"></script>
 <script src="/js/lib/file-import.js"></script>
-
-<!-- ✅ 3️⃣ صفحات التطبيق (pages) -->
 <script src="/js/pages/dashboard.js"></script>
 <script src="/js/pages/fleet.js"></script>
 <script src="/js/pages/maintenance.js"></script>
 <script src="/js/pages/efficiency.js"></script>
-<script src="/js/pages/support.js"></script>
 <script src="/js/pages/users.js"></script>
-<script src="/js/pages/notes.js"></script>
-<script src="/js/pages/sessions.js"></script>
 <script src="/js/pages/ai-assistant.js"></script>
-
-<!-- ✅ 4️⃣ الملف الرئيسي -->
 <script src="/js/app.js"></script>
 
 </body>
 </html>
+EOF
