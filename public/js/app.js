@@ -1,7 +1,4 @@
-// ============================================================
-// 📱 التطبيق الرئيسي - app.js
-// ============================================================
-
+// public/js/app.js
 console.log('✅ App loaded');
 
 let allVessels = [];
@@ -89,28 +86,32 @@ function loadPage(pageName) {
 }
 
 function initPage(pageName) {
-    console.log('📄 Initializing page:', pageName);
     switch(pageName) {
-        case 'dashboard': 
-            if (typeof loadDashboard === 'function') loadDashboard(); 
-            break;
-        case 'fleet': 
-            if (typeof loadVessels === 'function') loadVessels(); 
-            break;
-        case 'maintenance': 
-            if (typeof loadMaintenance === 'function') loadMaintenance(); 
-            break;
-        case 'efficiency': 
-            if (typeof loadVessels === 'function') loadVessels(); 
-            break;
-        case 'users': 
-            if (typeof loadUsers === 'function') loadUsers(); 
-            break;
-        case 'ai-assistant': 
-            if (typeof initAIAssistant === 'function') setTimeout(initAIAssistant, 300); 
-            break;
-        default: 
-            console.log('⚠️ Unknown page:', pageName);
+        case 'dashboard': loadDashboard(); break;
+        case 'fleet': loadVessels(); break;
+        case 'maintenance': loadMaintenance(); break;
+        case 'efficiency': loadVessels(); break;
+        case 'support': loadTickets(); break;
+        case 'tracking': initTrackingPage(); break;
+        case 'map': setTimeout(initMap, 100); break;
+        case 'users': loadUsers(); break;
+        case 'notes': loadNotes(); break;
+        case 'sessions': loadSessions(); break;
+        default: console.log('⚠️ Unknown page:', pageName);
+    }
+}
+
+function initTrackingPage() {
+    if (document.getElementById('page-tracking')) {
+        if (typeof initTrackingMap === 'function') {
+            setTimeout(initTrackingMap, 300);
+        }
+        if (typeof initTrackingSocket === 'function') {
+            setTimeout(initTrackingSocket, 500);
+        }
+        if (typeof startContinuousTracking === 'function') {
+            setTimeout(startContinuousTracking, 1000);
+        }
     }
 }
 
@@ -119,7 +120,7 @@ function showPage(pageName) {
     const btns = document.querySelectorAll('.nav-btn');
     const pageMap = {
         'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'users': 4, 'ai-assistant': 5
+        'support': 4, 'tracking': 5, 'map': 6, 'users': 7, 'notes': 8, 'sessions': 9
     };
     if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
         btns[pageMap[pageName]].classList.add('active');
@@ -276,11 +277,19 @@ function doLogin() {
     // ===== حسابات تجريبية =====
     const demoUsers = {
         'admin': {
-            password: 'Admin@2024#Secure',
+            password: '123456',
             user: { id: '1', name: 'مدير النظام', role: 'مسؤول', email: 'admin@example.com' }
         },
+        'manager': {
+            password: '123456',
+            user: { id: '2', name: 'مدير العمليات', role: 'مشرف', email: 'manager@example.com' }
+        },
+        'editor': {
+            password: '123456',
+            user: { id: '3', name: 'محرر', role: 'محرر', email: 'editor@example.com' }
+        },
         'viewer': {
-            password: 'Viewer@2024#Secure',
+            password: '123456',
             user: { id: '4', name: 'مشاهد', role: 'مشاهد', email: 'viewer@example.com' }
         }
     };
@@ -512,6 +521,16 @@ function loadNotes() {
     .catch(err => console.error('Load notes error:', err));
 }
 
+function loadSessions() {
+    const token = getToken();
+    if (!token) return;
+    if (document.getElementById('page-sessions')) {
+        if (typeof refreshSessions === 'function') {
+            refreshSessions();
+        }
+    }
+}
+
 function renderAllTables() {
     renderMainTable();
     renderMaintenanceTables();
@@ -546,7 +565,18 @@ function getDemoVessels() {
         { id: 7, name: 'البروق 7', num: 'B007', len: 25, cat: 'البروق', reg: 'الجنوب', zone: 'جرجيس', port: 'جرجيس', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 4' },
         { id: 8, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 1' },
         { id: 9, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 1' },
-        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' }
+        { id: 10, name: 'صقر 3', num: 'S003', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'حمام سوسة', port: 'حمام سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 2' },
+        { id: 11, name: 'صقر 4', num: 'S004', len: 30, cat: 'صقور', reg: 'الساحل', zone: 'قليبية', port: 'قليبية', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-02-10', eDate: '2026-12-31', ref: 'REF-011', repairer: 'فني 2' },
+        { id: 12, name: 'صقر 5', num: 'S005', len: 30, cat: 'صقور', reg: 'الجنوب', zone: 'بن قردان', port: 'بن قردان', supp: 'الوحدة 4', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-012', repairer: 'فني 4' },
+        { id: 13, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-013', repairer: 'فني 2' },
+        { id: 14, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-014', repairer: 'فني 2' },
+        { id: 15, name: 'خافر 3', num: 'K003', len: 20, cat: 'خوافر', reg: 'الوسط', zone: 'جربة', port: 'جربة', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-015', repairer: 'فني 3' },
+        { id: 16, name: 'طوافة 1', num: 'T001', len: 15, cat: 'طوافات', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-016', repairer: 'فني 1' },
+        { id: 17, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-017', repairer: 'فني 1' },
+        { id: 18, name: 'زورق مزدوج 2', num: 'Z002', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-018', repairer: 'فني 2' },
+        { id: 19, name: 'زورق مزدوج 3', num: 'Z003', len: 35, cat: 'زوارق مزدوجة', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-25', eDate: '2026-12-31', ref: 'REF-019', repairer: 'فني 2' },
+        { id: 20, name: 'زورق مزدوج 4', num: 'Z004', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-020', repairer: 'فني 3' },
+        { id: 21, name: 'زورق مزدوج 5', num: 'Z005', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'القطار', port: 'القطار', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-021', repairer: 'فني 3' }
     ];
 }
 
@@ -588,6 +618,82 @@ function getDemoMaintenance() {
             startDate: '2026-05-14',
             endDate: '2026-05-15',
             parts: [{ name: 'زيت محرك', quantity: 5, price: 100 }, { name: 'فلتر هواء', quantity: 1, price: 300 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 3,
+            vesselId: 14,
+            vesselName: 'خافر 2',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري المنستير',
+            technician: 'فني 3',
+            description: 'إصلاح شامل للهيكل',
+            repair: 'تم تغيير ألواح الهيكل والدهان',
+            faultType: 'هيكل',
+            cost: 5000,
+            notes: 'تم تغيير ألواح الهيكل والدهان المضاد للصدأ',
+            status: 'مكتملة',
+            date: '2026-01-10',
+            startDate: '2026-01-05',
+            endDate: '2026-01-10',
+            parts: [{ name: 'ألواح فولاذ', quantity: 10, price: 350 }, { name: 'دهان مضاد للصدأ', quantity: 5, price: 200 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 4,
+            vesselId: 6,
+            vesselName: 'البروق 6',
+            type: 'عادية',
+            unit: 'وحدة الصيانة والإسناد البحري جرجيس',
+            technician: 'فني 4',
+            description: 'عطل في النظام الكهربائي',
+            repair: 'تم تغيير البطاريات والكابلات',
+            faultType: 'كهرباء',
+            cost: 1200,
+            notes: 'تم تغيير البطاريات والكابلات',
+            status: 'مكتملة',
+            date: '2026-02-05',
+            startDate: '2026-02-03',
+            endDate: '2026-02-05',
+            parts: [{ name: 'بطارية', quantity: 2, price: 450 }, { name: 'كابلات', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 5,
+            vesselId: 19,
+            vesselName: 'زورق مزدوج 3',
+            type: 'طارئة',
+            unit: 'وحدة الصيانة والإسناد البحري تونس',
+            technician: 'فني 1',
+            description: 'عطل في نظام التوجيه',
+            repair: 'تم تغيير طرمبة التوجيه',
+            faultType: 'توجيه',
+            cost: 1800,
+            notes: 'تم تغيير طرمبة التوجيه بالكامل',
+            status: 'قيد الإنجاز',
+            date: '2026-02-10',
+            startDate: '2026-02-08',
+            endDate: null,
+            parts: [{ name: 'طرمبة توجيه', quantity: 1, price: 1500 }, { name: 'زيت هيدروليك', quantity: 3, price: 100 }],
+            createdBy: 'Admin'
+        },
+        {
+            id: 6,
+            vesselId: 11,
+            vesselName: 'صقر 4',
+            type: 'كبرى',
+            unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+            technician: 'فني 2',
+            description: 'عطل في نظام التبريد',
+            repair: 'تم تغيير الراديتر والمراوح',
+            faultType: 'تبريد',
+            cost: 3200,
+            notes: 'تم تغيير نظام التبريد بالكامل',
+            status: 'مكتملة',
+            date: '2026-07-15',
+            startDate: '2026-07-10',
+            endDate: '2026-07-15',
+            parts: [{ name: 'راديتر', quantity: 1, price: 2000 }, { name: 'مراوح تبريد', quantity: 2, price: 400 }],
             createdBy: 'Admin'
         }
     ];
@@ -684,7 +790,7 @@ function renderNotes() {
 }
 
 // ============================================================
-// 👥 دوال المستخدمين
+// 👥 دوال المستخدمين (كاملة)
 // ============================================================
 
 function addUser() {
@@ -1666,278 +1772,15 @@ function updateDashboardActivity() {
 }
 
 // ============================================================
-// 🤖 AI ASSISTANT
+// دوال إضافية
 // ============================================================
 
-function initAIAssistant() {
-    console.log('🤖 AI Assistant initialized');
-    
-    const sendBtn = document.getElementById('sendBtn');
-    const chatInput = document.getElementById('chatInput');
-    const micBtn = document.getElementById('micBtn');
-    const speakerBtn = document.getElementById('speakerBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    
-    if (sendBtn) {
-        sendBtn.onclick = function() {
-            askAI();
-        };
-    }
-    
-    if (chatInput) {
-        chatInput.onkeypress = function(e) {
-            if (e.key === 'Enter') {
-                askAI();
-            }
-        };
-    }
-    
-    if (micBtn) {
-        micBtn.onclick = function() {
-            toggleVoiceInput();
-        };
-    }
-    
-    if (speakerBtn) {
-        speakerBtn.onclick = function() {
-            speakLastResponse();
-        };
-    }
-    
-    if (clearBtn) {
-        clearBtn.onclick = function() {
-            clearChat();
-        };
-    }
+function exportEfficiencyData() {
+    showAlert('✅ تم تصدير البيانات', 'success');
 }
 
-// ============================================================
-// 💬 دوال المساعد الذكي
-// ============================================================
-
-const AI_API_BASE = '/api/ai';
-let aiConversationId = null;
-let aiProcessing = false;
-let aiLastResponse = null;
-
-async function askAI(message) {
-    const chatInput = document.getElementById('chatInput');
-    const chatBox = document.getElementById('chatBox');
-    const sendBtn = document.getElementById('sendBtn');
-    const typingIndicator = document.getElementById('typingIndicator');
-    
-    if (!chatInput) return;
-    
-    const question = message || chatInput.value.trim();
-    if (!question) {
-        showAlert('❌ الرجاء كتابة سؤال', 'warning');
-        return;
-    }
-    
-    if (aiProcessing) {
-        showAlert('⏳ جاري معالجة طلب سابق...', 'warning');
-        return;
-    }
-    
-    addAIMessage('user', question);
-    chatInput.value = '';
-    chatInput.disabled = true;
-    if (sendBtn) sendBtn.disabled = true;
-    
-    aiProcessing = true;
-    if (typingIndicator) typingIndicator.classList.add('active');
-    
-    try {
-        const token = getToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        
-        const response = await fetch(AI_API_BASE + '/ask', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
-                message: question,
-                conversationId: aiConversationId,
-                language: 'ar'
-            })
-        });
-        
-        if (typingIndicator) typingIndicator.classList.remove('active');
-        
-        if (!response.ok) {
-            const error = await response.json().catch(() => ({}));
-            throw new Error(error.error || 'خطأ ' + response.status);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            aiConversationId = data.conversationId;
-            aiLastResponse = data.response;
-            addAIMessage('ai', data.response);
-        } else {
-            throw new Error(data.error || 'حدث خطأ غير معروف');
-        }
-        
-    } catch (error) {
-        if (typingIndicator) typingIndicator.classList.remove('active');
-        addAIMessage('ai', '⚠️ عذراً، حدث خطأ: ' + error.message);
-        console.error('AI Error:', error);
-    }
-    
-    aiProcessing = false;
-    chatInput.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    chatInput.focus();
-}
-
-function addAIMessage(role, content, timestamp = new Date()) {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-    
-    const div = document.createElement('div');
-    div.className = 'message ' + role;
-    const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = timestamp.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    
-    div.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${content.replace(/\n/g, '<br>')}</div>
-        <div class="time">${time}</div>
-        ${role === 'ai' ? `
-            <div class="actions">
-                <button onclick="copyAIMessage(this)">📋 نسخ</button>
-                <button onclick="speakAIText(this)">🔊 استماع</button>
-            </div>
-        ` : ''}
-    `;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function copyAIMessage(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    navigator.clipboard.writeText(content).then(() => {
-        const orig = btn.textContent;
-        btn.textContent = '✅ تم النسخ';
-        setTimeout(() => btn.textContent = orig, 1500);
-    });
-}
-
-function speakAIText(btn) {
-    const content = btn.closest('.message').querySelector('.content').textContent;
-    speakText(content);
-}
-
-function speakText(text) {
-    if (!('speechSynthesis' in window)) {
-        showAlert('❌ المتصفح لا يدعم النطق', 'warning');
-        return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-}
-
-function speakLastResponse() {
-    if (aiLastResponse) {
-        speakText(aiLastResponse);
-        return;
-    }
-    showAlert('لا يوجد رد للاستماع', 'warning');
-}
-
-function clearChat() {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-    if (chatBox.querySelectorAll('.message').length === 0) return;
-    if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-        chatBox.innerHTML = '';
-        aiConversationId = null;
-        aiLastResponse = null;
-        showAlert('🗑️ تم مسح المحادثة', 'success');
-    }
-}
-
-// ============================================================
-// 🎤 ميزة الصوت
-// ============================================================
-
-let aiRecognition = null;
-let aiListening = false;
-
-function toggleVoiceInput() {
-    const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    if (!hasSpeech) {
-        showAlert('❌ المتصفح لا يدعم الميكروفون', 'warning');
-        return;
-    }
-    
-    if (aiListening) {
-        stopVoiceInput();
-        return;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    aiRecognition = new SpeechRecognition();
-    aiRecognition.lang = 'ar-SA';
-    aiRecognition.continuous = false;
-    aiRecognition.interimResults = true;
-    
-    aiRecognition.onstart = function() {
-        aiListening = true;
-        const micBtn = document.getElementById('micBtn');
-        if (micBtn) {
-            micBtn.textContent = '⏹️';
-            micBtn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
-        }
-        showAlert('🎤 جاري الاستماع...', 'info');
-    };
-    
-    aiRecognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                const chatInput = document.getElementById('chatInput');
-                if (chatInput) {
-                    chatInput.value = transcript;
-                    setTimeout(() => {
-                        if (transcript.trim()) askAI();
-                    }, 300);
-                }
-            }
-        }
-    };
-    
-    aiRecognition.onerror = function(event) {
-        console.warn('Voice error:', event.error);
-        if (event.error === 'not-allowed') {
-            showAlert('❌ الرجاء السماح بالميكروفون', 'warning');
-        }
-        stopVoiceInput();
-    };
-    
-    aiRecognition.onend = function() {
-        stopVoiceInput();
-    };
-    
-    aiRecognition.start();
-}
-
-function stopVoiceInput() {
-    aiListening = false;
-    const micBtn = document.getElementById('micBtn');
-    if (micBtn) {
-        micBtn.textContent = '🎤';
-        micBtn.style.background = '';
-    }
-    if (aiRecognition) {
-        try { aiRecognition.stop(); } catch(e) {}
-    }
+function initMap() {
+    console.log('🗺️ Initializing map...');
 }
 
 // ============================================================
@@ -1945,7 +1788,6 @@ function stopVoiceInput() {
 // ============================================================
 
 console.log('✅ تم تحميل التطبيق بالكامل');
-console.log('📝 استخدم admin / Admin@2024#Secure للدخول');
-console.log('👤 حسابات: admin, viewer');
-console.log('🔑 كلمة المرور: Admin@2024#Secure, Viewer@2024#Secure');
-console.log('🤖 دوال المساعد: askAI(), toggleVoiceInput(), speakLastResponse(), clearChat()');
+console.log('📝 استخدم admin / 123456 للدخول');
+console.log('👤 حسابات: admin, manager, editor, viewer');
+console.log('🔑 كلمة المرور: 123456'); اعطيني السرفر الخاص به
