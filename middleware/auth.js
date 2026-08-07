@@ -1,248 +1,132 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { logger } = require('../utils/logger');
 const User = require('../models/User');
-const { logger, logSecurity } = require('../services/logger');
-const { config } = require('../config/env');
 
-/**
- * ✅ Middleware للمصادقة
- */
-const authenticate = async (req, res, next) => {
-  try {
-    // الحصول على التوكن من الهيدر
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      logSecurity('Missing auth token', { ip: req.ip, path: req.path });
-      return res.status(401).json({
-        success: false,
-        error: 'يرجى تسجيل الدخول أولاً',
-        code: 'AUTH_REQUIRED'
-      });
+class AuthManager {
+    constructor() {
+        this.secret = process.env.JWT_SECRET;
+        this.expiry = process.env.JWT_EXPIRY || '7d';
+        this.saltRounds = parseInt(process.env.SALT_ROUNDS) || 12;
     }
 
-    const token = authHeader.split(' ')[1];
-    
-    // التحقق من التوكن
-    let decoded;
-    try {
-      decoded = jwt.verify(token, config.jwtSecret);
-    } catch (error) {
-      logSecurity('Invalid token', { 
-        ip: req.ip, 
-        error: error.message,
-        path: req.path 
-      });
-      
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({
-          success: false,
-          error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً',
-          code: 'TOKEN_EXPIRED'
-        });
-      }
-      
-      return res.status(401).json({
-        success: false,
-        error: 'توكن غير صالح',
-        code: 'INVALID_TOKEN'
-      });
+    // ====== توليد JWT ======
+    generateToken(userId, role, permissions = []) {
+        return jwt.sign(
+            { 
+                userId, 
+                role, 
+                permissions,
+                iat: Math.floor(Date.now() / 1000)
+            },
+            this.secret,
+            { expiresIn: this.expiry }
+        );
     }
 
-    // الحصول على المستخدم
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) {
-      logSecurity('User not found', { userId: decoded.id, ip: req.ip });
-      return res.status(401).json({
-        success: false,
-        error: 'المستخدم غير موجود',
-        code: 'USER_NOT_FOUND'
-      });
+    // ====== التحقق من JWT ======
+    verifyToken(token) {
+        try {
+            const decoded = jwt.verify(token, this.secret);
+            return { valid: true, data: decoded };
+        } catch (error) {
+            logger.warn('JWT verification failed:', error.message);
+            return { valid: false, error: error.message };
+        }
     }
 
-    // التحقق من حالة المستخدم
-    if (!user.isActive) {
-      logSecurity('Inactive user login attempt', { userId: user._id, ip: req.ip });
-      return res.status(403).json({
-        success: false,
-        error: 'الحساب غير مفعل',
-        code: 'ACCOUNT_INACTIVE'
-      });
+    // ====== Middleware للمصادقة ======
+    authenticate(req, res, next) {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'Missing or invalid token'
+            });
+        }
+
+        const token = authHeader.split(' ')[1];
+        const result = this.verifyToken(token);
+
+        if (!result.valid) {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: result.error
+            });
+        }
+
+        req.user = result.data;
+        next();
     }
 
-    // التحقق من تغيير كلمة المرور بعد إصدار التوكن
-    if (user.changedPasswordAfter(decoded.iat)) {
-      logSecurity('Password changed after token issued', { userId: user._id, ip: req.ip });
-      return res.status(401).json({
-        success: false,
-        error: 'تم تغيير كلمة المرور، يرجى تسجيل الدخول مجدداً',
-        code: 'PASSWORD_CHANGED'
-      });
+    // ====== RBAC - التحقق من الصلاحيات ======
+    checkPermission(requiredPermission) {
+        return (req, res, next) => {
+            if (!req.user) {
+                return res.status(401).json({
+                    error: 'Unauthorized',
+                    message: 'User not authenticated'
+                });
+            }
+
+            const userPermissions = req.user.permissions || [];
+            
+            // Admin لديه جميع الصلاحيات
+            if (req.user.role === 'admin') {
+                return next();
+            }
+
+            if (!userPermissions.includes(requiredPermission)) {
+                logger.warn(`Permission denied: ${req.user.userId} -> ${requiredPermission}`);
+                return res.status(403).json({
+                    error: 'Forbidden',
+                    message: 'Insufficient permissions'
+                });
+            }
+
+            next();
+        };
     }
 
-    // إضافة المستخدم للـ Request
-    req.user = user;
-    req.token = token;
-    
-    // تسجيل النشاط
-    logger.info('User authenticated', {
-      userId: user._id,
-      name: user.name,
-      role: user.role,
-      path: req.path,
-      method: req.method
-    });
-
-    next();
-  } catch (error) {
-    logger.error('Authentication error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'خطأ في المصادقة',
-      code: 'AUTH_ERROR'
-    });
-  }
-};
-
-/**
- * ✅ Middleware للصلاحيات
- */
-const authorize = (...allowedRoles) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: 'يرجى تسجيل الدخول أولاً',
-        code: 'AUTH_REQUIRED'
-      });
+    // ====== تشفير البيانات الحساسة ======
+    encrypt(text) {
+        const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+        let encrypted = cipher.update(text, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return `${iv.toString('hex')}:${encrypted}`;
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
-      logSecurity('Unauthorized access attempt', {
-        userId: req.user._id,
-        role: req.user.role,
-        requiredRoles: allowedRoles,
-        path: req.path,
-        method: req.method,
-        ip: req.ip
-      });
-
-      return res.status(403).json({
-        success: false,
-        error: 'غير مصرح لك بهذه العملية',
-        code: 'FORBIDDEN'
-      });
+    decrypt(encryptedText) {
+        const key = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
+        const [ivHex, encrypted] = encryptedText.split(':');
+        const iv = Buffer.from(ivHex, 'hex');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
     }
 
-    // تسجيل الوصول المصرح به
-    logger.info('Authorized access', {
-      userId: req.user._id,
-      role: req.user.role,
-      path: req.path,
-      method: req.method
-    });
-
-    next();
-  };
-};
-
-/**
- * ✅ Middleware للتحقق من صلاحيات الموارد
- */
-const checkResourceOwnership = (modelName, paramId = 'id') => {
-  return async (req, res, next) => {
-    try {
-      const Model = require(`../models/${modelName}`);
-      const resource = await Model.findById(req.params[paramId]);
-      
-      if (!resource) {
-        return res.status(404).json({
-          success: false,
-          error: 'المورد غير موجود',
-          code: 'RESOURCE_NOT_FOUND'
-        });
-      }
-
-      // مسؤول أو محرر يمكنهم الوصول لكل الموارد
-      if (['مسؤول', 'محرر'].includes(req.user.role)) {
-        req.resource = resource;
-        return next();
-      }
-
-      // التحقق من ملكية المورد
-      if (resource.userId && resource.userId.toString() !== req.user._id.toString()) {
-        logSecurity('Resource ownership violation', {
-          userId: req.user._id,
-          resourceId: resource._id,
-          model: modelName,
-          path: req.path
-        });
-
-        return res.status(403).json({
-          success: false,
-          error: 'غير مصرح لك بالوصول إلى هذا المورد',
-          code: 'RESOURCE_FORBIDDEN'
-        });
-      }
-
-      req.resource = resource;
-      next();
-    } catch (error) {
-      logger.error('Resource ownership check error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'خطأ في التحقق من صلاحيات المورد'
-      });
-    }
-  };
-};
-
-/**
- * ✅ Middleware لتحديث آخر نشاط
- */
-const updateLastActivity = async (req, res, next) => {
-  if (req.user) {
-    try {
-      await User.findByIdAndUpdate(req.user._id, {
-        lastActivity: new Date()
-      });
-    } catch (error) {
-      // لا نقطع العملية إذا فشل التحديث
-      logger.warn('Failed to update last activity:', error);
-    }
-  }
-  next();
-};
-
-/**
- * ✅ Middleware لتسجيل الخروج
- */
-const logout = async (req, res) => {
-  try {
-    if (req.user) {
-      // إلغاء التوكن (في حالة استخدام Blacklist)
-      // يمكن إضافة التوكن إلى قائمة سوداء في Redis
-      logger.info('User logged out', {
-        userId: req.user._id,
-        name: req.user.name
-      });
+    // ====== التحقق من كلمة المرور ======
+    async hashPassword(password) {
+        return await bcrypt.hash(password, this.saltRounds);
     }
 
-    res.json({
-      success: true,
-      message: 'تم تسجيل الخروج بنجاح'
-    });
-  } catch (error) {
-    logger.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'خطأ في تسجيل الخروج'
-    });
-  }
-};
+    async comparePassword(password, hash) {
+        return await bcrypt.compare(password, hash);
+    }
 
-module.exports = {
-  authenticate,
-  authorize,
-  checkResourceOwnership,
-  updateLastActivity,
-  logout
-};
+    // ====== توليد مفاتيح API ======
+    generateApiKey() {
+        return crypto.randomBytes(32).toString('hex');
+    }
+
+    hashApiKey(apiKey) {
+        return crypto.createHash('sha256').update(apiKey).digest('hex');
+    }
+}
+
+module.exports = new AuthManager();
