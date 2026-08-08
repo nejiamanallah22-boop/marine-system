@@ -138,6 +138,20 @@
             padding: 20px;
             color: rgba(255,255,255,0.2);
         }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top: 2px solid #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -213,54 +227,122 @@
         <div class="activity-container">
             <h4>🔄 آخر النشاطات</h4>
             <div id="dashActivity">
-                <div class="activity-empty">⏳ جاري التحميل...</div>
+                <div class="activity-empty"><span class="loading-spinner"></span> جاري التحميل...</div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // ============================================================
+        // 📊 Dashboard - البيانات الافتراضية
+        // ============================================================
+
+        const DEMO_DATA = {
+            vessels: [
+                { name: 'البروق 1', stat: 'صالح', zone: 'بنزرت', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 2', stat: 'صالح', zone: 'سوسة', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 3', stat: 'صالح', zone: 'صفاقس', createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 4', stat: 'صالح', zone: 'المنستير', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 5', stat: 'معطب', zone: 'بنزرت', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 6', stat: 'صيانة', zone: 'سوسة', createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 7', stat: 'صالح', zone: 'صفاقس', createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 8', stat: 'صالح', zone: 'بنزرت', createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 9', stat: 'معطب', zone: 'سوسة', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
+            ],
+            maintenance: [
+                { vesselName: 'البروق 3', cost: 1200, status: 'مكتملة', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 6', cost: 500, status: 'قيد الإنجاز', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 5', cost: 2300, status: 'معلقة', createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 9', cost: 800, status: 'قيد الإنجاز', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 2', cost: 350, status: 'مكتملة', createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 1', cost: 150, status: 'مكتملة', createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
+            ]
+        };
+
         let dashChart = null;
         let dashLineChart = null;
+        let isRefreshing = false;
 
-        function refreshDashboard() {
+        // ============================================================
+        // 📥 جلب البيانات من API مع Fallback
+        // ============================================================
+
+        async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+
+        async function refreshDashboard() {
+            if (isRefreshing) return;
+            isRefreshing = true;
+
             console.log('📊 Refreshing dashboard...');
             
-            const token = localStorage.getItem('token');
-            if (!token) {
-                console.warn('⚠️ No token found');
-                return;
-            }
+            const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+            
+            try {
+                let vessels = [];
+                let maintenance = [];
 
-            // جلب المراكب
-            fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Failed to fetch vessels');
-                return res.json();
-            })
-            .then(vessels => {
-                // جلب الصيانة
-                fetch('/api/maintenance', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('Failed to fetch maintenance');
-                    return res.json();
-                })
-                .then(maintenance => {
-                    updateUI(vessels, maintenance);
-                })
-                .catch(() => updateUI(vessels, []));
-            })
-            .catch(err => {
-                console.error('❌ Error:', err);
-                // استخدام بيانات تجريبية
-                const demo = getDemoData();
-                updateUI(demo.vessels, demo.maintenance);
-            });
+                // محاولة جلب المراكب
+                try {
+                    const res = await fetchWithTimeout('/api/vessels', {
+                        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                    });
+                    if (res.ok) {
+                        vessels = await res.json();
+                        console.log('✅ Vessels loaded:', vessels.length);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Failed to fetch vessels:', e.message);
+                }
+
+                // محاولة جلب الصيانة
+                try {
+                    const res = await fetchWithTimeout('/api/maintenance', {
+                        headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+                    });
+                    if (res.ok) {
+                        maintenance = await res.json();
+                        console.log('✅ Maintenance loaded:', maintenance.length);
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Failed to fetch maintenance:', e.message);
+                }
+
+                // إذا لم تكن هناك بيانات، استخدم البيانات الافتراضية
+                if (vessels.length === 0 && maintenance.length === 0) {
+                    console.log('📦 Using demo data');
+                    vessels = DEMO_DATA.vessels;
+                    maintenance = DEMO_DATA.maintenance;
+                }
+
+                updateUI(vessels, maintenance);
+
+            } catch (error) {
+                console.error('❌ Error refreshing dashboard:', error);
+                // استخدام البيانات الافتراضية في حالة الخطأ
+                updateUI(DEMO_DATA.vessels, DEMO_DATA.maintenance);
+            } finally {
+                isRefreshing = false;
+            }
         }
+
+        // ============================================================
+        // 🖥️ تحديث الواجهة
+        // ============================================================
 
         function updateUI(vessels, maintenance) {
             const total = vessels.length;
@@ -270,6 +352,7 @@
             const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
             const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
 
+            // تحديث الأرقام
             document.getElementById('dashTotal').textContent = total;
             document.getElementById('dashReady').textContent = ready;
             document.getElementById('dashBroken').textContent = broken;
@@ -278,20 +361,26 @@
             document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ar-TN');
 
-            // الرسوم البيانية
+            // تحديث الرسوم البيانية
             renderCharts(vessels);
             renderActivity(vessels, maintenance);
         }
+
+        // ============================================================
+        // 📈 الرسوم البيانية
+        // ============================================================
 
         function renderCharts(vessels) {
             const ready = vessels.filter(v => v.stat === 'صالح').length;
             const broken = vessels.filter(v => v.stat === 'معطب').length;
             const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
 
+            // تحديث الرسم البياني الدائري
             try {
                 const canvas = document.getElementById('dashChart');
                 if (canvas) {
                     if (dashChart) dashChart.destroy();
+                    
                     dashChart = new Chart(canvas, {
                         type: 'doughnut',
                         data: {
@@ -317,35 +406,34 @@
                     });
                 }
             } catch(e) {
-                console.log('Chart error:', e);
+                console.warn('⚠️ Chart error:', e);
             }
 
+            // تحديث الرسم البياني الخطي
             try {
                 const lineCanvas = document.getElementById('dashLineChart');
                 if (lineCanvas) {
                     if (dashLineChart) dashLineChart.destroy();
+                    
+                    // بيانات افتراضية لتطور الجاهزية
+                    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
+                    const readinessData = [72, 75, 78, 82, 85, 88];
+                    
                     dashLineChart = new Chart(lineCanvas, {
                         type: 'line',
                         data: {
-                            labels: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'],
-                            datasets: [
-                                {
-                                    label: 'صالح',
-                                    data: [12, 14, 13, 16, 18, 20],
-                                    borderColor: '#4ade80',
-                                    backgroundColor: 'rgba(74,222,128,0.1)',
-                                    fill: true,
-                                    tension: 0.4
-                                },
-                                {
-                                    label: 'معطب',
-                                    data: [5, 4, 6, 3, 4, 2],
-                                    borderColor: '#f87171',
-                                    backgroundColor: 'rgba(248,113,113,0.1)',
-                                    fill: true,
-                                    tension: 0.4
-                                }
-                            ]
+                            labels: months,
+                            datasets: [{
+                                label: '📈 نسبة الجاهزية %',
+                                data: readinessData,
+                                borderColor: '#34d399',
+                                backgroundColor: 'rgba(52,211,153,0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#34d399',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2
+                            }]
                         },
                         options: {
                             responsive: true,
@@ -357,35 +445,62 @@
                                 }
                             },
                             scales: {
-                                x: { ticks: { color: 'rgba(255,255,255,0.3)' } },
-                                y: { ticks: { color: 'rgba(255,255,255,0.3)' }, beginAtZero: true }
+                                x: { 
+                                    ticks: { color: 'rgba(255,255,255,0.3)' },
+                                    grid: { color: 'rgba(255,255,255,0.03)' }
+                                },
+                                y: { 
+                                    ticks: { color: 'rgba(255,255,255,0.3)' }, 
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: { color: 'rgba(255,255,255,0.03)' }
+                                }
                             }
                         }
                     });
                 }
             } catch(e) {
-                console.log('Line chart error:', e);
+                console.warn('⚠️ Line chart error:', e);
             }
         }
+
+        // ============================================================
+        // 📋 آخر النشاطات
+        // ============================================================
 
         function renderActivity(vessels, maintenance) {
             const container = document.getElementById('dashActivity');
             if (!container) return;
 
             const activities = [];
+
+            // إضافة نشاطات الصيانة
             maintenance.slice(0, 5).forEach(r => {
+                const date = r.createdAt ? new Date(r.createdAt) : new Date();
                 activities.push({
                     icon: '🔧',
                     text: `صيانة ${r.vesselName || 'مركب'}`,
-                    time: new Date(r.createdAt).toLocaleDateString('ar-TN') || 'اليوم'
+                    time: date.toLocaleDateString('ar-TN'),
+                    type: 'maintenance'
                 });
             });
+
+            // إضافة المراكب المعطلة
             vessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+                const date = v.createdAt ? new Date(v.createdAt) : new Date();
                 activities.push({
                     icon: '⚠️',
                     text: `المركب ${v.name} معطب`,
-                    time: new Date(v.createdAt).toLocaleDateString('ar-TN') || 'اليوم'
+                    time: date.toLocaleDateString('ar-TN'),
+                    type: 'broken'
                 });
+            });
+
+            // ترتيب حسب التاريخ (الأحدث أولاً)
+            activities.sort((a, b) => {
+                const dateA = new Date(a.time.split('/').reverse().join('/'));
+                const dateB = new Date(b.time.split('/').reverse().join('/'));
+                return dateB - dateA;
             });
 
             if (activities.length === 0) {
@@ -393,7 +508,7 @@
                 return;
             }
 
-            container.innerHTML = activities.map(a => `
+            container.innerHTML = activities.slice(0, 8).map(a => `
                 <div class="activity-item">
                     <span>${a.icon}</span>
                     <span>${a.text}</span>
@@ -402,24 +517,15 @@
             `).join('');
         }
 
-        function getDemoData() {
-            return {
-                vessels: [
-                    { name: 'البروق 1', stat: 'صالح', zone: 'بنزرت', createdAt: new Date() },
-                    { name: 'البروق 2', stat: 'صالح', zone: 'سوسة', createdAt: new Date() },
-                    { name: 'البروق 3', stat: 'معطب', zone: 'صفاقس', createdAt: new Date() },
-                    { name: 'البروق 4', stat: 'صيانة', zone: 'المنستير', createdAt: new Date() },
-                ],
-                maintenance: [
-                    { vesselName: 'البروق 3', cost: 1200, status: 'مكتملة', createdAt: new Date() },
-                    { vesselName: 'البروق 4', cost: 500, status: 'قيد الإنجاز', createdAt: new Date() },
-                ]
-            };
-        }
+        // ============================================================
+        // 🚀 تهيئة الصفحة
+        // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📊 Dashboard loaded');
-            setTimeout(refreshDashboard, 500);
+            console.log('📊 Dashboard initialized');
+            // تحميل البيانات بعد 300ms
+            setTimeout(refreshDashboard, 300);
+            // تحديث كل 30 ثانية
             setInterval(refreshDashboard, 30000);
         });
 
