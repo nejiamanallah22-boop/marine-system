@@ -235,9 +235,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // ============================================================
-        // 📊 Dashboard - البيانات الافتراضية
+        // 📊 Dashboard - البيانات الافتراضية (تعمل فوراً)
         // ============================================================
 
+        // ✅ بيانات تجريبية غنية - تظهر فوراً بدون انتظار API
         const DEMO_DATA = {
             vessels: [
                 { name: 'البروق 1', stat: 'صالح', zone: 'بنزرت', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) },
@@ -249,6 +250,9 @@
                 { name: 'البروق 7', stat: 'صالح', zone: 'صفاقس', createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) },
                 { name: 'البروق 8', stat: 'صالح', zone: 'بنزرت', createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000) },
                 { name: 'البروق 9', stat: 'معطب', zone: 'سوسة', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 10', stat: 'صالح', zone: 'صفاقس', createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 11', stat: 'صيانة', zone: 'بنزرت', createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000) },
+                { name: 'البروق 12', stat: 'معطب', zone: 'سوسة', createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
             ],
             maintenance: [
                 { vesselName: 'البروق 3', cost: 1200, status: 'مكتملة', createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
@@ -257,6 +261,17 @@
                 { vesselName: 'البروق 9', cost: 800, status: 'قيد الإنجاز', createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000) },
                 { vesselName: 'البروق 2', cost: 350, status: 'مكتملة', createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000) },
                 { vesselName: 'البروق 1', cost: 150, status: 'مكتملة', createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 11', cost: 750, status: 'معلقة', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) },
+                { vesselName: 'البروق 7', cost: 420, status: 'مكتملة', createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000) },
+            ],
+            // بيانات تطور الجاهزية للأشهر الستة الماضية
+            readinessHistory: [
+                { month: 'جانفي', value: 72 },
+                { month: 'فيفري', value: 75 },
+                { month: 'مارس', value: 78 },
+                { month: 'أفريل', value: 82 },
+                { month: 'ماي', value: 85 },
+                { month: 'جوان', value: 88 },
             ]
         };
 
@@ -265,10 +280,10 @@
         let isRefreshing = false;
 
         // ============================================================
-        // 📥 جلب البيانات من API مع Fallback
+        // 📥 جلب البيانات من API مع Fallback فوري
         // ============================================================
 
-        async function fetchWithTimeout(url, options = {}, timeout = 5000) {
+        async function fetchWithTimeout(url, options = {}, timeout = 3000) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), timeout);
             try {
@@ -322,18 +337,16 @@
                     console.warn('⚠️ Failed to fetch maintenance:', e.message);
                 }
 
-                // إذا لم تكن هناك بيانات، استخدم البيانات الافتراضية
-                if (vessels.length === 0 && maintenance.length === 0) {
-                    console.log('📦 Using demo data');
-                    vessels = DEMO_DATA.vessels;
-                    maintenance = DEMO_DATA.maintenance;
-                }
+                // 🔥 استخدام البيانات الافتراضية فوراً (حتى لو API يعمل)
+                // هذا يضمن ظهور البيانات بسرعة
+                const finalVessels = vessels.length > 0 ? vessels : DEMO_DATA.vessels;
+                const finalMaintenance = maintenance.length > 0 ? maintenance : DEMO_DATA.maintenance;
 
-                updateUI(vessels, maintenance);
+                updateUI(finalVessels, finalMaintenance);
 
             } catch (error) {
                 console.error('❌ Error refreshing dashboard:', error);
-                // استخدام البيانات الافتراضية في حالة الخطأ
+                // ✅ استخدام البيانات الافتراضية في حالة الخطأ
                 updateUI(DEMO_DATA.vessels, DEMO_DATA.maintenance);
             } finally {
                 isRefreshing = false;
@@ -352,18 +365,46 @@
             const readyPercent = total > 0 ? Math.round((ready / total) * 100) : 0;
             const totalCost = maintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
 
-            // تحديث الأرقام
-            document.getElementById('dashTotal').textContent = total;
-            document.getElementById('dashReady').textContent = ready;
-            document.getElementById('dashBroken').textContent = broken;
-            document.getElementById('dashMaintenance').textContent = maintenanceCount;
+            // ✅ تحديث الأرقام مع تأثير حركي
+            animateNumber('dashTotal', total);
+            animateNumber('dashReady', ready);
+            animateNumber('dashBroken', broken);
+            animateNumber('dashMaintenance', maintenanceCount);
+            
             document.getElementById('dashReadyPercent').textContent = readyPercent + '%';
             document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ar-TN');
 
-            // تحديث الرسوم البيانية
+            // ✅ تحديث الرسوم البيانية
             renderCharts(vessels);
             renderActivity(vessels, maintenance);
+        }
+
+        // ============================================================
+        // 🎯 تأثير حركي للأرقام
+        // ============================================================
+
+        function animateNumber(elementId, target) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const start = parseInt(element.textContent) || 0;
+            const duration = 500;
+            const startTime = Date.now();
+            
+            function update() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const current = Math.floor(start + (target - start) * progress);
+                element.textContent = current;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = target;
+                }
+            }
+            update();
         }
 
         // ============================================================
@@ -375,7 +416,7 @@
             const broken = vessels.filter(v => v.stat === 'معطب').length;
             const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
 
-            // تحديث الرسم البياني الدائري
+            // ✅ الرسم البياني الدائري - توزيع الحالات
             try {
                 const canvas = document.getElementById('dashChart');
                 if (canvas) {
@@ -409,15 +450,14 @@
                 console.warn('⚠️ Chart error:', e);
             }
 
-            // تحديث الرسم البياني الخطي
+            // ✅ الرسم البياني الخطي - تطور الجاهزية
             try {
                 const lineCanvas = document.getElementById('dashLineChart');
                 if (lineCanvas) {
                     if (dashLineChart) dashLineChart.destroy();
                     
-                    // بيانات افتراضية لتطور الجاهزية
-                    const months = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'];
-                    const readinessData = [72, 75, 78, 82, 85, 88];
+                    const months = DEMO_DATA.readinessHistory.map(d => d.month);
+                    const values = DEMO_DATA.readinessHistory.map(d => d.value);
                     
                     dashLineChart = new Chart(lineCanvas, {
                         type: 'line',
@@ -425,14 +465,15 @@
                             labels: months,
                             datasets: [{
                                 label: '📈 نسبة الجاهزية %',
-                                data: readinessData,
+                                data: values,
                                 borderColor: '#34d399',
-                                backgroundColor: 'rgba(52,211,153,0.1)',
+                                backgroundColor: 'rgba(52,211,153,0.15)',
                                 fill: true,
                                 tension: 0.4,
                                 pointBackgroundColor: '#34d399',
                                 pointBorderColor: '#ffffff',
-                                pointBorderWidth: 2
+                                pointBorderWidth: 2,
+                                pointRadius: 5
                             }]
                         },
                         options: {
@@ -474,8 +515,8 @@
 
             const activities = [];
 
-            // إضافة نشاطات الصيانة
-            maintenance.slice(0, 5).forEach(r => {
+            // ✅ نشاطات الصيانة
+            maintenance.forEach(r => {
                 const date = r.createdAt ? new Date(r.createdAt) : new Date();
                 activities.push({
                     icon: '🔧',
@@ -485,8 +526,8 @@
                 });
             });
 
-            // إضافة المراكب المعطلة
-            vessels.filter(v => v.stat === 'معطب').slice(0, 3).forEach(v => {
+            // ✅ المراكب المعطلة
+            vessels.filter(v => v.stat === 'معطب').forEach(v => {
                 const date = v.createdAt ? new Date(v.createdAt) : new Date();
                 activities.push({
                     icon: '⚠️',
@@ -496,7 +537,18 @@
                 });
             });
 
-            // ترتيب حسب التاريخ (الأحدث أولاً)
+            // ✅ المراكب التي دخلت الصيانة
+            vessels.filter(v => v.stat === 'صيانة').forEach(v => {
+                const date = v.createdAt ? new Date(v.createdAt) : new Date();
+                activities.push({
+                    icon: '🔧',
+                    text: `المركب ${v.name} دخل الصيانة`,
+                    time: date.toLocaleDateString('ar-TN'),
+                    type: 'maintenance'
+                });
+            });
+
+            // ✅ ترتيب حسب التاريخ (الأحدث أولاً)
             activities.sort((a, b) => {
                 const dateA = new Date(a.time.split('/').reverse().join('/'));
                 const dateB = new Date(b.time.split('/').reverse().join('/'));
@@ -508,7 +560,7 @@
                 return;
             }
 
-            container.innerHTML = activities.slice(0, 8).map(a => `
+            container.innerHTML = activities.slice(0, 10).map(a => `
                 <div class="activity-item">
                     <span>${a.icon}</span>
                     <span>${a.text}</span>
@@ -518,14 +570,19 @@
         }
 
         // ============================================================
-        // 🚀 تهيئة الصفحة
+        // 🚀 تهيئة الصفحة - تعرض البيانات فوراً
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Dashboard initialized');
-            // تحميل البيانات بعد 300ms
-            setTimeout(refreshDashboard, 300);
-            // تحديث كل 30 ثانية
+            
+            // ✅ عرض البيانات الافتراضية فوراً (بدون انتظار)
+            updateUI(DEMO_DATA.vessels, DEMO_DATA.maintenance);
+            
+            // ✅ محاولة جلب البيانات الحقيقية في الخلفية
+            setTimeout(refreshDashboard, 500);
+            
+            // ✅ تحديث كل 30 ثانية
             setInterval(refreshDashboard, 30000);
         });
 
