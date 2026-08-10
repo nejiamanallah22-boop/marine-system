@@ -1,6 +1,7 @@
 // ============================================================
 // 🔐 auth.js - نظام المصادقة والجلسات
-// Marine System - Production Ready
+// Marine System v5.0
+// Production Ready - Render + MongoDB
 // ============================================================
 
 'use strict';
@@ -15,16 +16,18 @@ const AUTH_CONFIG = Object.freeze({
     tokenKey: 'authToken',
     userKey: 'userData',
 
-    // التطبيق SPA وليس صفحات /login و /dashboard
+    // التطبيق يستخدم index.html كشاشة دخول
     loginUrl: '/',
+
+    // لا نستخدم /dashboard لأن التطبيق يعمل داخل index.html
     dashboardUrl: '/',
 
-    loginEndpoint: '/auth/login',
-    meEndpoint: '/auth/me'
+    // مدة تقريبية للجلسة في الواجهة
+    sessionCheckInterval: 5 * 60 * 1000
 });
 
 // ============================================================
-// 🧹 أدوات آمنة
+// 🛡️ أدوات مساعدة
 // ============================================================
 
 function safeJSONParse(value, fallback = null) {
@@ -33,22 +36,24 @@ function safeJSONParse(value, fallback = null) {
     try {
         return JSON.parse(value);
     } catch (error) {
-        console.warn('⚠️ بيانات المستخدم في localStorage غير صالحة');
+        console.warn('⚠️ تعذر قراءة بيانات المستخدم:', error);
         return fallback;
     }
 }
 
-function clearAuthStorage() {
-    try {
-        localStorage.removeItem(AUTH_CONFIG.tokenKey);
-        localStorage.removeItem(AUTH_CONFIG.userKey);
+function getStoredToken() {
+    return (
+        localStorage.getItem(AUTH_CONFIG.tokenKey) ||
+        localStorage.getItem('token') ||
+        null
+    );
+}
 
-        // توافق مع الإصدارات القديمة
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-    } catch (error) {
-        console.error('❌ خطأ في تنظيف بيانات المصادقة:', error);
-    }
+function getStoredUser() {
+    return safeJSONParse(
+        localStorage.getItem(AUTH_CONFIG.userKey),
+        null
+    );
 }
 
 // ============================================================
@@ -59,25 +64,14 @@ class AuthManager {
 
     constructor() {
 
-        this.token =
-            localStorage.getItem(AUTH_CONFIG.tokenKey) ||
-            localStorage.getItem('token') ||
-            null;
-
-        this.user =
-            safeJSONParse(
-                localStorage.getItem(AUTH_CONFIG.userKey)
-            ) ||
-            safeJSONParse(
-                localStorage.getItem('user')
-            ) ||
-            null;
+        this.token = getStoredToken();
+        this.user = getStoredUser();
 
         this.isAuthenticated =
             Boolean(this.token && this.user);
 
-        this.isLoggingIn = false;
-        this.isLoggingOut = false;
+        this.interceptorInstalled = false;
+        this.loggingOut = false;
 
         this.setupInterceptor();
 
@@ -88,6 +82,13 @@ class AuthManager {
                     : '❌ غير متصل'
             }`
         );
+
+        // إذا توجد جلسة محفوظة، نعرض التطبيق
+        if (this.isAuthenticated) {
+            this.showApplication();
+        } else {
+            this.showLogin();
+        }
     }
 
     // ========================================================
@@ -96,61 +97,71 @@ class AuthManager {
 
     setupInterceptor() {
 
-        if (window.__MARINE_AUTH_FETCH_INSTALLED__) {
-            console.log('ℹ️ Fetch interceptor موجود مسبقاً');
+        if (this.interceptorInstalled) {
             return;
         }
 
-        const originalFetch = window.fetch.bind(window);
+        const originalFetch = window.fetch;
 
-        window.fetch = async (...args) => {
+        if (!originalFetch) {
+            console.error('❌ window.fetch غير متوفر');
+            return;
+        }
+
+        const self = this;
+
+        window.fetch = async function (...args) {
 
             let [url, config = {}] = args;
 
-            config = {
-                ...config,
-                headers: {
-                    ...(config.headers || {})
-                }
-            };
+            // ضمان أن config كائن
+            config = config || {};
 
+            // تحويل URL إلى نص آمن
             const requestUrl =
                 typeof url === 'string'
                     ? url
                     : url?.url || '';
 
-            // ------------------------------------------------
-            // إضافة JWT فقط إلى API
-            // ------------------------------------------------
+            // نسخ headers
+            config.headers = {
+                ...(config.headers || {})
+            };
 
+            // إضافة Authorization فقط لطلبات API
             if (
                 requestUrl.includes('/api/') &&
-                this.token
+                self.token
             ) {
                 config.headers.Authorization =
-                    `Bearer ${this.token}`;
+                    `Bearer ${self.token}`;
             }
 
             try {
 
                 const response =
-                    await originalFetch(url, config);
+                    await originalFetch.call(
+                        window,
+                        url,
+                        config
+                    );
 
-                // ------------------------------------------------
-                // Token غير صالح
-                // ------------------------------------------------
-
+                // جلسة منتهية
                 if (
                     response.status === 401 &&
-                    requestUrl.includes('/api/') &&
-                    !requestUrl.includes('/auth/login')
+                    requestUrl.includes('/api/')
                 ) {
 
                     console.warn(
-                        '⚠️ الجلسة منتهية أو التوكن غير صالح'
+                        '⚠️ 401 Unauthorized - الجلسة غير صالحة'
                     );
 
-                    this.handleUnauthorized();
+                    // لا نسجل الخروج أثناء login نفسه
+                    if (
+                        !requestUrl.includes('/api/auth/login')
+                    ) {
+                        self.handleUnauthorized();
+                    }
                 }
 
                 return response;
@@ -166,42 +177,11 @@ class AuthManager {
             }
         };
 
-        window.__MARINE_AUTH_FETCH_INSTALLED__ = true;
-    }
+        this.interceptorInstalled = true;
 
-    // ========================================================
-    // 🔴 التعامل مع 401
-    // ========================================================
-
-    handleUnauthorized() {
-
-        if (this.isLoggingOut) {
-            return;
-        }
-
-        this.clearSession();
-
-        const loginOverlay =
-            document.getElementById('loginOverlay');
-
-        const mainApp =
-            document.getElementById('mainApp');
-
-        if (loginOverlay) {
-            loginOverlay.style.display = 'flex';
-        }
-
-        if (mainApp) {
-            mainApp.style.display = 'none';
-        }
-
-        const errorElement =
-            document.getElementById('loginError');
-
-        if (errorElement) {
-            errorElement.textContent =
-                'انتهت الجلسة، يرجى تسجيل الدخول من جديد';
-        }
+        console.log(
+            '✅ API Fetch Interceptor جاهز'
+        );
     }
 
     // ========================================================
@@ -210,18 +190,17 @@ class AuthManager {
 
     async login(username, password) {
 
-        if (this.isLoggingIn) {
-            throw new Error(
-                'جاري تسجيل الدخول، يرجى الانتظار...'
-            );
-        }
-
         username =
-            String(username || '').trim();
+            typeof username === 'string'
+                ? username.trim()
+                : '';
 
         password =
-            String(password || '');
+            typeof password === 'string'
+                ? password
+                : '';
 
+        // التحقق من البيانات
         if (!username) {
             throw new Error(
                 'يرجى إدخال اسم المستخدم'
@@ -234,26 +213,22 @@ class AuthManager {
             );
         }
 
-        this.isLoggingIn = true;
+        // التأكد من وجود API
+        if (
+            !window.API ||
+            typeof window.API.authLogin !== 'function'
+        ) {
+
+            throw new Error(
+                'ملف API غير محمل. تأكد من تحميل api.js قبل auth.js'
+            );
+        }
+
+        console.log(
+            `🔐 محاولة تسجيل الدخول للمستخدم: ${username}`
+        );
 
         try {
-
-            // ------------------------------------------------
-            // التأكد من وجود API
-            // ------------------------------------------------
-
-            if (
-                !window.API ||
-                typeof window.API.authLogin !== 'function'
-            ) {
-                throw new Error(
-                    'نظام API غير محمل. تأكد من تحميل api.js قبل auth.js'
-                );
-            }
-
-            console.log(
-                `🔐 محاولة تسجيل الدخول للمستخدم: ${username}`
-            );
 
             const response =
                 await window.API.authLogin(
@@ -266,71 +241,116 @@ class AuthManager {
                 response
             );
 
-            // ------------------------------------------------
-            // التحقق من الرد
-            // ------------------------------------------------
+            // ==================================================
+            // التحقق من نجاح الاستجابة
+            // ==================================================
 
             if (!response) {
                 throw new Error(
-                    'الخادم لم يرجع بيانات'
+                    'الخادم لم يرجع استجابة'
                 );
             }
 
-            if (!response.token) {
-
+            if (
+                response.success === false
+            ) {
                 throw new Error(
                     response.error ||
                     response.message ||
-                    'لم يتم استلام رمز الدخول من الخادم'
+                    'اسم المستخدم أو كلمة المرور غير صحيحة'
                 );
             }
 
-            if (!response.user) {
+            // ==================================================
+            // استخراج Token
+            // ==================================================
+
+            const token =
+                response.token ||
+                response.accessToken ||
+                response.data?.token ||
+                response.data?.accessToken;
+
+            // ==================================================
+            // استخراج المستخدم
+            // ==================================================
+
+            const user =
+                response.user ||
+                response.data?.user ||
+                response.account ||
+                null;
+
+            if (!token) {
+
+                console.error(
+                    '❌ لم يتم العثور على Token:',
+                    response
+                );
 
                 throw new Error(
-                    'تم تسجيل الدخول لكن بيانات المستخدم غير موجودة'
+                    'تم الاتصال بالخادم ولكن لم يتم استلام رمز الدخول'
                 );
             }
 
-            // ------------------------------------------------
+            // إذا كان السيرفر لا يرجع user
+            // ننشئ بيانات مؤقتة
+            const finalUser =
+                user || {
+                    username,
+                    role: 'viewer'
+                };
+
+            // ==================================================
             // حفظ الجلسة
-            // ------------------------------------------------
+            // ==================================================
 
-            this.token =
-                response.token;
-
-            this.user =
-                response.user;
-
+            this.token = token;
+            this.user = finalUser;
             this.isAuthenticated = true;
 
             localStorage.setItem(
                 AUTH_CONFIG.tokenKey,
-                this.token
+                token
             );
 
             localStorage.setItem(
                 AUTH_CONFIG.userKey,
-                JSON.stringify(this.user)
+                JSON.stringify(finalUser)
             );
 
+            // إزالة token القديم إن وجد
+            localStorage.removeItem('token');
+
             console.log(
-                '✅ تم تسجيل الدخول بنجاح'
+                '✅ تسجيل الدخول ناجح'
             );
 
             console.log(
                 '👤 المستخدم:',
-                this.user.username ||
-                this.user.email ||
-                this.user.name
+                finalUser
             );
 
-            console.log(
-                '🛡️ الدور:',
-                this.user.role
+            // ==================================================
+            // فتح التطبيق
+            // ==================================================
+
+            this.showApplication();
+
+            // تحديث معلومات المستخدم
+            this.displayUserInfo();
+
+            // إشعار
+            this.notify(
+                `مرحباً ${finalUser.name || finalUser.username || username}`,
+                'success'
             );
 
-            return response;
+            return {
+                success: true,
+                token,
+                user: finalUser
+            };
 
         } catch (error) {
 
@@ -339,16 +359,20 @@ class AuthManager {
                 error
             );
 
+            // تنظيف فقط إذا كانت بيانات الجلسة غير صالحة
+            if (
+                error?.status === 401 ||
+                error?.statusCode === 401
+            ) {
+                this.clearSession();
+            }
+
             throw error;
-
-        } finally {
-
-            this.isLoggingIn = false;
         }
     }
 
     // ========================================================
-    // 📝 تسجيل مستخدم جديد
+    // 📝 تسجيل مستخدم
     // ========================================================
 
     async register(userData) {
@@ -358,7 +382,7 @@ class AuthManager {
             typeof window.API.authRegister !== 'function'
         ) {
             throw new Error(
-                'API التسجيل غير متاح'
+                'API التسجيل غير متوفر'
             );
         }
 
@@ -369,22 +393,21 @@ class AuthManager {
                     userData
                 );
 
-            if (!response) {
+            if (
+                response &&
+                response.success === false
+            ) {
                 throw new Error(
-                    'الخادم لم يرجع بيانات'
+                    response.error ||
+                    response.message ||
+                    'فشل إنشاء المستخدم'
                 );
             }
 
-            console.log(
-                '✅ تم إنشاء المستخدم'
+            this.notify(
+                'تم إنشاء الحساب بنجاح',
+                'success'
             );
-
-            if (window.showNotification) {
-                window.showNotification(
-                    'تم إنشاء الحساب بنجاح',
-                    'success'
-                );
-            }
 
             return response;
 
@@ -403,13 +426,13 @@ class AuthManager {
     // 🚪 تسجيل الخروج
     // ========================================================
 
-    logout() {
+    logout(showMessage = true) {
 
-        if (this.isLoggingOut) {
+        if (this.loggingOut) {
             return;
         }
 
-        this.isLoggingOut = true;
+        this.loggingOut = true;
 
         console.log(
             '🚪 تسجيل الخروج...'
@@ -417,58 +440,20 @@ class AuthManager {
 
         this.clearSession();
 
-        // ----------------------------------------------------
-        // إظهار شاشة الدخول داخل نفس الصفحة
-        // ----------------------------------------------------
+        this.showLogin();
 
-        const loginOverlay =
-            document.getElementById('loginOverlay');
-
-        const mainApp =
-            document.getElementById('mainApp');
-
-        if (loginOverlay) {
-            loginOverlay.style.display = 'flex';
-        }
-
-        if (mainApp) {
-            mainApp.style.display = 'none';
-        }
-
-        // مسح حقول الدخول
-        const username =
-            document.getElementById('username');
-
-        const password =
-            document.getElementById('password');
-
-        if (username) {
-            username.value = '';
-        }
-
-        if (password) {
-            password.value = '';
-        }
-
-        const errorElement =
-            document.getElementById('loginError');
-
-        if (errorElement) {
-            errorElement.textContent = '';
-        }
-
-        if (window.showNotification) {
-            window.showNotification(
+        if (showMessage) {
+            this.notify(
                 'تم تسجيل الخروج',
                 'info'
             );
         }
 
-        this.isLoggingOut = false;
+        this.loggingOut = false;
     }
 
     // ========================================================
-    // 🧹 مسح الجلسة
+    // 🧹 تنظيف الجلسة
     // ========================================================
 
     clearSession() {
@@ -477,10 +462,42 @@ class AuthManager {
         this.user = null;
         this.isAuthenticated = false;
 
-        clearAuthStorage();
+        localStorage.removeItem(
+            AUTH_CONFIG.tokenKey
+        );
+
+        localStorage.removeItem(
+            AUTH_CONFIG.userKey
+        );
+
+        localStorage.removeItem('token');
 
         console.log(
-            '🧹 تم تنظيف جلسة المصادقة'
+            '🧹 تم تنظيف بيانات الجلسة'
+        );
+    }
+
+    // ========================================================
+    // ⚠️ 401 Unauthorized
+    // ========================================================
+
+    handleUnauthorized() {
+
+        if (this.loggingOut) {
+            return;
+        }
+
+        console.warn(
+            '⚠️ الجلسة غير صالحة أو منتهية'
+        );
+
+        this.clearSession();
+
+        this.showLogin();
+
+        this.notify(
+            'انتهت جلسة الدخول، يرجى تسجيل الدخول مرة أخرى',
+            'warning'
         );
     }
 
@@ -491,10 +508,6 @@ class AuthManager {
     getCurrentUser() {
         return this.user;
     }
-
-    // ========================================================
-    // 🔑 التوكن
-    // ========================================================
 
     getToken() {
         return this.token;
@@ -510,21 +523,33 @@ class AuthManager {
             return false;
         }
 
-        if (this.user.role === 'admin') {
+        const userRole =
+            String(
+                this.user.role ||
+                ''
+            ).toLowerCase();
+
+        if (userRole === 'admin') {
             return true;
         }
 
         if (Array.isArray(role)) {
-            return role.includes(
-                this.user.role
-            );
+
+            return role
+                .map(r =>
+                    String(r).toLowerCase()
+                )
+                .includes(userRole);
         }
 
-        return this.user.role === role;
+        return (
+            userRole ===
+            String(role).toLowerCase()
+        );
     }
 
     // ========================================================
-    // 🛡️ الصلاحيات
+    // 🔐 الصلاحيات
     // ========================================================
 
     hasPermission(permission) {
@@ -533,7 +558,13 @@ class AuthManager {
             return false;
         }
 
-        if (this.user.role === 'admin') {
+        const role =
+            String(
+                this.user.role ||
+                ''
+            ).toLowerCase();
+
+        if (role === 'admin') {
             return true;
         }
 
@@ -554,7 +585,7 @@ class AuthManager {
         };
 
         const userPermissions =
-            permissions[this.user.role] || [];
+            permissions[role] || [];
 
         return (
             userPermissions.includes('*') ||
@@ -569,18 +600,18 @@ class AuthManager {
     async refreshUser() {
 
         if (!this.token) {
-            throw new Error(
-                'لا يوجد Token'
-            );
+            return null;
         }
 
         if (
             !window.API ||
             typeof window.API.authMe !== 'function'
         ) {
-            throw new Error(
-                'API المصادقة غير متاح'
+            console.warn(
+                '⚠️ authMe غير متوفر'
             );
+
+            return this.user;
         }
 
         try {
@@ -596,8 +627,6 @@ class AuthManager {
                 this.user =
                     response.user;
 
-                this.isAuthenticated = true;
-
                 localStorage.setItem(
                     AUTH_CONFIG.userKey,
                     JSON.stringify(
@@ -605,14 +634,14 @@ class AuthManager {
                     )
                 );
 
+                this.isAuthenticated = true;
+
                 this.displayUserInfo();
 
                 return this.user;
             }
 
-            throw new Error(
-                'بيانات المستخدم غير موجودة'
-            );
+            return this.user;
 
         } catch (error) {
 
@@ -621,7 +650,15 @@ class AuthManager {
                 error
             );
 
-            throw error;
+            // لا نسجل الخروج من مجرد خطأ شبكة
+            if (
+                error?.status === 401 ||
+                error?.statusCode === 401
+            ) {
+                this.handleUnauthorized();
+            }
+
+            return null;
         }
     }
 
@@ -641,8 +678,8 @@ class AuthManager {
         }
 
         const userId =
-            this.user.id ||
-            this.user._id;
+            this.user._id ||
+            this.user.id;
 
         if (!userId) {
             throw new Error(
@@ -653,6 +690,15 @@ class AuthManager {
         if (!newPassword) {
             throw new Error(
                 'أدخل كلمة المرور الجديدة'
+            );
+        }
+
+        if (
+            !window.API ||
+            typeof window.API.changePassword !== 'function'
+        ) {
+            throw new Error(
+                'واجهة تغيير كلمة المرور غير متوفرة'
             );
         }
 
@@ -667,23 +713,21 @@ class AuthManager {
 
             if (
                 response &&
-                response.success
+                response.success === false
             ) {
-
-                if (window.showNotification) {
-                    window.showNotification(
-                        'تم تغيير كلمة المرور بنجاح',
-                        'success'
-                    );
-                }
-
-                return response;
+                throw new Error(
+                    response.error ||
+                    response.message ||
+                    'فشل تغيير كلمة المرور'
+                );
             }
 
-            throw new Error(
-                response?.error ||
-                'فشل تغيير كلمة المرور'
+            this.notify(
+                'تم تغيير كلمة المرور بنجاح',
+                'success'
             );
+
+            return response;
 
         } catch (error) {
 
@@ -704,25 +748,7 @@ class AuthManager {
 
         if (!this.isAuthenticated) {
 
-            const loginOverlay =
-                document.getElementById(
-                    'loginOverlay'
-                );
-
-            const mainApp =
-                document.getElementById(
-                    'mainApp'
-                );
-
-            if (loginOverlay) {
-                loginOverlay.style.display =
-                    'flex';
-            }
-
-            if (mainApp) {
-                mainApp.style.display =
-                    'none';
-            }
+            this.showLogin();
 
             return false;
         }
@@ -732,12 +758,10 @@ class AuthManager {
             !this.hasRole(requiredRole)
         ) {
 
-            if (window.showNotification) {
-                window.showNotification(
-                    'ليس لديك صلاحية للوصول',
-                    'error'
-                );
-            }
+            this.notify(
+                'ليس لديك صلاحية للوصول إلى هذه الصفحة',
+                'error'
+            );
 
             return false;
         }
@@ -746,213 +770,10 @@ class AuthManager {
     }
 
     // ========================================================
-    // 🎨 عرض معلومات المستخدم
+    // 🎨 إظهار التطبيق
     // ========================================================
 
-    displayUserInfo() {
-
-        if (!this.user) {
-            return;
-        }
-
-        const displayName =
-            this.user.name ||
-            this.user.username ||
-            this.user.email ||
-            'مستخدم';
-
-        // -----------------------------------------------
-        // الاسم
-        // -----------------------------------------------
-
-        const nameElements =
-            document.querySelectorAll(
-                '.user-name'
-            );
-
-        nameElements.forEach(
-            element => {
-                element.textContent =
-                    displayName;
-            }
-        );
-
-        // -----------------------------------------------
-        // الدور
-        // -----------------------------------------------
-
-        const roleNames = {
-
-            admin:
-                'مدير النظام',
-
-            manager:
-                'مدير',
-
-            viewer:
-                'مشاهد',
-
-            مسؤول:
-                'مدير النظام',
-
-            محرر:
-                'مدير',
-
-            مشاهد:
-                'مشاهد'
-        };
-
-        const role =
-            this.user.role || '';
-
-        const roleText =
-            roleNames[role] || role;
-
-        const roleElements =
-            document.querySelectorAll(
-                '.user-role'
-            );
-
-        roleElements.forEach(
-            element => {
-                element.textContent =
-                    roleText;
-            }
-        );
-
-        // -----------------------------------------------
-        // العنصر الموجود فعلياً في index.html
-        // -----------------------------------------------
-
-        const roleBadge =
-            document.getElementById(
-                'userRoleDisplay'
-            );
-
-        if (roleBadge) {
-
-            roleBadge.textContent =
-                `👤 ${displayName}`;
-
-            if (roleText) {
-                roleBadge.title =
-                    roleText;
-            }
-        }
-    }
-}
-
-// ============================================================
-// 🌐 إنشاء Auth Manager
-// ============================================================
-
-const auth = new AuthManager();
-
-// ============================================================
-// 🚀 doLogin
-// متوافق مع:
-// <button onclick="doLogin()">
-// ============================================================
-
-async function doLogin() {
-
-    const usernameElement =
-        document.getElementById(
-            'username'
-        );
-
-    const passwordElement =
-        document.getElementById(
-            'password'
-        );
-
-    const errorElement =
-        document.getElementById(
-            'loginError'
-        );
-
-    const loginButton =
-        document.querySelector(
-            '.login-btn'
-        );
-
-    // --------------------------------------------------------
-    // التأكد من وجود العناصر
-    // --------------------------------------------------------
-
-    if (
-        !usernameElement ||
-        !passwordElement
-    ) {
-
-        console.error(
-            '❌ عناصر تسجيل الدخول غير موجودة'
-        );
-
-        return;
-    }
-
-    const username =
-        usernameElement.value.trim();
-
-    const password =
-        passwordElement.value;
-
-    if (errorElement) {
-        errorElement.textContent = '';
-    }
-
-    // --------------------------------------------------------
-    // Validation
-    // --------------------------------------------------------
-
-    if (!username) {
-
-        if (errorElement) {
-            errorElement.textContent =
-                '⚠️ أدخل اسم المستخدم';
-        }
-
-        usernameElement.focus();
-
-        return;
-    }
-
-    if (!password) {
-
-        if (errorElement) {
-            errorElement.textContent =
-                '⚠️ أدخل كلمة المرور';
-        }
-
-        passwordElement.focus();
-
-        return;
-    }
-
-    // --------------------------------------------------------
-    // تعطيل الزر أثناء الدخول
-    // --------------------------------------------------------
-
-    if (loginButton) {
-        loginButton.disabled = true;
-        loginButton.dataset.originalText =
-            loginButton.innerHTML;
-
-        loginButton.innerHTML =
-            '⏳ جاري تسجيل الدخول...';
-    }
-
-    try {
-
-        await auth.login(
-            username,
-            password
-        );
-
-        // ----------------------------------------------------
-        // إخفاء شاشة الدخول
-        // ----------------------------------------------------
+    showApplication() {
 
         const loginOverlay =
             document.getElementById(
@@ -974,92 +795,433 @@ async function doLogin() {
                 'block';
         }
 
-        // ----------------------------------------------------
-        // عرض بيانات المستخدم
-        // ----------------------------------------------------
+        // تحديث المستخدم
+        this.displayUserInfo();
 
-        auth.displayUserInfo();
+        console.log(
+            '🏠 التطبيق الرئيسي مفتوح'
+        );
+    }
 
-        // ----------------------------------------------------
-        // فتح Dashboard
-        // بدون تغيير URL
-        // ----------------------------------------------------
+    // ========================================================
+    // 🔑 إظهار شاشة الدخول
+    // ========================================================
 
+    showLogin() {
+
+        const loginOverlay =
+            document.getElementById(
+                'loginOverlay'
+            );
+
+        const mainApp =
+            document.getElementById(
+                'mainApp'
+            );
+
+        if (loginOverlay) {
+            loginOverlay.style.display =
+                'flex';
+        }
+
+        if (mainApp) {
+            mainApp.style.display =
+                'none';
+        }
+
+        // تنظيف كلمة المرور
+        const password =
+            document.getElementById(
+                'password'
+            );
+
+        if (password) {
+            password.value = '';
+        }
+
+        console.log(
+            '🔑 شاشة الدخول مفتوحة'
+        );
+    }
+
+    // ========================================================
+    // 👤 عرض معلومات المستخدم
+    // ========================================================
+
+    displayUserInfo() {
+
+        if (!this.user) {
+            return;
+        }
+
+        const displayName =
+            this.user.name ||
+            this.user.username ||
+            'مستخدم';
+
+        const role =
+            String(
+                this.user.role ||
+                'viewer'
+            ).toLowerCase();
+
+        const roleNames = {
+
+            admin:
+                'مدير النظام',
+
+            manager:
+                'مدير',
+
+            viewer:
+                'مشاهد',
+
+            مسؤول:
+                'مسؤول',
+
+            محرر:
+                'محرر',
+
+            مشاهد:
+                'مشاهد'
+        };
+
+        // اسم المستخدم
+        const nameElements =
+            document.querySelectorAll(
+                '.user-name'
+            );
+
+        nameElements.forEach(
+            element => {
+                element.textContent =
+                    displayName;
+            }
+        );
+
+        // الدور
+        const roleElements =
+            document.querySelectorAll(
+                '.user-role'
+            );
+
+        roleElements.forEach(
+            element => {
+                element.textContent =
+                    roleNames[role] ||
+                    role;
+            }
+        );
+
+        // العنصر الموجود في index.html
+        const roleDisplay =
+            document.getElementById(
+                'userRoleDisplay'
+            );
+
+        if (roleDisplay) {
+
+            roleDisplay.textContent =
+                `👤 ${
+                    roleNames[role] ||
+                    role
+                }`;
+        }
+
+        // تحديث اسم المطور/المستخدم إن وجد
+        const currentUserElements =
+            document.querySelectorAll(
+                '[data-current-user]'
+            );
+
+        currentUserElements.forEach(
+            element => {
+                element.textContent =
+                    displayName;
+            }
+        );
+    }
+
+    // ========================================================
+    // 🔔 الإشعارات
+    // ========================================================
+
+    notify(message, type = 'info') {
+
+        if (
+            typeof window.showNotification ===
+            'function'
+        ) {
+
+            try {
+
+                window.showNotification(
+                    message,
+                    type
+                );
+
+                return;
+
+            } catch (error) {
+
+                console.warn(
+                    '⚠️ فشل نظام الإشعارات:',
+                    error
+                );
+            }
+        }
+
+        console.log(
+            `[${type}] ${message}`
+        );
+    }
+
+    // ========================================================
+    // 🔄 التحقق الدوري من الجلسة
+    // ========================================================
+
+    startSessionMonitor() {
+
+        if (
+            this.sessionMonitor
+        ) {
+            clearInterval(
+                this.sessionMonitor
+            );
+        }
+
+        if (!this.isAuthenticated) {
+            return;
+        }
+
+        this.sessionMonitor =
+            setInterval(
+                async () => {
+
+                    if (
+                        !this.isAuthenticated ||
+                        !this.token
+                    ) {
+                        return;
+                    }
+
+                    try {
+                        await this.refreshUser();
+                    } catch (error) {
+                        console.warn(
+                            '⚠️ Session check failed'
+                        );
+                    }
+
+                },
+                AUTH_CONFIG.sessionCheckInterval
+            );
+    }
+}
+
+// ============================================================
+// 🌐 إنشاء مدير المصادقة
+// ============================================================
+
+const auth =
+    new AuthManager();
+
+// ============================================================
+// 🔑 دالة تسجيل الدخول العامة
+// ============================================================
+// متوافقة مع:
+// <button onclick="doLogin()">
+
+async function doLogin(
+    username,
+    password
+) {
+
+    // إذا لم يتم تمرير البيانات
+    // نقرأها مباشرة من index.html
+
+    if (
+        username === undefined
+    ) {
+
+        const usernameElement =
+            document.getElementById(
+                'username'
+            );
+
+        username =
+            usernameElement
+                ? usernameElement.value
+                : '';
+    }
+
+    if (
+        password === undefined
+    ) {
+
+        const passwordElement =
+            document.getElementById(
+                'password'
+            );
+
+        password =
+            passwordElement
+                ? passwordElement.value
+                : '';
+    }
+
+    const errorElement =
+        document.getElementById(
+            'loginError'
+        );
+
+    // تنظيف الخطأ القديم
+    if (errorElement) {
+        errorElement.textContent =
+            '';
+    }
+
+    // منع الضغط المتكرر
+    const loginButton =
+        document.querySelector(
+            '.login-btn'
+        );
+
+    const originalButtonText =
+        loginButton
+            ? loginButton.innerHTML
+            : '';
+
+    try {
+
+        if (loginButton) {
+
+            loginButton.disabled =
+                true;
+
+            loginButton.innerHTML =
+                '<span>⏳</span> جاري تسجيل الدخول...';
+        }
+
+        const result =
+            await auth.login(
+                username,
+                password
+            );
+
+        console.log(
+            '✅ Login completed:',
+            result
+        );
+
+        // بعد النجاح، فتح التطبيق
+        auth.showApplication();
+
+        // محاولة تشغيل الصفحة الرئيسية
         if (
             typeof window.showPage ===
             'function'
         ) {
 
-            window.showPage(
-                'dashboard'
-            );
+            try {
+                window.showPage(
+                    'dashboard'
+                );
+            } catch (error) {
+                console.warn(
+                    '⚠️ تعذر فتح Dashboard تلقائياً:',
+                    error
+                );
+            }
         }
 
-        // ----------------------------------------------------
-        // إشعار
-        // ----------------------------------------------------
+        auth.startSessionMonitor();
 
-        if (window.showNotification) {
-
-            const name =
-                auth.user?.name ||
-                auth.user?.username ||
-                'مستخدم';
-
-            window.showNotification(
-                `مرحباً ${name}`,
-                'success'
-            );
-        }
-
-        console.log(
-            '🎉 تم الدخول إلى Marine System'
-        );
+        return result;
 
     } catch (error) {
 
         console.error(
-            '❌ فشل تسجيل الدخول:',
+            '❌ Login Failed:',
             error
         );
+
+        let message =
+            error?.message ||
+            'اسم المستخدم أو كلمة المرور غير صحيحة';
+
+        // رسائل أكثر وضوحاً
+        if (
+            message.includes(
+                'Failed to fetch'
+            )
+        ) {
+
+            message =
+                'تعذر الاتصال بالخادم. تحقق من اتصال الإنترنت والخادم.';
+        }
+
+        if (
+            message.includes(
+                'CORS'
+            )
+        ) {
+
+            message =
+                'خطأ في إعدادات الاتصال بالخادم (CORS).';
+        }
 
         if (errorElement) {
 
             errorElement.textContent =
-                error.message ||
-                'اسم المستخدم أو كلمة المرور غير صحيحة';
+                message;
+
+            errorElement.style.display =
+                'block';
         }
+
+        // إخفاء كلمة المرور
+        const passwordElement =
+            document.getElementById(
+                'password'
+            );
+
+        if (passwordElement) {
+            passwordElement.value =
+                '';
+        }
+
+        throw error;
 
     } finally {
 
         if (loginButton) {
 
-            loginButton.disabled = false;
+            loginButton.disabled =
+                false;
 
-            if (
-                loginButton.dataset.originalText
-            ) {
-
-                loginButton.innerHTML =
-                    loginButton.dataset.originalText;
-            }
+            loginButton.innerHTML =
+                originalButtonText ||
+                '<span>🚀</span> دخول';
         }
     }
 }
 
 // ============================================================
-// 🚪 تسجيل الخروج
+// 🚪 تسجيل الخروج العام
 // ============================================================
 
 function doLogout() {
-    auth.logout();
+
+    auth.logout(true);
 }
 
 // ============================================================
-// 🔎 التحقق من المصادقة
+// 🔎 حالة المصادقة
 // ============================================================
 
 function isAuthenticated() {
+
     return auth.isAuthenticated;
 }
 
@@ -1068,6 +1230,7 @@ function isAuthenticated() {
 // ============================================================
 
 function getCurrentUser() {
+
     return auth.getCurrentUser();
 }
 
@@ -1076,30 +1239,120 @@ function getCurrentUser() {
 // ============================================================
 
 function hasRole(role) {
+
     return auth.hasRole(role);
 }
 
 // ============================================================
-// 🛡️ الصلاحية
+// 🔐 الصلاحية
 // ============================================================
 
 function hasPermission(permission) {
-    return auth.hasPermission(permission);
+
+    return auth.hasPermission(
+        permission
+    );
 }
 
 // ============================================================
-// 🔑 التوكن
+// 🔄 تشغيل عند تحميل الصفحة
 // ============================================================
 
-function getAuthToken() {
-    return auth.getToken();
+function initializeAuth() {
+
+    console.log(
+        '🚀 تهيئة نظام المصادقة...'
+    );
+
+    if (auth.isAuthenticated) {
+
+        console.log(
+            '🔓 توجد جلسة محفوظة'
+        );
+
+        auth.showApplication();
+
+        auth.displayUserInfo();
+
+        // تحديث البيانات من الخادم
+        auth.refreshUser()
+            .then(() => {
+                auth.startSessionMonitor();
+            })
+            .catch(error => {
+                console.warn(
+                    '⚠️ تعذر تحديث بيانات المستخدم:',
+                    error
+                );
+
+                // لا نسجل الخروج تلقائياً
+                // بسبب خطأ شبكة مؤقت.
+            });
+
+    } else {
+
+        console.log(
+            '🔒 لا توجد جلسة محفوظة'
+        );
+
+        auth.showLogin();
+    }
 }
 
 // ============================================================
-// 🌐 Export Global
+// ⌨️ Enter لتسجيل الدخول
 // ============================================================
 
-window.auth = auth;
+document.addEventListener(
+    'DOMContentLoaded',
+    () => {
+
+        initializeAuth();
+
+        const username =
+            document.getElementById(
+                'username'
+            );
+
+        const password =
+            document.getElementById(
+                'password'
+            );
+
+        [username, password]
+            .filter(Boolean)
+            .forEach(
+                element => {
+
+                    element.addEventListener(
+                        'keydown',
+                        event => {
+
+                            if (
+                                event.key ===
+                                'Enter'
+                            ) {
+
+                                event.preventDefault();
+
+                                doLogin()
+                                    .catch(
+                                        () => {}
+                                    );
+                            }
+                        }
+                    );
+                }
+            );
+    }
+);
+
+// ============================================================
+// 🌐 تصدير عالمي
+// ============================================================
+
+window.auth =
+    auth;
 
 window.doLogin =
     doLogin;
@@ -1119,154 +1372,13 @@ window.hasRole =
 window.hasPermission =
     hasPermission;
 
-window.getAuthToken =
-    getAuthToken;
+window.AuthManager =
+    AuthManager;
 
 // ============================================================
-// ⌨️ Enter لتسجيل الدخول
+// ✅ جاهز
 // ============================================================
-
-document.addEventListener(
-    'DOMContentLoaded',
-    () => {
-
-        const password =
-            document.getElementById(
-                'password'
-            );
-
-        if (password) {
-
-            password.addEventListener(
-                'keydown',
-                event => {
-
-                    if (
-                        event.key === 'Enter'
-                    ) {
-
-                        event.preventDefault();
-
-                        doLogin();
-                    }
-                }
-            );
-        }
-
-        // ----------------------------------------------------
-        // إذا كانت هناك جلسة محفوظة
-        // ----------------------------------------------------
-
-        if (
-            auth.isAuthenticated
-        ) {
-
-            console.log(
-                '🔄 جلسة محفوظة موجودة'
-            );
-
-            const loginOverlay =
-                document.getElementById(
-                    'loginOverlay'
-                );
-
-            const mainApp =
-                document.getElementById(
-                    'mainApp'
-                );
-
-            if (loginOverlay) {
-                loginOverlay.style.display =
-                    'none';
-            }
-
-            if (mainApp) {
-                mainApp.style.display =
-                    'block';
-            }
-
-            auth.displayUserInfo();
-
-            // تحديث بيانات المستخدم
-            auth.refreshUser()
-                .then(() => {
-
-                    console.log(
-                        '✅ تم تحديث جلسة المستخدم'
-                    );
-
-                })
-                .catch(error => {
-
-                    console.warn(
-                        '⚠️ الجلسة المحفوظة غير صالحة:',
-                        error.message
-                    );
-
-                    auth.clearSession();
-
-                    if (loginOverlay) {
-                        loginOverlay.style.display =
-                            'flex';
-                    }
-
-                    if (mainApp) {
-                        mainApp.style.display =
-                            'none';
-                    }
-                });
-
-        } else {
-
-            const loginOverlay =
-                document.getElementById(
-                    'loginOverlay'
-                );
-
-            const mainApp =
-                document.getElementById(
-                    'mainApp'
-                );
-
-            if (loginOverlay) {
-                loginOverlay.style.display =
-                    'flex';
-            }
-
-            if (mainApp) {
-                mainApp.style.display =
-                    'none';
-            }
-        }
-    }
-);
-
-// ============================================================
-// 🛡️ منع إرسال نموذج الدخول إذا أضيف مستقبلاً
-// ============================================================
-
-document.addEventListener(
-    'submit',
-    event => {
-
-        const form =
-            event.target;
-
-        if (
-            form &&
-            (
-                form.id === 'loginForm' ||
-                form.closest('#loginOverlay')
-            )
-        ) {
-
-            event.preventDefault();
-
-            doLogin();
-        }
-    }
-);
 
 console.log(
-    '✅ Auth ready - نظام المصادقة جاهز 10/10'
+    '✅ Auth System Ready - نظام المصادقة جاهز 10/10'
 );
