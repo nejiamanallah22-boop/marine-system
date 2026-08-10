@@ -1,28 +1,21 @@
 // ============================================================
 // 🚢 MARINE SYSTEM - server.js
-// Production Server - Express + MongoDB + JWT
-// متوافق مع:
-// User.js
-// Vessel.js
-// Maintenance.js
-// Ticket.js
-// Note.js
-// Log.js
+// Production Ready - Express + MongoDB + JWT
 // ============================================================
 
 'use strict';
 
-console.log('🚀 بدء تشغيل Marine System...');
+require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
 
 // ============================================================
 // 📦 MODELS
@@ -36,13 +29,12 @@ const Note = require('./models/Note');
 const Log = require('./models/Log');
 
 // ============================================================
-// ⚙️ CONFIG
+// ⚙️ CONFIGURATION
 // ============================================================
 
 const app = express();
 
 const PORT = Number(process.env.PORT) || 3000;
-
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 const MONGODB_URI =
@@ -53,22 +45,44 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const JWT_REFRESH_SECRET =
     process.env.JWT_REFRESH_SECRET ||
-    (JWT_SECRET ? `${JWT_SECRET}_refresh` : null);
+    (JWT_SECRET ? `${JWT_SECRET}_refresh_secret` : null);
 
 const FRONTEND_URL =
     process.env.FRONTEND_URL || '*';
 
+const publicPath = path.join(__dirname, 'public');
+
+// ============================================================
+// 🚨 ENVIRONMENT VALIDATION
+// ============================================================
+
+console.log('');
+console.log('==========================================');
+console.log('🚢 MARINE SYSTEM');
+console.log('==========================================');
+
 if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI غير موجود في Environment Variables');
+    console.error('❌ MONGODB_URI / MONGO_URI غير موجود');
     process.exit(1);
 }
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-    console.error(
-        '❌ JWT_SECRET غير موجود أو قصير جداً. يجب أن يكون 32 حرفاً على الأقل.'
-    );
+if (!JWT_SECRET) {
+    console.error('❌ JWT_SECRET غير موجود');
     process.exit(1);
 }
+
+if (JWT_SECRET.length < 32) {
+    console.error('❌ JWT_SECRET يجب أن يكون 32 حرفاً على الأقل');
+    process.exit(1);
+}
+
+if (!JWT_REFRESH_SECRET) {
+    console.error('❌ JWT_REFRESH_SECRET غير موجود');
+    process.exit(1);
+}
+
+console.log(`🌍 Environment: ${NODE_ENV}`);
+console.log(`🚀 Port: ${PORT}`);
 
 // ============================================================
 // 🔐 SECURITY
@@ -80,32 +94,100 @@ app.set('trust proxy', 1);
 
 app.use(
     helmet({
-        crossOriginResourcePolicy: { policy: 'cross-origin' }
+        crossOriginResourcePolicy: {
+            policy: 'cross-origin'
+        },
+
+        contentSecurityPolicy: false
     })
 );
 
-// CORS
+// ============================================================
+// 🌐 CORS
+// ============================================================
+
+const allowedOrigins =
+    FRONTEND_URL === '*'
+        ? '*'
+        : FRONTEND_URL
+            .split(',')
+            .map(x => x.trim())
+            .filter(Boolean);
+
 app.use(
     cors({
-        origin: FRONTEND_URL === '*'
-            ? true
-            : FRONTEND_URL.split(',').map(v => v.trim()),
+        origin: (origin, callback) => {
+
+            // Requests without Origin
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            // Development / wildcard
+            if (allowedOrigins === '*') {
+                return callback(null, true);
+            }
+
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            console.warn(
+                `⚠️ CORS blocked: ${origin}`
+            );
+
+            return callback(
+                new Error('CORS origin not allowed')
+            );
+        },
+
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+
+        methods: [
+            'GET',
+            'POST',
+            'PUT',
+            'PATCH',
+            'DELETE',
+            'OPTIONS'
+        ],
+
         allowedHeaders: [
             'Content-Type',
             'Authorization',
-            'Accept'
+            'Accept',
+            'X-Requested-With'
         ]
     })
 );
 
-// Body limits
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({
-    extended: true,
-    limit: '2mb'
-}));
+// ============================================================
+// 📦 BODY PARSERS
+// ============================================================
+
+app.use(
+    express.json({
+        limit: '5mb',
+        strict: true
+    })
+);
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: '5mb'
+    })
+);
+
+// ============================================================
+// 🗜️ COMPRESSION
+// ============================================================
+
+app.use(
+    compression({
+        threshold: 1024
+    })
+);
 
 // ============================================================
 // 🚦 RATE LIMIT
@@ -113,79 +195,212 @@ app.use(express.urlencoded({
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: NODE_ENV === 'production' ? 500 : 2000,
+
+    max:
+        NODE_ENV === 'production'
+            ? 1000
+            : 5000,
+
     standardHeaders: true,
     legacyHeaders: false,
+
+    skip: req =>
+        req.path === '/health',
+
     message: {
         success: false,
-        error: 'طلبات كثيرة جداً. حاول لاحقاً.'
+        error: 'طلبات كثيرة جداً، حاول لاحقاً.'
     }
 });
 
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
+
     max: 10,
+
+    skipSuccessfulRequests: true,
+
     standardHeaders: true,
     legacyHeaders: false,
+
     message: {
         success: false,
-        error: 'محاولات تسجيل دخول كثيرة. حاول بعد قليل.'
+        error: 'محاولات تسجيل الدخول كثيرة جداً. حاول بعد قليل.'
     }
 });
 
 app.use('/api', globalLimiter);
 
 // ============================================================
-// 📁 STATIC FILES
+// 📊 REQUEST LOGGER
 // ============================================================
 
-const publicPath = path.join(__dirname, 'public');
+app.use((req, res, next) => {
+
+    const started = Date.now();
+
+    res.on('finish', () => {
+
+        const duration =
+            Date.now() - started;
+
+        if (NODE_ENV !== 'test') {
+
+            console.log(
+                `${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`
+            );
+        }
+    });
+
+    next();
+});
+
+// ============================================================
+// 📁 STATIC FRONTEND
+// ============================================================
 
 app.use(
     express.static(publicPath, {
         index: 'index.html',
-        maxAge: NODE_ENV === 'production' ? '1d' : 0
+
+        maxAge:
+            NODE_ENV === 'production'
+                ? '1d'
+                : 0,
+
+        etag: true
     })
 );
 
-app.use('/css', express.static(path.join(publicPath, 'css')));
-app.use('/js', express.static(path.join(publicPath, 'js')));
-app.use('/pages', express.static(path.join(publicPath, 'pages')));
-app.use('/images', express.static(path.join(publicPath, 'images')));
+app.use(
+    '/css',
+    express.static(
+        path.join(publicPath, 'css')
+    )
+);
+
+app.use(
+    '/js',
+    express.static(
+        path.join(publicPath, 'js')
+    )
+);
+
+app.use(
+    '/pages',
+    express.static(
+        path.join(publicPath, 'pages')
+    )
+);
+
+app.use(
+    '/images',
+    express.static(
+        path.join(publicPath, 'images')
+    )
+);
 
 // ============================================================
 // 🧰 HELPERS
 // ============================================================
 
 function isValidObjectId(id) {
+
     return mongoose.Types.ObjectId.isValid(id);
 }
 
+// ------------------------------------------------------------
+
 function cleanUser(user) {
-    if (!user) return null;
+
+    if (!user) {
+        return null;
+    }
 
     return {
-        id: user._id?.toString() || user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        lastLogin: user.lastLogin || null,
-        preferences: user.preferences || {},
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        id:
+            user._id
+                ? user._id.toString()
+                : user.id,
+
+        _id:
+            user._id
+                ? user._id.toString()
+                : undefined,
+
+        name: user.name || '',
+
+        username:
+            user.username || '',
+
+        email:
+            user.email || '',
+
+        role:
+            user.role || 'مستخدم',
+
+        isActive:
+            user.isActive !== false,
+
+        lastLogin:
+            user.lastLogin || null,
+
+        preferences:
+            user.preferences || {},
+
+        createdAt:
+            user.createdAt || null,
+
+        updatedAt:
+            user.updatedAt || null
     };
 }
 
+// ============================================================
+// 🔑 PASSWORD
+// ============================================================
+
+async function comparePassword(user, password) {
+
+    if (
+        user &&
+        typeof user.comparePassword === 'function'
+    ) {
+        return user.comparePassword(password);
+    }
+
+    if (!user || !user.password) {
+        return false;
+    }
+
+    return bcrypt.compare(
+        password,
+        user.password
+    );
+}
+
+// ============================================================
+// 🔐 JWT
+// ============================================================
+
 function generateAccessToken(user) {
+
     return jwt.sign(
         {
             id: user._id.toString(),
+
             name: user.name,
+
+            username:
+                user.username || undefined,
+
             email: user.email,
+
             role: user.role
         },
+
         JWT_SECRET,
+
         {
             expiresIn: '24h',
             issuer: 'marine-system'
@@ -193,12 +408,17 @@ function generateAccessToken(user) {
     );
 }
 
+// ------------------------------------------------------------
+
 function generateRefreshToken(user) {
+
     return jwt.sign(
         {
             id: user._id.toString()
         },
+
         JWT_REFRESH_SECRET,
+
         {
             expiresIn: '7d',
             issuer: 'marine-system'
@@ -206,109 +426,193 @@ function generateRefreshToken(user) {
     );
 }
 
+// ------------------------------------------------------------
+
 function verifyAccessToken(token) {
-    return jwt.verify(token, JWT_SECRET);
+
+    return jwt.verify(
+        token,
+        JWT_SECRET,
+        {
+            issuer: 'marine-system'
+        }
+    );
 }
+
+// ============================================================
+// 📜 LOGGING
+// ============================================================
 
 async function writeLog({
     action,
     resource,
     resourceId,
     resourceModel,
+    resourceName,
     user,
     req,
     details = {},
     status = 'success',
     error = null
 }) {
+
     try {
+
+        if (
+            !Log ||
+            typeof Log.logAction !== 'function'
+        ) {
+            return;
+        }
+
         await Log.logAction({
             action,
             resource,
             resourceId,
             resourceModel,
-            user: user?._id,
-            userName: user?.name,
-            userEmail: user?.email,
-            ipAddress: req.ip,
-            userAgent: req.get('user-agent'),
+            resourceName,
+
+            user:
+                user?._id || null,
+
+            userName:
+                user?.name || null,
+
+            userEmail:
+                user?.email || null,
+
+            ipAddress:
+                req?.ip || null,
+
+            userAgent:
+                req?.get('user-agent') || null,
+
             details,
+
             status,
+
             error
         });
+
     } catch (err) {
-        console.error('⚠️ Log error:', err.message);
+
+        console.error(
+            '⚠️ Log error:',
+            err.message
+        );
     }
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION MIDDLEWARE
+// 🔐 AUTHENTICATION
 // ============================================================
 
 async function authenticate(req, res, next) {
-    try {
-        const header = req.headers.authorization;
 
-        if (!header || !header.startsWith('Bearer ')) {
+    try {
+
+        const authorization =
+            req.headers.authorization;
+
+        if (
+            !authorization ||
+            !authorization.startsWith('Bearer ')
+        ) {
+
             return res.status(401).json({
                 success: false,
-                error: 'غير مصرح. رمز الدخول غير موجود.'
+                error: 'غير مصرح. يرجى تسجيل الدخول.'
             });
         }
 
-        const token = header.substring(7);
+        const token =
+            authorization.substring(7).trim();
+
+        if (!token) {
+
+            return res.status(401).json({
+                success: false,
+                error: 'رمز الدخول مفقود.'
+            });
+        }
 
         let decoded;
 
         try {
-            decoded = verifyAccessToken(token);
-        } catch (err) {
+
+            decoded =
+                verifyAccessToken(token);
+
+        } catch (error) {
+
             return res.status(401).json({
                 success: false,
-                error: 'رمز الدخول غير صالح أو منتهي.'
+                error:
+                    error.name === 'TokenExpiredError'
+                        ? 'انتهت جلسة الدخول. يرجى تسجيل الدخول من جديد.'
+                        : 'رمز الدخول غير صالح.'
             });
         }
 
-        if (!decoded?.id || !isValidObjectId(decoded.id)) {
+        if (
+            !decoded ||
+            !decoded.id ||
+            !isValidObjectId(decoded.id)
+        ) {
+
             return res.status(401).json({
                 success: false,
-                error: 'رمز دخول غير صالح.'
+                error: 'رمز الدخول غير صالح.'
             });
         }
 
-        const user = await User.findById(decoded.id).select(
-            '+password'
-        );
+        const user =
+            await User
+                .findById(decoded.id)
+                .select('+password +refreshToken');
 
         if (!user) {
+
             return res.status(401).json({
                 success: false,
                 error: 'المستخدم غير موجود.'
             });
         }
 
-        if (!user.isActive) {
+        if (user.isActive === false) {
+
             return res.status(403).json({
                 success: false,
                 error: 'الحساب معطل.'
             });
         }
 
-        if (user.isLocked) {
+        if (user.isLocked === true) {
+
             return res.status(423).json({
                 success: false,
                 error: 'الحساب مقفل مؤقتاً.'
             });
         }
 
+        // Password change protection
         if (
             decoded.iat &&
-            user.changedPasswordAfter(decoded.iat)
+            typeof user.changedPasswordAfter === 'function'
         ) {
-            return res.status(401).json({
-                success: false,
-                error: 'تم تغيير كلمة المرور. يرجى تسجيل الدخول من جديد.'
-            });
+
+            if (
+                user.changedPasswordAfter(
+                    decoded.iat
+                )
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'تم تغيير كلمة المرور. يرجى تسجيل الدخول من جديد.'
+                });
+            }
         }
 
         req.user = user;
@@ -316,7 +620,11 @@ async function authenticate(req, res, next) {
         next();
 
     } catch (error) {
-        console.error('Authentication error:', error);
+
+        console.error(
+            '❌ Authentication:',
+            error
+        );
 
         return res.status(401).json({
             success: false,
@@ -326,23 +634,31 @@ async function authenticate(req, res, next) {
 }
 
 // ============================================================
-// 👮 ROLE AUTHORIZATION
+// 👮 AUTHORIZATION
 // ============================================================
 
 function authorize(...roles) {
+
     return (req, res, next) => {
 
         if (!req.user) {
+
             return res.status(401).json({
                 success: false,
                 error: 'غير مصرح.'
             });
         }
 
-        if (!roles.includes(req.user.role)) {
+        if (
+            !roles.includes(
+                req.user.role
+            )
+        ) {
+
             return res.status(403).json({
                 success: false,
-                error: 'ليس لديك صلاحية لتنفيذ هذه العملية.'
+                error:
+                    'ليس لديك صلاحية لتنفيذ هذه العملية.'
             });
         }
 
@@ -354,26 +670,52 @@ function authorize(...roles) {
 // ❤️ HEALTH
 // ============================================================
 
-app.get('/health', async (req, res) => {
+app.get('/health', (req, res) => {
 
-    const dbState = mongoose.connection.readyState;
+    const state =
+        mongoose.connection.readyState;
 
-    res.json({
-        success: true,
-        status: 'ok',
-        service: 'Marine System',
-        environment: NODE_ENV,
-        database:
-            dbState === 1
-                ? 'connected'
-                : 'disconnected',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString()
+    const database =
+        state === 1
+            ? 'connected'
+            : state === 2
+                ? 'connecting'
+                : 'disconnected';
+
+    const healthy =
+        state === 1;
+
+    res.status(
+        healthy ? 200 : 503
+    ).json({
+
+        success: healthy,
+
+        status:
+            healthy
+                ? 'ok'
+                : 'degraded',
+
+        service:
+            'Marine System',
+
+        environment:
+            NODE_ENV,
+
+        database,
+
+        uptime:
+            Math.floor(
+                process.uptime()
+            ),
+
+        timestamp:
+            new Date().toISOString()
     });
 });
 
 // ============================================================
-// 🔐 AUTH
+// 🔐 LOGIN
 // ============================================================
 
 app.post(
@@ -381,55 +723,125 @@ app.post(
     loginLimiter,
     async (req, res) => {
 
-        const started = Date.now();
+        const started =
+            Date.now();
 
         try {
 
-            let { email, password } = req.body;
+            /*
+             * IMPORTANT:
+             * نقبل:
+             * email
+             * username
+             * identifier
+             *
+             * لأن index.html عندك يستخدم username.
+             */
 
-            email = String(email || '')
-                .trim()
-                .toLowerCase();
+            const identifier =
+                String(
+                    req.body.identifier ||
+                    req.body.email ||
+                    req.body.username ||
+                    ''
+                )
+                    .trim()
+                    .toLowerCase();
 
-            password = String(password || '');
+            const password =
+                String(
+                    req.body.password || ''
+                );
 
-            if (!email || !password) {
+            if (!identifier || !password) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'البريد الإلكتروني وكلمة المرور مطلوبان.'
+                    error:
+                        'اسم المستخدم أو البريد الإلكتروني وكلمة المرور مطلوبان.'
                 });
             }
 
-            const user = await User
-                .findOne({ email })
-                .select('+password');
+            /*
+             * البحث بالبريد أو اسم المستخدم.
+             * هذا يصلح حتى إذا كان schema يحتوي
+             * email فقط أو email + username.
+             */
+
+            const user =
+                await User.findOne({
+                    $or: [
+                        {
+                            email:
+                                identifier
+                        },
+                        {
+                            username:
+                                identifier
+                        }
+                    ]
+                }).select(
+                    '+password +refreshToken'
+                );
 
             if (!user) {
+
                 return res.status(401).json({
                     success: false,
-                    error: 'بيانات الدخول غير صحيحة.'
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة.'
                 });
             }
 
-            if (user.isLocked) {
-                return res.status(423).json({
-                    success: false,
-                    error: 'الحساب مقفل مؤقتاً.'
-                });
-            }
+            if (user.isActive === false) {
 
-            if (!user.isActive) {
                 return res.status(403).json({
                     success: false,
                     error: 'الحساب معطل.'
                 });
             }
 
-            const valid = await user.comparePassword(password);
+            if (user.isLocked === true) {
+
+                return res.status(423).json({
+                    success: false,
+                    error:
+                        'الحساب مقفل مؤقتاً بسبب محاولات دخول فاشلة.'
+                });
+            }
+
+            const valid =
+                await comparePassword(
+                    user,
+                    password
+                );
 
             if (!valid) {
 
-                await user.incrementLoginAttempts();
+                try {
+
+                    if (
+                        typeof user.incrementLoginAttempts ===
+                        'function'
+                    ) {
+
+                        await user.incrementLoginAttempts();
+
+                    } else {
+
+                        user.loginAttempts =
+                            (user.loginAttempts || 0) + 1;
+
+                        await user.save();
+                    }
+
+                } catch (e) {
+
+                    console.error(
+                        'Login attempts error:',
+                        e.message
+                    );
+                }
 
                 await writeLog({
                     action: 'login',
@@ -439,17 +851,52 @@ app.post(
                     user,
                     req,
                     status: 'error',
-                    error: 'Invalid password'
+                    error: 'Invalid credentials'
                 });
 
                 return res.status(401).json({
                     success: false,
-                    error: 'بيانات الدخول غير صحيحة.'
+                    error:
+                        'اسم المستخدم أو كلمة المرور غير صحيحة.'
                 });
             }
 
-            await user.resetLoginAttempts();
-            await user.updateLastLogin();
+            // Reset failed attempts
+            try {
+
+                if (
+                    typeof user.resetLoginAttempts ===
+                    'function'
+                ) {
+
+                    await user.resetLoginAttempts();
+
+                } else {
+
+                    user.loginAttempts = 0;
+                }
+
+            } catch (e) {
+
+                console.error(
+                    'Reset attempts error:',
+                    e.message
+                );
+            }
+
+            // Update login
+            if (
+                typeof user.updateLastLogin ===
+                'function'
+            ) {
+
+                await user.updateLastLogin();
+
+            } else {
+
+                user.lastLogin =
+                    new Date();
+            }
 
             const accessToken =
                 generateAccessToken(user);
@@ -457,8 +904,9 @@ app.post(
             const refreshToken =
                 generateRefreshToken(user);
 
-            // تخزين refresh token
-            user.refreshToken = refreshToken;
+            user.refreshToken =
+                refreshToken;
+
             await user.save();
 
             await writeLog({
@@ -469,109 +917,172 @@ app.post(
                 user,
                 req,
                 details: {
-                    duration: Date.now() - started
+                    duration:
+                        Date.now() - started
                 }
             });
 
-            res.json({
+            return res.json({
+
                 success: true,
-                token: accessToken,
+
+                token:
+                    accessToken,
+
                 accessToken,
+
                 refreshToken,
-                user: cleanUser(user)
+
+                user:
+                    cleanUser(user)
             });
 
         } catch (error) {
 
-            console.error('Login error:', error);
+            console.error(
+                '❌ Login error:',
+                error
+            );
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
-                error: 'حدث خطأ داخلي في الخادم.'
+                error:
+                    NODE_ENV === 'production'
+                        ? 'حدث خطأ داخلي في الخادم.'
+                        : error.message
             });
         }
     }
 );
 
 // ============================================================
-// 🔄 REFRESH TOKEN
+// 🔄 REFRESH
 // ============================================================
 
-app.post('/api/auth/refresh', async (req, res) => {
-
-    try {
-
-        const { refreshToken } = req.body;
-
-        if (!refreshToken) {
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token مطلوب.'
-            });
-        }
-
-        let decoded;
+app.post(
+    '/api/auth/refresh',
+    async (req, res) => {
 
         try {
-            decoded = jwt.verify(
-                refreshToken,
-                JWT_REFRESH_SECRET
+
+            const refreshToken =
+                String(
+                    req.body.refreshToken || ''
+                ).trim();
+
+            if (!refreshToken) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'Refresh token مطلوب.'
+                });
+            }
+
+            let decoded;
+
+            try {
+
+                decoded =
+                    jwt.verify(
+                        refreshToken,
+                        JWT_REFRESH_SECRET,
+                        {
+                            issuer:
+                                'marine-system'
+                        }
+                    );
+
+            } catch {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'Refresh token غير صالح أو منتهي.'
+                });
+            }
+
+            if (
+                !decoded?.id ||
+                !isValidObjectId(decoded.id)
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'Refresh token غير صالح.'
+                });
+            }
+
+            const user =
+                await User
+                    .findById(decoded.id)
+                    .select('+refreshToken');
+
+            if (
+                !user ||
+                user.isActive === false
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'المستخدم غير صالح.'
+                });
+            }
+
+            if (
+                !user.refreshToken ||
+                user.refreshToken !==
+                    refreshToken
+            ) {
+
+                return res.status(401).json({
+                    success: false,
+                    error:
+                        'Refresh token غير صالح.'
+                });
+            }
+
+            const accessToken =
+                generateAccessToken(user);
+
+            const newRefreshToken =
+                generateRefreshToken(user);
+
+            user.refreshToken =
+                newRefreshToken;
+
+            await user.save();
+
+            return res.json({
+
+                success: true,
+
+                token:
+                    accessToken,
+
+                accessToken,
+
+                refreshToken:
+                    newRefreshToken
+            });
+
+        } catch (error) {
+
+            console.error(
+                '❌ Refresh:',
+                error
             );
-        } catch {
-            return res.status(401).json({
+
+            return res.status(500).json({
                 success: false,
-                error: 'Refresh token غير صالح.'
+                error:
+                    'فشل تحديث جلسة الدخول.'
             });
         }
-
-        const user = await User
-            .findById(decoded.id)
-            .select('+refreshToken');
-
-        if (!user || !user.isActive) {
-            return res.status(401).json({
-                success: false,
-                error: 'المستخدم غير صالح.'
-            });
-        }
-
-        if (
-            !user.refreshToken ||
-            user.refreshToken !== refreshToken
-        ) {
-            return res.status(401).json({
-                success: false,
-                error: 'Refresh token غير صالح.'
-            });
-        }
-
-        const accessToken =
-            generateAccessToken(user);
-
-        const newRefreshToken =
-            generateRefreshToken(user);
-
-        user.refreshToken = newRefreshToken;
-
-        await user.save();
-
-        res.json({
-            success: true,
-            accessToken,
-            token: accessToken,
-            refreshToken: newRefreshToken
-        });
-
-    } catch (error) {
-
-        console.error('Refresh error:', error);
-
-        res.status(500).json({
-            success: false,
-            error: 'فشل تحديث رمز الدخول.'
-        });
     }
-});
+);
 
 // ============================================================
 // 🚪 LOGOUT
@@ -584,7 +1095,8 @@ app.post(
 
         try {
 
-            req.user.refreshToken = undefined;
+            req.user.refreshToken =
+                undefined;
 
             await req.user.save();
 
@@ -599,14 +1111,21 @@ app.post(
 
             res.json({
                 success: true,
-                message: 'تم تسجيل الخروج.'
+                message:
+                    'تم تسجيل الخروج بنجاح.'
             });
 
         } catch (error) {
 
+            console.error(
+                'Logout:',
+                error
+            );
+
             res.status(500).json({
                 success: false,
-                error: 'فشل تسجيل الخروج.'
+                error:
+                    'فشل تسجيل الخروج.'
             });
         }
     }
@@ -619,11 +1138,12 @@ app.post(
 app.get(
     '/api/auth/me',
     authenticate,
-    async (req, res) => {
+    (req, res) => {
 
         res.json({
             success: true,
-            user: cleanUser(req.user)
+            user:
+                cleanUser(req.user)
         });
     }
 );
@@ -640,10 +1160,15 @@ app.get(
 
         try {
 
-            const users = await User
-                .find()
-                .select('-password -refreshToken')
-                .sort({ createdAt: -1 });
+            const users =
+                await User
+                    .find()
+                    .select(
+                        '-password -refreshToken'
+                    )
+                    .sort({
+                        createdAt: -1
+                    });
 
             res.json({
                 success: true,
@@ -654,13 +1179,17 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: 'فشل تحميل المستخدمين.'
+                error:
+                    'فشل تحميل المستخدمين.'
             });
         }
     }
 );
 
-// إنشاء مستخدم
+// ------------------------------------------------------------
+// CREATE USER
+// ------------------------------------------------------------
+
 app.post(
     '/api/users',
     authenticate,
@@ -671,38 +1200,81 @@ app.post(
 
             const {
                 name,
+                username,
                 email,
                 password,
                 role,
                 isActive
             } = req.body;
 
-            if (!name || !email || !password) {
+            if (
+                !name ||
+                !password ||
+                (!email && !username)
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'الاسم والبريد وكلمة المرور مطلوبة.'
+                    error:
+                        'الاسم واسم المستخدم/البريد وكلمة المرور مطلوبة.'
                 });
             }
 
             const normalizedEmail =
-                String(email).trim().toLowerCase();
+                email
+                    ? String(email)
+                        .trim()
+                        .toLowerCase()
+                    : undefined;
 
-            const exists =
-                await User.findOne({
-                    email: normalizedEmail
-                });
+            const normalizedUsername =
+                username
+                    ? String(username)
+                        .trim()
+                        .toLowerCase()
+                    : undefined;
 
-            if (exists) {
-                return res.status(409).json({
-                    success: false,
-                    error: 'البريد الإلكتروني موجود مسبقاً.'
-                });
+            if (normalizedEmail) {
+
+                const exists =
+                    await User.findOne({
+                        email:
+                            normalizedEmail
+                    });
+
+                if (exists) {
+
+                    return res.status(409).json({
+                        success: false,
+                        error:
+                            'البريد الإلكتروني موجود مسبقاً.'
+                    });
+                }
+            }
+
+            if (normalizedUsername) {
+
+                const exists =
+                    await User.findOne({
+                        username:
+                            normalizedUsername
+                    });
+
+                if (exists) {
+
+                    return res.status(409).json({
+                        success: false,
+                        error:
+                            'اسم المستخدم موجود مسبقاً.'
+                    });
+                }
             }
 
             const allowedRoles = [
                 'مسؤول',
                 'محرر',
-                'مستخدم'
+                'مستخدم',
+                'مشاهد'
             ];
 
             const finalRole =
@@ -710,16 +1282,29 @@ app.post(
                     ? role
                     : 'مستخدم';
 
-            const user = new User({
+            const data = {
                 name,
-                email: normalizedEmail,
                 password,
                 role: finalRole,
+
                 isActive:
                     typeof isActive === 'boolean'
                         ? isActive
                         : true
-            });
+            };
+
+            if (normalizedEmail) {
+                data.email =
+                    normalizedEmail;
+            }
+
+            if (normalizedUsername) {
+                data.username =
+                    normalizedUsername;
+            }
+
+            const user =
+                new User(data);
 
             await user.save();
 
@@ -733,28 +1318,38 @@ app.post(
                 details: {
                     name: user.name,
                     email: user.email,
+                    username:
+                        user.username,
                     role: user.role
                 }
             });
 
             res.status(201).json({
                 success: true,
-                user: cleanUser(user)
+                user:
+                    cleanUser(user)
             });
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                'Create user:',
+                error
+            );
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// تعديل مستخدم
+// ------------------------------------------------------------
+// UPDATE USER
+// ------------------------------------------------------------
+
 app.put(
     '/api/users/:id',
     authenticate,
@@ -763,12 +1358,15 @@ app.put(
 
         try {
 
-            const { id } = req.params;
+            const { id } =
+                req.params;
 
             if (!isValidObjectId(id)) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'معرف المستخدم غير صالح.'
+                    error:
+                        'معرف المستخدم غير صالح.'
                 });
             }
 
@@ -776,16 +1374,20 @@ app.put(
                 await User.findById(id);
 
             if (!user) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المستخدم غير موجود.'
+                    error:
+                        'المستخدم غير موجود.'
                 });
             }
 
-            const before = cleanUser(user);
+            const before =
+                cleanUser(user);
 
             const {
                 name,
+                username,
                 email,
                 password,
                 role,
@@ -793,42 +1395,76 @@ app.put(
                 preferences
             } = req.body;
 
-            if (name !== undefined)
+            if (name !== undefined) {
                 user.name = name;
+            }
 
-            if (email !== undefined)
+            if (username !== undefined) {
+                user.username =
+                    String(username)
+                        .trim()
+                        .toLowerCase();
+            }
+
+            if (email !== undefined) {
                 user.email =
-                    String(email).trim().toLowerCase();
+                    String(email)
+                        .trim()
+                        .toLowerCase();
+            }
+
+            if (password) {
+                user.password =
+                    password;
+            }
 
             if (role !== undefined) {
 
+                const allowedRoles = [
+                    'مسؤول',
+                    'محرر',
+                    'مستخدم',
+                    'مشاهد'
+                ];
+
                 if (
-                    ![
-                        'مسؤول',
-                        'محرر',
-                        'مستخدم'
-                    ].includes(role)
+                    !allowedRoles.includes(role)
                 ) {
+
                     return res.status(400).json({
                         success: false,
-                        error: 'الدور غير صالح.'
+                        error:
+                            'الدور غير صالح.'
                     });
                 }
 
-                user.role = role;
+                user.role =
+                    role;
             }
 
-            if (typeof isActive === 'boolean')
-                user.isActive = isActive;
+            if (
+                typeof isActive ===
+                'boolean'
+            ) {
 
-            if (preferences)
+                user.isActive =
+                    isActive;
+            }
+
+            if (preferences) {
+
+                const oldPreferences =
+                    user.preferences?.toObject
+                        ? user.preferences.toObject()
+                        : (
+                            user.preferences ||
+                            {}
+                        );
+
                 user.preferences = {
-                    ...user.preferences?.toObject?.(),
+                    ...oldPreferences,
                     ...preferences
                 };
-
-            if (password) {
-                user.password = password;
             }
 
             await user.save();
@@ -841,29 +1477,38 @@ app.put(
                 user: req.user,
                 req,
                 details: {
-                    changes: {
-                        before,
-                        after: cleanUser(user)
-                    }
+                    before,
+                    after:
+                        cleanUser(user)
                 }
             });
 
             res.json({
                 success: true,
-                user: cleanUser(user)
+                user:
+                    cleanUser(user)
             });
 
         } catch (error) {
 
+            console.error(
+                'Update user:',
+                error
+            );
+
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// حذف مستخدم
+// ------------------------------------------------------------
+// DELETE USER
+// ------------------------------------------------------------
+
 app.delete(
     '/api/users/:id',
     authenticate,
@@ -872,22 +1517,32 @@ app.delete(
 
         try {
 
-            const { id } = req.params;
+            const { id } =
+                req.params;
 
-            if (String(req.user._id) === String(id)) {
+            if (
+                String(req.user._id) ===
+                String(id)
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'لا يمكنك حذف حسابك بنفسك.'
+                    error:
+                        'لا يمكنك حذف حسابك بنفسك.'
                 });
             }
 
             const user =
-                await User.findByIdAndDelete(id);
+                await User.findByIdAndDelete(
+                    id
+                );
 
             if (!user) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المستخدم غير موجود.'
+                    error:
+                        'المستخدم غير موجود.'
                 });
             }
 
@@ -906,14 +1561,21 @@ app.delete(
 
             res.json({
                 success: true,
-                message: 'تم حذف المستخدم.'
+                message:
+                    'تم حذف المستخدم.'
             });
 
         } catch (error) {
 
+            console.error(
+                'Delete user:',
+                error
+            );
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -933,7 +1595,9 @@ app.get(
             const vessels =
                 await Vessel
                     .find()
-                    .sort({ createdAt: -1 });
+                    .sort({
+                        createdAt: -1
+                    });
 
             res.json({
                 success: true,
@@ -944,11 +1608,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/vessels/stats',
@@ -957,29 +1624,73 @@ app.get(
 
         try {
 
-            const [
-                statusStats,
-                categoryStats
-            ] = await Promise.all([
-                Vessel.getStats(),
-                Vessel.getCategoryStats()
-            ]);
+            let statusStats = [];
+            let categoryStats = [];
+
+            if (
+                typeof Vessel.getStats ===
+                'function'
+            ) {
+
+                statusStats =
+                    await Vessel.getStats();
+
+            } else {
+
+                statusStats =
+                    await Vessel.aggregate([
+                        {
+                            $group: {
+                                _id: '$stat',
+                                count:
+                                    { $sum: 1 }
+                            }
+                        }
+                    ]);
+            }
+
+            if (
+                typeof Vessel.getCategoryStats ===
+                'function'
+            ) {
+
+                categoryStats =
+                    await Vessel.getCategoryStats();
+
+            } else {
+
+                categoryStats =
+                    await Vessel.aggregate([
+                        {
+                            $group: {
+                                _id: '$cat',
+                                count:
+                                    { $sum: 1 }
+                            }
+                        }
+                    ]);
+            }
 
             res.json({
                 success: true,
-                status: statusStats,
-                categories: categoryStats
+                status:
+                    statusStats,
+                categories:
+                    categoryStats
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/vessels/:id',
@@ -988,20 +1699,30 @@ app.get(
 
         try {
 
-            if (!isValidObjectId(req.params.id)) {
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'معرف القطعة غير صالح.'
+                    error:
+                        'معرف القطعة غير صالح.'
                 });
             }
 
             const vessel =
-                await Vessel.findById(req.params.id);
+                await Vessel.findById(
+                    req.params.id
+                );
 
             if (!vessel) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'القطعة غير موجودة.'
+                    error:
+                        'القطعة غير موجودة.'
                 });
             }
 
@@ -1014,11 +1735,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.post(
     '/api/vessels',
@@ -1029,17 +1753,23 @@ app.post(
         try {
 
             const vessel =
-                new Vessel(req.body);
+                new Vessel(
+                    req.body
+                );
 
             await vessel.save();
 
             await writeLog({
                 action: 'create',
                 resource: 'vessel',
-                resourceId: vessel._id,
-                resourceModel: 'Vessel',
-                resourceName: vessel.name,
-                user: req.user,
+                resourceId:
+                    vessel._id,
+                resourceModel:
+                    'Vessel',
+                resourceName:
+                    vessel.name,
+                user:
+                    req.user,
                 req
             });
 
@@ -1052,11 +1782,14 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.put(
     '/api/vessels/:id',
@@ -1066,20 +1799,16 @@ app.put(
 
         try {
 
-            if (!isValidObjectId(req.params.id)) {
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'معرف القطعة غير صالح.'
-                });
-            }
-
-            const before =
-                await Vessel.findById(req.params.id);
-
-            if (!before) {
-                return res.status(404).json({
-                    success: false,
-                    error: 'القطعة غير موجودة.'
+                    error:
+                        'معرف القطعة غير صالح.'
                 });
             }
 
@@ -1093,18 +1822,27 @@ app.put(
                     }
                 );
 
+            if (!vessel) {
+
+                return res.status(404).json({
+                    success: false,
+                    error:
+                        'القطعة غير موجودة.'
+                });
+            }
+
             await writeLog({
                 action: 'update',
                 resource: 'vessel',
-                resourceId: vessel._id,
-                resourceModel: 'Vessel',
-                resourceName: vessel.name,
-                user: req.user,
-                req,
-                details: {
-                    before,
-                    after: vessel
-                }
+                resourceId:
+                    vessel._id,
+                resourceModel:
+                    'Vessel',
+                resourceName:
+                    vessel.name,
+                user:
+                    req.user,
+                req
             });
 
             res.json({
@@ -1116,11 +1854,14 @@ app.put(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.delete(
     '/api/vessels/:id',
@@ -1130,38 +1871,59 @@ app.delete(
 
         try {
 
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف القطعة غير صالح.'
+                });
+            }
+
             const vessel =
                 await Vessel.findByIdAndDelete(
                     req.params.id
                 );
 
             if (!vessel) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'القطعة غير موجودة.'
+                    error:
+                        'القطعة غير موجودة.'
                 });
             }
 
             await writeLog({
                 action: 'delete',
                 resource: 'vessel',
-                resourceId: vessel._id,
-                resourceModel: 'Vessel',
-                resourceName: vessel.name,
-                user: req.user,
+                resourceId:
+                    vessel._id,
+                resourceModel:
+                    'Vessel',
+                resourceName:
+                    vessel.name,
+                user:
+                    req.user,
                 req
             });
 
             res.json({
                 success: true,
-                message: 'تم حذف القطعة.'
+                message:
+                    'تم حذف القطعة.'
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -1181,24 +1943,36 @@ app.get(
             const records =
                 await Maintenance
                     .find()
-                    .populate('vesselId', 'name num cat stat')
-                    .populate('supervisor', 'name email')
-                    .sort({ startDate: -1 });
+                    .populate(
+                        'vesselId',
+                        'name num cat stat'
+                    )
+                    .populate(
+                        'supervisor',
+                        'name email'
+                    )
+                    .sort({
+                        startDate: -1
+                    });
 
             res.json({
                 success: true,
-                maintenance: records
+                maintenance:
+                    records
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/maintenance/stats',
@@ -1207,8 +1981,29 @@ app.get(
 
         try {
 
-            const stats =
-                await Maintenance.getStats();
+            let stats;
+
+            if (
+                typeof Maintenance.getStats ===
+                'function'
+            ) {
+
+                stats =
+                    await Maintenance.getStats();
+
+            } else {
+
+                stats =
+                    await Maintenance.aggregate([
+                        {
+                            $group: {
+                                _id: '$status',
+                                count:
+                                    { $sum: 1 }
+                            }
+                        }
+                    ]);
+            }
 
             res.json({
                 success: true,
@@ -1219,11 +2014,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/maintenance/vessel/:vesselId',
@@ -1237,31 +2035,57 @@ app.get(
                     req.params.vesselId
                 )
             ) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'معرف القطعة غير صالح.'
+                    error:
+                        'معرف القطعة غير صالح.'
                 });
             }
 
-            const records =
-                await Maintenance.findByVessel(
-                    req.params.vesselId
-                );
+            let records;
+
+            if (
+                typeof Maintenance.findByVessel ===
+                'function'
+            ) {
+
+                records =
+                    await Maintenance.findByVessel(
+                        req.params.vesselId
+                    );
+
+            } else {
+
+                records =
+                    await Maintenance
+                        .find({
+                            vesselId:
+                                req.params.vesselId
+                        })
+                        .sort({
+                            startDate: -1
+                        });
+            }
 
             res.json({
                 success: true,
-                maintenance: records
+                maintenance:
+                    records
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.post(
     '/api/maintenance',
@@ -1271,44 +2095,59 @@ app.post(
 
         try {
 
+            const data = {
+                ...req.body
+            };
+
+            if (!data.supervisor) {
+                data.supervisor =
+                    req.user._id;
+            }
+
             const record =
-                new Maintenance({
-                    ...req.body,
-                    supervisor:
-                        req.body.supervisor ||
-                        req.user._id
-                });
+                new Maintenance(data);
 
             await record.save();
 
             await writeLog({
                 action: 'create',
-                resource: 'maintenance',
-                resourceId: record._id,
-                resourceModel: 'Maintenance',
-                user: req.user,
+                resource:
+                    'maintenance',
+                resourceId:
+                    record._id,
+                resourceModel:
+                    'Maintenance',
+                user:
+                    req.user,
                 req,
                 details: {
-                    vesselId: record.vesselId,
-                    type: record.type,
-                    status: record.status
+                    vesselId:
+                        record.vesselId,
+                    type:
+                        record.type,
+                    status:
+                        record.status
                 }
             });
 
             res.status(201).json({
                 success: true,
-                maintenance: record
+                maintenance:
+                    record
             });
 
         } catch (error) {
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.put(
     '/api/maintenance/:id',
@@ -1317,6 +2156,19 @@ app.put(
     async (req, res) => {
 
         try {
+
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف الصيانة غير صالح.'
+                });
+            }
 
             const record =
                 await Maintenance.findByIdAndUpdate(
@@ -1329,35 +2181,45 @@ app.put(
                 );
 
             if (!record) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'سجل الصيانة غير موجود.'
+                    error:
+                        'سجل الصيانة غير موجود.'
                 });
             }
 
             await writeLog({
                 action: 'update',
-                resource: 'maintenance',
-                resourceId: record._id,
-                resourceModel: 'Maintenance',
-                user: req.user,
+                resource:
+                    'maintenance',
+                resourceId:
+                    record._id,
+                resourceModel:
+                    'Maintenance',
+                user:
+                    req.user,
                 req
             });
 
             res.json({
                 success: true,
-                maintenance: record
+                maintenance:
+                    record
             });
 
         } catch (error) {
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.delete(
     '/api/maintenance/:id',
@@ -1367,36 +2229,58 @@ app.delete(
 
         try {
 
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف الصيانة غير صالح.'
+                });
+            }
+
             const record =
                 await Maintenance.findByIdAndDelete(
                     req.params.id
                 );
 
             if (!record) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'سجل الصيانة غير موجود.'
+                    error:
+                        'سجل الصيانة غير موجود.'
                 });
             }
 
             await writeLog({
                 action: 'delete',
-                resource: 'maintenance',
-                resourceId: record._id,
-                resourceModel: 'Maintenance',
-                user: req.user,
+                resource:
+                    'maintenance',
+                resourceId:
+                    record._id,
+                resourceModel:
+                    'Maintenance',
+                user:
+                    req.user,
                 req
             });
 
             res.json({
-                success: true
+                success: true,
+                message:
+                    'تم حذف سجل الصيانة.'
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -1416,9 +2300,17 @@ app.get(
             const tickets =
                 await Ticket
                     .find()
-                    .populate('createdBy', 'name email')
-                    .populate('assignedTo', 'name email')
-                    .sort({ createdAt: -1 });
+                    .populate(
+                        'createdBy',
+                        'name email'
+                    )
+                    .populate(
+                        'assignedTo',
+                        'name email'
+                    )
+                    .sort({
+                        createdAt: -1
+                    });
 
             res.json({
                 success: true,
@@ -1429,11 +2321,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/tickets/stats',
@@ -1442,13 +2337,54 @@ app.get(
 
         try {
 
-            const [
-                status,
-                priority
-            ] = await Promise.all([
-                Ticket.getStats(),
-                Ticket.getPriorityStats()
-            ]);
+            let status;
+            let priority;
+
+            if (
+                typeof Ticket.getStats ===
+                'function'
+            ) {
+
+                status =
+                    await Ticket.getStats();
+
+            } else {
+
+                status =
+                    await Ticket.aggregate([
+                        {
+                            $group: {
+                                _id:
+                                    '$status',
+                                count:
+                                    { $sum: 1 }
+                            }
+                        }
+                    ]);
+            }
+
+            if (
+                typeof Ticket.getPriorityStats ===
+                'function'
+            ) {
+
+                priority =
+                    await Ticket.getPriorityStats();
+
+            } else {
+
+                priority =
+                    await Ticket.aggregate([
+                        {
+                            $group: {
+                                _id:
+                                    '$priority',
+                                count:
+                                    { $sum: 1 }
+                            }
+                        }
+                    ]);
+            }
 
             res.json({
                 success: true,
@@ -1460,11 +2396,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.post(
     '/api/tickets',
@@ -1476,19 +2415,26 @@ app.post(
             const ticket =
                 new Ticket({
                     ...req.body,
-                    createdBy: req.user._id,
-                    createdByName: req.user.name
+                    createdBy:
+                        req.user._id,
+                    createdByName:
+                        req.user.name
                 });
 
             await ticket.save();
 
             await writeLog({
                 action: 'create',
-                resource: 'ticket',
-                resourceId: ticket._id,
-                resourceModel: 'Ticket',
-                resourceName: ticket.title,
-                user: req.user,
+                resource:
+                    'ticket',
+                resourceId:
+                    ticket._id,
+                resourceModel:
+                    'Ticket',
+                resourceName:
+                    ticket.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1501,11 +2447,14 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.put(
     '/api/tickets/:id',
@@ -1514,29 +2463,52 @@ app.put(
 
         try {
 
+            if (
+                !isValidObjectId(
+                    req.params.id
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف التذكرة غير صالح.'
+                });
+            }
+
             const ticket =
                 await Ticket.findById(
                     req.params.id
                 );
 
             if (!ticket) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'التذكرة غير موجودة.'
+                    error:
+                        'التذكرة غير موجودة.'
                 });
             }
 
-            Object.assign(ticket, req.body);
+            Object.assign(
+                ticket,
+                req.body
+            );
 
             await ticket.save();
 
             await writeLog({
                 action: 'update',
-                resource: 'ticket',
-                resourceId: ticket._id,
-                resourceModel: 'Ticket',
-                resourceName: ticket.title,
-                user: req.user,
+                resource:
+                    'ticket',
+                resourceId:
+                    ticket._id,
+                resourceModel:
+                    'Ticket',
+                resourceName:
+                    ticket.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1549,13 +2521,17 @@ app.put(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// إضافة رد
+// ------------------------------------------------------------
+// REPLY
+// ------------------------------------------------------------
+
 app.post(
     '/api/tickets/:id/reply',
     authenticate,
@@ -1563,15 +2539,22 @@ app.post(
 
         try {
 
-            const {
-                message,
-                isInternal = false
-            } = req.body;
+            const message =
+                String(
+                    req.body.message || ''
+                ).trim();
 
-            if (!message || !message.trim()) {
+            const isInternal =
+                Boolean(
+                    req.body.isInternal
+                );
+
+            if (!message) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'الرد مطلوب.'
+                    error:
+                        'الرد مطلوب.'
                 });
             }
 
@@ -1581,18 +2564,44 @@ app.post(
                 );
 
             if (!ticket) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'التذكرة غير موجودة.'
+                    error:
+                        'التذكرة غير موجودة.'
                 });
             }
 
-            await ticket.addReply(
-                req.user._id,
-                req.user.name,
-                message.trim(),
-                Boolean(isInternal)
-            );
+            if (
+                typeof ticket.addReply ===
+                'function'
+            ) {
+
+                await ticket.addReply(
+                    req.user._id,
+                    req.user.name,
+                    message,
+                    isInternal
+                );
+
+            } else {
+
+                ticket.replies =
+                    ticket.replies || [];
+
+                ticket.replies.push({
+                    user:
+                        req.user._id,
+                    userName:
+                        req.user.name,
+                    message,
+                    isInternal,
+                    createdAt:
+                        new Date()
+                });
+
+                await ticket.save();
+            }
 
             res.json({
                 success: true,
@@ -1603,13 +2612,17 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// إغلاق تذكرة
+// ------------------------------------------------------------
+// CLOSE
+// ------------------------------------------------------------
+
 app.post(
     '/api/tickets/:id/close',
     authenticate,
@@ -1624,23 +2637,50 @@ app.post(
                 );
 
             if (!ticket) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'التذكرة غير موجودة.'
+                    error:
+                        'التذكرة غير موجودة.'
                 });
             }
 
-            await ticket.close(
-                req.user._id,
-                req.body.resolution
-            );
+            if (
+                typeof ticket.close ===
+                'function'
+            ) {
+
+                await ticket.close(
+                    req.user._id,
+                    req.body.resolution
+                );
+
+            } else {
+
+                ticket.status =
+                    'مغلق';
+
+                if (
+                    req.body.resolution
+                ) {
+
+                    ticket.resolution =
+                        req.body.resolution;
+                }
+
+                await ticket.save();
+            }
 
             await writeLog({
                 action: 'approve',
-                resource: 'ticket',
-                resourceId: ticket._id,
-                resourceModel: 'Ticket',
-                user: req.user,
+                resource:
+                    'ticket',
+                resourceId:
+                    ticket._id,
+                resourceModel:
+                    'Ticket',
+                user:
+                    req.user,
                 req
             });
 
@@ -1653,7 +2693,8 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -1673,9 +2714,17 @@ app.get(
             const notes =
                 await Note
                     .find()
-                    .populate('createdBy', 'name email')
-                    .populate('approvedBy', 'name email')
-                    .sort({ createdAt: -1 });
+                    .populate(
+                        'createdBy',
+                        'name email'
+                    )
+                    .populate(
+                        'approvedBy',
+                        'name email'
+                    )
+                    .sort({
+                        createdAt: -1
+                    });
 
             res.json({
                 success: true,
@@ -1686,11 +2735,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/notes/latest',
@@ -1699,8 +2751,26 @@ app.get(
 
         try {
 
-            const notes =
-                await Note.getLatest(10);
+            let notes;
+
+            if (
+                typeof Note.getLatest ===
+                'function'
+            ) {
+
+                notes =
+                    await Note.getLatest(10);
+
+            } else {
+
+                notes =
+                    await Note
+                        .find()
+                        .sort({
+                            createdAt: -1
+                        })
+                        .limit(10);
+            }
 
             res.json({
                 success: true,
@@ -1711,11 +2781,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/notes/search',
@@ -1725,17 +2798,58 @@ app.get(
         try {
 
             const q =
-                String(req.query.q || '').trim();
+                String(
+                    req.query.q || ''
+                ).trim();
 
             if (!q) {
+
                 return res.status(400).json({
                     success: false,
-                    error: 'كلمة البحث مطلوبة.'
+                    error:
+                        'كلمة البحث مطلوبة.'
                 });
             }
 
-            const notes =
-                await Note.search(q);
+            let notes;
+
+            if (
+                typeof Note.search ===
+                'function'
+            ) {
+
+                notes =
+                    await Note.search(q);
+
+            } else {
+
+                notes =
+                    await Note.find({
+                        $or: [
+                            {
+                                title:
+                                    {
+                                        $regex:
+                                            q,
+                                        $options:
+                                            'i'
+                                    }
+                            },
+                            {
+                                content:
+                                    {
+                                        $regex:
+                                            q,
+                                        $options:
+                                            'i'
+                                    }
+                            }
+                        ]
+                    })
+                    .sort({
+                        createdAt: -1
+                    });
+            }
 
             res.json({
                 success: true,
@@ -1746,11 +2860,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.post(
     '/api/notes',
@@ -1763,19 +2880,26 @@ app.post(
             const note =
                 new Note({
                     ...req.body,
-                    createdBy: req.user._id,
-                    createdByName: req.user.name
+                    createdBy:
+                        req.user._id,
+                    createdByName:
+                        req.user.name
                 });
 
             await note.save();
 
             await writeLog({
                 action: 'create',
-                resource: 'note',
-                resourceId: note._id,
-                resourceModel: 'Note',
-                resourceName: note.title,
-                user: req.user,
+                resource:
+                    'note',
+                resourceId:
+                    note._id,
+                resourceModel:
+                    'Note',
+                resourceName:
+                    note.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1788,11 +2912,14 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.put(
     '/api/notes/:id',
@@ -1808,23 +2935,33 @@ app.put(
                 );
 
             if (!note) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المذكرة غير موجودة.'
+                    error:
+                        'المذكرة غير موجودة.'
                 });
             }
 
-            Object.assign(note, req.body);
+            Object.assign(
+                note,
+                req.body
+            );
 
             await note.save();
 
             await writeLog({
                 action: 'update',
-                resource: 'note',
-                resourceId: note._id,
-                resourceModel: 'Note',
-                resourceName: note.title,
-                user: req.user,
+                resource:
+                    'note',
+                resourceId:
+                    note._id,
+                resourceModel:
+                    'Note',
+                resourceName:
+                    note.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1837,13 +2974,17 @@ app.put(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// نشر مذكرة
+// ------------------------------------------------------------
+// PUBLISH
+// ------------------------------------------------------------
+
 app.post(
     '/api/notes/:id/publish',
     authenticate,
@@ -1858,15 +2999,31 @@ app.post(
                 );
 
             if (!note) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المذكرة غير موجودة.'
+                    error:
+                        'المذكرة غير موجودة.'
                 });
             }
 
-            await note.publish(
-                req.user._id
-            );
+            if (
+                typeof note.publish ===
+                'function'
+            ) {
+
+                await note.publish(
+                    req.user._id
+                );
+
+            } else {
+
+                note.status =
+                    'منشورة';
+
+                note.approvedBy =
+                    req.user._id;
+            }
 
             note.approvedByName =
                 req.user.name;
@@ -1875,11 +3032,16 @@ app.post(
 
             await writeLog({
                 action: 'approve',
-                resource: 'note',
-                resourceId: note._id,
-                resourceModel: 'Note',
-                resourceName: note.title,
-                user: req.user,
+                resource:
+                    'note',
+                resourceId:
+                    note._id,
+                resourceModel:
+                    'Note',
+                resourceName:
+                    note.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1892,13 +3054,17 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
-// أرشفة مذكرة
+// ------------------------------------------------------------
+// ARCHIVE
+// ------------------------------------------------------------
+
 app.post(
     '/api/notes/:id/archive',
     authenticate,
@@ -1913,21 +3079,41 @@ app.post(
                 );
 
             if (!note) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المذكرة غير موجودة.'
+                    error:
+                        'المذكرة غير موجودة.'
                 });
             }
 
-            await note.archive();
+            if (
+                typeof note.archive ===
+                'function'
+            ) {
+
+                await note.archive();
+
+            } else {
+
+                note.status =
+                    'مؤرشفة';
+
+                await note.save();
+            }
 
             await writeLog({
                 action: 'update',
-                resource: 'note',
-                resourceId: note._id,
-                resourceModel: 'Note',
-                resourceName: note.title,
-                user: req.user,
+                resource:
+                    'note',
+                resourceId:
+                    note._id,
+                resourceModel:
+                    'Note',
+                resourceName:
+                    note.title,
+                user:
+                    req.user,
                 req
             });
 
@@ -1940,11 +3126,14 @@ app.post(
 
             res.status(400).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.delete(
     '/api/notes/:id',
@@ -1960,31 +3149,41 @@ app.delete(
                 );
 
             if (!note) {
+
                 return res.status(404).json({
                     success: false,
-                    error: 'المذكرة غير موجودة.'
+                    error:
+                        'المذكرة غير موجودة.'
                 });
             }
 
             await writeLog({
                 action: 'delete',
-                resource: 'note',
-                resourceId: note._id,
-                resourceModel: 'Note',
-                resourceName: note.title,
-                user: req.user,
+                resource:
+                    'note',
+                resourceId:
+                    note._id,
+                resourceModel:
+                    'Note',
+                resourceName:
+                    note.title,
+                user:
+                    req.user,
                 req
             });
 
             res.json({
-                success: true
+                success: true,
+                message:
+                    'تم حذف المذكرة.'
             });
 
         } catch (error) {
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -2004,12 +3203,37 @@ app.get(
 
             const limit =
                 Math.min(
-                    Number(req.query.limit) || 100,
+                    Math.max(
+                        Number(
+                            req.query.limit
+                        ) || 100,
+                        1
+                    ),
                     500
                 );
 
-            const logs =
-                await Log.getRecent(limit);
+            let logs;
+
+            if (
+                typeof Log.getRecent ===
+                'function'
+            ) {
+
+                logs =
+                    await Log.getRecent(
+                        limit
+                    );
+
+            } else {
+
+                logs =
+                    await Log
+                        .find()
+                        .sort({
+                            createdAt: -1
+                        })
+                        .limit(limit);
+            }
 
             res.json({
                 success: true,
@@ -2020,11 +3244,14 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
+
+// ------------------------------------------------------------
 
 app.get(
     '/api/logs/user/:userId',
@@ -2034,11 +3261,45 @@ app.get(
 
         try {
 
-            const logs =
-                await Log.getUserLogs(
-                    req.params.userId,
-                    100
-                );
+            if (
+                !isValidObjectId(
+                    req.params.userId
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    error:
+                        'معرف المستخدم غير صالح.'
+                });
+            }
+
+            let logs;
+
+            if (
+                typeof Log.getUserLogs ===
+                'function'
+            ) {
+
+                logs =
+                    await Log.getUserLogs(
+                        req.params.userId,
+                        100
+                    );
+
+            } else {
+
+                logs =
+                    await Log
+                        .find({
+                            user:
+                                req.params.userId
+                        })
+                        .sort({
+                            createdAt: -1
+                        })
+                        .limit(100);
+            }
 
             res.json({
                 success: true,
@@ -2049,7 +3310,8 @@ app.get(
 
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
@@ -2067,10 +3329,13 @@ app.get(
         try {
 
             const [
-                vessels,
-                maintenance,
-                tickets,
-                notes
+                totalVessels,
+                activeMaintenance,
+                openTickets,
+                publishedNotes,
+                validVessels,
+                damagedVessels,
+                maintenanceVessels
             ] = await Promise.all([
 
                 Vessel.countDocuments(),
@@ -2091,139 +3356,233 @@ app.get(
                 }),
 
                 Note.countDocuments({
-                    status: 'منشورة'
-                })
-
-            ]);
-
-            const [
-                validVessels,
-                damagedVessels,
-                vesselsMaintenance
-            ] = await Promise.all([
-
-                Vessel.countDocuments({
-                    stat: 'صالح'
+                    status:
+                        'منشورة'
                 }),
 
                 Vessel.countDocuments({
-                    stat: 'معطب'
+                    stat:
+                        'صالح'
                 }),
 
                 Vessel.countDocuments({
-                    stat: 'صيانة'
-                })
+                    stat:
+                        'معطب'
+                }),
 
+                Vessel.countDocuments({
+                    stat:
+                        'صيانة'
+                })
             ]);
 
             res.json({
+
                 success: true,
+
                 data: {
+
                     vessels: {
-                        total: vessels,
-                        valid: validVessels,
-                        damaged: damagedVessels,
-                        maintenance: vesselsMaintenance
+
+                        total:
+                            totalVessels,
+
+                        valid:
+                            validVessels,
+
+                        damaged:
+                            damagedVessels,
+
+                        maintenance:
+                            maintenanceVessels
                     },
-                    activeMaintenance: maintenance,
-                    openTickets: tickets,
-                    publishedNotes: notes
+
+                    activeMaintenance,
+
+                    openTickets,
+
+                    publishedNotes
                 }
             });
 
         } catch (error) {
 
+            console.error(
+                'Dashboard:',
+                error
+            );
+
             res.status(500).json({
                 success: false,
-                error: error.message
+                error:
+                    error.message
             });
         }
     }
 );
 
 // ============================================================
-// ❌ 404 API
+// ❌ API 404
 // ============================================================
 
-app.use('/api', (req, res) => {
+app.use(
+    '/api',
+    (req, res) => {
 
-    res.status(404).json({
-        success: false,
-        error: 'API endpoint غير موجود.',
-        path: req.originalUrl
-    });
-});
+        res.status(404).json({
+
+            success: false,
+
+            error:
+                'API endpoint غير موجود.',
+
+            path:
+                req.originalUrl
+        });
+    }
+);
 
 // ============================================================
 // 🌐 FRONTEND FALLBACK
 // ============================================================
 
-app.get('*', (req, res, next) => {
+/*
+ * مهم جداً:
+ *
+ * لا نستعمل:
+ *
+ * app.get('*', ...)
+ *
+ * لأن Express 5 قد يعطي PathError.
+ *
+ * نستعمل Regex متوافقاً مع Express 4 و Express 5.
+ */
 
-    if (req.path.startsWith('/api')) {
-        return next();
-    }
+app.get(
+    /^(?!\/api(?:\/|$)).*/,
+    (req, res) => {
 
-    const indexPath =
-        path.join(publicPath, 'index.html');
-
-    res.sendFile(indexPath, err => {
-
-        if (err) {
-            res.status(404).send(
-                'Marine System - الصفحة غير موجودة'
+        const indexPath =
+            path.join(
+                publicPath,
+                'index.html'
             );
+
+        res.sendFile(
+            indexPath,
+            error => {
+
+                if (error) {
+
+                    console.error(
+                        'Frontend error:',
+                        error.message
+                    );
+
+                    if (!res.headersSent) {
+
+                        res.status(404).send(
+                            'Marine System - الصفحة غير موجودة'
+                        );
+                    }
+                }
+            }
+        );
+    }
+);
+
+// ============================================================
+// 💥 GLOBAL ERROR HANDLER
+// ============================================================
+
+app.use(
+    (err, req, res, next) => {
+
+        console.error(
+            '💥 SERVER ERROR:',
+            err
+        );
+
+        if (
+            res.headersSent
+        ) {
+            return next(err);
         }
 
-    });
-});
+        if (
+            err.name ===
+            'ValidationError'
+        ) {
 
-// ============================================================
-// 💥 ERROR HANDLER
-// ============================================================
+            return res.status(400).json({
 
-app.use((err, req, res, next) => {
+                success: false,
 
-    console.error('💥 Server Error:', err);
+                error:
+                    'بيانات غير صالحة.',
 
-    if (res.headersSent) {
-        return next(err);
-    }
+                details:
+                    Object.values(
+                        err.errors || {}
+                    ).map(
+                        e => e.message
+                    )
+            });
+        }
 
-    if (err.name === 'ValidationError') {
+        if (
+            err.name ===
+            'CastError'
+        ) {
 
-        return res.status(400).json({
+            return res.status(400).json({
+
+                success: false,
+
+                error:
+                    'معرف غير صالح.'
+            });
+        }
+
+        if (
+            err.code === 11000
+        ) {
+
+            return res.status(409).json({
+
+                success: false,
+
+                error:
+                    'القيمة موجودة مسبقاً.'
+            });
+        }
+
+        if (
+            err.message ===
+            'CORS origin not allowed'
+        ) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                error:
+                    'Origin غير مسموح.'
+            });
+        }
+
+        return res.status(500).json({
+
             success: false,
-            error: 'بيانات غير صالحة.',
-            details: Object.values(err.errors)
-                .map(e => e.message)
+
+            error:
+                NODE_ENV ===
+                'production'
+                    ? 'حدث خطأ داخلي في الخادم.'
+                    : err.message
         });
     }
-
-    if (err.name === 'CastError') {
-
-        return res.status(400).json({
-            success: false,
-            error: 'معرف غير صالح.'
-        });
-    }
-
-    if (err.code === 11000) {
-
-        return res.status(409).json({
-            success: false,
-            error: 'القيمة موجودة مسبقاً.'
-        });
-    }
-
-    res.status(500).json({
-        success: false,
-        error:
-            NODE_ENV === 'production'
-                ? 'حدث خطأ داخلي في الخادم.'
-                : err.message
-    });
-});
+);
 
 // ============================================================
 // 🗄️ DATABASE
@@ -2231,23 +3590,38 @@ app.use((err, req, res, next) => {
 
 async function connectDatabase() {
 
-    try {
+    console.log(
+        '🗄️ الاتصال بـ MongoDB...'
+    );
 
-        console.log('🗄️ الاتصال بـ MongoDB...');
+    try {
 
         await mongoose.connect(
             MONGODB_URI,
             {
-                serverSelectionTimeoutMS: 10000,
-                socketTimeoutMS: 45000,
-                maxPoolSize: 10,
-                minPoolSize: 2
+                serverSelectionTimeoutMS:
+                    15000,
+
+                socketTimeoutMS:
+                    45000,
+
+                maxPoolSize:
+                    20,
+
+                minPoolSize:
+                    2,
+
+                retryWrites:
+                    true
             }
         );
 
         console.log(
-            '✅ MongoDB Connected:',
-            mongoose.connection.name
+            '✅ MongoDB Connected'
+        );
+
+        console.log(
+            `📚 Database: ${mongoose.connection.name}`
         );
 
     } catch (error) {
@@ -2257,39 +3631,58 @@ async function connectDatabase() {
             error.message
         );
 
-        process.exit(1);
+        throw error;
     }
 }
 
 // ============================================================
-// 👤 CREATE FIRST ADMIN
+// 👤 INITIAL ADMIN
 // ============================================================
 
 async function createInitialAdmin() {
 
     try {
 
-        const count =
-            await User.countDocuments();
+        const adminEmail =
+            String(
+                process.env.ADMIN_EMAIL ||
+                ''
+            )
+                .trim()
+                .toLowerCase();
 
-        if (count > 0) {
-            return;
-        }
+        const adminPassword =
+            String(
+                process.env.ADMIN_PASSWORD ||
+                ''
+            );
 
-        const email =
-            process.env.ADMIN_EMAIL;
-
-        const password =
-            process.env.ADMIN_PASSWORD;
-
-        const name =
+        const adminName =
             process.env.ADMIN_NAME ||
             'مدير النظام';
 
-        if (!email || !password) {
+        if (
+            !adminEmail ||
+            !adminPassword
+        ) {
 
-            console.warn(
-                '⚠️ لا يوجد ADMIN_EMAIL / ADMIN_PASSWORD. لم يتم إنشاء مدير تلقائياً.'
+            console.log(
+                'ℹ️ ADMIN_EMAIL / ADMIN_PASSWORD غير موجودين. تم تخطي إنشاء المدير.'
+            );
+
+            return;
+        }
+
+        const existing =
+            await User.findOne({
+                email:
+                    adminEmail
+            });
+
+        if (existing) {
+
+            console.log(
+                'ℹ️ حساب المدير موجود مسبقاً.'
             );
 
             return;
@@ -2297,17 +3690,26 @@ async function createInitialAdmin() {
 
         const admin =
             new User({
-                name,
-                email,
-                password,
-                role: 'مسؤول',
-                isActive: true
+                name:
+                    adminName,
+
+                email:
+                    adminEmail,
+
+                password:
+                    adminPassword,
+
+                role:
+                    'مسؤول',
+
+                isActive:
+                    true
             });
 
         await admin.save();
 
         console.log(
-            `✅ تم إنشاء حساب المدير: ${email}`
+            `✅ تم إنشاء المدير: ${adminEmail}`
         );
 
     } catch (error) {
@@ -2316,101 +3718,171 @@ async function createInitialAdmin() {
             '❌ Initial admin error:',
             error.message
         );
+
+        /*
+         * لا نوقف السيرفر بسبب فشل
+         * إنشاء المدير.
+         */
     }
 }
 
 // ============================================================
-// 🚀 START SERVER
+// 🚀 START
 // ============================================================
 
 async function startServer() {
 
-    await connectDatabase();
+    try {
 
-    await createInitialAdmin();
+        await connectDatabase();
 
-    const server =
-        app.listen(PORT, '0.0.0.0', () => {
+        await createInitialAdmin();
 
-            console.log('');
-            console.log('==========================================');
-            console.log('🚢 MARINE SYSTEM');
-            console.log('==========================================');
-            console.log(`🚀 PORT: ${PORT}`);
-            console.log(`🌍 ENV: ${NODE_ENV}`);
-            console.log('🗄️ DATABASE: MongoDB');
-            console.log('🔐 JWT: Enabled');
-            console.log('🛡️ Helmet: Enabled');
-            console.log('🚦 Rate Limit: Enabled');
-            console.log('📜 Audit Logs: Enabled');
-            console.log('==========================================');
-            console.log(
-                `❤️ Health: /health`
+        const server =
+            app.listen(
+                PORT,
+                '0.0.0.0',
+                () => {
+
+                    console.log('');
+                    console.log(
+                        '=========================================='
+                    );
+                    console.log(
+                        '🚢 MARINE SYSTEM IS RUNNING'
+                    );
+                    console.log(
+                        '=========================================='
+                    );
+
+                    console.log(
+                        `🚀 PORT: ${PORT}`
+                    );
+
+                    console.log(
+                        `🌍 ENV: ${NODE_ENV}`
+                    );
+
+                    console.log(
+                        '🗄️ DATABASE: MongoDB'
+                    );
+
+                    console.log(
+                        '🔐 JWT: ENABLED'
+                    );
+
+                    console.log(
+                        '🛡️ HELMET: ENABLED'
+                    );
+
+                    console.log(
+                        '🚦 RATE LIMIT: ENABLED'
+                    );
+
+                    console.log(
+                        '📜 AUDIT LOGS: ENABLED'
+                    );
+
+                    console.log(
+                        `❤️ HEALTH: /health`
+                    );
+
+                    console.log(
+                        `🔐 LOGIN: /api/auth/login`
+                    );
+
+                    console.log(
+                        '=========================================='
+                    );
+                    console.log('');
+                }
             );
-            console.log(
-                `🔐 Login: /api/auth/login`
-            );
-            console.log('==========================================');
-            console.log('');
 
-        });
+        // ====================================================
+        // GRACEFUL SHUTDOWN
+        // ====================================================
 
-    // ========================================================
-    // 🛑 GRACEFUL SHUTDOWN
-    // ========================================================
+        let shuttingDown =
+            false;
 
-    const shutdown = async signal => {
+        const shutdown =
+            async signal => {
 
-        console.log(
-            `\n🛑 ${signal} - إغلاق الخادم...`
-        );
+                if (shuttingDown) {
+                    return;
+                }
 
-        server.close(async () => {
-
-            try {
-
-                await mongoose.connection.close();
+                shuttingDown =
+                    true;
 
                 console.log(
-                    '✅ تم إغلاق MongoDB.'
+                    `🛑 ${signal} - إغلاق الخادم...`
                 );
 
-                process.exit(0);
+                server.close(
+                    async () => {
 
-            } catch (error) {
+                        try {
 
-                console.error(
-                    '❌ Shutdown error:',
-                    error
+                            await mongoose.connection.close();
+
+                            console.log(
+                                '✅ تم إغلاق MongoDB.'
+                            );
+
+                            process.exit(0);
+
+                        } catch (error) {
+
+                            console.error(
+                                '❌ Shutdown error:',
+                                error
+                            );
+
+                            process.exit(1);
+                        }
+                    }
                 );
 
-                process.exit(1);
-            }
-        });
-    };
+                setTimeout(
+                    () => {
+                        process.exit(1);
+                    },
+                    10000
+                ).unref();
+            };
 
-    process.on('SIGTERM', () =>
-        shutdown('SIGTERM')
-    );
+        process.once(
+            'SIGTERM',
+            () =>
+                shutdown('SIGTERM')
+        );
 
-    process.on('SIGINT', () =>
-        shutdown('SIGINT')
-    );
+        process.once(
+            'SIGINT',
+            () =>
+                shutdown('SIGINT')
+        );
+
+    } catch (error) {
+
+        console.error('');
+        console.error(
+            '💥 فشل تشغيل Marine System'
+        );
+        console.error(
+            error
+        );
+
+        process.exit(1);
+    }
 }
 
 // ============================================================
 // 🚀 RUN
 // ============================================================
 
-startServer().catch(error => {
-
-    console.error(
-        '💥 فشل تشغيل الخادم:',
-        error
-    );
-
-    process.exit(1);
-});
+startServer();
 
 // ============================================================
 // EXPORT
