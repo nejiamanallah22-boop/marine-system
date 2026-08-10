@@ -1,417 +1,903 @@
- // ============================================================
-// 📦 api.js - دوال API المتكاملة مع المنظومة البحرية
+// ============================================================
+// 📦 api.js - Marine System API Client
+// الإصدار: Production / Stable
 // ============================================================
 
-console.log('✅ api.js تم تحميله بنجاح');
+'use strict';
+
+console.log('🚀 تحميل api.js...');
 
 // ============================================================
 // ⚙️ الإعدادات
 // ============================================================
 
-const API_URL = window.location.origin + '/api';
+const API_CONFIG = {
+    baseURL: `${window.location.origin}/api`,
+    tokenKey: 'authToken',
+    userKey: 'userData',
+    timeout: 30000
+};
 
 // ============================================================
-// 🔧 دوال API العامة
+// 🔐 إدارة التوكن
 // ============================================================
 
-function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-    
-    // إعدادات الطلب
-    const config = {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-            ...(options.headers || {})
-        }
-    };
+function getToken() {
+    return localStorage.getItem(API_CONFIG.tokenKey);
+}
 
-    // تحويل body إذا كان كائن
-    if (options.body && typeof options.body === 'object') {
-        config.body = JSON.stringify(options.body);
+function setToken(token) {
+    if (token) {
+        localStorage.setItem(API_CONFIG.tokenKey, token);
+    }
+}
+
+function clearAuth() {
+    localStorage.removeItem(API_CONFIG.tokenKey);
+    localStorage.removeItem(API_CONFIG.userKey);
+}
+
+// ============================================================
+// 🚪 تسجيل الخروج الآمن
+// ============================================================
+
+function forceLogout() {
+    clearAuth();
+
+    // لا نذهب إلى /login لأنه لا توجد صفحة مستقلة بهذا الاسم
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+
+    if (overlay) {
+        overlay.style.display = 'flex';
     }
 
-    console.log(`📡 ${options.method || 'GET'} ${endpoint}`);
+    if (mainApp) {
+        mainApp.style.display = 'none';
+    }
+}
 
-    return fetch(API_URL + endpoint, config)
-        .then(async res => {
-            const data = await res.json();
-            
-            if (!res.ok) {
-                // معالجة أخطاء المصادقة
-                if (res.status === 401) {
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('userData');
-                    if (window.location.pathname !== '/login') {
-                        window.location.href = '/login';
-                    }
-                }
-                throw new Error(data.error || data.message || 'خطأ في الطلب');
-            }
-            
-            return data;
-        })
-        .catch(err => {
-            console.error('❌ API Error:', err);
-            // عرض إشعار للمستخدم
-            if (window.showNotification) {
-                window.showNotification(err.message, 'error');
-            }
-            throw err;
+// ============================================================
+// ⏱️ Fetch مع Timeout
+// ============================================================
+
+async function fetchWithTimeout(url, options = {}) {
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, API_CONFIG.timeout);
+
+    try {
+
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
         });
+
+    } finally {
+
+        clearTimeout(timeout);
+
+    }
 }
 
 // ============================================================
-// 🔐 المصادقة (Auth)
+// 📡 API Request
 // ============================================================
 
-function authLogin(username, password) {
-    return apiRequest('/auth/login', {
-        method: 'POST',
-        body: { username, password }
-    });
-}
+async function apiRequest(endpoint, options = {}) {
 
-function authRegister(userData) {
-    return apiRequest('/auth/register', {
-        method: 'POST',
-        body: userData
-    });
-}
+    const token = getToken();
 
-function authMe() {
-    return apiRequest('/auth/me');
-}
+    const method =
+        options.method ||
+        'GET';
 
-function authLogout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    window.location.href = '/login';
+    const headers = {
+        'Accept': 'application/json',
+        ...(options.headers || {})
+    };
+
+    // Content-Type فقط عند وجود body
+    if (options.body !== undefined && options.body !== null) {
+        headers['Content-Type'] = 'application/json';
+    }
+
+    // Authorization
+    if (token) {
+        headers['Authorization'] =
+            `Bearer ${token}`;
+    }
+
+    let body = options.body;
+
+    // تحويل object إلى JSON
+    if (
+        body !== undefined &&
+        body !== null &&
+        typeof body === 'object' &&
+        !(body instanceof FormData)
+    ) {
+        body = JSON.stringify(body);
+    }
+
+    const requestURL =
+        `${API_CONFIG.baseURL}${endpoint}`;
+
+    console.log(
+        `📡 API ${method} ${endpoint}`
+    );
+
+    try {
+
+        const response =
+            await fetchWithTimeout(
+                requestURL,
+                {
+                    ...options,
+                    method,
+                    headers,
+                    body
+                }
+            );
+
+        // ====================================================
+        // قراءة الاستجابة بأمان
+        // ====================================================
+
+        const contentType =
+            response.headers.get('content-type') || '';
+
+        let data;
+
+        if (contentType.includes('application/json')) {
+
+            data = await response.json();
+
+        } else {
+
+            const text =
+                await response.text();
+
+            data = text
+                ? { success: response.ok, message: text }
+                : { success: response.ok };
+
+        }
+
+        // ====================================================
+        // 401 Unauthorized
+        // ====================================================
+
+        if (response.status === 401) {
+
+            console.warn(
+                '⚠️ Unauthorized - session expired'
+            );
+
+            forceLogout();
+
+            throw new Error(
+                data.error ||
+                data.message ||
+                'انتهت الجلسة، يرجى تسجيل الدخول من جديد'
+            );
+        }
+
+        // ====================================================
+        // أخطاء HTTP
+        // ====================================================
+
+        if (!response.ok) {
+
+            const message =
+                data?.error ||
+                data?.message ||
+                `خطأ HTTP ${response.status}`;
+
+            throw new Error(message);
+        }
+
+        return data;
+
+    } catch (error) {
+
+        if (error.name === 'AbortError') {
+
+            console.error(
+                '⏱️ API Timeout:',
+                endpoint
+            );
+
+            throw new Error(
+                'انتهت مهلة الاتصال بالخادم'
+            );
+        }
+
+        console.error(
+            `❌ API Error [${method} ${endpoint}]:`,
+            error
+        );
+
+        throw error;
+    }
 }
 
 // ============================================================
-// 🚢 الأسطول (Fleet/Vessels)
+// 🔐 AUTH
+// ============================================================
+
+async function authLogin(username, password) {
+
+    if (!username || !password) {
+
+        throw new Error(
+            'يرجى إدخال اسم المستخدم وكلمة المرور'
+        );
+    }
+
+    const response =
+        await apiRequest(
+            '/auth/login',
+            {
+                method: 'POST',
+                body: {
+                    username:
+                        String(username).trim(),
+                    password:
+                        String(password)
+                }
+            }
+        );
+
+    // ========================================================
+    // حفظ التوكن
+    // ========================================================
+
+    if (response.token) {
+        setToken(response.token);
+    }
+
+    if (response.user) {
+
+        localStorage.setItem(
+            API_CONFIG.userKey,
+            JSON.stringify(response.user)
+        );
+    }
+
+    return response;
+}
+
+// ============================================================
+// 👤 التسجيل
+// ============================================================
+
+async function authRegister(userData) {
+
+    return apiRequest(
+        '/auth/register',
+        {
+            method: 'POST',
+            body: userData
+        }
+    );
+}
+
+// ============================================================
+// 👤 المستخدم الحالي
+// ============================================================
+
+async function authMe() {
+
+    return apiRequest(
+        '/auth/me'
+    );
+}
+
+// ============================================================
+// 🚪 Logout
+// ============================================================
+
+async function authLogout() {
+
+    try {
+
+        // إذا كان السيرفر لديه endpoint logout
+        await apiRequest(
+            '/auth/logout',
+            {
+                method: 'POST'
+            }
+        );
+
+    } catch (error) {
+
+        // عدم منع الخروج إذا لم يوجد endpoint
+        console.warn(
+            '⚠️ Logout endpoint unavailable'
+        );
+
+    } finally {
+
+        forceLogout();
+
+    }
+}
+
+// ============================================================
+// 🚢 FLEET
 // ============================================================
 
 function getFleet(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/fleet${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/fleet${query ? `?${query}` : ''}`
+    );
 }
 
 function getVessel(id) {
-    return apiRequest(`/fleet/${id}`);
+
+    return apiRequest(
+        `/fleet/${encodeURIComponent(id)}`
+    );
 }
 
 function createVessel(data) {
-    return apiRequest('/fleet', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/fleet',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateVessel(id, data) {
-    return apiRequest(`/fleet/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/fleet/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function deleteVessel(id) {
-    return apiRequest(`/fleet/${id}`, {
-        method: 'DELETE'
-    });
+
+    return apiRequest(
+        `/fleet/${encodeURIComponent(id)}`,
+        {
+            method: 'DELETE'
+        }
+    );
 }
 
 function getFleetStats() {
-    return apiRequest('/fleet/stats');
+
+    return apiRequest(
+        '/fleet/stats'
+    );
 }
 
 // ============================================================
-// 🔧 الصيانة (Maintenance)
+// 🔧 MAINTENANCE
 // ============================================================
 
 function getMaintenance(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/maintenance${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/maintenance${query ? `?${query}` : ''}`
+    );
 }
 
 function getMaintenanceById(id) {
-    return apiRequest(`/maintenance/${id}`);
+
+    return apiRequest(
+        `/maintenance/${encodeURIComponent(id)}`
+    );
 }
 
 function createMaintenance(data) {
-    return apiRequest('/maintenance', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/maintenance',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateMaintenance(id, data) {
-    return apiRequest(`/maintenance/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/maintenance/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function deleteMaintenance(id) {
-    return apiRequest(`/maintenance/${id}`, {
-        method: 'DELETE'
-    });
+
+    return apiRequest(
+        `/maintenance/${encodeURIComponent(id)}`,
+        {
+            method: 'DELETE'
+        }
+    );
 }
 
 function getMaintenanceStats() {
-    return apiRequest('/maintenance/stats');
+
+    return apiRequest(
+        '/maintenance/stats'
+    );
 }
 
 // ============================================================
-// 📊 الكفاءة والجاهزية (Efficiency)
+// 📊 EFFICIENCY
 // ============================================================
 
 function getEfficiency(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/efficiency${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/efficiency${query ? `?${query}` : ''}`
+    );
 }
 
 function getEfficiencyById(id) {
-    return apiRequest(`/efficiency/${id}`);
+
+    return apiRequest(
+        `/efficiency/${encodeURIComponent(id)}`
+    );
 }
 
 function createEfficiency(data) {
-    return apiRequest('/efficiency', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/efficiency',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateEfficiency(id, data) {
-    return apiRequest(`/efficiency/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/efficiency/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function getEfficiencyStats() {
-    return apiRequest('/efficiency/stats');
+
+    return apiRequest(
+        '/efficiency/stats'
+    );
 }
 
 // ============================================================
-// 📝 Note Verbale
+// 📝 NOTES
 // ============================================================
 
 function getNotes(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/notes${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/notes${query ? `?${query}` : ''}`
+    );
 }
 
 function getNoteById(id) {
-    return apiRequest(`/notes/${id}`);
+
+    return apiRequest(
+        `/notes/${encodeURIComponent(id)}`
+    );
 }
 
 function createNote(data) {
-    return apiRequest('/notes', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/notes',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateNote(id, data) {
-    return apiRequest(`/notes/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/notes/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function deleteNote(id) {
-    return apiRequest(`/notes/${id}`, {
-        method: 'DELETE'
-    });
+
+    return apiRequest(
+        `/notes/${encodeURIComponent(id)}`,
+        {
+            method: 'DELETE'
+        }
+    );
 }
 
 function getNotesByWeek(week) {
-    return apiRequest(`/notes/week/${week}`);
+
+    return apiRequest(
+        `/notes/week/${encodeURIComponent(week)}`
+    );
 }
 
 function getLatestNote() {
-    return apiRequest('/notes/latest');
+
+    return apiRequest(
+        '/notes/latest'
+    );
 }
 
 // ============================================================
-// 👥 المستخدمين (Users)
+// 👥 USERS
 // ============================================================
 
 function getUsers(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/users${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/users${query ? `?${query}` : ''}`
+    );
 }
 
 function getUserById(id) {
-    return apiRequest(`/users/${id}`);
+
+    return apiRequest(
+        `/users/${encodeURIComponent(id)}`
+    );
 }
 
 function createUser(data) {
-    return apiRequest('/users', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/users',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateUser(id, data) {
-    return apiRequest(`/users/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/users/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function deleteUser(id) {
-    return apiRequest(`/users/${id}`, {
-        method: 'DELETE'
-    });
+
+    return apiRequest(
+        `/users/${encodeURIComponent(id)}`,
+        {
+            method: 'DELETE'
+        }
+    );
 }
 
-function changePassword(id, oldPassword, newPassword) {
-    return apiRequest(`/users/${id}/password`, {
-        method: 'PUT',
-        body: { oldPassword, newPassword }
-    });
+function changePassword(
+    id,
+    oldPassword,
+    newPassword
+) {
+
+    return apiRequest(
+        `/users/${encodeURIComponent(id)}/password`,
+        {
+            method: 'PUT',
+            body: {
+                oldPassword,
+                newPassword
+            }
+        }
+    );
 }
 
 // ============================================================
-// 🎫 الدعم (Support/Tickets)
+// 🎫 SUPPORT / TICKETS
 // ============================================================
 
 function getTickets(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/tickets${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/tickets${query ? `?${query}` : ''}`
+    );
 }
 
 function createTicket(data) {
-    return apiRequest('/tickets', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/tickets',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function replyTicket(id, reply) {
-    return apiRequest(`/tickets/${id}/reply`, {
-        method: 'PUT',
-        body: { reply }
-    });
+
+    return apiRequest(
+        `/tickets/${encodeURIComponent(id)}/reply`,
+        {
+            method: 'PUT',
+            body: { reply }
+        }
+    );
 }
 
 function closeTicket(id) {
-    return apiRequest(`/tickets/${id}/close`, {
-        method: 'PUT'
-    });
+
+    return apiRequest(
+        `/tickets/${encodeURIComponent(id)}/close`,
+        {
+            method: 'PUT'
+        }
+    );
 }
 
 // ============================================================
-// 📍 المواقع (Locations) - للخرائط
+// 📍 LOCATIONS
 // ============================================================
 
 function getLocations(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/locations${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/locations${query ? `?${query}` : ''}`
+    );
 }
 
 function createLocation(data) {
-    return apiRequest('/locations', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/locations',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function updateLocation(id, data) {
-    return apiRequest(`/locations/${id}`, {
-        method: 'PUT',
-        body: data
-    });
+
+    return apiRequest(
+        `/locations/${encodeURIComponent(id)}`,
+        {
+            method: 'PUT',
+            body: data
+        }
+    );
 }
 
 function deleteLocation(id) {
-    return apiRequest(`/locations/${id}`, {
-        method: 'DELETE'
-    });
+
+    return apiRequest(
+        `/locations/${encodeURIComponent(id)}`,
+        {
+            method: 'DELETE'
+        }
+    );
 }
 
 // ============================================================
-// 📜 السجلات (Logs)
+// 📜 LOGS
 // ============================================================
 
 function getLogs(filters = {}) {
-    const query = new URLSearchParams(filters).toString();
-    return apiRequest(`/logs${query ? '?' + query : ''}`);
+
+    const query =
+        new URLSearchParams(filters).toString();
+
+    return apiRequest(
+        `/logs${query ? `?${query}` : ''}`
+    );
 }
 
 function createLog(data) {
-    return apiRequest('/logs', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/logs',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function getLogsByDate(date) {
-    return apiRequest(`/logs/date/${date}`);
+
+    return apiRequest(
+        `/logs/date/${encodeURIComponent(date)}`
+    );
 }
 
 // ============================================================
-// 💾 تصدير واستيراد البيانات
+// 💾 EXPORT / IMPORT
 // ============================================================
 
 function exportAll() {
-    return apiRequest('/export/all');
+
+    return apiRequest(
+        '/export/all'
+    );
 }
 
 function exportVessels() {
-    return apiRequest('/export/vessels');
+
+    return apiRequest(
+        '/export/vessels'
+    );
 }
 
 function exportMaintenance() {
-    return apiRequest('/export/maintenance');
+
+    return apiRequest(
+        '/export/maintenance'
+    );
 }
 
 function importAll(data) {
-    return apiRequest('/import/all', {
-        method: 'POST',
-        body: data
-    });
+
+    return apiRequest(
+        '/import/all',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
 }
 
 function importVessels(data) {
-    return apiRequest('/import/vessels', {
-        method: 'POST',
-        body: data
+
+    return apiRequest(
+        '/import/vessels',
+        {
+            method: 'POST',
+            body: data
+        }
+    );
+}
+
+// ============================================================
+// 📊 DASHBOARD
+// ============================================================
+
+function getDashboardStats() {
+
+    return apiRequest(
+        '/dashboard/stats'
+    );
+}
+
+function getDashboardCharts() {
+
+    return apiRequest(
+        '/dashboard/charts'
+    );
+}
+
+function getRecentActivity() {
+
+    return apiRequest(
+        '/dashboard/activity'
+    );
+}
+
+// ============================================================
+// 🤖 AI
+// ============================================================
+
+function aiChat(message, history = []) {
+
+    return apiRequest(
+        '/ai/chat',
+        {
+            method: 'POST',
+            body: {
+                message,
+                history
+            }
+        }
+    );
+}
+
+function getAIStatus() {
+
+    return apiRequest(
+        '/ai/status'
+    );
+}
+
+// ============================================================
+// 🩺 HEALTH
+// ============================================================
+
+function getHealth() {
+
+    return fetch(
+        `${window.location.origin}/health`,
+        {
+            headers: {
+                'Accept': 'application/json'
+            }
+        }
+    ).then(async response => {
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                'Health check failed'
+            );
+        }
+
+        return data;
+
     });
 }
 
 // ============================================================
-// 📊 لوحة التحكم (Dashboard)
-// ============================================================
-
-function getDashboardStats() {
-    return apiRequest('/dashboard/stats');
-}
-
-function getDashboardCharts() {
-    return apiRequest('/dashboard/charts');
-}
-
-function getRecentActivity() {
-    return apiRequest('/dashboard/activity');
-}
-
-// ============================================================
-// 🔄 تصدير الدوال للاستخدام العالمي
+// 🌐 API GLOBAL
 // ============================================================
 
 window.API = {
+
     // Auth
     authLogin,
     authRegister,
     authMe,
     authLogout,
-    
+
     // Fleet
     getFleet,
     getVessel,
@@ -419,7 +905,7 @@ window.API = {
     updateVessel,
     deleteVessel,
     getFleetStats,
-    
+
     // Maintenance
     getMaintenance,
     getMaintenanceById,
@@ -427,14 +913,14 @@ window.API = {
     updateMaintenance,
     deleteMaintenance,
     getMaintenanceStats,
-    
+
     // Efficiency
     getEfficiency,
     getEfficiencyById,
     createEfficiency,
     updateEfficiency,
     getEfficiencyStats,
-    
+
     // Notes
     getNotes,
     getNoteById,
@@ -443,7 +929,7 @@ window.API = {
     deleteNote,
     getNotesByWeek,
     getLatestNote,
-    
+
     // Users
     getUsers,
     getUserById,
@@ -451,35 +937,47 @@ window.API = {
     updateUser,
     deleteUser,
     changePassword,
-    
-    // Support
+
+    // Tickets
     getTickets,
     createTicket,
     replyTicket,
     closeTicket,
-    
+
     // Locations
     getLocations,
     createLocation,
     updateLocation,
     deleteLocation,
-    
+
     // Logs
     getLogs,
     createLog,
     getLogsByDate,
-    
-    // Export/Import
+
+    // Import / Export
     exportAll,
     exportVessels,
     exportMaintenance,
     importAll,
     importVessels,
-    
+
     // Dashboard
     getDashboardStats,
     getDashboardCharts,
-    getRecentActivity
+    getRecentActivity,
+
+    // AI
+    aiChat,
+    getAIStatus,
+
+    // Health
+    getHealth,
+
+    // Utilities
+    apiRequest,
+    getToken,
+    clearAuth
 };
 
-console.log('✅ API ready - جميع الدوال جاهزة للاستخدام');
+console.log('✅ API جاهز - Marine System');
