@@ -1,12 +1,13 @@
 <!-- ============================================================
      public/index.html
-     Marine System - Production Frontend
+     MARINE SYSTEM - Production Frontend
      ============================================================ -->
 
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -15,11 +16,14 @@
     >
 
     <meta
-        name="description"
-        content="منظومة الوسائل البحرية - نظام متابعة وإدارة الأسطول البحري"
+        name="theme-color"
+        content="#0b1f33"
     >
 
-    <meta name="theme-color" content="#0b3d5c">
+    <meta
+        name="description"
+        content="منظومة إدارة ومتابعة الوسائل البحرية"
+    >
 
     <title>⚓ منظومة الوسائل البحرية</title>
 
@@ -42,7 +46,7 @@
     >
 
     <!-- ========================================================
-         Application CSS
+         Main CSS
          ======================================================== -->
 
     <link
@@ -59,32 +63,24 @@
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     >
 
+    <!-- ========================================================
+         External Libraries
+         ======================================================== -->
+
     <script
         src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         defer
     ></script>
-
-    <!-- ========================================================
-         Chart.js
-         ======================================================== -->
 
     <script
         src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
         defer
     ></script>
 
-    <!-- ========================================================
-         SheetJS
-         ======================================================== -->
-
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
         defer
     ></script>
-
-    <!-- ========================================================
-         PDF.js
-         ======================================================== -->
 
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
@@ -96,7 +92,7 @@
 <body>
 
 <!-- ============================================================
-     شاشة الدخول
+     LOGIN
      ============================================================ -->
 
 <div id="loginOverlay">
@@ -105,7 +101,9 @@
 
         <div class="login-logo">
 
-            <span class="logo-icon">⚓</span>
+            <span class="logo-icon">
+                ⚓
+            </span>
 
             <span class="logo-text">
                 منظومة الوسائل البحرية
@@ -129,9 +127,7 @@
 
         </div>
 
-        <!-- ====================================================
-             Username
-             ==================================================== -->
+        <!-- Username -->
 
         <div class="input-group">
 
@@ -140,19 +136,14 @@
             <input
                 type="text"
                 id="username"
-                name="username"
                 placeholder="اسم المستخدم"
                 autocomplete="username"
-                autocapitalize="none"
-                spellcheck="false"
-                maxlength="100"
+                required
             >
 
         </div>
 
-        <!-- ====================================================
-             Password
-             ==================================================== -->
+        <!-- Password -->
 
         <div class="input-group">
 
@@ -161,42 +152,39 @@
             <input
                 type="password"
                 id="password"
-                name="password"
                 placeholder="كلمة المرور"
                 autocomplete="current-password"
-                maxlength="200"
+                required
             >
 
         </div>
 
-        <!-- ====================================================
-             Login Button
-             ==================================================== -->
+        <!-- Login -->
 
         <button
             type="button"
-            id="loginButton"
             class="login-btn"
-            onclick="submitLogin()"
+            id="loginButton"
+            onclick="handleLogin()"
         >
-            <span>🚀</span>
-            دخول
+
+            <span id="loginButtonIcon">
+                🚀
+            </span>
+
+            <span id="loginButtonText">
+                دخول
+            </span>
+
         </button>
 
-        <!-- ====================================================
-             Login Error
-             ==================================================== -->
+        <!-- Error -->
 
         <div
             id="loginError"
             class="error-msg"
             role="alert"
-            aria-live="polite"
         ></div>
-
-        <!-- ====================================================
-             Footer
-             ==================================================== -->
 
         <div class="login-footer">
 
@@ -205,7 +193,7 @@
             </span>
 
             <span class="version">
-                v3.0
+                v5.0
             </span>
 
         </div>
@@ -216,7 +204,7 @@
 
 
 <!-- ============================================================
-     التطبيق الرئيسي
+     MAIN APPLICATION
      ============================================================ -->
 
 <div
@@ -225,7 +213,7 @@
 >
 
     <!-- ========================================================
-         Header
+         HEADER
          ======================================================== -->
 
     <header>
@@ -241,7 +229,9 @@
 
             <h1>
 
-                <span>⚓</span>
+                <span>
+                    ⚓
+                </span>
 
                 منظومة الوسائل البحرية
 
@@ -260,6 +250,7 @@
                 class="notification-icon"
                 onclick="toggleNotifications()"
             >
+
                 🔔
 
                 <span
@@ -281,32 +272,38 @@
 
 
             <button
-                type="button"
                 class="btn-outline-white"
+                type="button"
                 onclick="window.print()"
                 title="طباعة"
             >
+
                 <i class="fas fa-print"></i>
+
             </button>
 
 
             <button
-                type="button"
                 class="btn-outline-white"
+                type="button"
                 onclick="refreshAllPages()"
                 title="تحديث"
             >
+
                 <i class="fas fa-sync-alt"></i>
+
             </button>
 
 
             <button
-                type="button"
                 class="btn-outline-white btn-logout"
+                type="button"
                 onclick="doLogout()"
                 title="تسجيل الخروج"
             >
+
                 <i class="fas fa-sign-out-alt"></i>
+
             </button>
 
         </div>
@@ -315,7 +312,7 @@
 
 
     <!-- ========================================================
-         Sidebar
+         SIDEBAR
          ======================================================== -->
 
     <nav
@@ -325,7 +322,9 @@
 
         <div class="sidebar-brand">
 
-            <span>⚓</span>
+            <span>
+                ⚓
+            </span>
 
             <span>
                 الأسطول البحري
@@ -335,651 +334,99 @@
 
 
         <button
-            type="button"
             class="nav-btn active"
             onclick="showPage('dashboard')"
         >
+
             <i class="fas fa-chart-pie"></i>
+
             لوحة التحكم
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('fleet')"
         >
+
             <i class="fas fa-ship"></i>
+
             الأسطول
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('maintenance')"
         >
+
             <i class="fas fa-wrench"></i>
+
             الصيانة
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('efficiency')"
         >
+
             <i class="fas fa-chart-line"></i>
+
             الجاهزية
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('support')"
         >
+
             <i class="fas fa-headset"></i>
+
             الدعم
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('users')"
         >
+
             <i class="fas fa-users"></i>
+
             المستخدمين
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('notes')"
         >
+
             <i class="fas fa-sticky-note"></i>
+
             Note Verbale
+
         </button>
 
 
         <button
-            type="button"
             class="nav-btn"
             onclick="showPage('sessions')"
         >
+
             <i class="fas fa-users-cog"></i>
+
             المراقبة
+
         </button>
 
 
-        <button
-            type="button"
-            class="nav-btn"
-            onclick="showPage('ai-assistant')"
-        >
-            <i class="fas fa-robot"></i>
-            🤖 المساعد الذكي
-        </button>
-
-
-        <div class="sidebar-footer">
-
-            <span>
-                الوكيل أمان الله ناجي
-            </span>
-
-        </div>
-
-    </nav>
-
-
-    <!-- ========================================================
-         Main Content
-         ======================================================== -->
-
-    <div class="main-content">
-
-        <div id="pageContainer"></div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================================================
-     Scroll Buttons
-     ============================================================ -->
-
-<div class="scroll-buttons">
-
-    <button
-        type="button"
-        class="scroll-btn"
-        onclick="scrollToTop()"
-        title="إلى الأعلى"
-    >
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-
-    <button
-        type="button"
-        class="scroll-btn"
-        onclick="scrollToBottom()"
-        title="إلى الأسفل"
-    >
-        <i class="fas fa-chevron-down"></i>
-    </button>
-
-</div>
-
-
-<!-- ============================================================
-     Password Modal
-     ============================================================ -->
-
-<div
-    id="passwordModal"
-    class="modal-overlay"
->
-
-    <div class="modal-box">
-
-        <h3>
-            🔑 تغيير كلمة المرور
-        </h3>
-
-        <p id="modalUserName"></p>
-
-        <input
-            type="password"
-            id="newPassword"
-            placeholder="كلمة المرور الجديدة"
-            autocomplete="new-password"
-        >
-
-        <input
-            type="password"
-            id="confirmPassword"
-            placeholder="تأكيد كلمة المرور"
-            autocomplete="new-password"
-        >
-
-        <div class="modal-actions">
-
-            <button
-                type="button"
-                class="btn-save"
-                onclick="saveNewPassword()"
-            >
-                حفظ
-            </button>
-
-            <button
-                type="button"
-                class="btn-cancel"
-                onclick="closePasswordModal()"
-            >
-                إلغاء
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-<!-- ============================================================
-     JavaScript
-     مهم جداً:
-     api.js يجب أن يأتي قبل auth.js
-     ============================================================ -->
-
-<!-- Core -->
-
-<script src="/js/core/config.js"></script>
-
-<script src="/js/core/helpers.js"></script>
-
-<!-- 🔴 مهم: API قبل auth -->
-
-<script src="/js/core/api.js"></script>
-
-<script src="/js/core/auth.js"></script>
-
-
-<!-- Libraries -->
-
-<script src="/js/lib/charts.js"></script>
-
-<script src="/js/lib/map.js"></script>
-
-<script src="/js/lib/notifications.js"></script>
-
-<script src="/js/lib/file-import.js"></script>
-
-
-<!-- Pages -->
-
-<script src="/js/pages/dashboard.js"></script>
-
-<script src="/js/pages/fleet.js"></script>
-
-<script src="/js/pages/maintenance.js"></script>
-
-<script src="/js/pages/efficiency.js"></script>
-
-<script src="/js/pages/support.js"></script>
-
-<script src="/js/pages/users.js"></script>
-
-<script src="/js/pages/notes.js"></script>
-
-<script src="/js/pages/sessions.js"></script>
-
-<script src="/js/pages/ai-assistant.js"></script>
-
-
-<!-- Main Application -->
-
-<script src="/js/app.js"></script>
-
-
-<!-- ============================================================
-     Login Controller
-     ============================================================ -->
-
-<script>
-
-(function () {
-
-    'use strict';
-
-
-    function getElement(id) {
-
-        return document.getElementById(id);
-
-    }
-
-
-    function setLoginState(loading) {
-
-        const button =
-            getElement('loginButton');
-
-        if (!button) return;
-
-
-        button.disabled = loading;
-
-        button.innerHTML = loading
-            ? '<span>⏳</span> جاري تسجيل الدخول...'
-            : '<span>🚀</span> دخول';
-
-    }
-
-
-    function showLoginError(message) {
-
-        const error =
-            getElement('loginError');
-
-        if (!error) return;
-
-
-        error.textContent =
-            message || 'فشل تسجيل الدخول';
-
-        error.style.display =
-            'block';
-
-    }
-
-
-    function clearLoginError() {
-
-        const error =
-            getElement('loginError');
-
-        if (!error) return;
-
-
-        error.textContent = '';
-
-        error.style.display =
-            'none';
-
-    }
-
-
-    window.submitLogin = async function () {
-
-        clearLoginError();
-
-
-        const username =
-            getElement('username')?.value.trim();
-
-        const password =
-            getElement('password')?.value;
-
-
-        if (!username) {
-
-            showLoginError(
-                'يرجى إدخال اسم المستخدم'
-            );
-
-            getElement('username')?.focus();
-
-            return;
-
-        }
-
-
-        if (!password) {
-
-            showLoginError(
-                'يرجى إدخال كلمة المرور'
-            );
-
-            getElement('password')?.focus();
-
-            return;
-
-        }
-
-
-        if (
-            typeof window.auth === 'undefined'
-        ) {
-
-            showLoginError(
-                'خطأ: نظام المصادقة لم يتم تحميله'
-            );
-
-            console.error(
-                '❌ window.auth غير موجود'
-            );
-
-            return;
-
-        }
-
-
-        if (
-            typeof window.API === 'undefined'
-        ) {
-
-            showLoginError(
-                'خطأ: API لم يتم تحميله'
-            );
-
-            console.error(
-                '❌ window.API غير موجود'
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            setLoginState(true);
-
-
-            /*
-             * لا نستعمل doLogin() هنا حتى لا يحدث
-             * redirect إلى /dashboard.
-             *
-             * نستعمل AuthManager مباشرة.
-             */
-
-            const response =
-                await window.auth.login(
-                    username,
-                    password
-                );
-
-
-            if (
-                !response ||
-                !response.token
-            ) {
-
-                throw new Error(
-                    'الخادم لم يرجع رمز المصادقة'
-                );
-
-            }
-
-
-            /*
-             * إظهار التطبيق مباشرة
-             */
-
-            const overlay =
-                getElement('loginOverlay');
-
-            const mainApp =
-                getElement('mainApp');
-
-
-            if (overlay) {
-
-                overlay.style.display =
-                    'none';
-
-            }
-
-
-            if (mainApp) {
-
-                mainApp.style.display =
-                    'block';
-
-            }
-
-
-            /*
-             * تحديث معلومات المستخدم
-             */
-
-            if (
-                typeof window.auth.displayUserInfo ===
-                'function'
-            ) {
-
-                window.auth.displayUserInfo();
-
-            }
-
-
-            /*
-             * تحديث الدور في الهيدر
-             */
-
-            const roleDisplay =
-                getElement(
-                    'userRoleDisplay'
-                );
-
-
-            if (
-                roleDisplay &&
-                window.auth.user
-            ) {
-
-                const roleNames = {
-
-                    admin: '👑 مدير النظام',
-
-                    manager: '🛡️ مدير',
-
-                    viewer: '👤 مشاهد'
-
-                };
-
-
-                roleDisplay.textContent =
-                    roleNames[
-                        window.auth.user.role
-                    ] ||
-                    '👤 ' +
-                    (
-                        window.auth.user.role ||
-                        'مستخدم'
-                    );
-
-            }
-
-
-            /*
-             * تشغيل الصفحة الرئيسية
-             */
-
-            if (
-                typeof window.showPage ===
-                'function'
-            ) {
-
-                window.showPage(
-                    'dashboard'
-                );
-
-            }
-
-
-            console.log(
-                '✅ تم الدخول بنجاح'
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                '❌ Login failed:',
-                error
-            );
-
-
-            showLoginError(
-                error?.message ||
-                'اسم المستخدم أو كلمة المرور غير صحيحة'
-            );
-
-
-        } finally {
-
-            setLoginState(false);
-
-        }
-
-    };
-
-
-    /*
-     * الضغط على Enter
-     */
-
-    document.addEventListener(
-        'keydown',
-        function (event) {
-
-            if (
-                event.key === 'Enter' &&
-                (
-                    document.activeElement?.id ===
-                    'username' ||
-                    document.activeElement?.id ===
-                    'password'
-                )
-            ) {
-
-                event.preventDefault();
-
-                window.submitLogin();
-
-            }
-
-        }
-    );
-
-
-})();
-
-</script>
-
-
-<!-- ============================================================
-     Session Bootstrap
-     ============================================================ -->
-
-<script>
-
-document.addEventListener(
-    'DOMContentLoaded',
-    function () {
-
-        /*
-         * إذا كانت هناك جلسة محفوظة،
-         * لا نعرض شاشة الدخول.
-         */
-
-        if (
-            window.auth &&
-            window.auth.isAuthenticated
-        ) {
-
-            const overlay =
-                document.getElementById(
-                    'loginOverlay'
-                );
-
-            const mainApp =
-                document.getElementById(
-                    'mainApp'
-                );
-
-
-            if (overlay) {
-
-                overlay.style.display =
-                    'none';
-
-            }
-
-
-            if (mainApp) {
-
-                mainApp.style.display =
-                    'block';
-
-            }
-
-
-            if (
-                typeof window.showPage ===
-                'function'
-            ) {
-
-                window.showPage(
-                    'dashboard'
-                );
-
-            }
-
-        }
-
-    }
-);
-
-</script>
-
-</body>
-</html>
+        <
