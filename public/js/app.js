@@ -1,908 +1,675 @@
-// public/js/app.js
-console.log('✅ App loaded');
-
-let allVessels = [];
-let allUsers = [];
-let allTickets = [];
-let allNotes = [];
-let allMaintenance = [];
-let currentUser = null;
-let editingVesselId = null;
-let editingMaintenanceId = null;
-
 // ============================================================
-// منع الدخول التلقائي
+// ملف: app.js
+// منظومة الوسائل البحرية - الخادم الرئيسي (Backend)
 // ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
-    localStorage.clear();
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-});
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
+require('dotenv').config();
 
-window.addEventListener('load', function() {
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-});
+// ==================== إنشاء التطبيق ====================
+const app = express();
+
+// ==================== الإعدادات الأساسية ====================
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_123456789';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/marine_db';
+
+// ==================== الوسائط (Middleware) ====================
+app.use(cors({ origin: true, credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
 // ============================================================
-// دوال تحميل الصفحات
+//                   نماذج قاعدة البيانات
 // ============================================================
 
-function loadPage(pageName) {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-    document.querySelectorAll('.page-content').forEach(el => el.remove());
-    
-    fetch(`/pages/${pageName}.html`)
-        .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
-            return res.text();
-        })
-        .then(html => {
-            const div = document.createElement('div');
-            div.className = 'page-content';
-            div.id = 'page-' + pageName;
-            div.innerHTML = html;
-            container.appendChild(div);
-            initPage(pageName);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#dc3545;">
-                    ❌ خطأ في تحميل الصفحة: ${pageName}
-                    <br><small>${err.message}</small>
-                </div>
-            `;
-        });
-}
+// ---------- نموذج المستخدم ----------
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true, trim: true },
+    pass: { type: String, required: true },
+    role: { 
+        type: String, 
+        default: 'مشاهد', 
+        enum: ['مسؤول', 'محرر', 'مشاهد'] 
+    },
+    enabled: { type: Boolean, default: true }
+}, { timestamps: true });
 
-function initPage(pageName) {
-    switch(pageName) {
-        case 'fleet': loadVessels(); break;
-        case 'maintenance': loadMaintenance(); break;
-        case 'efficiency': loadVessels(); break;
-        case 'support': loadTickets(); break;
-        case 'tracking': setTimeout(initMap, 100); break;
-        case 'map': setTimeout(initMap, 100); break;
-        case 'users': loadUsers(); break;
-        case 'notes': loadNotes(); break;
+// تشفير كلمة المرور قبل الحفظ
+userSchema.pre('save', async function(next) {
+    if (this.isModified('pass')) {
+        this.pass = await bcrypt.hash(this.pass, 10);
     }
-}
+    next();
+});
 
-function showPage(pageName) {
-    loadPage(pageName);
-}
+// مقارنة كلمة المرور
+userSchema.methods.comparePassword = async function(candidate) {
+    return bcrypt.compare(candidate, this.pass);
+};
+
+const User = mongoose.model('User', userSchema);
+
+// ---------- نموذج المركب ----------
+const vesselSchema = new mongoose.Schema({
+    name: { type: String, required: true, trim: true },
+    num: { type: String, default: '' },
+    len: { type: Number, default: 0 },
+    reg: { type: String, default: '' },
+    zone: { type: String, default: '' },
+    port: { type: String, default: '' },
+    supp: { type: String, default: '' },
+    stat: { 
+        type: String, 
+        default: 'صالح', 
+        enum: ['صالح', 'معطب', 'صيانة'] 
+    },
+    break: { type: String, default: '' },
+    fDate: { type: String, default: '' },
+    eDate: { type: String, default: '' },
+    ref: { type: String, default: '' },
+    cat: { type: String, default: '' }
+}, { timestamps: true });
+
+const Vessel = mongoose.model('Vessel', vesselSchema);
+
+// ---------- نموذج الردود (للتذاكر) ----------
+const replySchema = new mongoose.Schema({
+    adminName: { type: String, required: true },
+    reply: { type: String, required: true },
+    date: { type: String, default: '' },
+    time: { type: String, default: '' }
+});
+
+// ---------- نموذج التذكرة ----------
+const ticketSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    subject: { type: String, required: true },
+    message: { type: String, required: true },
+    status: { 
+        type: String, 
+        default: 'قيد المعالجة', 
+        enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'] 
+    },
+    replies: [replySchema],
+    date: { type: String, default: '' },
+    time: { type: String, default: '' }
+}, { timestamps: true });
+
+const Ticket = mongoose.model('Ticket', ticketSchema);
+
+// ---------- نموذج سجل النشاطات ----------
+const logSchema = new mongoose.Schema({
+    userName: { type: String, required: true },
+    userRole: { type: String, required: true },
+    action: { type: String, required: true },
+    details: { type: String, default: '' },
+    ip: { type: String, default: '' },
+    device: { type: String, default: '' },
+    date: { type: String, default: '' },
+    time: { type: String, default: '' }
+}, { timestamps: true });
+
+const Log = mongoose.model('Log', logSchema);
 
 // ============================================================
-// دوال مساعدة
+//                   دوال مساعدة
 // ============================================================
 
-function showAlert(message, type = 'info') {
-    const colors = {
-        success: '#28a745',
-        danger: '#dc3545',
-        warning: '#ffc107',
-        info: '#0d6efd'
-    };
-    const alertDiv = document.createElement('div');
-    alertDiv.style.cssText = `
-        position: fixed; top: 20px; right: 20px; z-index: 99999;
-        padding: 15px 25px; border-radius: 8px; color: white;
-        background: ${colors[type] || colors.info};
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        font-family: 'Cairo', sans-serif;
-        max-width: 400px;
-        animation: slideIn 0.3s ease;
-    `;
-    alertDiv.textContent = message;
-    document.body.appendChild(alertDiv);
-    setTimeout(() => {
-        alertDiv.style.opacity = '0';
-        alertDiv.style.transition = 'opacity 0.3s';
-        setTimeout(() => alertDiv.remove(), 300);
-    }, 4000);
+// الحصول على التاريخ الحالي
+const getCurrentDate = () => {
+    const d = new Date();
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+};
+
+// الحصول على الوقت الحالي
+const getCurrentTime = () => {
+    const d = new Date();
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+};
+
+// تنسيق المستند للـ JSON (إزالة _id و __v وإضافة id)
+const formatDoc = (doc) => {
+    if (!doc) return null;
+    const obj = doc.toObject();
+    const { _id, __v, pass, ...rest } = obj;
+    return { ...rest, id: _id.toString() };
+};
+
+// تنسيق مصفوفة من المستندات
+const formatArray = (arr) => arr.map(formatDoc);
+
+// تحديد فئة المركب حسب الطول
+function getCategory(len) {
+    const n = parseFloat(len);
+    if (isNaN(n)) return 'غير محدد';
+    if (n === 11) return 'البروق';
+    if (n >= 8 && n <= 12 && n !== 11) return 'صقور';
+    if (n > 12 && n <= 25) return 'خوافر';
+    if (n >= 30) return 'طوافات';
+    return 'زوارق مزدوجة';
 }
 
-function getToken() {
-    return localStorage.getItem('token');
-}
-
-function getUser() {
+// تسجيل نشاط في السجل
+async function addLog(userName, userRole, action, details, req = null) {
     try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch {
-        return null;
-    }
-}
-
-// ============================================================
-// المصادقة
-// ============================================================
-
-function doLogin() {
-    const username = document.getElementById('username')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
-    
-    if (!username || !password) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور', 'warning');
-        return;
-    }
-    
-    const loginBtn = document.querySelector('#loginOverlay .login-btn');
-    if (loginBtn) {
-        loginBtn.disabled = true;
-        loginBtn.textContent = '⏳ جاري الدخول...';
-    }
-    
-    fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: username, password })
-    })
-    .then(res => {
-        if (!res.ok) throw new Error('فشل الاتصال');
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            
-            currentUser = data.user;
-            updateUserDisplay();
-            loadAllData();
-            loadPage('fleet');
-            
-            showAlert('✅ تم تسجيل الدخول بنجاح', 'success');
-        } else {
-            showAlert('❌ ' + (data.error || 'بيانات غير صحيحة'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Login error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
-    })
-    .finally(() => {
-        if (loginBtn) {
-            loginBtn.disabled = false;
-            loginBtn.textContent = '🚀 دخول';
-        }
-    });
-}
-
-function doLogout() {
-    if (confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) {
-        localStorage.clear();
-        location.reload();
-    }
-}
-
-function updateUserDisplay() {
-    const display = document.getElementById('userRoleDisplay');
-    if (display && currentUser) {
-        const roleEmojis = {
-            'مسؤول': '👑',
-            'مشرف': '⭐',
-            'محرر': '✏️',
-            'مشاهد': '👀'
-        };
-        display.innerHTML = `
-            <i class="fas fa-user-circle"></i> 
-            ${currentUser.name} 
-            <span style="font-size:12px; background:#e9ecef; padding:2px 10px; border-radius:10px;">
-                ${roleEmojis[currentUser.role] || '👤'} ${currentUser.role}
-            </span>
-        `;
-    }
-}
-
-// ============================================================
-// تحميل البيانات
-// ============================================================
-
-function loadAllData() {
-    loadVessels();
-    loadMaintenance();
-    loadTickets();
-    loadNotes();
-    loadUsers();
-}
-
-function loadVessels() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/vessels', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allVessels = data || [];
-        console.log('✅ Vessels loaded:', allVessels.length);
-        renderMainTable();
-        renderGeneralMaintenance();
-        renderHistoryMaintenance();
-        updateMaintenanceVessels();
-        renderEfficiency();
-    })
-    .catch(err => console.error('Load vessels error:', err));
-}
-
-function loadMaintenance() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/maintenance', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allMaintenance = data || [];
-        renderGeneralMaintenance();
-        renderHistoryMaintenance();
-        updateMaintenanceStats();
-        renderMaintenanceUnits();
-    })
-    .catch(err => console.error('Load maintenance error:', err));
-}
-
-function loadTickets() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/tickets', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allTickets = data || [];
-        renderTickets();
-    })
-    .catch(err => console.error('Load tickets error:', err));
-}
-
-function loadUsers() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/users', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allUsers = data || [];
-        renderUsersTable();
-    })
-    .catch(err => console.error('Load users error:', err));
-}
-
-function loadNotes() {
-    const token = getToken();
-    if (!token) return;
-    fetch('/api/notes', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        allNotes = data || [];
-        renderNotes();
-    })
-    .catch(err => console.error('Load notes error:', err));
-}
-
-// ============================================================
-// عرض الجداول الأساسية
-// ============================================================
-
-function renderMainTable() {
-    const tbody = document.getElementById('mainBody');
-    if (!tbody) return;
-    if (!allVessels || allVessels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px;">🚫 لا توجد بيانات</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = allVessels.map(v => `
-        <tr>
-            <td>${v.name || '-'}</td>
-            <td>${v.num || '-'}</td>
-            <td>${v.len || 0}</td>
-            <td>${v.cat || '-'}</td>
-            <td>${v.reg || '-'}</td>
-            <td>${v.zone || '-'}</td>
-            <td>${v.port || '-'}</td>
-            <td>${v.supp || '-'}</td>
-            <td style="color:${v.stat === 'صالح' ? '#28a745' : v.stat === 'معطب' ? '#dc3545' : '#ffc107'}">${v.stat || 'صالح'}</td>
-            <td>${v.break || '-'}</td>
-            <td>${v.fDate || '-'}</td>
-            <td>${v.eDate || '-'}</td>
-            <td>${v.ref || '-'}</td>
-            <td>${v.repairer || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editVessel(${v.id})">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteVessel(${v.id})">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderTickets() {
-    const container = document.getElementById('ticketsList');
-    if (!container) return;
-    if (!allTickets || allTickets.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد تذاكر</p>';
-        return;
-    }
-    container.innerHTML = allTickets.map(t => `
-        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid ${t.status === 'مغلقة' ? '#28a745' : '#ffc107'}">
-            <h4>${t.subject}</h4>
-            <p>${t.message}</p>
-            <small>${t.date || ''} ${t.time || ''} | ${t.userName || 'مجهول'}</small>
-            <span style="background:#ffc107; padding:2px 10px; border-radius:10px; font-size:12px; margin-right:10px;">${t.status || 'قيد المعالجة'}</span>
-        </div>
-    `).join('');
-}
-
-function renderUsersTable() {
-    const tbody = document.getElementById('usersBody');
-    if (!tbody) return;
-    if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:30px;">🚫 لا توجد مستخدمين</td></tr>`;
-        return;
-    }
-    tbody.innerHTML = allUsers.map(u => `
-        <tr>
-            <td>${u.name || '-'}</td>
-            <td>${u.role || 'مشاهد'}</td>
-            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function renderNotes() {
-    const container = document.getElementById('notesListContainer');
-    if (!container) return;
-    if (!allNotes || allNotes.length === 0) {
-        container.innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">🚫 لا توجد مذكرات</p>';
-        return;
-    }
-    container.innerHTML = allNotes.map(n => `
-        <div style="background:#f8f9fa; padding:15px; margin:10px 0; border-radius:8px; border-right:4px solid #0d6efd;">
-            <h4>${n.title}</h4>
-            <p>${n.content}</p>
-            <small>${n.date || ''} | ${n.createdBy || 'مجهول'}</small>
-        </div>
-    `).join('');
-}
-
-// ============================================================
-// دوال المراكب
-// ============================================================
-
-function addItem() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    const name = document.getElementById('iName')?.value;
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
-        return;
-    }
-    const data = {
-        name: name,
-        num: document.getElementById('iNum')?.value || '',
-        len: parseFloat(document.getElementById('iLen')?.value) || 0,
-        reg: document.getElementById('iReg')?.value || '',
-        zone: document.getElementById('iZone')?.value || '',
-        port: document.getElementById('iPort')?.value || '',
-        supp: document.getElementById('iSupp')?.value || '',
-        stat: document.getElementById('iStat')?.value || 'صالح',
-        break: document.getElementById('iBreak')?.value || '',
-        fDate: document.getElementById('iDate')?.value || '',
-        eDate: document.getElementById('iEnd')?.value || '',
-        ref: document.getElementById('iRef')?.value || '',
-        repairer: document.getElementById('iRepairer')?.value || ''
-    };
-    const url = editingVesselId ? '/api/vessels/' + editingVesselId : '/api/vessels';
-    const method = editingVesselId ? 'PUT' : 'POST';
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
-            editingVesselId = null;
-            clearVesselInputs();
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showAlert('❌ خطأ في العملية', 'danger');
-    });
-}
-
-function editVessel(id) {
-    const vessel = allVessels.find(v => v.id === id);
-    if (!vessel) {
-        showAlert('⚠️ المركب غير موجود', 'warning');
-        return;
-    }
-    editingVesselId = vessel.id;
-    document.getElementById('iName').value = vessel.name || '';
-    document.getElementById('iNum').value = vessel.num || '';
-    document.getElementById('iLen').value = vessel.len || 0;
-    document.getElementById('iReg').value = vessel.reg || '';
-    document.getElementById('iZone').value = vessel.zone || '';
-    document.getElementById('iPort').value = vessel.port || '';
-    document.getElementById('iSupp').value = vessel.supp || '';
-    document.getElementById('iStat').value = vessel.stat || 'صالح';
-    document.getElementById('iBreak').value = vessel.break || '';
-    document.getElementById('iDate').value = vessel.fDate || '';
-    document.getElementById('iEnd').value = vessel.eDate || '';
-    document.getElementById('iRef').value = vessel.ref || '';
-    document.getElementById('iRepairer').value = vessel.repairer || '';
-}
-
-function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم الحذف', 'success');
-            loadVessels();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete error:', err);
-        showAlert('❌ خطأ في الحذف', 'danger');
-    });
-}
-
-function clearVesselInputs() {
-    document.getElementById('iName').value = '';
-    document.getElementById('iNum').value = '';
-    document.getElementById('iLen').value = '';
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').value = '';
-    document.getElementById('iPort').value = '';
-    document.getElementById('iSupp').value = '';
-    document.getElementById('iStat').value = 'صالح';
-    document.getElementById('iBreak').value = '';
-    document.getElementById('iDate').value = '';
-    document.getElementById('iEnd').value = '';
-    document.getElementById('iRef').value = '';
-    document.getElementById('iRepairer').value = '';
-}
-
-function updateZones() {
-    const reg = document.getElementById('iReg')?.value;
-    const zoneSelect = document.getElementById('iZone');
-    if (!zoneSelect) return;
-    const zones = {
-        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح'],
-        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة'],
-        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار'],
-        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل']
-    };
-    const options = zones[reg] || ['المنطقة غير محددة'];
-    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
-    options.forEach(z => {
-        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
-    });
-}
-
-// ============================================================
-// دوال الصيانة
-// ============================================================
-
-function updateMaintenanceVessels() {
-    const select = document.getElementById('mVesselId');
-    if (!select) return;
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">اختر المركب</option>';
-    allVessels.forEach(v => {
-        const option = document.createElement('option');
-        option.value = v.id;
-        option.textContent = `${v.name} (${v.num || 'بدون رقم'})`;
-        if (v.id == currentValue) option.selected = true;
-        select.appendChild(option);
-    });
-}
-
-function toggleMaintenanceForm() {
-    const form = document.getElementById('maintenanceForm');
-    if (!form) return;
-    form.classList.toggle('active');
-}
-
-function addPart() {
-    const container = document.getElementById('partsContainer');
-    const div = document.createElement('div');
-    div.className = 'part-item';
-    div.innerHTML = `
-        <input type="text" placeholder="اسم القطعة" class="part-name">
-        <input type="number" placeholder="الكمية" class="part-qty" style="width:80px;">
-        <input type="number" placeholder="السعر" class="part-price" style="width:80px;">
-        <button class="remove-part" onclick="removePart(this)">✕</button>
-    `;
-    container.appendChild(div);
-}
-
-function removePart(btn) {
-    const container = document.getElementById('partsContainer');
-    if (container.children.length > 1) {
-        btn.parentElement.remove();
-    } else {
-        showAlert('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
-    }
-}
-
-function getPartsData() {
-    const parts = [];
-    document.querySelectorAll('.part-item').forEach(item => {
-        const name = item.querySelector('.part-name')?.value;
-        const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
-        const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
-        if (name) {
-            parts.push({ name, quantity: qty, price });
-        }
-    });
-    return parts;
-}
-
-function saveMaintenance() {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    const vesselId = document.getElementById('mVesselId')?.value;
-    const type = document.getElementById('mType')?.value;
-    const unit = document.getElementById('mUnit')?.value;
-    const technician = document.getElementById('mTechnician')?.value.trim();
-    const description = document.getElementById('mDescription')?.value.trim();
-    const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-    const notes = document.getElementById('mNotes')?.value.trim();
-    const parts = getPartsData();
-    
-    if (!vesselId) {
-        showAlert('⚠️ الرجاء اختيار المركب', 'warning');
-        return;
-    }
-    if (!description) {
-        showAlert('⚠️ الرجاء إدخال وصف العطل', 'warning');
-        return;
-    }
-    if (!technician) {
-        showAlert('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning');
-        return;
-    }
-    
-    const data = {
-        vesselId: parseFloat(vesselId),
-        type: type || 'عادية',
-        unit: unit || 'غير محدد',
-        technician: technician,
-        description: description,
-        cost: cost,
-        notes: notes || '',
-        parts: parts,
-        createdBy: currentUser?.name || 'Admin'
-    };
-    
-    const url = editingMaintenanceId ? '/api/maintenance/' + editingMaintenanceId : '/api/maintenance';
-    const method = editingMaintenanceId ? 'PUT' : 'POST';
-    
-    fetch(url, {
-        method: method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert(editingMaintenanceId ? '✅ تم تحديث سجل الصيانة' : '✅ تم إضافة سجل الصيانة', 'success');
-            editingMaintenanceId = null;
-            toggleMaintenanceForm();
-            loadAllData();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Save maintenance error:', err);
-        showAlert('❌ خطأ في حفظ سجل الصيانة', 'danger');
-    });
-}
-
-function renderGeneralMaintenance() {
-    const container = document.getElementById('generalMaintenanceContainer');
-    if (!container) return;
-    const vessels = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
-    if (vessels.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:20px; background:#f8f9fa; border-radius:8px; color:#28a745;">
-                ✅ لا توجد مراكب معطبة حالياً
-            </div>
-        `;
-        return;
-    }
-    let html = `
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th><th>المركب</th><th>الرقم</th>
-                        <th>الفئة</th><th>الوحدة</th><th>العطل</th>
-                        <th>📅 تاريخ العطب</th><th>الحالة</th><th>إجراءات</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    vessels.forEach((v, index) => {
-        const maintenanceRecord = allMaintenance.find(r => r.vesselId === v.id && r.status === 'قيد الإنجاز');
-        html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${v.name || '-'}</strong></td>
-                <td>${v.num || '-'}</td>
-                <td>${v.cat || '-'}</td>
-                <td>${v.repairer || v.supp || '-'}</td>
-                <td>${v.break || maintenanceRecord?.description || '-'}</td>
-                <td>${v.fDate || '-'}</td>
-                <td style="color:${v.stat === 'معطب' ? '#dc3545' : '#ffc107'}; font-weight:600;">
-                    ${v.stat === 'معطب' ? '❌ معطب' : '🔧 صيانة'}
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-success" onclick="fixVessel(${v.id})" title="إصلاح المركب">
-                        <i class="fas fa-check"></i> إصلاح
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    html += `</tbody></table></div>`;
-    container.innerHTML = html;
-}
-
-function fixVessel(vesselId) {
-    if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب؟')) return;
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    fetch('/api/vessels/' + vesselId, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ stat: 'صالح' })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إصلاح المركب', 'success');
-            loadAllData();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإصلاح'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Fix vessel error:', err);
-        showAlert('❌ خطأ في إصلاح المركب', 'danger');
-    });
-}
-
-function renderHistoryMaintenance() {
-    const container = document.getElementById('historyMaintenanceContainer');
-    if (!container) return;
-    let records = allMaintenance.filter(r => r.status === 'مكتملة' || r.status === 'ملغية');
-    const vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
-    const dateFrom = document.getElementById('filterDateFrom')?.value || '';
-    const dateTo = document.getElementById('filterDateTo')?.value || '';
-    const statusFilter = document.getElementById('filterStatus')?.value || '';
-    
-    if (vesselFilter) {
-        records = records.filter(r => {
-            const name = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '';
-            const num = r.vesselNum || allVessels.find(v => v.id === r.vesselId)?.num || '';
-            return name.toLowerCase().includes(vesselFilter) || num.toString().includes(vesselFilter);
+        await Log.create({
+            userName,
+            userRole,
+            action,
+            details,
+            ip: req ? (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '') : '',
+            device: req ? req.headers['user-agent'] : '',
+            date: getCurrentDate(),
+            time: getCurrentTime()
         });
+    } catch (err) {
+        console.error('❌ خطأ في تسجيل النشاط:', err.message);
     }
-    if (dateFrom) records = records.filter(r => r.date >= dateFrom);
-    if (dateTo) records = records.filter(r => r.date <= dateTo + 'T23:59:59');
-    if (statusFilter) records = records.filter(r => r.status === statusFilter);
-    
-    document.getElementById('historyCount').textContent = `📊 ${records.length} سجل`;
-    if (records.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:30px; color:#6c757d; background:#f8f9fa; border-radius:8px;">
-                🚫 لا توجد سجلات صيانة مكتملة
-            </div>
-        `;
-        return;
-    }
-    let html = `
-        <div class="scrollable-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th><th>المركب</th><th>الرقم</th>
-                        <th>👨‍🔧 الفني</th>
-                        <th>🔩 القطع</th>
-                        <th>💰 التكلفة</th>
-                        <th>📊 الحالة</th>
-                        <th>📅 التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    records.slice().reverse().forEach((r, index) => {
-        const vesselName = r.vesselName || allVessels.find(v => v.id === r.vesselId)?.name || '-';
-        const vesselNum = r.vesselNum || allVessels.find(v => v.id === r.vesselId)?.num || '-';
-        const partsText = r.parts?.length ? r.parts.map(p => `${p.name}(${p.quantity})`).join(', ') : '-';
-        html += `
-            <tr>
-                <td>${index + 1}</td>
-                <td><strong>${vesselName}</strong></td>
-                <td>${vesselNum}</td>
-                <td>${r.technician || '-'}</td>
-                <td style="font-size:11px;">${partsText}</td>
-                <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                <td style="color:${r.status === 'مكتملة' ? '#28a745' : '#dc3545'}; font-weight:600;">${r.status || '-'}</td>
-                <td>${new Date(r.date).toLocaleDateString()}</td>
-            </tr>
-        `;
-    });
-    html += `</tbody></table></div>`;
-    container.innerHTML = html;
-}
-
-function applyHistoryFilters() {
-    renderHistoryMaintenance();
-}
-
-function resetHistoryFilters() {
-    document.getElementById('filterVessel').value = '';
-    document.getElementById('filterDateFrom').value = '';
-    document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterStatus').value = '';
-    renderHistoryMaintenance();
-    showAlert('✅ تم إلغاء الفلترة', 'success');
-}
-
-function updateMaintenanceStats() {
-    const container = document.getElementById('maintenanceStats');
-    if (!container) return;
-    const total = allMaintenance.length;
-    const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز').length;
-    const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-    const cancelled = allMaintenance.filter(r => r.status === 'ملغية').length;
-    container.innerHTML = `
-        <div class="maintenance-stats">
-            <div class="stat-box stat-total"><h4>${total}</h4><p>📊 المجموع</p></div>
-            <div class="stat-box stat-progress"><h4>${inProgress}</h4><p>🔄 قيد الإنجاز</p></div>
-            <div class="stat-box stat-completed"><h4>${completed}</h4><p>✅ مكتملة</p></div>
-            <div class="stat-box stat-cancelled"><h4>${cancelled}</h4><p>❌ ملغية</p></div>
-        </div>
-    `;
-}
-
-function renderMaintenanceUnits() {
-    const container = document.getElementById('maintenanceUnitsContainer');
-    if (!container) return;
-    const units = [
-        'وحدة الصيانة والإسناد البحري تونس',
-        'وحدة الصيانة والإسناد البحري صفاقس',
-        'وحدة الصيانة والإسناد البحري المنستير',
-        'وحدة الصيانة والإسناد البحري جرجيس',
-        'شركة خاصة'
-    ];
-    let html = '';
-    units.forEach(unit => {
-        const records = allMaintenance.filter(r => r.unit === unit);
-        const total = records.length;
-        const completed = records.filter(r => r.status === 'مكتملة').length;
-        const inProgress = records.filter(r => r.status === 'قيد الإنجاز').length;
-        const cancelled = records.filter(r => r.status === 'ملغية').length;
-        html += `
-            <div class="region-table-card">
-                <div class="region-table-header">
-                    🏭 ${unit}
-                    <span style="font-size:12px; font-weight:400; color:#6c757d; margin-right:10px;">
-                        📊 ${total} سجل
-                    </span>
-                    <span style="font-size:11px; font-weight:400; margin-right:5px;">
-                        ✅ ${completed} | 🔄 ${inProgress} | ❌ ${cancelled}
-                    </span>
-                </div>
-                <div class="scrollable-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>المركب</th><th>👨‍🔧 الفني</th>
-                                <th>🔩 القطع</th>
-                                <th>💰 التكلفة</th>
-                                <th>📊 الحالة</th>
-                                <th>📅 التاريخ</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${records.length === 0 ? `
-                                <tr><td colspan="6" style="text-align:center; padding:15px; color:#6c757d;">🚫 لا توجد سجلات</td></tr>
-                            ` : records.slice().reverse().map(r => {
-                                const statusColors = {
-                                    'قيد الإنجاز': '#ffc107',
-                                    'مكتملة': '#28a745',
-                                    'ملغية': '#dc3545'
-                                };
-                                const partsText = r.parts && r.parts.length ? 
-                                    r.parts.map(p => `${p.name}(${p.quantity})`).join(', ') : '-';
-                                return `
-                                    <tr>
-                                        <td>${r.vesselName || '-'}</td>
-                                        <td>${r.technician || '-'}</td>
-                                        <td style="font-size:11px;">${partsText}</td>
-                                        <td>${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                                        <td><span style="color:${statusColors[r.status] || '#6c757d'}; font-weight:600;">${r.status || '-'}</span></td>
-                                        <td>${new Date(r.date).toLocaleDateString()}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
 }
 
 // ============================================================
-// 📊 صفحة الجاهزية - الكود المصحح بالكامل
+//                   وسائط المصادقة والصلاحيات
 // ============================================================
 
-function renderEfficiency() {
-    console.log('📊 Rendering efficiency, vessels:', allVessels.length);
-    const vessels = allVessels || [];
+// التحقق من التوكن
+const auth = async (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'غير مصرح، يرجى تسجيل الدخول' });
+    }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (!user || !user.enabled) {
+            return res.status(401).json({ error: 'حساب غير موجود أو معطل' });
+        }
+        req.user = user;
+        req.userId = user._id;
+        req.userRole = user.role;
+        req.userName = user.name;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: 'رمز غير صالح أو منتهي' });
+    }
+};
+
+// التحقق من الصلاحيات
+const checkRole = (roles) => (req, res, next) => {
+    if (!roles.includes(req.userRole)) {
+        return res.status(403).json({ error: 'لا تملك الصلاحية للقيام بهذا الإجراء' });
+    }
+    next();
+};
+
+// ============================================================
+//                   مسارات API
+// ============================================================
+
+// ---------- المصادقة ----------
+app.post('/api/login', async (req, res) => {
+    try {
+        const { name, pass } = req.body;
+        if (!name || !pass) {
+            return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+        }
+
+        const user = await User.findOne({ name });
+        if (!user || !user.enabled) {
+            return res.status(401).json({ error: 'بيانات غير صحيحة أو حساب معطل' });
+        }
+
+        const isValid = await user.comparePassword(pass);
+        if (!isValid) {
+            return res.status(401).json({ error: 'كلمة المرور غير صحيحة' });
+        }
+
+        const token = jwt.sign(
+            { id: user._id, name: user.name, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        await addLog(user.name, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول', req);
+        res.json({ token, name: user.name, role: user.role });
+    } catch (err) {
+        console.error('❌ خطأ في تسجيل الدخول:', err);
+        res.status(500).json({ error: 'خطأ في الخادم' });
+    }
+});
+
+app.post('/api/logout', auth, async (req, res) => {
+    await addLog(req.userName, req.userRole, 'تسجيل خروج', 'قام بتسجيل الخروج', req);
+    res.json({ success: true });
+});
+
+app.get('/api/verify', auth, (req, res) => {
+    res.json({ 
+        valid: true, 
+        name: req.userName, 
+        role: req.userRole, 
+        user: formatDoc(req.user) 
+    });
+});
+
+// ---------- المراكب ----------
+app.get('/api/vessels', auth, async (req, res) => {
+    try {
+        const vessels = await Vessel.find().sort({ createdAt: -1 });
+        res.json(formatArray(vessels));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/vessels/all', auth, async (req, res) => {
+    try {
+        const vessels = await Vessel.find().sort({ name: 1 });
+        res.json(formatArray(vessels));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/vessels', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
+    try {
+        const data = { ...req.body };
+        if (data.len !== undefined) {
+            data.cat = getCategory(data.len);
+        }
+        const vessel = await Vessel.create(data);
+        await addLog(req.userName, req.userRole, 'إضافة مركب', `أضاف مركب "${vessel.name}"`, req);
+        res.status(201).json(formatDoc(vessel));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/vessels/:id', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'معرف غير صالح' });
+        }
+        const data = { ...req.body };
+        if (data.len !== undefined) {
+            data.cat = getCategory(data.len);
+        }
+        const vessel = await Vessel.findByIdAndUpdate(id, data, { new: true });
+        if (!vessel) {
+            return res.status(404).json({ error: 'المركب غير موجود' });
+        }
+        await addLog(req.userName, req.userRole, 'تعديل مركب', `عدل مركب "${vessel.name}"`, req);
+        res.json(formatDoc(vessel));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/vessels/:id', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const vessel = await Vessel.findByIdAndDelete(id);
+        if (!vessel) {
+            return res.status(404).json({ error: 'المركب غير موجود' });
+        }
+        await addLog(req.userName, req.userRole, 'حذف مركب', `حذف مركب "${vessel.name}"`, req);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- التذاكر ----------
+app.get('/api/tickets', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
+    try {
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
+        res.json(formatArray(tickets));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/tickets', auth, async (req, res) => {
+    try {
+        const { subject, message } = req.body;
+        if (!subject || !message) {
+            return res.status(400).json({ error: 'الموضوع والرسالة مطلوبان' });
+        }
+        const ticket = await Ticket.create({
+            userName: req.userName,
+            userRole: req.userRole,
+            subject,
+            message,
+            date: getCurrentDate(),
+            time: getCurrentTime(),
+            status: 'قيد المعالجة',
+            replies: []
+        });
+        await addLog(req.userName, req.userRole, 'إنشاء تذكرة', `موضوع: ${subject}`, req);
+        res.status(201).json(formatDoc(ticket));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/tickets/:id/reply', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reply } = req.body;
+        if (!reply || !reply.reply) {
+            return res.status(400).json({ error: 'نص الرد مطلوب' });
+        }
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        }
+        ticket.replies.push({
+            adminName: req.userName,
+            reply: reply.reply,
+            date: getCurrentDate(),
+            time: getCurrentTime()
+        });
+        ticket.status = 'تم الرد';
+        await ticket.save();
+        await addLog(req.userName, req.userRole, 'رد على تذكرة', `رد على تذكرة: ${ticket.subject}`, req);
+        res.json({ success: true, ticket: formatDoc(ticket) });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/tickets/:id/close', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await Ticket.findById(id);
+        if (!ticket) {
+            return res.status(404).json({ error: 'التذكرة غير موجودة' });
+        }
+        ticket.status = 'مغلقة';
+        await ticket.save();
+        await addLog(req.userName, req.userRole, 'إغلاق تذكرة', `أغلق تذكرة: ${ticket.subject}`, req);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- المستخدمين ----------
+app.get('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const users = await User.find().select('-pass');
+        res.json(formatArray(users));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const { name, pass, role } = req.body;
+        if (!name || !pass) {
+            return res.status(400).json({ error: 'الاسم وكلمة المرور مطلوبان' });
+        }
+        const existing = await User.findOne({ name });
+        if (existing) {
+            return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+        }
+        const user = await User.create({
+            name,
+            pass,
+            role: role || 'مشاهد',
+            enabled: true
+        });
+        await addLog(req.userName, req.userRole, 'إضافة مستخدم', `أضاف مستخدم: ${name}`, req);
+        res.status(201).json(formatDoc(user));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/users/:id', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        if (req.body.name && req.body.name !== user.name) {
+            const existing = await User.findOne({ name: req.body.name });
+            if (existing) {
+                return res.status(400).json({ error: 'الاسم موجود بالفعل' });
+            }
+            user.name = req.body.name;
+        }
+        if (req.body.pass) {
+            user.pass = req.body.pass;
+        }
+        if (req.body.role) {
+            user.role = req.body.role;
+        }
+        if (req.body.enabled !== undefined) {
+            user.enabled = req.body.enabled;
+        }
+        await user.save();
+        await addLog(req.userName, req.userRole, 'تعديل مستخدم', `عدل مستخدم: ${user.name}`, req);
+        res.json(formatDoc(user));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/users/:id', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (req.userId === id) {
+            return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
+        }
+        const user = await User.findByIdAndDelete(id);
+        if (!user) {
+            return res.status(404).json({ error: 'المستخدم غير موجود' });
+        }
+        await addLog(req.userName, req.userRole, 'حذف مستخدم', `حذف مستخدم: ${user.name}`, req);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- سجل الأنشطة ----------
+app.get('/api/logs', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const logs = await Log.find().sort({ createdAt: -1 }).limit(500);
+        res.json(formatArray(logs));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/logs', auth, async (req, res) => {
+    try {
+        const { action, details } = req.body;
+        await Log.create({
+            userName: req.userName,
+            userRole: req.userRole,
+            action,
+            details,
+            date: getCurrentDate(),
+            time: getCurrentTime()
+        });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- تصدير واستيراد البيانات ----------
+app.get('/api/export-all', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const vessels = await Vessel.find();
+        const users = await User.find().select('-pass');
+        const tickets = await Ticket.find();
+        const logs = await Log.find().limit(1000);
+        res.json({
+            vessels,
+            users,
+            tickets,
+            logs,
+            exportDate: new Date()
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/import-all', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const { vessels, users, tickets } = req.body;
+        if (vessels && Array.isArray(vessels)) {
+            await Vessel.deleteMany({});
+            await Vessel.insertMany(vessels);
+        }
+        if (users && Array.isArray(users)) {
+            await User.deleteMany({});
+            for (const u of users) {
+                await User.create({
+                    name: u.name,
+                    pass: u.pass || 'Temp@123',
+                    role: u.role || 'مشاهد',
+                    enabled: u.enabled !== undefined ? u.enabled : true
+                });
+            }
+        }
+        if (tickets && Array.isArray(tickets)) {
+            await Ticket.deleteMany({});
+            await Ticket.insertMany(tickets);
+        }
+        await addLog(req.userName, req.userRole, 'استيراد بيانات', 'قام باستيراد جميع البيانات', req);
+        res.json({ success: true, message: 'تم استيراد البيانات بنجاح' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- إحصائيات ----------
+app.get('/api/stats', auth, checkRole(['مسؤول']), async (req, res) => {
+    try {
+        const vessels = await Vessel.countDocuments();
+        const tickets = await Ticket.countDocuments();
+        const users = await User.countDocuments();
+        res.json({ vessels, tickets, users });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ---------- فحص الصحة ----------
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        mongo: mongoose.connection.readyState === 1,
+        timestamp: new Date()
+    });
+});
+
+// ============================================================
+//                   إنشاء المستخدمين والمراكب الافتراضية
+// ============================================================
+
+async function initDatabase() {
+    try {
+        // حذف المستخدمين السابقين لضمان admin/admin123
+        await User.deleteMany({});
+        
+        const adminPass = await bcrypt.hash('admin123', 10);
+        const editorPass = await bcrypt.hash('editor123', 10);
+        const viewerPass = await bcrypt.hash('viewer123', 10);
+        
+        await User.create([
+            { name: 'admin', pass: adminPass, role: 'مسؤول', enabled: true },
+            { name: 'editor', pass: editorPass, role: 'محرر', enabled: true },
+            { name: 'viewer', pass: viewerPass, role: 'مشاهد', enabled: true }
+        ]);
+        console.log('✅ تم إنشاء المستخدمين: admin/admin123, editor/editor123, viewer/viewer123');
+
+        const vesselsCount = await Vessel.countDocuments();
+        if (vesselsCount === 0) {
+            await Vessel.insertMany([
+                { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", stat: "صالح", cat: "البروق" },
+                { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", stat: "صالح", cat: "صقور" },
+                { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-04-01", cat: "خوافر" },
+                { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", stat: "صيانة", cat: "زوارق مزدوجة" }
+            ]);
+            console.log('✅ تم إنشاء مراكب افتراضية');
+        }
+    } catch (err) {
+        console.error('❌ خطأ في تهيئة قاعدة البيانات:', err.message);
+    }
+}
+
+// ============================================================
+//                   معالجة الأخطاء العامة
+// ============================================================
+
+process.on('uncaughtException', (err) => {
+    console.error('❌ خطأ غير متوقع:', err);
+});
+
+process.on('unhandledRejection', (err) => {
+    console.error('❌ خطأ في Promise غير معالج:', err);
+});
+
+// ============================================================
+//                   تشغيل الخادم
+// ============================================================
+
+mongoose.connect(MONGO_URI, {
+    maxPoolSize: 10,
+    serverSelectionTimeoutMS: 5000
+})
+.then(async () => {
+    console.log('✅ متصل بقاعدة البيانات MongoDB');
+    await initDatabase();
     
-    const countEl = document.getElementById('effCount');
-    if (countEl) countEl.textContent = `📊 ${vessels.length} مركب`;
-    
-    updateEfficiencyStats(vessels);
-    renderCategoryEfficiencyTable(vessels);
-    render
+    app.listen(PORT, '0.0.0.0', () => {
+        const localIp = (() => {
+            const os = require('os');
+            const ifaces = os.networkInterfaces();
+            for (const name of Object.keys(ifaces)) {
+                for (const iface of ifaces[name]) {
+                    if (iface.family === 'IPv4' && !iface.internal) {
+                        return iface.address;
+                    }
+                }
+            }
+            return 'localhost';
+        })();
+        
+        console.log(`\n🚀 السيرفر يعمل على:`);
+        console.log(`📡 محلياً: http://localhost:${PORT}`);
+        console.log(`📱 من الهاتف (نفس الشبكة): http://${localIp}:${PORT}`);
+        console.log(`\n👤 بيانات الدخول:`);
+        console.log(`   admin   / admin123`);
+        console.log(`   editor  / editor123`);
+        console.log(`   viewer  / viewer123`);
+        console.log(`\n✅ التطبيق جاهز للاستخدام`);
+    });
+})
+.catch(err => {
+    console.error('❌ فشل الاتصال بقاعدة البيانات:', err.message);
+    console.error('📌 تأكد من إعدادات MongoDB واتصال الإنترنت');
+    process.exit(1);
+});
+
+// ============================================================
+//                   تصدير التطبيق (للاستخدام في الاختبارات)
+// ============================================================
+
+module.exports = app;
