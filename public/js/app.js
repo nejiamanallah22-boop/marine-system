@@ -1,675 +1,560 @@
-// ============================================================
-// ملف: app.js
-// منظومة الوسائل البحرية - الخادم الرئيسي (Backend)
-// ============================================================
-
 const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const crypto = require('crypto');
 const path = require('path');
-require('dotenv').config();
 
-// ==================== إنشاء التطبيق ====================
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// ==================== الإعدادات الأساسية ====================
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_123456789';
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/marine_db';
-
-// ==================== الوسائط (Middleware) ====================
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+// ==================== Middleware ====================
+app.use(express.json());
 app.use(express.static('public'));
+app.use(session({
+    secret: crypto.randomBytes(32).toString('hex'),
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 }
+}));
 
-// ============================================================
-//                   نماذج قاعدة البيانات
-// ============================================================
-
-// ---------- نموذج المستخدم ----------
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true, trim: true },
-    pass: { type: String, required: true },
-    role: { 
-        type: String, 
-        default: 'مشاهد', 
-        enum: ['مسؤول', 'محرر', 'مشاهد'] 
-    },
-    enabled: { type: Boolean, default: true }
-}, { timestamps: true });
-
-// تشفير كلمة المرور قبل الحفظ
-userSchema.pre('save', async function(next) {
-    if (this.isModified('pass')) {
-        this.pass = await bcrypt.hash(this.pass, 10);
-    }
-    next();
-});
-
-// مقارنة كلمة المرور
-userSchema.methods.comparePassword = async function(candidate) {
-    return bcrypt.compare(candidate, this.pass);
-};
-
-const User = mongoose.model('User', userSchema);
-
-// ---------- نموذج المركب ----------
-const vesselSchema = new mongoose.Schema({
-    name: { type: String, required: true, trim: true },
-    num: { type: String, default: '' },
-    len: { type: Number, default: 0 },
-    reg: { type: String, default: '' },
-    zone: { type: String, default: '' },
-    port: { type: String, default: '' },
-    supp: { type: String, default: '' },
-    stat: { 
-        type: String, 
-        default: 'صالح', 
-        enum: ['صالح', 'معطب', 'صيانة'] 
-    },
-    break: { type: String, default: '' },
-    fDate: { type: String, default: '' },
-    eDate: { type: String, default: '' },
-    ref: { type: String, default: '' },
-    cat: { type: String, default: '' }
-}, { timestamps: true });
-
-const Vessel = mongoose.model('Vessel', vesselSchema);
-
-// ---------- نموذج الردود (للتذاكر) ----------
-const replySchema = new mongoose.Schema({
-    adminName: { type: String, required: true },
-    reply: { type: String, required: true },
-    date: { type: String, default: '' },
-    time: { type: String, default: '' }
-});
-
-// ---------- نموذج التذكرة ----------
-const ticketSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    subject: { type: String, required: true },
-    message: { type: String, required: true },
-    status: { 
-        type: String, 
-        default: 'قيد المعالجة', 
-        enum: ['قيد المعالجة', 'تم الرد', 'مغلقة'] 
-    },
-    replies: [replySchema],
-    date: { type: String, default: '' },
-    time: { type: String, default: '' }
-}, { timestamps: true });
-
-const Ticket = mongoose.model('Ticket', ticketSchema);
-
-// ---------- نموذج سجل النشاطات ----------
-const logSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    action: { type: String, required: true },
-    details: { type: String, default: '' },
-    ip: { type: String, default: '' },
-    device: { type: String, default: '' },
-    date: { type: String, default: '' },
-    time: { type: String, default: '' }
-}, { timestamps: true });
-
-const Log = mongoose.model('Log', logSchema);
-
-// ============================================================
-//                   دوال مساعدة
-// ============================================================
-
-// الحصول على التاريخ الحالي
-const getCurrentDate = () => {
-    const d = new Date();
-    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-};
-
-// الحصول على الوقت الحالي
-const getCurrentTime = () => {
-    const d = new Date();
-    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-};
-
-// تنسيق المستند للـ JSON (إزالة _id و __v وإضافة id)
-const formatDoc = (doc) => {
-    if (!doc) return null;
-    const obj = doc.toObject();
-    const { _id, __v, pass, ...rest } = obj;
-    return { ...rest, id: _id.toString() };
-};
-
-// تنسيق مصفوفة من المستندات
-const formatArray = (arr) => arr.map(formatDoc);
-
-// تحديد فئة المركب حسب الطول
-function getCategory(len) {
-    const n = parseFloat(len);
-    if (isNaN(n)) return 'غير محدد';
-    if (n === 11) return 'البروق';
-    if (n >= 8 && n <= 12 && n !== 11) return 'صقور';
-    if (n > 12 && n <= 25) return 'خوافر';
-    if (n >= 30) return 'طوافات';
-    return 'زوارق مزدوجة';
+// ==================== دوال مساعدة ====================
+function hashPassword(password) {
+    return crypto.createHash('sha256').update(password).digest('hex');
 }
 
-// تسجيل نشاط في السجل
-async function addLog(userName, userRole, action, details, req = null) {
-    try {
-        await Log.create({
-            userName,
-            userRole,
-            action,
-            details,
-            ip: req ? (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '') : '',
-            device: req ? req.headers['user-agent'] : '',
-            date: getCurrentDate(),
-            time: getCurrentTime()
-        });
-    } catch (err) {
-        console.error('❌ خطأ في تسجيل النشاط:', err.message);
-    }
+function getClientIp(req) {
+    return req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || '127.0.0.1';
 }
 
-// ============================================================
-//                   وسائط المصادقة والصلاحيات
-// ============================================================
+function getCurrentDate() {
+    const d = new Date();
+    return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+}
 
-// التحقق من التوكن
-const auth = async (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return res.status(401).json({ error: 'غير مصرح، يرجى تسجيل الدخول' });
+function getCurrentTime() {
+    const d = new Date();
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// ==================== البيانات ====================
+let users = [
+    { id: 1, name: 'admin', pass: hashPassword('1234'), role: 'مسؤول', enabled: true },
+    { id: 2, name: 'editor', pass: hashPassword('1234'), role: 'محرر', enabled: true },
+    { id: 3, name: 'viewer', pass: hashPassword('1234'), role: 'مشاهد', enabled: true }
+];
+
+let vessels = [
+    { id: 1, name: 'البروق 1', num: 'B001', len: 11, reg: 'الشمال', zone: 'تونس', port: 'تونس', supp: '', stat: 'صالح', break: '', fDate: '', eDate: '', ref: '', cat: 'البروق' },
+    { id: 2, name: 'خافرة معطوبة', num: 'K002', len: 20, reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: '', stat: 'معطب', break: 'محرك محترق', fDate: '2024-05-01', eDate: '2024-06-15', ref: 'REF001', cat: 'خوافر' },
+    { id: 3, name: 'زورق صيانة', num: 'Z003', len: 15, reg: 'الجنوب', zone: 'جربة', port: 'جربة', supp: '', stat: 'صيانة', break: 'عطل كهربائي', fDate: '2024-05-10', eDate: '2024-05-30', ref: 'REF002', cat: 'زوارق مزدوجة' }
+];
+
+let tickets = [];
+let activityLogs = [];
+let userLocations = [];
+let maintenanceRecords = [];
+let nextId = 10;
+
+// ==================== تسجيل النشاطات ====================
+function logActivity(username, role, action, details, ip) {
+    const log = {
+        id: Date.now(),
+        userName: username,
+        userRole: role,
+        action: action,
+        details: details,
+        date: getCurrentDate(),
+        time: getCurrentTime(),
+        ip: ip,
+        timestamp: new Date().toISOString()
+    };
+    activityLogs.unshift(log);
+    if (activityLogs.length > 1000) activityLogs.pop();
+    return log;
+}
+
+// ==================== API تسجيل الدخول ====================
+app.post('/api/login', (req, res) => {
+    const { name, pass } = req.body;
+    const hashedInputPass = hashPassword(pass);
+    const user = users.find(u => u.name === name && u.pass === hashedInputPass);
+    
+    if (!user || !user.enabled) {
+        return res.status(401).json({ error: 'بيانات الدخول غير صحيحة' });
     }
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.id);
-        if (!user || !user.enabled) {
-            return res.status(401).json({ error: 'حساب غير موجود أو معطل' });
-        }
-        req.user = user;
-        req.userId = user._id;
-        req.userRole = user.role;
-        req.userName = user.name;
-        next();
-    } catch (err) {
-        return res.status(401).json({ error: 'رمز غير صالح أو منتهي' });
-    }
-};
-
-// التحقق من الصلاحيات
-const checkRole = (roles) => (req, res, next) => {
-    if (!roles.includes(req.userRole)) {
-        return res.status(403).json({ error: 'لا تملك الصلاحية للقيام بهذا الإجراء' });
-    }
-    next();
-};
-
-// ============================================================
-//                   مسارات API
-// ============================================================
-
-// ---------- المصادقة ----------
-app.post('/api/login', async (req, res) => {
-    try {
-        const { name, pass } = req.body;
-        if (!name || !pass) {
-            return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
-        }
-
-        const user = await User.findOne({ name });
-        if (!user || !user.enabled) {
-            return res.status(401).json({ error: 'بيانات غير صحيحة أو حساب معطل' });
-        }
-
-        const isValid = await user.comparePassword(pass);
-        if (!isValid) {
-            return res.status(401).json({ error: 'كلمة المرور غير صحيحة' });
-        }
-
-        const token = jwt.sign(
-            { id: user._id, name: user.name, role: user.role },
-            JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        await addLog(user.name, user.role, 'تسجيل دخول', 'قام بتسجيل الدخول', req);
-        res.json({ token, name: user.name, role: user.role });
-    } catch (err) {
-        console.error('❌ خطأ في تسجيل الدخول:', err);
-        res.status(500).json({ error: 'خطأ في الخادم' });
-    }
+    
+    req.session.userId = user.id;
+    req.session.userName = user.name;
+    req.session.userRole = user.role;
+    
+    logActivity(user.name, user.role, 'تسجيل دخول', `قام بتسجيل الدخول`, getClientIp(req));
+    
+    res.json({ success: true, name: user.name, role: user.role, id: user.id });
 });
 
-app.post('/api/logout', auth, async (req, res) => {
-    await addLog(req.userName, req.userRole, 'تسجيل خروج', 'قام بتسجيل الخروج', req);
+app.post('/api/logout', (req, res) => {
+    if (req.session.userId) {
+        logActivity(req.session.userName, req.session.userRole, 'تسجيل خروج', 'قام بتسجيل الخروج', getClientIp(req));
+        userLocations = userLocations.filter(l => l.userId !== req.session.userId);
+    }
+    req.session.destroy();
     res.json({ success: true });
 });
 
-app.get('/api/verify', auth, (req, res) => {
-    res.json({ 
-        valid: true, 
-        name: req.userName, 
-        role: req.userRole, 
-        user: formatDoc(req.user) 
-    });
-});
-
-// ---------- المراكب ----------
-app.get('/api/vessels', auth, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json(formatArray(vessels));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+// ✅ التحقق من الجلسة
+app.get('/api/me', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
     }
-});
-
-app.get('/api/vessels/all', auth, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ name: 1 });
-        res.json(formatArray(vessels));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/vessels', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
-    try {
-        const data = { ...req.body };
-        if (data.len !== undefined) {
-            data.cat = getCategory(data.len);
-        }
-        const vessel = await Vessel.create(data);
-        await addLog(req.userName, req.userRole, 'إضافة مركب', `أضاف مركب "${vessel.name}"`, req);
-        res.status(201).json(formatDoc(vessel));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/vessels/:id', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'معرف غير صالح' });
-        }
-        const data = { ...req.body };
-        if (data.len !== undefined) {
-            data.cat = getCategory(data.len);
-        }
-        const vessel = await Vessel.findByIdAndUpdate(id, data, { new: true });
-        if (!vessel) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
-        }
-        await addLog(req.userName, req.userRole, 'تعديل مركب', `عدل مركب "${vessel.name}"`, req);
-        res.json(formatDoc(vessel));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/vessels/:id', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const vessel = await Vessel.findByIdAndDelete(id);
-        if (!vessel) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
-        }
-        await addLog(req.userName, req.userRole, 'حذف مركب', `حذف مركب "${vessel.name}"`, req);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- التذاكر ----------
-app.get('/api/tickets', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        res.json(formatArray(tickets));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/tickets', auth, async (req, res) => {
-    try {
-        const { subject, message } = req.body;
-        if (!subject || !message) {
-            return res.status(400).json({ error: 'الموضوع والرسالة مطلوبان' });
-        }
-        const ticket = await Ticket.create({
-            userName: req.userName,
-            userRole: req.userRole,
-            subject,
-            message,
-            date: getCurrentDate(),
-            time: getCurrentTime(),
-            status: 'قيد المعالجة',
-            replies: []
-        });
-        await addLog(req.userName, req.userRole, 'إنشاء تذكرة', `موضوع: ${subject}`, req);
-        res.status(201).json(formatDoc(ticket));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/tickets/:id/reply', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reply } = req.body;
-        if (!reply || !reply.reply) {
-            return res.status(400).json({ error: 'نص الرد مطلوب' });
-        }
-        const ticket = await Ticket.findById(id);
-        if (!ticket) {
-            return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        }
-        ticket.replies.push({
-            adminName: req.userName,
-            reply: reply.reply,
-            date: getCurrentDate(),
-            time: getCurrentTime()
-        });
-        ticket.status = 'تم الرد';
-        await ticket.save();
-        await addLog(req.userName, req.userRole, 'رد على تذكرة', `رد على تذكرة: ${ticket.subject}`, req);
-        res.json({ success: true, ticket: formatDoc(ticket) });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/tickets/:id/close', auth, checkRole(['مسؤول', 'محرر']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const ticket = await Ticket.findById(id);
-        if (!ticket) {
-            return res.status(404).json({ error: 'التذكرة غير موجودة' });
-        }
-        ticket.status = 'مغلقة';
-        await ticket.save();
-        await addLog(req.userName, req.userRole, 'إغلاق تذكرة', `أغلق تذكرة: ${ticket.subject}`, req);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- المستخدمين ----------
-app.get('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const users = await User.find().select('-pass');
-        res.json(formatArray(users));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/users', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const { name, pass, role } = req.body;
-        if (!name || !pass) {
-            return res.status(400).json({ error: 'الاسم وكلمة المرور مطلوبان' });
-        }
-        const existing = await User.findOne({ name });
-        if (existing) {
-            return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
-        }
-        const user = await User.create({
-            name,
-            pass,
-            role: role || 'مشاهد',
-            enabled: true
-        });
-        await addLog(req.userName, req.userRole, 'إضافة مستخدم', `أضاف مستخدم: ${name}`, req);
-        res.status(201).json(formatDoc(user));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.put('/api/users/:id', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ error: 'المستخدم غير موجود' });
-        }
-        if (req.body.name && req.body.name !== user.name) {
-            const existing = await User.findOne({ name: req.body.name });
-            if (existing) {
-                return res.status(400).json({ error: 'الاسم موجود بالفعل' });
-            }
-            user.name = req.body.name;
-        }
-        if (req.body.pass) {
-            user.pass = req.body.pass;
-        }
-        if (req.body.role) {
-            user.role = req.body.role;
-        }
-        if (req.body.enabled !== undefined) {
-            user.enabled = req.body.enabled;
-        }
-        await user.save();
-        await addLog(req.userName, req.userRole, 'تعديل مستخدم', `عدل مستخدم: ${user.name}`, req);
-        res.json(formatDoc(user));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.delete('/api/users/:id', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (req.userId === id) {
-            return res.status(400).json({ error: 'لا يمكن حذف حسابك الخاص' });
-        }
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
-            return res.status(404).json({ error: 'المستخدم غير موجود' });
-        }
-        await addLog(req.userName, req.userRole, 'حذف مستخدم', `حذف مستخدم: ${user.name}`, req);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- سجل الأنشطة ----------
-app.get('/api/logs', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const logs = await Log.find().sort({ createdAt: -1 }).limit(500);
-        res.json(formatArray(logs));
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/logs', auth, async (req, res) => {
-    try {
-        const { action, details } = req.body;
-        await Log.create({
-            userName: req.userName,
-            userRole: req.userRole,
-            action,
-            details,
-            date: getCurrentDate(),
-            time: getCurrentTime()
-        });
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- تصدير واستيراد البيانات ----------
-app.get('/api/export-all', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const vessels = await Vessel.find();
-        const users = await User.find().select('-pass');
-        const tickets = await Ticket.find();
-        const logs = await Log.find().limit(1000);
-        res.json({
-            vessels,
-            users,
-            tickets,
-            logs,
-            exportDate: new Date()
-        });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/api/import-all', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const { vessels, users, tickets } = req.body;
-        if (vessels && Array.isArray(vessels)) {
-            await Vessel.deleteMany({});
-            await Vessel.insertMany(vessels);
-        }
-        if (users && Array.isArray(users)) {
-            await User.deleteMany({});
-            for (const u of users) {
-                await User.create({
-                    name: u.name,
-                    pass: u.pass || 'Temp@123',
-                    role: u.role || 'مشاهد',
-                    enabled: u.enabled !== undefined ? u.enabled : true
-                });
-            }
-        }
-        if (tickets && Array.isArray(tickets)) {
-            await Ticket.deleteMany({});
-            await Ticket.insertMany(tickets);
-        }
-        await addLog(req.userName, req.userRole, 'استيراد بيانات', 'قام باستيراد جميع البيانات', req);
-        res.json({ success: true, message: 'تم استيراد البيانات بنجاح' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- إحصائيات ----------
-app.get('/api/stats', auth, checkRole(['مسؤول']), async (req, res) => {
-    try {
-        const vessels = await Vessel.countDocuments();
-        const tickets = await Ticket.countDocuments();
-        const users = await User.countDocuments();
-        res.json({ vessels, tickets, users });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ---------- فحص الصحة ----------
-app.get('/api/health', (req, res) => {
     res.json({
-        status: 'OK',
-        mongo: mongoose.connection.readyState === 1,
-        timestamp: new Date()
+        id: req.session.userId,
+        name: req.session.userName,
+        role: req.session.userRole
     });
 });
 
-// ============================================================
-//                   إنشاء المستخدمين والمراكب الافتراضية
-// ============================================================
-
-async function initDatabase() {
-    try {
-        // حذف المستخدمين السابقين لضمان admin/admin123
-        await User.deleteMany({});
-        
-        const adminPass = await bcrypt.hash('admin123', 10);
-        const editorPass = await bcrypt.hash('editor123', 10);
-        const viewerPass = await bcrypt.hash('viewer123', 10);
-        
-        await User.create([
-            { name: 'admin', pass: adminPass, role: 'مسؤول', enabled: true },
-            { name: 'editor', pass: editorPass, role: 'محرر', enabled: true },
-            { name: 'viewer', pass: viewerPass, role: 'مشاهد', enabled: true }
-        ]);
-        console.log('✅ تم إنشاء المستخدمين: admin/admin123, editor/editor123, viewer/viewer123');
-
-        const vesselsCount = await Vessel.countDocuments();
-        if (vesselsCount === 0) {
-            await Vessel.insertMany([
-                { name: "البروق 1", num: "B001", len: 11, reg: "الشمال", stat: "صالح", cat: "البروق" },
-                { name: "صقر 1", num: "S001", len: 10, reg: "الساحل", stat: "صالح", cat: "صقور" },
-                { name: "خافرة 1", num: "K001", len: 20, reg: "الوسط", stat: "معطب", break: "عطل في المحرك", fDate: "2025-04-01", cat: "خوافر" },
-                { name: "زورق 1", num: "Z001", len: 15, reg: "الجنوب", stat: "صيانة", cat: "زوارق مزدوجة" }
-            ]);
-            console.log('✅ تم إنشاء مراكب افتراضية');
-        }
-    } catch (err) {
-        console.error('❌ خطأ في تهيئة قاعدة البيانات:', err.message);
+// ==================== API تتبع المستخدمين ====================
+app.post('/api/update-location', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
     }
-}
-
-// ============================================================
-//                   معالجة الأخطاء العامة
-// ============================================================
-
-process.on('uncaughtException', (err) => {
-    console.error('❌ خطأ غير متوقع:', err);
-});
-
-process.on('unhandledRejection', (err) => {
-    console.error('❌ خطأ في Promise غير معالج:', err);
-});
-
-// ============================================================
-//                   تشغيل الخادم
-// ============================================================
-
-mongoose.connect(MONGO_URI, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 5000
-})
-.then(async () => {
-    console.log('✅ متصل بقاعدة البيانات MongoDB');
-    await initDatabase();
     
-    app.listen(PORT, '0.0.0.0', () => {
-        const localIp = (() => {
-            const os = require('os');
-            const ifaces = os.networkInterfaces();
-            for (const name of Object.keys(ifaces)) {
-                for (const iface of ifaces[name]) {
-                    if (iface.family === 'IPv4' && !iface.internal) {
-                        return iface.address;
-                    }
-                }
-            }
-            return 'localhost';
-        })();
-        
-        console.log(`\n🚀 السيرفر يعمل على:`);
-        console.log(`📡 محلياً: http://localhost:${PORT}`);
-        console.log(`📱 من الهاتف (نفس الشبكة): http://${localIp}:${PORT}`);
-        console.log(`\n👤 بيانات الدخول:`);
-        console.log(`   admin   / admin123`);
-        console.log(`   editor  / editor123`);
-        console.log(`   viewer  / viewer123`);
-        console.log(`\n✅ التطبيق جاهز للاستخدام`);
-    });
-})
-.catch(err => {
-    console.error('❌ فشل الاتصال بقاعدة البيانات:', err.message);
-    console.error('📌 تأكد من إعدادات MongoDB واتصال الإنترنت');
-    process.exit(1);
+    const { lat, lng, page } = req.body;
+    const existingIndex = userLocations.findIndex(l => l.userId === req.session.userId);
+    const locationData = {
+        userId: req.session.userId,
+        userName: req.session.userName,
+        userRole: req.session.userRole,
+        lat: lat,
+        lng: lng,
+        page: page || 'unknown',
+        lastUpdate: new Date().toISOString(),
+        lastSeen: new Date().toLocaleTimeString('ar-TN')
+    };
+    
+    if (existingIndex !== -1) {
+        userLocations[existingIndex] = locationData;
+    } else {
+        userLocations.push(locationData);
+    }
+    
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    userLocations = userLocations.filter(l => new Date(l.lastUpdate) > fiveMinutesAgo);
+    
+    res.json({ success: true });
 });
 
-// ============================================================
-//                   تصدير التطبيق (للاستخدام في الاختبارات)
-// ============================================================
+app.get('/api/user-locations', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    if (req.session.userRole === 'مسؤول') {
+        res.json(userLocations);
+    } else {
+        const myLocation = userLocations.find(l => l.userId === req.session.userId);
+        res.json(myLocation ? [myLocation] : []);
+    }
+});
 
-module.exports = app;
+// ==================== API المراكب ====================
+app.get('/api/vessels', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    res.json(vessels);
+});
+
+app.post('/api/vessels', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الإضافة' });
+    }
+    
+    const newVessel = { 
+        id: nextId++, 
+        name: req.body.name,
+        createdAt: new Date().toISOString()
+    };
+    vessels.push(newVessel);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إضافة مركب', 
+        `أضاف مركب جديد: ${newVessel.name}`, getClientIp(req));
+    
+    res.json({ success: true, vessel: newVessel });
+});
+
+app.put('/api/vessels/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية التعديل' });
+    }
+    
+    const index = vessels.findIndex(v => v.id == req.params.id);
+    if (index !== -1) {
+        const oldName = vessels[index].name;
+        vessels[index] = { ...vessels[index], ...req.body, updatedAt: new Date().toISOString() };
+        
+        logActivity(req.session.userName, req.session.userRole, 'تعديل مركب', 
+            `عدل المركب: ${oldName}`, getClientIp(req));
+        
+        res.json({ success: true, vessel: vessels[index] });
+    } else {
+        res.status(404).json({ error: 'مركب غير موجود' });
+    }
+});
+
+app.delete('/api/vessels/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الحذف' });
+    }
+    
+    const vessel = vessels.find(v => v.id == req.params.id);
+    vessels = vessels.filter(v => v.id != req.params.id);
+    
+    logActivity(req.session.userName, req.session.userRole, 'حذف مركب', 
+        `حذف المركب: ${vessel?.name}`, getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// ==================== API المستخدمين ====================
+app.get('/api/users', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const safeUsers = users.map(u => ({ 
+        id: u.id, 
+        name: u.name, 
+        role: u.role, 
+        enabled: u.enabled 
+    }));
+    
+    res.json(safeUsers);
+});
+
+app.post('/api/users', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { name, pass, role } = req.body;
+    
+    if (!name || !pass) {
+        return res.status(400).json({ error: 'اسم المستخدم وكلمة المرور مطلوبان' });
+    }
+    
+    if (users.find(u => u.name === name)) {
+        return res.status(400).json({ error: 'اسم المستخدم موجود بالفعل' });
+    }
+    
+    const newUser = { 
+        id: nextId++, 
+        name: name, 
+        pass: hashPassword(pass),
+        role: role || 'مشاهد', 
+        enabled: true,
+        lastLogin: null
+    };
+    
+    users.push(newUser);
+    logActivity(req.session.userName, req.session.userRole, 'إضافة مستخدم', 
+        `أضاف مستخدم جديد: ${name}`, getClientIp(req));
+    
+    res.json({ success: true, user: { id: newUser.id, name: newUser.name, role: newUser.role, enabled: newUser.enabled } });
+});
+
+app.put('/api/users/:id', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+        const { name, role, enabled } = req.body;
+        if (name !== undefined) users[index].name = name;
+        if (role !== undefined) users[index].role = role;
+        if (enabled !== undefined) users[index].enabled = enabled;
+        
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'مستخدم غير موجود' });
+    }
+});
+
+app.put('/api/users/:id/password', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { newPassword } = req.body;
+    if (!newPassword) {
+        return res.status(400).json({ error: 'كلمة المرور الجديدة مطلوبة' });
+    }
+    
+    const index = users.findIndex(u => u.id == req.params.id);
+    if (index !== -1) {
+        users[index].pass = hashPassword(newPassword);
+        logActivity(req.session.userName, req.session.userRole, 'تغيير كلمة مرور', 
+            `غير كلمة مرور المستخدم: ${users[index].name}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'مستخدم غير موجود' });
+    }
+});
+
+app.delete('/api/users/:id', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const user = users.find(u => u.id == req.params.id);
+    if (user && user.name === 'admin') {
+        return res.status(400).json({ error: 'لا يمكن حذف المستخدم admin' });
+    }
+    
+    users = users.filter(u => u.id != req.params.id);
+    logActivity(req.session.userName, req.session.userRole, 'حذف مستخدم', 
+        `حذف المستخدم: ${user?.name}`, getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// ==================== API التذاكر ====================
+app.get('/api/tickets', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    res.json(tickets);
+});
+
+app.post('/api/tickets', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const newTicket = { 
+        _id: Date.now().toString(), 
+        ...req.body, 
+        replies: [],
+        createdAt: new Date().toISOString()
+    };
+    tickets.unshift(newTicket);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إرسال تذكرة', 
+        `أرسل تذكرة دعم: ${req.body.subject}`, getClientIp(req));
+    
+    res.json({ success: true, ticket: newTicket });
+});
+
+app.put('/api/tickets/:id/reply', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const ticket = tickets.find(t => t._id === req.params.id);
+    if (ticket) {
+        ticket.replies.push(req.body.reply);
+        ticket.status = 'تم الرد';
+        logActivity(req.session.userName, req.session.userRole, 'رد على تذكرة', 
+            `رد على تذكرة: ${ticket.subject}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'تذكرة غير موجودة' });
+    }
+});
+
+app.put('/api/tickets/:id/close', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const ticket = tickets.find(t => t._id === req.params.id);
+    if (ticket) {
+        ticket.status = 'مغلقة';
+        logActivity(req.session.userName, req.session.userRole, 'إغلاق تذكرة', 
+            `أغلق التذكرة: ${ticket.subject}`, getClientIp(req));
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'تذكرة غير موجودة' });
+    }
+});
+
+// ==================== API سجل النشاطات ====================
+app.get('/api/logs', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    res.json(activityLogs);
+});
+
+app.post('/api/logs', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    
+    const { action, details } = req.body;
+    const log = logActivity(
+        req.session.userName, 
+        req.session.userRole, 
+        action, 
+        details, 
+        getClientIp(req)
+    );
+    
+    res.json({ success: true, log });
+});
+
+// ==================== API تصدير واستيراد ====================
+app.get('/api/export-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const exportData = {
+        vessels: vessels,
+        tickets: tickets,
+        maintenance: maintenanceRecords,
+        users: users.map(u => ({ id: u.id, name: u.name, role: u.role, enabled: u.enabled })),
+        exportDate: new Date().toISOString(),
+        version: '2.0'
+    };
+    
+    logActivity(req.session.userName, req.session.userRole, 'تصدير بيانات', 
+        'قام بتصدير جميع البيانات', getClientIp(req));
+    
+    res.json(exportData);
+});
+
+app.post('/api/import-all', (req, res) => {
+    if (!req.session.userId || req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'غير مصرح' });
+    }
+    
+    const { vessels: newVessels, tickets: newTickets, maintenance: newMaintenance } = req.body;
+    
+    if (newVessels && Array.isArray(newVessels)) {
+        vessels = newVessels;
+    }
+    if (newTickets && Array.isArray(newTickets)) {
+        tickets = newTickets;
+    }
+    if (newMaintenance && Array.isArray(newMaintenance)) {
+        maintenanceRecords = newMaintenance;
+    }
+    
+    logActivity(req.session.userName, req.session.userRole, 'استيراد بيانات', 
+        'قام باستيراد البيانات من ملف', getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// ==================== API الصيانة ====================
+app.get('/api/maintenance', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    res.json(maintenanceRecords);
+});
+
+app.post('/api/maintenance', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الإضافة' });
+    }
+    
+    const newRecord = { 
+        id: Date.now().toString(), 
+        ...req.body,
+        createdAt: new Date().toISOString()
+    };
+    maintenanceRecords.push(newRecord);
+    
+    logActivity(req.session.userName, req.session.userRole, 'إضافة سجل صيانة', 
+        `أضاف سجل صيانة للمركب: ${req.body.vesselId}`, getClientIp(req));
+    
+    res.json({ success: true, record: newRecord });
+});
+
+app.put('/api/maintenance/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole === 'مشاهد') {
+        return res.status(403).json({ error: 'لا تملك صلاحية التعديل' });
+    }
+    
+    const index = maintenanceRecords.findIndex(r => r.id === req.params.id);
+    if (index === -1) {
+        return res.status(404).json({ error: 'السجل غير موجود' });
+    }
+    
+    maintenanceRecords[index] = { 
+        ...maintenanceRecords[index], 
+        ...req.body, 
+        updatedAt: new Date().toISOString() 
+    };
+    
+    logActivity(req.session.userName, req.session.userRole, 'تعديل سجل صيانة', 
+        `عدل سجل الصيانة: ${req.params.id}`, getClientIp(req));
+    
+    res.json({ success: true, record: maintenanceRecords[index] });
+});
+
+app.delete('/api/maintenance/:id', (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'غير مصرح' });
+    }
+    if (req.session.userRole !== 'مسؤول') {
+        return res.status(403).json({ error: 'لا تملك صلاحية الحذف' });
+    }
+    
+    const record = maintenanceRecords.find(r => r.id === req.params.id);
+    maintenanceRecords = maintenanceRecords.filter(r => r.id !== req.params.id);
+    
+    logActivity(req.session.userName, req.session.userRole, 'حذف سجل صيانة', 
+        `حذف سجل الصيانة: ${req.params.id}`, getClientIp(req));
+    
+    res.json({ success: true });
+});
+
+// ==================== API الاختبار ====================
+app.get('/api/test', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        server: 'Marine Tracking System v2.0'
+    });
+});
+
+// ==================== تنظيف المواقع القديمة ====================
+setInterval(() => {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    userLocations = userLocations.filter(l => new Date(l.lastUpdate) > fiveMinutesAgo);
+}, 60 * 1000);
+
+// ==================== تشغيل السيرفر ====================
+app.listen(PORT, () => {
+    console.log(`\n╔══════════════════════════════════════════════════════════════╗`);
+    console.log(`║     🚀 منظومة الوسائل البحرية - نظام متابعة الأسطول       ║`);
+    console.log(`╠══════════════════════════════════════════════════════════════╣`);
+    console.log(`║  ✅ السيرفر يعمل على: http://localhost:${PORT}              ║`);
+    console.log(`║  🗺️  خريطة تتبع المستخدمين: نشطة                          ║`);
+    console.log(`║  🔐 تشفير كلمات المرور: SHA-256                            ║`);
+    console.log(`║  🛠️  نظام الصيانة: مفعل                                   ║`);
+    console.log(`╠══════════════════════════════════════════════════════════════╣`);
+    console.log(`║  📝 بيانات الدخول التجريبية:                                ║`);
+    console.log(`║     👑 admin / 1234  (مسؤول كامل الصلاحيات)                ║`);
+    console.log(`║     ✏️ editor / 1234 (محرر - يمكنه الإضافة والتعديل)       ║`);
+    console.log(`║     👁️ viewer / 1234 (مشاهد - قراءة فقط)                   ║`);
+    console.log(`╚══════════════════════════════════════════════════════════════╝\n`);
+});
