@@ -1,73 +1,37 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const http = require('http');
-const socketIO = require('socket.io');
 const path = require('path');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIO(server, {
-    cors: { origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }
-});
+const PORT = process.env.PORT || 3000;
 
 // ============================================================
 // ==================== Middleware ====================
 // ============================================================
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'",
-                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net",
-                "https://unpkg.com", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            imgSrc: ["'self'", "data:", "https://unpkg.com", "https://cdn.jsdelivr.net",
-                "https://*.tile.openstreetmap.org", "https://*.basemaps.cartocdn.com"],
-            connectSrc: ["'self'", "https://*.tile.openstreetmap.org",
-                "https://*.basemaps.cartocdn.com", "https://cdn.jsdelivr.net",
-                "https://unpkg.com", "https://cdnjs.cloudflare.com"]
-        }
-    }
-}));
-
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-app.use('/api', rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000,
-    message: '⚠️ تجاوزت الحد المسموح'
-}));
-
 // ============================================================
-// ==================== تقديم الملفات الثابتة (المهم) ====================
+// ==================== تقديم الملفات الثابتة ====================
 // ============================================================
 
-// ✅ خدمة ملفات CSS و JS و صفحات HTML
+// ✅ خدمة جميع الملفات من مجلد public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ============================================================
-// ==================== الصفحات الديناميكية ====================
-// ============================================================
+// ✅ التأكد من أن index.html هو الصفحة الرئيسية
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-// ✅ صفحات التطبيق (للتحميل الديناميكي)
-app.get('/pages/:page.html', (req, res) => {
-    const page = req.params.page;
-    const pagePath = path.join(__dirname, 'public', 'pages', `${page}.html`);
-    res.sendFile(pagePath, (err) => {
-        if (err) {
-            res.status(404).json({ error: `الصفحة ${page} غير موجودة` });
-        }
-    });
+// ✅ أي مسار آخر يعيد index.html (لـ SPA)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ============================================================
@@ -76,27 +40,17 @@ app.get('/pages/:page.html', (req, res) => {
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/marine_db';
 
-mongoose.connect(MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-});
-
-mongoose.connection.on('connected', () => {
-    console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
-    initializeDefaultUsers();
-});
-
-mongoose.connection.on('error', (err) => {
-    console.error('❌ خطأ في MongoDB:', err.message);
-});
+mongoose.connect(MONGODB_URI)
+    .then(() => {
+        console.log('✅ متصل بقاعدة البيانات MongoDB بنجاح!');
+        initializeDefaultUsers();
+    })
+    .catch(err => console.error('❌ خطأ في الاتصال بقاعدة البيانات:', err.message));
 
 // ============================================================
 // ==================== نماذج البيانات ====================
 // ============================================================
 
-// ===== نموذج المستخدمين =====
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true, trim: true },
     email: { type: String, unique: true, sparse: true, trim: true },
@@ -108,7 +62,6 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-// ===== نموذج المراكب =====
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -127,7 +80,6 @@ const VesselSchema = new mongoose.Schema({
 
 const Vessel = mongoose.model('Vessel', VesselSchema);
 
-// ===== نموذج التذاكر =====
 const TicketSchema = new mongoose.Schema({
     userName: { type: String, required: true },
     userRole: { type: String, required: true },
@@ -146,23 +98,6 @@ const TicketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model('Ticket', TicketSchema);
 
-// ===== نموذج المواقع =====
-const LocationSchema = new mongoose.Schema({
-    userName: { type: String, required: true },
-    userRole: { type: String, required: true },
-    lat: { type: Number, required: true },
-    lng: { type: Number, required: true },
-    timestamp: { type: Date, default: Date.now },
-    action: { type: String, default: 'تحديث موقع' },
-    ip: { type: String },
-    userAgent: { type: String },
-    device: { type: String },
-    browser: { type: String }
-}, { timestamps: true });
-
-const Location = mongoose.model('Location', LocationSchema);
-
-// ===== نموذج Note Verbale =====
 const NoteVerbaleSchema = new mongoose.Schema({
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
@@ -194,44 +129,19 @@ function getWeekNumber(date) {
     return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
 }
 
-function extractDevice(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Android')) return 'Android';
-    if (userAgent.includes('iPhone') || userAgent.includes('iPad')) return 'iOS';
-    if (userAgent.includes('Windows')) return 'Windows';
-    if (userAgent.includes('Macintosh')) return 'Mac';
-    if (userAgent.includes('Linux')) return 'Linux';
-    return 'غير معروف';
-}
-
-function extractBrowser(userAgent) {
-    if (!userAgent) return 'غير معروف';
-    if (userAgent.includes('Edg') || userAgent.includes('Edge')) return 'Edge';
-    if (userAgent.includes('Opera') || userAgent.includes('OPR')) return 'Opera';
-    if (userAgent.includes('Chrome')) return 'Chrome';
-    if (userAgent.includes('Firefox')) return 'Firefox';
-    if (userAgent.includes('Safari')) return 'Safari';
-    return 'غير معروف';
-}
-
 // ============================================================
 // ==================== المصادقة ====================
 // ============================================================
 
 const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_change_this';
-const REFRESH_SECRET = process.env.REFRESH_SECRET || 'my_refresh_secret_change_this';
 
 const authenticate = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ success: false, error: 'غير مصرح به' });
-        }
+        if (!token) return res.status(401).json({ success: false, error: 'غير مصرح به' });
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
-        }
+        if (!user || !user.isActive) return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
         req.user = user;
         next();
     } catch (error) {
@@ -248,20 +158,6 @@ const authorize = (...roles) => {
     };
 };
 
-function generateTokens(user) {
-    const accessToken = jwt.sign(
-        { id: user._id, name: user.name, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
-    const refreshToken = jwt.sign(
-        { id: user._id },
-        REFRESH_SECRET,
-        { expiresIn: '30d' }
-    );
-    return { accessToken, refreshToken };
-}
-
 // ============================================================
 // ==================== API Routes ====================
 // ============================================================
@@ -270,25 +166,22 @@ function generateTokens(user) {
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        
         const user = await User.findOne({ $or: [{ email }, { name: email }] });
         if (!user || !user.isActive) {
             return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
         }
-
         const isMatch = await bcrypt.compare(password, user.pass);
         if (!isMatch) {
             return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
         }
-
-        const { accessToken, refreshToken } = generateTokens(user);
-        user.refreshToken = refreshToken;
-        await user.save();
-
+        const token = jwt.sign(
+            { id: user._id, name: user.name, email: user.email, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
         res.json({
             success: true,
-            token: accessToken,
-            refreshToken: refreshToken,
+            token: token,
             user: {
                 id: user._id,
                 name: user.name,
@@ -296,42 +189,6 @@ app.post('/api/auth/login', async (req, res) => {
                 role: user.role
             }
         });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/auth/refresh', async (req, res) => {
-    try {
-        const { refreshToken } = req.body;
-        if (!refreshToken) {
-            return res.status(400).json({ success: false, error: 'Refresh token مطلوب' });
-        }
-
-        const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
-        const user = await User.findById(decoded.id);
-        if (!user || user.refreshToken !== refreshToken) {
-            return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
-        }
-
-        const { accessToken, refreshToken: newRefreshToken } = generateTokens(user);
-        user.refreshToken = newRefreshToken;
-        await user.save();
-
-        res.json({ success: true, token: accessToken, refreshToken: newRefreshToken });
-    } catch (error) {
-        res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
-    }
-});
-
-app.post('/api/auth/logout', authenticate, async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id);
-        if (user) {
-            user.refreshToken = null;
-            await user.save();
-        }
-        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -352,7 +209,7 @@ app.get('/api/auth/verify', authenticate, async (req, res) => {
 // ===== المستخدمين =====
 app.get('/api/users', authenticate, authorize('admin', 'manager'), async (req, res) => {
     try {
-        const users = await User.find().select('-pass -refreshToken');
+        const users = await User.find().select('-pass');
         res.json(users);
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -375,7 +232,6 @@ app.post('/api/users', authenticate, authorize('admin'), async (req, res) => {
         await user.save();
         const userData = user.toObject();
         delete userData.pass;
-        delete userData.refreshToken;
         res.status(201).json({ success: true, user: userData });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -389,7 +245,7 @@ app.put('/api/users/:id', authenticate, authorize('admin'), async (req, res) => 
             const salt = await bcrypt.genSalt(10);
             updateData.pass = await bcrypt.hash(pass, salt);
         }
-        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-pass -refreshToken');
+        const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true }).select('-pass');
         if (!user) return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         res.json({ success: true, user });
     } catch (error) {
@@ -579,7 +435,7 @@ app.delete('/api/notes/:id', authenticate, authorize('admin', 'manager'), async 
 });
 
 // ============================================================
-// ==================== تشغيل السيرفر ====================
+// ==================== إنشاء المستخدم الافتراضي ====================
 // ============================================================
 
 const initializeDefaultUsers = async () => {
@@ -602,19 +458,15 @@ const initializeDefaultUsers = async () => {
     }
 };
 
-const PORT = process.env.PORT || 3000;
+// ============================================================
+// ==================== تشغيل السيرفر ====================
+// ============================================================
 
-server.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 السيرفر يعمل على http://localhost:${PORT}`);
     console.log('========================================');
     console.log('🔐 بيانات تسجيل الدخول:');
     console.log('   📧 admin@marine.gov.tn أو admin');
     console.log('   🔑 123456');
     console.log('========================================');
-});
-
-process.on('SIGINT', async () => {
-    await mongoose.connection.close();
-    console.log('🔌 تم إغلاق الاتصال بقاعدة البيانات');
-    process.exit(0);
 });
