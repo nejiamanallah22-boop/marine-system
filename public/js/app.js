@@ -54,7 +54,7 @@ let userLocations = [];
 let maintenanceRecords = [];
 let nextId = 10;
 
-// ==================== تسجيل النشاطات ====================
+// ==================== دوال السجلات ====================
 function logActivity(username, role, action, details, ip) {
     const log = {
         id: Date.now(),
@@ -100,7 +100,7 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ✅ التحقق من الجلسة
+// ===== التحقق من الجلسة =====
 app.get('/api/me', (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({ error: 'غير مصرح' });
@@ -456,7 +456,7 @@ app.post('/api/import-all', (req, res) => {
     res.json({ success: true });
 });
 
-// ==================== API الصيانة ====================
+// ==================== ✅ API الصيانة ====================
 app.get('/api/maintenance', (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({ error: 'غير مصرح' });
@@ -551,6 +551,7 @@ app.listen(PORT, () => {
     console.log(`║  🗺️  خريطة تتبع المستخدمين: نشطة                          ║`);
     console.log(`║  🔐 تشفير كلمات المرور: SHA-256                            ║`);
     console.log(`║  🛠️  نظام الصيانة: مفعل                                   ║`);
+    console.log(`║  📦  التخزين: في الذاكرة (للتجربة)                        ║`);
     console.log(`╠══════════════════════════════════════════════════════════════╣`);
     console.log(`║  📝 بيانات الدخول التجريبية:                                ║`);
     console.log(`║     👑 admin / 1234  (مسؤول كامل الصلاحيات)                ║`);
@@ -558,3 +559,5 @@ app.listen(PORT, () => {
     console.log(`║     👁️ viewer / 1234 (مشاهد - قراءة فقط)                   ║`);
     console.log(`╚══════════════════════════════════════════════════════════════╝\n`);
 });
+
+module.exports = app;
