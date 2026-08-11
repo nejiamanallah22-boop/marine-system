@@ -1,6 +1,6 @@
 <!-- ============================================================
      public/index.html
-     MARINE SYSTEM - Production Frontend
+     MARINE SYSTEM - Production Frontend v5.1
      ============================================================ -->
 
 <!DOCTYPE html>
@@ -9,23 +9,22 @@
 <head>
 
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="theme-color"
-        content="#0b1f33"
-    >
-
-    <meta
-        name="description"
-        content="منظومة إدارة ومتابعة الوسائل البحرية"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1f33">
+    <meta name="description" content="منظومة إدارة ومتابعة الوسائل البحرية">
+    <meta name="robots" content="noindex,nofollow">
 
     <title>⚓ منظومة الوسائل البحرية</title>
+
+    <!-- ========================================================
+         Preconnect for Performance
+         ======================================================== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
     <!-- ========================================================
          Fonts
@@ -43,49 +42,34 @@
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
     >
 
     <!-- ========================================================
          Main CSS
          ======================================================== -->
 
-    <link
-        rel="stylesheet"
-        href="/css/style.css"
-    >
+    <link rel="stylesheet" href="/css/style.css">
 
     <!-- ========================================================
-         Leaflet
+         Leaflet CSS
          ======================================================== -->
 
     <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        crossorigin=""
     >
 
     <!-- ========================================================
          External Libraries (defer for performance)
          ======================================================== -->
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
-        defer
-    ></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 
 </head>
 
@@ -95,108 +79,69 @@
      LOGIN OVERLAY
      ============================================================ -->
 
-<div id="loginOverlay">
+<div id="loginOverlay" role="dialog" aria-labelledby="loginTitle">
 
     <div class="login-box">
 
         <div class="login-logo">
-
-            <span class="logo-icon">
-                ⚓
-            </span>
-
-            <span class="logo-text">
-                منظومة الوسائل البحرية
-            </span>
-
+            <span class="logo-icon" aria-hidden="true">⚓</span>
+            <span class="logo-text" id="loginTitle">منظومة الوسائل البحرية</span>
         </div>
 
-        <p class="subtitle">
-            نظام متابعة وإدارة الأسطول البحري
-        </p>
+        <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
 
         <div class="developer">
-
-            <span class="dev-label">
-                الوكيل
-            </span>
-
-            <span class="dev-name">
-                أمان الله ناجي
-            </span>
-
+            <span class="dev-label">الوكيل</span>
+            <span class="dev-name">أمان الله ناجي</span>
         </div>
 
         <!-- Username -->
-
         <div class="input-group">
-
-            <i class="fas fa-user input-icon"></i>
-
+            <i class="fas fa-user input-icon" aria-hidden="true"></i>
             <input
                 type="text"
                 id="username"
+                name="username"
                 placeholder="اسم المستخدم"
                 autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                maxlength="100"
                 required
             >
-
         </div>
 
         <!-- Password -->
-
         <div class="input-group">
-
-            <i class="fas fa-lock input-icon"></i>
-
+            <i class="fas fa-lock input-icon" aria-hidden="true"></i>
             <input
                 type="password"
                 id="password"
+                name="password"
                 placeholder="كلمة المرور"
                 autocomplete="current-password"
+                maxlength="200"
                 required
             >
-
         </div>
 
         <!-- Login Button -->
-        <!-- ✅ تم تغيير onclick من handleLogin() إلى doLogin() -->
-
         <button
             type="button"
             class="login-btn"
             id="loginButton"
-            onclick="doLogin()"
+            aria-label="تسجيل الدخول"
         >
-
-            <span id="loginButtonIcon">
-                🚀
-            </span>
-
-            <span id="loginButtonText">
-                دخول
-            </span>
-
+            <span id="loginButtonIcon" aria-hidden="true">🚀</span>
+            <span id="loginButtonText">دخول</span>
         </button>
 
         <!-- Error Message -->
-
-        <div
-            id="loginError"
-            class="error-msg"
-            role="alert"
-        ></div>
+        <div id="loginError" class="error-msg" role="alert" aria-live="polite"></div>
 
         <div class="login-footer">
-
-            <span>
-                نظام إدارة وإسناد الوحدات البحرية
-            </span>
-
-            <span class="version">
-                v5.0
-            </span>
-
+            <span>نظام إدارة وإسناد الوحدات البحرية</span>
+            <span class="version">v5.1</span>
         </div>
 
     </div>
@@ -208,10 +153,7 @@
      MAIN APPLICATION
      ============================================================ -->
 
-<div
-    id="mainApp"
-    style="display:none;"
->
+<div id="mainApp" style="display:none;">
 
     <!-- ========================================================
          HEADER
@@ -221,90 +163,49 @@
 
         <div class="header-left">
 
-            <span
+            <button
+                type="button"
                 class="menu-toggle"
                 onclick="toggleSidebar()"
+                aria-label="فتح القائمة"
+                title="القائمة"
             >
                 ☰
-            </span>
+            </button>
 
             <h1>
-
-                <span>
-                    ⚓
-                </span>
-
+                <span aria-hidden="true">⚓</span>
                 منظومة الوسائل البحرية
-
-                <span class="developer-tag">
-                    الوكيل أمان الله ناجي
-                </span>
-
+                <span class="developer-tag">الوكيل أمان الله ناجي</span>
             </h1>
 
         </div>
 
-
         <div class="header-right">
 
-            <span
+            <button
+                type="button"
                 class="notification-icon"
                 onclick="toggleNotifications()"
+                aria-label="الإشعارات"
+                title="الإشعارات"
             >
-
                 🔔
-
-                <span
-                    class="notification-badge"
-                    id="notificationBadge"
-                >
-                    0
-                </span>
-
-            </span>
-
-
-            <span
-                class="role-badge"
-                id="userRoleDisplay"
-            >
-                👤
-            </span>
-
-
-            <button
-                class="btn-outline-white"
-                type="button"
-                onclick="window.print()"
-                title="طباعة"
-            >
-
-                <i class="fas fa-print"></i>
-
+                <span class="notification-badge" id="notificationBadge" aria-label="عدد الإشعارات">0</span>
             </button>
 
+            <span class="role-badge" id="userRoleDisplay">👤</span>
 
-            <button
-                class="btn-outline-white"
-                type="button"
-                onclick="refreshAllPages()"
-                title="تحديث"
-            >
-
-                <i class="fas fa-sync-alt"></i>
-
+            <button class="btn-outline-white" type="button" onclick="window.print()" title="طباعة" aria-label="طباعة">
+                <i class="fas fa-print" aria-hidden="true"></i>
             </button>
 
+            <button class="btn-outline-white" type="button" onclick="refreshAllPages()" title="تحديث" aria-label="تحديث">
+                <i class="fas fa-sync-alt" aria-hidden="true"></i>
+            </button>
 
-            <button
-                class="btn-outline-white btn-logout"
-                type="button"
-                onclick="doLogout()"
-                title="تسجيل الخروج"
-            >
-
-                <i class="fas fa-sign-out-alt"></i>
-
+            <button class="btn-outline-white btn-logout" type="button" onclick="doLogout()" title="تسجيل الخروج" aria-label="تسجيل الخروج">
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
             </button>
 
         </div>
@@ -316,146 +217,52 @@
          SIDEBAR
          ======================================================== -->
 
-    <nav
-        class="sidebar"
-        id="sidebar"
-    >
+    <nav class="sidebar" id="sidebar" aria-label="القائمة الرئيسية">
 
         <div class="sidebar-brand">
-
-            <span>
-                ⚓
-            </span>
-
-            <span>
-                الأسطول البحري
-            </span>
-
+            <span aria-hidden="true">⚓</span>
+            <span>الأسطول البحري</span>
         </div>
 
-
-        <button
-            class="nav-btn active"
-            onclick="showPage('dashboard')"
-        >
-
-            <i class="fas fa-chart-pie"></i>
-
-            لوحة التحكم
-
+        <button type="button" class="nav-btn active" data-page="dashboard" onclick="showPage('dashboard')">
+            <i class="fas fa-chart-pie" aria-hidden="true"></i> لوحة التحكم
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('fleet')"
-        >
-
-            <i class="fas fa-ship"></i>
-
-            الأسطول
-
+        <button type="button" class="nav-btn" data-page="fleet" onclick="showPage('fleet')">
+            <i class="fas fa-ship" aria-hidden="true"></i> الأسطول
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('maintenance')"
-        >
-
-            <i class="fas fa-wrench"></i>
-
-            الصيانة
-
+        <button type="button" class="nav-btn" data-page="maintenance" onclick="showPage('maintenance')">
+            <i class="fas fa-wrench" aria-hidden="true"></i> الصيانة
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('efficiency')"
-        >
-
-            <i class="fas fa-chart-line"></i>
-
-            الجاهزية
-
+        <button type="button" class="nav-btn" data-page="efficiency" onclick="showPage('efficiency')">
+            <i class="fas fa-chart-line" aria-hidden="true"></i> الجاهزية
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('support')"
-        >
-
-            <i class="fas fa-headset"></i>
-
-            الدعم
-
+        <button type="button" class="nav-btn" data-page="support" onclick="showPage('support')">
+            <i class="fas fa-headset" aria-hidden="true"></i> الدعم
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('users')"
-        >
-
-            <i class="fas fa-users"></i>
-
-            المستخدمين
-
+        <button type="button" class="nav-btn" data-page="users" onclick="showPage('users')">
+            <i class="fas fa-users" aria-hidden="true"></i> المستخدمين
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('notes')"
-        >
-
-            <i class="fas fa-sticky-note"></i>
-
-            Note Verbale
-
+        <button type="button" class="nav-btn" data-page="notes" onclick="showPage('notes')">
+            <i class="fas fa-sticky-note" aria-hidden="true"></i> Note Verbale
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('sessions')"
-        >
-
-            <i class="fas fa-users-cog"></i>
-
-            المراقبة
-
+        <button type="button" class="nav-btn" data-page="sessions" onclick="showPage('sessions')">
+            <i class="fas fa-users-cog" aria-hidden="true"></i> المراقبة
         </button>
 
-
-        <button
-            class="nav-btn"
-            onclick="showPage('ai-assistant')"
-        >
-
-            <i class="fas fa-robot"></i>
-
-            🤖 المساعد الذكي
-
+        <button type="button" class="nav-btn" data-page="ai-assistant" onclick="showPage('ai-assistant')">
+            <i class="fas fa-robot" aria-hidden="true"></i> 🤖 المساعد الذكي
         </button>
-
-
-        <!-- ====================================================
-             SIDEBAR FOOTER
-             ==================================================== -->
 
         <div class="sidebar-footer">
-
-            <span>
-                الوكيل أمان الله ناجي
-            </span>
-
-            <span class="version">
-                v5.0
-            </span>
-
+            <span>الوكيل أمان الله ناجي</span>
+            <span class="version">v5.1</span>
         </div>
 
     </nav>
@@ -465,16 +272,11 @@
          MAIN CONTENT
          ======================================================== -->
 
-    <div class="main-content">
-
-        <div id="pageContainer">
-
+    <main class="main-content" id="mainContent">
+        <div id="pageContainer" aria-live="polite">
             <!-- يتم تحميل الصفحات هنا ديناميكياً -->
-
         </div>
-
-    </div>
-
+    </main>
 
 </div>  <!-- end mainApp -->
 
@@ -483,26 +285,14 @@
      SCROLL BUTTONS
      ============================================================ -->
 
-<div class="scroll-buttons">
+<div class="scroll-buttons" aria-label="التنقل">
 
-    <button
-        class="scroll-btn"
-        onclick="scrollToTop()"
-        title="أعلى"
-    >
-
-        <i class="fas fa-chevron-up"></i>
-
+    <button type="button" class="scroll-btn" onclick="scrollToTop()" title="أعلى" aria-label="الانتقال إلى أعلى الصفحة">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
     </button>
 
-    <button
-        class="scroll-btn"
-        onclick="scrollToBottom()"
-        title="أسفل"
-    >
-
-        <i class="fas fa-chevron-down"></i>
-
+    <button type="button" class="scroll-btn" onclick="scrollToBottom()" title="أسفل" aria-label="الانتقال إلى أسفل الصفحة">
+        <i class="fas fa-chevron-down" aria-hidden="true"></i>
     </button>
 
 </div>
@@ -513,89 +303,31 @@
      ============================================================ -->
 
 <!-- Password Change Modal -->
-
-<div
-    id="passwordModal"
-    class="modal-overlay"
->
-
+<div id="passwordModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
     <div class="modal-box">
-
-        <h3>
-            🔑 تغيير كلمة المرور
-        </h3>
-
+        <h3 id="passwordModalTitle">🔑 تغيير كلمة المرور</h3>
         <p id="modalUserName"></p>
-
-        <input
-            type="password"
-            id="newPassword"
-            placeholder="كلمة المرور الجديدة"
-        >
-
-        <input
-            type="password"
-            id="confirmPassword"
-            placeholder="تأكيد كلمة المرور"
-        >
-
+        <input type="password" id="currentPassword" placeholder="كلمة المرور الحالية" autocomplete="current-password">
+        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" autocomplete="new-password">
+        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" autocomplete="new-password">
         <div class="modal-actions">
-
-            <button
-                class="btn-save"
-                onclick="saveNewPassword()"
-            >
-                حفظ
-            </button>
-
-            <button
-                class="btn-cancel"
-                onclick="closePasswordModal()"
-            >
-                إلغاء
-            </button>
-
+            <button type="button" class="btn-save" onclick="saveNewPassword()">حفظ</button>
+            <button type="button" class="btn-cancel" onclick="closePasswordModal()">إلغاء</button>
         </div>
-
     </div>
-
 </div>
 
-
-<!-- Notification Modal (optional) -->
-
-<div
-    id="notificationModal"
-    class="modal-overlay"
->
-
+<!-- Notification Modal -->
+<div id="notificationModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="notificationModalTitle">
     <div class="modal-box">
-
-        <h3>
-            🔔 الإشعارات
-        </h3>
-
+        <h3 id="notificationModalTitle">🔔 الإشعارات</h3>
         <div id="notificationList">
-
-            <p style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">
-                لا توجد إشعارات جديدة
-            </p>
-
+            <p style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">لا توجد إشعارات جديدة</p>
         </div>
-
         <div class="modal-actions">
-
-            <button
-                class="btn-cancel"
-                onclick="closeNotificationModal()"
-            >
-                إغلاق
-            </button>
-
+            <button type="button" class="btn-cancel" onclick="closeNotificationModal()">إغلاق</button>
         </div>
-
     </div>
-
 </div>
 
 
@@ -604,21 +336,44 @@
      ============================================================ -->
 
 <!-- 1️⃣ Core Files -->
-
 <script src="/js/core/config.js"></script>
 <script src="/js/core/helpers.js"></script>
 <script src="/js/core/auth.js"></script>
 
 <!-- 2️⃣ Libraries -->
-
 <script src="/js/lib/charts.js"></script>
 <script src="/js/lib/map.js"></script>
 <script src="/js/lib/notifications.js"></script>
 <script src="/js/lib/file-import.js"></script>
-<script src="/js/lib/api.js"></script>
+
+<!-- ✅ api.js يتم تحميله ديناميكياً (آمن) -->
+<script>
+    (function loadApiSafely() {
+        const script = document.createElement('script');
+        script.src = '/js/lib/api.js';
+        script.onload = function() {
+            console.log('✅ api.js loaded successfully');
+        };
+        script.onerror = function() {
+            console.warn('⚠️ api.js not found - using local data');
+            // تعريف API وهمي لتجنب الأخطاء
+            window.API = {
+                authLogin: function() {
+                    return Promise.reject(new Error('API unavailable - use demo account'));
+                },
+                authMe: function() {
+                    return Promise.reject(new Error('API unavailable'));
+                },
+                authLogout: function() {
+                    return Promise.resolve();
+                }
+            };
+        };
+        document.head.appendChild(script);
+    })();
+</script>
 
 <!-- 3️⃣ Pages -->
-
 <script src="/js/pages/dashboard.js"></script>
 <script src="/js/pages/fleet.js"></script>
 <script src="/js/pages/maintenance.js"></script>
@@ -630,7 +385,6 @@
 <script src="/js/pages/ai-assistant.js"></script>
 
 <!-- 4️⃣ Main Application -->
-
 <script src="/js/app.js"></script>
 
 
@@ -639,71 +393,321 @@
      ============================================================ -->
 
 <script>
+    (function ensureAppWorks() {
 
-    // ✅ التحقق من تحميل app.js
-    document.addEventListener('DOMContentLoaded', function() {
+        // انتظار حتى يكتمل تحميل الصفحة
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAndFallback);
+        } else {
+            checkAndFallback();
+        }
 
-        if (typeof window.showPage !== 'function') {
+        function checkAndFallback() {
 
-            console.warn('⚠️ app.js لم يتم تحميله، استخدام الإعدادات الافتراضية');
+            // إذا كان app.js قد حمل بنجاح، لا نفعل شيئاً
+            if (typeof window.showPage === 'function' && typeof window.doLogin === 'function') {
+                console.log('✅ app.js loaded successfully');
+                return;
+            }
 
-            // دوال احتياطية
-            window.showPage = function(page) {
-                const container = document.getElementById('pageContainer');
-                if (container) {
-                    container.innerHTML = `
-                        <div style="padding:40px; text-align:center; color:rgba(255,255,255,0.5);">
-                            <div style="font-size:48px; margin-bottom:20px;">⚓</div>
-                            <h2 style="color:#60a5fa;">منظومة الوسائل البحرية</h2>
-                            <p>جاري تحميل الصفحة: ${page}</p>
-                            <button onclick="location.reload()" style="margin-top:20px; padding:10px 30px; background:#60a5fa; border:none; border-radius:10px; color:white; cursor:pointer;">
-                                🔄 إعادة تحميل
-                            </button>
-                        </div>
-                    `;
+            console.warn('⚠️ app.js not loaded - using fallback');
+
+            // ====================================================
+            // تعريف جميع الدوال الأساسية في Fallback
+            // ====================================================
+
+            // بيانات تجريبية
+            const DEMO_DATA = {
+                vessels: [
+                    { name: 'البروق 1', stat: 'صالح' },
+                    { name: 'البروق 2', stat: 'صالح' },
+                    { name: 'البروق 3', stat: 'صالح' },
+                    { name: 'البروق 4', stat: 'صالح' },
+                    { name: 'البروق 5', stat: 'معطب' },
+                    { name: 'البروق 6', stat: 'صيانة' },
+                    { name: 'البروق 7', stat: 'صالح' },
+                    { name: 'البروق 8', stat: 'صالح' },
+                ],
+                maintenance: [
+                    { vesselName: 'البروق 3', cost: 1200 },
+                    { vesselName: 'البروق 6', cost: 500 },
+                    { vesselName: 'البروق 5', cost: 2300 },
+                ]
+            };
+
+            // دوال مساعدة
+            function getElement(id) {
+                return document.getElementById(id);
+            }
+
+            // إدارة الجلسة
+            function getStoredUser() {
+                try {
+                    const data = localStorage.getItem('userData');
+                    return data ? JSON.parse(data) : null;
+                } catch { return null; }
+            }
+
+            function showApplication() {
+                const login = getElement('loginOverlay');
+                const main = getElement('mainApp');
+                if (login) login.style.display = 'none';
+                if (main) main.style.display = 'block';
+                const user = getStoredUser();
+                const roleEl = getElement('userRoleDisplay');
+                if (roleEl && user) {
+                    roleEl.textContent = `👤 ${user.name || 'مستخدم'} - ${user.role || 'مستخدم'}`;
                 }
+            }
+
+            function showLogin() {
+                const login = getElement('loginOverlay');
+                const main = getElement('mainApp');
+                if (login) login.style.display = 'flex';
+                if (main) main.style.display = 'none';
+            }
+
+            // دوال أساسية
+            window.doLogin = function() {
+                const username = getElement('username')?.value?.trim() || '';
+                const password = getElement('password')?.value || '';
+                const errorEl = getElement('loginError');
+
+                if (errorEl) errorEl.textContent = '';
+
+                if (!username || !password) {
+                    if (errorEl) errorEl.textContent = '❌ يرجى إدخال اسم المستخدم وكلمة المرور';
+                    return;
+                }
+
+                if (username === 'admin' && password === '123456') {
+                    const user = { name: 'مدير النظام', email: 'admin', role: 'مسؤول' };
+                    localStorage.setItem('authToken', 'demo-token');
+                    localStorage.setItem('userData', JSON.stringify(user));
+                    showApplication();
+                    window.showPage('dashboard');
+                    return;
+                }
+
+                if (errorEl) {
+                    errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة (admin / 123456)';
+                }
+            };
+
+            window.handleLogin = window.doLogin;
+
+            window.doLogout = function() {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                showLogin();
             };
 
             window.toggleSidebar = function() {
-                const sidebar = document.getElementById('sidebar');
+                const sidebar = getElement('sidebar');
                 if (sidebar) sidebar.classList.toggle('open');
             };
 
-            window.doLogout = function() {
-                localStorage.clear();
-                location.reload();
-            };
-
-            // ✅ تعريف doLogin و handleLogin في الفول باك
-            window.doLogin = function() {
-                const username = document.getElementById('username')?.value;
-                const password = document.getElementById('password')?.value;
-
-                if (username === 'admin' && password === '123456') {
-                    localStorage.setItem('authToken', 'demo-token');
-                    localStorage.setItem('userData', JSON.stringify({ name: 'مدير النظام', role: 'مسؤول' }));
-                    location.reload();
-                } else {
-                    const error = document.getElementById('loginError');
-                    if (error) error.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+            window.toggleNotifications = function() {
+                const modal = getElement('notificationModal');
+                if (modal) {
+                    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
                 }
             };
 
-            // ✅ تعريف handleLogin كمرادف لـ doLogin
-            window.handleLogin = window.doLogin;
+            window.closeNotificationModal = function() {
+                const modal = getElement('notificationModal');
+                if (modal) modal.style.display = 'none';
+            };
 
-            // عرض الصفحة الافتراضية
-            setTimeout(() => {
-                if (document.getElementById('pageContainer')) {
-                    window.showPage('dashboard');
+            window.closePasswordModal = function() {
+                const modal = getElement('passwordModal');
+                if (modal) modal.style.display = 'none';
+            };
+
+            window.openPasswordModal = function(userId, userName) {
+                const modal = getElement('passwordModal');
+                const nameEl = getElement('modalUserName');
+                if (modal) {
+                    modal.dataset.userId = userId || '';
+                    if (nameEl) nameEl.textContent = userName || 'المستخدم';
+                    modal.style.display = 'flex';
                 }
-            }, 500);
+            };
 
-            console.log('✅ Fallback loaded successfully');
+            window.saveNewPassword = function() {
+                alert('وظيفة تغيير كلمة المرور قيد التطوير');
+                window.closePasswordModal();
+            };
+
+            window.refreshAllPages = function() {
+                window.showPage(window.currentPage || 'dashboard');
+            };
+
+            window.scrollToTop = function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            window.scrollToBottom = function() {
+                window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+            };
+
+            // عرض الصفحات (مع محتوى مضمن)
+            window.showPage = function(page) {
+                const container = getElement('pageContainer');
+                if (!container) return;
+
+                window.currentPage = page || 'dashboard';
+
+                // تحديث الأزرار النشطة
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => {
+                    const onclick = btn.getAttribute('onclick') || '';
+                    return onclick.includes(`'${page}'`) || onclick.includes(`"${page}"`);
+                });
+                if (activeBtn) activeBtn.classList.add('active');
+
+                // محتوى الصفحات المضمنة
+                const pages = {
+                    dashboard: `
+                        <div style="padding:20px;">
+                            <h2 style="color:#60a5fa;">📊 لوحة التحكم</h2>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin:20px 0;">
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#60a5fa;" id="dashTotal">0</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">🚢 إجمالي المراكب</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#4ade80;" id="dashReady">0</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">✅ صالح</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#fbbf24;" id="dashMaintenance">0</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">🔧 صيانة</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#f87171;" id="dashBroken">0</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">❌ معطب</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#34d399;" id="dashReadyPercent">0%</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">📊 نسبة الجاهزية</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,0.05);">
+                                    <div style="font-size:28px;font-weight:800;color:#f5d76e;" id="dashTotalCost">0 د.ت</div>
+                                    <div style="font-size:12px;color:rgba(255,255,255,0.4);">💰 تكاليف الصيانة</div>
+                                </div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,0.05);">
+                                    <h4 style="color:rgba(255,255,255,0.6);">📊 توزيع الحالات</h4>
+                                    <canvas id="dashChart" style="width:100%;height:200px;"></canvas>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:18px;border:1px solid rgba(255,255,255,0.05);">
+                                    <h4 style="color:rgba(255,255,255,0.6);">📈 تطور الجاهزية</h4>
+                                    <canvas id="dashLineChart" style="width:100%;height:200px;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    fleet: `<div style="padding:20px;"><h2 style="color:#60a5fa;">🚢 الأسطول</h2><p>جاري تحميل البيانات...</p></div>`,
+                    maintenance: `<div style="padding:20px;"><h2 style="color:#60a5fa;">🔧 الصيانة</h2><p>جاري تحميل البيانات...</p></div>`,
+                    efficiency: `<div style="padding:20px;"><h2 style="color:#60a5fa;">📊 الجاهزية</h2><p>جاري تحميل البيانات...</p></div>`,
+                    support: `<div style="padding:20px;"><h2 style="color:#60a5fa;">🎫 الدعم</h2><p>جاري تحميل البيانات...</p></div>`,
+                    users: `<div style="padding:20px;"><h2 style="color:#60a5fa;">👥 المستخدمين</h2><p>جاري تحميل البيانات...</p></div>`,
+                    notes: `<div style="padding:20px;"><h2 style="color:#60a5fa;">📝 Note Verbale</h2><p>جاري تحميل البيانات...</p></div>`,
+                    sessions: `<div style="padding:20px;"><h2 style="color:#60a5fa;">👥 المراقبة</h2><p>جاري تحميل البيانات...</p></div>`,
+                    'ai-assistant': `<div style="padding:20px;"><h2 style="color:#60a5fa;">🤖 المساعد الذكي</h2><p>جاري تحميل البيانات...</p></div>`
+                };
+
+                container.innerHTML = pages[page] || `<div style="padding:20px;text-align:center;"><h2 style="color:#f87171;">⚠️ الصفحة غير موجودة</h2></div>`;
+
+                // تهيئة Dashboard إذا كانت الصفحة هي Dashboard
+                if (page === 'dashboard') {
+                    setTimeout(function() {
+                        const vessels = DEMO_DATA.vessels;
+                        const maintenance = DEMO_DATA.maintenance;
+
+                        const total = vessels.length;
+                        const ready = vessels.filter(v => v.stat === 'صالح').length;
+                        const broken = vessels.filter(v => v.stat === 'معطب').length;
+                        const maintenanceCount = vessels.filter(v => v.stat === 'صيانة').length;
+                        const readyPercent = total ? Math.round((ready / total) * 100) : 0;
+                        const totalCost = maintenance.reduce((s, r) => s + (r.cost || 0), 0);
+
+                        const ids = {
+                            dashTotal: total,
+                            dashReady: ready,
+                            dashBroken: broken,
+                            dashMaintenance: maintenanceCount,
+                            dashReadyPercent: readyPercent + '%',
+                            dashTotalCost: totalCost.toLocaleString() + ' د.ت'
+                        };
+                        Object.entries(ids).forEach(([id, val]) => {
+                            const el = document.getElementById(id);
+                            if (el) el.textContent = val;
+                        });
+
+                        // رسوم بيانية
+                        if (typeof Chart !== 'undefined') {
+                            try {
+                                const ctx = document.getElementById('dashChart');
+                                if (ctx) {
+                                    if (window.dashChart) window.dashChart.destroy();
+                                    window.dashChart = new Chart(ctx, {
+                                        type: 'doughnut',
+                                        data: {
+                                            labels: ['✅ صالح', '❌ معطب', '🔧 صيانة'],
+                                            datasets: [{
+                                                data: [ready, broken, maintenanceCount],
+                                                backgroundColor: ['rgba(74,222,128,0.8)', 'rgba(248,113,113,0.8)', 'rgba(251,191,36,0.8)'],
+                                                borderColor: ['#4ade80', '#f87171', '#fbbf24'],
+                                                borderWidth: 2
+                                            }]
+                                        },
+                                        options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+                                    });
+                                }
+                                const lineCtx = document.getElementById('dashLineChart');
+                                if (lineCtx) {
+                                    if (window.dashLineChart) window.dashLineChart.destroy();
+                                    window.dashLineChart = new Chart(lineCtx, {
+                                        type: 'line',
+                                        data: {
+                                            labels: ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان'],
+                                            datasets: [{
+                                                label: '📈 نسبة الجاهزية %',
+                                                data: [72, 75, 78, 82, 85, 88],
+                                                borderColor: '#34d399',
+                                                backgroundColor: 'rgba(52,211,153,0.15)',
+                                                fill: true,
+                                                tension: 0.4
+                                            }]
+                                        },
+                                        options: { responsive: true, maintainAspectRatio: false }
+                                    });
+                                }
+                            } catch (e) {
+                                console.warn('Chart error:', e);
+                            }
+                        }
+                    }, 100);
+                }
+            };
+
+            // التحقق من الجلسة
+            const token = localStorage.getItem('authToken');
+            const user = getStoredUser();
+            if (token && user) {
+                showApplication();
+                window.showPage('dashboard');
+            } else {
+                showLogin();
+            }
+
+            console.log('✅ Fallback system ready');
         }
 
-    });
-
+    })();
 </script>
 
 </body>
