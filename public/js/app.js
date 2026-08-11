@@ -1,918 +1,1267 @@
 // ============================================================
-// 🚀 app.js - Marine System
-// Enterprise Express Application
+// 🚀 public/js/app.js
+// MARINE SYSTEM - Frontend Application
+// Browser Version - Production
 // ============================================================
 
 'use strict';
 
-// ============================================================
-// 📦 Dependencies
-// ============================================================
-
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
+console.log('🚀 تحميل Marine System Frontend...');
 
 // ============================================================
-// 🚀 إنشاء تطبيق Express
+// 🌐 حالة التطبيق
 // ============================================================
 
-const app = express();
+const APP_CONFIG = {
+    defaultPage: 'dashboard',
+    pageBasePath: '/pages/',
+    pageExtension: '.html',
+    loginOverlay: 'loginOverlay',
+    mainApp: 'mainApp',
+    pageContainer: 'pageContainer'
+};
+
+let currentPage = APP_CONFIG.defaultPage;
+let isApplicationReady = false;
 
 // ============================================================
-// ⚙️ Environment
+// 🧰 أدوات مساعدة
 // ============================================================
 
-const NODE_ENV =
-    process.env.NODE_ENV || 'development';
+function getElement(id) {
+    return document.getElementById(id);
+}
 
-const IS_PRODUCTION =
-    NODE_ENV === 'production';
+function escapeHtml(value) {
 
-const PORT =
-    Number(process.env.PORT) || 3000;
-
-// ============================================================
-// 🌐 Frontend / CORS
-// ============================================================
-
-const FRONTEND_URL =
-    process.env.FRONTEND_URL || '';
-
-const allowedOrigins =
-    FRONTEND_URL
-        .split(',')
-        .map(origin => origin.trim())
-        .filter(Boolean);
-
-// في نفس الموقع لا نحتاج CORS أصلاً.
-// لكن نبقيه جاهزاً إذا كان لديك Frontend خارجي.
-// ============================================================
-
-app.disable('x-powered-by');
-
-// ============================================================
-// 🔐 Security Headers
-// ============================================================
-
-app.use(
-    helmet({
-        contentSecurityPolicy: false,
-
-        crossOriginEmbedderPolicy: false,
-
-        crossOriginResourcePolicy: {
-            policy: 'cross-origin'
-        },
-
-        referrerPolicy: {
-            policy: 'strict-origin-when-cross-origin'
-        }
-    })
-);
-
-// ============================================================
-// 🌐 CORS
-// ============================================================
-
-app.use(
-    cors({
-
-        origin: function (origin, callback) {
-
-            // طلبات نفس الخادم / أدوات الخادم
-            if (!origin) {
-                return callback(null, true);
-            }
-
-            // إذا لم يتم تحديد FRONTEND_URL
-            // نسمح بالطلبات القادمة من نفس التطبيق
-            if (allowedOrigins.length === 0) {
-                return callback(null, true);
-            }
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            console.warn(
-                `⚠️ CORS blocked: ${origin}`
-            );
-
-            return callback(
-                new Error('CORS: Origin not allowed')
-            );
-        },
-
-        credentials: true,
-
-        methods: [
-            'GET',
-            'POST',
-            'PUT',
-            'PATCH',
-            'DELETE',
-            'OPTIONS'
-        ],
-
-        allowedHeaders: [
-            'Content-Type',
-            'Authorization',
-            'Accept',
-            'X-Requested-With'
-        ]
-    })
-);
-
-// ============================================================
-// 📦 Body Parser
-// ============================================================
-
-app.use(
-    express.json({
-        limit: '5mb',
-        strict: true
-    })
-);
-
-app.use(
-    express.urlencoded({
-        extended: true,
-        limit: '5mb'
-    })
-);
-
-// ============================================================
-// 🗜️ Compression
-// ============================================================
-
-app.use(
-    compression({
-        threshold: 1024
-    })
-);
-
-// ============================================================
-// 🚦 API Rate Limit
-// ============================================================
-
-const apiLimiter =
-    rateLimit({
-
-        windowMs:
-            15 * 60 * 1000,
-
-        max:
-            IS_PRODUCTION
-                ? 1000
-                : 5000,
-
-        standardHeaders: true,
-
-        legacyHeaders: false,
-
-        message: {
-            success: false,
-            error:
-                'طلبات كثيرة جداً، حاول لاحقاً'
-        }
-    });
-
-// ============================================================
-// 🔐 Login Rate Limit
-// ============================================================
-
-const loginLimiter =
-    rateLimit({
-
-        windowMs:
-            15 * 60 * 1000,
-
-        max: 10,
-
-        skipSuccessfulRequests: true,
-
-        standardHeaders: true,
-
-        legacyHeaders: false,
-
-        message: {
-            success: false,
-            error:
-                'محاولات تسجيل الدخول كثيرة جداً، حاول بعد قليل'
-        }
-    });
-
-// ============================================================
-// 📊 Request Logger
-// ============================================================
-
-app.use(
-    (req, res, next) => {
-
-        const start =
-            Date.now();
-
-        res.on(
-            'finish',
-            () => {
-
-                const duration =
-                    Date.now() - start;
-
-                if (NODE_ENV !== 'test') {
-
-                    console.log(
-                        `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`
-                    );
-
-                }
-            }
-        );
-
-        next();
+    if (value === null || value === undefined) {
+        return '';
     }
-);
+
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 // ============================================================
-// 🚦 تطبيق Rate Limit على API
+// 🔐 التحقق من تسجيل الدخول
 // ============================================================
 
-app.use(
-    '/api',
-    apiLimiter
-);
+function getStoredUser() {
 
-// ============================================================
-// 🔐 حماية Login
-// ============================================================
+    try {
 
-app.use(
-    '/api/auth/login',
-    loginLimiter
-);
+        const data =
+            localStorage.getItem('userData');
 
-// ============================================================
-// 📁 Public Directory
-// ============================================================
+        return data
+            ? JSON.parse(data)
+            : null;
 
-const publicPath =
-    path.resolve(
-        __dirname,
-        'public'
-    );
-
-// ============================================================
-// 📂 Static Files
-// ============================================================
-
-app.use(
-    express.static(
-        publicPath,
-        {
-            index: 'index.html',
-
-            maxAge:
-                IS_PRODUCTION
-                    ? '1d'
-                    : 0,
-
-            etag: true,
-
-            dotfiles: 'deny'
-        }
-    )
-);
-
-// ============================================================
-// 📁 CSS
-// ============================================================
-
-app.use(
-    '/css',
-    express.static(
-        path.join(
-            publicPath,
-            'css'
-        ),
-        {
-            maxAge:
-                IS_PRODUCTION
-                    ? '1d'
-                    : 0
-        }
-    )
-);
-
-// ============================================================
-// 📁 JavaScript
-// ============================================================
-
-app.use(
-    '/js',
-    express.static(
-        path.join(
-            publicPath,
-            'js'
-        ),
-        {
-            maxAge:
-                IS_PRODUCTION
-                    ? '1d'
-                    : 0
-        }
-    )
-);
-
-// ============================================================
-// 📁 Pages
-// ============================================================
-
-app.use(
-    '/pages',
-    express.static(
-        path.join(
-            publicPath,
-            'pages'
-        ),
-        {
-            maxAge:
-                IS_PRODUCTION
-                    ? '1d'
-                    : 0
-        }
-    )
-);
-
-// ============================================================
-// 📁 Images
-// ============================================================
-
-app.use(
-    '/images',
-    express.static(
-        path.join(
-            publicPath,
-            'images'
-        ),
-        {
-            maxAge:
-                IS_PRODUCTION
-                    ? '1d'
-                    : 0
-        }
-    )
-);
-
-// ============================================================
-// 🩺 HEALTH CHECK
-// ============================================================
-
-app.get(
-    '/health',
-    (req, res) => {
-
-        const states = {
-
-            0: 'disconnected',
-
-            1: 'connected',
-
-            2: 'connecting',
-
-            3: 'disconnecting'
-        };
-
-        const database =
-            states[
-                mongoose
-                    .connection
-                    .readyState
-            ] || 'unknown';
-
-        const healthy =
-            database === 'connected';
-
-        res
-            .status(
-                healthy
-                    ? 200
-                    : 503
-            )
-            .json({
-
-                success:
-                    healthy,
-
-                status:
-                    healthy
-                        ? 'ok'
-                        : 'degraded',
-
-                service:
-                    'Marine System',
-
-                application:
-                    'Marine System',
-
-                environment:
-                    NODE_ENV,
-
-                database,
-
-                uptime:
-                    process.uptime(),
-
-                timestamp:
-                    new Date()
-                        .toISOString()
-            });
-    }
-);
-
-// ============================================================
-// 🩺 READY CHECK
-// ============================================================
-
-app.get(
-    '/ready',
-    (req, res) => {
-
-        const database =
-            mongoose
-                .connection
-                .readyState === 1;
-
-        if (!database) {
-
-            return res
-                .status(503)
-                .json({
-
-                    success: false,
-
-                    ready: false,
-
-                    database:
-                        'disconnected'
-                });
-        }
-
-        res.json({
-
-            success: true,
-
-            ready: true,
-
-            database:
-                'connected'
-        });
-    }
-);
-
-// ============================================================
-// 🏠 الصفحة الرئيسية
-// ============================================================
-
-app.get(
-    '/',
-    (req, res, next) => {
-
-        const indexPath =
-            path.join(
-                publicPath,
-                'index.html'
-            );
-
-        res.sendFile(
-            indexPath,
-            error => {
-
-                if (error) {
-                    next(error);
-                }
-
-            }
-        );
-    }
-);
-
-// ============================================================
-// 📄 صفحات HTML
-// ============================================================
-
-app.get(
-    '/pages/:page',
-    (req, res, next) => {
-
-        const page =
-            String(
-                req.params.page
-            );
-
-        // منع Path Traversal
-        if (
-            !/^[a-zA-Z0-9_-]+$/
-                .test(page)
-        ) {
-
-            return res
-                .status(400)
-                .json({
-
-                    success: false,
-
-                    error:
-                        'Invalid page name'
-                });
-        }
-
-        const filePath =
-            path.join(
-                publicPath,
-                'pages',
-                `${page}.html`
-            );
-
-        res.sendFile(
-            filePath,
-            error => {
-
-                if (error) {
-                    next();
-                }
-
-            }
-        );
-    }
-);
-
-// ============================================================
-// ❌ API 404
-// ============================================================
-
-app.use(
-    '/api',
-    (req, res) => {
-
-        res
-            .status(404)
-            .json({
-
-                success: false,
-
-                error:
-                    'API endpoint not found',
-
-                path:
-                    req.originalUrl,
-
-                method:
-                    req.method,
-
-                timestamp:
-                    new Date()
-                        .toISOString()
-            });
-    }
-);
-
-// ============================================================
-// 🌐 HTML / Web 404
-// ============================================================
-
-app.use(
-    (req, res) => {
-
-        // API / JSON
-        if (
-            req.path.startsWith('/api') ||
-            req.headers.accept?.includes(
-                'application/json'
-            )
-        ) {
-
-            return res
-                .status(404)
-                .json({
-
-                    success: false,
-
-                    error:
-                        'Resource not found',
-
-                    path:
-                        req.originalUrl
-                });
-        }
-
-        // HTML 404
-        res
-            .status(404)
-            .type('html')
-            .send(`<!DOCTYPE html>
-
-<html lang="ar" dir="rtl">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        404 - الصفحة غير موجودة
-    </title>
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-
-            margin: 0;
-
-            min-height: 100vh;
-
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            font-family:
-                Arial,
-                Tahoma,
-                sans-serif;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #eef3f8,
-                    #dce7f1
-                );
-
-            color: #1f2937;
-        }
-
-        .box {
-
-            width:
-                min(90%,
-                520px);
-
-            text-align: center;
-
-            background: #ffffff;
-
-            padding: 45px 35px;
-
-            border-radius: 22px;
-
-            box-shadow:
-                0 20px 60px
-                rgba(0, 0, 0, 0.12);
-        }
-
-        .icon {
-
-            font-size: 55px;
-
-            margin-bottom: 10px;
-        }
-
-        h1 {
-
-            font-size: 72px;
-
-            margin: 0;
-
-            font-weight: 900;
-        }
-
-        h2 {
-
-            margin:
-                5px 0 15px;
-
-            font-size: 24px;
-        }
-
-        p {
-
-            color: #6b7280;
-
-            line-height: 1.8;
-
-            margin-bottom: 25px;
-        }
-
-        a {
-
-            display: inline-block;
-
-            padding:
-                13px 28px;
-
-            background:
-                #0f4c81;
-
-            color: white;
-
-            text-decoration: none;
-
-            border-radius: 10px;
-
-            font-weight: bold;
-
-            transition:
-                transform .2s,
-                opacity .2s;
-        }
-
-        a:hover {
-
-            transform:
-                translateY(-2px);
-
-            opacity: .9;
-        }
-
-        .service {
-
-            margin-top: 20px;
-
-            font-size: 13px;
-
-            color: #9ca3af;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-    <div class="box">
-
-        <div class="icon">
-            ⚓
-        </div>
-
-        <h1>
-            404
-        </h1>
-
-        <h2>
-            الصفحة غير موجودة
-        </h2>
-
-        <p>
-            عذراً، الصفحة التي تبحث عنها
-            غير موجودة أو تم نقلها.
-        </p>
-
-        <a href="/">
-            العودة إلى منظومة الوسائل البحرية
-        </a>
-
-        <div class="service">
-            Marine System
-        </div>
-
-    </div>
-
-</body>
-
-</html>`);
-    }
-);
-
-// ============================================================
-// 🛑 GLOBAL ERROR HANDLER
-// ============================================================
-
-app.use(
-    (err, req, res, next) => {
+    } catch (error) {
 
         console.error(
-            '❌ Express Error:',
-            err
+            '❌ خطأ في قراءة userData:',
+            error
         );
 
-        // CORS
+        return null;
+    }
+}
+
+function getStoredToken() {
+    return localStorage.getItem('authToken');
+}
+
+// ============================================================
+// 👤 عرض معلومات المستخدم
+// ============================================================
+
+function updateUserDisplay() {
+
+    const user =
+        getStoredUser();
+
+    const roleElement =
+        getElement('userRoleDisplay');
+
+    if (!roleElement) {
+        return;
+    }
+
+    if (!user) {
+
+        roleElement.textContent = '👤';
+
+        return;
+    }
+
+    const name =
+        user.name ||
+        user.username ||
+        'المستخدم';
+
+    const role =
+        user.role ||
+        user.roleName ||
+        'مستخدم';
+
+    roleElement.textContent =
+        `👤 ${name} - ${role}`;
+}
+
+// ============================================================
+// 🔐 عرض التطبيق / تسجيل الدخول
+// ============================================================
+
+function showApplication() {
+
+    const loginOverlay =
+        getElement(APP_CONFIG.loginOverlay);
+
+    const mainApp =
+        getElement(APP_CONFIG.mainApp);
+
+    if (loginOverlay) {
+        loginOverlay.style.display = 'none';
+    }
+
+    if (mainApp) {
+        mainApp.style.display = 'block';
+    }
+
+    updateUserDisplay();
+
+    isApplicationReady = true;
+}
+
+function showLogin() {
+
+    const loginOverlay =
+        getElement(APP_CONFIG.loginOverlay);
+
+    const mainApp =
+        getElement(APP_CONFIG.mainApp);
+
+    if (loginOverlay) {
+        loginOverlay.style.display = 'flex';
+    }
+
+    if (mainApp) {
+        mainApp.style.display = 'none';
+    }
+
+    isApplicationReady = false;
+}
+
+// ============================================================
+// 🔑 تسجيل الدخول
+// ============================================================
+
+async function doLogin() {
+
+    const usernameInput =
+        getElement('username');
+
+    const passwordInput =
+        getElement('password');
+
+    const loginButton =
+        getElement('loginButton');
+
+    const loginButtonText =
+        getElement('loginButtonText');
+
+    const loginButtonIcon =
+        getElement('loginButtonIcon');
+
+    const loginError =
+        getElement('loginError');
+
+    const username =
+        usernameInput
+            ? usernameInput.value.trim()
+            : '';
+
+    const password =
+        passwordInput
+            ? passwordInput.value
+            : '';
+
+    if (loginError) {
+        loginError.textContent = '';
+    }
+
+    if (!username || !password) {
+
+        if (loginError) {
+            loginError.textContent =
+                '❌ يرجى إدخال اسم المستخدم وكلمة المرور';
+        }
+
+        return;
+    }
+
+    try {
+
+        if (loginButton) {
+            loginButton.disabled = true;
+        }
+
+        if (loginButtonText) {
+            loginButtonText.textContent =
+                'جاري تسجيل الدخول...';
+        }
+
+        if (loginButtonIcon) {
+            loginButtonIcon.textContent = '⏳';
+        }
+
+        // ====================================================
+        // التأكد من وجود API
+        // ====================================================
+
         if (
-            err.message &&
-            err.message.startsWith(
-                'CORS:'
+            !window.API ||
+            typeof window.API.authLogin !== 'function'
+        ) {
+
+            throw new Error(
+                'واجهة API غير محملة. تأكد من تحميل /js/lib/api.js'
+            );
+        }
+
+        // ====================================================
+        // إرسال تسجيل الدخول
+        // ====================================================
+
+        const response =
+            await window.API.authLogin(
+                username,
+                password
+            );
+
+        if (!response) {
+            throw new Error(
+                'لم تصل استجابة من الخادم'
+            );
+        }
+
+        // ====================================================
+        // التحقق من نجاح تسجيل الدخول
+        // ====================================================
+
+        if (
+            response.success === false
+        ) {
+
+            throw new Error(
+                response.error ||
+                response.message ||
+                'فشل تسجيل الدخول'
+            );
+        }
+
+        // ====================================================
+        // حفظ البيانات
+        // ====================================================
+
+        if (response.token) {
+
+            localStorage.setItem(
+                'authToken',
+                response.token
+            );
+        }
+
+        if (response.user) {
+
+            localStorage.setItem(
+                'userData',
+                JSON.stringify(response.user)
+            );
+        }
+
+        // ====================================================
+        // فتح التطبيق
+        // ====================================================
+
+        showApplication();
+
+        await showPage(
+            APP_CONFIG.defaultPage
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Login Error:',
+            error
+        );
+
+        if (loginError) {
+
+            loginError.textContent =
+                `❌ ${
+                    error.message ||
+                    'فشل تسجيل الدخول'
+                }`;
+        }
+
+    } finally {
+
+        if (loginButton) {
+            loginButton.disabled = false;
+        }
+
+        if (loginButtonText) {
+            loginButtonText.textContent =
+                'دخول';
+        }
+
+        if (loginButtonIcon) {
+            loginButtonIcon.textContent = '🚀';
+        }
+    }
+}
+
+// ============================================================
+// 🔗 دعم Enter في تسجيل الدخول
+// ============================================================
+
+function setupLoginEvents() {
+
+    const username =
+        getElement('username');
+
+    const password =
+        getElement('password');
+
+    if (username) {
+
+        username.addEventListener(
+            'keydown',
+            event => {
+
+                if (event.key === 'Enter') {
+                    doLogin();
+                }
+
+            }
+        );
+    }
+
+    if (password) {
+
+        password.addEventListener(
+            'keydown',
+            event => {
+
+                if (event.key === 'Enter') {
+                    doLogin();
+                }
+
+            }
+        );
+    }
+}
+
+// ============================================================
+// 🚪 تسجيل الخروج
+// ============================================================
+
+async function doLogout() {
+
+    try {
+
+        if (
+            window.API &&
+            typeof window.API.authLogout === 'function'
+        ) {
+
+            await window.API.authLogout();
+
+        } else {
+
+            localStorage.removeItem(
+                'authToken'
+            );
+
+            localStorage.removeItem(
+                'userData'
+            );
+
+            showLogin();
+        }
+
+    } catch (error) {
+
+        console.warn(
+            '⚠️ Logout:',
+            error
+        );
+
+        localStorage.removeItem(
+            'authToken'
+        );
+
+        localStorage.removeItem(
+            'userData'
+        );
+
+        showLogin();
+    }
+}
+
+// ============================================================
+// 📄 تحميل الصفحات
+// ============================================================
+
+async function showPage(page) {
+
+    if (!page) {
+        page = APP_CONFIG.defaultPage;
+    }
+
+    const container =
+        getElement(
+            APP_CONFIG.pageContainer
+        );
+
+    if (!container) {
+
+        console.error(
+            '❌ pageContainer غير موجود'
+        );
+
+        return;
+    }
+
+    // حماية اسم الصفحة
+    if (
+        !/^[a-zA-Z0-9_-]+$/.test(page)
+    ) {
+
+        console.error(
+            '❌ اسم صفحة غير صالح:',
+            page
+        );
+
+        return;
+    }
+
+    currentPage = page;
+
+    // ========================================================
+    // تحديث أزرار Sidebar
+    // ========================================================
+
+    document
+        .querySelectorAll('.nav-btn')
+        .forEach(button => {
+
+            button.classList.remove(
+                'active'
+            );
+
+        });
+
+    const activeButton =
+        Array.from(
+            document.querySelectorAll(
+                '.nav-btn'
             )
-        ) {
+        ).find(button => {
 
-            return res
-                .status(403)
-                .json({
+            const onclick =
+                button.getAttribute(
+                    'onclick'
+                ) || '';
 
-                    success: false,
+            return onclick.includes(
+                `'${page}'`
+            ) ||
+            onclick.includes(
+                `"${page}"`
+            );
 
-                    error:
-                        'Origin not allowed'
-                });
+        });
+
+    if (activeButton) {
+
+        activeButton.classList.add(
+            'active'
+        );
+    }
+
+    // ========================================================
+    // Loading
+    // ========================================================
+
+    container.innerHTML = `
+        <div class="page-loading"
+             style="
+                padding:50px;
+                text-align:center;
+                font-size:20px;
+             ">
+            <div style="font-size:42px;">
+                ⚓
+            </div>
+
+            <div>
+                جاري تحميل الصفحة...
+            </div>
+        </div>
+    `;
+
+    try {
+
+        const url =
+            `${APP_CONFIG.pageBasePath}` +
+            `${encodeURIComponent(page)}` +
+            `${APP_CONFIG.pageExtension}`;
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/html'
+                    },
+                    cache: 'no-cache'
+                }
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
         }
 
-        // JSON Parse Error
+        const html =
+            await response.text();
+
+        if (!html.trim()) {
+
+            throw new Error(
+                'الصفحة فارغة'
+            );
+        }
+
+        container.innerHTML =
+            html;
+
+        // ====================================================
+        // تهيئة الصفحة
+        // ====================================================
+
+        await initializePage(
+            page
+        );
+
+        // ====================================================
+        // إغلاق Sidebar على الهاتف
+        // ====================================================
+
         if (
-            err instanceof SyntaxError &&
-            err.status === 400 &&
-            'body' in err
+            window.innerWidth <= 900
         ) {
 
-            return res
-                .status(400)
-                .json({
+            const sidebar =
+                getElement('sidebar');
 
-                    success: false,
-
-                    error:
-                        'Invalid JSON body'
-                });
+            if (sidebar) {
+                sidebar.classList.remove(
+                    'open'
+                );
+            }
         }
 
-        // Payload Too Large
+    } catch (error) {
+
+        console.error(
+            `❌ فشل تحميل الصفحة ${page}:`,
+            error
+        );
+
+        container.innerHTML = `
+
+            <div
+                style="
+                    padding:50px;
+                    text-align:center;
+                "
+            >
+
+                <div
+                    style="
+                        font-size:55px;
+                        margin-bottom:15px;
+                    "
+                >
+                    ⚠️
+                </div>
+
+                <h2>
+                    تعذر تحميل الصفحة
+                </h2>
+
+                <p>
+                    الصفحة:
+                    <strong>
+                        ${escapeHtml(page)}
+                    </strong>
+                </p>
+
+                <p>
+                    الخطأ:
+                    ${escapeHtml(error.message)}
+                </p>
+
+                <button
+                    onclick="showPage('${escapeHtml(page)}')"
+                    style="
+                        padding:12px 25px;
+                        border:0;
+                        border-radius:10px;
+                        cursor:pointer;
+                    "
+                >
+                    🔄 إعادة المحاولة
+                </button>
+
+            </div>
+        `;
+    }
+}
+
+// ============================================================
+// 🧠 تهيئة الصفحة بعد تحميل HTML
+// ============================================================
+
+async function initializePage(page) {
+
+    try {
+
+        switch (page) {
+
+            case 'dashboard':
+
+                if (
+                    typeof window.initDashboard ===
+                    'function'
+                ) {
+
+                    await window.initDashboard();
+                }
+
+                break;
+
+
+            case 'fleet':
+
+                if (
+                    typeof window.initFleetPage ===
+                    'function'
+                ) {
+
+                    await window.initFleetPage();
+                }
+
+                break;
+
+
+            case 'maintenance':
+
+                if (
+                    typeof window.initMaintenancePage ===
+                    'function'
+                ) {
+
+                    await window.initMaintenancePage();
+                }
+
+                break;
+
+
+            case 'efficiency':
+
+                if (
+                    typeof window.initEfficiencyPage ===
+                    'function'
+                ) {
+
+                    await window.initEfficiencyPage();
+                }
+
+                break;
+
+
+            case 'support':
+
+                if (
+                    typeof window.initSupportPage ===
+                    'function'
+                ) {
+
+                    await window.initSupportPage();
+                }
+
+                break;
+
+
+            case 'users':
+
+                if (
+                    typeof window.initUsersPage ===
+                    'function'
+                ) {
+
+                    await window.initUsersPage();
+                }
+
+                break;
+
+
+            case 'notes':
+
+                if (
+                    typeof window.initNotesPage ===
+                    'function'
+                ) {
+
+                    await window.initNotesPage();
+                }
+
+                break;
+
+
+            case 'sessions':
+
+                if (
+                    typeof window.initSessionsPage ===
+                    'function'
+                ) {
+
+                    await window.initSessionsPage();
+                }
+
+                break;
+
+
+            case 'ai-assistant':
+
+                if (
+                    typeof window.initAIAssistant ===
+                    'function'
+                ) {
+
+                    await window.initAIAssistant();
+                }
+
+                break;
+
+
+            default:
+
+                console.log(
+                    `ℹ️ لا توجد تهيئة خاصة للصفحة: ${page}`
+                );
+        }
+
+    } catch (error) {
+
+        console.error(
+            `❌ خطأ في تهيئة ${page}:`,
+            error
+        );
+    }
+}
+
+// ============================================================
+// 📱 Sidebar
+// ============================================================
+
+function toggleSidebar() {
+
+    const sidebar =
+        getElement('sidebar');
+
+    if (!sidebar) {
+        return;
+    }
+
+    sidebar.classList.toggle(
+        'open'
+    );
+}
+
+// ============================================================
+// 🔔 Notifications
+// ============================================================
+
+function toggleNotifications() {
+
+    const modal =
+        getElement(
+            'notificationModal'
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.toggle(
+        'active'
+    );
+
+    // توافق مع CSS المختلفة
+    if (
+        modal.style.display === 'flex'
+    ) {
+
+        modal.style.display = 'none';
+
+    } else {
+
+        modal.style.display = 'flex';
+    }
+}
+
+function closeNotificationModal() {
+
+    const modal =
+        getElement(
+            'notificationModal'
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.style.display = 'none';
+
+    modal.classList.remove(
+        'active'
+    );
+}
+
+// ============================================================
+// 🔑 Password Modal
+// ============================================================
+
+function closePasswordModal() {
+
+    const modal =
+        getElement(
+            'passwordModal'
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.style.display = 'none';
+
+    modal.classList.remove(
+        'active'
+    );
+}
+
+function openPasswordModal(
+    userId,
+    userName = ''
+) {
+
+    const modal =
+        getElement(
+            'passwordModal'
+        );
+
+    const nameElement =
+        getElement(
+            'modalUserName'
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    modal.dataset.userId =
+        String(userId || '');
+
+    if (nameElement) {
+        nameElement.textContent =
+            userName || 'المستخدم';
+    }
+
+    modal.style.display = 'flex';
+
+    modal.classList.add(
+        'active'
+    );
+}
+
+async function saveNewPassword() {
+
+    const modal =
+        getElement(
+            'passwordModal'
+        );
+
+    const newPassword =
+        getElement(
+            'newPassword'
+        );
+
+    const confirmPassword =
+        getElement(
+            'confirmPassword'
+        );
+
+    if (!modal) {
+        return;
+    }
+
+    const userId =
+        modal.dataset.userId;
+
+    const password =
+        newPassword
+            ? newPassword.value
+            : '';
+
+    const confirmation =
+        confirmPassword
+            ? confirmPassword.value
+            : '';
+
+    if (!userId) {
+
+        alert(
+            '❌ لم يتم تحديد المستخدم'
+        );
+
+        return;
+    }
+
+    if (
+        !password ||
+        password.length < 8
+    ) {
+
+        alert(
+            '❌ كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل'
+        );
+
+        return;
+    }
+
+    if (
+        password !== confirmation
+    ) {
+
+        alert(
+            '❌ كلمتا المرور غير متطابقتين'
+        );
+
+        return;
+    }
+
+    try {
+
+        const user =
+            getStoredUser();
+
+        const currentPassword =
+            prompt(
+                'أدخل كلمة المرور الحالية:'
+            );
+
+        if (!currentPassword) {
+            return;
+        }
+
         if (
-            err.type ===
-            'entity.too.large'
+            !window.API ||
+            typeof window.API.changePassword !==
+            'function'
         ) {
 
-            return res
-                .status(413)
-                .json({
-
-                    success: false,
-
-                    error:
-                        'حجم البيانات كبير جداً'
-                });
+            throw new Error(
+                'API.changePassword غير متوفر'
+            );
         }
 
-        // لا نكشف تفاصيل الخطأ في Production
-        const message =
-            IS_PRODUCTION
-                ? 'حدث خطأ داخلي في الخادم'
-                : err.message;
+        await window.API.changePassword(
+            userId,
+            currentPassword,
+            password
+        );
 
-        res
-            .status(
-                err.statusCode ||
-                err.status ||
-                500
-            )
-            .json({
+        alert(
+            '✅ تم تغيير كلمة المرور بنجاح'
+        );
 
-                success: false,
+        if (newPassword) {
+            newPassword.value = '';
+        }
 
-                error: message,
+        if (confirmPassword) {
+            confirmPassword.value = '';
+        }
 
-                ...(IS_PRODUCTION
-                    ? {}
-                    : {
-                        stack:
-                            err.stack
-                    })
-            });
+        closePasswordModal();
+
+    } catch (error) {
+
+        console.error(
+            '❌ Password change error:',
+            error
+        );
+
+        alert(
+            `❌ ${
+                error.message ||
+                'فشل تغيير كلمة المرور'
+            }`
+        );
+    }
+}
+
+// ============================================================
+// 🔄 تحديث التطبيق
+// ============================================================
+
+async function refreshAllPages() {
+
+    try {
+
+        await showPage(
+            currentPage
+        );
+
+    } catch (error) {
+
+        console.error(
+            '❌ Refresh error:',
+            error
+        );
+    }
+}
+
+// ============================================================
+// ⬆️ Scroll
+// ============================================================
+
+function scrollToTop() {
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+function scrollToBottom() {
+
+    window.scrollTo({
+        top:
+            document.documentElement
+                .scrollHeight,
+
+        behavior: 'smooth'
+    });
+}
+
+// ============================================================
+// 🖥️ فحص الجلسة
+// ============================================================
+
+async function checkSession() {
+
+    const token =
+        getStoredToken();
+
+    if (!token) {
+
+        showLogin();
+
+        return false;
+    }
+
+    try {
+
+        // إذا كان API موجوداً نفحص الجلسة
+        if (
+            window.API &&
+            typeof window.API.authMe ===
+            'function'
+        ) {
+
+            const response =
+                await window.API.authMe();
+
+            if (
+                response &&
+                response.user
+            ) {
+
+                localStorage.setItem(
+                    'userData',
+                    JSON.stringify(
+                        response.user
+                    )
+                );
+            }
+        }
+
+        showApplication();
+
+        return true;
+
+    } catch (error) {
+
+        console.warn(
+            '⚠️ Session invalid:',
+            error
+        );
+
+        localStorage.removeItem(
+            'authToken'
+        );
+
+        localStorage.removeItem(
+            'userData'
+        );
+
+        showLogin();
+
+        return false;
+    }
+}
+
+// ============================================================
+// 🛡️ منع أخطاء JavaScript غير المعالجة
+// ============================================================
+
+window.addEventListener(
+    'error',
+    event => {
+
+        console.error(
+            '❌ Frontend Error:',
+            event.error ||
+            event.message
+        );
+    }
+);
+
+window.addEventListener(
+    'unhandledrejection',
+    event => {
+
+        console.error(
+            '❌ Unhandled Promise:',
+            event.reason
+        );
     }
 );
 
 // ============================================================
-// 📤 Export
+// 🚀 تشغيل التطبيق
 // ============================================================
 
-module.exports = app;
+async function initializeApplication() {
+
+    console.log(
+        '🚀 تشغيل Marine System...'
+    );
+
+    setupLoginEvents();
+
+    const loggedIn =
+        await checkSession();
+
+    if (loggedIn) {
+
+        await showPage(
+            APP_CONFIG.defaultPage
+        );
+
+    } else {
+
+        // لا نعرض Dashboard قبل تسجيل الدخول
+        showLogin();
+    }
+
+    console.log(
+        '✅ Marine System Frontend جاهز'
+    );
+}
 
 // ============================================================
-// 🏁 ملاحظة
-// ============================================================
-//
-// لا يوجد app.listen() هنا.
-//
-// server.js هو المسؤول عن:
-//
-// 1. تحميل dotenv
-// 2. الاتصال بـ MongoDB
-// 3. تحميل routes
-// 4. إنشاء Admin
-// 5. app.listen()
-//
+// 🌐 Expose Global Functions
 // ============================================================
 
-console.log(
-    '✅ Marine System Express App جاهز'
-);
+window.showPage =
+    showPage;
+
+window.doLogin =
+    doLogin;
+
+window.handleLogin =
+    doLogin;
+
+window.doLogout =
+    doLogout;
+
+window.toggleSidebar =
+    toggleSidebar;
+
+window.toggleNotifications =
+    toggleNotifications;
+
+window.closeNotificationModal =
+    closeNotificationModal;
+
+window.openPasswordModal =
+    openPasswordModal;
+
+window.closePasswordModal =
+    closePasswordModal;
+
+window.saveNewPassword =
+    saveNewPassword;
+
+window.refreshAllPages =
+    refreshAllPages;
+
+window.scrollToTop =
+    scrollToTop;
+
+window.scrollToBottom =
+    scrollToBottom;
+
+// ============================================================
+// DOM READY
+// ============================================================
+
+if (
+    document.readyState === 'loading'
+) {
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        initializeApplication
+    );
+
+} else {
+
+    initializeApplication();
+}
