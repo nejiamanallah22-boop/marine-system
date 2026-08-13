@@ -92,7 +92,7 @@ app.use(helmet({
 }));
 
 // ============================================================
-// 🌐 CORS - التعديل الأساسي
+// 🌐 CORS
 // ============================================================
 
 const allowedOrigins = FRONTEND_URL === '*' 
@@ -101,15 +101,10 @@ const allowedOrigins = FRONTEND_URL === '*'
 
 app.use(cors({
     origin: (origin, callback) => {
-        // ✅ السماح بالطلبات من نفس الخادم
-        if (!origin) {
-            return callback(null, true);
-        }
-        // ✅ السماح إذا كان الرابط مسموحاً
+        if (!origin) return callback(null, true);
         if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        // ✅ السماح إذا كان الطلب من Render
         if (origin.includes('onrender.com')) {
             return callback(null, true);
         }
@@ -335,13 +330,13 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================
-// 🔐 AUTH ROUTES - تسجيل الدخول
+// 🔐 AUTH ROUTES - متوافقة مع api.js
 // ============================================================
 
+// ✅ تسجيل الدخول - يدعم username و email
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
     const start = Date.now();
     try {
-        // ✅ دعم username و email
         const identifier = String(req.body.username || req.body.email || req.body.identifier || '').trim().toLowerCase();
         const password = String(req.body.password || '');
 
@@ -352,7 +347,6 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             });
         }
 
-        // ✅ البحث عن المستخدم
         const user = await User.findOne({
             $or: [
                 { email: identifier },
@@ -381,7 +375,6 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             });
         }
 
-        // ✅ التحقق من كلمة المرور
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             if (typeof user.incrementLoginAttempts === 'function') {
@@ -393,20 +386,17 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             });
         }
 
-        // ✅ إعادة تعيين محاولات الدخول
         if (typeof user.resetLoginAttempts === 'function') {
             await user.resetLoginAttempts();
         }
 
         user.lastLogin = new Date();
 
-        // ✅ توليد التوكنات
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         user.refreshToken = refreshToken;
         await user.save();
 
-        // ✅ تسجيل الدخول
         await writeLog({
             action: 'login',
             resource: 'user',
@@ -434,6 +424,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     }
 });
 
+// ✅ تجديد التوكن
 app.post('/api/auth/refresh', async (req, res) => {
     try {
         const refreshToken = String(req.body.refreshToken || '').trim();
@@ -475,6 +466,7 @@ app.post('/api/auth/refresh', async (req, res) => {
     }
 });
 
+// ✅ تسجيل الخروج
 app.post('/api/auth/logout', authenticate, async (req, res) => {
     try {
         req.user.refreshToken = undefined;
@@ -487,6 +479,7 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
     }
 });
 
+// ✅ المستخدم الحالي
 app.get('/api/auth/me', authenticate, (req, res) => {
     res.json({ success: true, user: cleanUser(req.user) });
 });
@@ -804,6 +797,68 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
 });
 
 // ============================================================
+// 📝 NOTES
+// ============================================================
+
+app.get('/api/notes', authenticate, async (req, res) => {
+    try {
+        const notes = await Note.find()
+            .populate('createdBy', 'name email')
+            .populate('approvedBy', 'name email')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, notes });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/notes', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
+    try {
+        const note = new Note({
+            ...req.body,
+            createdBy: req.user._id,
+            createdByName: req.user.name
+        });
+        await note.save();
+        await writeLog({ action: 'create', resource: 'note', resourceId: note._id, resourceModel: 'Note', resourceName: note.title, user: req.user, req });
+        res.status(201).json({ success: true, note });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 🎫 TICKETS
+// ============================================================
+
+app.get('/api/tickets', authenticate, async (req, res) => {
+    try {
+        const tickets = await Ticket.find()
+            .populate('createdBy', 'name email')
+            .populate('assignedTo', 'name email')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, tickets });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/tickets', authenticate, async (req, res) => {
+    try {
+        const ticket = new Ticket({
+            ...req.body,
+            createdBy: req.user._id,
+            createdByName: req.user.name
+        });
+        await ticket.save();
+        await writeLog({ action: 'create', resource: 'ticket', resourceId: ticket._id, resourceModel: 'Ticket', resourceName: ticket.title, user: req.user, req });
+        res.status(201).json({ success: true, ticket });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
 // ❌ API 404
 // ============================================================
 
@@ -891,7 +946,7 @@ async function connectDatabase() {
 async function createInitialAdmin() {
     try {
         const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@marine-system.com').trim().toLowerCase();
-        const adminPassword = String(process.env.ADMIN_PASSWORD || 'Admin@2024#Secure');
+        const adminPassword = String(process.env.ADMIN_PASSWORD || '123456');
         const adminName = process.env.ADMIN_NAME || 'مدير النظام';
 
         if (!adminEmail || !adminPassword) {
