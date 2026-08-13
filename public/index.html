@@ -28,6 +28,30 @@
     <title>⚓ منظومة الوسائل البحرية</title>
 
     <!-- ========================================================
+         Preconnect for performance
+         ======================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://cdnjs.cloudflare.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://unpkg.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://cdn.jsdelivr.net"
+    >
+
+    <!-- ========================================================
          Fonts
          ======================================================== -->
 
@@ -92,6 +116,61 @@
 <body>
 
 <!-- ============================================================
+     NOSCRIPT FALLBACK
+     ============================================================ -->
+
+<noscript>
+
+    <div style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: #0b1f33;
+        color: #f8f9fa;
+        font-family: 'Cairo', sans-serif;
+        text-align: center;
+        padding: 20px;
+    ">
+
+        <div style="
+            max-width: 500px;
+            padding: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        ">
+
+            <div style="font-size: 64px; margin-bottom: 20px;">
+                ⚓
+            </div>
+
+            <h2 style="color: #f8f9fa; margin-bottom: 10px;">
+                منظومة الوسائل البحرية
+            </h2>
+
+            <p style="color: rgba(255,255,255,0.6); line-height: 1.8;">
+                ⚠️ يرجى تفعيل JavaScript لتشغيل التطبيق
+            </p>
+
+            <p style="
+                color: rgba(255,255,255,0.3);
+                font-size: 13px;
+                margin-top: 20px;
+                border-top: 1px solid rgba(255,255,255,0.05);
+                padding-top: 20px;
+            ">
+                نظام إدارة وإسناد الوحدات البحرية v5.0
+            </p>
+
+        </div>
+
+    </div>
+
+</noscript>
+
+
+<!-- ============================================================
      LOGIN
      ============================================================ -->
 
@@ -139,6 +218,7 @@
                 placeholder="اسم المستخدم"
                 autocomplete="username"
                 required
+                aria-label="اسم المستخدم"
             >
 
         </div>
@@ -155,6 +235,7 @@
                 placeholder="كلمة المرور"
                 autocomplete="current-password"
                 required
+                aria-label="كلمة المرور"
             >
 
         </div>
@@ -166,6 +247,7 @@
             class="login-btn"
             id="loginButton"
             onclick="handleLogin()"
+            aria-label="تسجيل الدخول"
         >
 
             <span id="loginButtonIcon">
@@ -184,6 +266,7 @@
             id="loginError"
             class="error-msg"
             role="alert"
+            aria-live="polite"
         ></div>
 
         <div class="login-footer">
@@ -223,6 +306,9 @@
             <span
                 class="menu-toggle"
                 onclick="toggleSidebar()"
+                aria-label="فتح القائمة الجانبية"
+                role="button"
+                tabindex="0"
             >
                 ☰
             </span>
@@ -249,6 +335,9 @@
             <span
                 class="notification-icon"
                 onclick="toggleNotifications()"
+                role="button"
+                tabindex="0"
+                aria-label="الإشعارات"
             >
 
                 🔔
@@ -266,6 +355,7 @@
             <span
                 class="role-badge"
                 id="userRoleDisplay"
+                aria-label="الدور"
             >
                 👤
             </span>
@@ -276,6 +366,7 @@
                 type="button"
                 onclick="window.print()"
                 title="طباعة"
+                aria-label="طباعة"
             >
 
                 <i class="fas fa-print"></i>
@@ -288,6 +379,7 @@
                 type="button"
                 onclick="refreshAllPages()"
                 title="تحديث"
+                aria-label="تحديث"
             >
 
                 <i class="fas fa-sync-alt"></i>
@@ -300,6 +392,7 @@
                 type="button"
                 onclick="doLogout()"
                 title="تسجيل الخروج"
+                aria-label="تسجيل الخروج"
             >
 
                 <i class="fas fa-sign-out-alt"></i>
@@ -318,6 +411,7 @@
     <nav
         class="sidebar"
         id="sidebar"
+        aria-label="القائمة الجانبية"
     >
 
         <div class="sidebar-brand">
@@ -336,6 +430,7 @@
         <button
             class="nav-btn active"
             onclick="showPage('dashboard')"
+            aria-label="لوحة التحكم"
         >
 
             <i class="fas fa-chart-pie"></i>
@@ -348,6 +443,7 @@
         <button
             class="nav-btn"
             onclick="showPage('fleet')"
+            aria-label="الأسطول"
         >
 
             <i class="fas fa-ship"></i>
@@ -360,6 +456,7 @@
         <button
             class="nav-btn"
             onclick="showPage('maintenance')"
+            aria-label="الصيانة"
         >
 
             <i class="fas fa-wrench"></i>
@@ -372,6 +469,7 @@
         <button
             class="nav-btn"
             onclick="showPage('efficiency')"
+            aria-label="الجاهزية"
         >
 
             <i class="fas fa-chart-line"></i>
@@ -384,6 +482,7 @@
         <button
             class="nav-btn"
             onclick="showPage('support')"
+            aria-label="الدعم"
         >
 
             <i class="fas fa-headset"></i>
@@ -396,6 +495,7 @@
         <button
             class="nav-btn"
             onclick="showPage('users')"
+            aria-label="المستخدمين"
         >
 
             <i class="fas fa-users"></i>
@@ -408,6 +508,7 @@
         <button
             class="nav-btn"
             onclick="showPage('notes')"
+            aria-label="Note Verbale"
         >
 
             <i class="fas fa-sticky-note"></i>
@@ -420,6 +521,7 @@
         <button
             class="nav-btn"
             onclick="showPage('sessions')"
+            aria-label="المراقبة"
         >
 
             <i class="fas fa-users-cog"></i>
@@ -429,4 +531,193 @@
         </button>
 
 
-        <
+        <button
+            class="nav-btn"
+            onclick="showPage('ai-assistant')"
+            aria-label="المساعد الذكي"
+        >
+
+            <i class="fas fa-robot"></i>
+
+            🤖 المساعد الذكي
+
+        </button>
+
+
+        <div class="sidebar-footer">
+
+            <span>
+                الوكيل أمان الله ناجي
+            </span>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ========================================================
+         MAIN CONTENT
+         ======================================================== -->
+
+    <main
+        class="main-content"
+        id="mainContent"
+    >
+
+        <div
+            id="pageContainer"
+            role="main"
+            aria-label="محتوى الصفحة"
+        ></div>
+
+    </main>
+
+</div>
+
+
+<!-- ============================================================
+     SCROLL BUTTONS
+     ============================================================ -->
+
+<div class="scroll-buttons">
+
+    <button
+        class="scroll-btn"
+        onclick="scrollToTop()"
+        aria-label="انتقال إلى الأعلى"
+        title="انتقال إلى الأعلى"
+    >
+
+        <i class="fas fa-chevron-up"></i>
+
+    </button>
+
+
+    <button
+        class="scroll-btn"
+        onclick="scrollToBottom()"
+        aria-label="انتقال إلى الأسفل"
+        title="انتقال إلى الأسفل"
+    >
+
+        <i class="fas fa-chevron-down"></i>
+
+    </button>
+
+</div>
+
+
+<!-- ============================================================
+     PASSWORD MODAL
+     ============================================================ -->
+
+<div
+    id="passwordModal"
+    class="modal-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="passwordModalTitle"
+>
+
+    <div class="modal-box">
+
+        <h3 id="passwordModalTitle">
+            🔑 تغيير كلمة المرور
+        </h3>
+
+        <p id="modalUserName"></p>
+
+        <input
+            type="password"
+            id="newPassword"
+            placeholder="كلمة المرور الجديدة"
+            autocomplete="new-password"
+            aria-label="كلمة المرور الجديدة"
+        >
+
+        <input
+            type="password"
+            id="confirmPassword"
+            placeholder="تأكيد كلمة المرور"
+            autocomplete="new-password"
+            aria-label="تأكيد كلمة المرور"
+        >
+
+        <div class="modal-actions">
+
+            <button
+                class="btn-save"
+                onclick="saveNewPassword()"
+                aria-label="حفظ"
+            >
+                حفظ
+            </button>
+
+
+            <button
+                class="btn-cancel"
+                onclick="closePasswordModal()"
+                aria-label="إلغاء"
+            >
+                إلغاء
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================
+     JAVASCRIPT - Core
+     ============================================================ -->
+
+<!-- 1️⃣ Core -->
+
+<script src="/js/core/config.js"></script>
+
+<script src="/js/core/helpers.js"></script>
+
+<script src="/js/core/auth.js"></script>
+
+
+<!-- 2️⃣ Libraries -->
+
+<script src="/js/lib/charts.js"></script>
+
+<script src="/js/lib/map.js"></script>
+
+<script src="/js/lib/notifications.js"></script>
+
+<script src="/js/lib/file-import.js"></script>
+
+
+<!-- 3️⃣ Pages -->
+
+<script src="/js/pages/dashboard.js"></script>
+
+<script src="/js/pages/fleet.js"></script>
+
+<script src="/js/pages/maintenance.js"></script>
+
+<script src="/js/pages/efficiency.js"></script>
+
+<script src="/js/pages/support.js"></script>
+
+<script src="/js/pages/users.js"></script>
+
+<script src="/js/pages/notes.js"></script>
+
+<script src="/js/pages/sessions.js"></script>
+
+<script src="/js/pages/ai-assistant.js"></script>
+
+
+<!-- 4️⃣ Main Application -->
+
+<script src="/js/app.js"></script>
+
+</body>
+
+</html>
