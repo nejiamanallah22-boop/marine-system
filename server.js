@@ -21,7 +21,6 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 
 // ============================================================
 // 📦 MODELS
@@ -71,6 +70,7 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
 
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
+console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
 console.log('='.repeat(50) + '\n');
 
 // ============================================================
@@ -91,17 +91,26 @@ app.use(helmet({
     }
 }));
 
-// CORS
+// ============================================================
+// 🌐 CORS - التعديل الأساسي
+// ============================================================
+
 const allowedOrigins = FRONTEND_URL === '*' 
     ? ['*'] 
     : FRONTEND_URL.split(',').map(x => x.trim()).filter(Boolean);
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes('*')) {
+        // ✅ السماح بالطلبات من نفس الخادم
+        if (!origin) {
             return callback(null, true);
         }
-        if (allowedOrigins.includes(origin)) {
+        // ✅ السماح إذا كان الرابط مسموحاً
+        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        // ✅ السماح إذا كان الطلب من Render
+        if (origin.includes('onrender.com')) {
             return callback(null, true);
         }
         console.warn(`⚠️ CORS blocked: ${origin}`);
@@ -113,7 +122,10 @@ app.use(cors({
     maxAge: 86400
 }));
 
-// Body Parsers
+// ============================================================
+// 📦 Body Parsers
+// ============================================================
+
 app.use(express.json({ limit: '10mb', strict: true }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -153,9 +165,7 @@ app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
         const duration = Date.now() - start;
-        if (NODE_ENV !== 'test') {
-            console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
-        }
+        console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
     });
     next();
 });
@@ -325,60 +335,87 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================
-// 🔐 AUTH ROUTES
+// 🔐 AUTH ROUTES - تسجيل الدخول
 // ============================================================
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
     const start = Date.now();
     try {
-        const identifier = String(req.body.identifier || req.body.email || req.body.username || '').trim().toLowerCase();
+        // ✅ دعم username و email
+        const identifier = String(req.body.username || req.body.email || req.body.identifier || '').trim().toLowerCase();
         const password = String(req.body.password || '');
 
         if (!identifier || !password) {
-            return res.status(400).json({ success: false, error: 'Email/username and password required' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'اسم المستخدم وكلمة المرور مطلوبان' 
+            });
         }
 
+        // ✅ البحث عن المستخدم
         const user = await User.findOne({
-            $or: [{ email: identifier }, { username: identifier }]
+            $or: [
+                { email: identifier },
+                { username: identifier }
+            ]
         }).select('+password +refreshToken');
 
         if (!user) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+            return res.status(401).json({ 
+                success: false, 
+                error: 'بيانات الدخول غير صحيحة' 
+            });
         }
 
         if (!user.isActive) {
-            return res.status(403).json({ success: false, error: 'Account disabled' });
+            return res.status(403).json({ 
+                success: false, 
+                error: 'الحساب معطل' 
+            });
         }
 
         if (user.isLocked) {
-            return res.status(423).json({ success: false, error: 'Account locked' });
+            return res.status(423).json({ 
+                success: false, 
+                error: 'الحساب مقفل مؤقتاً' 
+            });
         }
 
+        // ✅ التحقق من كلمة المرور
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             if (typeof user.incrementLoginAttempts === 'function') {
                 await user.incrementLoginAttempts();
             }
-            await writeLog({ action: 'login', resource: 'user', resourceId: user._id, resourceModel: 'User', user, req, status: 'error', error: 'Invalid credentials' });
-            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+            return res.status(401).json({ 
+                success: false, 
+                error: 'بيانات الدخول غير صحيحة' 
+            });
         }
 
+        // ✅ إعادة تعيين محاولات الدخول
         if (typeof user.resetLoginAttempts === 'function') {
             await user.resetLoginAttempts();
         }
 
-        if (typeof user.updateLastLogin === 'function') {
-            await user.updateLastLogin();
-        } else {
-            user.lastLogin = new Date();
-        }
+        user.lastLogin = new Date();
 
+        // ✅ توليد التوكنات
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
         user.refreshToken = refreshToken;
         await user.save();
 
-        await writeLog({ action: 'login', resource: 'user', resourceId: user._id, resourceModel: 'User', user, req, details: { duration: Date.now() - start } });
+        // ✅ تسجيل الدخول
+        await writeLog({
+            action: 'login',
+            resource: 'user',
+            resourceId: user._id,
+            resourceModel: 'User',
+            user,
+            req,
+            details: { duration: Date.now() - start }
+        });
 
         res.json({
             success: true,
@@ -390,7 +427,10 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
     } catch (error) {
         console.error('❌ Login error:', error);
-        res.status(500).json({ success: false, error: IS_PRODUCTION ? 'Internal server error' : error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: IS_PRODUCTION ? 'حدث خطأ في الخادم' : error.message 
+        });
     }
 });
 
@@ -902,6 +942,7 @@ async function startServer() {
             console.log('📜 AUDIT LOGS: ENABLED');
             console.log(`❤️ HEALTH: /health`);
             console.log(`🔐 LOGIN: /api/auth/login`);
+            console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
             console.log('='.repeat(50) + '\n');
         });
 
