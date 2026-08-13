@@ -1,6 +1,6 @@
 // ============================================================
 // 📦 api.js - Marine System API Client
-// الإصدار: Production / Stable
+// الإصدار: Production / Stable v2.0
 // ============================================================
 
 'use strict';
@@ -12,7 +12,8 @@ console.log('🚀 تحميل api.js...');
 // ============================================================
 
 const API_CONFIG = {
-    baseURL: `${window.location.origin}/api`,
+    // ✅ تم الإصلاح: إزالة /api من baseURL لأن المسارات في server.js تبدأ بـ /api
+    baseURL: window.location.origin,
     tokenKey: 'authToken',
     userKey: 'userData',
     timeout: 30000
@@ -44,7 +45,6 @@ function clearAuth() {
 function forceLogout() {
     clearAuth();
 
-    // لا نذهب إلى /login لأنه لا توجد صفحة مستقلة بهذا الاسم
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
 
@@ -123,11 +123,17 @@ async function apiRequest(endpoint, options = {}) {
         body = JSON.stringify(body);
     }
 
+    // ✅ إصلاح المسار: إضافة /api إذا كان المسار لا يبدأ به
+    let fullEndpoint = endpoint;
+    if (!endpoint.startsWith('/api') && !endpoint.startsWith('http')) {
+        fullEndpoint = `/api${endpoint}`;
+    }
+
     const requestURL =
-        `${API_CONFIG.baseURL}${endpoint}`;
+        `${API_CONFIG.baseURL}${fullEndpoint}`;
 
     console.log(
-        `📡 API ${method} ${endpoint}`
+        `📡 API ${method} ${fullEndpoint}`
     );
 
     try {
@@ -305,7 +311,6 @@ async function authLogout() {
 
     try {
 
-        // إذا كان السيرفر لديه endpoint logout
         await apiRequest(
             '/auth/logout',
             {
@@ -315,7 +320,6 @@ async function authLogout() {
 
     } catch (error) {
 
-        // عدم منع الخروج إذا لم يوجد endpoint
         console.warn(
             '⚠️ Logout endpoint unavailable'
         );
@@ -328,7 +332,7 @@ async function authLogout() {
 }
 
 // ============================================================
-// 🚢 FLEET
+// 🚢 FLEET (VESSELS)
 // ============================================================
 
 function getFleet(filters = {}) {
@@ -337,21 +341,21 @@ function getFleet(filters = {}) {
         new URLSearchParams(filters).toString();
 
     return apiRequest(
-        `/fleet${query ? `?${query}` : ''}`
+        `/vessels${query ? `?${query}` : ''}`
     );
 }
 
 function getVessel(id) {
 
     return apiRequest(
-        `/fleet/${encodeURIComponent(id)}`
+        `/vessels/${encodeURIComponent(id)}`
     );
 }
 
 function createVessel(data) {
 
     return apiRequest(
-        '/fleet',
+        '/vessels',
         {
             method: 'POST',
             body: data
@@ -362,7 +366,7 @@ function createVessel(data) {
 function updateVessel(id, data) {
 
     return apiRequest(
-        `/fleet/${encodeURIComponent(id)}`,
+        `/vessels/${encodeURIComponent(id)}`,
         {
             method: 'PUT',
             body: data
@@ -373,7 +377,7 @@ function updateVessel(id, data) {
 function deleteVessel(id) {
 
     return apiRequest(
-        `/fleet/${encodeURIComponent(id)}`,
+        `/vessels/${encodeURIComponent(id)}`,
         {
             method: 'DELETE'
         }
@@ -383,7 +387,7 @@ function deleteVessel(id) {
 function getFleetStats() {
 
     return apiRequest(
-        '/fleet/stats'
+        '/vessels/stats'
     );
 }
 
@@ -980,4 +984,4 @@ window.API = {
     clearAuth
 };
 
-console.log('✅ API جاهز - Marine System');
+console.log('✅ API جاهز - Marine System v2.0');
