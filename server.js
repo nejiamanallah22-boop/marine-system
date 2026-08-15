@@ -1,7 +1,7 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v15.1
+// 🚢 MARINE SYSTEM - SERVER v15.2
 // ============================================================
-// 🔐 PRODUCTION READY - SECURE EDITION WITH CSP FIX
+// 🔐 PRODUCTION READY - CSP FIXED
 // ============================================================
 
 'use strict';
@@ -59,7 +59,7 @@ const publicPath = path.join(__dirname, 'public');
 // ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v15.1 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v15.2 - PRODUCTION');
 console.log('='.repeat(60));
 
 const errors = [];
@@ -242,7 +242,7 @@ async function writeLog({ action, resource, resourceId, resourceModel, user, req
 }
 
 // ============================================================
-// 🔐 SECURITY MIDDLEWARE - مع CSP معدل
+// 🔐 SECURITY MIDDLEWARE - مع CSP معدل بالكامل
 // ============================================================
 
 app.disable('x-powered-by');
@@ -258,9 +258,9 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             
-            // ✅ script-src مع unsafe-inline للـ event handlers
+            // ✅ script-src مع unsafe-inline
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-            scriptSrcAttr: ["'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"], // ✅ يسمح بـ onclick
             
             // ✅ style-src مع جميع المصادر
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
@@ -1467,7 +1467,7 @@ async function startServer() {
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v15.1 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v15.2 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
