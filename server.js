@@ -1,7 +1,7 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v15.0
+// 🚢 MARINE SYSTEM - SERVER v15.1
 // ============================================================
-// 🔐 PRODUCTION READY - SECURE EDITION
+// 🔐 PRODUCTION READY - SECURE EDITION WITH CSP FIX
 // ============================================================
 
 'use strict';
@@ -59,7 +59,7 @@ const publicPath = path.join(__dirname, 'public');
 // ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v15.0 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v15.1 - PRODUCTION');
 console.log('='.repeat(60));
 
 const errors = [];
@@ -242,7 +242,7 @@ async function writeLog({ action, resource, resourceId, resourceModel, user, req
 }
 
 // ============================================================
-// 🔐 SECURITY MIDDLEWARE
+// 🔐 SECURITY MIDDLEWARE - مع CSP معدل
 // ============================================================
 
 app.disable('x-powered-by');
@@ -251,17 +251,30 @@ app.set('trust proxy', 1);
 // ✅ Cookie Parser
 app.use(cookieParser());
 
-// ✅ Helmet
+// ✅ Helmet مع CSP معدل بالكامل
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            imgSrc: ["'self'", "data:", "https://*.googleapis.com", "https://*.gstatic.com", "https://*.openstreetmap.org"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            connectSrc: ["'self'", "https://*.openstreetmap.org", "https://*.googleapis.com"],
+            
+            // ✅ script-src مع unsafe-inline للـ event handlers
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            
+            // ✅ style-src مع جميع المصادر
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+            styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
+            
+            // ✅ img-src
+            imgSrc: ["'self'", "data:", "https://*.googleapis.com", "https://*.gstatic.com", "https://*.openstreetmap.org", "https://*.tile.openstreetmap.org"],
+            
+            // ✅ font-src
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+            
+            // ✅ connect-src مع جميع المصادر
+            connectSrc: ["'self'", "https://*.openstreetmap.org", "https://*.googleapis.com", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://*.tile.openstreetmap.org"],
+            
             frameSrc: ["'none'"],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
@@ -377,10 +390,8 @@ app.use(express.static(publicPath, {
 
 async function authenticate(req, res, next) {
     try {
-        // ✅ محاولة قراءة التوكن من Cookie أولاً
         let token = req.cookies?.auth_token;
         
-        // ✅ إذا لم يكن في Cookie، حاول من Authorization header
         if (!token) {
             const authHeader = req.headers.authorization;
             if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -551,7 +562,6 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         user.refreshToken = hashRefreshToken(refreshToken);
         await user.save();
 
-        // ✅ إرسال التوكنات في HttpOnly Cookies
         res.cookie('auth_token', accessToken, {
             httpOnly: true,
             secure: IS_PRODUCTION,
@@ -662,7 +672,6 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
         req.user.refreshToken = undefined;
         await req.user.save();
 
-        // ✅ حذف Cookies
         res.clearCookie('auth_token');
         res.clearCookie('refresh_token');
 
@@ -1458,7 +1467,7 @@ async function startServer() {
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v15.0 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v15.1 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
@@ -1466,7 +1475,7 @@ async function startServer() {
             console.log('🔐 JWT: ENABLED (15min access)');
             console.log('🍪 HTTPONLY COOKIES: ENABLED');
             console.log('🔄 TOKEN VERSION: ENABLED');
-            console.log('🛡️ HELMET + CSP: ENABLED');
+            console.log('🛡️ HELMET + CSP: ENABLED (FIXED)');
             console.log('🚦 RATE LIMIT: ENABLED');
             console.log('📜 AUDIT LOGS: ENABLED');
             console.log('🔐 SECURITY LOGGING: ENABLED');
@@ -1477,6 +1486,7 @@ async function startServer() {
             console.log('📊 PAGINATION: ENABLED');
             console.log('🔒 DATA-LEVEL RBAC: ENABLED');
             console.log('🛡️ ADMIN PROTECTION: ENABLED');
+            console.log('✅ CSP: UNSAFE-INLINE ALLOWED');
             console.log(`❤️ HEALTH: /health`);
             console.log(`🔐 LOGIN: /api/auth/login`);
             console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
