@@ -1,7 +1,7 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - PRODUCTION SERVER v10.0
+// 🚢 MARINE SYSTEM - SERVER v15.0
 // ============================================================
-// 🏆 100/100 - Enterprise Grade
+// 🔐 PRODUCTION READY - SECURE EDITION
 // ============================================================
 
 'use strict';
@@ -20,7 +20,8 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const cookieParser = require('cookie-parser');
 
 // ============================================================
 // 📦 MODELS
@@ -45,8 +46,11 @@ const IS_PRODUCTION = NODE_ENV === 'production';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || `${JWT_SECRET}_refresh`;
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
 const publicPath = path.join(__dirname, 'public');
 
@@ -54,24 +58,188 @@ const publicPath = path.join(__dirname, 'public');
 // 🚨 ENVIRONMENT VALIDATION
 // ============================================================
 
-console.log('\n' + '='.repeat(50));
-console.log('🚢 MARINE SYSTEM v10.0');
-console.log('='.repeat(50));
+console.log('\n' + '='.repeat(60));
+console.log('🚢 MARINE SYSTEM v15.0 - PRODUCTION');
+console.log('='.repeat(60));
 
-if (!MONGODB_URI) {
-    console.error('❌ MONGODB_URI is required');
-    process.exit(1);
+const errors = [];
+
+if (!MONGODB_URI) errors.push('❌ MONGODB_URI is required');
+if (!JWT_SECRET || JWT_SECRET.length < 32) errors.push('❌ JWT_SECRET must be at least 32 characters');
+if (!JWT_REFRESH_SECRET || JWT_REFRESH_SECRET.length < 32) errors.push('❌ JWT_REFRESH_SECRET must be at least 32 characters');
+
+if (IS_PRODUCTION) {
+    if (!FRONTEND_URL || FRONTEND_URL === '*') {
+        errors.push('❌ FRONTEND_URL must be explicitly set in production');
+    }
+    if (!ADMIN_EMAIL) errors.push('❌ ADMIN_EMAIL is required in production');
+    if (!ADMIN_PASSWORD) errors.push('❌ ADMIN_PASSWORD is required in production');
+    if (ADMIN_PASSWORD && ADMIN_PASSWORD.length < 12) {
+        errors.push('❌ ADMIN_PASSWORD must be at least 12 characters in production');
+    }
 }
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-    console.error('❌ JWT_SECRET must be at least 32 characters');
+if (errors.length > 0) {
+    errors.forEach(err => console.error(err));
     process.exit(1);
 }
 
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
-console.log('='.repeat(50) + '\n');
+console.log('='.repeat(60) + '\n');
+
+// ============================================================
+// 🔐 TOKEN HELPERS
+// ============================================================
+
+function generateAccessToken(user) {
+    return jwt.sign(
+        { 
+            id: user._id.toString(), 
+            name: user.name, 
+            email: user.email, 
+            role: user.role,
+            tokenVersion: user.tokenVersion || 0
+        },
+        JWT_SECRET,
+        { expiresIn: '15m', issuer: 'marine-system' }
+    );
+}
+
+function generateRefreshToken(user) {
+    const jti = crypto.randomBytes(16).toString('hex');
+    return jwt.sign(
+        { 
+            id: user._id.toString(),
+            jti: jti
+        },
+        JWT_REFRESH_SECRET,
+        { expiresIn: '7d', issuer: 'marine-system' }
+    );
+}
+
+function hashRefreshToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function verifyAccessToken(token) {
+    return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
+}
+
+// ============================================================
+// 🔐 SECURITY HELPERS
+// ============================================================
+
+function logSecurityEvent(event, userId, req, details = {}) {
+    const safeDetails = { ...details };
+    delete safeDetails.password;
+    delete safeDetails.token;
+    delete safeDetails.refreshToken;
+    if (safeDetails.identifier) {
+        safeDetails.identifier = safeDetails.identifier.substring(0, 3) + '***';
+    }
+
+    console.log('🔐 SECURITY:', JSON.stringify({
+        timestamp: new Date().toISOString(),
+        event,
+        userId: userId || 'anonymous',
+        ip: req?.ip || 'unknown',
+        userAgent: req?.get('user-agent') || 'unknown',
+        path: req?.path || 'unknown',
+        ...safeDetails
+    }));
+}
+
+function pickAllowedFields(body, allowedFields) {
+    const result = {};
+    for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+            result[field] = body[field];
+        }
+    }
+    return result;
+}
+
+function isValidObjectId(id) {
+    return mongoose.Types.ObjectId.isValid(id);
+}
+
+function cleanUser(user) {
+    if (!user) return null;
+    return {
+        id: user._id?.toString(),
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        preferences: user.preferences || {},
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        tokenVersion: user.tokenVersion || 0
+    };
+}
+
+// ============================================================
+// ✅ VALIDATION FUNCTIONS
+// ============================================================
+
+function validateVessel(data, partial = false) {
+    const errors = [];
+    if (data.name !== undefined) {
+        if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 2) {
+            errors.push('اسم المركب مطلوب (حرفين على الأقل)');
+        }
+    } else if (!partial) {
+        errors.push('اسم المركب مطلوب');
+    }
+    if (data.stat && !['صالح', 'معطب', 'صيانة'].includes(data.stat)) {
+        errors.push('الحالة غير صالحة');
+    }
+    if (data.region && !['الشمال', 'الساحل', 'الوسط', 'الجنوب'].includes(data.region)) {
+        errors.push('المنطقة غير صالحة');
+    }
+    return errors;
+}
+
+function validateMaintenance(data, partial = false) {
+    const errors = [];
+    if (data.description !== undefined) {
+        if (!data.description || typeof data.description !== 'string' || data.description.trim().length < 3) {
+            errors.push('وصف الصيانة مطلوب (3 أحرف على الأقل)');
+        }
+    } else if (!partial) {
+        errors.push('وصف الصيانة مطلوب');
+    }
+    if (data.technician !== undefined) {
+        if (!data.technician || typeof data.technician !== 'string' || data.technician.trim().length < 2) {
+            errors.push('اسم الفني مطلوب');
+        }
+    } else if (!partial) {
+        errors.push('اسم الفني مطلوب');
+    }
+    if (data.cost !== undefined && (typeof data.cost !== 'number' || data.cost < 0)) {
+        errors.push('التكلفة يجب أن تكون رقم موجب');
+    }
+    return errors;
+}
+
+async function writeLog({ action, resource, resourceId, resourceModel, user, req, details = {}, status = 'success', error = null }) {
+    try {
+        if (Log && typeof Log.logAction === 'function') {
+            await Log.logAction({
+                action, resource, resourceId, resourceModel,
+                user: user?._id, userName: user?.name, userEmail: user?.email,
+                ipAddress: req?.ip, userAgent: req?.get('user-agent'),
+                details, status, error
+            });
+        }
+    } catch (err) {
+        console.error('⚠️ Log error:', err.message);
+    }
+}
 
 // ============================================================
 // 🔐 SECURITY MIDDLEWARE
@@ -80,10 +248,26 @@ console.log('='.repeat(50) + '\n');
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// Helmet
+// ✅ Cookie Parser
+app.use(cookieParser());
+
+// ✅ Helmet
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            imgSrc: ["'self'", "data:", "https://*.googleapis.com", "https://*.gstatic.com", "https://*.openstreetmap.org"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            connectSrc: ["'self'", "https://*.openstreetmap.org", "https://*.googleapis.com"],
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"]
+        }
+    },
     hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
@@ -95,17 +279,12 @@ app.use(helmet({
 // 🌐 CORS
 // ============================================================
 
-const allowedOrigins = FRONTEND_URL === '*' 
-    ? ['*'] 
-    : FRONTEND_URL.split(',').map(x => x.trim()).filter(Boolean);
+const allowedOrigins = FRONTEND_URL ? [FRONTEND_URL] : [];
 
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        if (origin.includes('onrender.com')) {
+        if (allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
         console.warn(`⚠️ CORS blocked: ${origin}`);
@@ -118,13 +297,12 @@ app.use(cors({
 }));
 
 // ============================================================
-// 📦 Body Parsers
+// 📦 BODY PARSERS
 // ============================================================
 
-app.use(express.json({ limit: '10mb', strict: true }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb', strict: true }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Compression
 app.use(compression({ threshold: 1024, level: 6 }));
 
 // ============================================================
@@ -137,7 +315,7 @@ const globalLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     skip: req => req.path === '/health',
-    message: { success: false, error: 'Too many requests, please try again later.' }
+    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' }
 });
 
 const loginLimiter = rateLimit({
@@ -146,7 +324,19 @@ const loginLimiter = rateLimit({
     skipSuccessfulRequests: true,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, error: 'Too many login attempts, please try again later.' }
+    message: { success: false, error: 'محاولات تسجيل دخول كثيرة، حاول بعد قليل' }
+});
+
+const userLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    keyGenerator: (req) => {
+        if (req.user?._id) return req.user._id.toString();
+        return req.ip || 'anonymous';
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, error: 'تجاوزت الحد المسموح من الطلبات' }
 });
 
 app.use('/api', globalLimiter);
@@ -159,8 +349,7 @@ app.use('/api/auth/login', loginLimiter);
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`);
+        console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`);
     });
     next();
 });
@@ -183,129 +372,93 @@ app.use(express.static(publicPath, {
 });
 
 // ============================================================
-// 🧰 HELPERS
-// ============================================================
-
-function isValidObjectId(id) {
-    return mongoose.Types.ObjectId.isValid(id);
-}
-
-function cleanUser(user) {
-    if (!user) return null;
-    return {
-        id: user._id?.toString(),
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        lastLogin: user.lastLogin,
-        preferences: user.preferences || {},
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-    };
-}
-
-function generateAccessToken(user) {
-    return jwt.sign(
-        { id: user._id.toString(), name: user.name, email: user.email, role: user.role },
-        JWT_SECRET,
-        { expiresIn: '24h', issuer: 'marine-system' }
-    );
-}
-
-function generateRefreshToken(user) {
-    return jwt.sign(
-        { id: user._id.toString() },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d', issuer: 'marine-system' }
-    );
-}
-
-function verifyAccessToken(token) {
-    return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
-}
-
-async function writeLog({ action, resource, resourceId, resourceModel, user, req, details = {}, status = 'success', error = null }) {
-    try {
-        if (Log && typeof Log.logAction === 'function') {
-            await Log.logAction({
-                action, resource, resourceId, resourceModel,
-                user: user?._id, userName: user?.name, userEmail: user?.email,
-                ipAddress: req?.ip, userAgent: req?.get('user-agent'),
-                details, status, error
-            });
-        }
-    } catch (err) {
-        console.error('⚠️ Log error:', err.message);
-    }
-}
-
-// ============================================================
 // 🔐 AUTHENTICATION
 // ============================================================
 
 async function authenticate(req, res, next) {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        // ✅ محاولة قراءة التوكن من Cookie أولاً
+        let token = req.cookies?.auth_token;
+        
+        // ✅ إذا لم يكن في Cookie، حاول من Authorization header
+        if (!token) {
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                token = authHeader.substring(7).trim();
+            }
         }
 
-        const token = authHeader.substring(7).trim();
         if (!token) {
-            return res.status(401).json({ success: false, error: 'Token missing' });
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
 
         let decoded;
         try {
             decoded = verifyAccessToken(token);
         } catch (error) {
+            logSecurityEvent('token_verification_failed', null, req, { error: error.name });
             return res.status(401).json({
                 success: false,
                 error: error.name === 'TokenExpiredError' 
-                    ? 'Session expired, please login again' 
-                    : 'Invalid token'
+                    ? 'انتهت الجلسة، يرجى تسجيل الدخول من جديد' 
+                    : 'رمز الدخول غير صالح'
             });
         }
 
         if (!decoded?.id || !isValidObjectId(decoded.id)) {
-            return res.status(401).json({ success: false, error: 'Invalid token payload' });
+            return res.status(401).json({ success: false, error: 'رمز الدخول غير صالح' });
         }
 
         const user = await User.findById(decoded.id).select('+password +refreshToken');
         if (!user) {
-            return res.status(401).json({ success: false, error: 'User not found' });
+            return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
         }
 
         if (!user.isActive) {
-            return res.status(403).json({ success: false, error: 'Account disabled' });
+            return res.status(403).json({ success: false, error: 'الحساب معطل' });
         }
 
         if (user.isLocked) {
-            return res.status(423).json({ success: false, error: 'Account locked' });
+            return res.status(423).json({ success: false, error: 'الحساب مقفل مؤقتاً' });
+        }
+
+        if (decoded.tokenVersion !== undefined && user.tokenVersion !== undefined) {
+            if (decoded.tokenVersion !== user.tokenVersion) {
+                logSecurityEvent('token_version_mismatch', user._id, req, {
+                    tokenVersion: decoded.tokenVersion,
+                    userVersion: user.tokenVersion
+                });
+                return res.status(401).json({ 
+                    success: false, 
+                    error: 'انتهت الجلسة، يرجى تسجيل الدخول من جديد' 
+                });
+            }
         }
 
         if (decoded.iat && typeof user.changedPasswordAfter === 'function' && user.changedPasswordAfter(decoded.iat)) {
-            return res.status(401).json({ success: false, error: 'Password changed, please login again' });
+            return res.status(401).json({ success: false, error: 'تم تغيير كلمة المرور، يرجى تسجيل الدخول من جديد' });
         }
 
         req.user = user;
-        next();
+        
+        userLimiter(req, res, () => {
+            next();
+        });
 
     } catch (error) {
         console.error('❌ Authentication error:', error);
-        return res.status(401).json({ success: false, error: 'Authentication failed' });
+        return res.status(401).json({ success: false, error: 'فشل التحقق من الهوية' });
     }
 }
 
 function authorize(...roles) {
     return (req, res, next) => {
         if (!req.user) {
-            return res.status(401).json({ success: false, error: 'Unauthorized' });
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
         if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'Insufficient permissions' });
+            logSecurityEvent('authorization_failed', req.user._id, req, { required: roles, userRole: req.user.role });
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
         }
         next();
     };
@@ -319,26 +472,22 @@ app.get('/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
     const isHealthy = dbState === 1;
     res.status(isHealthy ? 200 : 503).json({
-        success: isHealthy,
         status: isHealthy ? 'ok' : 'degraded',
-        service: 'Marine System',
-        environment: NODE_ENV,
-        database: ['disconnected', 'connected', 'connecting', 'disconnecting'][dbState] || 'unknown',
-        uptime: Math.floor(process.uptime()),
         timestamp: new Date().toISOString()
     });
 });
 
 // ============================================================
-// 🔐 AUTH ROUTES - متوافقة مع api.js
+// 🔐 AUTH ROUTES
 // ============================================================
 
-// ✅ تسجيل الدخول - يدعم username و email
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
     const start = Date.now();
     try {
         const identifier = String(req.body.username || req.body.email || req.body.identifier || '').trim().toLowerCase();
         const password = String(req.body.password || '');
+
+        logSecurityEvent('login_attempt', null, req, { identifier: identifier.substring(0, 3) + '***' });
 
         if (!identifier || !password) {
             return res.status(400).json({ 
@@ -355,6 +504,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }).select('+password +refreshToken');
 
         if (!user) {
+            logSecurityEvent('login_failed_user_not_found', null, req);
             return res.status(401).json({ 
                 success: false, 
                 error: 'بيانات الدخول غير صحيحة' 
@@ -362,6 +512,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }
 
         if (!user.isActive) {
+            logSecurityEvent('login_failed_inactive', user._id, req);
             return res.status(403).json({ 
                 success: false, 
                 error: 'الحساب معطل' 
@@ -369,6 +520,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }
 
         if (user.isLocked) {
+            logSecurityEvent('login_failed_locked', user._id, req);
             return res.status(423).json({ 
                 success: false, 
                 error: 'الحساب مقفل مؤقتاً' 
@@ -377,6 +529,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
         const isValid = await user.comparePassword(password);
         if (!isValid) {
+            logSecurityEvent('login_failed_password', user._id, req);
             if (typeof user.incrementLoginAttempts === 'function') {
                 await user.incrementLoginAttempts();
             }
@@ -391,11 +544,29 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }
 
         user.lastLogin = new Date();
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
 
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-        user.refreshToken = refreshToken;
+        user.refreshToken = hashRefreshToken(refreshToken);
         await user.save();
+
+        // ✅ إرسال التوكنات في HttpOnly Cookies
+        res.cookie('auth_token', accessToken, {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        logSecurityEvent('login_success', user._id, req);
 
         await writeLog({
             action: 'login',
@@ -409,14 +580,12 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
         res.json({
             success: true,
-            token: accessToken,
-            accessToken,
-            refreshToken,
             user: cleanUser(user)
         });
 
     } catch (error) {
         console.error('❌ Login error:', error);
+        logSecurityEvent('login_error', null, req, { error: error.message });
         res.status(500).json({ 
             success: false, 
             error: IS_PRODUCTION ? 'حدث خطأ في الخادم' : error.message 
@@ -424,62 +593,87 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
     }
 });
 
-// ✅ تجديد التوكن
 app.post('/api/auth/refresh', async (req, res) => {
     try {
-        const refreshToken = String(req.body.refreshToken || '').trim();
+        const refreshToken = req.cookies?.refresh_token || req.body.refreshToken;
         if (!refreshToken) {
-            return res.status(401).json({ success: false, error: 'Refresh token required' });
+            return res.status(401).json({ success: false, error: 'Refresh token مطلوب' });
         }
 
         let decoded;
         try {
             decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET, { issuer: 'marine-system' });
         } catch {
-            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+            return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
         }
 
         if (!decoded?.id || !isValidObjectId(decoded.id)) {
-            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+            return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
         }
 
-        const user = await User.findById(decoded.id).select('+refreshToken');
-        if (!user || !user.isActive || !user.refreshToken || user.refreshToken !== refreshToken) {
-            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+        const user = await User.findById(decoded.id).select('+refreshToken +tokenVersion');
+        if (!user || !user.isActive) {
+            return res.status(401).json({ success: false, error: 'Refresh token غير صالح' });
+        }
+
+        const hashedToken = hashRefreshToken(refreshToken);
+        if (!user.refreshToken || user.refreshToken !== hashedToken) {
+            logSecurityEvent('refresh_token_reuse_detected', user._id, req, { jti: decoded.jti });
+            user.tokenVersion = (user.tokenVersion || 0) + 1;
+            user.refreshToken = undefined;
+            await user.save();
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Refresh token غير صالح - تم إلغاء الجلسة' 
+            });
         }
 
         const accessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
-        user.refreshToken = newRefreshToken;
+        user.refreshToken = hashRefreshToken(newRefreshToken);
         await user.save();
 
-        res.json({
-            success: true,
-            token: accessToken,
-            accessToken,
-            refreshToken: newRefreshToken
+        res.cookie('auth_token', accessToken, {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000
         });
+
+        res.cookie('refresh_token', newRefreshToken, {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({ success: true });
 
     } catch (error) {
         console.error('❌ Refresh error:', error);
-        res.status(500).json({ success: false, error: 'Failed to refresh token' });
+        res.status(500).json({ success: false, error: 'فشل تحديث الجلسة' });
     }
 });
 
-// ✅ تسجيل الخروج
 app.post('/api/auth/logout', authenticate, async (req, res) => {
     try {
+        logSecurityEvent('logout', req.user._id, req);
+        req.user.tokenVersion = (req.user.tokenVersion || 0) + 1;
         req.user.refreshToken = undefined;
         await req.user.save();
+
+        // ✅ حذف Cookies
+        res.clearCookie('auth_token');
+        res.clearCookie('refresh_token');
+
         await writeLog({ action: 'logout', resource: 'user', resourceId: req.user._id, resourceModel: 'User', user: req.user, req });
-        res.json({ success: true, message: 'Logged out successfully' });
+        res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
     } catch (error) {
         console.error('Logout error:', error);
-        res.status(500).json({ success: false, error: 'Logout failed' });
+        res.status(500).json({ success: false, error: 'فشل تسجيل الخروج' });
     }
 });
 
-// ✅ المستخدم الحالي
 app.get('/api/auth/me', authenticate, (req, res) => {
     res.json({ success: true, user: cleanUser(req.user) });
 });
@@ -490,48 +684,67 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 
 app.get('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
-        const users = await User.find().select('-password -refreshToken').sort({ createdAt: -1 });
-        res.json({ success: true, users });
+        const { page = 1, limit = 50 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [users, total] = await Promise.all([
+            User.find().select('-password -refreshToken').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            User.countDocuments()
+        ]);
+        
+        res.json({ 
+            success: true, 
+            users,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل المستخدمين' });
     }
 });
 
 app.post('/api/users', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
-        const { name, username, email, password, role, isActive } = req.body;
-        if (!name || !password || (!email && !username)) {
-            return res.status(400).json({ success: false, error: 'Name, password, and email/username required' });
+        const allowedFields = ['name', 'username', 'email', 'password', 'role', 'isActive'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        if (!data.name || !data.password || (!data.email && !data.username)) {
+            return res.status(400).json({ success: false, error: 'الاسم وكلمة المرور والبريد الإلكتروني مطلوبون' });
         }
 
-        const normalizedEmail = email ? String(email).trim().toLowerCase() : undefined;
-        const normalizedUsername = username ? String(username).trim().toLowerCase() : undefined;
+        const normalizedEmail = data.email ? String(data.email).trim().toLowerCase() : undefined;
+        const normalizedUsername = data.username ? String(data.username).trim().toLowerCase() : undefined;
 
         if (normalizedEmail) {
             const exists = await User.findOne({ email: normalizedEmail });
-            if (exists) return res.status(409).json({ success: false, error: 'Email already exists' });
+            if (exists) return res.status(409).json({ success: false, error: 'البريد الإلكتروني موجود مسبقاً' });
         }
         if (normalizedUsername) {
             const exists = await User.findOne({ username: normalizedUsername });
-            if (exists) return res.status(409).json({ success: false, error: 'Username already exists' });
+            if (exists) return res.status(409).json({ success: false, error: 'اسم المستخدم موجود مسبقاً' });
         }
 
         const allowedRoles = ['مسؤول', 'محرر', 'مستخدم', 'مشاهد'];
         const user = new User({
-            name,
+            name: data.name,
             username: normalizedUsername,
             email: normalizedEmail,
-            password,
-            role: allowedRoles.includes(role) ? role : 'مستخدم',
-            isActive: typeof isActive === 'boolean' ? isActive : true
+            password: data.password,
+            role: allowedRoles.includes(data.role) ? data.role : 'مستخدم',
+            isActive: typeof data.isActive === 'boolean' ? data.isActive : true
         });
 
         await user.save();
+        logSecurityEvent('user_created', req.user._id, req, { newUser: user.email });
         await writeLog({ action: 'create', resource: 'user', resourceId: user._id, resourceModel: 'User', user: req.user, req });
 
         res.status(201).json({ success: true, user: cleanUser(user) });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل إنشاء المستخدم' });
     }
 });
 
@@ -539,41 +752,103 @@ app.put('/api/users/:id', authenticate, authorize('مسؤول'), async (req, res
     try {
         const { id } = req.params;
         if (!isValidObjectId(id)) {
-            return res.status(400).json({ success: false, error: 'Invalid user ID' });
+            return res.status(400).json({ success: false, error: 'معرف المستخدم غير صالح' });
         }
 
         const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
 
-        const before = cleanUser(user);
-        const { name, username, email, password, role, isActive, preferences } = req.body;
-
-        if (name !== undefined) user.name = name;
-        if (username !== undefined) user.username = String(username).trim().toLowerCase();
-        if (email !== undefined) user.email = String(email).trim().toLowerCase();
-        if (password) user.password = password;
-
-        if (role !== undefined) {
-            const allowedRoles = ['مسؤول', 'محرر', 'مستخدم', 'مشاهد'];
-            if (!allowedRoles.includes(role)) {
-                return res.status(400).json({ success: false, error: 'Invalid role' });
+        if (user.role === 'مسؤول') {
+            const adminCount = await User.countDocuments({ role: 'مسؤول', isActive: true });
+            if (adminCount <= 1 && req.body.isActive === false) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'لا يمكن تعطيل المسؤول الوحيد في النظام' 
+                });
             }
-            user.role = role;
         }
 
-        if (typeof isActive === 'boolean') user.isActive = isActive;
-        if (preferences) {
-            user.preferences = { ...(user.preferences || {}), ...preferences };
+        const allowedFields = ['name', 'username', 'email', 'password', 'role', 'isActive', 'preferences'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        if (data.email) {
+            const normalizedEmail = String(data.email).trim().toLowerCase();
+            const existing = await User.findOne({ 
+                email: normalizedEmail, 
+                _id: { $ne: id } 
+            });
+            if (existing) {
+                return res.status(409).json({ success: false, error: 'البريد الإلكتروني مستخدم من قبل' });
+            }
+            data.email = normalizedEmail;
+        }
+
+        if (data.username) {
+            const normalizedUsername = String(data.username).trim().toLowerCase();
+            const existing = await User.findOne({ 
+                username: normalizedUsername, 
+                _id: { $ne: id } 
+            });
+            if (existing) {
+                return res.status(409).json({ success: false, error: 'اسم المستخدم مستخدم من قبل' });
+            }
+            data.username = normalizedUsername;
+        }
+
+        let passwordChanged = false;
+        let roleChanged = false;
+        let activeChanged = false;
+
+        if (data.name !== undefined) user.name = data.name;
+        if (data.username !== undefined) user.username = data.username;
+        if (data.email !== undefined) user.email = data.email;
+        if (data.password) {
+            user.password = data.password;
+            passwordChanged = true;
+        }
+        if (data.role !== undefined) {
+            const allowedRoles = ['مسؤول', 'محرر', 'مستخدم', 'مشاهد'];
+            if (!allowedRoles.includes(data.role)) {
+                return res.status(400).json({ success: false, error: 'الدور غير صالح' });
+            }
+            if (user.role === 'مسؤول' || data.role === 'مسؤول') {
+                logSecurityEvent('admin_role_change', req.user._id, req, {
+                    targetUser: user.email,
+                    oldRole: user.role,
+                    newRole: data.role
+                });
+            }
+            user.role = data.role;
+            roleChanged = true;
+        }
+        if (typeof data.isActive === 'boolean') {
+            user.isActive = data.isActive;
+            activeChanged = true;
+        }
+        if (data.preferences) {
+            user.preferences = { ...(user.preferences || {}), ...data.preferences };
+        }
+
+        if (passwordChanged || roleChanged || activeChanged) {
+            user.tokenVersion = (user.tokenVersion || 0) + 1;
+            user.refreshToken = undefined;
         }
 
         await user.save();
+
+        logSecurityEvent('user_updated', req.user._id, req, { 
+            updatedUser: user.email,
+            passwordChanged,
+            roleChanged,
+            activeChanged
+        });
         await writeLog({ action: 'update', resource: 'user', resourceId: user._id, resourceModel: 'User', user: req.user, req });
 
         res.json({ success: true, user: cleanUser(user) });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل تحديث المستخدم' });
     }
 });
 
@@ -581,19 +856,32 @@ app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, 
     try {
         const { id } = req.params;
         if (String(req.user._id) === String(id)) {
-            return res.status(400).json({ success: false, error: 'Cannot delete your own account' });
+            return res.status(400).json({ success: false, error: 'لا يمكنك حذف حسابك بنفسك' });
         }
 
-        const user = await User.findByIdAndDelete(id);
+        const user = await User.findById(id);
         if (!user) {
-            return res.status(404).json({ success: false, error: 'User not found' });
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
         }
 
+        if (user.role === 'مسؤول') {
+            const adminCount = await User.countDocuments({ role: 'مسؤول' });
+            if (adminCount <= 1) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'لا يمكن حذف المسؤول الوحيد في النظام' 
+                });
+            }
+        }
+
+        await user.deleteOne();
+
+        logSecurityEvent('user_deleted', req.user._id, req, { deletedUser: user.email });
         await writeLog({ action: 'delete', resource: 'user', resourceId: user._id, resourceModel: 'User', user: req.user, req });
 
-        res.json({ success: true, message: 'User deleted' });
+        res.json({ success: true, message: 'تم حذف المستخدم' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل حذف المستخدم' });
     }
 });
 
@@ -603,10 +891,34 @@ app.delete('/api/users/:id', authenticate, authorize('مسؤول'), async (req, 
 
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json({ success: true, vessels });
+        const { page = 1, limit = 100, status, region } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const filter = {};
+        if (status) filter.stat = status;
+        if (region) filter.region = region;
+
+        if (req.user.role === 'مشاهد') {
+            filter.stat = 'صالح';
+        }
+
+        const [vessels, total] = await Promise.all([
+            Vessel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+            Vessel.countDocuments(filter)
+        ]);
+        
+        res.json({ 
+            success: true, 
+            vessels,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل المراكب' });
     }
 });
 
@@ -620,65 +932,82 @@ app.get('/api/vessels/stats', authenticate, async (req, res) => {
         ]);
         res.json({ success: true, status: statusStats, categories: categoryStats });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل إحصائيات المراكب' });
     }
 });
 
 app.get('/api/vessels/:id', authenticate, async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
+            return res.status(400).json({ success: false, error: 'معرف المركب غير صالح' });
         }
         const vessel = await Vessel.findById(req.params.id);
         if (!vessel) {
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
+            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
         }
         res.json({ success: true, vessel });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل المركب' });
     }
 });
 
 app.post('/api/vessels', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
-        const vessel = new Vessel(req.body);
+        const allowedFields = ['name', 'num', 'stat', 'zone', 'port', 'supp', 'region', 'cat', 'len'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        const errors = validateVessel(data, false);
+        if (errors.length > 0) {
+            return res.status(400).json({ success: false, errors });
+        }
+
+        const vessel = new Vessel(data);
         await vessel.save();
         await writeLog({ action: 'create', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
         res.status(201).json({ success: true, vessel });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل إضافة المركب' });
     }
 });
 
 app.put('/api/vessels/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
+            return res.status(400).json({ success: false, error: 'معرف المركب غير صالح' });
         }
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+        const allowedFields = ['name', 'num', 'stat', 'zone', 'port', 'supp', 'region', 'cat', 'len'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        const errors = validateVessel(data, true);
+        if (errors.length > 0) {
+            return res.status(400).json({ success: false, errors });
+        }
+
+        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
         if (!vessel) {
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
+            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
         }
         await writeLog({ action: 'update', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
         res.json({ success: true, vessel });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل تحديث المركب' });
     }
 });
 
 app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
+            return res.status(400).json({ success: false, error: 'معرف المركب غير صالح' });
         }
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
         if (!vessel) {
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
+            return res.status(404).json({ success: false, error: 'المركب غير موجود' });
         }
         await writeLog({ action: 'delete', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
-        res.json({ success: true, message: 'Vessel deleted' });
+        res.json({ success: true, message: 'تم حذف المركب' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل حذف المركب' });
     }
 });
 
@@ -688,13 +1017,39 @@ app.delete('/api/vessels/:id', authenticate, authorize('مسؤول'), async (req
 
 app.get('/api/maintenance', authenticate, async (req, res) => {
     try {
-        const records = await Maintenance.find()
-            .populate('vesselId', 'name num cat stat')
-            .populate('supervisor', 'name email')
-            .sort({ startDate: -1 });
-        res.json({ success: true, maintenance: records });
+        const { page = 1, limit = 50, status, vesselId } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const filter = {};
+        if (status) filter.status = status;
+        if (vesselId) filter.vesselId = vesselId;
+
+        if (req.user.role === 'مشاهد') {
+            filter.status = 'مكتملة';
+        }
+
+        const [records, total] = await Promise.all([
+            Maintenance.find(filter)
+                .populate('vesselId', 'name num cat stat')
+                .populate('supervisor', 'name email')
+                .sort({ startDate: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Maintenance.countDocuments(filter)
+        ]);
+        
+        res.json({ 
+            success: true, 
+            maintenance: records,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل سجلات الصيانة' });
     }
 });
 
@@ -705,64 +1060,89 @@ app.get('/api/maintenance/stats', authenticate, async (req, res) => {
         ]);
         res.json({ success: true, stats });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل إحصائيات الصيانة' });
     }
 });
 
 app.get('/api/maintenance/vessel/:vesselId', authenticate, async (req, res) => {
     try {
         if (!isValidObjectId(req.params.vesselId)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
+            return res.status(400).json({ success: false, error: 'معرف المركب غير صالح' });
         }
         const records = await Maintenance.find({ vesselId: req.params.vesselId }).sort({ startDate: -1 });
         res.json({ success: true, maintenance: records });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل سجلات الصيانة' });
     }
 });
 
 app.post('/api/maintenance', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
-        const data = { ...req.body };
-        if (!data.supervisor) data.supervisor = req.user._id;
+        const allowedFields = [
+            'vesselId', 'vesselName', 'type', 'unit', 'technician', 
+            'description', 'repair', 'faultType', 'cost', 'notes', 
+            'parts', 'status', 'date', 'startDate', 'endDate'
+        ];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        data.supervisor = req.user._id;
+
+        const errors = validateMaintenance(data, false);
+        if (errors.length > 0) {
+            return res.status(400).json({ success: false, errors });
+        }
+
         const record = new Maintenance(data);
         await record.save();
         await writeLog({ action: 'create', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
         res.status(201).json({ success: true, maintenance: record });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل إضافة سجل الصيانة' });
     }
 });
 
 app.put('/api/maintenance/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid maintenance ID' });
+            return res.status(400).json({ success: false, error: 'معرف الصيانة غير صالح' });
         }
-        const record = await Maintenance.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+        const allowedFields = [
+            'vesselId', 'vesselName', 'type', 'unit', 'technician', 
+            'description', 'repair', 'faultType', 'cost', 'notes', 
+            'parts', 'status', 'date', 'startDate', 'endDate'
+        ];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        const errors = validateMaintenance(data, true);
+        if (errors.length > 0) {
+            return res.status(400).json({ success: false, errors });
+        }
+
+        const record = await Maintenance.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
         if (!record) {
-            return res.status(404).json({ success: false, error: 'Maintenance record not found' });
+            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
         }
         await writeLog({ action: 'update', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
         res.json({ success: true, maintenance: record });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل تحديث سجل الصيانة' });
     }
 });
 
 app.delete('/api/maintenance/:id', authenticate, authorize('مسؤول'), async (req, res) => {
     try {
         if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid maintenance ID' });
+            return res.status(400).json({ success: false, error: 'معرف الصيانة غير صالح' });
         }
         const record = await Maintenance.findByIdAndDelete(req.params.id);
         if (!record) {
-            return res.status(404).json({ success: false, error: 'Maintenance record not found' });
+            return res.status(404).json({ success: false, error: 'سجل الصيانة غير موجود' });
         }
         await writeLog({ action: 'delete', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
-        res.json({ success: true, message: 'Maintenance record deleted' });
+        res.json({ success: true, message: 'تم حذف سجل الصيانة' });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل حذف سجل الصيانة' });
     }
 });
 
@@ -792,7 +1172,7 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل لوحة التحكم' });
     }
 });
 
@@ -802,20 +1182,50 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
 
 app.get('/api/notes', authenticate, async (req, res) => {
     try {
-        const notes = await Note.find()
-            .populate('createdBy', 'name email')
-            .populate('approvedBy', 'name email')
-            .sort({ createdAt: -1 });
-        res.json({ success: true, notes });
+        const { page = 1, limit = 50 } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const filter = {};
+        if (req.user.role === 'مشاهد') {
+            filter.status = 'منشورة';
+        }
+
+        const [notes, total] = await Promise.all([
+            Note.find(filter)
+                .populate('createdBy', 'name email')
+                .populate('approvedBy', 'name email')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Note.countDocuments(filter)
+        ]);
+        
+        res.json({ 
+            success: true, 
+            notes,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل المذكرات' });
     }
 });
 
 app.post('/api/notes', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
     try {
+        const allowedFields = ['title', 'content', 'status'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        if (!data.title || !data.content) {
+            return res.status(400).json({ success: false, error: 'العنوان والمحتوى مطلوبان' });
+        }
+
         const note = new Note({
-            ...req.body,
+            ...data,
             createdBy: req.user._id,
             createdByName: req.user.name
         });
@@ -823,7 +1233,7 @@ app.post('/api/notes', authenticate, authorize('مسؤول', 'محرر'), async 
         await writeLog({ action: 'create', resource: 'note', resourceId: note._id, resourceModel: 'Note', resourceName: note.title, user: req.user, req });
         res.status(201).json({ success: true, note });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل إنشاء المذكرة' });
     }
 });
 
@@ -833,20 +1243,57 @@ app.post('/api/notes', authenticate, authorize('مسؤول', 'محرر'), async 
 
 app.get('/api/tickets', authenticate, async (req, res) => {
     try {
-        const tickets = await Ticket.find()
-            .populate('createdBy', 'name email')
-            .populate('assignedTo', 'name email')
-            .sort({ createdAt: -1 });
-        res.json({ success: true, tickets });
+        const { page = 1, limit = 50, status } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const filter = {};
+        if (status) filter.status = status;
+
+        if (req.user.role === 'مشاهد') {
+            filter.status = 'مغلق';
+        } else if (req.user.role === 'مستخدم') {
+            filter.$or = [
+                { createdBy: req.user._id },
+                { assignedTo: req.user._id }
+            ];
+        }
+
+        const [tickets, total] = await Promise.all([
+            Ticket.find(filter)
+                .populate('createdBy', 'name email')
+                .populate('assignedTo', 'name email')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Ticket.countDocuments(filter)
+        ]);
+        
+        res.json({ 
+            success: true, 
+            tickets,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ success: false, error: 'فشل تحميل التذاكر' });
     }
 });
 
 app.post('/api/tickets', authenticate, async (req, res) => {
     try {
+        const allowedFields = ['title', 'message', 'priority', 'assignedTo'];
+        const data = pickAllowedFields(req.body, allowedFields);
+
+        if (!data.title || !data.message) {
+            return res.status(400).json({ success: false, error: 'العنوان والرسالة مطلوبان' });
+        }
+
         const ticket = new Ticket({
-            ...req.body,
+            ...data,
             createdBy: req.user._id,
             createdByName: req.user.name
         });
@@ -854,7 +1301,7 @@ app.post('/api/tickets', authenticate, async (req, res) => {
         await writeLog({ action: 'create', resource: 'ticket', resourceId: ticket._id, resourceModel: 'Ticket', resourceName: ticket.title, user: req.user, req });
         res.status(201).json({ success: true, ticket });
     } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ success: false, error: 'فشل إنشاء التذكرة' });
     }
 });
 
@@ -863,7 +1310,7 @@ app.post('/api/tickets', authenticate, async (req, res) => {
 // ============================================================
 
 app.use('/api', (req, res) => {
-    res.status(404).json({ success: false, error: 'API endpoint not found', path: req.originalUrl });
+    res.status(404).json({ success: false, error: 'API غير موجود', path: req.originalUrl });
 });
 
 // ============================================================
@@ -876,7 +1323,7 @@ app.get(/^(?!\/api(?:\/|$)).*/, (req, res) => {
         if (error) {
             console.error('Frontend error:', error.message);
             if (!res.headersSent) {
-                res.status(404).send('Marine System - Page not found');
+                res.status(404).send('Marine System - الصفحة غير موجودة');
             }
         }
     });
@@ -894,26 +1341,26 @@ app.use((err, req, res, next) => {
     if (err.name === 'ValidationError') {
         return res.status(400).json({
             success: false,
-            error: 'Validation error',
+            error: 'بيانات غير صالحة',
             details: Object.values(err.errors || {}).map(e => e.message)
         });
     }
 
     if (err.name === 'CastError') {
-        return res.status(400).json({ success: false, error: 'Invalid ID format' });
+        return res.status(400).json({ success: false, error: 'معرف غير صالح' });
     }
 
     if (err.code === 11000) {
-        return res.status(409).json({ success: false, error: 'Duplicate key error' });
+        return res.status(409).json({ success: false, error: 'القيمة موجودة مسبقاً' });
     }
 
     if (err.message === 'CORS origin not allowed') {
-        return res.status(403).json({ success: false, error: 'Origin not allowed' });
+        return res.status(403).json({ success: false, error: 'Origin غير مسموح' });
     }
 
     res.status(500).json({
         success: false,
-        error: IS_PRODUCTION ? 'Internal server error' : err.message
+        error: IS_PRODUCTION ? 'حدث خطأ داخلي في الخادم' : err.message
     });
 });
 
@@ -933,6 +1380,15 @@ async function connectDatabase() {
         });
         console.log('✅ MongoDB Connected');
         console.log(`📚 Database: ${mongoose.connection.name}`);
+        
+        mongoose.connection.on('disconnected', () => {
+            console.warn('⚠️ MongoDB disconnected');
+        });
+        
+        mongoose.connection.on('reconnected', () => {
+            console.log('✅ MongoDB reconnected');
+        });
+
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
         throw error;
@@ -945,13 +1401,24 @@ async function connectDatabase() {
 
 async function createInitialAdmin() {
     try {
-        const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@marine-system.com').trim().toLowerCase();
-        const adminPassword = String(process.env.ADMIN_PASSWORD || '123456');
-        const adminName = process.env.ADMIN_NAME || 'مدير النظام';
-
-        if (!adminEmail || !adminPassword) {
+        if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+            if (IS_PRODUCTION) {
+                console.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD are required in production');
+                process.exit(1);
+            }
             console.log('ℹ️ ADMIN_EMAIL / ADMIN_PASSWORD not set, skipping admin creation');
             return;
+        }
+
+        if (ADMIN_PASSWORD.length < 12) {
+            console.error('❌ ADMIN_PASSWORD must be at least 12 characters');
+            process.exit(1);
+        }
+
+        const adminEmail = String(ADMIN_EMAIL).trim().toLowerCase();
+        if (!adminEmail.includes('@')) {
+            console.error('❌ ADMIN_EMAIL must be a valid email');
+            process.exit(1);
         }
 
         const existing = await User.findOne({ email: adminEmail });
@@ -961,17 +1428,22 @@ async function createInitialAdmin() {
         }
 
         const admin = new User({
-            name: adminName,
+            name: ADMIN_NAME,
             email: adminEmail,
-            password: adminPassword,
+            password: ADMIN_PASSWORD,
             role: 'مسؤول',
-            isActive: true
+            isActive: true,
+            tokenVersion: 1
         });
 
         await admin.save();
         console.log(`✅ Admin created: ${adminEmail}`);
+        console.log('⚠️ Please change the admin password immediately after first login');
     } catch (error) {
         console.error('❌ Initial admin error:', error.message);
+        if (IS_PRODUCTION) {
+            process.exit(1);
+        }
     }
 }
 
@@ -985,23 +1457,32 @@ async function startServer() {
         await createInitialAdmin();
 
         const server = app.listen(PORT, '0.0.0.0', () => {
-            console.log('\n' + '='.repeat(50));
-            console.log('🚢 MARINE SYSTEM IS RUNNING');
-            console.log('='.repeat(50));
+            console.log('\n' + '='.repeat(60));
+            console.log('🚢 MARINE SYSTEM v15.0 - PRODUCTION READY');
+            console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
             console.log('🗄️ DATABASE: MongoDB');
-            console.log('🔐 JWT: ENABLED');
-            console.log('🛡️ HELMET: ENABLED');
+            console.log('🔐 JWT: ENABLED (15min access)');
+            console.log('🍪 HTTPONLY COOKIES: ENABLED');
+            console.log('🔄 TOKEN VERSION: ENABLED');
+            console.log('🛡️ HELMET + CSP: ENABLED');
             console.log('🚦 RATE LIMIT: ENABLED');
             console.log('📜 AUDIT LOGS: ENABLED');
+            console.log('🔐 SECURITY LOGGING: ENABLED');
+            console.log('✅ INPUT VALIDATION: ENABLED');
+            console.log('🔑 REFRESH TOKEN HASH: ENABLED');
+            console.log('🔄 REFRESH TOKEN REUSE DETECTION: ENABLED');
+            console.log('📝 PARTIAL VALIDATION: ENABLED');
+            console.log('📊 PAGINATION: ENABLED');
+            console.log('🔒 DATA-LEVEL RBAC: ENABLED');
+            console.log('🛡️ ADMIN PROTECTION: ENABLED');
             console.log(`❤️ HEALTH: /health`);
             console.log(`🔐 LOGIN: /api/auth/login`);
             console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
-            console.log('='.repeat(50) + '\n');
+            console.log('='.repeat(60) + '\n');
         });
 
-        // Graceful Shutdown
         let shuttingDown = false;
         const shutdown = async (signal) => {
             if (shuttingDown) return;
