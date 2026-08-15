@@ -1,32 +1,21 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v10.0
+// 🚀 MARINE SYSTEM - APP.JS v15.0
+// ============================================================
+// 🔐 SECURE - No localStorage for tokens
 // ============================================================
 
-console.log('🚀 Marine System v10.0 - Frontend Loaded');
+console.log('🚀 Marine System v15.0 - Secure Frontend');
 
 // ============================================================
 // 📋 CONFIGURATION
 // ============================================================
 
 const API_BASE = '/api';
-const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
 // ============================================================
 // 🔐 AUTH FUNCTIONS
 // ============================================================
-
-function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-}
-
-function setToken(token) {
-    if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
-    } else {
-        localStorage.removeItem(TOKEN_KEY);
-    }
-}
 
 function getUser() {
     try {
@@ -44,10 +33,6 @@ function setUser(user) {
     }
 }
 
-function isAuthenticated() {
-    return !!getToken();
-}
-
 // ============================================================
 // 🔐 LOGIN
 // ============================================================
@@ -57,13 +42,11 @@ async function doLogin() {
     const password = document.getElementById('password')?.value?.trim();
     const errorEl = document.getElementById('loginError');
 
-    // ✅ تنظيف الأخطاء السابقة
     if (errorEl) {
         errorEl.textContent = '';
         errorEl.style.display = 'none';
     }
 
-    // ✅ التحقق من المدخلات
     if (!username || !password) {
         if (errorEl) {
             errorEl.textContent = '⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور';
@@ -72,7 +55,6 @@ async function doLogin() {
         return;
     }
 
-    // ✅ تعطيل الزر
     const loginBtn = document.querySelector('.login-btn');
     if (loginBtn) {
         loginBtn.disabled = true;
@@ -80,48 +62,34 @@ async function doLogin() {
     }
 
     try {
-        console.log('📤 Sending login request...');
-
         const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
                 username: username,
                 password: password
             })
         });
 
-        console.log('📥 Response status:', response.status);
-
         const data = await response.json();
-        console.log('📥 Response data:', data);
 
-        // ✅ نجاح تسجيل الدخول
         if (response.ok && data.success) {
-            // حفظ التوكن والمستخدم
-            setToken(data.token || data.accessToken);
             setUser(data.user);
 
-            // إخفاء شاشة الدخول
             const overlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
             if (overlay) overlay.style.display = 'none';
             if (mainApp) mainApp.style.display = 'block';
 
-            // تحديث عرض المستخدم
             updateUserDisplay();
-
-            // تحميل الصفحة الرئيسية
             loadPage('dashboard');
 
-            // ✅ إشعار نجاح
             showToast('✅ مرحباً ' + (data.user?.name || 'مدير النظام') + '!', 'success');
-
         } else {
-            // ❌ فشل تسجيل الدخول
             if (errorEl) {
                 errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                 errorEl.style.display = 'block';
@@ -134,7 +102,6 @@ async function doLogin() {
             errorEl.style.display = 'block';
         }
     } finally {
-        // ✅ إعادة تفعيل الزر
         if (loginBtn) {
             loginBtn.disabled = false;
             loginBtn.textContent = '🚀 دخول';
@@ -142,18 +109,28 @@ async function doLogin() {
     }
 }
 
+function handleLogin() {
+    doLogin();
+}
+
 // ============================================================
 // 🚪 LOGOUT
 // ============================================================
 
-function doLogout() {
+async function doLogout() {
     if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
-    // مسح البيانات
-    setToken(null);
+    try {
+        await fetch(`${API_BASE}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
+
     setUser(null);
 
-    // إظهار شاشة الدخول
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
     if (overlay) overlay.style.display = 'flex';
@@ -197,11 +174,9 @@ function loadPage(pageName) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
 
-    // تنظيف المحتوى السابق
     const oldContent = container.querySelector('.page-content');
     if (oldContent) oldContent.remove();
 
-    // إظهار مؤشر التحميل
     const loading = document.createElement('div');
     loading.className = 'page-loading';
     loading.innerHTML = `
@@ -212,7 +187,6 @@ function loadPage(pageName) {
     `;
     container.appendChild(loading);
 
-    // تحميل الصفحة
     fetch(`/pages/${pageName}.html`)
         .then(res => {
             if (!res.ok) throw new Error(`Page ${pageName} not found`);
@@ -232,7 +206,6 @@ function loadPage(pageName) {
                 page.style.opacity = '1';
             });
 
-            // تهيئة الصفحة
             setTimeout(() => initPage(pageName), 100);
         })
         .catch(err => {
@@ -276,7 +249,6 @@ function initPage(pageName) {
 }
 
 function showPage(pageName) {
-    // تحديث الأزرار النشطة
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     const btns = document.querySelectorAll('.nav-btn');
     const pageMap = {
@@ -287,7 +259,6 @@ function showPage(pageName) {
         btns[pageMap[pageName]].classList.add('active');
     }
 
-    // إغلاق القائمة الجانبية
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 992) {
         sidebar.classList.remove('open');
@@ -313,7 +284,7 @@ function refreshAllPages() {
 }
 
 // ============================================================
-// 🔔 TOAST NOTIFICATIONS
+// 🔔 TOAST
 // ============================================================
 
 function showToast(message, type = 'info') {
@@ -380,25 +351,19 @@ function showToast(message, type = 'info') {
 // ============================================================
 
 async function fetchData(url, options = {}) {
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ الرجاء تسجيل الدخول', 'warning');
-        return null;
-    }
-
     try {
         const response = await fetch(url, {
             ...options,
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
                 ...(options.headers || {})
             }
         });
 
         if (!response.ok) {
             if (response.status === 401) {
-                setToken(null);
                 setUser(null);
                 showToast('⚠️ انتهت الجلسة، يرجى تسجيل الدخول', 'warning');
                 setTimeout(() => location.reload(), 1000);
@@ -427,25 +392,23 @@ function loadDashboard() {
             if (!data?.success) return;
             const stats = data.data || {};
 
-            // تحديث الإحصائيات
             const vessels = stats.vessels || {};
-            document.getElementById('dashTotal').textContent = vessels.total || 0;
-            document.getElementById('dashReady').textContent = vessels.valid || 0;
-            document.getElementById('dashBroken').textContent = vessels.damaged || 0;
-            document.getElementById('dashMaintenance').textContent = vessels.maintenance || 0;
+            const el = (id) => document.getElementById(id);
+            if (el('dashTotal')) el('dashTotal').textContent = vessels.total || 0;
+            if (el('dashReady')) el('dashReady').textContent = vessels.valid || 0;
+            if (el('dashBroken')) el('dashBroken').textContent = vessels.damaged || 0;
+            if (el('dashMaintenance')) el('dashMaintenance').textContent = vessels.maintenance || 0;
 
-            // نسبة الجاهزية
             const percent = vessels.total > 0 ? Math.round((vessels.valid / vessels.total) * 100) : 0;
-            document.getElementById('dashReadyPercent').textContent = percent + '%';
+            if (el('dashReadyPercent')) el('dashReadyPercent').textContent = percent + '%';
 
-            // تكاليف الصيانة (من API منفصل)
             fetchData('/api/maintenance')
                 .then(maintenanceData => {
                     if (maintenanceData?.success) {
                         const records = maintenanceData.maintenance || [];
                         const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-                        document.getElementById('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-                        document.getElementById('dashMaintenanceCount').textContent = records.length;
+                        if (el('dashTotalCost')) el('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
+                        if (el('dashMaintenanceCount')) el('dashMaintenanceCount').textContent = records.length;
                     }
                 });
         });
@@ -468,19 +431,23 @@ function loadVessels() {
                 return;
             }
 
-            tbody.innerHTML = data.vessels.map((v, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><strong>${v.name || '-'}</strong></td>
-                    <td><span class="status ${v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning'}">${v.stat || 'صالح'}</span></td>
-                    <td>${v.region || '-'}</td>
-                    <td>${v.supp || '-'}</td>
-                    <td>
-                        <button class="btn-sm btn-edit" onclick="editVessel('${v._id}')">✏️</button>
-                        <button class="btn-sm btn-delete" onclick="deleteVessel('${v._id}')">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+            let html = '';
+            data.vessels.forEach((v, i) => {
+                html += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${v.name || '-'}</strong></td>
+                        <td><span class="status ${v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning'}">${v.stat || 'صالح'}</span></td>
+                        <td>${v.region || '-'}</td>
+                        <td>${v.supp || '-'}</td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="editVessel('${v._id}')">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="deleteVessel('${v._id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         });
 }
 
@@ -501,16 +468,20 @@ function loadMaintenance() {
                 return;
             }
 
-            tbody.innerHTML = data.maintenance.map((r, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td><strong>${r.vesselName || '-'}</strong></td>
-                    <td>${r.type || '-'}</td>
-                    <td>${r.technician || '-'}</td>
-                    <td>${r.cost || 0} د.ت</td>
-                    <td><span class="status ${r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger'}">${r.status || 'قيد الإنجاز'}</span></td>
-                </tr>
-            `).join('');
+            let html = '';
+            data.maintenance.forEach((r, i) => {
+                html += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><strong>${r.vesselName || '-'}</strong></td>
+                        <td>${r.type || '-'}</td>
+                        <td>${r.technician || '-'}</td>
+                        <td>${r.cost || 0} د.ت</td>
+                        <td><span class="status ${r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger'}">${r.status || 'قيد الإنجاز'}</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         });
 }
 
@@ -531,18 +502,22 @@ function loadUsers() {
                 return;
             }
 
-            tbody.innerHTML = data.users.map(u => `
-                <tr>
-                    <td><strong>${u.name || '-'}</strong></td>
-                    <td>${u.email || '-'}</td>
-                    <td><span class="role">${u.role || 'مشاهد'}</span></td>
-                    <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-                    <td>
-                        <button class="btn-sm btn-edit" onclick="editUser('${u._id}')">✏️</button>
-                        <button class="btn-sm btn-delete" onclick="deleteUser('${u._id}')">🗑️</button>
-                    </td>
-                </tr>
-            `).join('');
+            let html = '';
+            data.users.forEach(u => {
+                html += `
+                    <tr>
+                        <td><strong>${u.name || '-'}</strong></td>
+                        <td>${u.email || '-'}</td>
+                        <td><span class="role">${u.role || 'مشاهد'}</span></td>
+                        <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="editUser('${u._id}')">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="deleteUser('${u._id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
         });
 }
 
@@ -552,175 +527,10 @@ function loadUsers() {
 
 function initAIAssistant() {
     console.log('🤖 AI Assistant initialized');
-
-    const sendBtn = document.getElementById('sendBtn');
-    const chatInput = document.getElementById('chatInput');
-    const micBtn = document.getElementById('micBtn');
-
-    if (sendBtn) {
-        sendBtn.onclick = function() {
-            askAI();
-        };
-    }
-
-    if (chatInput) {
-        chatInput.onkeypress = function(e) {
-            if (e.key === 'Enter') {
-                askAI();
-            }
-        };
-    }
-
-    if (micBtn) {
-        micBtn.onclick = function() {
-            toggleVoiceInput();
-        };
-    }
 }
 
 async function askAI() {
-    const chatInput = document.getElementById('chatInput');
-    const chatBox = document.getElementById('chatBox');
-    const sendBtn = document.getElementById('sendBtn');
-
-    if (!chatInput) return;
-
-    const question = chatInput.value.trim();
-    if (!question) {
-        showToast('❌ الرجاء كتابة سؤال', 'warning');
-        return;
-    }
-
-    // إضافة رسالة المستخدم
-    addChatMessage('user', question);
-    chatInput.value = '';
-    chatInput.disabled = true;
-    if (sendBtn) sendBtn.disabled = true;
-
-    // مؤشر الكتابة
-    const typing = document.createElement('div');
-    typing.className = 'typing active';
-    typing.innerHTML = `<span></span><span></span><span></span>`;
-    chatBox.appendChild(typing);
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    try {
-        const token = getToken();
-        const response = await fetch('/api/ai/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ message: question })
-        });
-
-        typing.remove();
-
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                addChatMessage('ai', data.response || 'عذراً، لم أستطع الإجابة');
-            } else {
-                addChatMessage('ai', '⚠️ ' + (data.error || 'حدث خطأ'));
-            }
-        } else {
-            addChatMessage('ai', '❌ خطأ في الاتصال بالخادم');
-        }
-    } catch (error) {
-        typing.remove();
-        addChatMessage('ai', '❌ خطأ: ' + error.message);
-    }
-
-    chatInput.disabled = false;
-    if (sendBtn) sendBtn.disabled = false;
-    chatInput.focus();
-}
-
-function addChatMessage(role, content) {
-    const chatBox = document.getElementById('chatBox');
-    if (!chatBox) return;
-
-    const div = document.createElement('div');
-    div.className = 'message ' + role;
-    const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-
-    div.innerHTML = `
-        <div class="sender">${sender}</div>
-        <div class="content">${content.replace(/\n/g, '<br>')}</div>
-        <div class="time">${time}</div>
-    `;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// ============================================================
-// 🎤 VOICE INPUT
-// ============================================================
-
-function toggleVoiceInput() {
-    const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-    if (!hasSpeech) {
-        showToast('❌ المتصفح لا يدعم الميكروفون', 'warning');
-        return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-
-    recognition.onstart = function() {
-        showToast('🎤 جاري الاستماع...', 'info');
-    };
-
-    recognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-        }
-        const input = document.getElementById('chatInput');
-        if (input) {
-            input.value = transcript;
-        }
-    };
-
-    recognition.onend = function() {
-        const input = document.getElementById('chatInput');
-        if (input && input.value.trim()) {
-            askAI();
-        }
-    };
-
-    recognition.start();
-}
-
-// ============================================================
-// 📦 CRUD FUNCTIONS (placeholder)
-// ============================================================
-
-function editVessel(id) {
-    console.log('✏️ Edit vessel:', id);
-    showToast('✏️ جاري تعديل المركب', 'info');
-}
-
-function deleteVessel(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    console.log('🗑️ Delete vessel:', id);
-    showToast('🗑️ تم حذف المركب', 'success');
-}
-
-function editUser(id) {
-    console.log('✏️ Edit user:', id);
-    showToast('✏️ جاري تعديل المستخدم', 'info');
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-    console.log('🗑️ Delete user:', id);
-    showToast('🗑️ تم حذف المستخدم', 'success');
+    // AI logic here
 }
 
 // ============================================================
@@ -730,32 +540,20 @@ function deleteUser(id) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
-    // ✅ التحقق من التوكن
-    const token = getToken();
     const user = getUser();
 
-    if (token && user) {
-        // ✅ جلسة موجودة
+    if (user) {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-
         updateUserDisplay();
-
-        // تحميل الصفحة الرئيسية
         loadPage('dashboard');
-
         console.log('✅ Session restored for:', user.name);
     } else {
-        // ❌ لا توجد جلسة
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
-
-        // تنظيف البيانات القديمة
-        setToken(null);
         setUser(null);
     }
 
-    // ✅ ربط أحداث الدخول
     const username = document.getElementById('username');
     const password = document.getElementById('password');
 
@@ -776,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     console.log('✅ Marine System ready');
-    console.log('📝 Username: admin / Password: 123456');
+    console.log('🔐 Tokens stored in HttpOnly Cookies (secure)');
 });
 
 // ============================================================
@@ -784,16 +582,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================================
 
 window.doLogin = doLogin;
+window.handleLogin = handleLogin;
 window.doLogout = doLogout;
 window.showPage = showPage;
 window.toggleSidebar = toggleSidebar;
 window.refreshAllPages = refreshAllPages;
 window.loadPage = loadPage;
-window.editVessel = editVessel;
-window.deleteVessel = deleteVessel;
-window.editUser = editUser;
-window.deleteUser = deleteUser;
-window.askAI = askAI;
-window.toggleVoiceInput = toggleVoiceInput;
 
-console.log('✅ app.js v10.0 loaded successfully');
+console.log('✅ app.js v15.0 - Secure Edition loaded');
