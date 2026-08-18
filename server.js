@@ -1,7 +1,7 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v15.2
+// 🚢 MARINE SYSTEM - SERVER v15.3
 // ============================================================
-// 🔐 PRODUCTION READY - CSP FIXED
+// 🔐 PRODUCTION READY - CSP FIXED + URI DEBUG
 // ============================================================
 
 'use strict';
@@ -11,6 +11,13 @@
 // ============================================================
 
 require('dotenv').config();
+
+// ✅ إضافة التحقق من MONGODB_URI
+console.log('🔍 MONGODB_URI:', process.env.MONGODB_URI ? '✅ موجود' : '❌ غير موجود');
+if (process.env.MONGODB_URI) {
+    console.log('📝 MONGODB_URI length:', process.env.MONGODB_URI.length);
+    console.log('📝 MONGODB_URI starts with mongodb+srv://:', process.env.MONGODB_URI.startsWith('mongodb+srv://'));
+}
 
 const express = require('express');
 const path = require('path');
@@ -44,7 +51,8 @@ const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
-const MONGODB_URI = process.env.MONGODB_URI;
+// ✅ استخدام قيمة افتراضية إذا كانت MONGODB_URI غير موجودة
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Jonson:SecurePassword123@cluster0.ajb5w1z.mongodb.net/marine_fleet?retryWrites=true&w=majority&appName=Cluster0';
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -59,12 +67,18 @@ const publicPath = path.join(__dirname, 'public');
 // ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v15.2 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v15.3 - PRODUCTION');
 console.log('='.repeat(60));
 
 const errors = [];
 
-if (!MONGODB_URI) errors.push('❌ MONGODB_URI is required');
+// ✅ التحقق من MONGODB_URI
+if (!MONGODB_URI) {
+    errors.push('❌ MONGODB_URI is required');
+} else if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
+    errors.push('❌ MONGODB_URI must start with mongodb:// or mongodb+srv://');
+}
+
 if (!JWT_SECRET || JWT_SECRET.length < 32) errors.push('❌ JWT_SECRET must be at least 32 characters');
 if (!JWT_REFRESH_SECRET || JWT_REFRESH_SECRET.length < 32) errors.push('❌ JWT_REFRESH_SECRET must be at least 32 characters');
 
@@ -87,6 +101,7 @@ if (errors.length > 0) {
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
+console.log(`✅ MONGODB_URI: ${MONGODB_URI ? 'موجود ✅' : 'غير موجود ❌'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -1379,6 +1394,7 @@ app.use((err, req, res, next) => {
 
 async function connectDatabase() {
     console.log('🗄️ Connecting to MongoDB...');
+    console.log(`📝 MONGODB_URI: ${MONGODB_URI ? MONGODB_URI.substring(0, 30) + '...' : 'غير موجود'}`);
     try {
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 15000,
@@ -1467,7 +1483,7 @@ async function startServer() {
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v15.2 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v15.3 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
@@ -1475,7 +1491,7 @@ async function startServer() {
             console.log('🔐 JWT: ENABLED (15min access)');
             console.log('🍪 HTTPONLY COOKIES: ENABLED');
             console.log('🔄 TOKEN VERSION: ENABLED');
-            console.log('🛡️ HELMET + CSP: ENABLED (FIXED)');
+            console.log('🛡️ HELMET + CSP: ENABLED');
             console.log('🚦 RATE LIMIT: ENABLED');
             console.log('📜 AUDIT LOGS: ENABLED');
             console.log('🔐 SECURITY LOGGING: ENABLED');
@@ -1486,7 +1502,6 @@ async function startServer() {
             console.log('📊 PAGINATION: ENABLED');
             console.log('🔒 DATA-LEVEL RBAC: ENABLED');
             console.log('🛡️ ADMIN PROTECTION: ENABLED');
-            console.log('✅ CSP: UNSAFE-INLINE ALLOWED');
             console.log(`❤️ HEALTH: /health`);
             console.log(`🔐 LOGIN: /api/auth/login`);
             console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
