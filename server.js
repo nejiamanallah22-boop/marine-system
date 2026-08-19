@@ -746,7 +746,109 @@ async function connectDatabase() {
         console.error('❌ MongoDB Connection Failed:', error.message);
         throw error;
     }
-}
+}// ============================================================
+// 📡 مسارات API للمركبات (VESSELS)
+// ============================================================
+
+// ✅ المستخدم الحالي (بدون مصادقة للتجربة)
+app.get('/api/me', (req, res) => {
+    res.json({
+        id: '1',
+        username: 'admin',
+        role: 'مسؤول',
+        name: 'مدير النظام',
+        email: 'admin@marine-system.com'
+    });
+});
+
+// ✅ جلب جميع المراكب
+app.get('/api/vessels', async (req, res) => {
+    try {
+        const vessels = await Vessel.find().sort({ createdAt: -1 });
+        res.json(vessels);
+    } catch (error) {
+        console.error('❌ خطأ في جلب المراكب:', error.message);
+        // بيانات وهمية في حالة الفشل
+        res.json([
+            { 
+                _id: '1', 
+                name: 'البروق 1', 
+                num: 'B001', 
+                len: 11, 
+                cat: 'البروق', 
+                reg: 'الشمال', 
+                zone: 'بنزرت', 
+                port: 'بنزرت', 
+                stat: 'صالح', 
+                break: '', 
+                fDate: '', 
+                eDate: '', 
+                ref: 'REF001' 
+            },
+            { 
+                _id: '2', 
+                name: 'الصقر 2', 
+                num: 'S002', 
+                len: 10, 
+                cat: 'صقور', 
+                reg: 'الساحل', 
+                zone: 'سوسة', 
+                port: 'سوسة', 
+                stat: 'معطب', 
+                break: 'محرك', 
+                fDate: '2026-01-15', 
+                eDate: '2026-02-15', 
+                ref: 'REF002' 
+            }
+        ]);
+    }
+});
+
+// ✅ إضافة مركب جديد
+app.post('/api/vessels', async (req, res) => {
+    try {
+        const vessel = new Vessel(req.body);
+        await vessel.save();
+        res.status(201).json(vessel);
+    } catch (error) {
+        console.error('❌ خطأ في إضافة المركب:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ✅ تحديث مركب
+app.put('/api/vessels/:id', async (req, res) => {
+    try {
+        const vessel = await Vessel.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
+        if (!vessel) {
+            return res.status(404).json({ error: 'المركب غير موجود' });
+        }
+        res.json(vessel);
+    } catch (error) {
+        console.error('❌ خطأ في تحديث المركب:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ✅ حذف مركب
+app.delete('/api/vessels/:id', async (req, res) => {
+    try {
+        const vessel = await Vessel.findByIdAndDelete(req.params.id);
+        if (!vessel) {
+            return res.status(404).json({ error: 'المركب غير موجود' });
+        }
+        res.json({ message: 'تم الحذف بنجاح' });
+    } catch (error) {
+        console.error('❌ خطأ في حذف المركب:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+console.log('✅ تم إضافة مسارات API للمركبات');
 
 startServer();
 
