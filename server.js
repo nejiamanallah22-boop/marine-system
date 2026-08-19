@@ -1,8 +1,13 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v16.2 (RENDER FIXED)
+// 🚢 MARINE SYSTEM - SERVER v16.2 (RENDER-ONLY)
+// ✅ MUST use Render Environment Variables
 // ============================================================
 
 'use strict';
+
+// ============================================================
+// 📦 DEPENDENCIES
+// ============================================================
 
 require('dotenv').config();
 
@@ -16,10 +21,10 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
-const bcrypt = require('bcryptjs'); // ✅ إضافة bcrypt
+const bcrypt = require('bcrypt');
 
 // ============================================================
-// ⚙️ CONFIGURATION
+// ⚙️ CONFIGURATION - MUST BE IN RENDER ENV
 // ============================================================
 
 const app = express();
@@ -27,29 +32,58 @@ const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
+// ✅ متغيرات إلزامية من Render
 const MONGODB_URI = process.env.MONGODB_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'my_super_secret_key_1234567890123456';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'another_secret_key_1234567890123456';
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Marine@2024#Secure';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
+const FRONTEND_URL = process.env.FRONTEND_URL || '*';
 
-const publicPath = path.join(__dirname, 'public');
+// ============================================================
+// ✅ التحقق من المتغيرات الإلزامية
+// ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v16.2 - RENDER FIXED');
+console.log('🚢 MARINE SYSTEM v16.2 - RENDER-ONLY');
 console.log('='.repeat(60));
-console.log(`✅ MONGODB_URI: ${MONGODB_URI ? 'موجود' : '❌ غير موجود'}`);
-console.log(`✅ PORT: ${PORT}`);
-console.log(`✅ NODE_ENV: ${NODE_ENV}`);
+
+const requiredEnvVars = [
+    { name: 'MONGODB_URI', value: MONGODB_URI },
+    { name: 'JWT_SECRET', value: JWT_SECRET },
+    { name: 'JWT_REFRESH_SECRET', value: JWT_REFRESH_SECRET },
+    { name: 'ADMIN_EMAIL', value: ADMIN_EMAIL },
+    { name: 'ADMIN_PASSWORD', value: ADMIN_PASSWORD }
+];
+
+let missingVars = [];
+
+for (const env of requiredEnvVars) {
+    if (!env.value) {
+        missingVars.push(env.name);
+        console.log(`❌ ${env.name}: غير موجود`);
+    } else {
+        console.log(`✅ ${env.name}: موجود`);
+    }
+}
+
+if (missingVars.length > 0) {
+    console.log('\n❌ خطأ: المتغيرات التالية مفقودة في Render:');
+    missingVars.forEach(v => console.log(`   - ${v}`));
+    console.log('\n📝 يرجى إضافتها في:');
+    console.log('   Render Dashboard → مشروعك → Settings → Environment Variables');
+    console.log('\n' + '='.repeat(60) + '\n');
+    process.exit(1);
+}
+
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
-// 📦 MODELS (مع إضافة bcrypt)
+// 📦 MODELS
 // ============================================================
 
-// ----- نموذج المستخدم مع دالة comparePassword -----
+// ----- نموذج المستخدم -----
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     username: { type: String, unique: true, sparse: true },
@@ -68,27 +102,6 @@ const UserSchema = new mongoose.Schema({
     loginAttempts: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
-});
-
-// ✅ إضافة دالة comparePassword
-UserSchema.methods.comparePassword = async function(candidatePassword) {
-    try {
-        return await bcrypt.compare(candidatePassword, this.password);
-    } catch (error) {
-        console.error('❌ Password comparison error:', error);
-        return false;
-    }
-};
-
-// ✅ تشفير كلمة المرور قبل الحفظ
-UserSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) return next();
-    try {
-        this.password = await bcrypt.hash(this.password, 12);
-        next();
-    } catch (error) {
-        next(error);
-    }
 });
 
 // ----- نموذج المركب -----
@@ -114,7 +127,7 @@ const VesselSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// ----- نماذج أخرى -----
+// نماذج أخرى
 const MaintenanceSchema = new mongoose.Schema({
     vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel' },
     description: { type: String, required: true },
@@ -200,156 +213,56 @@ function verifyAccessToken(token) {
 // ============================================================
 
 async function connectDatabase() {
-    if (!MONGODB_URI) {
-        console.error('❌ MONGODB_URI is required!');
-        console.error('📝 Please set MONGODB_URI in Render environment variables');
-        process.exit(1);
-    }
-    
     console.log('🗄️ Connecting to MongoDB...');
-    console.log(`📝 URI: ${MONGODB_URI.replace(/\/\/.*@/, '//***:***@')}`); // إخفاء البيانات الحساسة
-    
     try {
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 15000,
             socketTimeoutMS: 45000,
             maxPoolSize: 20,
-            minPoolSize: 2,
-            connectTimeoutMS: 10000,
-            retryWrites: true
+            minPoolSize: 2
         });
-        console.log('✅ MongoDB Connected Successfully');
+        console.log('✅ MongoDB Connected');
         console.log(`📚 Database: ${mongoose.connection.name}`);
-        console.log(`📊 Collections: ${await mongoose.connection.db.listCollections().toArray().then(c => c.length)}`);
-        return true;
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
-        console.error('💡 Tips:');
-        console.error('  1. Check if MONGODB_URI is correct');
-        console.error('  2. Check if IP address is whitelisted in MongoDB Atlas');
-        console.error('  3. Check network connectivity');
-        throw error;
+        process.exit(1);
     }
 }
 
 // ============================================================
-// 🛠️ INITIALIZE DATABASE
+// 👤 CREATE ADMIN USER - USING RENDER ENV ONLY
 // ============================================================
 
-async function initializeDatabase() {
+async function createAdminUser() {
     try {
-        const db = mongoose.connection.db;
-        
-        // ✅ التحقق من وجود قاعدة البيانات
-        console.log('📊 Initializing database...');
-        
-        // التحقق من وجود مجموعة vessels
-        const collections = await db.listCollections({ name: 'vessels' }).toArray();
-        
-        if (collections.length === 0) {
-            console.log('📦 Creating vessels collection...');
-            await db.createCollection('vessels');
-            console.log('✅ Vessels collection created');
-        }
-        
-        // ✅ إنشاء الفهارس
-        console.log('📊 Creating indexes...');
-        
-        try {
-            // حذف الفهارس القديمة
-            const indexes = await db.collection('vessels').indexes();
-            for (const idx of indexes) {
-                if (idx.name === 'num_1' || idx.name === 'num_1_dup') {
-                    try {
-                        await db.collection('vessels').dropIndex(idx.name);
-                        console.log(`🗑️ Dropped old index: ${idx.name}`);
-                    } catch(e) {}
-                }
-            }
-        } catch(e) {}
-        
-        // إنشاء فهارس جديدة
-        await db.collection('vessels').createIndex({ num: 1 });
-        await db.collection('vessels').createIndex({ name: 1 });
-        await db.collection('vessels').createIndex({ stat: 1 });
-        await db.collection('vessels').createIndex({ reg: 1 });
-        await db.collection('vessels').createIndex({ cat: 1 });
-        
-        console.log('✅ Indexes created successfully');
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Database initialization error:', error.message);
-        // لا نخرج من العملية، نكمل
-        return false;
-    }
-}
-
-// ============================================================
-// 👤 CREATE ADMIN USER
-// ============================================================
-
-async function createInitialAdmin() {
-    try {
-        console.log('👤 Creating/Checking admin user...');
-        
-        const adminEmail = String(ADMIN_EMAIL).trim().toLowerCase();
-        const adminPassword = String(ADMIN_PASSWORD);
-        const adminName = String(ADMIN_NAME);
-
-        // البحث عن المدير
-        let admin = await User.findOne({ 
-            $or: [{ email: adminEmail }, { username: 'admin' }]
+        // ✅ حذف المستخدمين القدامى
+        await User.deleteMany({ 
+            $or: [{ email: ADMIN_EMAIL }, { username: 'admin' }]
         });
+        console.log('🗑️ تم حذف المستخدمين القدامى');
 
-        if (admin) {
-            // ✅ تحديث المدير الموجود
-            if (!admin.isActive) {
-                admin.isActive = true;
-                admin.tokenVersion = (admin.tokenVersion || 0) + 1;
-                await admin.save();
-                console.log('✅ Admin account reactivated');
-            }
-            
-            // تحديث كلمة المرور إذا تغيرت
-            const isPasswordCorrect = await admin.comparePassword(adminPassword);
-            if (!isPasswordCorrect) {
-                admin.password = adminPassword;
-                await admin.save();
-                console.log('✅ Admin password updated');
-            }
-            
-            console.log('✅ Admin user exists and is active');
-            console.log(`📧 Email: ${adminEmail}`);
-            return true;
-        }
-
-        // ✅ إنشاء مدير جديد
-        console.log('📝 Creating new admin user...');
+        // ✅ إنشاء مستخدم جديد بكلمة المرور من Render
+        const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 10);
         
-        const newAdmin = new User({
-            name: adminName,
+        const admin = new User({
+            name: ADMIN_NAME,
             username: 'admin',
-            email: adminEmail,
-            password: adminPassword,
+            email: ADMIN_EMAIL,
+            password: hashedPassword,
             role: 'admin',
             isActive: true,
             tokenVersion: 1
         });
 
-        await newAdmin.save();
-        console.log('✅ Admin created successfully!');
-        console.log(`📧 Email: ${adminEmail}`);
-        console.log(`🔑 Password: ${adminPassword}`);
-        console.log(`👤 Name: ${adminName}`);
-        return true;
+        await admin.save();
+        console.log('✅ تم إنشاء المدير بنجاح!');
+        console.log(`📧 Email: ${ADMIN_EMAIL}`);
+        console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+        console.log(`👤 Name: ${ADMIN_NAME}`);
 
     } catch (error) {
-        console.error('❌ Admin creation error:', error.message);
-        if (error.code === 11000) {
-            console.error('⚠️ Duplicate key error - admin may already exist');
-        }
-        return false;
+        console.error('❌ خطأ في إنشاء المدير:', error.message);
+        process.exit(1);
     }
 }
 
@@ -414,6 +327,7 @@ app.use('/api/auth/login', loginLimiter);
 // 📁 STATIC FILES
 // ============================================================
 
+const publicPath = path.join(__dirname, 'public');
 app.use(express.static(publicPath, {
     index: 'index.html',
     maxAge: IS_PRODUCTION ? '1d' : 0
@@ -449,7 +363,6 @@ async function authenticate(req, res, next) {
         next();
 
     } catch (error) {
-        console.error('❌ Authentication error:', error.message);
         return res.status(401).json({ 
             success: false, 
             error: error.name === 'TokenExpiredError' ? 'انتهت الجلسة' : 'رمز الدخول غير صالح'
@@ -470,24 +383,16 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// ❤️ HEALTH CHECK
+// ❤️ HEALTH
 // ============================================================
 
 app.get('/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
-    const stateMap = {
-        0: 'disconnected',
-        1: 'connected',
-        2: 'connecting',
-        3: 'disconnecting'
-    };
-    
     res.json({
         status: dbState === 1 ? 'ok' : 'degraded',
         timestamp: new Date().toISOString(),
-        database: stateMap[dbState] || 'unknown',
-        uptime: process.uptime(),
-        memory: process.memoryUsage()
+        database: dbState === 1 ? 'connected' : 'disconnected',
+        adminEmail: ADMIN_EMAIL ? 'set' : 'not set'
     });
 });
 
@@ -500,8 +405,6 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         const identifier = String(req.body.username || req.body.email || '').trim().toLowerCase();
         const password = String(req.body.password || '');
 
-        console.log(`🔐 Login attempt: ${identifier}`);
-
         if (!identifier || !password) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
         }
@@ -511,17 +414,13 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }).select('+password +refreshToken');
 
         if (!user) {
-            console.log(`❌ User not found: ${identifier}`);
             return res.status(401).json({ success: false, error: 'بيانات الدخول غير صحيحة' });
         }
 
-        const isValid = await user.comparePassword(password);
+        const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
-            console.log(`❌ Invalid password for: ${identifier}`);
             return res.status(401).json({ success: false, error: 'بيانات الدخول غير صحيحة' });
         }
-
-        console.log(`✅ Login successful: ${identifier}`);
 
         user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
@@ -666,21 +565,12 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin', 'مسؤول'), a
 
 async function startServer() {
     try {
-        console.log('🚀 Starting Marine System v16.2...');
-        
-        // 1. الاتصال بقاعدة البيانات
         await connectDatabase();
-        
-        // 2. تهيئة النماذج والفهارس
-        await initializeDatabase();
-        
-        // 3. إنشاء المدير
-        await createInitialAdmin();
+        await createAdminUser();
 
-        // 4. تشغيل الخادم
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v16.2 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v16.2 - RENDER-ONLY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
@@ -688,11 +578,10 @@ async function startServer() {
             console.log(`❤️ HEALTH: /health`);
             console.log(`🔐 LOGIN: /api/auth/login`);
             console.log(`📡 VESSELS: /api/vessels`);
-            console.log(`👤 ADMIN: ${ADMIN_EMAIL}`);
+            console.log(`👤 ADMIN EMAIL: ${ADMIN_EMAIL}`);
             console.log('='.repeat(60) + '\n');
         });
 
-        // 5. إغلاق آمن
         let shuttingDown = false;
         const shutdown = async (signal) => {
             if (shuttingDown) return;
@@ -714,10 +603,6 @@ async function startServer() {
         process.exit(1);
     }
 }
-
-// ============================================================
-// 🏃‍♂️ RUN
-// ============================================================
 
 startServer();
 
