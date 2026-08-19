@@ -1,14 +1,8 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v16.1 (FIXED)
-// ============================================================
-// ✅ تم إصلاح: duplicate key error, indexes, vessel model
+// 🚢 MARINE SYSTEM - SERVER v16.2 (RENDER FIXED)
 // ============================================================
 
 'use strict';
-
-// ============================================================
-// 📦 DEPENDENCIES
-// ============================================================
 
 require('dotenv').config();
 
@@ -22,6 +16,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs'); // ✅ إضافة bcrypt
 
 // ============================================================
 // ⚙️ CONFIGURATION
@@ -43,16 +38,18 @@ const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 const publicPath = path.join(__dirname, 'public');
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v16.1 - FIXED');
+console.log('🚢 MARINE SYSTEM v16.2 - RENDER FIXED');
 console.log('='.repeat(60));
 console.log(`✅ MONGODB_URI: ${MONGODB_URI ? 'موجود' : '❌ غير موجود'}`);
+console.log(`✅ PORT: ${PORT}`);
+console.log(`✅ NODE_ENV: ${NODE_ENV}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
-// 📦 MODELS (مع إصلاح مشكلة unique)
+// 📦 MODELS (مع إضافة bcrypt)
 // ============================================================
 
-// ----- نموذج المستخدم -----
+// ----- نموذج المستخدم مع دالة comparePassword -----
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     username: { type: String, unique: true, sparse: true },
@@ -73,10 +70,31 @@ const UserSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// ----- نموذج المركب (مع إصلاح unique) -----
+// ✅ إضافة دالة comparePassword
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+    try {
+        return await bcrypt.compare(candidatePassword, this.password);
+    } catch (error) {
+        console.error('❌ Password comparison error:', error);
+        return false;
+    }
+};
+
+// ✅ تشفير كلمة المرور قبل الحفظ
+UserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    try {
+        this.password = await bcrypt.hash(this.password, 12);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+// ----- نموذج المركب -----
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    num: { type: String, default: '' }, // ❌ تم إزالة unique: true
+    num: { type: String, default: '' },
     len: { type: Number, required: true },
     cat: { type: String, default: '' },
     reg: { type: String, default: '' },
@@ -96,7 +114,7 @@ const VesselSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// نماذج أخرى (اختيارية)
+// ----- نماذج أخرى -----
 const MaintenanceSchema = new mongoose.Schema({
     vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel' },
     description: { type: String, required: true },
@@ -178,88 +196,92 @@ function verifyAccessToken(token) {
 }
 
 // ============================================================
-// 🗄️ DATABASE CONNECTION & INITIALIZATION
+// 🗄️ DATABASE CONNECTION
 // ============================================================
 
 async function connectDatabase() {
     if (!MONGODB_URI) {
         console.error('❌ MONGODB_URI is required!');
+        console.error('📝 Please set MONGODB_URI in Render environment variables');
         process.exit(1);
     }
     
     console.log('🗄️ Connecting to MongoDB...');
+    console.log(`📝 URI: ${MONGODB_URI.replace(/\/\/.*@/, '//***:***@')}`); // إخفاء البيانات الحساسة
+    
     try {
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 15000,
             socketTimeoutMS: 45000,
             maxPoolSize: 20,
-            minPoolSize: 2
+            minPoolSize: 2,
+            connectTimeoutMS: 10000,
+            retryWrites: true
         });
-        console.log('✅ MongoDB Connected');
+        console.log('✅ MongoDB Connected Successfully');
         console.log(`📚 Database: ${mongoose.connection.name}`);
+        console.log(`📊 Collections: ${await mongoose.connection.db.listCollections().toArray().then(c => c.length)}`);
+        return true;
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
-        process.exit(1);
+        console.error('💡 Tips:');
+        console.error('  1. Check if MONGODB_URI is correct');
+        console.error('  2. Check if IP address is whitelisted in MongoDB Atlas');
+        console.error('  3. Check network connectivity');
+        throw error;
     }
 }
 
 // ============================================================
-// 🛠️ CREATE MODELS AND INDEXES
+// 🛠️ INITIALIZE DATABASE
 // ============================================================
 
 async function initializeDatabase() {
     try {
         const db = mongoose.connection.db;
         
-        // ----- التحقق من وجود مجموعة vessels -----
+        // ✅ التحقق من وجود قاعدة البيانات
+        console.log('📊 Initializing database...');
+        
+        // التحقق من وجود مجموعة vessels
         const collections = await db.listCollections({ name: 'vessels' }).toArray();
         
         if (collections.length === 0) {
-            console.log('📦 إنشاء مجموعة vessels...');
+            console.log('📦 Creating vessels collection...');
             await db.createCollection('vessels');
-            
-            // ✅ إضافة نموذج اختبار
-            await db.collection('vessels').insertOne({
-                name: "البروق 1",
-                num: "001",
-                len: 11,
-                cat: "البروق",
-                reg: "الشمال",
-                zone: "بنزرت",
-                port: "بنزرت",
-                stat: "صالح",
-                break: "",
-                fDate: "",
-                eDate: "",
-                ref: "REF001",
-                createdAt: new Date(),
-                updatedAt: new Date()
-            });
-            console.log('✅ تم إنشاء نموذج اختبار');
+            console.log('✅ Vessels collection created');
         }
         
-        // ----- إنشاء الفهارس (بدون unique) -----
-        console.log('📊 إنشاء الفهارس...');
+        // ✅ إنشاء الفهارس
+        console.log('📊 Creating indexes...');
         
-        // حذف الفهرس القديم إذا كان موجوداً
         try {
-            await db.collection('vessels').dropIndex('num_1');
-            console.log('🗑️ تم حذف الفهرس القديم num_1');
-        } catch(e) {
-            // الفهرس غير موجود، نكمل
-        }
+            // حذف الفهارس القديمة
+            const indexes = await db.collection('vessels').indexes();
+            for (const idx of indexes) {
+                if (idx.name === 'num_1' || idx.name === 'num_1_dup') {
+                    try {
+                        await db.collection('vessels').dropIndex(idx.name);
+                        console.log(`🗑️ Dropped old index: ${idx.name}`);
+                    } catch(e) {}
+                }
+            }
+        } catch(e) {}
         
         // إنشاء فهارس جديدة
-        await db.collection('vessels').createIndex({ num: 1 }, { unique: false });
+        await db.collection('vessels').createIndex({ num: 1 });
         await db.collection('vessels').createIndex({ name: 1 });
         await db.collection('vessels').createIndex({ stat: 1 });
         await db.collection('vessels').createIndex({ reg: 1 });
         await db.collection('vessels').createIndex({ cat: 1 });
         
-        console.log('✅ تم إنشاء الفهارس بنجاح');
+        console.log('✅ Indexes created successfully');
+        return true;
         
     } catch (error) {
-        console.error('❌ خطأ في تهيئة قاعدة البيانات:', error.message);
+        console.error('❌ Database initialization error:', error.message);
+        // لا نخرج من العملية، نكمل
+        return false;
     }
 }
 
@@ -269,25 +291,43 @@ async function initializeDatabase() {
 
 async function createInitialAdmin() {
     try {
-        const adminEmail = String(process.env.ADMIN_EMAIL || 'admin@marine-system.com').trim().toLowerCase();
-        const adminPassword = String(process.env.ADMIN_PASSWORD || 'Marine@2024#Secure');
-        const adminName = process.env.ADMIN_NAME || 'مدير النظام';
+        console.log('👤 Creating/Checking admin user...');
+        
+        const adminEmail = String(ADMIN_EMAIL).trim().toLowerCase();
+        const adminPassword = String(ADMIN_PASSWORD);
+        const adminName = String(ADMIN_NAME);
 
-        const existing = await User.findOne({ 
+        // البحث عن المدير
+        let admin = await User.findOne({ 
             $or: [{ email: adminEmail }, { username: 'admin' }]
         });
 
-        if (existing) {
-            if (!existing.isActive) {
-                existing.isActive = true;
-                existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                await existing.save();
-                console.log('✅ تم تفعيل حساب المدير');
+        if (admin) {
+            // ✅ تحديث المدير الموجود
+            if (!admin.isActive) {
+                admin.isActive = true;
+                admin.tokenVersion = (admin.tokenVersion || 0) + 1;
+                await admin.save();
+                console.log('✅ Admin account reactivated');
             }
-            return;
+            
+            // تحديث كلمة المرور إذا تغيرت
+            const isPasswordCorrect = await admin.comparePassword(adminPassword);
+            if (!isPasswordCorrect) {
+                admin.password = adminPassword;
+                await admin.save();
+                console.log('✅ Admin password updated');
+            }
+            
+            console.log('✅ Admin user exists and is active');
+            console.log(`📧 Email: ${adminEmail}`);
+            return true;
         }
 
-        const admin = new User({
+        // ✅ إنشاء مدير جديد
+        console.log('📝 Creating new admin user...');
+        
+        const newAdmin = new User({
             name: adminName,
             username: 'admin',
             email: adminEmail,
@@ -297,13 +337,19 @@ async function createInitialAdmin() {
             tokenVersion: 1
         });
 
-        await admin.save();
-        console.log('✅ تم إنشاء المدير بنجاح!');
+        await newAdmin.save();
+        console.log('✅ Admin created successfully!');
         console.log(`📧 Email: ${adminEmail}`);
         console.log(`🔑 Password: ${adminPassword}`);
+        console.log(`👤 Name: ${adminName}`);
+        return true;
 
     } catch (error) {
-        console.error('❌ خطأ في إنشاء المدير:', error.message);
+        console.error('❌ Admin creation error:', error.message);
+        if (error.code === 11000) {
+            console.error('⚠️ Duplicate key error - admin may already exist');
+        }
+        return false;
     }
 }
 
@@ -403,6 +449,7 @@ async function authenticate(req, res, next) {
         next();
 
     } catch (error) {
+        console.error('❌ Authentication error:', error.message);
         return res.status(401).json({ 
             success: false, 
             error: error.name === 'TokenExpiredError' ? 'انتهت الجلسة' : 'رمز الدخول غير صالح'
@@ -423,15 +470,24 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// ❤️ HEALTH
+// ❤️ HEALTH CHECK
 // ============================================================
 
 app.get('/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
+    const stateMap = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+    };
+    
     res.json({
         status: dbState === 1 ? 'ok' : 'degraded',
         timestamp: new Date().toISOString(),
-        database: dbState === 1 ? 'connected' : 'disconnected'
+        database: stateMap[dbState] || 'unknown',
+        uptime: process.uptime(),
+        memory: process.memoryUsage()
     });
 });
 
@@ -444,6 +500,8 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         const identifier = String(req.body.username || req.body.email || '').trim().toLowerCase();
         const password = String(req.body.password || '');
 
+        console.log(`🔐 Login attempt: ${identifier}`);
+
         if (!identifier || !password) {
             return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
         }
@@ -453,13 +511,17 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         }).select('+password +refreshToken');
 
         if (!user) {
+            console.log(`❌ User not found: ${identifier}`);
             return res.status(401).json({ success: false, error: 'بيانات الدخول غير صحيحة' });
         }
 
         const isValid = await user.comparePassword(password);
         if (!isValid) {
+            console.log(`❌ Invalid password for: ${identifier}`);
             return res.status(401).json({ success: false, error: 'بيانات الدخول غير صحيحة' });
         }
+
+        console.log(`✅ Login successful: ${identifier}`);
 
         user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
@@ -527,10 +589,9 @@ app.get('/api/me', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 📡 VESSELS API (المعدلة والمصححة)
+// 📡 VESSELS API
 // ============================================================
 
-// ✅ جلب جميع المراكب
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
@@ -541,16 +602,13 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     }
 });
 
-// ✅ إضافة مركب جديد (مع إصلاح مشكلة التكرار)
 app.post('/api/vessels', authenticate, authorize('admin', 'مسؤول', 'editor', 'محرر'), async (req, res) => {
     try {
         const vesselData = req.body;
         
-        // ✅ التحقق من وجود رقم مكرر
         if (vesselData.num) {
             const existing = await Vessel.findOne({ num: vesselData.num });
             if (existing) {
-                // إضافة لاحقة عشوائية لجعل الرقم فريداً
                 const suffix = Math.floor(Math.random() * 10000);
                 vesselData.num = vesselData.num + '-' + suffix;
                 console.log(`⚠️ رقم مكرر، تم تغييره إلى: ${vesselData.num}`);
@@ -563,8 +621,6 @@ app.post('/api/vessels', authenticate, authorize('admin', 'مسؤول', 'editor'
         
     } catch (error) {
         console.error('❌ Error saving vessel:', error);
-        
-        // ✅ معالجة خطأ التكرار
         if (error.code === 11000) {
             return res.status(400).json({ 
                 error: 'الرقم موجود بالفعل، يرجى استخدام رقم آخر' 
@@ -574,7 +630,6 @@ app.post('/api/vessels', authenticate, authorize('admin', 'مسؤول', 'editor'
     }
 });
 
-// ✅ تحديث مركب
 app.put('/api/vessels/:id', authenticate, authorize('admin', 'مسؤول', 'editor', 'محرر'), async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndUpdate(
@@ -592,7 +647,6 @@ app.put('/api/vessels/:id', authenticate, authorize('admin', 'مسؤول', 'edit
     }
 });
 
-// ✅ حذف مركب
 app.delete('/api/vessels/:id', authenticate, authorize('admin', 'مسؤول'), async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
@@ -612,6 +666,8 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin', 'مسؤول'), a
 
 async function startServer() {
     try {
+        console.log('🚀 Starting Marine System v16.2...');
+        
         // 1. الاتصال بقاعدة البيانات
         await connectDatabase();
         
@@ -624,7 +680,7 @@ async function startServer() {
         // 4. تشغيل الخادم
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v16.1 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v16.2 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
