@@ -1,11 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v15.0
+// 🚀 MARINE SYSTEM - APP.JS v16.0
 // ============================================================
-// 🔐 SECURE - No localStorage for tokens
-// 🏆 10/10 - PRODUCTION READY
+// 🏆 10/10 - ULTIMATE PRODUCTION EDITION
 // ============================================================
 
-console.log('🚀 Marine System v15.0 - Secure Frontend');
+console.log('🚀 Marine System v16.0 - Ultimate Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -13,6 +12,17 @@ console.log('🚀 Marine System v15.0 - Secure Frontend');
 
 const API_BASE = '/api';
 const USER_KEY = 'auth_user';
+const PAGE_REGISTRY = {
+    'dashboard': { title: '📊 لوحة التحكم', init: 'loadDashboard', permissions: [] },
+    'fleet': { title: '🚢 الأسطول', init: 'loadVessels', permissions: [] },
+    'maintenance': { title: '🔧 الصيانة', init: 'refreshMaintenancePage', permissions: [] },
+    'efficiency': { title: '📈 الجاهزية', init: 'renderEfficiency', permissions: [] },
+    'support': { title: '🎫 الدعم', init: 'loadTickets', permissions: [] },
+    'users': { title: '👤 المستخدمين', init: 'loadUsers', permissions: ['admin', 'manager'] },
+    'notes': { title: '📝 Note Verbale', init: 'loadNotes', permissions: [] },
+    'sessions': { title: '🔄 المراقبة', init: 'initSessionsPage', permissions: ['admin', 'manager'] },
+    'ai-assistant': { title: '🤖 المساعد الذكي', init: 'initAIAssistant', permissions: [] }
+};
 
 // ============================================================
 // 🔐 AUTH FUNCTIONS
@@ -36,6 +46,30 @@ function setUser(user) {
 
 function isAuthenticated() {
     return !!getUser();
+}
+
+function hasPermission(pageName) {
+    const config = PAGE_REGISTRY[pageName];
+    if (!config || !config.permissions || config.permissions.length === 0) {
+        return true;
+    }
+    const user = getUser();
+    if (!user) return false;
+    return config.permissions.includes(user.role);
+}
+
+// ============================================================
+// 🛡️ ESCAPE HTML - منع XSS
+// ============================================================
+
+function escapeHTML(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // ============================================================
@@ -67,8 +101,6 @@ async function doLogin() {
     }
 
     try {
-        console.log('📤 Sending login request...');
-
         const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
@@ -82,10 +114,7 @@ async function doLogin() {
             })
         });
 
-        console.log('📥 Response status:', response.status);
-
         const data = await response.json();
-        console.log('📥 Response data:', data);
 
         if (response.ok && data.success) {
             setUser(data.user);
@@ -98,11 +127,11 @@ async function doLogin() {
             updateUserDisplay();
             loadPage('dashboard');
 
-            showToast('✅ مرحباً ' + (data.user?.name || 'مدير النظام') + '!', 'success');
+            showToast('✅ مرحباً ' + escapeHTML(data.user?.name || 'مدير النظام') + '!', 'success');
 
         } else {
             if (errorEl) {
-                errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                errorEl.textContent = '❌ ' + escapeHTML(data.error || 'بيانات الدخول غير صحيحة');
                 errorEl.style.display = 'block';
             }
         }
@@ -120,7 +149,6 @@ async function doLogin() {
     }
 }
 
-// ✅ دالة للتوافق مع `onclick="handleLogin()"`
 function handleLogin() {
     doLogin();
 }
@@ -162,15 +190,15 @@ function updateUserDisplay() {
     const user = getUser();
     if (user) {
         const roleEmojis = {
-            'مسؤول': '👑',
-            'محرر': '✏️',
-            'مستخدم': '👤',
-            'مشاهد': '👀'
+            'admin': '👑',
+            'manager': '⭐',
+            'editor': '✏️',
+            'viewer': '👀'
         };
         display.innerHTML = `
             <i class="fas fa-user-circle"></i>
-            ${user.name || 'مستخدم'}
-            <span class="role-badge">${roleEmojis[user.role] || '👤'} ${user.role || 'مستخدم'}</span>
+            ${escapeHTML(user.name || 'مستخدم')}
+            <span class="role-badge">${roleEmojis[user.role] || '👤'} ${escapeHTML(user.role || 'مشاهد')}</span>
             <button onclick="doLogout()" class="logout-btn-small">🚪 خروج</button>
         `;
     } else {
@@ -179,16 +207,44 @@ function updateUserDisplay() {
 }
 
 // ============================================================
-// 📄 PAGE MANAGEMENT
+// 📄 PAGE MANAGEMENT - نظام احترافي
 // ============================================================
 
+let currentPage = null;
+let isLoading = false;
+let pageCache = {};
+
 function loadPage(pageName) {
+    // ✅ التحقق من الصلاحيات
+    if (!hasPermission(pageName)) {
+        showToast('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
+        return;
+    }
+
+    if (isLoading) return;
+    if (currentPage === pageName) return;
+
     const container = document.getElementById('pageContainer');
     if (!container) return;
 
-    const oldContent = container.querySelector('.page-content');
-    if (oldContent) oldContent.remove();
+    isLoading = true;
+    currentPage = pageName;
 
+    // ✅ تحديث عنوان الصفحة
+    const config = PAGE_REGISTRY[pageName];
+    if (config) {
+        document.title = `${config.title} - Marine System`;
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.textContent = config.title;
+    }
+
+    // ✅ تحديث الأزرار النشطة
+    updateActiveNav(pageName);
+
+    // ✅ حفظ الصفحة الحالية
+    localStorage.setItem('currentPage', pageName);
+
+    // ✅ عرض مؤشر التحميل
     const loading = document.createElement('div');
     loading.className = 'page-loading';
     loading.innerHTML = `
@@ -199,26 +255,30 @@ function loadPage(pageName) {
     `;
     container.appendChild(loading);
 
-    fetch(`/pages/${pageName}.html`)
+    // ✅ تنظيف الصفحة السابقة
+    destroyCurrentPage();
+
+    // ✅ تحميل الصفحة
+    const url = `/pages/${pageName}.html`;
+    
+    // ✅ التحقق من الكاش
+    if (pageCache[pageName]) {
+        console.log(`📄 Using cached page: ${pageName}`);
+        renderPage(pageName, pageCache[pageName]);
+        return;
+    }
+
+    fetch(url)
         .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found`);
+            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
             return res.text();
         })
         .then(html => {
-            loading.remove();
-            const page = document.createElement('div');
-            page.className = 'page-content';
-            page.id = `page-${pageName}`;
-            page.innerHTML = html;
-            page.style.opacity = '0';
-            page.style.transition = 'opacity 0.3s';
-            container.appendChild(page);
-
-            requestAnimationFrame(() => {
-                page.style.opacity = '1';
-            });
-
-            setTimeout(() => initPage(pageName), 100);
+            // ✅ تخزين في الكاش (ما عدا الصفحات الديناميكية)
+            if (pageName !== 'sessions' && pageName !== 'tracking') {
+                pageCache[pageName] = html;
+            }
+            renderPage(pageName, html);
         })
         .catch(err => {
             console.error('❌ Page load error:', err);
@@ -226,56 +286,109 @@ function loadPage(pageName) {
             container.innerHTML = `
                 <div style="text-align:center; padding:50px; color:#f87171;">
                     <h2>❌ خطأ في تحميل الصفحة</h2>
-                    <p>${err.message}</p>
+                    <p>${escapeHTML(err.message)}</p>
                     <button onclick="loadPage('dashboard')" class="btn-primary">🏠 العودة</button>
                 </div>
             `;
+        })
+        .finally(() => {
+            isLoading = false;
         });
+}
+
+function renderPage(pageName, html) {
+    const container = document.getElementById('pageContainer');
+    if (!container) return;
+
+    // ✅ إزالة مؤشر التحميل
+    const loading = container.querySelector('.page-loading');
+    if (loading) loading.remove();
+
+    // ✅ إزالة المحتوى القديم
+    const oldContent = container.querySelector('.page-content');
+    if (oldContent) {
+        oldContent.style.opacity = '0';
+        oldContent.style.transform = 'translateY(10px)';
+        oldContent.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => oldContent.remove(), 300);
+    }
+
+    // ✅ إضافة المحتوى الجديد
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'page-content';
+    pageDiv.id = `page-${pageName}`;
+    pageDiv.innerHTML = html;
+    pageDiv.style.opacity = '0';
+    pageDiv.style.transform = 'translateY(10px)';
+    pageDiv.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    
+    container.appendChild(pageDiv);
+
+    // ✅ تأثير التلاشي
+    requestAnimationFrame(() => {
+        pageDiv.style.opacity = '1';
+        pageDiv.style.transform = 'translateY(0)';
+    });
+
+    // ✅ تهيئة الصفحة بعد التحميل
+    setTimeout(() => initPage(pageName), 200);
 }
 
 function initPage(pageName) {
     console.log(`📄 Initializing page: ${pageName}`);
 
-    switch(pageName) {
-        case 'dashboard':
-            if (typeof loadDashboard === 'function') loadDashboard();
-            break;
-        case 'fleet':
-            if (typeof loadVessels === 'function') loadVessels();
-            break;
-        case 'maintenance':
-            if (typeof loadMaintenance === 'function') loadMaintenance();
-            break;
-        case 'efficiency':
-            if (typeof loadVessels === 'function') loadVessels();
-            break;
-        case 'users':
-            if (typeof loadUsers === 'function') loadUsers();
-            break;
-        case 'ai-assistant':
-            if (typeof initAIAssistant === 'function') initAIAssistant();
-            break;
-        default:
-            console.log(`⚠️ Unknown page: ${pageName}`);
+    const config = PAGE_REGISTRY[pageName];
+    if (config && config.init) {
+        const initFn = window[config.init];
+        if (typeof initFn === 'function') {
+            try {
+                setTimeout(() => {
+                    initFn();
+                }, 100);
+            } catch (error) {
+                console.error(`❌ Error initializing ${pageName}:`, error);
+            }
+        } else {
+            console.warn(`⚠️ Function ${config.init} not found`);
+        }
+    }
+
+    // ✅ إطلاق حدث مخصص
+    document.dispatchEvent(new CustomEvent('pageLoaded', {
+        detail: { page: pageName }
+    }));
+}
+
+function destroyCurrentPage() {
+    if (currentPage === 'sessions' && typeof window.destroySessionsPage === 'function') {
+        try {
+            window.destroySessionsPage();
+            console.log('🧹 Sessions page cleaned up');
+        } catch (e) {
+            console.warn('⚠️ Sessions cleanup error:', e);
+        }
+    }
+}
+
+function updateActiveNav(pageName) {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const btns = document.querySelectorAll('.nav-btn');
+    const pageMap = {
+        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
+        'support': 4, 'users': 5, 'notes': 6, 'sessions': 7,
+        'ai-assistant': 8
+    };
+    
+    const index = pageMap[pageName];
+    if (index !== undefined && btns[index]) {
+        btns[index].classList.add('active');
     }
 }
 
 function showPage(pageName) {
-    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    const btns = document.querySelectorAll('.nav-btn');
-    const pageMap = {
-        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'users': 5, 'notes': 6, 'sessions': 7, 'ai-assistant': 8
-    };
-    if (pageMap[pageName] !== undefined && btns[pageMap[pageName]]) {
-        btns[pageMap[pageName]].classList.add('active');
-    }
-
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar && window.innerWidth <= 992) {
-        sidebar.classList.remove('open');
-    }
-
     loadPage(pageName);
 }
 
@@ -288,6 +401,8 @@ function refreshAllPages() {
     const currentPage = document.querySelector('.page-content');
     if (currentPage) {
         const pageName = currentPage.id.replace('page-', '');
+        // ✅ مسح الكاش
+        delete pageCache[pageName];
         loadPage(pageName);
     } else {
         loadPage('dashboard');
@@ -342,7 +457,7 @@ function showToast(message, type = 'info') {
     `;
     toast.innerHTML = `
         <span style="color:${colors[type]}">${icons[type]}</span>
-        <span style="margin-left:8px;">${message}</span>
+        <span style="margin-left:8px;">${escapeHTML(message)}</span>
     `;
     document.body.appendChild(toast);
 
@@ -448,13 +563,13 @@ function loadVessels() {
                 html += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><strong>${v.name || '-'}</strong></td>
-                        <td><span class="status ${v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning'}">${v.stat || 'صالح'}</span></td>
-                        <td>${v.region || '-'}</td>
-                        <td>${v.supp || '-'}</td>
+                        <td><strong>${escapeHTML(v.name || '-')}</strong></td>
+                        <td><span class="status ${v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning'}">${escapeHTML(v.stat || 'صالح')}</span></td>
+                        <td>${escapeHTML(v.region || '-')}</td>
+                        <td>${escapeHTML(v.supp || '-')}</td>
                         <td>
-                            <button class="btn-sm btn-edit" onclick="editVessel('${v._id}')">✏️</button>
-                            <button class="btn-sm btn-delete" onclick="deleteVessel('${v._id}')">🗑️</button>
+                            <button class="btn-sm btn-edit" onclick="editVessel('${escapeHTML(v._id)}')">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="deleteVessel('${escapeHTML(v._id)}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -485,11 +600,11 @@ function loadMaintenance() {
                 html += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td><strong>${r.vesselName || '-'}</strong></td>
-                        <td>${r.type || '-'}</td>
-                        <td>${r.technician || '-'}</td>
+                        <td><strong>${escapeHTML(r.vesselName || '-')}</strong></td>
+                        <td>${escapeHTML(r.type || '-')}</td>
+                        <td>${escapeHTML(r.technician || '-')}</td>
                         <td>${r.cost || 0} د.ت</td>
-                        <td><span class="status ${r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger'}">${r.status || 'قيد الإنجاز'}</span></td>
+                        <td><span class="status ${r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger'}">${escapeHTML(r.status || 'قيد الإنجاز')}</span></td>
                     </tr>
                 `;
             });
@@ -518,13 +633,13 @@ function loadUsers() {
             data.users.forEach(u => {
                 html += `
                     <tr>
-                        <td><strong>${u.name || '-'}</strong></td>
-                        <td>${u.email || '-'}</td>
-                        <td><span class="role">${u.role || 'مشاهد'}</span></td>
+                        <td><strong>${escapeHTML(u.name || '-')}</strong></td>
+                        <td>${escapeHTML(u.email || '-')}</td>
+                        <td><span class="role">${escapeHTML(u.role || 'مشاهد')}</span></td>
                         <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
                         <td>
-                            <button class="btn-sm btn-edit" onclick="editUser('${u._id}')">✏️</button>
-                            <button class="btn-sm btn-delete" onclick="deleteUser('${u._id}')">🗑️</button>
+                            <button class="btn-sm btn-edit" onclick="editUser('${escapeHTML(u._id)}')">✏️</button>
+                            <button class="btn-sm btn-delete" onclick="deleteUser('${escapeHTML(u._id)}')">🗑️</button>
                         </td>
                     </tr>
                 `;
@@ -731,7 +846,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         updateUserDisplay();
-        loadPage('dashboard');
+        
+        // ✅ استعادة الصفحة المحفوظة
+        const savedPage = localStorage.getItem('currentPage') || 'dashboard';
+        loadPage(savedPage);
         console.log('✅ Session restored for:', user.name);
     } else {
         document.getElementById('loginOverlay').style.display = 'flex';
@@ -760,6 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('✅ Marine System ready');
     console.log('🔐 Tokens stored in HttpOnly Cookies (secure)');
+    console.log('📌 Pages available:', Object.keys(PAGE_REGISTRY).join(', '));
 });
 
 // ============================================================
@@ -779,5 +898,10 @@ window.editUser = editUser;
 window.deleteUser = deleteUser;
 window.askAI = askAI;
 window.toggleVoiceInput = toggleVoiceInput;
+window.escapeHTML = escapeHTML;
+window.showToast = showToast;
 
-console.log('✅ app.js v15.0 - Secure Edition loaded successfully');
+console.log('✅ app.js v16.0 - Ultimate Edition loaded successfully');
+console.log('🛡️ XSS Protection: ENABLED');
+console.log('📦 Page Cache: ENABLED');
+console.log('🔐 RBAC: ENABLED');
