@@ -1,693 +1,415 @@
-<!-- public/pages/ai-assistant.html -->
-<div id="page-ai-assistant">
-    <div class="container">
-        <!-- HEADER -->
-        <div class="header">
-            <h1>🤖 المساعد الذكي</h1>
-            <span class="badge">
-                <span class="dot" id="statusDot"></span>
-                <span id="statusText">متصل</span>
+<!-- public/pages/sessions.html -->
+<div id="page-sessions">
+    <!-- ===== HEADER ===== -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div>
+            <h2 style="margin:0; color:white; font-size:22px;">🔄 المراقبة</h2>
+            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">مراقبة الجلسات النشطة والأجهزة المتصلة</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="background:rgba(74,222,128,0.15); color:#4ade80; padding:6px 16px; border-radius:20px; font-size:12px; border:1px solid rgba(74,222,128,0.1);">
+                🟢 <span id="sessionOnline">0</span> متصل
             </span>
-        </div>
-
-        <!-- QUICK ACTIONS -->
-        <div class="quick-actions">
-            <button onclick="askAI('كم عدد المراكب الصالحة؟')">🚢 الصالحة</button>
-            <button onclick="askAI('كم عدد المراكب المعطبة؟')">⚠️ المعطبة</button>
-            <button onclick="askAI('عرض تكاليف الصيانة')">💰 التكاليف</button>
-            <button onclick="askAI('ما هو الذكاء الاصطناعي؟')">🧠 AI</button>
-            <button onclick="askAI('ما هي عاصمة تونس؟')">🌍 جغرافيا</button>
-            <button onclick="askAI('مساعدة')">❓ مساعدة</button>
-            <button onclick="clearChat()">🗑️ مسح</button>
-        </div>
-
-        <!-- CHAT BOX -->
-        <div class="chat-box" id="chatBox">
-            <div class="message ai">
-                <div class="sender">🤖 المساعد الذكي</div>
-                <div class="content">
-👋 مرحباً! أنا <strong>نظامي</strong>، المساعد الذكي.
-
-📌 اسألني عن أي شيء!
-🎤 اضغط على 🎤 لتتحدث معي
-🔊 اضغط على 🔊 لسماع الرد
-                </div>
-                <div class="time">الآن</div>
-            </div>
-        </div>
-
-        <!-- TYPING INDICATOR -->
-        <div class="typing" id="typingIndicator">
-            <span></span><span></span><span></span>
-        </div>
-
-        <!-- VOICE STATUS -->
-        <div class="voice-status" id="voiceStatus">
-            <span id="voiceStatusText">🎤 جاري الاستماع...</span>
-        </div>
-
-        <!-- INPUT AREA -->
-        <div class="input-area">
-            <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." 
-                   onkeypress="if(event.key==='Enter') askAI()">
-            <button class="btn btn-send" id="sendBtn" onclick="askAI()">📨 إرسال</button>
-            <button class="btn btn-mic" id="micBtn" onclick="toggleVoice()" title="تحدث 🎤">🎤</button>
-            <button class="btn btn-speaker" id="speakerBtn" onclick="speakLast()" title="استماع 🔊">🔊</button>
-            <button class="btn btn-clear" onclick="clearChat()" title="مسح">🗑️</button>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="footer">
-            تم التطوير بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
-            <br>
-            <span style="opacity:0.3; font-size:10px;">الإصدار 23.0 | يعمل بـ Gemini AI</span>
+            <button onclick="refreshSessions()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
+            <button onclick="initUserMap()" style="padding:6px 14px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:10px; color:#60a5fa; cursor:pointer;">🗺️ خريطة</button>
         </div>
     </div>
 
-    <style>
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        .header h1 { font-size: 24px; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge { font-size: 12px; padding: 6px 14px; border-radius: 20px; background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.2); color: #4ade80; display: flex; align-items: center; gap: 8px; }
-        .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
-        .badge .dot.offline { background: #f87171; animation: none; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-        .quick-actions button { padding: 6px 16px; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.3s; }
-        .quick-actions button:hover { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.2); color: white; }
-        .chat-box { background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); height: 400px; overflow-y: auto; padding: 16px; margin-bottom: 16px; scroll-behavior: smooth; }
-        .chat-box::-webkit-scrollbar { width: 4px; }
-        .chat-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-        .message { margin: 8px 0; padding: 10px 16px; border-radius: 12px; max-width: 85%; animation: fadeIn 0.3s ease; }
-        .message.user { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.15); margin-left: auto; text-align: right; }
-        .message.ai { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.1); margin-right: auto; }
-        .message .sender { font-size: 11px; opacity: 0.4; margin-bottom: 4px; }
-        .message .content { font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
-        .message .time { font-size: 10px; opacity: 0.2; margin-top: 4px; }
-        .message .actions { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
-        .message .actions button { background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.4); padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: inherit; transition: all 0.3s; }
-        .message .actions button:hover { background: rgba(255,255,255,0.1); color: white; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .typing { display: none; padding: 10px 16px; background: rgba(74,222,128,0.05); border-radius: 12px; max-width: 60px; margin: 8px 0; }
-        .typing.active { display: inline-flex; gap: 4px; align-items: center; }
-        .typing span { width: 8px; height: 8px; border-radius: 50%; background: rgba(74,222,128,0.5); animation: typing 1.4s infinite both; }
-        .typing span:nth-child(2) { animation-delay: 0.2s; }
-        .typing span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-8px); opacity: 1; } }
-        .input-area { display: flex; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; align-items: center; }
-        .input-area input { flex: 1; padding: 10px 16px; border: none; border-radius: 8px; background: rgba(255,255,255,0.04); color: white; font-size: 14px; font-family: inherit; min-width: 120px; }
-        .input-area input:focus { outline: none; background: rgba(255,255,255,0.08); }
-        .input-area input::placeholder { color: rgba(255,255,255,0.3); }
-        .input-area .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.3s; font-size: 14px; white-space: nowrap; }
-        .input-area .btn-send { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
-        .input-area .btn-send:hover:not(:disabled) { transform: scale(1.02); opacity: 0.9; }
-        .input-area .btn-mic { background: linear-gradient(135deg, #f87171, #ef4444); color: white; min-width: 50px; }
-        .input-area .btn-mic.listening { background: linear-gradient(135deg, #4ade80, #22c55e); animation: pulse-mic 1s infinite; }
-        .input-area .btn-speaker { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; min-width: 50px; }
-        .input-area .btn-speaker.speaking { background: linear-gradient(135deg, #4ade80, #22c55e); }
-        .input-area .btn-clear { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); min-width: 40px; font-size: 16px; }
-        .input-area .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        @keyframes pulse-mic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .voice-status { display: none; text-align: center; padding: 8px; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
-        .voice-status.active { display: block; color: #4ade80; border-color: rgba(74,222,128,0.2); }
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-family: inherit; font-size: 14px; z-index: 9999; max-width: 90%; text-align: center; background: rgba(10,14,23,0.95); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid; animation: fadeIn 0.3s ease; }
-        .toast.error { color: #f87171; border-color: rgba(248,113,113,0.2); }
-        .toast.warning { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
-        .toast.success { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-        .toast.info { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
-        .footer { text-align: center; margin-top: 16px; padding: 10px; border-top: 1px solid rgba(255,255,255,0.03); font-size: 12px; color: rgba(255,255,255,0.15); }
-        .footer strong { color: rgba(255,255,255,0.3); }
-        @media (max-width: 600px) { .container { padding: 12px; } .chat-box { height: 320px; padding: 12px; } .input-area { padding: 10px; gap: 8px; } .input-area input { min-width: 100%; order: 1; } .input-area .btn { flex: 1; padding: 8px 12px; font-size: 12px; } .input-area .btn-send { flex: 2; } .message { max-width: 92%; padding: 8px 12px; } .message .content { font-size: 13px; } .header h1 { font-size: 20px; } .quick-actions button { font-size: 11px; padding: 4px 10px; } }
-    </style>
+    <!-- ===== إحصائيات سريعة ===== -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:15px 0;">
+        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:#60a5fa;" id="totalSessions">0</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">📊 إجمالي الجلسات</div>
+        </div>
+        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:#4ade80;" id="activeSessions">0</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🟢 جلسات نشطة</div>
+        </div>
+        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:#f87171;" id="expiredSessions">0</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🔴 منتهية</div>
+        </div>
+        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
+            <div style="font-size:22px; font-weight:700; color:#fbbf24;" id="uniqueUsers">0</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">👤 مستخدمين فريدين</div>
+        </div>
+    </div>
 
-    <script>
-        // ============================================================
-        // 🤖 AI ASSISTANT - كود كامل مع Gemini API
-        // ============================================================
+    <!-- ===== الخريطة ===== -->
+    <div style="background:rgba(255,255,255,0.02); border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,0.04); margin-bottom:15px;">
+        <div id="sessionMap" style="height:400px; width:100%; border-radius:8px; background:#0a0a1a;"></div>
+    </div>
 
-        const API_BASE = '/api/ai';
-        let conversationId = null;
-        let isProcessing = false;
-        let isListening = false;
-        let recognition = null;
-        let lastResponse = null;
-        let synth = null;
-
-        // ============================================================
-        // DOM REFS
-        // ============================================================
-        const chatBox = document.getElementById('chatBox');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const micBtn = document.getElementById('micBtn');
-        const speakerBtn = document.getElementById('speakerBtn');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const voiceStatus = document.getElementById('voiceStatus');
-        const voiceStatusText = document.getElementById('voiceStatusText');
-        const statusDot = document.getElementById('statusDot');
-        const statusText = document.getElementById('statusText');
-
-        // ============================================================
-        // UTILITY FUNCTIONS
-        // ============================================================
-        function getToken() {
-            return localStorage.getItem('token') || null;
-        }
-
-        function getHeaders() {
-            const headers = { 'Content-Type': 'application/json' };
-            const token = getToken();
-            if (token) headers['Authorization'] = 'Bearer ' + token;
-            return headers;
-        }
-
-        function formatTime(date) {
-            return new Date(date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function showTyping(show) {
-            typingIndicator.classList.toggle('active', show);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function setOnline(online) {
-            if (online) {
-                statusDot.className = 'dot';
-                statusText.textContent = 'متصل';
-            } else {
-                statusDot.className = 'dot offline';
-                statusText.textContent = 'غير متصل';
-            }
-        }
-
-        function showToast(msg, type = 'info') {
-            const existing = document.querySelector('.toast');
-            if (existing) existing.remove();
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // ============================================================
-        // CHAT FUNCTIONS
-        // ============================================================
-        function addMessage(role, content, timestamp = new Date()) {
-            const div = document.createElement('div');
-            div.className = 'message ' + role;
-            const sender = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-            let formatted = escapeHtml(content).replace(/\n/g, '<br>');
-            div.innerHTML = `
-                <div class="sender">${sender}</div>
-                <div class="content">${formatted}</div>
-                <div class="time">${formatTime(timestamp)}</div>
-                ${role === 'ai' ? `
-                    <div class="actions">
-                        <button onclick="copyMessage(this)">📋 نسخ</button>
-                        <button onclick="speakTextFromBtn(this)">🔊 استماع</button>
-                    </div>
-                ` : ''}
-            `;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function copyMessage(btn) {
-            const content = btn.closest('.message').querySelector('.content').textContent;
-            navigator.clipboard.writeText(content).then(() => {
-                const orig = btn.textContent;
-                btn.textContent = '✅ تم النسخ';
-                setTimeout(() => btn.textContent = orig, 1500);
-            }).catch(() => {
-                const range = document.createRange();
-                range.selectNode(btn.closest('.message').querySelector('.content'));
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                document.execCommand('copy');
-                const orig = btn.textContent;
-                btn.textContent = '✅ تم النسخ';
-                setTimeout(() => btn.textContent = orig, 1500);
-            });
-        }
-
-        function speakTextFromBtn(btn) {
-            const content = btn.closest('.message').querySelector('.content').textContent;
-            speakText(content);
-        }
-
-        // ============================================================
-        // VOICE INPUT
-        // ============================================================
-        const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
-        const hasSynth = 'speechSynthesis' in window;
-
-        console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
-        console.log('🔊 Speech Synthesis:', hasSynth ? '✅' : '❌');
-
-        if (!hasSpeech) {
-            micBtn.className = 'btn btn-mic unsupported';
-            micBtn.title = 'المتصفح لا يدعم الميكروفون';
-            micBtn.textContent = '🚫';
-        }
-
-        if (!hasSynth) {
-            speakerBtn.className = 'btn btn-speaker unsupported';
-            speakerBtn.title = 'المتصفح لا يدعم النطق';
-            speakerBtn.textContent = '🔇';
-        }
-
-        function initSpeech() {
-            if (!hasSpeech) {
-                showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
-                return false;
-            }
-            
-            try {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                recognition.lang = 'ar-SA';
-                recognition.continuous = false;
-                recognition.interimResults = true;
-
-                recognition.onstart = function() {
-                    isListening = true;
-                    micBtn.classList.add('listening');
-                    micBtn.textContent = '⏹️';
-                    voiceStatus.classList.add('active');
-                    voiceStatusText.textContent = '🎤 جاري الاستماع...';
-                    chatInput.placeholder = '🎤 استمع...';
-                    showToast('🎤 جاري الاستماع...', 'info');
-                };
-
-                recognition.onresult = function(event) {
-                    let transcript = '';
-                    for (let i = event.resultIndex; i < event.results.length; i++) {
-                        transcript += event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            chatInput.value = transcript;
-                            voiceStatusText.textContent = '✅ تم التعرف: "' + transcript + '"';
-                            setTimeout(() => {
-                                if (transcript.trim()) {
-                                    askAI();
-                                }
-                            }, 300);
-                        } else {
-                            chatInput.value = transcript;
-                            voiceStatusText.textContent = '✍️ ' + transcript;
-                        }
-                    }
-                };
-
-                recognition.onerror = function(event) {
-                    console.warn('Voice error:', event.error);
-                    if (event.error === 'not-allowed') {
-                        showToast('❌ الرجاء السماح بالميكروفون', 'error');
-                    } else if (event.error === 'no-speech') {
-                        showToast('⏳ لم يتم سماع صوت، حاول مرة أخرى', 'warning');
-                    } else if (event.error === 'audio-capture') {
-                        showToast('❌ لا يمكن الوصول إلى الميكروفون', 'error');
-                    }
-                    stopVoice();
-                };
-
-                recognition.onend = function() {
-                    stopVoice();
-                };
-
-                return true;
-            } catch (e) {
-                console.error('Speech init error:', e);
-                showToast('❌ خطأ في تهيئة الميكروفون', 'error');
-                return false;
-            }
-        }
-
-        function toggleVoice() {
-            if (!hasSpeech) {
-                showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
-                return;
-            }
-
-            if (!recognition) {
-                if (!initSpeech()) return;
-            }
-
-            if (isListening) {
-                stopVoice();
-                return;
-            }
-
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(function(stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                        startVoice();
-                    })
-                    .catch(function(err) {
-                        console.error('Microphone permission error:', err);
-                        if (err.name === 'NotAllowedError') {
-                            showToast('❌ الرجاء السماح بالميكروفون في المتصفح', 'error');
-                        } else if (err.name === 'NotFoundError') {
-                            showToast('❌ لا يوجد ميكروفون متصل', 'error');
-                        } else {
-                            showToast('❌ خطأ في الوصول إلى الميكروفون: ' + err.message, 'error');
-                        }
-                    });
-            } else {
-                showToast('❌ المتصفح لا يدعم الوصول إلى الميكروفون', 'error');
-            }
-        }
-
-        function startVoice() {
-            if (!recognition) {
-                initSpeech();
-                if (!recognition) return;
-            }
-            try {
-                recognition.start();
-            } catch (e) {
-                if (e.message.includes('already started')) {
-                    stopVoice();
-                    setTimeout(() => startVoice(), 200);
-                } else {
-                    console.error('Start voice error:', e);
-                    showToast('❌ خطأ في بدء الميكروفون', 'error');
-                }
-            }
-        }
-
-        function stopVoice() {
-            isListening = false;
-            micBtn.classList.remove('listening');
-            micBtn.textContent = '🎤';
-            voiceStatus.classList.remove('active');
-            chatInput.placeholder = 'اكتب سؤالك هنا...';
-            if (recognition) {
-                try {
-                    recognition.stop();
-                } catch (e) {}
-            }
-        }
-
-        // ============================================================
-        // SPEECH OUTPUT
-        // ============================================================
-        function initSynth() {
-            if (!hasSynth) {
-                showToast('❌ المتصفح لا يدعم النطق', 'error');
-                return false;
-            }
-            synth = window.speechSynthesis;
-            return true;
-        }
-
-        function speakText(text) {
-            if (!synth) {
-                if (!initSynth()) return;
-            }
-            
-            synth.cancel();
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ar-SA';
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            utterance.volume = 1;
-            
-            const voices = synth.getVoices();
-            const arabic = voices.find(v => v.lang.includes('ar'));
-            if (arabic) utterance.voice = arabic;
-            
-            utterance.onstart = function() {
-                speakerBtn.textContent = '⏹️';
-                speakerBtn.classList.add('speaking');
-            };
-            utterance.onend = function() {
-                speakerBtn.textContent = '🔊';
-                speakerBtn.classList.remove('speaking');
-            };
-            utterance.onerror = function() {
-                speakerBtn.textContent = '🔊';
-                speakerBtn.classList.remove('speaking');
-                showToast('❌ خطأ في النطق', 'error');
-            };
-            
-            synth.speak(utterance);
-        }
-
-        function speakLast() {
-            if (lastResponse) {
-                speakText(lastResponse);
-                return;
-            }
-            const msgs = chatBox.querySelectorAll('.message.ai');
-            if (msgs.length > 0) {
-                const last = msgs[msgs.length - 1];
-                const content = last.querySelector('.content');
-                if (content) {
-                    const text = content.textContent;
-                    lastResponse = text;
-                    speakText(text);
-                    return;
-                }
-            }
-            showToast('لا يوجد رد للاستماع', 'warning');
-        }
-
-        // ============================================================
-        // 🤖 ASK AI - مع Gemini API
-        // ============================================================
-        async function askAI(message) {
-            const input = chatInput;
-            const question = message || input.value.trim();
-            
-            if (!question) {
-                showToast('❌ الرجاء كتابة سؤال', 'error');
-                return;
-            }
-            
-            if (isProcessing) {
-                showToast('⏳ جاري معالجة طلب سابق...', 'warning');
-                return;
-            }
-
-            // ✅ إضافة رسالة المستخدم
-            addMessage('user', question);
-            input.value = '';
-            input.disabled = true;
-            sendBtn.disabled = true;
-
-            isProcessing = true;
-            showTyping(true);
-
-            try {
-                const response = await fetch(API_BASE + '/ask', {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        message: question,
-                        conversationId: conversationId,
-                        language: 'ar'
-                    })
-                });
-
-                showTyping(false);
-
-                if (!response.ok) {
-                    const error = await response.json().catch(() => ({}));
-                    throw new Error(error.error || 'خطأ ' + response.status);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    conversationId = data.conversationId;
-                    lastResponse = data.response;
-                    addMessage('ai', data.response);
-                    setOnline(true);
-                } else {
-                    throw new Error(data.error || 'حدث خطأ غير معروف');
-                }
-
-            } catch (error) {
-                showTyping(false);
-                setOnline(false);
-                console.error('AI Error:', error);
-                
-                // ✅ إذا فشل Gemini، استخدم ردود محلية
-                const localResponse = getLocalResponse(question);
-                lastResponse = localResponse;
-                addMessage('ai', localResponse);
-                showToast('⚠️ تم استخدام الردود المحلية (Gemini غير متاح)', 'warning');
-            }
-
-            isProcessing = false;
-            input.disabled = false;
-            sendBtn.disabled = false;
-            input.focus();
-        }
-
-        // ============================================================
-        // 📝 LOCAL RESPONSES - ردود محلية (عند فشل Gemini فقط)
-        // ============================================================
-        function getLocalResponse(message) {
-            const msg = message.toLowerCase();
-            
-            // 🌍 جغرافيا
-            if (msg.includes('تونس') || msg.includes('اين تونس')) {
-                return `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
-            }
-            
-            if (msg.includes('فرنسا') || msg.includes('باريس')) {
-                return `🇫🇷 **فرنسا**\n\nالعاصمة: باريس\nاللغة: الفرنسية\nالعملة: اليورو\nعدد السكان: ~68 مليون\n\n📍 مدن رئيسية: مارسيليا، ليون، تولوز`;
-            }
-            
-            if (msg.includes('مصر') || msg.includes('القاهرة')) {
-                return `🇪🇬 **مصر**\n\nالعاصمة: القاهرة\nاللغة: العربية\nالعملة: الجنيه المصري\nعدد السكان: ~110 مليون\n\n📍 مدن رئيسية: الإسكندرية، الأقصر، أسوان`;
-            }
-            
-            // 🧠 علوم وتقنية
-            if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
-                return `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
-            }
-            
-            if (msg.includes('برمجة') || msg.includes('كود')) {
-                return `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
-            }
-            
-            // 📜 تاريخ
-            if (msg.includes('صلاح الدين') || msg.includes('الأيوبي')) {
-                return `⚔️ **صلاح الدين الأيوبي**\n\n• قائد مسلم من العصر الأيوبي\n• حرر القدس من الصليبيين عام 1187م\n• أسس الدولة الأيوبية\n• توفي عام 1193م`;
-            }
-            
-            // 🌊 شؤون بحرية
-            if (msg.includes('بحر') || msg.includes('محيط') || msg.includes('بحري')) {
-                const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
-                const maintenance = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
-                return `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: ${vessels.length || 0} مركب\n• الصيانة: ${maintenance.length || 0} سجل`;
-            }
-            
-            // ❓ مساعدة
-            if (msg.includes('مساعدة') || msg.includes('help')) {
-                return `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة\n\n🔹 اسألني أي شيء!`;
-            }
-            
-            // 👋 ترحيب
-            if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-                return "👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟";
-            }
-            
-            // ❓ أي شيء آخر
-            return `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة باستخدام الذكاء الاصطناعي، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول 🌍\n• الذكاء الاصطناعي 🧠\n• البرمجة 💻\n• التاريخ 📜\n• الشؤون البحرية 🌊\n\n🔹 **اسألني أي شيء!**`;
-        }
-
-        // ============================================================
-        // 🗑️ CLEAR CHAT
-        // ============================================================
-        function clearChat() {
-            if (chatBox.querySelectorAll('.message').length === 0) return;
-            if (confirm('هل أنت متأكد من مسح المحادثة؟')) {
-                chatBox.innerHTML = '';
-                conversationId = null;
-                lastResponse = null;
-                addMessage('ai', '👋 مرحباً! تم مسح المحادثة.\n\n💬 اكتب سؤالك أو استخدم الأزرار السريعة!');
-                showToast('🗑️ تم مسح المحادثة', 'info');
-            }
-        }
-
-        // ============================================================
-        // 🏥 HEALTH CHECK
-        // ============================================================
-        async function checkHealth() {
-            try {
-                const response = await fetch(API_BASE + '/health');
-                if (response.ok) {
-                    const data = await response.json();
-                    setOnline(true);
-                    console.log('✅ Server healthy:', data);
-                } else {
-                    setOnline(false);
-                }
-            } catch (error) {
-                setOnline(false);
-                console.warn('⚠️ Cannot connect to server');
-            }
-        }
-
-        // ============================================================
-        // ⌨️ KEYBOARD SHORTCUTS
-        // ============================================================
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                askAI();
-            }
-            if (e.key === 'Escape' && isListening) {
-                stopVoice();
-            }
-            if (e.ctrlKey && e.shiftKey && e.key === 'V') {
-                e.preventDefault();
-                toggleVoice();
-            }
-            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
-                e.preventDefault();
-                speakLast();
-            }
-        });
-
-        // ============================================================
-        // 🚀 INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            if (hasSpeech) initSpeech();
-            if (hasSynth) {
-                initSynth();
-                synth.getVoices();
-                synth.onvoiceschanged = function() {
-                    synth.getVoices();
-                };
-            }
-            checkHealth();
-            console.log('✅ AI Assistant v23 loaded');
-            console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
-            console.log('🔊 Speech Synthesis:', hasSynth ? '✅' : '❌');
-            console.log('📌 Shortcuts: Ctrl+Enter, Ctrl+Shift+V, Ctrl+Shift+S');
-        });
-
-        // ============================================================
-        // 🧹 CLEANUP
-        // ============================================================
-        window.addEventListener('beforeunload', function() {
-            if (recognition) {
-                try { recognition.abort(); } catch (e) {}
-            }
-            if (synth) { synth.cancel(); }
-        });
-
-        // ============================================================
-        // 📦 EXPOSE FUNCTIONS GLOBALLY
-        // ============================================================
-        window.askAI = askAI;
-        window.toggleVoice = toggleVoice;
-        window.speakLast = speakLast;
-        window.clearChat = clearChat;
-        window.copyMessage = copyMessage;
-        window.speakTextFromBtn = speakTextFromBtn;
-        window.speakText = speakText;
-
-        console.log('🚀 AI Assistant v23 loaded');
-        console.log('📌 Functions: askAI(), toggleVoice(), speakLast(), clearChat()');
-    </script>
+    <!-- ===== قائمة الجلسات ===== -->
+    <div class="stat-card" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة الجلسات النشطة</h4>
+            <span style="color:rgba(255,255,255,0.3); font-size:11px;" id="sessionCount">0 جلسة</span>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>👤 المستخدم</th>
+                        <th>📍 الجهاز</th>
+                        <th>🌐 IP</th>
+                        <th>🕐 بداية الجلسة</th>
+                        <th>📊 الحالة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">⏳ جاري تحميل البيانات...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<!-- ============================================================
+     Leaflet CSS & JS
+     ============================================================ -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+    #sessionMap {
+        height: 400px;
+        width: 100%;
+        border-radius: 8px;
+        background: #0a0a1a;
+    }
+    .session-marker {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 12px;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+    }
+    .session-marker .avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        border: 2px solid white;
+        box-shadow: 0 0 20px rgba(13,110,253,0.3);
+    }
+    .session-marker .avatar.active { background: #4ade80; border-color: #4ade80; animation: pulse-marker 2s infinite; }
+    .session-marker .avatar.inactive { background: #6c757d; border-color: #6c757d; }
+    .session-marker .name { font-size: 10px; margin-top: 2px; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 10px; backdrop-filter: blur(4px); }
+    @keyframes pulse-marker { 0%, 100% { box-shadow: 0 0 20px rgba(74,222,128,0.3); } 50% { box-shadow: 0 0 40px rgba(74,222,128,0.6); } }
+    
+    .scrollable-table { overflow-x: auto; margin: 10px 0; }
+    .scrollable-table table { width: 100%; border-collapse: collapse; font-family: 'Cairo', sans-serif; font-size: 13px; }
+    .scrollable-table table th { background: rgba(255,255,255,0.04); padding: 10px; border-bottom: 2px solid rgba(255,255,255,0.06); text-align: center; color: rgba(255,255,255,0.7); }
+    .scrollable-table table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); text-align: center; color: rgba(255,255,255,0.6); }
+    .scrollable-table table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+    .status-active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+    .status-inactive { background: rgba(108,117,125,0.15); color: #6c757d; border: 1px solid rgba(108,117,125,0.1); }
+    .status-expired { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+    
+    .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; }
+    .btn-sm:hover { opacity: 0.8; }
+    .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+    .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+    
+    .stat-card { transition: all 0.3s; }
+    .stat-card:hover { background: rgba(255,255,255,0.04) !important; }
+</style>
+
+<script>
+// ============================================================
+// 🔄 SESSIONS PAGE - الكود الكامل المصحح
+// ============================================================
+
+let sessionMap = null;
+let sessionMarkers = {};
+let sessionsData = [];
+let mapInitialized = false;
+
+// ============================================================
+// 1. تهيئة الخريطة
+// ============================================================
+
+function initUserMap() {
+    console.log('🗺️ initUserMap called');
+    
+    if (sessionMap) {
+        sessionMap.invalidateSize();
+        return;
+    }
+    
+    try {
+        sessionMap = L.map('sessionMap', {
+            center: [36.8, 10.18],
+            zoom: 13
+        });
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(sessionMap);
+        
+        mapInitialized = true;
+        console.log('✅ Session map initialized');
+        
+        setTimeout(updateSessionMarkers, 500);
+        
+    } catch(error) {
+        console.error('❌ Map error:', error);
+        document.getElementById('sessionMap').innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#f87171; flex-direction:column;">
+                <div style="font-size:48px;">🗺️</div>
+                <div style="margin-top:10px;">❌ خطأ في تحميل الخريطة</div>
+                <button onclick="initUserMap()" style="margin-top:10px; padding:8px 20px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:8px; color:#60a5fa; cursor:pointer;">🔄 إعادة المحاولة</button>
+            </div>
+        `;
+    }
+}
+
+// ============================================================
+// 2. تحميل الجلسات
+// ============================================================
+
+function loadSessions() {
+    console.log('🔄 Loading sessions...');
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        document.getElementById('sessionsBody').innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">
+                ⚠️ الرجاء تسجيل الدخول أولاً
+            </td></tr>
+        `;
+        return;
+    }
+    
+    // ✅ جلب البيانات من API
+    fetch('/api/sessions', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('فشل تحميل الجلسات');
+        return res.json();
+    })
+    .then(data => {
+        sessionsData = data.sessions || data || [];
+        console.log('✅ Sessions loaded:', sessionsData.length);
+        renderSessions(sessionsData);
+        updateSessionStats(sessionsData);
+        updateSessionMarkers();
+    })
+    .catch(err => {
+        console.error('❌ Load sessions error:', err);
+        document.getElementById('sessionsBody').innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#f87171;">
+                ❌ خطأ في تحميل البيانات: ${err.message}
+            </td></tr>
+        `;
+    });
+}
+
+// ============================================================
+// 3. عرض الجلسات
+// ============================================================
+
+function renderSessions(sessions) {
+    const tbody = document.getElementById('sessionsBody');
+    if (!tbody) return;
+    
+    document.getElementById('sessionCount').textContent = sessions.length + ' جلسة';
+    
+    if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">
+                🚫 لا توجد جلسات نشطة
+            </td></tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = sessions.map((s, i) => {
+        const statusClass = s.status === 'active' ? 'status-active' : s.status === 'expired' ? 'status-expired' : 'status-inactive';
+        const statusText = s.status === 'active' ? '🟢 نشط' : s.status === 'expired' ? '🔴 منتهية' : '⚪ غير نشط';
+        const deviceName = s.device || s.userAgent || 'جهاز غير معروف';
+        
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${s.username || s.userName || 'مجهول'}</strong></td>
+                <td>${deviceName}</td>
+                <td>${s.ip || s.ipAddress || '--'}</td>
+                <td>${s.createdAt ? new Date(s.createdAt).toLocaleString('ar-TN') : '--'}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn-sm btn-danger" onclick="terminateSession('${s.sessionId || s.id || i}')">⏹️ إنهاء</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// 4. تحديث الإحصائيات
+// ============================================================
+
+function updateSessionStats(sessions) {
+    const total = sessions.length;
+    const active = sessions.filter(s => s.status === 'active').length;
+    const expired = sessions.filter(s => s.status === 'expired' || s.status === 'inactive').length;
+    const uniqueUsers = new Set(sessions.map(s => s.userId || s.userName)).size;
+    
+    document.getElementById('totalSessions').textContent = total;
+    document.getElementById('activeSessions').textContent = active;
+    document.getElementById('expiredSessions').textContent = expired;
+    document.getElementById('uniqueUsers').textContent = uniqueUsers;
+    document.getElementById('sessionOnline').textContent = active;
+}
+
+// ============================================================
+// 5. تحديث الماركرز
+// ============================================================
+
+function updateSessionMarkers() {
+    if (!mapInitialized || !sessionMap) return;
+    
+    // حذف الماركرز القديمة
+    Object.values(sessionMarkers).forEach(marker => {
+        sessionMap.removeLayer(marker);
+    });
+    sessionMarkers = {};
+    
+    // إضافة ماركرز جديدة
+    sessionsData.forEach(s => {
+        if (!s.lat || !s.lng) return;
+        
+        const isActive = s.status === 'active';
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div class="session-marker">
+                    <div class="avatar ${isActive ? 'active' : 'inactive'}">
+                        ${s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤'}
+                    </div>
+                    <div class="name">${s.username || s.userName || 'مجهول'}</div>
+                </div>
+            `,
+            iconSize: [50, 50],
+            iconAnchor: [25, 25],
+            popupAnchor: [0, -25]
+        });
+        
+        const marker = L.marker([s.lat, s.lng], { icon: icon }).addTo(sessionMap);
+        
+        const popupContent = `
+            <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px;">
+                <div style="font-weight:bold; font-size:14px; color:white;">${s.username || s.userName || 'مجهول'}</div>
+                <div style="color:rgba(255,255,255,0.6); font-size:12px;">${s.role || 'مشاهد'}</div>
+                <div style="margin:4px 0;">
+                    <span style="color:${isActive ? '#4ade80' : '#6c757d'}; font-size:11px;">${isActive ? '🟢 نشط' : '🔴 غير نشط'}</span>
+                </div>
+                <div style="color:rgba(255,255,255,0.4); font-size:10px;">
+                    📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}
+                </div>
+                <div style="color:rgba(255,255,255,0.2); font-size:9px; margin-top:2px;">
+                    ${s.updatedAt ? '🕐 ' + new Date(s.updatedAt).toLocaleString('ar-TN') : ''}
+                </div>
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+        
+        sessionMarkers[s.sessionId || s.id || s._id] = marker;
+    });
+    
+    // تحديث مركز الخريطة
+    const keys = Object.keys(sessionMarkers);
+    if (keys.length > 0 && sessionsData.length > 0) {
+        const first = sessionsData.find(s => s.lat && s.lng);
+        if (first) {
+            sessionMap.setView([first.lat, first.lng], 13);
+        }
+    }
+}
+
+// ============================================================
+// 6. إنهاء جلسة
+// ============================================================
+
+function terminateSession(id) {
+    if (!confirm('⚠️ هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch(`/api/sessions/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('✅ تم إنهاء الجلسة بنجاح', 'success');
+            refreshSessions();
+        } else {
+            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسة'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('❌ Terminate session error:', err);
+        showToast('❌ خطأ في إنهاء الجلسة', 'danger');
+    });
+}
+
+// ============================================================
+// 7. تحديث الجلسات
+// ============================================================
+
+function refreshSessions() {
+    loadSessions();
+    showToast('🔄 تم تحديث الجلسات', 'info');
+}
+
+function startMapAutoRefresh() {
+    setInterval(() => {
+        if (document.getElementById('page-sessions')) {
+            loadSessions();
+        }
+    }, 30000);
+}
+
+// ============================================================
+// 8. التهيئة
+// ============================================================
+
+if (document.getElementById('page-sessions')) {
+    console.log('🔄 Sessions page loaded');
+    
+    setTimeout(() => {
+        initUserMap();
+        loadSessions();
+        startMapAutoRefresh();
+    }, 300);
+}
+
+// ============================================================
+// 9. دوال عالمية
+// ============================================================
+
+window.refreshSessions = refreshSessions;
+window.terminateSession = terminateSession;
+window.initUserMap = initUserMap;
+window.startMapAutoRefresh = startMapAutoRefresh;
+
+console.log('✅ Sessions page ready');
+</script>
