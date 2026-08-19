@@ -1,5 +1,5 @@
 // ============================================================
-// 🚢 models/Vessel.js - نموذج القطع البحرية (معدل)
+// 🚢 models/Vessel.js - نموذج القطع البحرية (معدل - بدون unique)
 // ============================================================
 
 const mongoose = require('mongoose');
@@ -8,14 +8,14 @@ const VesselSchema = new mongoose.Schema({
     name: { 
         type: String, 
         required: [true, 'اسم القطعة مطلوب'], 
-        trim: true,
-        unique: true
+        trim: true
+        // ❌ تم إزالة unique: true
     },
     num: { 
         type: String, 
-        trim: true,
-        unique: true,
-        sparse: true
+        trim: true
+        // ❌ تم إزالة unique: true
+        // ❌ تم إزالة sparse: true
     },
     len: { 
         type: Number, 
@@ -53,11 +53,11 @@ const VesselSchema = new mongoose.Schema({
 });
 
 // ============================================================
-// 🔍 الفهارس
+// 🔍 الفهارس (بدون unique)
 // ============================================================
 
-VesselSchema.index({ name: 1 });
-VesselSchema.index({ num: 1 }, { unique: true });
+VesselSchema.index({ name: 1 });        // ✅ فهرس عادي
+VesselSchema.index({ num: 1 });         // ✅ فهرس عادي (بدون unique)
 VesselSchema.index({ stat: 1 });
 VesselSchema.index({ cat: 1 });
 
@@ -142,7 +142,6 @@ VesselSchema.statics.getCategoryStats = async function() {
 // ============================================================
 
 VesselSchema.pre('save', function(next) {
-    // تحديث الفئة تلقائياً عند حفظ الطول
     if (this.isModified('len')) {
         this.cat = this.calculateCategory();
     }
