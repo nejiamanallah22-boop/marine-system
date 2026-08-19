@@ -1,340 +1,7 @@
 <!-- public/pages/ai-assistant.html -->
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 المساعد الذكي</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-            background: #0a0e17;
-            color: #e8edf5;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .header h1 {
-            font-size: 24px;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .badge {
-            font-size: 12px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(74,222,128,0.15);
-            border: 1px solid rgba(74,222,128,0.2);
-            color: #4ade80;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .badge .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4ade80;
-            animation: pulse 2s infinite;
-        }
-        .badge .dot.offline {
-            background: #f87171;
-            animation: none;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .quick-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .quick-actions button {
-            padding: 6px 16px;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.5);
-            cursor: pointer;
-            font-size: 12px;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-        .quick-actions button:hover {
-            background: rgba(96,165,250,0.08);
-            border-color: rgba(96,165,250,0.2);
-            color: white;
-        }
-        .chat-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.05);
-            height: 400px;
-            overflow-y: auto;
-            padding: 16px;
-            margin-bottom: 16px;
-            scroll-behavior: smooth;
-        }
-        .chat-box::-webkit-scrollbar {
-            width: 4px;
-        }
-        .chat-box::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-        .message {
-            margin: 8px 0;
-            padding: 10px 16px;
-            border-radius: 12px;
-            max-width: 85%;
-            animation: fadeIn 0.3s ease;
-        }
-        .message.user {
-            background: rgba(96,165,250,0.12);
-            border: 1px solid rgba(96,165,250,0.15);
-            margin-left: auto;
-            text-align: right;
-        }
-        .message.ai {
-            background: rgba(74,222,128,0.06);
-            border: 1px solid rgba(74,222,128,0.1);
-            margin-right: auto;
-        }
-        .message .sender {
-            font-size: 11px;
-            opacity: 0.4;
-            margin-bottom: 4px;
-        }
-        .message .content {
-            font-size: 14px;
-            line-height: 1.7;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .message .time {
-            font-size: 10px;
-            opacity: 0.2;
-            margin-top: 4px;
-        }
-        .message .actions {
-            margin-top: 6px;
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .message .actions button {
-            background: rgba(255,255,255,0.05);
-            border: none;
-            color: rgba(255,255,255,0.4);
-            padding: 2px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-        .message .actions button:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .typing {
-            display: none;
-            padding: 10px 16px;
-            background: rgba(74,222,128,0.05);
-            border-radius: 12px;
-            max-width: 60px;
-            margin: 8px 0;
-        }
-        .typing.active {
-            display: inline-flex;
-            gap: 4px;
-            align-items: center;
-        }
-        .typing span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(74,222,128,0.5);
-            animation: typing 1.4s infinite both;
-        }
-        .typing span:nth-child(2) { animation-delay: 0.2s; }
-        .typing span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
-            30% { transform: translateY(-8px); opacity: 1; }
-        }
-        .input-area {
-            display: flex;
-            gap: 10px;
-            background: rgba(255,255,255,0.02);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.05);
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .input-area input {
-            flex: 1;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.04);
-            color: white;
-            font-size: 14px;
-            font-family: inherit;
-            min-width: 120px;
-        }
-        .input-area input:focus {
-            outline: none;
-            background: rgba(255,255,255,0.08);
-        }
-        .input-area input::placeholder {
-            color: rgba(255,255,255,0.3);
-        }
-        .input-area .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: bold;
-            transition: all 0.3s;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-        .input-area .btn-send {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            color: white;
-        }
-        .input-area .btn-send:hover:not(:disabled) {
-            transform: scale(1.02);
-            opacity: 0.9;
-        }
-        .input-area .btn-mic {
-            background: linear-gradient(135deg, #f87171, #ef4444);
-            color: white;
-            min-width: 50px;
-        }
-        .input-area .btn-mic.listening {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-            animation: pulse-mic 1s infinite;
-        }
-        .input-area .btn-speaker {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: white;
-            min-width: 50px;
-        }
-        .input-area .btn-speaker.speaking {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
-        }
-        .input-area .btn-clear {
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.3);
-            min-width: 40px;
-            font-size: 16px;
-        }
-        .input-area .btn-clear:hover {
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
-        .input-area .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        @keyframes pulse-mic {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .voice-status {
-            display: none;
-            text-align: center;
-            padding: 8px;
-            margin-top: 8px;
-            font-size: 13px;
-            color: rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.03);
-        }
-        .voice-status.active {
-            display: block;
-            color: #4ade80;
-            border-color: rgba(74,222,128,0.2);
-        }
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 14px;
-            z-index: 9999;
-            max-width: 90%;
-            text-align: center;
-            background: rgba(10,14,23,0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            font-weight: 500;
-            border: 1px solid;
-            animation: fadeIn 0.3s ease;
-        }
-        .toast.error { color: #f87171; border-color: rgba(248,113,113,0.2); }
-        .toast.warning { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
-        .toast.success { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-        .toast.info { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
-        .footer {
-            text-align: center;
-            margin-top: 16px;
-            padding: 10px;
-            border-top: 1px solid rgba(255,255,255,0.03);
-            font-size: 12px;
-            color: rgba(255,255,255,0.15);
-        }
-        .footer strong {
-            color: rgba(255,255,255,0.3);
-        }
-        @media (max-width: 600px) {
-            .container { padding: 12px; }
-            .chat-box { height: 320px; padding: 12px; }
-            .input-area { padding: 10px; gap: 8px; }
-            .input-area input { min-width: 100%; order: 1; }
-            .input-area .btn { flex: 1; padding: 8px 12px; font-size: 12px; }
-            .input-area .btn-send { flex: 2; }
-            .message { max-width: 92%; padding: 8px 12px; }
-            .message .content { font-size: 13px; }
-            .header h1 { font-size: 20px; }
-            .quick-actions button { font-size: 11px; padding: 4px 10px; }
-        }
-    </style>
-</head>
-<body>
+<div id="page-ai-assistant">
     <div class="container">
-        <!-- ===== HEADER ===== -->
+        <!-- HEADER -->
         <div class="header">
             <h1>🤖 المساعد الذكي</h1>
             <span class="badge">
@@ -343,17 +10,18 @@
             </span>
         </div>
 
-        <!-- ===== QUICK ACTIONS ===== -->
+        <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <button onclick="askAI('كم عدد المراكب الصالحة؟')">🚢 الصالحة</button>
             <button onclick="askAI('كم عدد المراكب المعطبة؟')">⚠️ المعطبة</button>
             <button onclick="askAI('عرض تكاليف الصيانة')">💰 التكاليف</button>
             <button onclick="askAI('ما هو الذكاء الاصطناعي؟')">🧠 AI</button>
+            <button onclick="askAI('ما هي عاصمة تونس؟')">🌍 جغرافيا</button>
             <button onclick="askAI('مساعدة')">❓ مساعدة</button>
             <button onclick="clearChat()">🗑️ مسح</button>
         </div>
 
-        <!-- ===== CHAT BOX ===== -->
+        <!-- CHAT BOX -->
         <div class="chat-box" id="chatBox">
             <div class="message ai">
                 <div class="sender">🤖 المساعد الذكي</div>
@@ -368,17 +36,17 @@
             </div>
         </div>
 
-        <!-- ===== TYPING INDICATOR ===== -->
+        <!-- TYPING INDICATOR -->
         <div class="typing" id="typingIndicator">
             <span></span><span></span><span></span>
         </div>
 
-        <!-- ===== VOICE STATUS ===== -->
+        <!-- VOICE STATUS -->
         <div class="voice-status" id="voiceStatus">
             <span id="voiceStatusText">🎤 جاري الاستماع...</span>
         </div>
 
-        <!-- ===== INPUT AREA ===== -->
+        <!-- INPUT AREA -->
         <div class="input-area">
             <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." 
                    onkeypress="if(event.key==='Enter') askAI()">
@@ -388,7 +56,7 @@
             <button class="btn btn-clear" onclick="clearChat()" title="مسح">🗑️</button>
         </div>
 
-        <!-- ===== FOOTER ===== -->
+        <!-- FOOTER -->
         <div class="footer">
             تم التطوير بواسطة: <strong>المبدع والمحترف الوكيل بالحرس الوطني التونسي أمان الله ناجي</strong>
             <br>
@@ -396,13 +64,67 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         📜 JAVASCRIPT - الكود الكامل المعدل
-         ============================================================ -->
+    <style>
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 24px; background: linear-gradient(135deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { font-size: 12px; padding: 6px 14px; border-radius: 20px; background: rgba(74,222,128,0.15); border: 1px solid rgba(74,222,128,0.2); color: #4ade80; display: flex; align-items: center; gap: 8px; }
+        .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
+        .badge .dot.offline { background: #f87171; animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .quick-actions button { padding: 6px 16px; border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.3s; }
+        .quick-actions button:hover { background: rgba(96,165,250,0.08); border-color: rgba(96,165,250,0.2); color: white; }
+        .chat-box { background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); height: 400px; overflow-y: auto; padding: 16px; margin-bottom: 16px; scroll-behavior: smooth; }
+        .chat-box::-webkit-scrollbar { width: 4px; }
+        .chat-box::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .message { margin: 8px 0; padding: 10px 16px; border-radius: 12px; max-width: 85%; animation: fadeIn 0.3s ease; }
+        .message.user { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.15); margin-left: auto; text-align: right; }
+        .message.ai { background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.1); margin-right: auto; }
+        .message .sender { font-size: 11px; opacity: 0.4; margin-bottom: 4px; }
+        .message .content { font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+        .message .time { font-size: 10px; opacity: 0.2; margin-top: 4px; }
+        .message .actions { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+        .message .actions button { background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.4); padding: 2px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; font-family: inherit; transition: all 0.3s; }
+        .message .actions button:hover { background: rgba(255,255,255,0.1); color: white; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .typing { display: none; padding: 10px 16px; background: rgba(74,222,128,0.05); border-radius: 12px; max-width: 60px; margin: 8px 0; }
+        .typing.active { display: inline-flex; gap: 4px; align-items: center; }
+        .typing span { width: 8px; height: 8px; border-radius: 50%; background: rgba(74,222,128,0.5); animation: typing 1.4s infinite both; }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-8px); opacity: 1; } }
+        .input-area { display: flex; gap: 10px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; align-items: center; }
+        .input-area input { flex: 1; padding: 10px 16px; border: none; border-radius: 8px; background: rgba(255,255,255,0.04); color: white; font-size: 14px; font-family: inherit; min-width: 120px; }
+        .input-area input:focus { outline: none; background: rgba(255,255,255,0.08); }
+        .input-area input::placeholder { color: rgba(255,255,255,0.3); }
+        .input-area .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: bold; transition: all 0.3s; font-size: 14px; white-space: nowrap; }
+        .input-area .btn-send { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
+        .input-area .btn-send:hover:not(:disabled) { transform: scale(1.02); opacity: 0.9; }
+        .input-area .btn-mic { background: linear-gradient(135deg, #f87171, #ef4444); color: white; min-width: 50px; }
+        .input-area .btn-mic.listening { background: linear-gradient(135deg, #4ade80, #22c55e); animation: pulse-mic 1s infinite; }
+        .input-area .btn-speaker { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; min-width: 50px; }
+        .input-area .btn-speaker.speaking { background: linear-gradient(135deg, #4ade80, #22c55e); }
+        .input-area .btn-clear { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); min-width: 40px; font-size: 16px; }
+        .input-area .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        @keyframes pulse-mic { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .voice-status { display: none; text-align: center; padding: 8px; margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
+        .voice-status.active { display: block; color: #4ade80; border-color: rgba(74,222,128,0.2); }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-family: inherit; font-size: 14px; z-index: 9999; max-width: 90%; text-align: center; background: rgba(10,14,23,0.95); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid; animation: fadeIn 0.3s ease; }
+        .toast.error { color: #f87171; border-color: rgba(248,113,113,0.2); }
+        .toast.warning { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
+        .toast.success { color: #4ade80; border-color: rgba(74,222,128,0.2); }
+        .toast.info { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+        .footer { text-align: center; margin-top: 16px; padding: 10px; border-top: 1px solid rgba(255,255,255,0.03); font-size: 12px; color: rgba(255,255,255,0.15); }
+        .footer strong { color: rgba(255,255,255,0.3); }
+        @media (max-width: 600px) { .container { padding: 12px; } .chat-box { height: 320px; padding: 12px; } .input-area { padding: 10px; gap: 8px; } .input-area input { min-width: 100%; order: 1; } .input-area .btn { flex: 1; padding: 8px 12px; font-size: 12px; } .input-area .btn-send { flex: 2; } .message { max-width: 92%; padding: 8px 12px; } .message .content { font-size: 13px; } .header h1 { font-size: 20px; } .quick-actions button { font-size: 11px; padding: 4px 10px; } }
+    </style>
+
     <script>
         // ============================================================
-        // 🔧 CONFIGURATION
+        // 🤖 AI ASSISTANT - كود كامل مع Gemini API
         // ============================================================
+
         const API_BASE = '/api/ai';
         let conversationId = null;
         let isProcessing = false;
@@ -412,7 +134,7 @@
         let synth = null;
 
         // ============================================================
-        // 🚀 DOM REFS
+        // DOM REFS
         // ============================================================
         const chatBox = document.getElementById('chatBox');
         const chatInput = document.getElementById('chatInput');
@@ -426,10 +148,9 @@
         const statusText = document.getElementById('statusText');
 
         // ============================================================
-        // 🔧 UTILITY FUNCTIONS
+        // UTILITY FUNCTIONS
         // ============================================================
         function getToken() {
-            // ✅ تصحيح: استخدام 'token' بدلاً من 'authToken'
             return localStorage.getItem('token') || null;
         }
 
@@ -481,7 +202,7 @@
         }
 
         // ============================================================
-        // 💬 CHAT FUNCTIONS
+        // CHAT FUNCTIONS
         // ============================================================
         function addMessage(role, content, timestamp = new Date()) {
             const div = document.createElement('div');
@@ -527,7 +248,7 @@
         }
 
         // ============================================================
-        // 🎤 VOICE INPUT - مع طلب إذن الميكروفون
+        // VOICE INPUT
         // ============================================================
         const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
         const hasSynth = 'speechSynthesis' in window;
@@ -535,7 +256,6 @@
         console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
         console.log('🔊 Speech Synthesis:', hasSynth ? '✅' : '❌');
 
-        // ✅ التحقق من دعم الميكروفون
         if (!hasSpeech) {
             micBtn.className = 'btn btn-mic unsupported';
             micBtn.title = 'المتصفح لا يدعم الميكروفون';
@@ -615,16 +335,13 @@
         }
 
         function toggleVoice() {
-            // ✅ التحقق من وجود الميكروفون
             if (!hasSpeech) {
                 showToast('❌ المتصفح لا يدعم الميكروفون', 'error');
                 return;
             }
 
             if (!recognition) {
-                if (!initSpeech()) {
-                    return;
-                }
+                if (!initSpeech()) return;
             }
 
             if (isListening) {
@@ -632,11 +349,9 @@
                 return;
             }
 
-            // ✅ طلب إذن الميكروفون
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ audio: true })
                     .then(function(stream) {
-                        // ✅ تم الحصول على الإذن
                         stream.getTracks().forEach(track => track.stop());
                         startVoice();
                     })
@@ -682,14 +397,12 @@
             if (recognition) {
                 try {
                     recognition.stop();
-                } catch (e) {
-                    // تجاهل الخطأ
-                }
+                } catch (e) {}
             }
         }
 
         // ============================================================
-        // 🔊 SPEECH OUTPUT
+        // SPEECH OUTPUT
         // ============================================================
         function initSynth() {
             if (!hasSynth) {
@@ -705,7 +418,6 @@
                 if (!initSynth()) return;
             }
             
-            // ✅ إيقاف أي نطق سابق
             synth.cancel();
             
             const utterance = new SpeechSynthesisUtterance(text);
@@ -714,7 +426,6 @@
             utterance.pitch = 1;
             utterance.volume = 1;
             
-            // ✅ اختيار صوت عربي
             const voices = synth.getVoices();
             const arabic = voices.find(v => v.lang.includes('ar'));
             if (arabic) utterance.voice = arabic;
@@ -756,7 +467,7 @@
         }
 
         // ============================================================
-        // 🤖 ASK AI - مع دعم الردود المحلية عند فشل Gemini
+        // 🤖 ASK AI - مع Gemini API
         // ============================================================
         async function askAI(message) {
             const input = chatInput;
@@ -829,49 +540,57 @@
         }
 
         // ============================================================
-        // 📝 LOCAL RESPONSES - ردود محلية عند فشل Gemini
+        // 📝 LOCAL RESPONSES - ردود محلية (عند فشل Gemini فقط)
         // ============================================================
         function getLocalResponse(message) {
             const msg = message.toLowerCase();
             
-            if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
-                return "👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟";
-            }
-            
+            // 🌍 جغرافيا
             if (msg.includes('تونس') || msg.includes('اين تونس')) {
-                return `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد`;
+                return `🇹🇳 **تونس**\n\nتقع تونس في شمال أفريقيا، على البحر المتوسط.\n\n• العاصمة: مدينة تونس\n• اللغة: العربية\n• العملة: الدينار التونسي\n• عدد السكان: ~12 مليون\n• الرئيس: قيس سعيد\n\n📍 مدن رئيسية: صفاقس، سوسة، المنستير، بنزرت`;
             }
             
+            if (msg.includes('فرنسا') || msg.includes('باريس')) {
+                return `🇫🇷 **فرنسا**\n\nالعاصمة: باريس\nاللغة: الفرنسية\nالعملة: اليورو\nعدد السكان: ~68 مليون\n\n📍 مدن رئيسية: مارسيليا، ليون، تولوز`;
+            }
+            
+            if (msg.includes('مصر') || msg.includes('القاهرة')) {
+                return `🇪🇬 **مصر**\n\nالعاصمة: القاهرة\nاللغة: العربية\nالعملة: الجنيه المصري\nعدد السكان: ~110 مليون\n\n📍 مدن رئيسية: الإسكندرية، الأقصر، أسوان`;
+            }
+            
+            // 🧠 علوم وتقنية
             if (msg.includes('الذكاء') || msg.includes('AI') || msg.includes('ذكاء')) {
-                return `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)`;
-            }
-            
-            if (msg.includes('مساعدة') || msg.includes('help')) {
-                return `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة\n\n🔹 اسألني أي شيء!`;
+                return `🧠 **الذكاء الاصطناعي**\n\nهو محاكاة الذكاء البشري في الآلات.\n\n📌 **أنواعه:**\n• الذكاء الاصطناعي الضيق (مثل Siri، Alexa)\n• الذكاء الاصطناعي العام (مثل البشر)\n• الذكاء الاصطناعي الفائق (يتفوق على البشر)\n\n💡 **أمثلة:** ChatGPT، Gemini، DeepSeek`;
             }
             
             if (msg.includes('برمجة') || msg.includes('كود')) {
                 return `💻 **البرمجة**\n\nأشهر لغات البرمجة:\n• JavaScript - تطوير الويب\n• Python - الذكاء الاصطناعي\n• Java - تطبيقات الأندرويد\n• C++ - الألعاب\n\n💡 ابدأ بتعلم JavaScript أو Python!`;
             }
             
-            if (msg.includes('صالحة') || msg.includes('صالح') || msg.includes('جاهزة')) {
-                const ready = allVessels ? allVessels.filter(v => v.stat === 'صالح').length : 0;
-                const total = allVessels ? allVessels.length : 0;
-                return `🚢 عدد المراكب الصالحة: **${ready}** من أصل ${total}\nنسبة الجاهزية: ${total > 0 ? Math.round((ready/total)*100) : 0}%`;
+            // 📜 تاريخ
+            if (msg.includes('صلاح الدين') || msg.includes('الأيوبي')) {
+                return `⚔️ **صلاح الدين الأيوبي**\n\n• قائد مسلم من العصر الأيوبي\n• حرر القدس من الصليبيين عام 1187م\n• أسس الدولة الأيوبية\n• توفي عام 1193م`;
             }
             
-            if (msg.includes('معطبة') || msg.includes('معطب') || msg.includes('عطل')) {
-                const broken = allVessels ? allVessels.filter(v => v.stat === 'معطب').length : 0;
-                return `⚠️ عدد المراكب المعطبة: **${broken}**\n${broken > 0 ? 'يوصى بإصلاحها في أقرب وقت' : '✅ لا توجد مراكب معطبة'}`;
+            // 🌊 شؤون بحرية
+            if (msg.includes('بحر') || msg.includes('محيط') || msg.includes('بحري')) {
+                const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
+                const maintenance = typeof allMaintenance !== 'undefined' ? allMaintenance : [];
+                return `🌊 **الشؤون البحرية**\n\n• البحر المتوسط: 1600 كم من السواحل\n• أهم الموانئ: حلق الوادي، صفاقس، سوسة\n• الصيد البحري: قطاع حيوي\n• الأسطول: ${vessels.length || 0} مركب\n• الصيانة: ${maintenance.length || 0} سجل`;
             }
             
-            if (msg.includes('صيانة') || msg.includes('تكاليف')) {
-                const total = allMaintenance ? allMaintenance.length : 0;
-                const cost = allMaintenance ? allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0) : 0;
-                return `🔧 **إحصائيات الصيانة**\n\n• إجمالي السجلات: ${total}\n• التكلفة الإجمالية: ${cost.toLocaleString()} د.ت`;
+            // ❓ مساعدة
+            if (msg.includes('مساعدة') || msg.includes('help')) {
+                return `📚 **ماذا يمكنني أن أفعل؟**\n\n🌍 **المعرفة العامة:**\n• معلومات عن الدول\n• الذكاء الاصطناعي والتكنولوجيا\n• البرمجة\n• التاريخ والجغرافيا\n\n🌊 **الشؤون البحرية:**\n• إحصائيات الأسطول\n• تقارير الصيانة\n\n🔹 اسألني أي شيء!`;
             }
             
-            return `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة باستخدام الذكاء الاصطناعي، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول 🌍\n• الذكاء الاصطناعي 🧠\n• البرمجة 💻\n• الشؤون البحرية 🌊\n\n🔹 **اسألني أي شيء!**`;
+            // 👋 ترحيب
+            if (msg.includes('مرحبا') || msg.includes('السلام') || msg.includes('اهلاً')) {
+                return "👋 وعليكم السلام! كيف يمكنني مساعدتك اليوم؟";
+            }
+            
+            // ❓ أي شيء آخر
+            return `🤔 **سؤال ممتاز!**\n\nللحصول على إجابة دقيقة باستخدام الذكاء الاصطناعي، أحتاج إلى مفتاح Gemini صالح.\n\n📌 **كيف تحصل على مفتاح Gemini مجاني:**\n1. اذهب إلى https://ai.google.dev/\n2. سجل الدخول بحساب Google\n3. اضغط على "Get API Key"\n4. انسخ المفتاح الجديد\n5. ضعه في ملف .env: GEMINI_API_KEY=المفتاح\n6. أعد تشغيل السيرفر\n\n💡 **يمكنني مساعدتك في:**\n• معلومات عن الدول 🌍\n• الذكاء الاصطناعي 🧠\n• البرمجة 💻\n• التاريخ 📜\n• الشؤون البحرية 🌊\n\n🔹 **اسألني أي شيء!**`;
         }
 
         // ============================================================
@@ -932,21 +651,14 @@
         // 🚀 INIT
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // ✅ تهيئة الميكروفون
-            if (hasSpeech) {
-                initSpeech();
-            }
-            
-            // ✅ تهيئة النطق
+            if (hasSpeech) initSpeech();
             if (hasSynth) {
                 initSynth();
-                // تحميل الأصوات
                 synth.getVoices();
                 synth.onvoiceschanged = function() {
                     synth.getVoices();
                 };
             }
-            
             checkHealth();
             console.log('✅ AI Assistant v23 loaded');
             console.log('🎤 Speech:', hasSpeech ? '✅' : '❌');
@@ -978,5 +690,4 @@
         console.log('🚀 AI Assistant v23 loaded');
         console.log('📌 Functions: askAI(), toggleVoice(), speakLast(), clearChat()');
     </script>
-</body>
-</html>
+</div>
