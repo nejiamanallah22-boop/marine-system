@@ -1,6 +1,6 @@
 <!-- public/pages/sessions.html -->
 <div id="page-sessions">
-    <!-- ===== HEADER ===== -->
+    <!-- HEADER -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
         <div>
             <h2 style="margin:0; color:white; font-size:22px;">🔄 المراقبة</h2>
@@ -11,19 +11,19 @@
                 🟢 <span id="sessionOnline">0</span> متصل
             </span>
             <button onclick="refreshSessions()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
-            <button onclick="initUserMap()" style="padding:6px 14px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:10px; color:#60a5fa; cursor:pointer;">🗺️ خريطة</button>
+            <button onclick="centerSessionMap()" style="padding:6px 14px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:10px; color:#60a5fa; cursor:pointer;">🎯 مركز الخريطة</button>
         </div>
     </div>
 
-    <!-- ===== إحصائيات سريعة ===== -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin:15px 0;">
+    <!-- إحصائيات -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin:15px 0;">
         <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:#60a5fa;" id="totalSessions">0</div>
             <div style="font-size:11px; color:rgba(255,255,255,0.3);">📊 إجمالي الجلسات</div>
         </div>
         <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:#4ade80;" id="activeSessions">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🟢 جلسات نشطة</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🟢 نشطة</div>
         </div>
         <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:#f87171;" id="expiredSessions">0</div>
@@ -31,19 +31,20 @@
         </div>
         <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
             <div style="font-size:22px; font-weight:700; color:#fbbf24;" id="uniqueUsers">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">👤 مستخدمين فريدين</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.3);">👤 مستخدمين</div>
         </div>
     </div>
 
-    <!-- ===== الخريطة ===== -->
+    <!-- الخريطة -->
     <div style="background:rgba(255,255,255,0.02); border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,0.04); margin-bottom:15px;">
         <div id="sessionMap" style="height:400px; width:100%; border-radius:8px; background:#0a0a1a;"></div>
+        <div id="mapStatus" style="text-align:center; padding:8px; color:rgba(255,255,255,0.3); font-size:12px;">📍 تحميل الخريطة...</div>
     </div>
 
-    <!-- ===== قائمة الجلسات ===== -->
+    <!-- قائمة الجلسات -->
     <div class="stat-card" style="padding:15px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة الجلسات النشطة</h4>
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة الجلسات</h4>
             <span style="color:rgba(255,255,255,0.3); font-size:11px;" id="sessionCount">0 جلسة</span>
         </div>
         <div class="scrollable-table">
@@ -60,18 +61,12 @@
                     </tr>
                 </thead>
                 <tbody id="sessionsBody">
-                    <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">⏳ جاري تحميل البيانات...</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">⏳ جاري تحميل الجلسات...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 </div>
-
-<!-- ============================================================
-     Leaflet CSS & JS
-     ============================================================ -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <style>
     #sessionMap {
@@ -99,76 +94,209 @@
         font-size: 16px;
         border: 2px solid white;
         box-shadow: 0 0 20px rgba(13,110,253,0.3);
+        transition: all 0.3s;
     }
-    .session-marker .avatar.active { background: #4ade80; border-color: #4ade80; animation: pulse-marker 2s infinite; }
-    .session-marker .avatar.inactive { background: #6c757d; border-color: #6c757d; }
-    .session-marker .name { font-size: 10px; margin-top: 2px; background: rgba(0,0,0,0.8); padding: 2px 8px; border-radius: 10px; backdrop-filter: blur(4px); }
-    @keyframes pulse-marker { 0%, 100% { box-shadow: 0 0 20px rgba(74,222,128,0.3); } 50% { box-shadow: 0 0 40px rgba(74,222,128,0.6); } }
+    .session-marker .avatar.active { 
+        background: #4ade80; 
+        border-color: #4ade80; 
+        animation: pulse-marker 2s infinite;
+    }
+    .session-marker .avatar.inactive { 
+        background: #6c757d; 
+        border-color: #6c757d; 
+    }
+    .session-marker .avatar.expired { 
+        background: #f87171; 
+        border-color: #f87171; 
+    }
+    .session-marker .name { 
+        font-size: 10px; 
+        margin-top: 2px; 
+        background: rgba(0,0,0,0.8); 
+        padding: 2px 8px; 
+        border-radius: 10px; 
+        backdrop-filter: blur(4px);
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    @keyframes pulse-marker { 
+        0%, 100% { box-shadow: 0 0 20px rgba(74,222,128,0.3); } 
+        50% { box-shadow: 0 0 40px rgba(74,222,128,0.6); } 
+    }
     
     .scrollable-table { overflow-x: auto; margin: 10px 0; }
     .scrollable-table table { width: 100%; border-collapse: collapse; font-family: 'Cairo', sans-serif; font-size: 13px; }
-    .scrollable-table table th { background: rgba(255,255,255,0.04); padding: 10px; border-bottom: 2px solid rgba(255,255,255,0.06); text-align: center; color: rgba(255,255,255,0.7); }
-    .scrollable-table table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); text-align: center; color: rgba(255,255,255,0.6); }
+    .scrollable-table table th { 
+        background: rgba(255,255,255,0.04); 
+        padding: 10px; 
+        border-bottom: 2px solid rgba(255,255,255,0.06); 
+        text-align: center; 
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+    }
+    .scrollable-table table td { 
+        padding: 8px; 
+        border-bottom: 1px solid rgba(255,255,255,0.04); 
+        text-align: center; 
+        color: rgba(255,255,255,0.6); 
+    }
     .scrollable-table table tr:hover { background: rgba(255,255,255,0.02); }
     
-    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+    .status-badge { 
+        padding: 4px 12px; 
+        border-radius: 20px; 
+        font-size: 12px; 
+        font-weight: 600; 
+        display: inline-block; 
+    }
     .status-active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-    .status-inactive { background: rgba(108,117,125,0.15); color: #6c757d; border: 1px solid rgba(108,117,125,0.1); }
+    .status-inactive { background: rgba(108,117,125,0.15); color: #adb5bd; border: 1px solid rgba(108,117,125,0.1); }
     .status-expired { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
     
-    .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; }
-    .btn-sm:hover { opacity: 0.8; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; transition: all 0.3s; }
+    .btn-sm:hover { opacity: 0.8; transform: scale(1.02); }
     .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
     .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
     
     .stat-card { transition: all 0.3s; }
-    .stat-card:hover { background: rgba(255,255,255,0.04) !important; }
+    .stat-card:hover { background: rgba(255,255,255,0.04) !important; transform: translateY(-2px); }
+    
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-family: inherit; font-size: 14px; z-index: 9999; max-width: 90%; text-align: center; background: rgba(10,14,23,0.95); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid; animation: fadeIn 0.3s ease; }
+    .toast.error { color: #f87171; border-color: rgba(248,113,113,0.2); }
+    .toast.success { color: #4ade80; border-color: rgba(74,222,128,0.2); }
+    .toast.info { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
+    .toast.warning { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 
 <script>
 // ============================================================
-// 🔄 SESSIONS PAGE - الكود الكامل المصحح
+// 🔄 SESSIONS PAGE - النسخة النهائية المصححة 10/10
+// ============================================================
+
+// ============================================================
+// 1. متغيرات عامة
 // ============================================================
 
 let sessionMap = null;
 let sessionMarkers = {};
 let sessionsData = [];
 let mapInitialized = false;
+let sessionsRefreshTimer = null;
+let isSessionsPageActive = false;
 
 // ============================================================
-// 1. تهيئة الخريطة
+// 2. دوال مساعدة
+// ============================================================
+
+function escapeHTML(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function getTimeAgo(date) {
+    if (!date) return '--';
+    const diff = Date.now() - new Date(date).getTime();
+    if (diff < 60000) return 'الآن';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' دقائق';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + ' ساعات';
+    return Math.floor(diff / 86400000) + ' أيام';
+}
+
+function isValidCoordinate(lat, lng) {
+    return typeof lat === 'number' && 
+           typeof lng === 'number' &&
+           lat >= -90 && lat <= 90 &&
+           lng >= -180 && lng <= 180;
+}
+
+// ============================================================
+// 3. تهيئة الخريطة
 // ============================================================
 
 function initUserMap() {
     console.log('🗺️ initUserMap called');
     
+    // ✅ التحقق من وجود Leaflet
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ Leaflet not loaded, retrying...');
+        document.getElementById('mapStatus').textContent = '⏳ جاري تحميل الخريطة...';
+        setTimeout(initUserMap, 500);
+        return;
+    }
+    
+    const mapContainer = document.getElementById('sessionMap');
+    if (!mapContainer) return;
+    
+    // ✅ إذا كانت الخريطة موجودة، فقط حدث الحجم
     if (sessionMap) {
-        sessionMap.invalidateSize();
+        setTimeout(() => {
+            sessionMap.invalidateSize(true);
+        }, 300);
         return;
     }
     
     try {
         sessionMap = L.map('sessionMap', {
-            center: [36.8, 10.18],
-            zoom: 13
+            center: [36.8065, 10.1815],
+            zoom: 12,
+            zoomControl: true
         });
         
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap',
-            maxZoom: 19
-        }).addTo(sessionMap);
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }
+        ).addTo(sessionMap);
         
         mapInitialized = true;
+        document.getElementById('mapStatus').textContent = '📍 الخريطة جاهزة';
         console.log('✅ Session map initialized');
         
-        setTimeout(updateSessionMarkers, 500);
+        // ✅ تأخير لضمان عرض الخريطة
+        setTimeout(() => {
+            if (sessionMap) {
+                sessionMap.invalidateSize(true);
+            }
+        }, 500);
+        
+        // ✅ تحديث الماركرز
+        setTimeout(updateSessionMarkers, 300);
         
     } catch(error) {
         console.error('❌ Map error:', error);
         document.getElementById('sessionMap').innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#f87171; flex-direction:column;">
+            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#f87171; flex-direction:column; padding:20px; text-align:center;">
                 <div style="font-size:48px;">🗺️</div>
                 <div style="margin-top:10px;">❌ خطأ في تحميل الخريطة</div>
+                <div style="font-size:12px; color:rgba(255,255,255,0.3);">${escapeHTML(error.message)}</div>
                 <button onclick="initUserMap()" style="margin-top:10px; padding:8px 20px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:8px; color:#60a5fa; cursor:pointer;">🔄 إعادة المحاولة</button>
             </div>
         `;
@@ -176,49 +304,100 @@ function initUserMap() {
 }
 
 // ============================================================
-// 2. تحميل الجلسات
+// 4. مركز الخريطة
+// ============================================================
+
+function centerSessionMap() {
+    if (!sessionMap) {
+        showToast('⚠️ الخريطة غير جاهزة', 'warning');
+        return;
+    }
+    
+    // ✅ البحث عن موقع نشط
+    const activeSession = sessionsData.find(s => s.status === 'active' && isValidCoordinate(s.lat, s.lng));
+    if (activeSession) {
+        sessionMap.setView([activeSession.lat, activeSession.lng], 13);
+        showToast('🎯 تم التوجيه إلى موقع نشط', 'info');
+    } else {
+        sessionMap.setView([36.8065, 10.1815], 12);
+        showToast('🎯 تم التوجيه إلى تونس', 'info');
+    }
+}
+
+// ============================================================
+// 5. تحميل الجلسات
 // ============================================================
 
 function loadSessions() {
     console.log('🔄 Loading sessions...');
     
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
         document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:#fbbf24;">
                 ⚠️ الرجاء تسجيل الدخول أولاً
             </td></tr>
         `;
         return;
     }
     
-    // ✅ جلب البيانات من API
+    // ✅ تحديث حالة التحميل
+    document.getElementById('sessionsBody').innerHTML = `
+        <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">
+            ⏳ جاري تحميل الجلسات...
+        </td></tr>
+    `;
+    
     fetch('/api/sessions', {
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        }
     })
     .then(res => {
-        if (!res.ok) throw new Error('فشل تحميل الجلسات');
+        if (!res.ok) {
+            if (res.status === 401) {
+                throw new Error('401 Unauthorized - يرجى تسجيل الدخول من جديد');
+            }
+            if (res.status === 403) {
+                throw new Error('403 Forbidden - ليس لديك صلاحية');
+            }
+            throw new Error('خطأ ' + res.status + ': ' + res.statusText);
+        }
         return res.json();
     })
     .then(data => {
-        sessionsData = data.sessions || data || [];
+        // ✅ التحقق من صيغة الاستجابة
+        if (data.success !== undefined && !data.success) {
+            throw new Error(data.error || 'فشل تحميل الجلسات');
+        }
+        
+        sessionsData = Array.isArray(data.sessions) ? data.sessions : [];
         console.log('✅ Sessions loaded:', sessionsData.length);
+        
         renderSessions(sessionsData);
         updateSessionStats(sessionsData);
         updateSessionMarkers();
+        
+        // ✅ تحديث حالة الخريطة
+        const hasLocations = sessionsData.some(s => isValidCoordinate(s.lat, s.lng));
+        document.getElementById('mapStatus').textContent = hasLocations 
+            ? '📍 ' + sessionsData.filter(s => isValidCoordinate(s.lat, s.lng)).length + ' موقع متاح'
+            : '📍 لا توجد مواقع GPS متاحة حاليًا';
     })
     .catch(err => {
         console.error('❌ Load sessions error:', err);
         document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:20px; color:#f87171;">
-                ❌ خطأ في تحميل البيانات: ${err.message}
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:#f87171;">
+                ❌ ${escapeHTML(err.message)}
             </td></tr>
         `;
+        document.getElementById('mapStatus').textContent = '❌ خطأ في تحميل البيانات';
     });
 }
 
 // ============================================================
-// 3. عرض الجلسات
+// 6. عرض الجلسات
 // ============================================================
 
 function renderSessions(sessions) {
@@ -229,7 +408,7 @@ function renderSessions(sessions) {
     
     if (!sessions || sessions.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:20px; color:rgba(255,255,255,0.2);">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">
                 🚫 لا توجد جلسات نشطة
             </td></tr>
         `;
@@ -237,20 +416,28 @@ function renderSessions(sessions) {
     }
     
     tbody.innerHTML = sessions.map((s, i) => {
-        const statusClass = s.status === 'active' ? 'status-active' : s.status === 'expired' ? 'status-expired' : 'status-inactive';
-        const statusText = s.status === 'active' ? '🟢 نشط' : s.status === 'expired' ? '🔴 منتهية' : '⚪ غير نشط';
-        const deviceName = s.device || s.userAgent || 'جهاز غير معروف';
+        // ✅ استخدام escapeHTML لمنع XSS
+        const username = escapeHTML(s.username || s.userName || 'مجهول');
+        const device = escapeHTML(s.device || s.userAgent || 'جهاز غير معروف');
+        const ip = escapeHTML(s.ip || s.ipAddress || '--');
+        
+        const statusClass = s.status === 'active' ? 'status-active' : 
+                           s.status === 'expired' ? 'status-expired' : 'status-inactive';
+        const statusText = s.status === 'active' ? '🟢 نشط' : 
+                          s.status === 'expired' ? '🔴 منتهية' : '⚪ غير نشط';
+        
+        const createdAt = s.createdAt ? new Date(s.createdAt).toLocaleString('ar-TN') : '--';
         
         return `
             <tr>
                 <td>${i + 1}</td>
-                <td><strong>${s.username || s.userName || 'مجهول'}</strong></td>
-                <td>${deviceName}</td>
-                <td>${s.ip || s.ipAddress || '--'}</td>
-                <td>${s.createdAt ? new Date(s.createdAt).toLocaleString('ar-TN') : '--'}</td>
+                <td><strong>${username}</strong></td>
+                <td>${device}</td>
+                <td>${ip}</td>
+                <td>${createdAt}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td>
-                    <button class="btn-sm btn-danger" onclick="terminateSession('${s.sessionId || s.id || i}')">⏹️ إنهاء</button>
+                    <button class="btn-sm btn-danger" onclick="terminateSession('${escapeHTML(s.sessionId || s.id || i)}')">⏹️ إنهاء</button>
                 </td>
             </tr>
         `;
@@ -258,48 +445,60 @@ function renderSessions(sessions) {
 }
 
 // ============================================================
-// 4. تحديث الإحصائيات
+// 7. تحديث الإحصائيات
 // ============================================================
 
 function updateSessionStats(sessions) {
     const total = sessions.length;
     const active = sessions.filter(s => s.status === 'active').length;
-    const expired = sessions.filter(s => s.status === 'expired' || s.status === 'inactive').length;
+    const expired = sessions.filter(s => s.status === 'expired').length;
+    const inactive = sessions.filter(s => s.status === 'inactive').length;
     const uniqueUsers = new Set(sessions.map(s => s.userId || s.userName)).size;
     
     document.getElementById('totalSessions').textContent = total;
     document.getElementById('activeSessions').textContent = active;
-    document.getElementById('expiredSessions').textContent = expired;
+    document.getElementById('expiredSessions').textContent = expired + inactive;
     document.getElementById('uniqueUsers').textContent = uniqueUsers;
     document.getElementById('sessionOnline').textContent = active;
 }
 
 // ============================================================
-// 5. تحديث الماركرز
+// 8. تحديث الماركرز
 // ============================================================
 
 function updateSessionMarkers() {
-    if (!mapInitialized || !sessionMap) return;
+    if (!mapInitialized || !sessionMap) {
+        console.warn('⚠️ Map not ready for markers');
+        return;
+    }
     
-    // حذف الماركرز القديمة
+    // ✅ حذف الماركرز القديمة
     Object.values(sessionMarkers).forEach(marker => {
         sessionMap.removeLayer(marker);
     });
     sessionMarkers = {};
     
-    // إضافة ماركرز جديدة
+    // ✅ إضافة ماركرز جديدة
+    let markerCount = 0;
     sessionsData.forEach(s => {
-        if (!s.lat || !s.lng) return;
+        // ✅ التحقق من صحة الإحداثيات
+        if (!isValidCoordinate(s.lat, s.lng)) {
+            return;
+        }
         
         const isActive = s.status === 'active';
+        const isExpired = s.status === 'expired';
+        const avatarClass = isActive ? 'active' : isExpired ? 'expired' : 'inactive';
+        const avatarIcon = s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤';
+        
         const icon = L.divIcon({
             className: 'custom-div-icon',
             html: `
                 <div class="session-marker">
-                    <div class="avatar ${isActive ? 'active' : 'inactive'}">
-                        ${s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤'}
+                    <div class="avatar ${avatarClass}">
+                        ${avatarIcon}
                     </div>
-                    <div class="name">${s.username || s.userName || 'مجهول'}</div>
+                    <div class="name">${escapeHTML(s.username || s.userName || '?')}</div>
                 </div>
             `,
             iconSize: [50, 50],
@@ -309,54 +508,74 @@ function updateSessionMarkers() {
         
         const marker = L.marker([s.lat, s.lng], { icon: icon }).addTo(sessionMap);
         
+        // ✅ نافذة منبثقة
+        const statusText = isActive ? '🟢 نشط' : isExpired ? '🔴 منتهية' : '⚪ غير نشط';
+        const updatedAt = s.updatedAt ? getTimeAgo(s.updatedAt) : '--';
+        
         const popupContent = `
-            <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px;">
-                <div style="font-weight:bold; font-size:14px; color:white;">${s.username || s.userName || 'مجهول'}</div>
-                <div style="color:rgba(255,255,255,0.6); font-size:12px;">${s.role || 'مشاهد'}</div>
+            <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px; direction:rtl;">
+                <div style="font-weight:bold; font-size:14px; color:#fff;">${escapeHTML(s.username || s.userName || 'مجهول')}</div>
+                <div style="color:rgba(255,255,255,0.6); font-size:12px;">${escapeHTML(s.role || 'مشاهد')}</div>
                 <div style="margin:4px 0;">
-                    <span style="color:${isActive ? '#4ade80' : '#6c757d'}; font-size:11px;">${isActive ? '🟢 نشط' : '🔴 غير نشط'}</span>
+                    <span style="color:${isActive ? '#4ade80' : isExpired ? '#f87171' : '#adb5bd'}; font-size:11px;">${statusText}</span>
                 </div>
                 <div style="color:rgba(255,255,255,0.4); font-size:10px;">
                     📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}
                 </div>
                 <div style="color:rgba(255,255,255,0.2); font-size:9px; margin-top:2px;">
-                    ${s.updatedAt ? '🕐 ' + new Date(s.updatedAt).toLocaleString('ar-TN') : ''}
+                    🕐 ${updatedAt}
                 </div>
             </div>
         `;
         marker.bindPopup(popupContent);
         
-        sessionMarkers[s.sessionId || s.id || s._id] = marker;
+        sessionMarkers[s.sessionId || s.id || s._id || markerCount] = marker;
+        markerCount++;
     });
     
-    // تحديث مركز الخريطة
+    // ✅ إذا كانت هناك ماركرات، نغير المركز إلى أول موقع
     const keys = Object.keys(sessionMarkers);
     if (keys.length > 0 && sessionsData.length > 0) {
-        const first = sessionsData.find(s => s.lat && s.lng);
+        const first = sessionsData.find(s => isValidCoordinate(s.lat, s.lng));
         if (first) {
             sessionMap.setView([first.lat, first.lng], 13);
         }
     }
+    
+    console.log('✅ Markers updated:', markerCount);
 }
 
 // ============================================================
-// 6. إنهاء جلسة
+// 9. إنهاء جلسة
 // ============================================================
 
 function terminateSession(id) {
     if (!confirm('⚠️ هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
     
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
         showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
-    fetch(`/api/sessions/${id}`, {
+    const sessionId = String(id);
+    
+    fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
         method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            if (res.status === 401) throw new Error('غير مصرح');
+            if (res.status === 403) throw new Error('ليس لديك صلاحية');
+            if (res.status === 404) throw new Error('الجلسة غير موجودة');
+            throw new Error('خطأ ' + res.status);
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             showToast('✅ تم إنهاء الجلسة بنجاح', 'success');
@@ -367,12 +586,12 @@ function terminateSession(id) {
     })
     .catch(err => {
         console.error('❌ Terminate session error:', err);
-        showToast('❌ خطأ في إنهاء الجلسة', 'danger');
+        showToast('❌ ' + err.message, 'danger');
     });
 }
 
 // ============================================================
-// 7. تحديث الجلسات
+// 10. تحديث الجلسات
 // ============================================================
 
 function refreshSessions() {
@@ -380,8 +599,17 @@ function refreshSessions() {
     showToast('🔄 تم تحديث الجلسات', 'info');
 }
 
+// ============================================================
+// 11. تحديث تلقائي
+// ============================================================
+
 function startMapAutoRefresh() {
-    setInterval(() => {
+    if (sessionsRefreshTimer) {
+        clearInterval(sessionsRefreshTimer);
+        sessionsRefreshTimer = null;
+    }
+    
+    sessionsRefreshTimer = setInterval(() => {
         if (document.getElementById('page-sessions')) {
             loadSessions();
         }
@@ -389,11 +617,34 @@ function startMapAutoRefresh() {
 }
 
 // ============================================================
-// 8. التهيئة
+// 12. تنظيف الصفحة عند المغادرة
 // ============================================================
 
-if (document.getElementById('page-sessions')) {
-    console.log('🔄 Sessions page loaded');
+function destroySessionsPage() {
+    console.log('🧹 Destroying sessions page...');
+    
+    if (sessionsRefreshTimer) {
+        clearInterval(sessionsRefreshTimer);
+        sessionsRefreshTimer = null;
+    }
+    
+    if (sessionMap) {
+        sessionMap.remove();
+        sessionMap = null;
+    }
+    
+    sessionMarkers = {};
+    mapInitialized = false;
+    isSessionsPageActive = false;
+}
+
+// ============================================================
+// 13. تهيئة الصفحة
+// ============================================================
+
+function initSessionsPage() {
+    console.log('🔄 Initializing sessions page...');
+    isSessionsPageActive = true;
     
     setTimeout(() => {
         initUserMap();
@@ -403,13 +654,25 @@ if (document.getElementById('page-sessions')) {
 }
 
 // ============================================================
-// 9. دوال عالمية
+// 14. تحميل الصفحة تلقائياً
 // ============================================================
 
+if (document.getElementById('page-sessions')) {
+    console.log('📄 Sessions page detected');
+    setTimeout(initSessionsPage, 300);
+}
+
+// ============================================================
+// 15. دوال عالمية
+// ============================================================
+
+window.initSessionsPage = initSessionsPage;
 window.refreshSessions = refreshSessions;
 window.terminateSession = terminateSession;
 window.initUserMap = initUserMap;
+window.centerSessionMap = centerSessionMap;
 window.startMapAutoRefresh = startMapAutoRefresh;
+window.destroySessionsPage = destroySessionsPage;
 
-console.log('✅ Sessions page ready');
+console.log('✅ Sessions page v3.0 ready');
 </script>
