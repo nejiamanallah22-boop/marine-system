@@ -1,723 +1,203 @@
-<!-- ============================================================
-     public/index.html
-     MARINE SYSTEM - Production Frontend
-     ============================================================ -->
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <meta
-        name="theme-color"
-        content="#0b1f33"
-    >
-
-    <meta
-        name="description"
-        content="منظومة إدارة ومتابعة الوسائل البحرية"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
-
-    <!-- ========================================================
-         Preconnect for performance
-         ======================================================== -->
-
-    <link
-        rel="preconnect"
-        href="https://fonts.googleapis.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://cdnjs.cloudflare.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://unpkg.com"
-    >
-
-    <link
-        rel="preconnect"
-        href="https://cdn.jsdelivr.net"
-    >
-
-    <!-- ========================================================
-         Fonts
-         ======================================================== -->
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap"
-        rel="stylesheet"
-    >
-
-    <!-- ========================================================
-         Font Awesome
-         ======================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    >
-
-    <!-- ========================================================
-         Main CSS
-         ======================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="/css/style.css"
-    >
-
-    <!-- ========================================================
-         Leaflet
-         ======================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    >
-
-    <!-- ========================================================
-         External Libraries
-         ======================================================== -->
-
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
-        defer
-    ></script>
-
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
-        defer
-    ></script>
-
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 </head>
-
 <body>
 
-<!-- ============================================================
-     NOSCRIPT FALLBACK
-     ============================================================ -->
-
-<noscript>
-
-    <div style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        background: #0b1f33;
-        color: #f8f9fa;
-        font-family: 'Cairo', sans-serif;
-        text-align: center;
-        padding: 20px;
-    ">
-
-        <div style="
-            max-width: 500px;
-            padding: 40px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-        ">
-
-            <div style="font-size: 64px; margin-bottom: 20px;">
-                ⚓
-            </div>
-
-            <h2 style="color: #f8f9fa; margin-bottom: 10px;">
-                منظومة الوسائل البحرية
-            </h2>
-
-            <p style="color: rgba(255,255,255,0.6); line-height: 1.8;">
-                ⚠️ يرجى تفعيل JavaScript لتشغيل التطبيق
-            </p>
-
-            <p style="
-                color: rgba(255,255,255,0.3);
-                font-size: 13px;
-                margin-top: 20px;
-                border-top: 1px solid rgba(255,255,255,0.05);
-                padding-top: 20px;
-            ">
-                نظام إدارة وإسناد الوحدات البحرية v5.0
-            </p>
-
-        </div>
-
-    </div>
-
-</noscript>
-
-
-<!-- ============================================================
-     LOGIN
-     ============================================================ -->
-
+<!-- ===== LOGIN ===== -->
 <div id="loginOverlay">
-
     <div class="login-box">
-
         <div class="login-logo">
-
-            <span class="logo-icon">
-                ⚓
-            </span>
-
-            <span class="logo-text">
-                منظومة الوسائل البحرية
-            </span>
-
+            <span class="logo-icon">⚓</span>
+            <span class="logo-text">منظومة الوسائل البحرية</span>
         </div>
-
-        <p class="subtitle">
-            نظام متابعة وإدارة الأسطول البحري
-        </p>
-
+        <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
         <div class="developer">
-
-            <span class="dev-label">
-                الوكيل
-            </span>
-
-            <span class="dev-name">
-                أمان الله ناجي
-            </span>
-
+            <span class="dev-label">الوكيل</span>
+            <span class="dev-name">أمان الله ناجي</span>
         </div>
-
-        <!-- Username -->
-
         <div class="input-group">
-
             <i class="fas fa-user input-icon"></i>
-
-            <input
-                type="text"
-                id="username"
-                placeholder="اسم المستخدم"
-                autocomplete="username"
-                required
-                aria-label="اسم المستخدم"
-            >
-
+            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
         </div>
-
-        <!-- Password -->
-
         <div class="input-group">
-
             <i class="fas fa-lock input-icon"></i>
-
-            <input
-                type="password"
-                id="password"
-                placeholder="كلمة المرور"
-                autocomplete="current-password"
-                required
-                aria-label="كلمة المرور"
-            >
-
+            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
         </div>
-
-        <!-- Login -->
-
-        <button
-            type="button"
-            class="login-btn"
-            id="loginButton"
-            onclick="handleLogin()"
-            aria-label="تسجيل الدخول"
-        >
-
-            <span id="loginButtonIcon">
-                🚀
-            </span>
-
-            <span id="loginButtonText">
-                دخول
-            </span>
-
+        <button type="button" class="login-btn" id="loginButton" onclick="handleLogin()">
+            <span id="loginButtonIcon">🚀</span>
+            <span id="loginButtonText">دخول</span>
         </button>
-
-        <!-- Error -->
-
-        <div
-            id="loginError"
-            class="error-msg"
-            role="alert"
-            aria-live="polite"
-        ></div>
-
+        <div id="loginError" class="error-msg" role="alert"></div>
         <div class="login-footer">
-
-            <span>
-                نظام إدارة وإسناد الوحدات البحرية
-            </span>
-
-            <span class="version">
-                v5.0
-            </span>
-
+            <span>نظام إدارة وإسناد الوحدات البحرية</span>
+            <span class="version">v5.0</span>
         </div>
-
     </div>
-
 </div>
 
-
-<!-- ============================================================
-     MAIN APPLICATION
-     ============================================================ -->
-
-<div
-    id="mainApp"
-    style="display:none;"
->
-
-    <!-- ========================================================
-         HEADER
-         ======================================================== -->
-
+<!-- ===== MAIN APPLICATION ===== -->
+<div id="mainApp" style="display:none;">
+    <!-- HEADER -->
     <header>
-
         <div class="header-left">
-
-            <span
-                class="menu-toggle"
-                onclick="toggleSidebar()"
-                aria-label="فتح القائمة الجانبية"
-                role="button"
-                tabindex="0"
-            >
-                ☰
-            </span>
-
+            <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
             <h1>
-
-                <span>
-                    ⚓
-                </span>
-
+                <span>⚓</span>
                 منظومة الوسائل البحرية
-
-                <span class="developer-tag">
-                    الوكيل أمان الله ناجي
-                </span>
-
+                <span class="developer-tag">الوكيل أمان الله ناجي</span>
             </h1>
-
         </div>
-
-
         <div class="header-right">
-
-            <span
-                class="notification-icon"
-                onclick="toggleNotifications()"
-                role="button"
-                tabindex="0"
-                aria-label="الإشعارات"
-            >
-
-                🔔
-
-                <span
-                    class="notification-badge"
-                    id="notificationBadge"
-                >
-                    0
-                </span>
-
+            <span class="notification-icon" onclick="toggleNotifications()">
+                🔔 <span class="notification-badge" id="notificationBadge">0</span>
             </span>
-
-
-            <span
-                class="role-badge"
-                id="userRoleDisplay"
-                aria-label="الدور"
-            >
-                👤
-            </span>
-
-
-            <button
-                class="btn-outline-white"
-                type="button"
-                onclick="window.print()"
-                title="طباعة"
-                aria-label="طباعة"
-            >
-
+            <span class="role-badge" id="userRoleDisplay">👤</span>
+            <button class="btn-outline-white" type="button" onclick="window.print()" title="طباعة">
                 <i class="fas fa-print"></i>
-
             </button>
-
-
-            <button
-                class="btn-outline-white"
-                type="button"
-                onclick="refreshAllPages()"
-                title="تحديث"
-                aria-label="تحديث"
-            >
-
+            <button class="btn-outline-white" type="button" onclick="refreshAllPages()" title="تحديث">
                 <i class="fas fa-sync-alt"></i>
-
             </button>
-
-
-            <button
-                class="btn-outline-white btn-logout"
-                type="button"
-                onclick="doLogout()"
-                title="تسجيل الخروج"
-                aria-label="تسجيل الخروج"
-            >
-
+            <button class="btn-outline-white btn-logout" type="button" onclick="doLogout()" title="تسجيل الخروج">
                 <i class="fas fa-sign-out-alt"></i>
-
             </button>
-
         </div>
-
     </header>
 
-
-    <!-- ========================================================
-         SIDEBAR
-         ======================================================== -->
-
-    <nav
-        class="sidebar"
-        id="sidebar"
-        aria-label="القائمة الجانبية"
-    >
-
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-
-            <span>
-                ⚓
-            </span>
-
-            <span>
-                الأسطول البحري
-            </span>
-
+            <span>⚓</span>
+            <span>الأسطول البحري</span>
         </div>
-
-
-        <button
-            class="nav-btn active"
-            onclick="showPage('dashboard')"
-            aria-label="لوحة التحكم"
-        >
-
-            <i class="fas fa-chart-pie"></i>
-
-            لوحة التحكم
-
+        <button class="nav-btn active" onclick="showPage('dashboard')">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('fleet')"
-            aria-label="الأسطول"
-        >
-
-            <i class="fas fa-ship"></i>
-
-            الأسطول
-
+        <button class="nav-btn" onclick="showPage('fleet')">
+            <i class="fas fa-ship"></i> الأسطول
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('maintenance')"
-            aria-label="الصيانة"
-        >
-
-            <i class="fas fa-wrench"></i>
-
-            الصيانة
-
+        <button class="nav-btn" onclick="showPage('maintenance')">
+            <i class="fas fa-wrench"></i> الصيانة
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('efficiency')"
-            aria-label="الجاهزية"
-        >
-
-            <i class="fas fa-chart-line"></i>
-
-            الجاهزية
-
+        <button class="nav-btn" onclick="showPage('efficiency')">
+            <i class="fas fa-chart-line"></i> الجاهزية
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('support')"
-            aria-label="الدعم"
-        >
-
-            <i class="fas fa-headset"></i>
-
-            الدعم
-
+        <button class="nav-btn" onclick="showPage('support')">
+            <i class="fas fa-headset"></i> الدعم
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('users')"
-            aria-label="المستخدمين"
-        >
-
-            <i class="fas fa-users"></i>
-
-            المستخدمين
-
+        <button class="nav-btn" onclick="showPage('users')">
+            <i class="fas fa-users"></i> المستخدمين
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('notes')"
-            aria-label="Note Verbale"
-        >
-
-            <i class="fas fa-sticky-note"></i>
-
-            Note Verbale
-
+        <button class="nav-btn" onclick="showPage('notes')">
+            <i class="fas fa-sticky-note"></i> Note Verbale
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('sessions')"
-            aria-label="المراقبة"
-        >
-
-            <i class="fas fa-users-cog"></i>
-
-            المراقبة
-
+        <button class="nav-btn" onclick="showPage('sessions')">
+            <i class="fas fa-users-cog"></i> المراقبة
         </button>
-
-
-        <button
-            class="nav-btn"
-            onclick="showPage('ai-assistant')"
-            aria-label="المساعد الذكي"
-        >
-
-            <i class="fas fa-robot"></i>
-
-            🤖 المساعد الذكي
-
+        <button class="nav-btn" onclick="showPage('ai-assistant')">
+            <i class="fas fa-robot"></i> 🤖 المساعد الذكي
         </button>
-
-
         <div class="sidebar-footer">
-
-            <span>
-                الوكيل أمان الله ناجي
-            </span>
-
+            <span>الوكيل أمان الله ناجي</span>
         </div>
-
     </nav>
 
-
-    <!-- ========================================================
-         MAIN CONTENT
-         ======================================================== -->
-
-    <main
-        class="main-content"
-        id="mainContent"
-    >
-
-        <div
-            id="pageContainer"
-            role="main"
-            aria-label="محتوى الصفحة"
-        ></div>
-
-    </main>
-
-</div>
-
-
-<!-- ============================================================
-     SCROLL BUTTONS
-     ============================================================ -->
-
-<div class="scroll-buttons">
-
-    <button
-        class="scroll-btn"
-        onclick="scrollToTop()"
-        aria-label="انتقال إلى الأعلى"
-        title="انتقال إلى الأعلى"
-    >
-
-        <i class="fas fa-chevron-up"></i>
-
-    </button>
-
-
-    <button
-        class="scroll-btn"
-        onclick="scrollToBottom()"
-        aria-label="انتقال إلى الأسفل"
-        title="انتقال إلى الأسفل"
-    >
-
-        <i class="fas fa-chevron-down"></i>
-
-    </button>
-
-</div>
-
-
-<!-- ============================================================
-     PASSWORD MODAL
-     ============================================================ -->
-
-<div
-    id="passwordModal"
-    class="modal-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="passwordModalTitle"
->
-
-    <div class="modal-box">
-
-        <h3 id="passwordModalTitle">
-            🔑 تغيير كلمة المرور
-        </h3>
-
-        <p id="modalUserName"></p>
-
-        <input
-            type="password"
-            id="newPassword"
-            placeholder="كلمة المرور الجديدة"
-            autocomplete="new-password"
-            aria-label="كلمة المرور الجديدة"
-        >
-
-        <input
-            type="password"
-            id="confirmPassword"
-            placeholder="تأكيد كلمة المرور"
-            autocomplete="new-password"
-            aria-label="تأكيد كلمة المرور"
-        >
-
-        <div class="modal-actions">
-
-            <button
-                class="btn-save"
-                onclick="saveNewPassword()"
-                aria-label="حفظ"
-            >
-                حفظ
-            </button>
-
-
-            <button
-                class="btn-cancel"
-                onclick="closePasswordModal()"
-                aria-label="إلغاء"
-            >
-                إلغاء
-            </button>
-
-        </div>
-
+    <!-- CONTENT -->
+    <div class="main-content">
+        <div id="pageContainer"></div>
     </div>
-
 </div>
 
+<!-- ===== SCROLL BUTTONS ===== -->
+<div class="scroll-buttons">
+    <button class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <button class="scroll-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">
+        <i class="fas fa-chevron-down"></i>
+    </button>
+</div>
 
-<!-- ============================================================
-     JAVASCRIPT - Core
-     ============================================================ -->
-
-<!-- 1️⃣ Core -->
-
+<!-- ===== JS ===== -->
 <script src="/js/core/config.js"></script>
-
 <script src="/js/core/helpers.js"></script>
-
 <script src="/js/core/auth.js"></script>
-
-
-<!-- 2️⃣ Libraries -->
-
 <script src="/js/lib/charts.js"></script>
-
-<script src="/js/lib/map.js"></script>
-
 <script src="/js/lib/notifications.js"></script>
-
 <script src="/js/lib/file-import.js"></script>
-
-
-<!-- 3️⃣ Pages -->
-
 <script src="/js/pages/dashboard.js"></script>
-
 <script src="/js/pages/fleet.js"></script>
-
 <script src="/js/pages/maintenance.js"></script>
-
 <script src="/js/pages/efficiency.js"></script>
-
-<script src="/js/pages/support.js"></script>
-
 <script src="/js/pages/users.js"></script>
-
-<script src="/js/pages/notes.js"></script>
-
-<script src="/js/pages/sessions.js"></script>
-
 <script src="/js/pages/ai-assistant.js"></script>
-
-
-<!-- 4️⃣ Main Application -->
-
 <script src="/js/app.js"></script>
 
-</body>
+<!-- ===== FORCE LOGIN - منع أي إخفاء لشاشة الدخول ===== -->
+<script>
+(function() {
+    // ✅ إجبار شاشة الدخول
+    function forceLogin() {
+        const overlay = document.getElementById('loginOverlay');
+        const mainApp = document.getElementById('mainApp');
+        
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.visibility = 'visible';
+            overlay.style.opacity = '1';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.zIndex = '999999';
+            overlay.style.background = 'rgba(10,14,23,0.98)';
+            overlay.style.backdropFilter = 'blur(10px)';
+        }
+        if (mainApp) {
+            mainApp.style.display = 'none';
+            mainApp.style.visibility = 'hidden';
+            mainApp.style.opacity = '0';
+        }
+        
+        console.log('🔐 Login screen forced');
+    }
 
+    // ✅ تنفيذ فوراً
+    forceLogin();
+
+    // ✅ مراقبة أي تغيير
+    const observer = new MutationObserver(function() {
+        const overlay = document.getElementById('loginOverlay');
+        if (overlay && (overlay.style.display === 'none' || overlay.style.visibility === 'hidden' || overlay.style.opacity === '0')) {
+            forceLogin();
+        }
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['style'],
+        subtree: true,
+        childList: true
+    });
+
+    console.log('🚀 Login screen locked - v20.0');
+})();
+</script>
+
+</body>
 </html>
