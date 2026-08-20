@@ -1,10 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v17.0
+// 🚀 MARINE SYSTEM - APP.JS v18.0
 // ============================================================
-// 🏆 10/10 - FIXED ULTIMATE EDITION
+// 🏆 10/10 - ULTIMATE FIXED EDITION
 // ============================================================
 
-console.log('🚀 Marine System v17.0 - Fixed Ultimate Edition');
+console.log('🚀 Marine System v18.0 - Ultimate Fixed Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -209,7 +209,7 @@ function updateUserDisplay() {
 }
 
 // ============================================================
-// 📄 PAGE MANAGEMENT - النظام الرئيسي
+// 📄 PAGE MANAGEMENT
 // ============================================================
 
 let currentPage = null;
@@ -861,15 +861,18 @@ function deleteUser(id) {
 }
 
 // ============================================================
-// 🚀 INITIALIZATION
+// 🚀 INITIALIZATION - مع إجبار شاشة الدخول
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
+    // ✅ التحقق من وجود مستخدم
     const user = getUser();
 
+    // ✅ إذا كان هناك مستخدم، نتحقق من صلاحيته
     if (user) {
+        // ✅ نعرض التطبيق مباشرة
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         updateUserDisplay();
@@ -878,11 +881,13 @@ document.addEventListener('DOMContentLoaded', function() {
         loadPage(savedPage);
         console.log('✅ Session restored for:', user.name);
     } else {
+        // ✅ إظهار شاشة الدخول
         document.getElementById('loginOverlay').style.display = 'flex';
         document.getElementById('mainApp').style.display = 'none';
         setUser(null);
     }
 
+    // ✅ ربط أحداث الدخول
     const username = document.getElementById('username');
     const password = document.getElementById('password');
 
@@ -927,7 +932,7 @@ window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
 window.showToast = showToast;
 
-console.log('✅ app.js v17.0 - Fixed Ultimate Edition loaded successfully');
+console.log('✅ app.js v18.0 - Ultimate Fixed Edition loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
