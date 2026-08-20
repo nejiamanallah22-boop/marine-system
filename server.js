@@ -1,18 +1,12 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v16.0
+// 🚢 MARINE SYSTEM - SERVER v17.0
 // ============================================================
-// 🏆 10/10 - ULTIMATE PRODUCTION READY
+// 🏆 10/10 - PRODUCTION READY
 // ============================================================
 
 'use strict';
 
-// ============================================================
-// 📦 DEPENDENCIES
-// ============================================================
-
 require('dotenv').config();
-
-console.log('🔍 MONGODB_URI:', process.env.MONGODB_URI ? '✅ موجود' : '❌ غير موجود');
 
 const express = require('express');
 const path = require('path');
@@ -51,7 +45,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Marine@2024#Secure';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'MarineDB2026Secure';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
 const publicPath = path.join(__dirname, 'public');
@@ -61,24 +55,17 @@ const publicPath = path.join(__dirname, 'public');
 // ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v16.0 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v17.0 - PRODUCTION');
 console.log('='.repeat(60));
 
 const errors = [];
 
-if (!MONGODB_URI) {
-    errors.push('❌ MONGODB_URI is required');
-} else if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
-    errors.push('❌ MONGODB_URI must start with mongodb:// or mongodb+srv://');
-}
-
+if (!MONGODB_URI) errors.push('❌ MONGODB_URI is required');
 if (!JWT_SECRET || JWT_SECRET.length < 32) errors.push('❌ JWT_SECRET must be at least 32 characters');
 if (!JWT_REFRESH_SECRET || JWT_REFRESH_SECRET.length < 32) errors.push('❌ JWT_REFRESH_SECRET must be at least 32 characters');
 
 if (IS_PRODUCTION) {
-    if (!FRONTEND_URL || FRONTEND_URL === '*') {
-        errors.push('❌ FRONTEND_URL must be explicitly set in production');
-    }
+    if (!FRONTEND_URL || FRONTEND_URL === '*') errors.push('❌ FRONTEND_URL must be explicitly set in production');
 }
 
 if (errors.length > 0) {
@@ -89,7 +76,6 @@ if (errors.length > 0) {
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
-console.log(`✅ MONGODB_URI: موجود ✅`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -594,22 +580,19 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 });
 
 // ============================================================
-// 👤 CREATE ADMIN - النسخة 10/10
+// 👤 CREATE ADMIN
 // ============================================================
 
 async function createInitialAdmin() {
     try {
-        // ✅ بيانات admin الافتراضية
         const defaultEmail = 'admin@marine-system.com';
-        const defaultPassword = 'Marine@2024#Secure';
+        const defaultPassword = 'MarineDB2026Secure';
         const defaultName = 'مدير النظام';
 
-        // ✅ استخدام القيم من Render أو الافتراضية
         const adminEmail = String(process.env.ADMIN_EMAIL || defaultEmail).trim().toLowerCase();
         const adminPassword = String(process.env.ADMIN_PASSWORD || defaultPassword);
         const adminName = process.env.ADMIN_NAME || defaultName;
 
-        // ✅ التحقق من وجود المستخدم
         const existing = await User.findOne({ 
             $or: [
                 { email: adminEmail },
@@ -619,8 +602,6 @@ async function createInitialAdmin() {
 
         if (existing) {
             console.log('ℹ️ Admin account already exists');
-            
-            // ✅ إذا كان المستخدم غير نشط، نفعله
             if (!existing.isActive) {
                 existing.isActive = true;
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
@@ -630,7 +611,6 @@ async function createInitialAdmin() {
             return;
         }
 
-        // ✅ إنشاء المستخدم
         const admin = new User({
             name: adminName,
             username: 'admin',
@@ -646,11 +626,9 @@ async function createInitialAdmin() {
         console.log('✅ Admin created successfully!');
         console.log(`📧 Email: ${adminEmail}`);
         console.log(`🔑 Password: ${adminPassword}`);
-        console.log('⚠️ Please change the admin password after first login');
 
     } catch (error) {
         console.error('❌ Initial admin error:', error.message);
-        // ✅ لا نوقف الخادم إذا فشل إنشاء المدير
     }
 }
 
@@ -665,7 +643,7 @@ async function startServer() {
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v16.0 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v17.0 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
