@@ -1,159 +1,67 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v19.0
+// 🚀 MARINE SYSTEM - APP.JS v18.0
 // ============================================================
-// 🏆 10/10 - PROFESSIONAL ULTIMATE EDITION
+// 🏆 10/10 - ULTIMATE FIXED EDITION - FORCE LOGIN
 // ============================================================
 
-console.log('🚀 Marine System v19.0 - Professional Ultimate Edition');
+console.log('🚀 Marine System v18.0 - Ultimate Fixed Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
 // ============================================================
 
-const CONFIG = {
-    API_BASE: '/api',
-    USER_KEY: 'auth_user',
-    TOKEN_KEY: 'auth_token',
-    DEFAULT_PAGE: 'dashboard',
-    PAGE_CACHE_TTL: 3600000, // 1 ساعة
-    DEBUG: false
-};
+const API_BASE = '/api';
+const USER_KEY = 'auth_user';
 
+// ✅ تعريف الصفحات مع دوال التهيئة الصحيحة
 const PAGE_REGISTRY = {
-    'dashboard': { 
-        title: '📊 لوحة التحكم', 
-        init: 'loadDashboard', 
-        permissions: [],
-        icon: 'fa-chart-pie'
-    },
-    'fleet': { 
-        title: '🚢 الأسطول', 
-        init: 'loadVessels', 
-        permissions: [],
-        icon: 'fa-ship'
-    },
-    'maintenance': { 
-        title: '🔧 الصيانة', 
-        init: 'loadMaintenance', 
-        permissions: [],
-        icon: 'fa-wrench'
-    },
-    'efficiency': { 
-        title: '📈 الجاهزية', 
-        init: 'loadVessels', 
-        permissions: [],
-        icon: 'fa-chart-line'
-    },
-    'support': { 
-        title: '🎫 الدعم', 
-        init: 'loadTickets', 
-        permissions: [],
-        icon: 'fa-headset'
-    },
-    'users': { 
-        title: '👤 المستخدمين', 
-        init: 'loadUsers', 
-        permissions: ['admin', 'manager'],
-        icon: 'fa-users'
-    },
-    'notes': { 
-        title: '📝 Note Verbale', 
-        init: 'loadNotes', 
-        permissions: [],
-        icon: 'fa-sticky-note'
-    },
-    'sessions': { 
-        title: '🔄 المراقبة', 
-        init: 'initSessionsPage', 
-        permissions: ['admin', 'manager'],
-        icon: 'fa-users-cog'
-    },
-    'ai-assistant': { 
-        title: '🤖 المساعد الذكي', 
-        init: 'initAIAssistant', 
-        permissions: [],
-        icon: 'fa-robot'
-    }
+    'dashboard': { title: '📊 لوحة التحكم', init: 'loadDashboard', permissions: [] },
+    'fleet': { title: '🚢 الأسطول', init: 'loadVessels', permissions: [] },
+    'maintenance': { title: '🔧 الصيانة', init: 'loadMaintenance', permissions: [] },
+    'efficiency': { title: '📈 الجاهزية', init: 'loadVessels', permissions: [] },
+    'support': { title: '🎫 الدعم', init: 'loadTickets', permissions: [] },
+    'users': { title: '👤 المستخدمين', init: 'loadUsers', permissions: ['admin', 'manager'] },
+    'notes': { title: '📝 Note Verbale', init: 'loadNotes', permissions: [] },
+    'sessions': { title: '🔄 المراقبة', init: 'initSessionsPage', permissions: ['admin', 'manager'] },
+    'ai-assistant': { title: '🤖 المساعد الذكي', init: 'initAIAssistant', permissions: [] }
 };
 
 // ============================================================
-// 🔐 AUTHENTICATION SYSTEM
+// 🔐 AUTH FUNCTIONS
 // ============================================================
 
-class AuthManager {
-    constructor() {
-        this.user = null;
-        this.token = null;
-        this.loadSession();
-    }
-
-    loadSession() {
-        try {
-            const userData = localStorage.getItem(CONFIG.USER_KEY);
-            const token = localStorage.getItem(CONFIG.TOKEN_KEY);
-            
-            if (userData && token) {
-                this.user = JSON.parse(userData);
-                this.token = token;
-                return true;
-            }
-        } catch (e) {
-            console.warn('⚠️ Session load failed:', e);
-        }
-        return false;
-    }
-
-    saveSession(user, token) {
-        this.user = user;
-        this.token = token;
-        
-        if (user) {
-            localStorage.setItem(CONFIG.USER_KEY, JSON.stringify(user));
-        }
-        if (token) {
-            localStorage.setItem(CONFIG.TOKEN_KEY, token);
-        }
-    }
-
-    clearSession() {
-        this.user = null;
-        this.token = null;
-        localStorage.removeItem(CONFIG.USER_KEY);
-        localStorage.removeItem(CONFIG.TOKEN_KEY);
-        localStorage.removeItem('currentPage');
-    }
-
-    getUser() {
-        return this.user;
-    }
-
-    getToken() {
-        return this.token;
-    }
-
-    isAuthenticated() {
-        return !!this.user && !!this.token;
-    }
-
-    hasPermission(permission) {
-        if (!this.user) return false;
-        if (this.user.role === 'admin') return true;
-        return this.user.permissions?.includes(permission) || false;
-    }
-
-    hasRole(role) {
-        if (!this.user) return false;
-        return this.user.role === role;
-    }
-
-    hasAnyRole(roles) {
-        if (!this.user) return false;
-        return roles.includes(this.user.role);
+function getUser() {
+    try {
+        return JSON.parse(localStorage.getItem(USER_KEY));
+    } catch {
+        return null;
     }
 }
 
+function setUser(user) {
+    if (user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } else {
+        localStorage.removeItem(USER_KEY);
+    }
+}
+
+function isAuthenticated() {
+    return !!getUser();
+}
+
+function hasPermission(pageName) {
+    const config = PAGE_REGISTRY[pageName];
+    if (!config || !config.permissions || config.permissions.length === 0) {
+        return true;
+    }
+    const user = getUser();
+    if (!user) return false;
+    return config.permissions.includes(user.role);
+}
+
 // ============================================================
-// 🛡️ SECURITY HELPERS
+// 🛡️ ESCAPE HTML
 // ============================================================
 
 function escapeHTML(value) {
@@ -166,299 +74,8 @@ function escapeHTML(value) {
         .replace(/'/g, '&#039;');
 }
 
-function sanitizeInput(value) {
-    if (typeof value !== 'string') return value;
-    return value.trim().replace(/[<>]/g, '');
-}
-
 // ============================================================
-// 🔔 NOTIFICATION SYSTEM
-// ============================================================
-
-class ToastManager {
-    constructor() {
-        this.container = null;
-        this.toasts = [];
-    }
-
-    show(message, type = 'info', duration = 3000) {
-        const colors = {
-            success: '#4ade80',
-            danger: '#f87171',
-            warning: '#fbbf24',
-            info: '#60a5fa'
-        };
-
-        const icons = {
-            success: '✅',
-            danger: '❌',
-            warning: '⚠️',
-            info: 'ℹ️'
-        };
-
-        // إزالة الإشعار القديم
-        const oldToast = document.querySelector('.marine-toast');
-        if (oldToast) oldToast.remove();
-
-        const toast = document.createElement('div');
-        toast.className = 'marine-toast';
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999;
-            padding: 14px 28px;
-            border-radius: 14px;
-            color: white;
-            background: rgba(10,14,23,0.96);
-            border: 1px solid ${colors[type]}55;
-            border-right: 4px solid ${colors[type]};
-            backdrop-filter: blur(14px);
-            box-shadow: 0 12px 48px rgba(0,0,0,0.5);
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
-            max-width: 90%;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform: translateX(-50%) translateY(20px);
-            font-size: 15px;
-        `;
-        toast.innerHTML = `
-            <span style="color:${colors[type]}; margin-right:10px;">${icons[type]}</span>
-            <span>${escapeHTML(message)}</span>
-        `;
-        document.body.appendChild(toast);
-
-        // تأثير الظهور
-        requestAnimationFrame(() => {
-            toast.style.opacity = '1';
-            toast.style.transform = 'translateX(-50%) translateY(0)';
-        });
-
-        // إخفاء بعد المدة
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(-50%) translateY(20px)';
-            setTimeout(() => {
-                if (toast.isConnected) toast.remove();
-            }, 300);
-        }, duration);
-    }
-
-    success(message, duration = 3000) {
-        this.show(message, 'success', duration);
-    }
-
-    error(message, duration = 4000) {
-        this.show(message, 'danger', duration);
-    }
-
-    warning(message, duration = 3000) {
-        this.show(message, 'warning', duration);
-    }
-
-    info(message, duration = 3000) {
-        this.show(message, 'info', duration);
-    }
-}
-
-// ============================================================
-// 📄 PAGE MANAGER
-// ============================================================
-
-class PageManager {
-    constructor(authManager) {
-        this.auth = authManager;
-        this.currentPage = null;
-        this.isLoading = false;
-        this.pageCache = new Map();
-        this.toast = new ToastManager();
-        this.container = document.getElementById('pageContainer');
-    }
-
-    loadPage(pageName) {
-        // ✅ التحقق من الصلاحيات
-        if (!this.hasPermission(pageName)) {
-            this.toast.error('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة');
-            return;
-        }
-
-        if (this.isLoading || this.currentPage === pageName) return;
-        if (!this.container) return;
-
-        this.isLoading = true;
-        this.currentPage = pageName;
-
-        // ✅ تحديث الواجهة
-        this.updateUI(pageName);
-        this.showLoading();
-
-        // ✅ تحميل الصفحة
-        const url = `/pages/${pageName}.html`;
-        
-        // ✅ التحقق من الكاش
-        if (this.pageCache.has(pageName)) {
-            console.log(`📄 Using cached page: ${pageName}`);
-            this.renderPage(pageName, this.pageCache.get(pageName));
-            return;
-        }
-
-        fetch(url)
-            .then(res => {
-                if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
-                return res.text();
-            })
-            .then(html => {
-                // ✅ تخزين في الكاش
-                if (pageName !== 'sessions') {
-                    this.pageCache.set(pageName, html);
-                }
-                this.renderPage(pageName, html);
-            })
-            .catch(err => {
-                console.error('❌ Page load error:', err);
-                this.showError(err.message);
-            })
-            .finally(() => {
-                this.isLoading = false;
-            });
-    }
-
-    renderPage(pageName, html) {
-        if (!this.container) return;
-
-        // ✅ إزالة مؤشر التحميل
-        const loading = this.container.querySelector('.page-loading');
-        if (loading) loading.remove();
-
-        // ✅ إزالة المحتوى القديم
-        const oldContent = this.container.querySelector('.page-content');
-        if (oldContent) {
-            oldContent.style.opacity = '0';
-            oldContent.style.transform = 'translateY(10px)';
-            setTimeout(() => oldContent.remove(), 300);
-        }
-
-        // ✅ إضافة المحتوى الجديد
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page-content';
-        pageDiv.id = `page-${pageName}`;
-        pageDiv.innerHTML = html;
-        pageDiv.style.opacity = '0';
-        pageDiv.style.transform = 'translateY(10px)';
-        pageDiv.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        
-        this.container.appendChild(pageDiv);
-
-        // ✅ تأثير التلاشي
-        requestAnimationFrame(() => {
-            pageDiv.style.opacity = '1';
-            pageDiv.style.transform = 'translateY(0)';
-        });
-
-        // ✅ تهيئة الصفحة
-        setTimeout(() => this.initPage(pageName), 200);
-        localStorage.setItem('currentPage', pageName);
-    }
-
-    initPage(pageName) {
-        console.log(`📄 Initializing page: ${pageName}`);
-
-        const config = PAGE_REGISTRY[pageName];
-        if (config && config.init) {
-            const initFn = window[config.init];
-            if (typeof initFn === 'function') {
-                try {
-                    setTimeout(() => initFn(), 100);
-                } catch (error) {
-                    console.error(`❌ Error initializing ${pageName}:`, error);
-                }
-            }
-        }
-
-        document.dispatchEvent(new CustomEvent('pageLoaded', { detail: { page: pageName } }));
-    }
-
-    showLoading() {
-        if (!this.container) return;
-        
-        const loading = document.createElement('div');
-        loading.className = 'page-loading';
-        loading.innerHTML = `
-            <div style="text-align:center; padding:60px 20px;">
-                <div class="spinner"></div>
-                <p style="color:rgba(255,255,255,0.3); margin-top:20px; font-size:16px;">⏳ جاري التحميل...</p>
-            </div>
-        `;
-        this.container.appendChild(loading);
-    }
-
-    showError(message) {
-        if (!this.container) return;
-        
-        const loading = this.container.querySelector('.page-loading');
-        if (loading) loading.remove();
-
-        this.container.innerHTML = `
-            <div style="text-align:center; padding:60px 20px; color:#f87171;">
-                <h2 style="font-size:28px; margin-bottom:15px;">❌ خطأ في تحميل الصفحة</h2>
-                <p style="color:rgba(255,255,255,0.6); font-size:16px;">${escapeHTML(message)}</p>
-                <button onclick="pageManager.loadPage('dashboard')" 
-                        style="margin-top:25px; padding:12px 35px; background:#3b82f6; border:none; border-radius:12px; color:white; cursor:pointer; font-size:16px; font-weight:bold; transition:opacity 0.3s;">
-                    🏠 العودة للرئيسية
-                </button>
-            </div>
-        `;
-    }
-
-    updateUI(pageName) {
-        // ✅ تحديث عنوان الصفحة
-        const config = PAGE_REGISTRY[pageName];
-        if (config) {
-            document.title = `${config.title} - Marine System`;
-            const titleEl = document.getElementById('pageTitle');
-            if (titleEl) titleEl.textContent = config.title;
-        }
-
-        // ✅ تحديث الأزرار النشطة
-        this.updateActiveNav(pageName);
-    }
-
-    updateActiveNav(pageName) {
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        
-        const btns = document.querySelectorAll('.nav-btn');
-        const pageMap = {
-            'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-            'support': 4, 'users': 5, 'notes': 6, 'sessions': 7,
-            'ai-assistant': 8
-        };
-        
-        const index = pageMap[pageName];
-        if (index !== undefined && btns[index]) {
-            btns[index].classList.add('active');
-        }
-    }
-
-    hasPermission(pageName) {
-        const config = PAGE_REGISTRY[pageName];
-        if (!config || !config.permissions || config.permissions.length === 0) {
-            return true;
-        }
-        return this.auth.hasAnyRole(config.permissions);
-    }
-
-    refreshCurrentPage() {
-        if (this.currentPage) {
-            this.pageCache.delete(this.currentPage);
-            this.loadPage(this.currentPage);
-        }
-    }
-}
-
-// ============================================================
-// 🔐 LOGIN SYSTEM
+// 🔐 LOGIN
 // ============================================================
 
 async function doLogin() {
@@ -486,38 +103,39 @@ async function doLogin() {
     }
 
     try {
-        const response = await fetch(`${CONFIG.API_BASE}/auth/login`, {
+        const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // ✅ حفظ الجلسة
-            authManager.saveSession(data.user, data.token || data.accessToken);
+            setUser(data.user);
 
-            // ✅ إخفاء شاشة الدخول
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+            const overlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            if (overlay) overlay.style.display = 'none';
+            if (mainApp) mainApp.style.display = 'block';
 
-            // ✅ تحديث الواجهة
             updateUserDisplay();
-            pageManager.loadPage('dashboard');
+            loadPage('dashboard');
 
-            toastManager.success(`✅ مرحباً ${escapeHTML(data.user?.name || 'مدير النظام')}!`);
+            showToast('✅ مرحباً ' + escapeHTML(data.user?.name || 'مدير النظام') + '!', 'success');
 
         } else {
             if (errorEl) {
-                errorEl.textContent = `❌ ${escapeHTML(data.error || 'بيانات الدخول غير صحيحة')}`;
+                errorEl.textContent = '❌ ' + escapeHTML(data.error || 'بيانات الدخول غير صحيحة');
                 errorEl.style.display = 'block';
             }
-            toastManager.error('❌ فشل تسجيل الدخول');
         }
     } catch (error) {
         console.error('❌ Login error:', error);
@@ -525,7 +143,6 @@ async function doLogin() {
             errorEl.textContent = '❌ خطأ في الاتصال بالخادم';
             errorEl.style.display = 'block';
         }
-        toastManager.error('❌ خطأ في الاتصال بالخادم');
     } finally {
         if (loginBtn) {
             loginBtn.disabled = false;
@@ -539,14 +156,14 @@ function handleLogin() {
 }
 
 // ============================================================
-// 🚪 LOGOUT SYSTEM
+// 🚪 LOGOUT
 // ============================================================
 
 async function doLogout() {
     if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
     try {
-        await fetch(`${CONFIG.API_BASE}/auth/logout`, {
+        await fetch(`${API_BASE}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -554,14 +171,14 @@ async function doLogout() {
         console.error('Logout error:', error);
     }
 
-    // ✅ مسح الجلسة
-    authManager.clearSession();
+    setUser(null);
 
-    // ✅ إظهار شاشة الدخول
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    if (overlay) overlay.style.display = 'flex';
+    if (mainApp) mainApp.style.display = 'none';
 
-    toastManager.info('👋 تم تسجيل الخروج بنجاح');
+    showToast('👋 تم تسجيل الخروج', 'info');
 }
 
 // ============================================================
@@ -572,7 +189,7 @@ function updateUserDisplay() {
     const display = document.getElementById('userRoleDisplay');
     if (!display) return;
 
-    const user = authManager.getUser();
+    const user = getUser();
     if (user) {
         const roleEmojis = {
             'admin': '👑',
@@ -591,18 +208,270 @@ function updateUserDisplay() {
     }
 }
 
+// ============================================================
+// 📄 PAGE MANAGEMENT
+// ============================================================
+
+let currentPage = null;
+let isLoading = false;
+let pageCache = {};
+
+function loadPage(pageName) {
+    // ✅ التحقق من الصلاحيات
+    if (!hasPermission(pageName)) {
+        showToast('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
+        return;
+    }
+
+    if (isLoading) return;
+    if (currentPage === pageName) return;
+
+    const container = document.getElementById('pageContainer');
+    if (!container) return;
+
+    isLoading = true;
+    currentPage = pageName;
+
+    // ✅ تحديث عنوان الصفحة
+    const config = PAGE_REGISTRY[pageName];
+    if (config) {
+        document.title = `${config.title} - Marine System`;
+        const titleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.textContent = config.title;
+    }
+
+    // ✅ تحديث الأزرار النشطة
+    updateActiveNav(pageName);
+
+    // ✅ حفظ الصفحة الحالية
+    localStorage.setItem('currentPage', pageName);
+
+    // ✅ عرض مؤشر التحميل
+    const loading = document.createElement('div');
+    loading.className = 'page-loading';
+    loading.innerHTML = `
+        <div style="text-align:center; padding:50px;">
+            <div class="spinner"></div>
+            <p style="color:rgba(255,255,255,0.3); margin-top:15px;">⏳ جاري التحميل...</p>
+        </div>
+    `;
+    container.appendChild(loading);
+
+    // ✅ تنظيف الصفحة السابقة
+    destroyCurrentPage();
+
+    // ✅ تحميل الصفحة
+    const url = `/pages/${pageName}.html`;
+    
+    // ✅ التحقق من الكاش
+    if (pageCache[pageName]) {
+        console.log(`📄 Using cached page: ${pageName}`);
+        renderPage(pageName, pageCache[pageName]);
+        return;
+    }
+
+    fetch(url)
+        .then(res => {
+            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
+            return res.text();
+        })
+        .then(html => {
+            // ✅ تخزين في الكاش
+            if (pageName !== 'sessions' && pageName !== 'tracking') {
+                pageCache[pageName] = html;
+            }
+            renderPage(pageName, html);
+        })
+        .catch(err => {
+            console.error('❌ Page load error:', err);
+            loading.remove();
+            container.innerHTML = `
+                <div style="text-align:center; padding:50px; color:#f87171;">
+                    <h2>❌ خطأ في تحميل الصفحة</h2>
+                    <p>${escapeHTML(err.message)}</p>
+                    <button onclick="loadPage('dashboard')" class="btn-primary">🏠 العودة</button>
+                </div>
+            `;
+        })
+        .finally(() => {
+            isLoading = false;
+        });
+}
+
+function renderPage(pageName, html) {
+    const container = document.getElementById('pageContainer');
+    if (!container) return;
+
+    // ✅ إزالة مؤشر التحميل
+    const loading = container.querySelector('.page-loading');
+    if (loading) loading.remove();
+
+    // ✅ إزالة المحتوى القديم
+    const oldContent = container.querySelector('.page-content');
+    if (oldContent) {
+        oldContent.style.opacity = '0';
+        oldContent.style.transform = 'translateY(10px)';
+        oldContent.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => oldContent.remove(), 300);
+    }
+
+    // ✅ إضافة المحتوى الجديد
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'page-content';
+    pageDiv.id = `page-${pageName}`;
+    pageDiv.innerHTML = html;
+    pageDiv.style.opacity = '0';
+    pageDiv.style.transform = 'translateY(10px)';
+    pageDiv.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    
+    container.appendChild(pageDiv);
+
+    // ✅ تأثير التلاشي
+    requestAnimationFrame(() => {
+        pageDiv.style.opacity = '1';
+        pageDiv.style.transform = 'translateY(0)';
+    });
+
+    // ✅ تهيئة الصفحة بعد التحميل
+    setTimeout(() => initPage(pageName), 200);
+}
+
+function initPage(pageName) {
+    console.log(`📄 Initializing page: ${pageName}`);
+
+    const config = PAGE_REGISTRY[pageName];
+    if (config && config.init) {
+        const initFn = window[config.init];
+        if (typeof initFn === 'function') {
+            try {
+                setTimeout(() => {
+                    initFn();
+                }, 100);
+            } catch (error) {
+                console.error(`❌ Error initializing ${pageName}:`, error);
+            }
+        } else {
+            console.warn(`⚠️ Function ${config.init} not found`);
+        }
+    }
+
+    // ✅ إطلاق حدث مخصص
+    document.dispatchEvent(new CustomEvent('pageLoaded', {
+        detail: { page: pageName }
+    }));
+}
+
+function destroyCurrentPage() {
+    if (currentPage === 'sessions' && typeof window.destroySessionsPage === 'function') {
+        try {
+            window.destroySessionsPage();
+            console.log('🧹 Sessions page cleaned up');
+        } catch (e) {
+            console.warn('⚠️ Sessions cleanup error:', e);
+        }
+    }
+}
+
+function updateActiveNav(pageName) {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const btns = document.querySelectorAll('.nav-btn');
+    const pageMap = {
+        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
+        'support': 4, 'users': 5, 'notes': 6, 'sessions': 7,
+        'ai-assistant': 8
+    };
+    
+    const index = pageMap[pageName];
+    if (index !== undefined && btns[index]) {
+        btns[index].classList.add('active');
+    }
+}
+
+function showPage(pageName) {
+    loadPage(pageName);
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.toggle('open');
 }
 
-function showPage(pageName) {
-    pageManager.loadPage(pageName);
+function refreshAllPages() {
+    const currentPage = document.querySelector('.page-content');
+    if (currentPage) {
+        const pageName = currentPage.id.replace('page-', '');
+        delete pageCache[pageName];
+        loadPage(pageName);
+    } else {
+        loadPage('dashboard');
+    }
+    showToast('✅ تم تحديث الصفحة', 'success');
 }
 
-function refreshAllPages() {
-    pageManager.refreshCurrentPage();
-    toastManager.success('✅ تم تحديث الصفحة');
+// ============================================================
+// 🔔 TOAST
+// ============================================================
+
+function showToast(message, type = 'info') {
+    const colors = {
+        success: '#4ade80',
+        danger: '#f87171',
+        warning: '#fbbf24',
+        info: '#60a5fa'
+    };
+
+    const icons = {
+        success: '✅',
+        danger: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    const oldToast = document.querySelector('.marine-toast');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'marine-toast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999999;
+        padding: 12px 24px;
+        border-radius: 12px;
+        color: white;
+        background: rgba(10,14,23,0.95);
+        border: 1px solid ${colors[type]}55;
+        border-right: 4px solid ${colors[type]};
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        font-family: 'Cairo', sans-serif;
+        max-width: 90%;
+        text-align: center;
+        animation: fadeIn 0.3s ease;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    `;
+    toast.innerHTML = `
+        <span style="color:${colors[type]}">${icons[type]}</span>
+        <span style="margin-left:8px;">${escapeHTML(message)}</span>
+    `;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.isConnected) toast.remove();
+        }, 300);
+    }, 3000);
 }
 
 // ============================================================
@@ -623,8 +492,8 @@ async function fetchData(url, options = {}) {
 
         if (!response.ok) {
             if (response.status === 401) {
-                authManager.clearSession();
-                toastManager.warning('⚠️ انتهت الجلسة، يرجى تسجيل الدخول');
+                setUser(null);
+                showToast('⚠️ انتهت الجلسة، يرجى تسجيل الدخول', 'warning');
                 setTimeout(() => location.reload(), 1000);
                 return null;
             }
@@ -634,7 +503,7 @@ async function fetchData(url, options = {}) {
         return await response.json();
     } catch (error) {
         console.error('❌ Fetch error:', error);
-        toastManager.error('❌ خطأ في تحميل البيانات');
+        showToast('❌ خطأ في تحميل البيانات', 'danger');
         return null;
     }
 }
@@ -786,7 +655,7 @@ function loadUsers() {
 
 function loadNotes() {
     console.log('📝 Loading notes...');
-    toastManager.info('📝 جاري تحميل المذكرات');
+    showToast('📝 جاري تحميل المذكرات', 'info');
 }
 
 // ============================================================
@@ -795,7 +664,7 @@ function loadNotes() {
 
 function loadTickets() {
     console.log('🎫 Loading tickets...');
-    toastManager.info('🎫 جاري تحميل التذاكر');
+    showToast('🎫 جاري تحميل التذاكر', 'info');
 }
 
 // ============================================================
@@ -817,9 +686,25 @@ function initAIAssistant() {
     const chatInput = document.getElementById('chatInput');
     const micBtn = document.getElementById('micBtn');
 
-    if (sendBtn) sendBtn.onclick = askAI;
-    if (chatInput) chatInput.onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
-    if (micBtn) micBtn.onclick = toggleVoiceInput;
+    if (sendBtn) {
+        sendBtn.onclick = function() {
+            askAI();
+        };
+    }
+
+    if (chatInput) {
+        chatInput.onkeypress = function(e) {
+            if (e.key === 'Enter') {
+                askAI();
+            }
+        };
+    }
+
+    if (micBtn) {
+        micBtn.onclick = function() {
+            toggleVoiceInput();
+        };
+    }
 }
 
 async function askAI() {
@@ -831,7 +716,7 @@ async function askAI() {
 
     const question = chatInput.value.trim();
     if (!question) {
-        toastManager.warning('❌ الرجاء كتابة سؤال');
+        showToast('❌ الرجاء كتابة سؤال', 'warning');
         return;
     }
 
@@ -847,11 +732,12 @@ async function askAI() {
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
+        const token = localStorage.getItem('auth_token');
         const response = await fetch('/api/ai/ask', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': authManager.getToken() ? `Bearer ${authManager.getToken()}` : undefined
+                'Authorization': token ? `Bearer ${token}` : undefined
             },
             credentials: 'include',
             body: JSON.stringify({ message: question })
@@ -861,13 +747,17 @@ async function askAI() {
 
         if (response.ok) {
             const data = await response.json();
-            addChatMessage('ai', data.response || 'عذراً، لم أستطع الإجابة');
+            if (data.success) {
+                addChatMessage('ai', data.response || 'عذراً، لم أستطع الإجابة');
+            } else {
+                addChatMessage('ai', '⚠️ ' + (data.error || 'حدث خطأ'));
+            }
         } else {
             addChatMessage('ai', '❌ خطأ في الاتصال بالخادم');
         }
     } catch (error) {
         typing.remove();
-        addChatMessage('ai', `❌ خطأ: ${error.message}`);
+        addChatMessage('ai', '❌ خطأ: ' + error.message);
     }
 
     chatInput.disabled = false;
@@ -880,7 +770,7 @@ function addChatMessage(role, content) {
     if (!chatBox) return;
 
     const div = document.createElement('div');
-    div.className = `message ${role}`;
+    div.className = 'message ' + role;
     
     const sender = document.createElement('div');
     sender.className = 'sender';
@@ -907,29 +797,38 @@ function addChatMessage(role, content) {
 // ============================================================
 
 function toggleVoiceInput() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        toastManager.warning('❌ المتصفح لا يدعم الميكروفون');
+    const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+    if (!hasSpeech) {
+        showToast('❌ المتصفح لا يدعم الميكروفون', 'warning');
         return;
     }
 
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'ar-SA';
     recognition.continuous = false;
     recognition.interimResults = true;
 
-    recognition.onstart = () => toastManager.info('🎤 جاري الاستماع...');
-    recognition.onresult = (event) => {
+    recognition.onstart = function() {
+        showToast('🎤 جاري الاستماع...', 'info');
+    };
+
+    recognition.onresult = function(event) {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
         }
         const input = document.getElementById('chatInput');
-        if (input) input.value = transcript;
+        if (input) {
+            input.value = transcript;
+        }
     };
-    recognition.onend = () => {
+
+    recognition.onend = function() {
         const input = document.getElementById('chatInput');
-        if (input && input.value.trim()) askAI();
+        if (input && input.value.trim()) {
+            askAI();
+        }
     };
 
     recognition.start();
@@ -941,80 +840,66 @@ function toggleVoiceInput() {
 
 function editVessel(id) {
     console.log('✏️ Edit vessel:', id);
-    toastManager.info('✏️ جاري تعديل المركب');
+    showToast('✏️ جاري تعديل المركب', 'info');
 }
 
 function deleteVessel(id) {
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
     console.log('🗑️ Delete vessel:', id);
-    toastManager.success('🗑️ تم حذف المركب');
+    showToast('🗑️ تم حذف المركب', 'success');
 }
 
 function editUser(id) {
     console.log('✏️ Edit user:', id);
-    toastManager.info('✏️ جاري تعديل المستخدم');
+    showToast('✏️ جاري تعديل المستخدم', 'info');
 }
 
 function deleteUser(id) {
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
     console.log('🗑️ Delete user:', id);
-    toastManager.success('🗑️ تم حذف المستخدم');
+    showToast('🗑️ تم حذف المستخدم', 'success');
 }
 
 // ============================================================
-// 🚀 INITIALIZATION
+// 🚀 INITIALIZATION - FORCE LOGIN SCREEN
 // ============================================================
-
-// ✅ إنشاء الكائنات العامة
-const authManager = new AuthManager();
-const toastManager = new ToastManager();
-const pageManager = new PageManager(authManager);
-
-// ✅ جعل الكائنات عالمية
-window.authManager = authManager;
-window.toastManager = toastManager;
-window.pageManager = pageManager;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
-    // ✅ التحقق من الجلسة
-    if (authManager.isAuthenticated()) {
-        // ✅ جلسة موجودة → دخول مباشر
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        updateUserDisplay();
-        
-        const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-        pageManager.loadPage(savedPage);
-        console.log('✅ Session restored for:', authManager.getUser()?.name);
-    } else {
-        // ✅ لا توجد جلسة → شاشة الدخول
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('mainApp').style.display = 'none';
-        authManager.clearSession();
-        console.log('ℹ️ No session found, showing login screen');
-    }
+    // ✅ إجبار شاشة الدخول - مسح أي بيانات مخزنة
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('currentPage');
+
+    // ✅ إظهار شاشة الدخول
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (overlay) overlay.style.display = 'flex';
+    if (mainApp) mainApp.style.display = 'none';
 
     // ✅ ربط أحداث الدخول
     const username = document.getElementById('username');
     const password = document.getElementById('password');
 
     if (password) {
-        password.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') doLogin();
+        password.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
         });
     }
 
     if (username) {
-        username.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && password) password.focus();
+        username.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && password) {
+                password.focus();
+            }
         });
     }
 
-    console.log('✅ Marine System v19.0 ready');
-    console.log('🔐 Tokens stored in HttpOnly Cookies (secure)');
-    console.log('📌 Pages available:', Object.keys(PAGE_REGISTRY).join(', '));
+    console.log('✅ Marine System ready - Login screen forced');
+    console.log('🔐 Please login to continue');
 });
 
 // ============================================================
@@ -1027,6 +912,7 @@ window.doLogout = doLogout;
 window.showPage = showPage;
 window.toggleSidebar = toggleSidebar;
 window.refreshAllPages = refreshAllPages;
+window.loadPage = loadPage;
 window.editVessel = editVessel;
 window.deleteVessel = deleteVessel;
 window.editUser = editUser;
@@ -1034,9 +920,9 @@ window.deleteUser = deleteUser;
 window.askAI = askAI;
 window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
+window.showToast = showToast;
 
-console.log('✅ app.js v19.0 - Professional Ultimate Edition loaded successfully');
+console.log('✅ app.js v18.0 - Ultimate Fixed Edition loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
-console.log('🏗️ Architecture: CLASS-BASED');
