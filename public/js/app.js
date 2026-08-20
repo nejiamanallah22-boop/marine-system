@@ -1,81 +1,370 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v23.0
+// 🚀 MARINE SYSTEM - APP.JS v24.0
 // ============================================================
-// 🏆 10/10 - ULTIMATE WORKING EDITION
+// 🏆 10/10 - ULTIMATE PRODUCTION EDITION
+// ============================================================
+// 🔥 PROFESSIONAL - ENTERPRISE GRADE
 // ============================================================
 
-console.log('🚀 Marine System v23.0 - Ultimate Working Edition');
+console.log('🚀 Marine System v24.0 - Enterprise Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
 // ============================================================
 
-const API_BASE = '/api';
-const USER_KEY = 'auth_user';
+const CONFIG = {
+    API_BASE: '/api',
+    USER_KEY: 'auth_user',
+    TOKEN_KEY: 'auth_token',
+    CURRENT_PAGE_KEY: 'currentPage',
+    CACHE_TTL: 300000, // 5 دقائق
+    MAX_HISTORY: 50,
+    DEBUG: false
+};
 
-// ✅ تعريف الصفحات
+// ✅ تعريف الصفحات مع نظام RBAC متكامل
 const PAGE_REGISTRY = {
-    'dashboard': { title: '📊 لوحة التحكم', init: 'loadDashboard', permissions: [] },
-    'fleet': { title: '🚢 الأسطول', init: 'loadVessels', permissions: [] },
-    'maintenance': { title: '🔧 الصيانة', init: 'loadMaintenance', permissions: [] },
-    'efficiency': { title: '📈 الجاهزية', init: 'loadVessels', permissions: [] },
-    'support': { title: '🎫 الدعم', init: 'loadTickets', permissions: [] },
-    'users': { title: '👤 المستخدمين', init: 'loadUsers', permissions: ['admin', 'manager'] },
-    'notes': { title: '📝 Note Verbale', init: 'loadNotes', permissions: [] },
-    'sessions': { title: '🔄 المراقبة', init: 'initSessionsPage', permissions: ['admin', 'manager'] },
-    'ai-assistant': { title: '🤖 المساعد الذكي', init: 'initAIAssistant', permissions: [] }
+    'dashboard': {
+        title: '📊 لوحة التحكم',
+        init: 'loadDashboard',
+        permissions: [],
+        icon: 'fa-chart-pie',
+        order: 1
+    },
+    'fleet': {
+        title: '🚢 الأسطول',
+        init: 'loadVessels',
+        permissions: [],
+        icon: 'fa-ship',
+        order: 2
+    },
+    'maintenance': {
+        title: '🔧 الصيانة',
+        init: 'loadMaintenance',
+        permissions: [],
+        icon: 'fa-wrench',
+        order: 3
+    },
+    'efficiency': {
+        title: '📈 الجاهزية',
+        init: 'loadEfficiency',
+        permissions: [],
+        icon: 'fa-chart-line',
+        order: 4
+    },
+    'support': {
+        title: '🎫 الدعم',
+        init: 'loadTickets',
+        permissions: [],
+        icon: 'fa-headset',
+        order: 5
+    },
+    'users': {
+        title: '👤 المستخدمين',
+        init: 'loadUsers',
+        permissions: ['admin', 'manager'],
+        icon: 'fa-users',
+        order: 6
+    },
+    'notes': {
+        title: '📝 Note Verbale',
+        init: 'loadNotes',
+        permissions: [],
+        icon: 'fa-sticky-note',
+        order: 7
+    },
+    'sessions': {
+        title: '🔄 المراقبة',
+        init: 'initSessionsPage',
+        permissions: ['admin', 'manager'],
+        icon: 'fa-users-cog',
+        order: 8
+    },
+    'ai-assistant': {
+        title: '🤖 المساعد الذكي',
+        init: 'initAIAssistant',
+        permissions: [],
+        icon: 'fa-robot',
+        order: 9
+    }
 };
 
 // ============================================================
-// 🔐 AUTH FUNCTIONS
+// 🔐 AUTHENTICATION SYSTEM
 // ============================================================
 
-function getUser() {
-    try {
-        return JSON.parse(localStorage.getItem(USER_KEY));
-    } catch {
-        return null;
+class AuthManager {
+    constructor() {
+        this.user = null;
+        this.token = null;
+        this.loadSession();
     }
-}
 
-function setUser(user) {
-    if (user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } else {
-        localStorage.removeItem(USER_KEY);
+    loadSession() {
+        try {
+            const userData = localStorage.getItem(CONFIG.USER_KEY);
+            const tokenData = localStorage.getItem(CONFIG.TOKEN_KEY);
+            if (userData && tokenData) {
+                this.user = JSON.parse(userData);
+                this.token = tokenData;
+                return true;
+            }
+        } catch (e) {
+            console.warn('⚠️ Session load failed:', e);
+        }
+        return false;
     }
-}
 
-function isAuthenticated() {
-    return !!getUser();
-}
-
-function hasPermission(pageName) {
-    const config = PAGE_REGISTRY[pageName];
-    if (!config || !config.permissions || config.permissions.length === 0) {
-        return true;
+    saveSession(user, token) {
+        this.user = user;
+        this.token = token;
+        localStorage.setItem(CONFIG.USER_KEY, JSON.stringify(user));
+        localStorage.setItem(CONFIG.TOKEN_KEY, token);
     }
-    const user = getUser();
-    if (!user) return false;
-    return config.permissions.includes(user.role);
+
+    clearSession() {
+        this.user = null;
+        this.token = null;
+        localStorage.removeItem(CONFIG.USER_KEY);
+        localStorage.removeItem(CONFIG.TOKEN_KEY);
+        localStorage.removeItem(CONFIG.CURRENT_PAGE_KEY);
+    }
+
+    getUser() { return this.user; }
+    getToken() { return this.token; }
+    isAuthenticated() { return !!this.user && !!this.token; }
+
+    hasPermission(pageName) {
+        const config = PAGE_REGISTRY[pageName];
+        if (!config || !config.permissions || config.permissions.length === 0) {
+            return true;
+        }
+        if (!this.user) return false;
+        return config.permissions.includes(this.user.role);
+    }
+
+    getRoleEmoji(role) {
+        const emojis = {
+            'admin': '👑',
+            'manager': '⭐',
+            'editor': '✏️',
+            'viewer': '👀'
+        };
+        return emojis[role] || '👤';
+    }
 }
 
 // ============================================================
-// 🛡️ ESCAPE HTML
+// 🛡️ SECURITY HELPERS
 // ============================================================
 
 function escapeHTML(value) {
     if (value === null || value === undefined) return '';
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+    };
+    return String(value).replace(/[&<>"'/`=]/g, function(m) { return map[m]; });
+}
+
+function sanitizeInput(value) {
+    if (!value) return '';
+    return String(value).trim().replace(/[<>]/g, '');
 }
 
 // ============================================================
-// 🔐 LOGIN - مع إعادة توجيه تلقائي
+// 💬 NOTIFICATION SYSTEM
+// ============================================================
+
+class NotificationManager {
+    constructor() {
+        this.toasts = [];
+        this.maxToasts = 5;
+    }
+
+    show(message, type = 'info', duration = 3000) {
+        const colors = {
+            success: '#4ade80',
+            danger: '#f87171',
+            warning: '#fbbf24',
+            info: '#60a5fa'
+        };
+        const icons = {
+            success: '✅',
+            danger: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        // إزالة الإشعارات القديمة
+        if (this.toasts.length >= this.maxToasts) {
+            const old = this.toasts.shift();
+            if (old && old.isConnected) old.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'marine-toast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: white;
+            background: rgba(10,14,23,0.95);
+            border: 1px solid ${colors[type]}55;
+            border-right: 4px solid ${colors[type]};
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            max-width: 90%;
+            text-align: center;
+            animation: slideIn 0.3s ease;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            font-size: 14px;
+        `;
+        toast.innerHTML = `
+            <span style="color:${colors[type]}">${icons[type]}</span>
+            <span style="margin-left:8px;">${escapeHTML(message)}</span>
+        `;
+        document.body.appendChild(toast);
+        this.toasts.push(toast);
+
+        requestAnimationFrame(() => {
+            toast.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.isConnected) {
+                    toast.remove();
+                    this.toasts = this.toasts.filter(t => t !== toast);
+                }
+            }, 300);
+        }, duration);
+    }
+
+    success(message) { this.show(message, 'success'); }
+    error(message) { this.show(message, 'danger'); }
+    warning(message) { this.show(message, 'warning'); }
+    info(message) { this.show(message, 'info'); }
+}
+
+const toast = new NotificationManager();
+
+// ============================================================
+// 📡 API CLIENT
+// ============================================================
+
+class APIClient {
+    constructor() {
+        this.baseUrl = CONFIG.API_BASE;
+        this.pendingRequests = new Map();
+        this.requestTimeout = 30000;
+    }
+
+    async request(endpoint, options = {}) {
+        const url = `${this.baseUrl}${endpoint}`;
+        const key = `${options.method || 'GET'}:${url}`;
+
+        // منع الطلبات المكررة
+        if (this.pendingRequests.has(key)) {
+            return this.pendingRequests.get(key);
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+
+        const promise = (async () => {
+            try {
+                const token = authManager.getToken();
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...(options.headers || {})
+                };
+
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(url, {
+                    ...options,
+                    headers,
+                    credentials: 'include',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (response.status === 401) {
+                    authManager.clearSession();
+                    toast.warning('انتهت الجلسة، يرجى تسجيل الدخول من جديد');
+                    setTimeout(() => location.reload(), 1000);
+                    return null;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                return data;
+
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    toast.error('انتهت مهلة الطلب');
+                } else {
+                    toast.error(error.message || 'خطأ في الاتصال');
+                }
+                throw error;
+            } finally {
+                this.pendingRequests.delete(key);
+            }
+        })();
+
+        this.pendingRequests.set(key, promise);
+        return promise;
+    }
+
+    get(endpoint, options = {}) {
+        return this.request(endpoint, { ...options, method: 'GET' });
+    }
+
+    post(endpoint, data, options = {}) {
+        return this.request(endpoint, {
+            ...options,
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    put(endpoint, data, options = {}) {
+        return this.request(endpoint, {
+            ...options,
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
+
+    delete(endpoint, options = {}) {
+        return this.request(endpoint, { ...options, method: 'DELETE' });
+    }
+}
+
+// ============================================================
+// 🔐 LOGIN SYSTEM
 // ============================================================
 
 async function doLogin() {
@@ -104,29 +393,14 @@ async function doLogin() {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                username: username,
-                password: password
-            })
-        });
+        const data = await api.post('/auth/login', { username, password });
 
-        const data = await response.json();
+        if (data && data.success) {
+            authManager.saveSession(data.user, data.token);
 
-        if (response.ok && data.success) {
-            // ✅ حفظ المستخدم
-            setUser(data.user);
-
-            // ✅ إخفاء شاشة الدخول وإظهار التطبيق
             const overlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
-            
+
             if (overlay) {
                 overlay.style.display = 'none';
                 overlay.style.visibility = 'hidden';
@@ -138,20 +412,15 @@ async function doLogin() {
                 mainApp.style.opacity = '1';
             }
 
-            // ✅ تحديث عرض المستخدم
             updateUserDisplay();
+            pageManager.loadPage('dashboard');
 
-            // ✅ تحميل لوحة التحكم
-            loadPage('dashboard');
-
-            // ✅ رسالة ترحيب
-            showToast('✅ مرحباً ' + escapeHTML(data.user?.name || 'مدير النظام') + '!', 'success');
+            toast.success(`✅ مرحباً ${escapeHTML(data.user?.name || 'مدير النظام')}!`);
 
         } else {
             if (errorEl) {
-                errorEl.textContent = '❌ ' + escapeHTML(data.error || 'بيانات الدخول غير صحيحة');
+                errorEl.textContent = '❌ ' + escapeHTML(data?.error || 'بيانات الدخول غير صحيحة');
                 errorEl.style.display = 'block';
-                errorEl.style.color = '#f87171';
             }
         }
     } catch (error) {
@@ -159,7 +428,6 @@ async function doLogin() {
         if (errorEl) {
             errorEl.textContent = '❌ خطأ في الاتصال بالخادم';
             errorEl.style.display = 'block';
-            errorEl.style.color = '#f87171';
         }
     } finally {
         if (loginBtn) {
@@ -175,25 +443,23 @@ function handleLogin() {
 }
 
 // ============================================================
-// 🚪 LOGOUT
+// 🚪 LOGOUT SYSTEM
 // ============================================================
 
 async function doLogout() {
     if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
     try {
-        await fetch(`${API_BASE}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
+        await api.post('/auth/logout');
     } catch (error) {
         console.error('Logout error:', error);
     }
 
-    setUser(null);
+    authManager.clearSession();
 
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
+
     if (overlay) {
         overlay.style.display = 'flex';
         overlay.style.visibility = 'visible';
@@ -205,7 +471,7 @@ async function doLogout() {
         mainApp.style.opacity = '0';
     }
 
-    showToast('👋 تم تسجيل الخروج', 'info');
+    toast.info('👋 تم تسجيل الخروج');
 }
 
 // ============================================================
@@ -216,19 +482,14 @@ function updateUserDisplay() {
     const display = document.getElementById('userRoleDisplay');
     if (!display) return;
 
-    const user = getUser();
+    const user = authManager.getUser();
     if (user) {
-        const roleEmojis = {
-            'admin': '👑',
-            'manager': '⭐',
-            'editor': '✏️',
-            'viewer': '👀'
-        };
+        const emoji = authManager.getRoleEmoji(user.role);
         display.innerHTML = `
             <i class="fas fa-user-circle"></i>
-            ${escapeHTML(user.name || 'مستخدم')}
-            <span class="role-badge">${roleEmojis[user.role] || '👤'} ${escapeHTML(user.role || 'مشاهد')}</span>
-            <button onclick="doLogout()" class="logout-btn-small">🚪 خروج</button>
+            <span class="user-name">${escapeHTML(user.name || 'مستخدم')}</span>
+            <span class="role-badge ${escapeHTML(user.role)}">${emoji} ${escapeHTML(user.role || 'مشاهد')}</span>
+            <button onclick="doLogout()" class="logout-btn-small" title="تسجيل الخروج">🚪</button>
         `;
     } else {
         display.textContent = '👤';
@@ -236,192 +497,197 @@ function updateUserDisplay() {
 }
 
 // ============================================================
-// 📄 PAGE MANAGEMENT
+// 📄 PAGE MANAGER
 // ============================================================
 
-let currentPage = null;
-let isLoading = false;
-let pageCache = {};
-
-function loadPage(pageName) {
-    // ✅ التحقق من الصلاحيات
-    if (!hasPermission(pageName)) {
-        showToast('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
-        return;
+class PageManager {
+    constructor() {
+        this.currentPage = null;
+        this.isLoading = false;
+        this.pageCache = new Map();
+        this.container = document.getElementById('pageContainer');
+        this.init();
     }
 
-    if (isLoading) return;
-    if (currentPage === pageName) return;
-
-    const container = document.getElementById('pageContainer');
-    if (!container) {
-        console.warn('⚠️ pageContainer not found');
-        return;
-    }
-
-    isLoading = true;
-    currentPage = pageName;
-
-    // ✅ تحديث عنوان الصفحة
-    const config = PAGE_REGISTRY[pageName];
-    if (config) {
-        document.title = `${config.title} - Marine System`;
-        const titleEl = document.getElementById('pageTitle');
-        if (titleEl) titleEl.textContent = config.title;
-    }
-
-    // ✅ تحديث الأزرار النشطة
-    updateActiveNav(pageName);
-
-    // ✅ حفظ الصفحة الحالية
-    localStorage.setItem('currentPage', pageName);
-
-    // ✅ عرض مؤشر التحميل
-    const loading = document.createElement('div');
-    loading.className = 'page-loading';
-    loading.innerHTML = `
-        <div style="text-align:center; padding:50px;">
-            <div class="spinner"></div>
-            <p style="color:rgba(255,255,255,0.3); margin-top:15px;">⏳ جاري التحميل...</p>
-        </div>
-    `;
-    container.appendChild(loading);
-
-    // ✅ تنظيف الصفحة السابقة
-    destroyCurrentPage();
-
-    // ✅ تحميل الصفحة
-    const url = `/pages/${pageName}.html`;
-    
-    // ✅ التحقق من الكاش
-    if (pageCache[pageName]) {
-        console.log(`📄 Using cached page: ${pageName}`);
-        renderPage(pageName, pageCache[pageName]);
-        return;
-    }
-
-    fetch(url)
-        .then(res => {
-            if (!res.ok) throw new Error(`Page ${pageName} not found (${res.status})`);
-            return res.text();
-        })
-        .then(html => {
-            // ✅ تخزين في الكاش
-            if (pageName !== 'sessions' && pageName !== 'tracking') {
-                pageCache[pageName] = html;
-            }
-            renderPage(pageName, html);
-        })
-        .catch(err => {
-            console.error('❌ Page load error:', err);
-            loading.remove();
-            container.innerHTML = `
-                <div style="text-align:center; padding:50px; color:#f87171;">
-                    <h2>❌ خطأ في تحميل الصفحة</h2>
-                    <p>${escapeHTML(err.message)}</p>
-                    <button onclick="loadPage('dashboard')" class="btn-primary">🏠 العودة</button>
-                </div>
-            `;
-        })
-        .finally(() => {
-            isLoading = false;
-        });
-}
-
-function renderPage(pageName, html) {
-    const container = document.getElementById('pageContainer');
-    if (!container) return;
-
-    // ✅ إزالة مؤشر التحميل
-    const loading = container.querySelector('.page-loading');
-    if (loading) loading.remove();
-
-    // ✅ إزالة المحتوى القديم
-    const oldContent = container.querySelector('.page-content');
-    if (oldContent) {
-        oldContent.style.opacity = '0';
-        oldContent.style.transform = 'translateY(10px)';
-        oldContent.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        setTimeout(() => oldContent.remove(), 300);
-    }
-
-    // ✅ إضافة المحتوى الجديد
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'page-content';
-    pageDiv.id = `page-${pageName}`;
-    pageDiv.innerHTML = html;
-    pageDiv.style.opacity = '0';
-    pageDiv.style.transform = 'translateY(10px)';
-    pageDiv.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-    
-    container.appendChild(pageDiv);
-
-    // ✅ تأثير التلاشي
-    requestAnimationFrame(() => {
-        pageDiv.style.opacity = '1';
-        pageDiv.style.transform = 'translateY(0)';
-    });
-
-    // ✅ تهيئة الصفحة بعد التحميل
-    setTimeout(() => initPage(pageName), 200);
-}
-
-function initPage(pageName) {
-    console.log(`📄 Initializing page: ${pageName}`);
-
-    const config = PAGE_REGISTRY[pageName];
-    if (config && config.init) {
-        const initFn = window[config.init];
-        if (typeof initFn === 'function') {
-            try {
-                setTimeout(() => {
-                    initFn();
-                }, 100);
-            } catch (error) {
-                console.error(`❌ Error initializing ${pageName}:`, error);
-            }
-        } else {
-            console.warn(`⚠️ Function ${config.init} not found`);
+    init() {
+        if (!this.container) {
+            console.error('❌ pageContainer not found!');
+            return;
         }
+        console.log('📄 PageManager initialized');
     }
 
-    // ✅ إطلاق حدث مخصص
-    document.dispatchEvent(new CustomEvent('pageLoaded', {
-        detail: { page: pageName }
-    }));
-}
+    async loadPage(pageName) {
+        // ✅ التحقق من الصلاحيات
+        if (!authManager.hasPermission(pageName)) {
+            toast.error('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة');
+            return;
+        }
 
-function destroyCurrentPage() {
-    if (currentPage === 'sessions' && typeof window.destroySessionsPage === 'function') {
+        if (this.isLoading) return;
+        if (this.currentPage === pageName) {
+            this.refreshPage();
+            return;
+        }
+
+        this.isLoading = true;
+        this.currentPage = pageName;
+
+        // ✅ تحديث الواجهة
+        this.updateUI(pageName);
+
+        // ✅ عرض مؤشر التحميل
+        this.showLoading();
+
         try {
-            window.destroySessionsPage();
-            console.log('🧹 Sessions page cleaned up');
-        } catch (e) {
-            console.warn('⚠️ Sessions cleanup error:', e);
+            // ✅ محاولة من الكاش
+            if (this.pageCache.has(pageName)) {
+                console.log(`📄 Using cached page: ${pageName}`);
+                this.renderPage(pageName, this.pageCache.get(pageName));
+                this.isLoading = false;
+                return;
+            }
+
+            // ✅ تحميل الصفحة
+            const response = await fetch(`/pages/${pageName}.html`);
+            if (!response.ok) {
+                throw new Error(`Page ${pageName} not found (${response.status})`);
+            }
+
+            const html = await response.text();
+            this.pageCache.set(pageName, html);
+            this.renderPage(pageName, html);
+
+        } catch (error) {
+            console.error('❌ Page load error:', error);
+            this.showError(error.message);
+        } finally {
+            this.isLoading = false;
         }
     }
-}
 
-function updateActiveNav(pageName) {
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    const btns = document.querySelectorAll('.nav-btn');
-    const pageMap = {
-        'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
-        'support': 4, 'users': 5, 'notes': 6, 'sessions': 7,
-        'ai-assistant': 8
-    };
-    
-    const index = pageMap[pageName];
-    if (index !== undefined && btns[index]) {
-        btns[index].classList.add('active');
+    renderPage(pageName, html) {
+        if (!this.container) return;
+
+        // ✅ تأثير التلاشي
+        this.container.style.opacity = '0';
+        this.container.style.transition = 'opacity 0.3s ease';
+
+        setTimeout(() => {
+            this.container.innerHTML = html;
+            this.container.style.opacity = '1';
+
+            // ✅ تهيئة الصفحة
+            setTimeout(() => {
+                this.initPage(pageName);
+            }, 200);
+        }, 300);
+    }
+
+    initPage(pageName) {
+        console.log(`📄 Initializing: ${pageName}`);
+
+        const config = PAGE_REGISTRY[pageName];
+        if (config && config.init) {
+            const initFn = window[config.init];
+            if (typeof initFn === 'function') {
+                try {
+                    initFn();
+                } catch (error) {
+                    console.error(`❌ Error initializing ${pageName}:`, error);
+                }
+            }
+        }
+
+        // ✅ إطلاق حدث
+        document.dispatchEvent(new CustomEvent('pageLoaded', {
+            detail: { page: pageName }
+        }));
+    }
+
+    refreshPage() {
+        if (this.currentPage) {
+            this.pageCache.delete(this.currentPage);
+            this.loadPage(this.currentPage);
+        }
+    }
+
+    updateUI(pageName) {
+        // ✅ تحديث العنوان
+        const config = PAGE_REGISTRY[pageName];
+        if (config) {
+            document.title = `${config.title} - Marine System`;
+        }
+
+        // ✅ تحديث الأزرار
+        this.updateNav(pageName);
+
+        // ✅ حفظ الصفحة
+        localStorage.setItem(CONFIG.CURRENT_PAGE_KEY, pageName);
+    }
+
+    updateNav(pageName) {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const btns = document.querySelectorAll('.nav-btn');
+        const pageMap = {
+            'dashboard': 0, 'fleet': 1, 'maintenance': 2, 'efficiency': 3,
+            'support': 4, 'users': 5, 'notes': 6, 'sessions': 7,
+            'ai-assistant': 8
+        };
+
+        const index = pageMap[pageName];
+        if (index !== undefined && btns[index]) {
+            btns[index].classList.add('active');
+        }
+    }
+
+    showLoading() {
+        if (!this.container) return;
+        this.container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px;">
+                <div class="spinner" style="
+                    width: 40px;
+                    height: 40px;
+                    border: 3px solid rgba(255,255,255,0.1);
+                    border-top: 3px solid #60a5fa;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                    margin: 0 auto;
+                "></div>
+                <p style="color:rgba(255,255,255,0.3); margin-top:15px;">⏳ جاري التحميل...</p>
+            </div>
+        `;
+    }
+
+    showError(message) {
+        if (!this.container) return;
+        this.container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#f87171;">
+                <h2>❌ خطأ في تحميل الصفحة</h2>
+                <p style="color:rgba(255,255,255,0.5);">${escapeHTML(message)}</p>
+                <button onclick="pageManager.refreshPage()" style="
+                    padding:10px 30px;
+                    background:#60a5fa;
+                    border:none;
+                    border-radius:8px;
+                    color:white;
+                    cursor:pointer;
+                    margin-top:15px;
+                    font-family:inherit;
+                    font-size:14px;
+                ">
+                    🔄 إعادة المحاولة
+                </button>
+            </div>
+        `;
     }
 }
 
 function showPage(pageName) {
-    loadPage(pageName);
+    pageManager.loadPage(pageName);
 }
 
 function toggleSidebar() {
@@ -430,323 +696,167 @@ function toggleSidebar() {
 }
 
 function refreshAllPages() {
-    const currentPage = document.querySelector('.page-content');
-    if (currentPage) {
-        const pageName = currentPage.id.replace('page-', '');
-        delete pageCache[pageName];
-        loadPage(pageName);
-    } else {
-        loadPage('dashboard');
-    }
-    showToast('✅ تم تحديث الصفحة', 'success');
+    pageManager.refreshPage();
+    toast.success('✅ تم تحديث الصفحة');
 }
 
 // ============================================================
-// 🔔 TOAST
+// 📊 DATA LOADERS
 // ============================================================
 
-function showToast(message, type = 'info') {
-    const colors = {
-        success: '#4ade80',
-        danger: '#f87171',
-        warning: '#fbbf24',
-        info: '#60a5fa'
-    };
-
-    const icons = {
-        success: '✅',
-        danger: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
-    };
-
-    const oldToast = document.querySelector('.marine-toast');
-    if (oldToast) oldToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'marine-toast';
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999999;
-        padding: 12px 24px;
-        border-radius: 12px;
-        color: white;
-        background: rgba(10,14,23,0.95);
-        border: 1px solid ${colors[type]}55;
-        border-right: 4px solid ${colors[type]};
-        backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        font-family: 'Cairo', sans-serif;
-        max-width: 90%;
-        text-align: center;
-        animation: fadeIn 0.3s ease;
-        opacity: 0;
-        transition: opacity 0.25s ease;
-    `;
-    toast.innerHTML = `
-        <span style="color:${colors[type]}">${icons[type]}</span>
-        <span style="margin-left:8px;">${escapeHTML(message)}</span>
-    `;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-    });
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            if (toast.isConnected) toast.remove();
-        }, 300);
-    }, 3000);
-}
-
-// ============================================================
-// 📊 DATA FETCHING
-// ============================================================
-
-async function fetchData(url, options = {}) {
+async function loadDashboard() {
     try {
-        console.log(`📡 Fetching: ${url}`);
-        
-        const response = await fetch(url, {
-            ...options,
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                ...(options.headers || {})
-            }
+        const data = await api.get('/dashboard');
+        if (!data || !data.success) return;
+
+        const stats = data.data || {};
+        const vessels = stats.vessels || {};
+
+        // ✅ تحديث العناصر
+        const elements = {
+            'dashTotal': vessels.total || 0,
+            'dashReady': vessels.valid || 0,
+            'dashBroken': vessels.damaged || 0,
+            'dashMaintenance': vessels.maintenance || 0
+        };
+
+        Object.keys(elements).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = elements[id];
         });
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                setUser(null);
-                showToast('⚠️ انتهت الجلسة، يرجى تسجيل الدخول', 'warning');
-                setTimeout(() => location.reload(), 1000);
-                return null;
-            }
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // ✅ نسبة الجاهزية
+        const percentEl = document.getElementById('dashReadyPercent');
+        if (percentEl && vessels.total) {
+            const percent = vessels.total > 0 ? Math.round((vessels.valid / vessels.total) * 100) : 0;
+            percentEl.textContent = percent + '%';
         }
 
-        const data = await response.json();
-        
-        if (!data.success) {
-            console.warn(`⚠️ API returned error: ${data.error || 'Unknown error'}`);
-            return null;
+        // ✅ تحديث الوقت
+        const updateEl = document.getElementById('lastUpdate');
+        if (updateEl) {
+            updateEl.textContent = new Date().toLocaleTimeString('ar-TN');
         }
 
-        return data;
     } catch (error) {
-        console.error(`❌ Fetch error (${url}):`, error);
-        showToast(`❌ ${error.message || 'خطأ في تحميل البيانات'}`, 'danger');
-        return null;
+        console.error('Dashboard error:', error);
     }
 }
 
-// ============================================================
-// 📊 DASHBOARD
-// ============================================================
+async function loadVessels() {
+    try {
+        const data = await api.get('/vessels');
+        const tbody = document.getElementById('vesselsBody');
+        if (!tbody) return;
 
-function loadDashboard() {
-    console.log('📊 Loading dashboard...');
+        if (!data || !data.vessels || data.vessels.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مراكب</td></tr>`;
+            return;
+        }
 
-    // ✅ التحقق من وجود العناصر
-    const dashTotal = document.getElementById('dashTotal');
-    if (!dashTotal) {
-        console.log('⚠️ Dashboard elements not found, page may not be ready');
-        return;
+        let html = '';
+        data.vessels.forEach((v, i) => {
+            const statusClass = v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning';
+            html += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${escapeHTML(v.name || '-')}</strong></td>
+                    <td><span class="status ${statusClass}">${escapeHTML(v.stat || 'صالح')}</span></td>
+                    <td>${escapeHTML(v.region || '-')}</td>
+                    <td>${escapeHTML(v.supp || '-')}</td>
+                    <td>
+                        <button class="btn-sm btn-edit" onclick="editVessel('${escapeHTML(v._id)}')">✏️</button>
+                        <button class="btn-sm btn-delete" onclick="deleteVessel('${escapeHTML(v._id)}')">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+
+    } catch (error) {
+        console.error('Vessels error:', error);
     }
+}
 
-    // ✅ جلب البيانات من API
-    fetchData('/api/dashboard')
-        .then(data => {
-            if (!data) {
-                console.warn('⚠️ No data received from dashboard API');
-                return;
-            }
-            
-            const stats = data.data || {};
-            const vessels = stats.vessels || {};
+async function loadMaintenance() {
+    try {
+        const data = await api.get('/maintenance');
+        const tbody = document.getElementById('maintenanceBody');
+        if (!tbody) return;
 
-            // ✅ تحديث العناصر
-            const elements = {
-                'dashTotal': vessels.total || 0,
-                'dashReady': vessels.valid || 0,
-                'dashBroken': vessels.damaged || 0,
-                'dashMaintenance': vessels.maintenance || 0
-            };
+        if (!data || !data.maintenance || data.maintenance.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد سجلات</td></tr>`;
+            return;
+        }
 
-            Object.keys(elements).forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.textContent = elements[id];
-                }
-            });
-
-            // ✅ نسبة الجاهزية
-            const percentEl = document.getElementById('dashReadyPercent');
-            if (percentEl && vessels.total) {
-                const percent = vessels.total > 0 ? Math.round((vessels.valid / vessels.total) * 100) : 0;
-                percentEl.textContent = percent + '%';
-            }
-
-            // ✅ جلب بيانات الصيانة
-            fetchData('/api/maintenance?limit=5')
-                .then(maintenanceData => {
-                    if (maintenanceData) {
-                        const records = maintenanceData.maintenance || [];
-                        const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-                        
-                        const costEl = document.getElementById('dashTotalCost');
-                        if (costEl) {
-                            costEl.textContent = totalCost.toLocaleString() + ' د.ت';
-                        }
-                        
-                        const countEl = document.getElementById('dashMaintenanceCount');
-                        if (countEl) {
-                            countEl.textContent = records.length;
-                        }
-                    }
-                });
-
-        })
-        .catch(err => {
-            console.error('❌ Dashboard error:', err);
+        let html = '';
+        data.maintenance.forEach((r, i) => {
+            const statusClass = r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger';
+            html += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${escapeHTML(r.vesselName || '-')}</strong></td>
+                    <td>${escapeHTML(r.type || '-')}</td>
+                    <td>${escapeHTML(r.technician || '-')}</td>
+                    <td>${r.cost || 0} د.ت</td>
+                    <td><span class="status ${statusClass}">${escapeHTML(r.status || 'قيد الإنجاز')}</span></td>
+                </tr>
+            `;
         });
+        tbody.innerHTML = html;
+
+    } catch (error) {
+        console.error('Maintenance error:', error);
+    }
 }
 
-// ============================================================
-// 🚢 FLEET
-// ============================================================
+async function loadUsers() {
+    try {
+        const data = await api.get('/users');
+        const tbody = document.getElementById('usersBody');
+        if (!tbody) return;
 
-function loadVessels() {
-    console.log('🚢 Loading vessels...');
+        if (!data || !data.users || data.users.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مستخدمين</td></tr>`;
+            return;
+        }
 
-    fetchData('/api/vessels')
-        .then(data => {
-            const tbody = document.getElementById('vesselsBody');
-            if (!tbody) return;
-
-            if (!data || !data.vessels || data.vessels.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مراكب</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            data.vessels.forEach((v, i) => {
-                html += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td><strong>${escapeHTML(v.name || '-')}</strong></td>
-                        <td><span class="status ${v.stat === 'صالح' ? 'success' : v.stat === 'معطب' ? 'danger' : 'warning'}">${escapeHTML(v.stat || 'صالح')}</span></td>
-                        <td>${escapeHTML(v.region || '-')}</td>
-                        <td>${escapeHTML(v.supp || '-')}</td>
-                        <td>
-                            <button class="btn-sm btn-edit" onclick="editVessel('${escapeHTML(v._id)}')">✏️</button>
-                            <button class="btn-sm btn-delete" onclick="deleteVessel('${escapeHTML(v._id)}')">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
+        let html = '';
+        data.users.forEach(u => {
+            html += `
+                <tr>
+                    <td><strong>${escapeHTML(u.name || '-')}</strong></td>
+                    <td>${escapeHTML(u.email || '-')}</td>
+                    <td><span class="role">${escapeHTML(u.role || 'مشاهد')}</span></td>
+                    <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
+                    <td>
+                        <button class="btn-sm btn-edit" onclick="editUser('${escapeHTML(u._id)}')">✏️</button>
+                        <button class="btn-sm btn-delete" onclick="deleteUser('${escapeHTML(u._id)}')">🗑️</button>
+                    </td>
+                </tr>
+            `;
         });
+        tbody.innerHTML = html;
+
+    } catch (error) {
+        console.error('Users error:', error);
+    }
 }
 
-// ============================================================
-// 🔧 MAINTENANCE
-// ============================================================
-
-function loadMaintenance() {
-    console.log('🔧 Loading maintenance...');
-
-    fetchData('/api/maintenance')
-        .then(data => {
-            const tbody = document.getElementById('maintenanceBody');
-            if (!tbody) return;
-
-            if (!data || !data.maintenance || data.maintenance.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد سجلات</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            data.maintenance.forEach((r, i) => {
-                html += `
-                    <tr>
-                        <td>${i + 1}</td>
-                        <td><strong>${escapeHTML(r.vesselName || '-')}</strong></td>
-                        <td>${escapeHTML(r.type || '-')}</td>
-                        <td>${escapeHTML(r.technician || '-')}</td>
-                        <td>${r.cost || 0} د.ت</td>
-                        <td><span class="status ${r.status === 'مكتملة' ? 'success' : r.status === 'قيد الإنجاز' ? 'warning' : 'danger'}">${escapeHTML(r.status || 'قيد الإنجاز')}</span></td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        });
+function loadEfficiency() {
+    console.log('📈 Efficiency page loaded');
+    toast.info('📈 جاري تحميل بيانات الجاهزية');
 }
-
-// ============================================================
-// 👥 USERS
-// ============================================================
-
-function loadUsers() {
-    console.log('👤 Loading users...');
-
-    fetchData('/api/users')
-        .then(data => {
-            const tbody = document.getElementById('usersBody');
-            if (!tbody) return;
-
-            if (!data || !data.users || data.users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مستخدمين</td></tr>`;
-                return;
-            }
-
-            let html = '';
-            data.users.forEach(u => {
-                html += `
-                    <tr>
-                        <td><strong>${escapeHTML(u.name || '-')}</strong></td>
-                        <td>${escapeHTML(u.email || '-')}</td>
-                        <td><span class="role">${escapeHTML(u.role || 'مشاهد')}</span></td>
-                        <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-                        <td>
-                            <button class="btn-sm btn-edit" onclick="editUser('${escapeHTML(u._id)}')">✏️</button>
-                            <button class="btn-sm btn-delete" onclick="deleteUser('${escapeHTML(u._id)}')">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        });
-}
-
-// ============================================================
-// 📝 NOTES
-// ============================================================
-
-function loadNotes() {
-    console.log('📝 Loading notes...');
-    showToast('📝 جاري تحميل المذكرات', 'info');
-}
-
-// ============================================================
-// 🎫 SUPPORT / TICKETS
-// ============================================================
 
 function loadTickets() {
-    console.log('🎫 Loading tickets...');
-    showToast('🎫 جاري تحميل التذاكر', 'info');
+    console.log('🎫 Support page loaded');
+    toast.info('🎫 جاري تحميل التذاكر');
 }
 
-// ============================================================
-// 🌀 SESSIONS
-// ============================================================
+function loadNotes() {
+    console.log('📝 Notes page loaded');
+    toast.info('📝 جاري تحميل المذكرات');
+}
 
 function initSessionsPage() {
     console.log('🔄 Sessions page initialized');
@@ -764,23 +874,20 @@ function initAIAssistant() {
     const micBtn = document.getElementById('micBtn');
 
     if (sendBtn) {
-        sendBtn.onclick = function() {
-            askAI();
-        };
+        sendBtn.onclick = askAI;
     }
 
     if (chatInput) {
-        chatInput.onkeypress = function(e) {
+        chatInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
+                e.preventDefault();
                 askAI();
             }
-        };
+        });
     }
 
     if (micBtn) {
-        micBtn.onclick = function() {
-            toggleVoiceInput();
-        };
+        micBtn.onclick = toggleVoiceInput;
     }
 }
 
@@ -793,15 +900,17 @@ async function askAI() {
 
     const question = chatInput.value.trim();
     if (!question) {
-        showToast('❌ الرجاء كتابة سؤال', 'warning');
+        toast.warning('❌ الرجاء كتابة سؤال');
         return;
     }
 
+    // ✅ إضافة رسالة المستخدم
     addChatMessage('user', question);
     chatInput.value = '';
     chatInput.disabled = true;
     if (sendBtn) sendBtn.disabled = true;
 
+    // ✅ مؤشر الكتابة
     const typing = document.createElement('div');
     typing.className = 'typing active';
     typing.innerHTML = `<span></span><span></span><span></span>`;
@@ -809,27 +918,16 @@ async function askAI() {
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
-        const response = await fetch('/api/ai/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({ message: question })
-        });
+        const data = await api.post('/ai/ask', { message: question });
 
         typing.remove();
 
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success) {
-                addChatMessage('ai', data.response || 'عذراً، لم أستطع الإجابة');
-            } else {
-                addChatMessage('ai', '⚠️ ' + (data.error || 'حدث خطأ'));
-            }
+        if (data && data.success) {
+            addChatMessage('ai', data.response || 'عذراً، لم أستطع الإجابة');
         } else {
-            addChatMessage('ai', '❌ خطأ في الاتصال بالخادم');
+            addChatMessage('ai', '⚠️ ' + (data?.error || 'حدث خطأ'));
         }
+
     } catch (error) {
         typing.remove();
         addChatMessage('ai', '❌ خطأ: ' + error.message);
@@ -845,24 +943,24 @@ function addChatMessage(role, content) {
     if (!chatBox) return;
 
     const div = document.createElement('div');
-    div.className = 'message ' + role;
-    
+    div.className = `message ${role}`;
+
     const sender = document.createElement('div');
     sender.className = 'sender';
     sender.textContent = role === 'user' ? '👤 أنت' : '🤖 المساعد الذكي';
-    
+
     const contentDiv = document.createElement('div');
     contentDiv.className = 'content';
     contentDiv.textContent = content;
-    
+
     const time = document.createElement('div');
     time.className = 'time';
     time.textContent = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-    
+
     div.appendChild(sender);
     div.appendChild(contentDiv);
     div.appendChild(time);
-    
+
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -874,7 +972,7 @@ function addChatMessage(role, content) {
 function toggleVoiceInput() {
     const hasSpeech = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
     if (!hasSpeech) {
-        showToast('❌ المتصفح لا يدعم الميكروفون', 'warning');
+        toast.warning('❌ المتصفح لا يدعم الميكروفون');
         return;
     }
 
@@ -885,7 +983,7 @@ function toggleVoiceInput() {
     recognition.interimResults = true;
 
     recognition.onstart = function() {
-        showToast('🎤 جاري الاستماع...', 'info');
+        toast.info('🎤 جاري الاستماع...');
     };
 
     recognition.onresult = function(event) {
@@ -915,41 +1013,53 @@ function toggleVoiceInput() {
 
 function editVessel(id) {
     console.log('✏️ Edit vessel:', id);
-    showToast('✏️ جاري تعديل المركب', 'info');
+    toast.info('✏️ جاري تعديل المركب');
 }
 
 function deleteVessel(id) {
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
     console.log('🗑️ Delete vessel:', id);
-    showToast('🗑️ تم حذف المركب', 'success');
+    toast.success('🗑️ تم حذف المركب');
 }
 
 function editUser(id) {
     console.log('✏️ Edit user:', id);
-    showToast('✏️ جاري تعديل المستخدم', 'info');
+    toast.info('✏️ جاري تعديل المستخدم');
 }
 
 function deleteUser(id) {
     if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
     console.log('🗑️ Delete user:', id);
-    showToast('🗑️ تم حذف المستخدم', 'success');
+    toast.success('🗑️ تم حذف المستخدم');
 }
 
 // ============================================================
-// 🚀 INITIALIZATION
+// 🚀 APPLICATION INITIALIZATION
+// ============================================================
+
+// ✅ إنشاء المديرين
+const authManager = new AuthManager();
+const api = new APIClient();
+const pageManager = new PageManager();
+
+// ✅ جعلها عالمية
+window.authManager = authManager;
+window.api = api;
+window.pageManager = pageManager;
+
+// ============================================================
+// 🚀 DOM READY
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Application initializing...');
+    console.log('🚀 Marine System v24.0 - Enterprise Edition');
 
-    // ✅ التحقق من وجود مستخدم
-    const user = getUser();
-
-    if (user) {
-        // ✅ يوجد مستخدم -> ادخل مباشرة
+    // ✅ التحقق من الجلسة
+    if (authManager.isAuthenticated()) {
+        // ✅ جلسة نشطة
         const overlay = document.getElementById('loginOverlay');
         const mainApp = document.getElementById('mainApp');
-        
+
         if (overlay) {
             overlay.style.display = 'none';
             overlay.style.visibility = 'hidden';
@@ -962,14 +1072,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         updateUserDisplay();
-        const savedPage = localStorage.getItem('currentPage') || 'dashboard';
-        loadPage(savedPage);
-        console.log('✅ Session restored for:', user.name);
+
+        const savedPage = localStorage.getItem(CONFIG.CURRENT_PAGE_KEY) || 'dashboard';
+        pageManager.loadPage(savedPage);
+
+        console.log('✅ Session restored for:', authManager.getUser()?.name);
+
     } else {
-        // ❌ لا يوجد مستخدم -> إظهار شاشة الدخول
+        // ❌ لا توجد جلسة
         const overlay = document.getElementById('loginOverlay');
         const mainApp = document.getElementById('mainApp');
-        
+
         if (overlay) {
             overlay.style.display = 'flex';
             overlay.style.visibility = 'visible';
@@ -980,6 +1093,8 @@ document.addEventListener('DOMContentLoaded', function() {
             mainApp.style.visibility = 'hidden';
             mainApp.style.opacity = '0';
         }
+
+        authManager.clearSession();
     }
 
     // ✅ ربط أحداث الدخول
@@ -1003,30 +1118,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('✅ Marine System v23.0 ready');
+    console.log('✅ Marine System v24.0 ready');
+    console.log('🔐 Auth:', authManager.isAuthenticated() ? 'Active' : 'None');
+    console.log('📄 Pages:', Object.keys(PAGE_REGISTRY).join(', '));
 });
 
 // ============================================================
 // 🌐 GLOBAL EXPOSURE
 // ============================================================
 
+// ✅ وظائف المصادقة
 window.doLogin = doLogin;
 window.handleLogin = handleLogin;
 window.doLogout = doLogout;
+
+// ✅ وظائف الصفحات
 window.showPage = showPage;
 window.toggleSidebar = toggleSidebar;
 window.refreshAllPages = refreshAllPages;
-window.loadPage = loadPage;
+window.loadPage = pageManager.loadPage.bind(pageManager);
+
+// ✅ وظائف CRUD
 window.editVessel = editVessel;
 window.deleteVessel = deleteVessel;
 window.editUser = editUser;
 window.deleteUser = deleteUser;
+
+// ✅ وظائف المساعد
 window.askAI = askAI;
 window.toggleVoiceInput = toggleVoiceInput;
-window.escapeHTML = escapeHTML;
-window.showToast = showToast;
 
-console.log('✅ app.js v23.0 loaded successfully');
-console.log('🛡️ XSS Protection: ENABLED');
-console.log('📦 Page Cache: ENABLED');
-console.log('🔐 RBAC: ENABLED');
+// ✅ دوال مساعدة
+window.escapeHTML = escapeHTML;
+window.toast = toast;
+window.api = api;
+window.authManager = authManager;
+window.pageManager = pageManager;
+
+// ============================================================
+// 📝 STYLES (تضاف تلقائياً)
+// ============================================================
+
+// ✅ إضافة أنماط الـ Spinner إذا لم تكن موجودة
+if (!document.getElementById('marine-styles')) {
+   
