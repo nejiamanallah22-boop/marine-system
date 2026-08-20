@@ -1,10 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v20.0
+// 🚀 MARINE SYSTEM - APP.JS v21.0
 // ============================================================
-// 🏆 10/10 - ULTIMATE WORKING EDITION
+// 🔥 ULTIMATE WORKING EDITION - FORCE LOGIN
 // ============================================================
 
-console.log('🚀 Marine System v20.0 - Ultimate Working Edition');
+console.log('🚀 Marine System v21.0 - Ultimate Working Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -883,17 +883,15 @@ function deleteUser(id) {
 }
 
 // ============================================================
-// 🚀 INITIALIZATION - FORCE LOGIN SCREEN
+// 🚀 INITIALIZATION - لا نخفي شاشة الدخول أبداً
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
-    // ✅ مسح localStorage - إجبار شاشة الدخول
-    localStorage.clear();
-    sessionStorage.clear();
+    // ✅ لا نمسح localStorage
+    // ✅ لا نخفي شاشة الدخول
 
-    // ✅ إظهار شاشة الدخول
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
     
@@ -901,14 +899,6 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.style.display = 'flex';
         overlay.style.visibility = 'visible';
         overlay.style.opacity = '1';
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.zIndex = '999999';
-        overlay.style.background = 'rgba(10,14,23,0.98)';
-        overlay.style.backdropFilter = 'blur(10px)';
     }
     if (mainApp) {
         mainApp.style.display = 'none';
@@ -937,7 +927,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('✅ Marine System v20.0 ready - Login screen forced');
+    console.log('✅ Marine System v21.0 ready - Login screen always visible');
     console.log('🔐 Please login to continue');
 });
 
@@ -961,7 +951,8 @@ window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
 window.showToast = showToast;
 
-console.log('✅ app.js v20.0 - Ultimate Working Edition loaded successfully');
+console.log('✅ app.js v21.0 - Ultimate Working Edition loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
+console.log('🔒 Login screen: ALWAYS VISIBLE');
