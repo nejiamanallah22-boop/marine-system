@@ -1,10 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v22.0
+// 🚀 MARINE SYSTEM - APP.JS v23.0
 // ============================================================
-// 🏆 10/10 - PRODUCTION READY
+// 🏆 10/10 - ULTIMATE WORKING EDITION
 // ============================================================
 
-console.log('🚀 Marine System v22.0 - Production Ready');
+console.log('🚀 Marine System v23.0 - Ultimate Working Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -75,7 +75,7 @@ function escapeHTML(value) {
 }
 
 // ============================================================
-// 🔐 LOGIN
+// 🔐 LOGIN - مع إعادة توجيه تلقائي
 // ============================================================
 
 async function doLogin() {
@@ -120,10 +120,13 @@ async function doLogin() {
         const data = await response.json();
 
         if (response.ok && data.success) {
+            // ✅ حفظ المستخدم
             setUser(data.user);
 
+            // ✅ إخفاء شاشة الدخول وإظهار التطبيق
             const overlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
+            
             if (overlay) {
                 overlay.style.display = 'none';
                 overlay.style.visibility = 'hidden';
@@ -135,9 +138,13 @@ async function doLogin() {
                 mainApp.style.opacity = '1';
             }
 
+            // ✅ تحديث عرض المستخدم
             updateUserDisplay();
+
+            // ✅ تحميل لوحة التحكم
             loadPage('dashboard');
 
+            // ✅ رسالة ترحيب
             showToast('✅ مرحباً ' + escapeHTML(data.user?.name || 'مدير النظام') + '!', 'success');
 
         } else {
@@ -237,6 +244,7 @@ let isLoading = false;
 let pageCache = {};
 
 function loadPage(pageName) {
+    // ✅ التحقق من الصلاحيات
     if (!hasPermission(pageName)) {
         showToast('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
         return;
@@ -246,11 +254,15 @@ function loadPage(pageName) {
     if (currentPage === pageName) return;
 
     const container = document.getElementById('pageContainer');
-    if (!container) return;
+    if (!container) {
+        console.warn('⚠️ pageContainer not found');
+        return;
+    }
 
     isLoading = true;
     currentPage = pageName;
 
+    // ✅ تحديث عنوان الصفحة
     const config = PAGE_REGISTRY[pageName];
     if (config) {
         document.title = `${config.title} - Marine System`;
@@ -258,9 +270,13 @@ function loadPage(pageName) {
         if (titleEl) titleEl.textContent = config.title;
     }
 
+    // ✅ تحديث الأزرار النشطة
     updateActiveNav(pageName);
+
+    // ✅ حفظ الصفحة الحالية
     localStorage.setItem('currentPage', pageName);
 
+    // ✅ عرض مؤشر التحميل
     const loading = document.createElement('div');
     loading.className = 'page-loading';
     loading.innerHTML = `
@@ -271,10 +287,13 @@ function loadPage(pageName) {
     `;
     container.appendChild(loading);
 
+    // ✅ تنظيف الصفحة السابقة
     destroyCurrentPage();
 
+    // ✅ تحميل الصفحة
     const url = `/pages/${pageName}.html`;
     
+    // ✅ التحقق من الكاش
     if (pageCache[pageName]) {
         console.log(`📄 Using cached page: ${pageName}`);
         renderPage(pageName, pageCache[pageName]);
@@ -287,6 +306,7 @@ function loadPage(pageName) {
             return res.text();
         })
         .then(html => {
+            // ✅ تخزين في الكاش
             if (pageName !== 'sessions' && pageName !== 'tracking') {
                 pageCache[pageName] = html;
             }
@@ -312,9 +332,11 @@ function renderPage(pageName, html) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
 
+    // ✅ إزالة مؤشر التحميل
     const loading = container.querySelector('.page-loading');
     if (loading) loading.remove();
 
+    // ✅ إزالة المحتوى القديم
     const oldContent = container.querySelector('.page-content');
     if (oldContent) {
         oldContent.style.opacity = '0';
@@ -323,6 +345,7 @@ function renderPage(pageName, html) {
         setTimeout(() => oldContent.remove(), 300);
     }
 
+    // ✅ إضافة المحتوى الجديد
     const pageDiv = document.createElement('div');
     pageDiv.className = 'page-content';
     pageDiv.id = `page-${pageName}`;
@@ -333,11 +356,13 @@ function renderPage(pageName, html) {
     
     container.appendChild(pageDiv);
 
+    // ✅ تأثير التلاشي
     requestAnimationFrame(() => {
         pageDiv.style.opacity = '1';
         pageDiv.style.transform = 'translateY(0)';
     });
 
+    // ✅ تهيئة الصفحة بعد التحميل
     setTimeout(() => initPage(pageName), 200);
 }
 
@@ -360,6 +385,7 @@ function initPage(pageName) {
         }
     }
 
+    // ✅ إطلاق حدث مخصص
     document.dispatchEvent(new CustomEvent('pageLoaded', {
         detail: { page: pageName }
     }));
@@ -977,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('✅ Marine System v22.0 ready');
+    console.log('✅ Marine System v23.0 ready');
 });
 
 // ============================================================
@@ -1000,7 +1026,7 @@ window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
 window.showToast = showToast;
 
-console.log('✅ app.js v22.0 loaded successfully');
+console.log('✅ app.js v23.0 loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
