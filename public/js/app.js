@@ -1,10 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v19.0
+// 🚀 MARINE SYSTEM - APP.JS v20.0
 // ============================================================
-// 🏆 10/10 - ULTIMATE PROFESSIONAL EDITION
+// 🏆 10/10 - ULTIMATE WORKING EDITION
 // ============================================================
 
-console.log('🚀 Marine System v19.0 - Ultimate Professional Edition');
+console.log('🚀 Marine System v20.0 - Ultimate Working Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -98,13 +98,11 @@ async function doLogin() {
     const errorEl = document.getElementById('loginError');
     const loginBtn = document.querySelector('.login-btn');
 
-    // ✅ تنظيف الأخطاء السابقة
     if (errorEl) {
         errorEl.textContent = '';
         errorEl.style.display = 'none';
     }
 
-    // ✅ التحقق من المدخلات
     if (!username || !password) {
         if (errorEl) {
             errorEl.textContent = '⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور';
@@ -113,7 +111,6 @@ async function doLogin() {
         return;
     }
 
-    // ✅ تعطيل الزر أثناء الطلب
     if (loginBtn) {
         loginBtn.disabled = true;
         loginBtn.textContent = '⏳ جاري الدخول...';
@@ -137,11 +134,9 @@ async function doLogin() {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // ✅ حفظ بيانات المستخدم
             setUser(data.user);
             if (data.token) setToken(data.token);
 
-            // ✅ إخفاء شاشة الدخول
             const overlay = document.getElementById('loginOverlay');
             const mainApp = document.getElementById('mainApp');
             if (overlay) {
@@ -155,15 +150,12 @@ async function doLogin() {
                 mainApp.style.opacity = '1';
             }
 
-            // ✅ تحديث الواجهة
             updateUserDisplay();
             loadPage('dashboard');
 
-            // ✅ رسالة ترحيب
             showToast('✅ مرحباً ' + escapeHTML(data.user?.name || 'مدير النظام') + '!', 'success');
 
         } else {
-            // ❌ فشل تسجيل الدخول
             if (errorEl) {
                 errorEl.textContent = '❌ ' + escapeHTML(data.error || 'بيانات الدخول غير صحيحة');
                 errorEl.style.display = 'block';
@@ -178,7 +170,6 @@ async function doLogin() {
             errorEl.style.color = '#f87171';
         }
     } finally {
-        // ✅ إعادة تفعيل الزر
         if (loginBtn) {
             loginBtn.disabled = false;
             loginBtn.textContent = '🚀 دخول';
@@ -207,12 +198,10 @@ async function doLogout() {
         console.error('Logout error:', error);
     }
 
-    // ✅ مسح البيانات
     setUser(null);
     setToken(null);
     localStorage.removeItem(CURRENT_PAGE_KEY);
 
-    // ✅ إظهار شاشة الدخول
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
     if (overlay) {
@@ -265,7 +254,6 @@ let isLoading = false;
 let pageCache = {};
 
 function loadPage(pageName) {
-    // ✅ التحقق من الصلاحيات
     if (!hasPermission(pageName)) {
         showToast('⛔ ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error');
         return;
@@ -280,7 +268,6 @@ function loadPage(pageName) {
     isLoading = true;
     currentPage = pageName;
 
-    // ✅ تحديث عنوان الصفحة
     const config = PAGE_REGISTRY[pageName];
     if (config) {
         document.title = `${config.title} - Marine System`;
@@ -288,13 +275,9 @@ function loadPage(pageName) {
         if (titleEl) titleEl.textContent = config.title;
     }
 
-    // ✅ تحديث الأزرار النشطة
     updateActiveNav(pageName);
-
-    // ✅ حفظ الصفحة الحالية
     localStorage.setItem(CURRENT_PAGE_KEY, pageName);
 
-    // ✅ عرض مؤشر التحميل
     const loading = document.createElement('div');
     loading.className = 'page-loading';
     loading.innerHTML = `
@@ -305,13 +288,10 @@ function loadPage(pageName) {
     `;
     container.appendChild(loading);
 
-    // ✅ تنظيف الصفحة السابقة
     destroyCurrentPage();
 
-    // ✅ تحميل الصفحة
     const url = `/pages/${pageName}.html`;
     
-    // ✅ التحقق من الكاش
     if (pageCache[pageName]) {
         console.log(`📄 Using cached page: ${pageName}`);
         renderPage(pageName, pageCache[pageName]);
@@ -349,11 +329,9 @@ function renderPage(pageName, html) {
     const container = document.getElementById('pageContainer');
     if (!container) return;
 
-    // ✅ إزالة مؤشر التحميل
     const loading = container.querySelector('.page-loading');
     if (loading) loading.remove();
 
-    // ✅ إزالة المحتوى القديم
     const oldContent = container.querySelector('.page-content');
     if (oldContent) {
         oldContent.style.opacity = '0';
@@ -362,7 +340,6 @@ function renderPage(pageName, html) {
         setTimeout(() => oldContent.remove(), 300);
     }
 
-    // ✅ إضافة المحتوى الجديد
     const pageDiv = document.createElement('div');
     pageDiv.className = 'page-content';
     pageDiv.id = `page-${pageName}`;
@@ -373,13 +350,11 @@ function renderPage(pageName, html) {
     
     container.appendChild(pageDiv);
 
-    // ✅ تأثير التلاشي
     requestAnimationFrame(() => {
         pageDiv.style.opacity = '1';
         pageDiv.style.transform = 'translateY(0)';
     });
 
-    // ✅ تهيئة الصفحة بعد التحميل
     setTimeout(() => initPage(pageName), 200);
 }
 
@@ -402,7 +377,6 @@ function initPage(pageName) {
         }
     }
 
-    // ✅ إطلاق حدث مخصص
     document.dispatchEvent(new CustomEvent('pageLoaded', {
         detail: { page: pageName }
     }));
@@ -909,45 +883,37 @@ function deleteUser(id) {
 }
 
 // ============================================================
-// 🚀 INITIALIZATION - PROFESSIONAL EDITION
+// 🚀 INITIALIZATION - FORCE LOGIN SCREEN
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
-    // ✅ التحقق من الجلسة
-    const user = getUser();
-    const token = getToken();
+    // ✅ مسح localStorage - إجبار شاشة الدخول
+    localStorage.clear();
+    sessionStorage.clear();
 
-    if (user && token) {
-        // ✅ يوجد جلسة نشطة
-        console.log('✅ Session found for:', user.name);
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        updateUserDisplay();
-        
-        const savedPage = localStorage.getItem(CURRENT_PAGE_KEY) || 'dashboard';
-        loadPage(savedPage);
-    } else {
-        // ❌ لا توجد جلسة
-        console.log('❌ No session found');
-        localStorage.removeItem('auth_user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('currentPage');
-
-        const overlay = document.getElementById('loginOverlay');
-        const mainApp = document.getElementById('mainApp');
-        
-        if (overlay) {
-            overlay.style.display = 'flex';
-            overlay.style.visibility = 'visible';
-            overlay.style.opacity = '1';
-        }
-        if (mainApp) {
-            mainApp.style.display = 'none';
-            mainApp.style.visibility = 'hidden';
-            mainApp.style.opacity = '0';
-        }
+    // ✅ إظهار شاشة الدخول
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.zIndex = '999999';
+        overlay.style.background = 'rgba(10,14,23,0.98)';
+        overlay.style.backdropFilter = 'blur(10px)';
+    }
+    if (mainApp) {
+        mainApp.style.display = 'none';
+        mainApp.style.visibility = 'hidden';
+        mainApp.style.opacity = '0';
     }
 
     // ✅ ربط أحداث الدخول
@@ -971,9 +937,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('✅ Marine System v19.0 ready');
-    console.log('🔐 ' + (user && token ? 'Session active' : 'Please login'));
-    console.log('📌 Pages available:', Object.keys(PAGE_REGISTRY).join(', '));
+    console.log('✅ Marine System v20.0 ready - Login screen forced');
+    console.log('🔐 Please login to continue');
 });
 
 // ============================================================
@@ -995,11 +960,8 @@ window.askAI = askAI;
 window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
 window.showToast = showToast;
-window.getToken = getToken;
-window.getUser = getUser;
 
-console.log('✅ app.js v19.0 - Ultimate Professional Edition loaded successfully');
+console.log('✅ app.js v20.0 - Ultimate Working Edition loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
-console.log('🔑 Token Management: ENABLED');
