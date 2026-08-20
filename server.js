@@ -1,7 +1,7 @@
 // ============================================================
-// 🚢 MARINE SYSTEM - SERVER v18.0
+// 🚢 MARINE SYSTEM - SERVER v19.0
 // ============================================================
-// 🏆 10/10 - PRODUCTION READY - FIXED ROUTES
+// 🏆 10/10 - PRODUCTION READY - FIXED
 // ============================================================
 
 'use strict';
@@ -49,6 +49,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'MarineDB2026Secure';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
+// ✅ تعريف publicPath مرة واحدة فقط
 const publicPath = path.join(__dirname, 'public');
 
 // ============================================================
@@ -56,7 +57,7 @@ const publicPath = path.join(__dirname, 'public');
 // ============================================================
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v18.0 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v19.0 - PRODUCTION');
 console.log('='.repeat(60));
 
 const errors = [];
@@ -345,10 +346,8 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// 📁 STATIC FILES - المهم هنا!
+// 📁 STATIC FILES
 // ============================================================
-
-const publicPath = path.join(__dirname, 'public');
 
 // ✅ تأكد من وجود مجلد public/pages
 const pagesPath = path.join(publicPath, 'pages');
@@ -357,7 +356,6 @@ if (!fs.existsSync(pagesPath)) {
     console.log('📁 Created pages directory');
 }
 
-// ✅ خدمة الملفات الثابتة
 app.use(express.static(publicPath, {
     index: 'index.html',
     maxAge: IS_PRODUCTION ? '1d' : 0,
@@ -365,22 +363,18 @@ app.use(express.static(publicPath, {
     dotfiles: 'deny'
 }));
 
-// ✅ خدمة مجلد pages
 app.use('/pages', express.static(path.join(publicPath, 'pages'), {
     maxAge: IS_PRODUCTION ? '1d' : 0
 }));
 
-// ✅ خدمة مجلد css
 app.use('/css', express.static(path.join(publicPath, 'css'), {
     maxAge: IS_PRODUCTION ? '1d' : 0
 }));
 
-// ✅ خدمة مجلد js
 app.use('/js', express.static(path.join(publicPath, 'js'), {
     maxAge: IS_PRODUCTION ? '1d' : 0
 }));
 
-// ✅ خدمة مجلد images
 app.use('/images', express.static(path.join(publicPath, 'images'), {
     maxAge: IS_PRODUCTION ? '1d' : 0
 }));
@@ -658,59 +652,6 @@ async function createInitialAdmin() {
 }
 
 // ============================================================
-// 📄 PAGE ROUTES - المهم هنا!
-// ============================================================
-
-// ✅ الصفحة الرئيسية
-app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
-// ✅ جميع الصفحات في مجلد pages
-app.get('/pages/:page', (req, res) => {
-    const pageName = req.params.page;
-    const filePath = path.join(publicPath, 'pages', `${pageName}.html`);
-    
-    console.log(`📄 Loading page: ${pageName} from ${filePath}`);
-    
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send(`
-            <h1>⚠️ الصفحة غير موجودة</h1>
-            <p>الصفحة المطلوبة: ${pageName}</p>
-            <p>الملف: ${filePath}</p>
-            <a href="/">🏠 العودة للرئيسية</a>
-        `);
-    }
-});
-
-// ✅ روابط مختصرة للصفحات الرئيسية
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'dashboard.html'));
-});
-
-app.get('/fleet', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'fleet.html'));
-});
-
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'maintenance.html'));
-});
-
-app.get('/efficiency', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'efficiency.html'));
-});
-
-app.get('/users', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'users.html'));
-});
-
-app.get('/ai-assistant', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
-});
-
-// ============================================================
 // 🚢 API ROUTES - VESSELS
 // ============================================================
 
@@ -718,20 +659,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
         res.json({ success: true, vessels });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.get('/api/vessels/stats', authenticate, async (req, res) => {
-    try {
-        const statusStats = await Vessel.aggregate([
-            { $group: { _id: '$stat', count: { $sum: 1 } } }
-        ]);
-        const categoryStats = await Vessel.aggregate([
-            { $group: { _id: '$cat', count: { $sum: 1 } } }
-        ]);
-        res.json({ success: true, status: statusStats, categories: categoryStats });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
@@ -873,7 +800,7 @@ app.delete('/api/maintenance/:id', authenticate, authorize('admin'), async (req,
 });
 
 // ============================================================
-// 📊 API ROUTES - DASHBOARD
+// 📊 API ROUTES - DASHBOARD ✅ تم الإضافة
 // ============================================================
 
 app.get('/api/dashboard', authenticate, async (req, res) => {
@@ -891,13 +818,19 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
         res.json({
             success: true,
             data: {
-                vessels: { total: totalVessels, valid: validVessels, damaged: damagedVessels, maintenance: maintenanceVessels },
+                vessels: {
+                    total: totalVessels,
+                    valid: validVessels,
+                    damaged: damagedVessels,
+                    maintenance: maintenanceVessels
+                },
                 activeMaintenance,
                 openTickets,
                 publishedNotes
             }
         });
     } catch (error) {
+        console.error('Dashboard error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -926,7 +859,6 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
             return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
         }
 
-        // ردود بسيطة
         let response = 'عذراً، لم أستطع فهم سؤالك.';
         const msg = message.toLowerCase();
 
@@ -955,6 +887,49 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         console.error('❌ AI error:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// ============================================================
+// 📄 PAGE ROUTES
+// ============================================================
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+app.get('/pages/:page', (req, res) => {
+    const pageName = req.params.page;
+    const filePath = path.join(publicPath, 'pages', `${pageName}.html`);
+    
+    if (fs.existsSync(filePath)) {
+        res.sendFile(filePath);
+    } else {
+        res.status(404).send(`
+            <h1>⚠️ الصفحة غير موجودة</h1>
+            <p>${pageName}</p>
+            <a href="/">🏠 العودة</a>
+        `);
+    }
+});
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(publicPath, 'pages', 'dashboard.html'));
+});
+
+app.get('/fleet', (req, res) => {
+    res.sendFile(path.join(publicPath, 'pages', 'fleet.html'));
+});
+
+app.get('/maintenance', (req, res) => {
+    res.sendFile(path.join(publicPath, 'pages', 'maintenance.html'));
+});
+
+app.get('/users', (req, res) => {
+    res.sendFile(path.join(publicPath, 'pages', 'users.html'));
+});
+
+app.get('/ai-assistant', (req, res) => {
+    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
 });
 
 // ============================================================
@@ -1058,7 +1033,7 @@ async function startServer() {
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v18.0 - PRODUCTION READY');
+            console.log('🚢 MARINE SYSTEM v19.0 - PRODUCTION READY');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
@@ -1081,6 +1056,7 @@ async function startServer() {
             console.log(`🔐 LOGIN: /api/auth/login`);
             console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
             console.log('📄 PAGES: /dashboard, /fleet, /maintenance, /users, /ai-assistant');
+            console.log('📊 API: /api/dashboard, /api/vessels, /api/maintenance');
             console.log('='.repeat(60) + '\n');
         });
 
