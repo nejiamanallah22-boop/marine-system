@@ -1,10 +1,10 @@
 // ============================================================
-// 🚀 MARINE SYSTEM - APP.JS v21.0
+// 🚀 MARINE SYSTEM - APP.JS v22.0
 // ============================================================
-// 🔥 ULTIMATE WORKING EDITION - FORCE LOGIN
+// 🏆 ULTIMATE WORKING EDITION - FIXED DATA LOADING
 // ============================================================
 
-console.log('🚀 Marine System v21.0 - Ultimate Working Edition');
+console.log('🚀 Marine System v22.0 - Ultimate Working Edition');
 
 // ============================================================
 // 📋 CONFIGURATION
@@ -496,11 +496,13 @@ function showToast(message, type = 'info') {
 }
 
 // ============================================================
-// 📊 DATA FETCHING
+// 📊 DATA FETCHING - مع معالجة أفضل للأخطاء
 // ============================================================
 
 async function fetchData(url, options = {}) {
     try {
+        console.log(`📡 Fetching: ${url}`);
+        
         const response = await fetch(url, {
             ...options,
             credentials: 'include',
@@ -519,48 +521,92 @@ async function fetchData(url, options = {}) {
                 setTimeout(() => location.reload(), 1000);
                 return null;
             }
-            throw new Error(`HTTP ${response.status}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        
+        if (!data.success) {
+            console.warn(`⚠️ API returned error: ${data.error || 'Unknown error'}`);
+            return null;
+        }
+
+        return data;
     } catch (error) {
-        console.error('❌ Fetch error:', error);
-        showToast('❌ خطأ في تحميل البيانات', 'danger');
+        console.error(`❌ Fetch error (${url}):`, error);
+        showToast(`❌ ${error.message || 'خطأ في تحميل البيانات'}`, 'danger');
         return null;
     }
 }
 
 // ============================================================
-// 📊 DASHBOARD
+// 📊 DASHBOARD - مع معالجة أفضل للأخطاء
 // ============================================================
 
 function loadDashboard() {
     console.log('📊 Loading dashboard...');
 
+    // ✅ التحقق من وجود العناصر في الصفحة
+    const dashTotal = document.getElementById('dashTotal');
+    if (!dashTotal) {
+        console.log('⚠️ Dashboard elements not found, page may not be ready');
+        return;
+    }
+
     fetchData('/api/dashboard')
         .then(data => {
-            if (!data?.success) return;
+            if (!data) {
+                console.warn('⚠️ No data received from dashboard API');
+                return;
+            }
+            
             const stats = data.data || {};
-
             const vessels = stats.vessels || {};
-            const el = (id) => document.getElementById(id);
-            if (el('dashTotal')) el('dashTotal').textContent = vessels.total || 0;
-            if (el('dashReady')) el('dashReady').textContent = vessels.valid || 0;
-            if (el('dashBroken')) el('dashBroken').textContent = vessels.damaged || 0;
-            if (el('dashMaintenance')) el('dashMaintenance').textContent = vessels.maintenance || 0;
 
-            const percent = vessels.total > 0 ? Math.round((vessels.valid / vessels.total) * 100) : 0;
-            if (el('dashReadyPercent')) el('dashReadyPercent').textContent = percent + '%';
+            // ✅ تحديث العناصر مع التحقق من وجودها
+            const elements = {
+                'dashTotal': vessels.total || 0,
+                'dashReady': vessels.valid || 0,
+                'dashBroken': vessels.damaged || 0,
+                'dashMaintenance': vessels.maintenance || 0
+            };
 
-            fetchData('/api/maintenance')
+            Object.keys(elements).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = elements[id];
+                }
+            });
+
+            // ✅ نسبة الجاهزية
+            const percentEl = document.getElementById('dashReadyPercent');
+            if (percentEl && vessels.total) {
+                const percent = vessels.total > 0 ? Math.round((vessels.valid / vessels.total) * 100) : 0;
+                percentEl.textContent = percent + '%';
+            }
+
+            // ✅ تحميل بيانات الصيانة
+            fetchData('/api/maintenance?limit=5')
                 .then(maintenanceData => {
-                    if (maintenanceData?.success) {
+                    if (maintenanceData) {
                         const records = maintenanceData.maintenance || [];
                         const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-                        if (el('dashTotalCost')) el('dashTotalCost').textContent = totalCost.toLocaleString() + ' د.ت';
-                        if (el('dashMaintenanceCount')) el('dashMaintenanceCount').textContent = records.length;
+                        
+                        const costEl = document.getElementById('dashTotalCost');
+                        if (costEl) {
+                            costEl.textContent = totalCost.toLocaleString() + ' د.ت';
+                        }
+                        
+                        const countEl = document.getElementById('dashMaintenanceCount');
+                        if (countEl) {
+                            countEl.textContent = records.length;
+                        }
                     }
                 });
+
+        })
+        .catch(err => {
+            console.error('❌ Dashboard error:', err);
         });
 }
 
@@ -576,7 +622,7 @@ function loadVessels() {
             const tbody = document.getElementById('vesselsBody');
             if (!tbody) return;
 
-            if (!data?.success || !data.vessels?.length) {
+            if (!data || !data.vessels || data.vessels.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مراكب</td></tr>`;
                 return;
             }
@@ -613,7 +659,7 @@ function loadMaintenance() {
             const tbody = document.getElementById('maintenanceBody');
             if (!tbody) return;
 
-            if (!data?.success || !data.maintenance?.length) {
+            if (!data || !data.maintenance || data.maintenance.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد سجلات</td></tr>`;
                 return;
             }
@@ -647,7 +693,7 @@ function loadUsers() {
             const tbody = document.getElementById('usersBody');
             if (!tbody) return;
 
-            if (!data?.success || !data.users?.length) {
+            if (!data || !data.users || data.users.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.2);">📭 لا توجد مستخدمين</td></tr>`;
                 return;
             }
@@ -883,15 +929,13 @@ function deleteUser(id) {
 }
 
 // ============================================================
-// 🚀 INITIALIZATION - لا نخفي شاشة الدخول أبداً
+// 🚀 INITIALIZATION
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Application initializing...');
 
-    // ✅ لا نمسح localStorage
-    // ✅ لا نخفي شاشة الدخول
-
+    // ✅ إظهار شاشة الدخول
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
     
@@ -927,7 +971,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    console.log('✅ Marine System v21.0 ready - Login screen always visible');
+    console.log('✅ Marine System v22.0 ready');
     console.log('🔐 Please login to continue');
 });
 
@@ -951,8 +995,8 @@ window.toggleVoiceInput = toggleVoiceInput;
 window.escapeHTML = escapeHTML;
 window.showToast = showToast;
 
-console.log('✅ app.js v21.0 - Ultimate Working Edition loaded successfully');
+console.log('✅ app.js v22.0 loaded successfully');
 console.log('🛡️ XSS Protection: ENABLED');
 console.log('📦 Page Cache: ENABLED');
 console.log('🔐 RBAC: ENABLED');
-console.log('🔒 Login screen: ALWAYS VISIBLE');
+console.log('📊 Data Loading: FIXED');
