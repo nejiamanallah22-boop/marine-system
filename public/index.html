@@ -14,6 +14,466 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    
+    <style>
+        /* ============================================================
+           🎨 STYLES - جميع الأنماط مدمجة هنا لضمان العمل
+           ============================================================ */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0e17;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        /* ===== LOGIN OVERLAY ===== */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10,14,23,0.98);
+            backdrop-filter: blur(10px);
+        }
+        
+        .login-box {
+            background: linear-gradient(145deg, #141b2d, #0f1625);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(96,165,250,0.1);
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(96,165,250,0.15);
+        }
+        
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .logo-icon {
+            font-size: 40px;
+            color: #60a5fa;
+        }
+        
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .developer {
+            background: rgba(96,165,250,0.08);
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            display: inline-block;
+            border: 1px solid rgba(96,165,250,0.1);
+        }
+        
+        .dev-label {
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+            margin-left: 6px;
+        }
+        
+        .dev-name {
+            color: #60a5fa;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.2);
+            font-size: 16px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 14px 48px 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(96,165,250,0.08);
+        }
+        
+        .input-group input::placeholder {
+            color: rgba(255,255,255,0.25);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(37,99,235,0.3);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .login-btn.loading .spinner {
+            display: inline-block;
+        }
+        
+        .login-btn.loading .btn-text {
+            display: none;
+        }
+        
+        .error-msg {
+            display: none;
+            color: #f87171;
+            background: rgba(248,113,113,0.08);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 14px;
+            font-size: 14px;
+            border: 1px solid rgba(248,113,113,0.15);
+        }
+        
+        .error-msg.show {
+            display: block;
+        }
+        
+        .login-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255,255,255,0.2);
+            font-size: 11px;
+        }
+        
+        .version {
+            background: rgba(255,255,255,0.04);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* ===== MAIN APP ===== */
+        #mainApp {
+            display: none;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        header {
+            background: #0f1625;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .menu-toggle {
+            font-size: 24px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .menu-toggle:hover {
+            color: #60a5fa;
+        }
+        
+        .header-left h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .header-left h1 span {
+            color: #60a5fa;
+        }
+        
+        .developer-tag {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 400;
+            margin-right: 8px;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.15);
+        }
+        
+        .btn-outline-white {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .btn-outline-white:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        
+        .btn-logout:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 65px;
+            right: 0;
+            width: 240px;
+            height: calc(100% - 65px);
+            background: #0f1625;
+            border-left: 1px solid rgba(255,255,255,0.06);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding-bottom: 12px;
+        }
+        
+        .sidebar-brand span:first-child {
+            font-size: 20px;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: right;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+        
+        .nav-btn.active {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border-left: 3px solid #60a5fa;
+        }
+        
+        .nav-btn i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 12px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.15);
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-right: 240px;
+            padding: 20px;
+            min-height: calc(100vh - 65px);
+        }
+        
+        /* Scroll Buttons */
+        .scroll-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50;
+        }
+        
+        .scroll-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        
+        .scroll-btn:hover {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+                width: 280px;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-right: 0;
+                padding: 12px;
+            }
+            
+            .login-box {
+                padding: 30px 20px;
+                margin: 16px;
+            }
+            
+            .header-left h1 {
+                font-size: 14px;
+            }
+            
+            .developer-tag {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -37,9 +497,9 @@
             <i class="fas fa-lock input-icon"></i>
             <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
         </div>
-        <button type="button" class="login-btn" id="loginButton" onclick="handleLogin()">
-            <span id="loginButtonIcon">🚀</span>
-            <span id="loginButtonText">دخول</span>
+        <button type="button" class="login-btn" id="loginButton">
+            <span class="spinner"></span>
+            <span class="btn-text">🚀 دخول</span>
         </button>
         <div id="loginError" class="error-msg" role="alert"></div>
         <div class="login-footer">
@@ -132,71 +592,380 @@
     </button>
 </div>
 
-<!-- ===== JS ===== -->
-<script src="/js/core/config.js"></script>
-<script src="/js/core/helpers.js"></script>
-<script src="/js/core/auth.js"></script>
-<script src="/js/lib/charts.js"></script>
-<script src="/js/lib/notifications.js"></script>
-<script src="/js/lib/file-import.js"></script>
-<script src="/js/pages/dashboard.js"></script>
-<script src="/js/pages/fleet.js"></script>
-<script src="/js/pages/maintenance.js"></script>
-<script src="/js/pages/efficiency.js"></script>
-<script src="/js/pages/users.js"></script>
-<script src="/js/pages/ai-assistant.js"></script>
-<script src="/js/app.js"></script>
+<!-- ============================================================
+     📦 JAVASCRIPT - جميع السكريبتات
+     ============================================================ -->
 
-<!-- ===== FORCE LOGIN - منع أي إخفاء لشاشة الدخول ===== -->
+<!-- ===== CORE SCRIPTS ===== -->
 <script>
-(function() {
-    // ✅ إجبار شاشة الدخول
-    function forceLogin() {
+// ============================================================
+// 🚀 MARINE SYSTEM - BOOTSTRAP (التشغيل الأساسي)
+// ============================================================
+
+// ✅ تعريف الدوال الأساسية قبل أي شيء
+window.handleLogin = function() {
+    console.log('🔐 handleLogin called');
+    doLogin();
+};
+
+window.doLogin = function() {
+    console.log('🔐 doLogin called');
+    const username = document.getElementById('username')?.value?.trim();
+    const password = document.getElementById('password')?.value?.trim();
+    const errorEl = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginButton');
+
+    // Reset error
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.classList.remove('show');
+    }
+
+    // Validate
+    if (!username || !password) {
+        if (errorEl) {
+            errorEl.textContent = '⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور';
+            errorEl.classList.add('show');
+        }
+        return;
+    }
+
+    // Loading state
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.classList.add('loading');
+    }
+
+    // Simulate login (for demo)
+    setTimeout(function() {
+        // Demo credentials: admin / admin123
+        if (username === 'admin' && password === 'admin123') {
+            // Success
+            const user = {
+                id: '1',
+                name: 'مدير النظام',
+                username: 'admin',
+                role: 'admin',
+                email: 'admin@marine.com'
+            };
+            
+            localStorage.setItem('auth_user', JSON.stringify(user));
+            localStorage.setItem('auth_token', 'demo-token-12345');
+            
+            // Hide login
+            const overlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.style.visibility = 'hidden';
+                overlay.style.opacity = '0';
+            }
+            if (mainApp) {
+                mainApp.style.display = 'block';
+                mainApp.style.visibility = 'visible';
+                mainApp.style.opacity = '1';
+            }
+            
+            // Update UI
+            updateUserDisplay();
+            
+            // Load dashboard
+            if (typeof pageManager !== 'undefined' && pageManager) {
+                pageManager.loadPage('dashboard');
+            } else {
+                // Fallback
+                document.getElementById('pageContainer').innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;">
+                        <h2>✅ مرحباً ${user.name}</h2>
+                        <p style="color:rgba(255,255,255,0.3);">تم تسجيل الدخول بنجاح</p>
+                    </div>
+                `;
+            }
+            
+            // Reset button
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+            }
+            
+            console.log('✅ Login successful:', user.name);
+            
+        } else {
+            // Failed
+            if (errorEl) {
+                errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+                errorEl.classList.add('show');
+            }
+            
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+            }
+            
+            console.log('❌ Login failed');
+        }
+    }, 800);
+};
+
+window.doLogout = function() {
+    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth_token');
+    
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+    }
+    if (mainApp) {
+        mainApp.style.display = 'none';
+        mainApp.style.visibility = 'hidden';
+        mainApp.style.opacity = '0';
+    }
+    
+    // Reset login form
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    console.log('👋 Logged out');
+};
+
+window.updateUserDisplay = function() {
+    const display = document.getElementById('userRoleDisplay');
+    if (!display) return;
+    
+    try {
+        const userData = localStorage.getItem('auth_user');
+        if (userData) {
+            const user = JSON.parse(userData);
+            const emojis = {
+                'admin': '👑',
+                'manager': '⭐',
+                'editor': '✏️',
+                'viewer': '👀'
+            };
+            const emoji = emojis[user.role] || '👤';
+            display.textContent = `${emoji} ${user.name || 'مستخدم'}`;
+        } else {
+            display.textContent = '👤';
+        }
+    } catch (e) {
+        display.textContent = '👤';
+    }
+};
+
+window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('open');
+};
+
+window.showPage = function(pageName) {
+    console.log('📄 Show page:', pageName);
+    if (typeof pageManager !== 'undefined' && pageManager) {
+        pageManager.loadPage(pageName);
+    } else {
+        // Fallback
+        const container = document.getElementById('pageContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;">
+                    <h2>📄 ${pageName}</h2>
+                    <p style="color:rgba(255,255,255,0.3);">جاري تحميل الصفحة...</p>
+                </div>
+            `;
+        }
+    }
+    // Update active nav
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.includes(pageName) || 
+            btn.textContent.includes(pageName === 'dashboard' ? 'لوحة التحكم' : '')) {
+            btn.classList.add('active');
+        }
+    });
+};
+
+window.refreshAllPages = function() {
+    console.log('🔄 Refreshing...');
+    if (typeof pageManager !== 'undefined' && pageManager) {
+        pageManager.refreshPage();
+    }
+};
+
+window.toggleNotifications = function() {
+    console.log('🔔 Notifications toggled');
+};
+
+// ============================================================
+// 📄 PAGE MANAGER - مدير الصفحات
+// ============================================================
+
+class PageManager {
+    constructor() {
+        this.currentPage = null;
+        this.isLoading = false;
+        this.pageCache = new Map();
+        this.container = document.getElementById('pageContainer');
+        console.log('📄 PageManager initialized');
+    }
+
+    async loadPage(pageName) {
+        if (this.isLoading) return;
+        if (this.currentPage === pageName) {
+            this.refreshPage();
+            return;
+        }
+
+        this.isLoading = true;
+        this.currentPage = pageName;
+
+        // Show loading
+        if (this.container) {
+            this.container.innerHTML = `
+                <div style="text-align:center;padding:60px 20px;">
+                    <div style="
+                        width:40px;height:40px;
+                        border:3px solid rgba(255,255,255,0.1);
+                        border-top:3px solid #60a5fa;
+                        border-radius:50%;
+                        animation: spin 0.8s linear infinite;
+                        margin:0 auto;
+                    "></div>
+                    <p style="color:rgba(255,255,255,0.3);margin-top:15px;">⏳ جاري التحميل...</p>
+                </div>
+            `;
+        }
+
+        try {
+            // Check cache
+            if (this.pageCache.has(pageName)) {
+                this.renderPage(this.pageCache.get(pageName));
+                this.isLoading = false;
+                return;
+            }
+
+            // Load page
+            const response = await fetch(`/pages/${pageName}.html`);
+            if (!response.ok) {
+                throw new Error(`Page ${pageName} not found`);
+            }
+
+            const html = await response.text();
+            this.pageCache.set(pageName, html);
+            this.renderPage(html);
+
+        } catch (error) {
+            console.error('❌ Page load error:', error);
+            if (this.container) {
+                this.container.innerHTML = `
+                    <div style="text-align:center;padding:60px 20px;color:#f87171;">
+                        <h2>❌ خطأ في تحميل الصفحة</h2>
+                        <p style="color:rgba(255,255,255,0.3);">${error.message}</p>
+                        <button onclick="pageManager.refreshPage()" style="
+                            padding:10px 30px;
+                            background:#60a5fa;
+                            border:none;
+                            border-radius:8px;
+                            color:white;
+                            cursor:pointer;
+                            margin-top:15px;
+                            font-family:inherit;
+                            font-size:14px;
+                        ">
+                            🔄 إعادة المحاولة
+                        </button>
+                    </div>
+                `;
+            }
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    renderPage(html) {
+        if (!this.container) return;
+        this.container.innerHTML = html;
+    }
+
+    refreshPage() {
+        if (this.currentPage) {
+            this.pageCache.delete(this.currentPage);
+            this.loadPage(this.currentPage);
+        }
+    }
+}
+
+// ============================================================
+// 🚀 INITIALIZATION - التشغيل
+// ============================================================
+
+// Create PageManager
+const pageManager = new PageManager();
+window.pageManager = pageManager;
+
+// Auto-login check
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM ready - initializing...');
+    
+    const userData = localStorage.getItem('auth_user');
+    const token = localStorage.getItem('auth_token');
+    
+    if (userData && token) {
+        // Auto-login
         const overlay = document.getElementById('loginOverlay');
         const mainApp = document.getElementById('mainApp');
         
         if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            overlay.style.opacity = '0';
+        }
+        if (mainApp) {
+            mainApp.style.display = 'block';
+            mainApp.style.visibility = 'visible';
+            mainApp.style.opacity = '1';
+        }
+        
+        updateUserDisplay();
+        
+        const savedPage = localStorage.getItem('currentPage') || 'dashboard';
+        pageManager.loadPage(savedPage);
+        
+        console.log('✅ Auto-login successful');
+    } else {
+        // Show login
+        const overlay = document.getElementById('loginOverlay');
+        if (overlay) {
             overlay.style.display = 'flex';
             overlay.style.visibility = 'visible';
             overlay.style.opacity = '1';
-            overlay.style.position = 'fixed';
-            overlay.style.top = '0';
-            overlay.style.left = '0';
-            overlay.style.width = '100%';
-            overlay.style.height = '100%';
-            overlay.style.zIndex = '999999';
-            overlay.style.background = 'rgba(10,14,23,0.98)';
-            overlay.style.backdropFilter = 'blur(10px)';
         }
-        if (mainApp) {
-            mainApp.style.display = 'none';
-            mainApp.style.visibility = 'hidden';
-            mainApp.style.opacity = '0';
-        }
-        
-        console.log('🔐 Login screen forced');
+        console.log('🔐 Login screen shown');
     }
-
-    // ✅ تنفيذ فوراً
-    forceLogin();
-
-    // ✅ مراقبة أي تغيير
-    const observer = new MutationObserver(function() {
-        const overlay = document.getElementById('loginOverlay');
-        if (overlay && (overlay.style.display === 'none' || overlay.style.visibility === 'hidden' || overlay.style.opacity === '0')) {
-            forceLogin();
+    
+    // Enter key support
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            doLogin();
         }
     });
-
-    observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['style'],
-        subtree: true,
-        childList: true
+    
+    document.getElementById('username').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('password').focus();
+        }
     });
+});
 
-    console.log('🚀 Login screen locked - v20.0');
-})();
+console.log('🚀 Marine System v5.0 - Bootstrap loaded');
+console.log('🔐 Use: admin / admin123');
 </script>
 
 </body>
