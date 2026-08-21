@@ -1,10 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v27.1 (FIXED)
+ * 🚢 MARINE SYSTEM - SERVER v27.2 (FINAL FIX)
  * ============================================================
- * ✅ FIXED: User validation error
- * ✅ FIXED: Role enum values
- * ✅ FIXED: Admin creation
+ * ✅ FIXED: Role "مسؤول" → "admin"
+ * ✅ FIXED: Missing username
+ * ✅ FIXED: User validation
  * ============================================================
  */
 
@@ -45,7 +45,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'MarineDB2026Secure';
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v27.1 - FIXED');
+console.log('🚢 MARINE SYSTEM v27.2 - FINAL FIX');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
@@ -135,10 +135,9 @@ app.use('/pages', express.static(pagesPath, {
 }));
 
 // ============================================================
-// 🗄️ MODELS (MongoDB) - ✅ FIXED
+// 🗄️ MODELS
 // ============================================================
 
-// 👤 USER MODEL - ✅ مع القيم الصحيحة
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     username: { type: String, required: true, unique: true, trim: true, lowercase: true },
@@ -146,7 +145,7 @@ const UserSchema = new mongoose.Schema({
     password: { type: String, required: true, select: false },
     role: { 
         type: String, 
-        enum: ['admin', 'manager', 'operator', 'viewer'], // ✅ القيم الصحيحة فقط
+        enum: ['admin', 'manager', 'operator', 'viewer'],
         default: 'viewer'
     },
     isActive: { type: Boolean, default: true },
@@ -720,10 +719,10 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
 });
 
 // ============================================================
-// 🔐 CREATE ADMIN USER - ✅ FIXED
+// 🔧 FIX EXISTING USER - ✅ FINAL FIX
 // ============================================================
 
-async function createInitialAdmin() {
+async function fixExistingUser() {
     try {
         // ✅ البحث عن المستخدم
         const existing = await User.findOne({ 
@@ -731,66 +730,63 @@ async function createInitialAdmin() {
         });
 
         if (existing) {
-            console.log('ℹ️ Admin account already exists in MongoDB');
+            console.log('ℹ️ Found existing user, fixing...');
             
-            // ✅ إعادة تعيين كلمة المرور مع التأكد من صحة البيانات
-            try {
-                const salt = await bcrypt.genSalt(12);
-                const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
-                existing.password = hashedPassword;
-                existing.name = ADMIN_NAME || existing.name;
-                existing.tokenVersion = (existing.tokenVersion || 0) + 1;
+            let needsSave = false;
+            
+            // ✅ تصحيح الدور
+            if (existing.role === 'مسؤول' || existing.role === 'مدير') {
+                existing.role = 'admin';
+                needsSave = true;
+                console.log('✅ Role fixed from "مسؤول" to "admin"');
+            }
+            
+            // ✅ التأكد من وجود username
+            if (!existing.username) {
+                existing.username = ADMIN_USERNAME;
+                needsSave = true;
+                console.log('✅ Username added');
+            }
+            
+            // ✅ التأكد من وجود name
+            if (!existing.name) {
+                existing.name = ADMIN_NAME;
+                needsSave = true;
+                console.log('✅ Name added');
+            }
+            
+            // ✅ إعادة تعيين كلمة المرور
+            const salt = await bcrypt.genSalt(12);
+            const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
+            existing.password = hashedPassword;
+            existing.tokenVersion = (existing.tokenVersion || 0) + 1;
+            needsSave = true;
+            
+            if (needsSave) {
                 await existing.save();
-                console.log('✅ Admin password reset successfully!');
-                console.log(`👤 Username: ${ADMIN_USERNAME}`);
+                console.log('✅ User fixed successfully!');
+                console.log(`👤 Username: ${existing.username}`);
+                console.log(`🔑 Role: ${existing.role}`);
                 console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-            } catch (saveError) {
-                console.error('❌ Error saving admin:', saveError.message);
+            } else {
+                console.log('ℹ️ User already correct');
             }
-            return;
+        } else {
+            console.log('ℹ️ User not found, creating new...');
+            const admin = new User({
+                name: ADMIN_NAME,
+                username: ADMIN_USERNAME,
+                email: ADMIN_EMAIL,
+                password: ADMIN_PASSWORD,
+                role: 'admin',
+                isActive: true,
+                tokenVersion: 1
+            });
+            await admin.save();
+            console.log('✅ Admin created successfully!');
         }
-
-        // ✅ إنشاء مستخدم جديد مع جميع الحقول المطلوبة
-        const admin = new User({
-            name: ADMIN_NAME,
-            username: ADMIN_USERNAME,
-            email: ADMIN_EMAIL,
-            password: ADMIN_PASSWORD,
-            role: 'admin',  // ✅ القيمة الصحيحة
-            isActive: true,
-            tokenVersion: 1
-        });
-
-        await admin.save();
-        
-        console.log('✅ Admin created successfully in MongoDB!');
-        console.log(`👤 Username: ${ADMIN_USERNAME}`);
-        console.log(`📧 Email: ${ADMIN_EMAIL}`);
-        console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
-
     } catch (error) {
-        console.error('❌ Initial admin error:', error.message);
-        
-        // ✅ إذا كان الخطأ بسبب وجود المستخدم، نحاول التحديث
-        if (error.message.includes('duplicate key')) {
-            try {
-                const existing = await User.findOne({ 
-                    $or: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }] 
-                });
-                if (existing) {
-                    const salt = await bcrypt.genSalt(12);
-                    const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
-                    existing.password = hashedPassword;
-                    existing.role = 'admin';
-                    existing.isActive = true;
-                    existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                    await existing.save();
-                    console.log('✅ Admin updated successfully!');
-                }
-            } catch (updateError) {
-                console.error('❌ Error updating admin:', updateError.message);
-            }
-        }
+        console.error('❌ Fix user error:', error.message);
     }
 }
 
@@ -1122,11 +1118,11 @@ async function connectDatabase() {
 async function startServer() {
     try {
         await connectDatabase();
-        await createInitialAdmin();
+        await fixExistingUser();
 
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v27.1 - FIXED');
+            console.log('🚢 MARINE SYSTEM v27.2 - FINAL FIX');
             console.log('='.repeat(60));
             console.log(`🚀 PORT: ${PORT}`);
             console.log(`🌍 ENV: ${NODE_ENV}`);
