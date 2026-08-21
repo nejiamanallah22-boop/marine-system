@@ -9,9 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* ===== RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         body {
             font-family: 'Cairo', 'Segoe UI', sans-serif;
             background: #0a0e17;
@@ -19,7 +17,6 @@
             min-height: 100vh;
         }
         
-        /* ===== LOGIN ===== */
         #loginOverlay {
             position: fixed;
             top: 0;
@@ -151,7 +148,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* ===== MAIN APP ===== */
         #mainApp { display: none; min-height: 100vh; }
         
         header {
@@ -307,7 +303,7 @@
         <div id="loginError" class="error-msg"></div>
         <div class="login-footer">
             <span>نظام إدارة وإسناد الوحدات البحرية</span>
-            <span class="version">v10.0</span>
+            <span class="version">v13.0</span>
         </div>
     </div>
 </div>
@@ -364,52 +360,88 @@
 </div>
 
 <!-- ============================================================
-     📦 JAVASCRIPT - VERSION 10.0 - CONNECTS TO YOUR SERVER
+     📦 JAVASCRIPT - VERSION 13.0 - NO LOCALSTORAGE
      ============================================================ -->
 
 <script>
 /**
  * ============================================================
- * 🚀 MARINE SYSTEM v10.0 - CONNECTS TO YOUR SERVER
+ * 🚀 MARINE SYSTEM v13.0 - NO LOCALSTORAGE
  * ============================================================
- * ✅ Server URL: https://marine-system-71eo.onrender.com
+ * ✅ يستخدم SessionStorage فقط (ينتهي عند إغلاق التبويب)
+ * ✅ لا يحفظ أي شيء بعد إغلاق المتصفح
  * ============================================================
  */
 
-console.log('🚀 Marine System v10.0 - Loading...');
+console.log('🚀 Marine System v13.0 - Loading...');
+console.log('🔐 No LocalStorage - Session only');
 
 // ============================================================
-// ⚙️ CONFIGURATION - SERVER URL
+// ⚙️ CONFIGURATION
 // ============================================================
 
-// ✅ عنوان السيرفر الخاص بك
 const API_BASE_URL = 'https://marine-system-71eo.onrender.com';
-
 console.log('📡 API Base URL:', API_BASE_URL);
+
+// ============================================================
+// 🔐 SESSION MANAGEMENT (بدون LocalStorage)
+// ============================================================
+
+function saveSession(user, token) {
+    try {
+        sessionStorage.setItem('auth_user', JSON.stringify(user));
+        sessionStorage.setItem('auth_token', token);
+        console.log('💾 Session saved (SessionStorage)');
+    } catch (e) {
+        console.warn('Session storage error:', e);
+    }
+}
+
+function getSession() {
+    try {
+        const userData = sessionStorage.getItem('auth_user');
+        const token = sessionStorage.getItem('auth_token');
+        if (userData && token) {
+            return { user: JSON.parse(userData), token: token };
+        }
+    } catch (e) {
+        console.warn('Session load error:', e);
+    }
+    return null;
+}
+
+function clearSession() {
+    try {
+        sessionStorage.removeItem('auth_user');
+        sessionStorage.removeItem('auth_token');
+        console.log('🗑️ Session cleared');
+    } catch (e) {
+        console.warn('Session clear error:', e);
+    }
+}
 
 // ============================================================
 // 🔐 LOGIN FUNCTION
 // ============================================================
 
-function doLogin() {
+window.doLogin = function() {
     console.log('🔐 [doLogin] CALLED');
-    console.log('📡 Connecting to:', API_BASE_URL + '/api/auth/login');
     
-    const username = document.getElementById('username');
-    const password = document.getElementById('password');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
     const errorEl = document.getElementById('loginError');
     const loginBtn = document.getElementById('loginButton');
     
-    if (!username || !password) {
+    if (!usernameEl || !passwordEl) {
         console.error('❌ Login elements not found!');
         return;
     }
     
-    const user = username.value.trim();
-    const pass = password.value.trim();
+    const user = usernameEl.value.trim();
+    const pass = passwordEl.value.trim();
     
-    console.log('🔐 Username:', user);
-    console.log('🔐 Password length:', pass.length);
+    console.log('🔐 Username:', user || '(empty)');
+    console.log('🔐 Password length:', pass.length || 0);
     
     if (errorEl) {
         errorEl.textContent = '';
@@ -417,6 +449,7 @@ function doLogin() {
     }
     
     if (!user || !pass) {
+        console.log('❌ Empty credentials');
         if (errorEl) {
             errorEl.textContent = '⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور';
             errorEl.className = 'error-msg show error';
@@ -427,11 +460,11 @@ function doLogin() {
     if (loginBtn) {
         loginBtn.disabled = true;
         loginBtn.classList.add('loading');
+        console.log('⏳ Loading...');
     }
     
-    // ✅ إرسال الطلب إلى السيرفر
     const loginUrl = API_BASE_URL + '/api/auth/login';
-    console.log('📡 Sending POST to:', loginUrl);
+    console.log('📡 Sending to:', loginUrl);
     
     fetch(loginUrl, {
         method: 'POST',
@@ -439,32 +472,26 @@ function doLogin() {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            username: user,
-            password: pass
-        })
+        body: JSON.stringify({ username: user, password: pass })
     })
     .then(function(response) {
-        console.log('📡 Response status:', response.status);
-        console.log('📡 Response ok?', response.ok);
-        return response.json().then(function(data) {
+        console.log('📡 Status:', response.status);
+        return response.text().then(function(text) {
+            let data;
+            try { data = JSON.parse(text); } catch (e) { data = { error: 'Invalid JSON' }; }
             return { status: response.status, ok: response.ok, data: data };
         });
     })
     .then(function(result) {
-        console.log('📡 Response data:', JSON.stringify(result.data, null, 2));
+        console.log('📡 Response:', result.data);
         
         if (result.ok && result.data && result.data.success) {
-            // ✅ نجاح تسجيل الدخول
+            console.log('✅ Login SUCCESS!');
+            
             const userData = result.data.user || result.data.data?.user || result.data;
             
-            try {
-                localStorage.setItem('auth_user', JSON.stringify(userData));
-                localStorage.setItem('auth_token', result.data.token || result.data.data?.token || 'token-' + Date.now());
-                console.log('💾 Saved to localStorage');
-            } catch (e) {
-                console.warn('Storage error:', e);
-            }
+            // ✅ استخدام SessionStorage بدلاً من LocalStorage
+            saveSession(userData, result.data.token || result.data.data?.token || 'token-' + Date.now());
             
             // إخفاء شاشة الدخول
             const overlay = document.getElementById('loginOverlay');
@@ -487,29 +514,23 @@ function doLogin() {
             if (errorEl) {
                 errorEl.textContent = '✅ مرحباً ' + (userData.name || userData.username || user);
                 errorEl.className = 'error-msg show success';
-                setTimeout(function() {
-                    errorEl.className = 'error-msg';
-                }, 3000);
+                setTimeout(function() { errorEl.className = 'error-msg'; }, 3000);
             }
             
-            console.log('✅ Login successful:', user);
-            
         } else {
-            // ❌ فشل تسجيل الدخول
+            console.log('❌ Login FAILED');
             const errorMsg = result.data?.error || result.data?.message || 'بيانات الدخول غير صحيحة';
             
             if (errorEl) {
                 errorEl.textContent = '❌ ' + errorMsg;
                 errorEl.className = 'error-msg show error';
             }
-            console.log('❌ Login failed:', errorMsg);
         }
     })
     .catch(function(error) {
         console.error('❌ Network error:', error);
-        
         if (errorEl) {
-            errorEl.textContent = '❌ لا يمكن الاتصال بالسيرفر. تأكد من أن السيرفر يعمل.';
+            errorEl.textContent = '❌ لا يمكن الاتصال بالسيرفر: ' + error.message;
             errorEl.className = 'error-msg show error';
         }
     })
@@ -519,23 +540,19 @@ function doLogin() {
             loginBtn.classList.remove('loading');
         }
     });
-}
+};
 
 // ============================================================
 // 🚪 LOGOUT
 // ============================================================
 
-function doLogout() {
+window.doLogout = function() {
     console.log('🚪 [doLogout] CALLED');
     
     if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
     
-    try {
-        localStorage.removeItem('auth_user');
-        localStorage.removeItem('auth_token');
-    } catch (e) {
-        console.warn('Storage error:', e);
-    }
+    // ✅ مسح SessionStorage فقط
+    clearSession();
     
     const overlay = document.getElementById('loginOverlay');
     const mainApp = document.getElementById('mainApp');
@@ -562,45 +579,35 @@ function doLogout() {
         errorEl.className = 'error-msg';
     }
     
-    console.log('👋 Logged out');
-}
+    console.log('👋 Logged out - Session cleared');
+};
 
 // ============================================================
 // 👤 USER DISPLAY
 // ============================================================
 
-function updateUserDisplay() {
+window.updateUserDisplay = function() {
     console.log('👤 [updateUserDisplay] CALLED');
     
     const display = document.getElementById('userRoleDisplay');
     if (!display) return;
     
-    try {
-        const userData = localStorage.getItem('auth_user');
-        if (userData) {
-            const user = JSON.parse(userData);
-            const emojis = {
-                'admin': '👑',
-                'manager': '⭐',
-                'operator': '🔧',
-                'viewer': '👀'
-            };
-            const emoji = emojis[user.role] || '👤';
-            display.textContent = `${emoji} ${user.name || user.username || 'مستخدم'}`;
-        } else {
-            display.textContent = '👤';
-        }
-    } catch (e) {
-        console.warn('Update user display error:', e);
+    const session = getSession();
+    if (session && session.user) {
+        const user = session.user;
+        const emojis = { 'admin': '👑', 'manager': '⭐', 'operator': '🔧', 'viewer': '👀' };
+        const emoji = emojis[user.role] || '👤';
+        display.textContent = `${emoji} ${user.name || user.username || 'مستخدم'}`;
+    } else {
         display.textContent = '👤';
     }
-}
+};
 
 // ============================================================
 // 📄 PAGE FUNCTIONS
 // ============================================================
 
-function loadDashboard() {
+window.loadDashboard = function() {
     console.log('📊 [loadDashboard] CALLED');
     
     const container = document.getElementById('pageContainer');
@@ -630,15 +637,17 @@ function loadDashboard() {
                     <p style="color:rgba(255,255,255,0.3);font-size:13px;">
                         ✅ متصل بالسيرفر: ${API_BASE_URL}
                     </p>
+                    <p style="color:rgba(255,255,255,0.2);font-size:11px;margin-top:8px;">
+                        🔐 الجلسة تنتهي عند إغلاق المتصفح
+                    </p>
                 </div>
             </div>
         `;
     }
-}
+};
 
-function showPage(pageName) {
+window.showPage = function(pageName) {
     console.log('📄 [showPage]', pageName);
-    
     const container = document.getElementById('pageContainer');
     if (container) {
         container.innerHTML = `
@@ -648,16 +657,15 @@ function showPage(pageName) {
             </div>
         `;
     }
-    
     document.querySelectorAll('.nav-btn').forEach(function(btn) {
         btn.classList.remove('active');
     });
-}
+};
 
-function toggleSidebar() {
+window.toggleSidebar = function() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.toggle('open');
-}
+};
 
 // ============================================================
 // 🚀 INITIALIZATION
@@ -666,12 +674,17 @@ function toggleSidebar() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM ready - initializing...');
     console.log('📡 Server URL:', API_BASE_URL);
+    console.log('🔐 Credentials: admin / MarineDB2026Secure');
+    console.log('💡 SessionStorage only - no persistence after browser close');
     
     // ربط زر الدخول
     const loginBtn = document.getElementById('loginButton');
     if (loginBtn) {
-        loginBtn.onclick = doLogin;
-        console.log('✅ Login button bound to doLogin()');
+        loginBtn.onclick = function() {
+            console.log('🖱️ Login button clicked!');
+            window.doLogin();
+        };
+        console.log('✅ Login button bound');
     }
     
     // ربط Enter
@@ -682,7 +695,8 @@ document.addEventListener('DOMContentLoaded', function() {
         passwordField.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                doLogin();
+                console.log('⌨️ Enter pressed');
+                window.doLogin();
             }
         });
     }
@@ -696,12 +710,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // التحقق من جلسة سابقة
-    const userData = localStorage.getItem('auth_user');
-    const token = localStorage.getItem('auth_token');
+    // ✅ التحقق من SessionStorage (بدون LocalStorage)
+    const session = getSession();
     
-    if (userData && token) {
-        console.log('🔄 Auto-login detected');
+    if (session && session.user && session.token) {
+        console.log('🔄 Session found - auto-login');
         const overlay = document.getElementById('loginOverlay');
         const mainApp = document.getElementById('mainApp');
         
@@ -718,31 +731,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         updateUserDisplay();
         loadDashboard();
-        console.log('✅ Auto-login successful');
+        console.log('✅ Auto-login from session');
     } else {
+        console.log('🔐 No session - showing login');
         const overlay = document.getElementById('loginOverlay');
         if (overlay) {
             overlay.style.display = 'flex';
             overlay.style.visibility = 'visible';
             overlay.style.opacity = '1';
         }
-        console.log('🔐 Login screen shown');
     }
     
-    console.log('🚀 Marine System v10.0 - Ready!');
-    console.log('📡 API URL:', API_BASE_URL);
-    console.log('🔐 Use your credentials from Render database');
+    console.log('🚀 Marine System v13.0 - Ready!');
+    console.log('🔐 SessionStorage only - no LocalStorage');
 });
 
-// جعل الدوال عالمية
-window.doLogin = doLogin;
-window.doLogout = doLogout;
-window.showPage = showPage;
-window.toggleSidebar = toggleSidebar;
-window.updateUserDisplay = updateUserDisplay;
-window.loadDashboard = loadDashboard;
-
-console.log('✅ All functions exposed to window');
+// التأكد من أن جميع الدوال معروفة
+console.log('✅ Functions: doLogin, doLogout, showPage, toggleSidebar');
 </script>
 
 </body>
