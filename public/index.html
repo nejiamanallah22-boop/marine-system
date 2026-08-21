@@ -639,11 +639,11 @@
             </div>
             <div class="input-group">
                 <i class="fas fa-user input-icon"></i>
-                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" value="admin">
+                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
             </div>
             <div class="input-group">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" value="Marine@2024#Secure">
+                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
             </div>
             <button type="button" class="login-btn" id="loginButton" onclick="handleLogin()">
                 <span id="loginButtonIcon">🚀</span>
@@ -749,55 +749,34 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    📝 JavaScript - الكود الكامل (بدون تجاوز)
+    📝 JavaScript
     ============================================================ -->
     <script>
-        /**
-         * ============================================================
-         * ⚓ منظومة الوسائل البحرية - الكود الكامل
-         * ❌ تم حذف زر "تجاوز (تجربة)" نهائياً
-         * 🔒 لا يمكن الدخول إلا عبر بيانات المصادقة الصحيحة
-         * 📌 الإصدار: 5.1
-         * ============================================================
-         */
-
-        // ============================================================
-        // 📦 المتغيرات العامة
-        // ============================================================
-
+        // المتغيرات العامة
         var currentUser = null;
         var authToken = null;
-        var socket = null;
-        var trackingActive = false;
-        var watchId = null;
         var vessels = [];
         var users = [];
         var tickets = [];
         var logs = [];
-        var onlineUsers = [];
-        var locations = [];
         var notes = [];
         var sessions = [];
+        var onlineUsers = [];
         var activePage = 'dashboard';
         var dashboardChart = null;
         var efficiencyChart = null;
 
         // ============================================================
-        // 🔐 المصادقة (بدون تجاوز)
+        // 🔐 المصادقة
         // ============================================================
 
         async function login(username, password) {
             try {
                 var response = await fetch('/api/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({
-                        username: username.trim(),
-                        password: password
-                    })
+                    body: JSON.stringify({ username: username.trim(), password: password })
                 });
 
                 var data = await response.json();
@@ -816,25 +795,14 @@
                     currentUser = data.user;
                 }
 
-                console.log('✅ Login successful:', data.user?.username || data.user?.name);
-
-                return {
-                    success: true,
-                    user: data.user
-                };
+                return { success: true, user: data.user };
 
             } catch (error) {
-                console.error('❌ Login failed:', error);
-                return {
-                    success: false,
-                    error: error.message
-                };
+                return { success: false, error: error.message };
             }
         }
 
         async function handleLogin() {
-            console.log('🟢 handleLogin تم استدعاؤها');
-
             var username = document.getElementById('username').value.trim();
             var password = document.getElementById('password').value.trim();
             var errorEl = document.getElementById('loginError');
@@ -842,8 +810,6 @@
 
             errorEl.classList.remove('show');
             errorEl.textContent = '';
-
-            console.log('👤 محاولة تسجيل دخول:', username);
 
             if (!username || !password) {
                 errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
@@ -858,8 +824,6 @@
                 var result = await login(username, password);
 
                 if (result.success) {
-                    showToast('✅ تم تسجيل الدخول بنجاح', 'success');
-
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'flex';
 
@@ -867,7 +831,6 @@
                         '👤 ' + (currentUser.name || currentUser.username) + ' | ' + (currentUser.role || 'مستخدم');
 
                     await loadAllData();
-                    connectSocket();
                     showPage('dashboard');
 
                 } else {
@@ -887,16 +850,6 @@
         // ❌ تم حذف دالة bypassLogin() نهائياً
 
         function doLogout() {
-            if (socket) {
-                socket.disconnect();
-                socket = null;
-            }
-
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
             localStorage.removeItem('authToken');
             localStorage.removeItem('currentUser');
             currentUser = null;
@@ -904,46 +857,6 @@
 
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('loginOverlay').style.display = 'flex';
-
-            showToast('👋 تم تسجيل الخروج', 'info');
-        }
-
-        // ============================================================
-        // 🔌 Socket.IO
-        // ============================================================
-
-        function connectSocket() {
-            if (socket && socket.connected) return;
-
-            try {
-                socket = io({
-                    auth: { token: authToken },
-                    transports: ['websocket', 'polling']
-                });
-
-                socket.on('connect', function() {
-                    console.log('✅ متصل بـ Socket.IO');
-                    if (currentUser) {
-                        socket.emit('user-connected', { userName: currentUser.name || currentUser.username });
-                    }
-                });
-
-                socket.on('online-users', function(data) {
-                    onlineUsers = data.users || [];
-                    updateOnlineUsers();
-                });
-
-                socket.on('receive-location', function(data) {
-                    updateLocation(data);
-                });
-
-                socket.on('disconnect', function() {
-                    console.log('❌ قطع اتصال Socket.IO');
-                });
-
-            } catch (error) {
-                console.error('❌ خطأ في Socket.IO:', error);
-            }
         }
 
         // ============================================================
@@ -960,10 +873,8 @@
                     loadNotes(),
                     loadSessions()
                 ]);
-                updateStats();
             } catch (error) {
                 console.error('❌ خطأ في تحميل البيانات:', error);
-                showToast('⚠️ خطأ في تحميل بعض البيانات', 'error');
             }
         }
 
@@ -975,8 +886,6 @@
                 if (response.ok) {
                     vessels = await response.json();
                     renderVessels();
-                    renderMaintenance();
-                    renderEfficiency();
                 }
             } catch (error) {
                 console.error('❌ خطأ في جلب المراكب:', error);
@@ -1053,21 +962,522 @@
             }
         }
 
-        function updateStats() {
-            document.getElementById('statVessels')?.textContent = vessels.length || 0;
-            document.getElementById('statUsers')?.textContent = users.length || 0;
-            document.getElementById('statTickets')?.textContent = tickets.length || 0;
-            document.getElementById('statOnline')?.textContent = onlineUsers.length || 0;
-            document.getElementById('statLocations')?.textContent = locations.length || 0;
-        }
-
         // ============================================================
-        // 📑 الصفحات - (نفس الكود السابق)
+        // 📑 الصفحات
         // ============================================================
 
         function showPage(pageName) {
             activePage = pageName;
-            // ... (نفس الكود السابق)
+
+            document.querySelectorAll('.nav-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-btn').forEach(function(btn) {
+                var btnText = btn.textContent.trim();
+                var pageMap = {
+                    'dashboard': 'لوحة التحكم',
+                    'fleet': 'الأسطول',
+                    'maintenance': 'الصيانة',
+                    'efficiency': 'الجاهزية',
+                    'support': 'الدعم',
+                    'users': 'المستخدمين',
+                    'notes': 'Note Verbale',
+                    'sessions': 'المراقبة',
+                    'ai-assistant': 'المساعد الذكي',
+                    'logs': 'السجلات'
+                };
+                if (btnText.includes(pageMap[pageName] || pageName)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            var container = document.getElementById('pageContainer');
+            if (!container) return;
+
+            var pages = {
+                'dashboard': renderDashboard,
+                'fleet': renderFleetPage,
+                'maintenance': renderMaintenancePage,
+                'efficiency': renderEfficiencyPage,
+                'support': renderSupportPage,
+                'users': renderUsersPage,
+                'notes': renderNotesPage,
+                'sessions': renderSessionsPage,
+                'ai-assistant': renderAIAssistantPage,
+                'logs': renderLogsPage
+            };
+
+            if (pages[pageName]) {
+                pages[pageName]();
+            } else {
+                renderDashboard();
+            }
+
+            var titles = {
+                'dashboard': '📊 لوحة التحكم',
+                'fleet': '⚓ الأسطول',
+                'maintenance': '🛠️ الصيانة',
+                'efficiency': '📈 الجاهزية',
+                'support': '📞 الدعم',
+                'users': '👥 المستخدمين',
+                'notes': '📝 Note Verbale',
+                'sessions': '👥 المراقبة',
+                'ai-assistant': '🤖 المساعد الذكي',
+                'logs': '📜 السجلات'
+            };
+            document.title = '⚓ ' + (titles[pageName] || 'منظومة الوسائل البحرية');
+        }
+
+        // ============================================================
+        // 📊 لوحة التحكم
+        // ============================================================
+
+        function renderDashboard() {
+            var container = document.getElementById('pageContainer');
+            var total = vessels.length;
+            var ok = vessels.filter(function(v) { return v.stat === 'صالح'; }).length;
+            var maint = vessels.filter(function(v) { return v.stat === 'صيانة'; }).length;
+            var broken = vessels.filter(function(v) { return v.stat === 'معطب'; }).length;
+            var efficiency = total ? Math.round((ok / total) * 100) : 0;
+
+            container.innerHTML = `
+                <div class="page active" id="page-dashboard">
+                    <div class="flex-between mb-16">
+                        <h2 style="color:var(--primary);">📊 لوحة التحكم</h2>
+                        <span style="font-size:13px;color:var(--text-light);">آخر تحديث: ${new Date().toLocaleString('ar')}</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><span class="icon">🚢</span><span class="number">${total}</span><span class="label">إجمالي المراكب</span></div>
+                        <div class="stat-card"><span class="icon">✅</span><span class="number">${ok}</span><span class="label">الصالح</span></div>
+                        <div class="stat-card"><span class="icon">🔧</span><span class="number">${maint}</span><span class="label">تحت الصيانة</span></div>
+                        <div class="stat-card"><span class="icon">❌</span><span class="number">${broken}</span><span class="label">المعطوب</span></div>
+                        <div class="stat-card"><span class="icon">📈</span><span class="number">${efficiency}%</span><span class="label">نسبة الجاهزية</span></div>
+                        <div class="stat-card"><span class="icon">👥</span><span class="number">${users.length}</span><span class="label">المستخدمين</span></div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;">
+                        <button class="btn btn-primary" onclick="showPage('fleet')">⚓ إدارة الأسطول</button>
+                        <button class="btn btn-success" onclick="showPage('maintenance')">🛠️ سجل الصيانة</button>
+                        <button class="btn btn-warning" onclick="showPage('support')">📞 الدعم الفني</button>
+                        <button class="btn" style="background:#3498db;color:white;" onclick="showPage('ai-assistant')">🤖 المساعد الذكي</button>
+                    </div>
+                    <div class="chart-grid">
+                        <div class="chart-box"><h4>📊 حالة الأسطول</h4><canvas id="dashboardChart"></canvas></div>
+                    </div>
+                </div>
+            `;
+
+            renderDashboardCharts(ok, maint, broken);
+        }
+
+        function renderDashboardCharts(ok, maint, broken) {
+            var ctx = document.getElementById('dashboardChart');
+            if (!ctx) return;
+            if (dashboardChart) dashboardChart.destroy();
+
+            dashboardChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['صالح', 'صيانة', 'معطب'],
+                    datasets: [{
+                        data: [ok, maint, broken],
+                        backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // ============================================================
+        // ⚓ الأسطول
+        // ============================================================
+
+        function renderFleetPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-fleet">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">⚓ إدارة الأسطول البحري</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>الاسم</th><th>الرقم</th><th>الطول</th><th>الفئة</th><th>الإقليم</th><th>الميناء</th><th>الحالة</th></tr></thead>
+                            <tbody id="vesselsTableBody"><tr><td colspan="7" style="text-align:center;color:#94a3b8;">⏳ جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            renderVessels();
+        }
+
+        function renderVessels() {
+            var tbody = document.getElementById('vesselsTableBody');
+            if (!tbody) return;
+
+            if (!vessels.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">🚢 لا توجد مراكب</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = vessels.map(function(v) {
+                return '<tr>' +
+                    '<td><strong>' + (v.name || '') + '</strong></td>' +
+                    '<td>' + (v.num || '-') + '</td>' +
+                    '<td>' + (v.len || '-') + '</td>' +
+                    '<td>' + (v.cat || '-') + '</td>' +
+                    '<td>' + (v.reg || '-') + '</td>' +
+                    '<td>' + (v.port || '-') + '</td>' +
+                    '<td><span class="status-badge active">' + (v.stat || 'غير محدد') + '</span></td></tr>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 🛠️ الصيانة
+        // ============================================================
+
+        function renderMaintenancePage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-maintenance">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">🛠️ سجل الصيانة والأعطال</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>الاسم</th><th>الرقم</th><th>الإقليم</th><th>الحالة</th><th>العطب</th></tr></thead>
+                            <tbody id="maintTableBody"><tr><td colspan="5" style="text-align:center;color:#94a3b8;">لا توجد مراكب معطوبة</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            renderMaintenance();
+        }
+
+        function renderMaintenance() {
+            var tbody = document.getElementById('maintTableBody');
+            if (!tbody) return;
+
+            var filtered = vessels.filter(function(v) {
+                return v.stat === 'معطب' || v.stat === 'صيانة';
+            });
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;">✅ لا توجد مراكب معطوبة</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(function(v) {
+                return '<tr>' +
+                    '<td><strong>' + (v.name || '') + '</strong></td>' +
+                    '<td>' + (v.num || '-') + '</td>' +
+                    '<td>' + (v.reg || '-') + '</td>' +
+                    '<td><span class="status-badge maintenance">' + v.stat + '</span></td>' +
+                    '<td>' + (v.break || '-') + '</td></tr>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 📈 الجاهزية
+        // ============================================================
+
+        function renderEfficiencyPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-efficiency">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">📈 جاهزية الأسطول</h2>
+                    <div class="stats-grid" id="effStats">
+                        <div class="stat-card"><span class="icon">🚢</span><span class="number" id="effTotal">0</span><span class="label">إجمالي المراكب</span></div>
+                        <div class="stat-card"><span class="icon">✅</span><span class="number" id="effOk">0</span><span class="label">الصالح</span></div>
+                        <div class="stat-card"><span class="icon">🔧</span><span class="number" id="effMaint">0</span><span class="label">تحت الصيانة</span></div>
+                        <div class="stat-card"><span class="icon">❌</span><span class="number" id="effBroken">0</span><span class="label">المعطوب</span></div>
+                        <div class="stat-card"><span class="icon">📈</span><span class="number" id="effPercent">0%</span><span class="label">نسبة الجاهزية</span></div>
+                    </div>
+                    <div class="chart-grid">
+                        <div class="chart-box"><h4>📊 حالة الأسطول</h4><canvas id="efficiencyChart"></canvas></div>
+                    </div>
+                </div>
+            `;
+            renderEfficiency();
+        }
+
+        function renderEfficiency() {
+            var total = vessels.length;
+            var ok = vessels.filter(function(v) { return v.stat === 'صالح'; }).length;
+            var maint = vessels.filter(function(v) { return v.stat === 'صيانة'; }).length;
+            var broken = vessels.filter(function(v) { return v.stat === 'معطب'; }).length;
+            var percent = total ? Math.round((ok / total) * 100) : 0;
+
+            document.getElementById('effTotal').textContent = total;
+            document.getElementById('effOk').textContent = ok;
+            document.getElementById('effMaint').textContent = maint;
+            document.getElementById('effBroken').textContent = broken;
+            document.getElementById('effPercent').textContent = percent + '%';
+
+            var ctx = document.getElementById('efficiencyChart');
+            if (ctx) {
+                if (efficiencyChart) efficiencyChart.destroy();
+                efficiencyChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['صالح', 'صيانة', 'معطب'],
+                        datasets: [{
+                            data: [ok, maint, broken],
+                            backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+        }
+
+        // ============================================================
+        // 📞 الدعم
+        // ============================================================
+
+        function renderSupportPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-support">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">📞 نظام التذاكر - الدعم الفني</h2>
+                    <div class="ticket-list" id="ticketsList"><div style="text-align:center;color:#94a3b8;padding:20px;">📭 لا توجد تذاكر</div></div>
+                </div>
+            `;
+            renderTickets();
+        }
+
+        function renderTickets() {
+            var container = document.getElementById('ticketsList');
+            if (!container) return;
+
+            if (!tickets.length) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">📭 لا توجد تذاكر</div>';
+                return;
+            }
+
+            container.innerHTML = tickets.map(function(t) {
+                return '<div class="ticket-item">' +
+                    '<div class="ticket-info">' +
+                    '<span class="ticket-title">' + (t.title || 'بدون عنوان') + '</span>' +
+                    '<span class="status-badge active">' + (t.status || 'مفتوحة') + '</span>' +
+                    '<span class="ticket-date">📅 ' + new Date(t.createdAt).toLocaleDateString('ar') + '</span>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 👥 المستخدمين
+        // ============================================================
+
+        function renderUsersPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-users">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">👥 إدارة المستخدمين</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>الاسم</th><th>البريد</th><th>الصلاحية</th><th>الحالة</th></tr></thead>
+                            <tbody id="usersTableBody"><tr><td colspan="4" style="text-align:center;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            renderUsers();
+        }
+
+        function renderUsers() {
+            var tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+
+            if (!users.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#94a3b8;">👥 لا توجد مستخدمين</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(function(u) {
+                return '<tr>' +
+                    '<td><strong>' + (u.name || u.username || '') + '</strong></td>' +
+                    '<td>' + (u.email || '-') + '</td>' +
+                    '<td>' + (u.role || 'مشاهد') + '</td>' +
+                    '<td><span class="status-badge active">مفعل</span></td></tr>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 📝 Note Verbale
+        // ============================================================
+
+        function renderNotesPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-notes">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">📝 Note Verbale</h2>
+                    <div id="notesList"><div style="text-align:center;color:#94a3b8;padding:20px;">📝 لا توجد ملاحظات</div></div>
+                </div>
+            `;
+            renderNotes();
+        }
+
+        function renderNotes() {
+            var container = document.getElementById('notesList');
+            if (!container) return;
+
+            if (!notes.length) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">📝 لا توجد ملاحظات</div>';
+                return;
+            }
+
+            container.innerHTML = notes.map(function(n) {
+                return '<div class="ticket-item">' +
+                    '<div class="ticket-info">' +
+                    '<span>📝 ' + (n.content || '') + '</span>' +
+                    '<span class="ticket-date">📅 ' + new Date(n.createdAt).toLocaleString('ar') + '</span>' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 👥 المراقبة
+        // ============================================================
+
+        function renderSessionsPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-sessions">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">👥 مراقبة المستخدمين</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>المستخدم</th><th>الحالة</th><th>آخر نشاط</th></tr></thead>
+                            <tbody id="sessionsTableBody"><tr><td colspan="3" style="text-align:center;color:#94a3b8;">جاري التحميل...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            renderSessions();
+        }
+
+        function renderSessions() {
+            var tbody = document.getElementById('sessionsTableBody');
+            if (!tbody) return;
+
+            if (!sessions.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">لا توجد جلسات نشطة</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sessions.map(function(s) {
+                return '<tr>' +
+                    '<td><strong>' + (s.userName || s.username || 'مجهول') + '</strong></td>' +
+                    '<td><span class="status-badge active">🟢 متصل</span></td>' +
+                    '<td>' + (s.lastActivity ? new Date(s.lastActivity).toLocaleString('ar') : '-') + '</td></tr>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 🤖 المساعد الذكي
+        // ============================================================
+
+        function renderAIAssistantPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-ai-assistant">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">🤖 المساعد الذكي للأسطول البحري</h2>
+                    <div class="form-card">
+                        <h3>💬 اسأل المساعد</h3>
+                        <div class="ai-chat-box" id="aiChatBox" style="background:white;border-radius:12px;border:1px solid #ddd;padding:16px;max-height:350px;overflow-y:auto;margin:12px 0;">
+                            <div class="msg ai" style="padding:8px 14px;border-radius:12px;margin:6px 0;max-width:85%;background:#f0f4f8;color:#333;margin-left:auto;">
+                                <strong>🤖 المساعد الذكي</strong>
+                                <p>مرحباً! أنا مساعدك الذكي للأسطول البحري.</p>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <div style="display:flex;gap:10px;">
+                                <input type="text" id="aiInput" placeholder="اكتب سؤالك هنا..." style="flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;">
+                                <button class="btn btn-primary" onclick="askAI()">📤 إرسال</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function askAI() {
+            var input = document.getElementById('aiInput');
+            var chatBox = document.getElementById('aiChatBox');
+            var query = input.value.trim();
+
+            if (!query) return;
+
+            var userMsg = document.createElement('div');
+            userMsg.className = 'msg user';
+            userMsg.style.cssText = 'padding:8px 14px;border-radius:12px;margin:6px 0;max-width:85%;background:#0a4b3a;color:white;margin-right:auto;';
+            userMsg.innerHTML = '<strong>👤 أنت</strong><p>' + query + '</p>';
+            chatBox.appendChild(userMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            input.value = '';
+
+            var response = '📌 معلومات عامة عن الأسطول<br>🚢 عدد المراكب: <b>' + vessels.length + '</b><br>👥 عدد المستخدمين: <b>' + users.length + '</b>';
+
+            var aiMsg = document.createElement('div');
+            aiMsg.className = 'msg ai';
+            aiMsg.style.cssText = 'padding:8px 14px;border-radius:12px;margin:6px 0;max-width:85%;background:#f0f4f8;color:#333;margin-left:auto;';
+            aiMsg.innerHTML = '<strong>🤖 المساعد الذكي</strong><p>' + response + '</p>';
+            chatBox.appendChild(aiMsg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // ============================================================
+        // 📜 السجلات
+        // ============================================================
+
+        function renderLogsPage() {
+            var container = document.getElementById('pageContainer');
+            container.innerHTML = `
+                <div class="page active" id="page-logs">
+                    <h2 style="color:var(--primary);margin-bottom:16px;">📜 سجل العمليات</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead><tr><th>التاريخ</th><th>المستخدم</th><th>الإجراء</th></tr></thead>
+                            <tbody id="logsTableBody"><tr><td colspan="3" style="text-align:center;color:#94a3b8;">لا توجد سجلات</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            renderLogs();
+        }
+
+        function renderLogs() {
+            var tbody = document.getElementById('logsTableBody');
+            if (!tbody) return;
+
+            if (!logs.length) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;">لا توجد سجلات</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.slice(0, 50).map(function(l) {
+                return '<tr>' +
+                    '<td style="font-size:12px;">' + new Date(l.createdAt).toLocaleString('ar') + '</td>' +
+                    '<td>' + (l.user?.name || l.user?.username || 'مجهول') + '</td>' +
+                    '<td><span class="status-badge active">' + (l.action || 'حدث') + '</span></td></tr>';
+            }).join('');
+        }
+
+        // ============================================================
+        // 🔄 تحديثات عامة
+        // ============================================================
+
+        function refreshAllPages() {
+            loadAllData();
+        }
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('closed');
         }
 
         // ============================================================
@@ -1089,49 +1499,29 @@
                     '👤 ' + (user.name || user.username) + ' | ' + (user.role || 'مستخدم');
 
                 loadAllData();
-                connectSocket();
                 showPage('dashboard');
-
-                console.log('✅ تم استعادة الجلسة');
             } else {
                 document.getElementById('loginOverlay').style.display = 'flex';
                 document.getElementById('mainApp').style.display = 'none';
             }
 
             console.log('⚓ منظومة الوسائل البحرية v5.1');
-            console.log('🔐 استخدم بيانات تسجيل الدخول الصحيحة من قاعدة البيانات');
-            console.log('❌ تم حذف زر "تجاوز" نهائياً');
+            console.log('🔐 تم حذف زر "تجاوز" وكلمة المرور من الكود');
         });
 
-        // ============================================================
-        // 🎯 ربط الدوال للنطاق العام
-        // ============================================================
-
+        // ربط الدوال
         window.handleLogin = handleLogin;
-        // ❌ تم حذف window.bypassLogin
         window.doLogout = doLogout;
         window.showPage = showPage;
         window.toggleSidebar = toggleSidebar;
         window.refreshAllPages = refreshAllPages;
-        window.startTracking = startTracking;
-        window.stopTracking = stopTracking;
-        window.handleAddVessel = handleAddVessel;
-        window.deleteVessel = deleteVessel;
+        window.askAI = askAI;
         window.loadVessels = loadVessels;
         window.loadUsers = loadUsers;
         window.loadTickets = loadTickets;
         window.loadLogs = loadLogs;
         window.loadNotes = loadNotes;
         window.loadSessions = loadSessions;
-        window.handleAddTicket = handleAddTicket;
-        window.closeTicket = closeTicket;
-        window.handleAddUser = handleAddUser;
-        window.toggleUser = toggleUser;
-        window.handleAddNote = handleAddNote;
-        window.deleteNote = deleteNote;
-        window.askAI = askAI;
-        window.aiQuickAction = aiQuickAction;
-        window.showToast = showToast;
         window.renderMaintenance = renderMaintenance;
         window.renderEfficiency = renderEfficiency;
         window.renderVessels = renderVessels;
@@ -1140,6 +1530,16 @@
         window.renderLogs = renderLogs;
         window.renderNotes = renderNotes;
         window.renderSessions = renderSessions;
+        window.renderDashboard = renderDashboard;
+        window.renderFleetPage = renderFleetPage;
+        window.renderMaintenancePage = renderMaintenancePage;
+        window.renderEfficiencyPage = renderEfficiencyPage;
+        window.renderSupportPage = renderSupportPage;
+        window.renderUsersPage = renderUsersPage;
+        window.renderNotesPage = renderNotesPage;
+        window.renderSessionsPage = renderSessionsPage;
+        window.renderAIAssistantPage = renderAIAssistantPage;
+        window.renderLogsPage = renderLogsPage;
 
         console.log('✅ تم تحميل التطبيق بنجاح');
     </script>
