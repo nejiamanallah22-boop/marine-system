@@ -1,1092 +1,754 @@
-// ============================================================
-// 🚢 MARINE SYSTEM - SERVER v19.0
-// ============================================================
-// 🏆 10/10 - PRODUCTION READY - FIXED
-// ============================================================
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚓ منظومة الوسائل البحرية</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: #0a0e17;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999999;
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            background: rgba(10,14,23,0.98);
+            backdrop-filter: blur(10px);
+        }
+        
+        .login-box {
+            background: linear-gradient(145deg, #141b2d, #0f1625);
+            padding: 50px 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.8);
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(96,165,250,0.15);
+        }
+        
+        .login-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px; }
+        .logo-icon { font-size: 40px; color: #60a5fa; }
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { color: rgba(255,255,255,0.4); font-size: 14px; margin-bottom: 20px; }
+        
+        .developer {
+            background: rgba(96,165,250,0.08);
+            border-radius: 12px;
+            padding: 8px 16px;
+            margin-bottom: 24px;
+            display: inline-block;
+            border: 1px solid rgba(96,165,250,0.1);
+        }
+        .dev-name { color: #60a5fa; font-weight: 700; font-size: 14px; }
+        .dev-label { color: rgba(255,255,255,0.3); font-size: 11px; margin-left: 6px; }
+        
+        .input-group { position: relative; margin-bottom: 16px; }
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.2);
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 48px 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(96,165,250,0.08);
+        }
+        .input-group input::placeholder { color: rgba(255,255,255,0.25); }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(37,99,235,0.3); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .login-btn .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .login-btn.loading .spinner { display: inline-block; }
+        .login-btn.loading .btn-text { display: none; }
+        
+        .error-msg {
+            display: none;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 14px;
+            font-size: 14px;
+        }
+        .error-msg.show { display: block; }
+        .error-msg.error { color: #f87171; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.15); }
+        .error-msg.success { color: #4ade80; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.15); }
+        
+        .login-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255,255,255,0.2);
+            font-size: 11px;
+        }
+        .version { background: rgba(255,255,255,0.04); padding: 2px 10px; border-radius: 20px; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #mainApp { display: none; min-height: 100vh; }
+        
+        header {
+            background: #0f1625;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .menu-toggle {
+            font-size: 24px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.4);
+            transition: all 0.3s ease;
+        }
+        .menu-toggle:hover { color: #60a5fa; }
+        .header-left h1 { font-size: 18px; font-weight: 700; color: #fff; }
+        .header-left h1 span { color: #60a5fa; }
+        .developer-tag {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 400;
+            margin-right: 8px;
+        }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.15);
+        }
+        .btn-outline-white {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .btn-outline-white:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); color: #fff; }
+        .btn-logout:hover { border-color: #ef4444; color: #ef4444; }
+        
+        .sidebar {
+            position: fixed;
+            top: 65px;
+            right: 0;
+            width: 240px;
+            height: calc(100% - 65px);
+            background: #0f1625;
+            border-left: 1px solid rgba(255,255,255,0.06);
+            padding: 16px 12px;
+            overflow-y: auto;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding-bottom: 12px;
+        }
+        .sidebar-brand span:first-child { font-size: 20px; }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: right;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .nav-btn.active {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border-left: 3px solid #60a5fa;
+        }
+        .nav-btn i { width: 20px; text-align: center; }
+        
+        .sidebar-footer {
+            padding: 12px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.15);
+            font-size: 11px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-right: 240px;
+            padding: 20px;
+            min-height: calc(100vh - 65px);
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(100%); width: 280px; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-right: 0; padding: 12px; }
+            .login-box { padding: 30px 20px; margin: 16px; }
+            .header-left h1 { font-size: 14px; }
+            .developer-tag { display: none; }
+        }
+    </style>
+</head>
+<body>
 
-'use strict';
+<!-- ===== LOGIN ===== -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <div class="login-logo">
+            <span class="logo-icon">⚓</span>
+            <span class="logo-text">منظومة الوسائل البحرية</span>
+        </div>
+        <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
+        <div class="developer">
+            <span class="dev-label">الوكيل</span>
+            <span class="dev-name">أمان الله ناجي</span>
+        </div>
+        <div class="input-group">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
+        </div>
+        <div class="input-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
+        </div>
+        <button type="button" class="login-btn" id="loginButton">
+            <span class="spinner"></span>
+            <span class="btn-text">🚀 دخول</span>
+        </button>
+        <div id="loginError" class="error-msg"></div>
+        <div class="login-footer">
+            <span>نظام إدارة وإسناد الوحدات البحرية</span>
+            <span class="version">v13.0</span>
+        </div>
+    </div>
+</div>
 
-require('dotenv').config();
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp" style="display:none;">
+    <header>
+        <div class="header-left">
+            <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
+            <h1>
+                <span>⚓</span>
+                منظومة الوسائل البحرية
+                <span class="developer-tag">الوكيل أمان الله ناجي</span>
+            </h1>
+        </div>
+        <div class="header-right">
+            <span class="role-badge" id="userRoleDisplay">👤</span>
+            <button class="btn-outline-white btn-logout" type="button" onclick="doLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </header>
 
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
-const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const cookieParser = require('cookie-parser');
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span>⚓</span>
+            <span>الأسطول البحري</span>
+        </div>
+        <button class="nav-btn active" onclick="showPage('dashboard')">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
+        </button>
+        <button class="nav-btn" onclick="showPage('fleet')">
+            <i class="fas fa-ship"></i> الأسطول
+        </button>
+        <button class="nav-btn" onclick="showPage('maintenance')">
+            <i class="fas fa-wrench"></i> الصيانة
+        </button>
+        <button class="nav-btn" onclick="showPage('users')">
+            <i class="fas fa-users"></i> المستخدمين
+        </button>
+        <div class="sidebar-footer">
+            <span>الوكيل أمان الله ناجي</span>
+        </div>
+    </nav>
 
-// ============================================================
-// 📦 MODELS
-// ============================================================
+    <div class="main-content">
+        <div id="pageContainer">
+            <div style="text-align:center;padding:60px 20px;color:rgba(255,255,255,0.2);">
+                <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+                <p>مرحباً بك في منظومة الوسائل البحرية</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-const User = require('./models/User');
-const Vessel = require('./models/Vessel');
-const Maintenance = require('./models/Maintenance');
-const Ticket = require('./models/Ticket');
-const Note = require('./models/Note');
-const Log = require('./models/Log');
+<!-- ============================================================
+     📦 JAVASCRIPT - VERSION 13.0 - NO LOCALSTORAGE
+     ============================================================ -->
+
+<script>
+/**
+ * ============================================================
+ * 🚀 MARINE SYSTEM v13.0 - NO LOCALSTORAGE
+ * ============================================================
+ * ✅ يستخدم SessionStorage فقط (ينتهي عند إغلاق التبويب)
+ * ✅ لا يحفظ أي شيء بعد إغلاق المتصفح
+ * ============================================================
+ */
+
+console.log('🚀 Marine System v13.0 - Loading...');
+console.log('🔐 No LocalStorage - Session only');
 
 // ============================================================
 // ⚙️ CONFIGURATION
 // ============================================================
 
-const app = express();
-
-const PORT = Number(process.env.PORT) || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const IS_PRODUCTION = NODE_ENV === 'production';
-
-const MONGODB_URI = process.env.MONGODB_URI;
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-const FRONTEND_URL = process.env.FRONTEND_URL;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'MarineDB2026Secure';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
-
-// ✅ تعريف publicPath مرة واحدة فقط
-const publicPath = path.join(__dirname, 'public');
+const API_BASE_URL = 'https://marine-system-71eo.onrender.com';
+console.log('📡 API Base URL:', API_BASE_URL);
 
 // ============================================================
-// 🚨 ENVIRONMENT VALIDATION
+// 🔐 SESSION MANAGEMENT (بدون LocalStorage)
 // ============================================================
 
-console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v19.0 - PRODUCTION');
-console.log('='.repeat(60));
-
-const errors = [];
-
-if (!MONGODB_URI) errors.push('❌ MONGODB_URI is required');
-if (!JWT_SECRET || JWT_SECRET.length < 32) errors.push('❌ JWT_SECRET must be at least 32 characters');
-if (!JWT_REFRESH_SECRET || JWT_REFRESH_SECRET.length < 32) errors.push('❌ JWT_REFRESH_SECRET must be at least 32 characters');
-
-if (IS_PRODUCTION) {
-    if (!FRONTEND_URL || FRONTEND_URL === '*') errors.push('❌ FRONTEND_URL must be explicitly set in production');
-}
-
-if (errors.length > 0) {
-    errors.forEach(err => console.error(err));
-    process.exit(1);
-}
-
-console.log(`✅ Environment: ${NODE_ENV}`);
-console.log(`✅ Port: ${PORT}`);
-console.log(`✅ Frontend URL: ${FRONTEND_URL}`);
-console.log('='.repeat(60) + '\n');
-
-// ============================================================
-// 🔐 TOKEN HELPERS
-// ============================================================
-
-function generateAccessToken(user) {
-    return jwt.sign(
-        { 
-            id: user._id.toString(), 
-            name: user.name, 
-            email: user.email, 
-            role: user.role,
-            tokenVersion: user.tokenVersion || 0
-        },
-        JWT_SECRET,
-        { expiresIn: '15m', issuer: 'marine-system' }
-    );
-}
-
-function generateRefreshToken(user) {
-    const jti = crypto.randomBytes(16).toString('hex');
-    return jwt.sign(
-        { 
-            id: user._id.toString(),
-            jti: jti
-        },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d', issuer: 'marine-system' }
-    );
-}
-
-function hashRefreshToken(token) {
-    return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-function verifyAccessToken(token) {
-    return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
-}
-
-// ============================================================
-// 🔐 SECURITY HELPERS
-// ============================================================
-
-function logSecurityEvent(event, userId, req, details = {}) {
-    const safeDetails = { ...details };
-    delete safeDetails.password;
-    delete safeDetails.token;
-    delete safeDetails.refreshToken;
-    if (safeDetails.identifier) {
-        safeDetails.identifier = safeDetails.identifier.substring(0, 3) + '***';
-    }
-
-    console.log('🔐 SECURITY:', JSON.stringify({
-        timestamp: new Date().toISOString(),
-        event,
-        userId: userId || 'anonymous',
-        ip: req?.ip || 'unknown',
-        userAgent: req?.get('user-agent') || 'unknown',
-        path: req?.path || 'unknown',
-        ...safeDetails
-    }));
-}
-
-function pickAllowedFields(body, allowedFields) {
-    const result = {};
-    for (const field of allowedFields) {
-        if (body[field] !== undefined) {
-            result[field] = body[field];
-        }
-    }
-    return result;
-}
-
-function isValidObjectId(id) {
-    return mongoose.Types.ObjectId.isValid(id);
-}
-
-function cleanUser(user) {
-    if (!user) return null;
-    return {
-        id: user._id?.toString(),
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        lastLogin: user.lastLogin,
-        preferences: user.preferences || {},
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-        tokenVersion: user.tokenVersion || 0
-    };
-}
-
-// ============================================================
-// ✅ VALIDATION FUNCTIONS
-// ============================================================
-
-function validateVessel(data, partial = false) {
-    const errors = [];
-    if (data.name !== undefined) {
-        if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 2) {
-            errors.push('اسم المركب مطلوب (حرفين على الأقل)');
-        }
-    } else if (!partial) {
-        errors.push('اسم المركب مطلوب');
-    }
-    if (data.stat && !['صالح', 'معطب', 'صيانة'].includes(data.stat)) {
-        errors.push('الحالة غير صالحة');
-    }
-    if (data.region && !['الشمال', 'الساحل', 'الوسط', 'الجنوب'].includes(data.region)) {
-        errors.push('المنطقة غير صالحة');
-    }
-    return errors;
-}
-
-function validateMaintenance(data, partial = false) {
-    const errors = [];
-    if (data.description !== undefined) {
-        if (!data.description || typeof data.description !== 'string' || data.description.trim().length < 3) {
-            errors.push('وصف الصيانة مطلوب (3 أحرف على الأقل)');
-        }
-    } else if (!partial) {
-        errors.push('وصف الصيانة مطلوب');
-    }
-    if (data.technician !== undefined) {
-        if (!data.technician || typeof data.technician !== 'string' || data.technician.trim().length < 2) {
-            errors.push('اسم الفني مطلوب');
-        }
-    } else if (!partial) {
-        errors.push('اسم الفني مطلوب');
-    }
-    if (data.cost !== undefined && (typeof data.cost !== 'number' || data.cost < 0)) {
-        errors.push('التكلفة يجب أن تكون رقم موجب');
-    }
-    return errors;
-}
-
-async function writeLog({ action, resource, resourceId, resourceModel, user, req, details = {}, status = 'success', error = null }) {
+function saveSession(user, token) {
     try {
-        if (Log && typeof Log.logAction === 'function') {
-            await Log.logAction({
-                action, resource, resourceId, resourceModel,
-                user: user?._id, userName: user?.name, userEmail: user?.email,
-                ipAddress: req?.ip, userAgent: req?.get('user-agent'),
-                details, status, error
-            });
+        sessionStorage.setItem('auth_user', JSON.stringify(user));
+        sessionStorage.setItem('auth_token', token);
+        console.log('💾 Session saved (SessionStorage)');
+    } catch (e) {
+        console.warn('Session storage error:', e);
+    }
+}
+
+function getSession() {
+    try {
+        const userData = sessionStorage.getItem('auth_user');
+        const token = sessionStorage.getItem('auth_token');
+        if (userData && token) {
+            return { user: JSON.parse(userData), token: token };
         }
-    } catch (err) {
-        console.error('⚠️ Log error:', err.message);
+    } catch (e) {
+        console.warn('Session load error:', e);
+    }
+    return null;
+}
+
+function clearSession() {
+    try {
+        sessionStorage.removeItem('auth_user');
+        sessionStorage.removeItem('auth_token');
+        console.log('🗑️ Session cleared');
+    } catch (e) {
+        console.warn('Session clear error:', e);
     }
 }
 
 // ============================================================
-// 🔐 SECURITY MIDDLEWARE
+// 🔐 LOGIN FUNCTION
 // ============================================================
 
-app.disable('x-powered-by');
-app.set('trust proxy', 1);
-
-app.use(cookieParser());
-
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
-            scriptSrcAttr: ["'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
-            styleSrcElem: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
-            imgSrc: ["'self'", "data:", "https://*.googleapis.com", "https://*.gstatic.com", "https://*.openstreetmap.org", "https://*.tile.openstreetmap.org"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-            connectSrc: ["'self'", "https://*.openstreetmap.org", "https://*.googleapis.com", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://*.tile.openstreetmap.org"],
-            frameSrc: ["'none'"],
-            objectSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"]
-        }
-    },
-    hsts: {
-        maxAge: 31536000,
-        includeSubDomains: true,
-        preload: true
-    }
-}));
-
-// ============================================================
-// 🌐 CORS
-// ============================================================
-
-const allowedOrigins = FRONTEND_URL ? [FRONTEND_URL] : [];
-
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-        console.warn(`⚠️ CORS blocked: ${origin}`);
-        return callback(new Error('CORS origin not allowed'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-    maxAge: 86400
-}));
-
-// ============================================================
-// 📦 BODY PARSERS
-// ============================================================
-
-app.use(express.json({ limit: '1mb', strict: true }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-
-app.use(compression({ threshold: 1024, level: 6 }));
-
-// ============================================================
-// 🚦 RATE LIMITING
-// ============================================================
-
-const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: IS_PRODUCTION ? 500 : 5000,
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: req => req.path === '/health',
-    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' }
-});
-
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    skipSuccessfulRequests: true,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, error: 'محاولات تسجيل دخول كثيرة، حاول بعد قليل' }
-});
-
-const userLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    keyGenerator: (req) => {
-        if (req.user?._id) return req.user._id.toString();
-        return req.ip || 'anonymous';
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, error: 'تجاوزت الحد المسموح من الطلبات' }
-});
-
-app.use('/api', globalLimiter);
-app.use('/api/auth/login', loginLimiter);
-
-// ============================================================
-// 📊 REQUEST LOGGER
-// ============================================================
-
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        console.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`);
-    });
-    next();
-});
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-// ✅ تأكد من وجود مجلد public/pages
-const pagesPath = path.join(publicPath, 'pages');
-if (!fs.existsSync(pagesPath)) {
-    fs.mkdirSync(pagesPath, { recursive: true });
-    console.log('📁 Created pages directory');
-}
-
-app.use(express.static(publicPath, {
-    index: 'index.html',
-    maxAge: IS_PRODUCTION ? '1d' : 0,
-    etag: true,
-    dotfiles: 'deny'
-}));
-
-app.use('/pages', express.static(path.join(publicPath, 'pages'), {
-    maxAge: IS_PRODUCTION ? '1d' : 0
-}));
-
-app.use('/css', express.static(path.join(publicPath, 'css'), {
-    maxAge: IS_PRODUCTION ? '1d' : 0
-}));
-
-app.use('/js', express.static(path.join(publicPath, 'js'), {
-    maxAge: IS_PRODUCTION ? '1d' : 0
-}));
-
-app.use('/images', express.static(path.join(publicPath, 'images'), {
-    maxAge: IS_PRODUCTION ? '1d' : 0
-}));
-
-// ============================================================
-// 🔐 AUTHENTICATION
-// ============================================================
-
-async function authenticate(req, res, next) {
-    try {
-        let token = req.cookies?.auth_token;
-        
-        if (!token) {
-            const authHeader = req.headers.authorization;
-            if (authHeader && authHeader.startsWith('Bearer ')) {
-                token = authHeader.substring(7).trim();
-            }
-        }
-
-        if (!token) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        let decoded;
-        try {
-            decoded = verifyAccessToken(token);
-        } catch (error) {
-            logSecurityEvent('token_verification_failed', null, req, { error: error.name });
-            return res.status(401).json({
-                success: false,
-                error: error.name === 'TokenExpiredError' 
-                    ? 'انتهت الجلسة، يرجى تسجيل الدخول من جديد' 
-                    : 'رمز الدخول غير صالح'
-            });
-        }
-
-        if (!decoded?.id || !isValidObjectId(decoded.id)) {
-            return res.status(401).json({ success: false, error: 'رمز الدخول غير صالح' });
-        }
-
-        const user = await User.findById(decoded.id).select('+password +refreshToken');
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'المستخدم غير موجود' });
-        }
-
-        if (!user.isActive) {
-            return res.status(403).json({ success: false, error: 'الحساب معطل' });
-        }
-
-        if (user.isLocked) {
-            return res.status(423).json({ success: false, error: 'الحساب مقفل مؤقتاً' });
-        }
-
-        if (decoded.tokenVersion !== undefined && user.tokenVersion !== undefined) {
-            if (decoded.tokenVersion !== user.tokenVersion) {
-                logSecurityEvent('token_version_mismatch', user._id, req, {
-                    tokenVersion: decoded.tokenVersion,
-                    userVersion: user.tokenVersion
-                });
-                return res.status(401).json({ 
-                    success: false, 
-                    error: 'انتهت الجلسة، يرجى تسجيل الدخول من جديد' 
-                });
-            }
-        }
-
-        if (decoded.iat && typeof user.changedPasswordAfter === 'function' && user.changedPasswordAfter(decoded.iat)) {
-            return res.status(401).json({ success: false, error: 'تم تغيير كلمة المرور، يرجى تسجيل الدخول من جديد' });
-        }
-
-        req.user = user;
-        
-        userLimiter(req, res, () => {
-            next();
-        });
-
-    } catch (error) {
-        console.error('❌ Authentication error:', error);
-        return res.status(401).json({ success: false, error: 'فشل التحقق من الهوية' });
-    }
-}
-
-function authorize(...roles) {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-        if (!roles.includes(req.user.role)) {
-            logSecurityEvent('authorization_failed', req.user._id, req, { required: roles, userRole: req.user.role });
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-        }
-        next();
-    };
-}
-
-// ============================================================
-// ❤️ HEALTH
-// ============================================================
-
-app.get('/health', (req, res) => {
-    const dbState = mongoose.connection.readyState;
-    const isHealthy = dbState === 1;
-    res.status(isHealthy ? 200 : 503).json({
-        status: isHealthy ? 'ok' : 'degraded',
-        timestamp: new Date().toISOString()
-    });
-});
-
-// ============================================================
-// 🔐 AUTH ROUTES
-// ============================================================
-
-app.post('/api/auth/login', loginLimiter, async (req, res) => {
-    const start = Date.now();
-    try {
-        const identifier = String(req.body.username || req.body.email || req.body.identifier || '').trim().toLowerCase();
-        const password = String(req.body.password || '');
-
-        logSecurityEvent('login_attempt', null, req, { identifier: identifier.substring(0, 3) + '***' });
-
-        if (!identifier || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'اسم المستخدم وكلمة المرور مطلوبان' 
-            });
-        }
-
-        const user = await User.findOne({
-            $or: [
-                { email: identifier },
-                { username: identifier }
-            ]
-        }).select('+password +refreshToken');
-
-        if (!user) {
-            logSecurityEvent('login_failed_user_not_found', null, req);
-            return res.status(401).json({ 
-                success: false, 
-                error: 'بيانات الدخول غير صحيحة' 
-            });
-        }
-
-        if (!user.isActive) {
-            logSecurityEvent('login_failed_inactive', user._id, req);
-            return res.status(403).json({ 
-                success: false, 
-                error: 'الحساب معطل' 
-            });
-        }
-
-        if (user.isLocked) {
-            logSecurityEvent('login_failed_locked', user._id, req);
-            return res.status(423).json({ 
-                success: false, 
-                error: 'الحساب مقفل مؤقتاً' 
-            });
-        }
-
-        const isValid = await user.comparePassword(password);
-        if (!isValid) {
-            logSecurityEvent('login_failed_password', user._id, req);
-            if (typeof user.incrementLoginAttempts === 'function') {
-                await user.incrementLoginAttempts();
-            }
-            return res.status(401).json({ 
-                success: false, 
-                error: 'بيانات الدخول غير صحيحة' 
-            });
-        }
-
-        if (typeof user.resetLoginAttempts === 'function') {
-            await user.resetLoginAttempts();
-        }
-
-        user.lastLogin = new Date();
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
-
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
-        user.refreshToken = hashRefreshToken(refreshToken);
-        await user.save();
-
-        res.cookie('auth_token', accessToken, {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            maxAge: 15 * 60 * 1000
-        });
-
-        res.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        logSecurityEvent('login_success', user._id, req);
-
-        await writeLog({
-            action: 'login',
-            resource: 'user',
-            resourceId: user._id,
-            resourceModel: 'User',
-            user,
-            req,
-            details: { duration: Date.now() - start }
-        });
-
-        res.json({
-            success: true,
-            user: cleanUser(user)
-        });
-
-    } catch (error) {
-        console.error('❌ Login error:', error);
-        logSecurityEvent('login_error', null, req, { error: error.message });
-        res.status(500).json({ 
-            success: false, 
-            error: IS_PRODUCTION ? 'حدث خطأ في الخادم' : error.message 
-        });
-    }
-});
-
-// ============================================================
-// 👤 CREATE ADMIN
-// ============================================================
-
-async function createInitialAdmin() {
-    try {
-        const defaultEmail = 'admin@marine-system.com';
-        const defaultPassword = 'MarineDB2026Secure';
-        const defaultName = 'مدير النظام';
-
-        const adminEmail = String(process.env.ADMIN_EMAIL || defaultEmail).trim().toLowerCase();
-        const adminPassword = String(process.env.ADMIN_PASSWORD || defaultPassword);
-        const adminName = process.env.ADMIN_NAME || defaultName;
-
-        const existing = await User.findOne({ 
-            $or: [
-                { email: adminEmail },
-                { username: 'admin' }
-            ]
-        });
-
-        if (existing) {
-            console.log('ℹ️ Admin account already exists');
-            if (!existing.isActive) {
-                existing.isActive = true;
-                existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                await existing.save();
-                console.log('✅ Admin account activated');
-            }
-            return;
-        }
-
-        const admin = new User({
-            name: adminName,
-            username: 'admin',
-            email: adminEmail,
-            password: adminPassword,
-            role: 'admin',
-            isActive: true,
-            tokenVersion: 1
-        });
-
-        await admin.save();
-        
-        console.log('✅ Admin created successfully!');
-        console.log(`📧 Email: ${adminEmail}`);
-        console.log(`🔑 Password: ${adminPassword}`);
-
-    } catch (error) {
-        console.error('❌ Initial admin error:', error.message);
-    }
-}
-
-// ============================================================
-// 🚢 API ROUTES - VESSELS
-// ============================================================
-
-app.get('/api/vessels', authenticate, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json({ success: true, vessels });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        const allowedFields = ['name', 'num', 'stat', 'zone', 'port', 'supp', 'region', 'cat', 'len'];
-        const data = pickAllowedFields(req.body, allowedFields);
-        const errors = validateVessel(data);
-        if (errors.length > 0) {
-            return res.status(400).json({ success: false, errors });
-        }
-        const vessel = new Vessel(data);
-        await vessel.save();
-        await writeLog({ action: 'create', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
-        res.status(201).json({ success: true, vessel });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
-        }
-        const allowedFields = ['name', 'num', 'stat', 'zone', 'port', 'supp', 'region', 'cat', 'len'];
-        const data = pickAllowedFields(req.body, allowedFields);
-        const errors = validateVessel(data, true);
-        if (errors.length > 0) {
-            return res.status(400).json({ success: false, errors });
-        }
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
-        }
-        await writeLog({ action: 'update', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
-        res.json({ success: true, vessel });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid vessel ID' });
-        }
-        const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) {
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
-        }
-        await writeLog({ action: 'delete', resource: 'vessel', resourceId: vessel._id, resourceModel: 'Vessel', resourceName: vessel.name, user: req.user, req });
-        res.json({ success: true, message: 'Vessel deleted' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🔧 API ROUTES - MAINTENANCE
-// ============================================================
-
-app.get('/api/maintenance', authenticate, async (req, res) => {
-    try {
-        const records = await Maintenance.find()
-            .populate('vesselId', 'name num cat stat')
-            .populate('supervisor', 'name email')
-            .sort({ startDate: -1 });
-        res.json({ success: true, maintenance: records });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        const allowedFields = [
-            'vesselId', 'vesselName', 'type', 'unit', 'technician', 
-            'description', 'repair', 'faultType', 'cost', 'notes', 
-            'parts', 'status', 'date', 'startDate', 'endDate'
-        ];
-        const data = pickAllowedFields(req.body, allowedFields);
-        data.supervisor = req.user._id;
-        const errors = validateMaintenance(data);
-        if (errors.length > 0) {
-            return res.status(400).json({ success: false, errors });
-        }
-        const record = new Maintenance(data);
-        await record.save();
-        await writeLog({ action: 'create', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
-        res.status(201).json({ success: true, maintenance: record });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-app.put('/api/maintenance/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    try {
-        if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid maintenance ID' });
-        }
-        const allowedFields = [
-            'vesselId', 'vesselName', 'type', 'unit', 'technician', 
-            'description', 'repair', 'faultType', 'cost', 'notes', 
-            'parts', 'status', 'date', 'startDate', 'endDate'
-        ];
-        const data = pickAllowedFields(req.body, allowedFields);
-        const errors = validateMaintenance(data, true);
-        if (errors.length > 0) {
-            return res.status(400).json({ success: false, errors });
-        }
-        const record = await Maintenance.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-        if (!record) {
-            return res.status(404).json({ success: false, error: 'Maintenance record not found' });
-        }
-        await writeLog({ action: 'update', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
-        res.json({ success: true, maintenance: record });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-app.delete('/api/maintenance/:id', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        if (!isValidObjectId(req.params.id)) {
-            return res.status(400).json({ success: false, error: 'Invalid maintenance ID' });
-        }
-        const record = await Maintenance.findByIdAndDelete(req.params.id);
-        if (!record) {
-            return res.status(404).json({ success: false, error: 'Maintenance record not found' });
-        }
-        await writeLog({ action: 'delete', resource: 'maintenance', resourceId: record._id, resourceModel: 'Maintenance', user: req.user, req });
-        res.json({ success: true, message: 'Maintenance record deleted' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📊 API ROUTES - DASHBOARD ✅ تم الإضافة
-// ============================================================
-
-app.get('/api/dashboard', authenticate, async (req, res) => {
-    try {
-        const [totalVessels, activeMaintenance, openTickets, publishedNotes, validVessels, damagedVessels, maintenanceVessels] = await Promise.all([
-            Vessel.countDocuments(),
-            Maintenance.countDocuments({ status: { $in: ['معلقة', 'قيد التنفيذ'] } }),
-            Ticket.countDocuments({ status: { $ne: 'مغلق' } }),
-            Note.countDocuments({ status: 'منشورة' }),
-            Vessel.countDocuments({ stat: 'صالح' }),
-            Vessel.countDocuments({ stat: 'معطب' }),
-            Vessel.countDocuments({ stat: 'صيانة' })
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                vessels: {
-                    total: totalVessels,
-                    valid: validVessels,
-                    damaged: damagedVessels,
-                    maintenance: maintenanceVessels
-                },
-                activeMaintenance,
-                openTickets,
-                publishedNotes
-            }
-        });
-    } catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 👥 API ROUTES - USERS
-// ============================================================
-
-app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const users = await User.find().select('-password -refreshToken').sort({ createdAt: -1 });
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🤖 AI ROUTES
-// ============================================================
-
-app.post('/api/ai/ask', authenticate, async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-        }
-
-        let response = 'عذراً، لم أستطع فهم سؤالك.';
-        const msg = message.toLowerCase();
-
-        if (msg.includes('مرحبا') || msg.includes('السلام')) {
-            response = '👋 وعليكم السلام! كيف يمكنني مساعدتك؟';
-        } else if (msg.includes('تونس')) {
-            response = '🇹🇳 تونس هي عاصمة تونس، تقع في شمال أفريقيا على البحر المتوسط.';
-        } else if (msg.includes('الذكاء') || msg.includes('ai')) {
-            response = '🧠 الذكاء الاصطناعي هو محاكاة الذكاء البشري في الآلات.';
-        } else if (msg.includes('مساعدة')) {
-            response = '📚 يمكنني مساعدتك في:\n• معلومات عامة\n• الشؤون البحرية\n• الأسطول والصيانة';
-        } else if (msg.includes('الأسطول') || msg.includes('مراكب')) {
-            const total = await Vessel.countDocuments();
-            response = `🚢 عدد المراكب في الأسطول: ${total}`;
-        } else {
-            response = `🤔 سؤال ممتاز! لكني لا أملك إجابة دقيقة الآن.\n\n💡 اسألني عن:\n• مرحبا\n• تونس\n• الذكاء الاصطناعي\n• الأسطول`;
-        }
-
-        res.json({
-            success: true,
-            response: response,
-            conversationId: 'ai-' + Date.now()
-        });
-
-    } catch (error) {
-        console.error('❌ AI error:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📄 PAGE ROUTES
-// ============================================================
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
-});
-
-app.get('/pages/:page', (req, res) => {
-    const pageName = req.params.page;
-    const filePath = path.join(publicPath, 'pages', `${pageName}.html`);
+window.doLogin = function() {
+    console.log('🔐 [doLogin] CALLED');
     
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        res.status(404).send(`
-            <h1>⚠️ الصفحة غير موجودة</h1>
-            <p>${pageName}</p>
-            <a href="/">🏠 العودة</a>
-        `);
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const errorEl = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginButton');
+    
+    if (!usernameEl || !passwordEl) {
+        console.error('❌ Login elements not found!');
+        return;
     }
-});
-
-app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'dashboard.html'));
-});
-
-app.get('/fleet', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'fleet.html'));
-});
-
-app.get('/maintenance', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'maintenance.html'));
-});
-
-app.get('/users', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'users.html'));
-});
-
-app.get('/ai-assistant', (req, res) => {
-    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
-});
-
-// ============================================================
-// ❌ API 404
-// ============================================================
-
-app.use('/api', (req, res) => {
-    res.status(404).json({ success: false, error: 'API endpoint not found', path: req.originalUrl });
-});
-
-// ============================================================
-// 🌐 FRONTEND FALLBACK
-// ============================================================
-
-app.get(/^(?!\/api(?:\/|$)).*/, (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    res.sendFile(indexPath, error => {
-        if (error) {
-            console.error('Frontend error:', error.message);
-            if (!res.headersSent) {
-                res.status(404).send('Marine System - Page not found');
+    
+    const user = usernameEl.value.trim();
+    const pass = passwordEl.value.trim();
+    
+    console.log('🔐 Username:', user || '(empty)');
+    console.log('🔐 Password length:', pass.length || 0);
+    
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.className = 'error-msg';
+    }
+    
+    if (!user || !pass) {
+        console.log('❌ Empty credentials');
+        if (errorEl) {
+            errorEl.textContent = '⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور';
+            errorEl.className = 'error-msg show error';
+        }
+        return;
+    }
+    
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.classList.add('loading');
+        console.log('⏳ Loading...');
+    }
+    
+    const loginUrl = API_BASE_URL + '/api/auth/login';
+    console.log('📡 Sending to:', loginUrl);
+    
+    fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username: user, password: pass })
+    })
+    .then(function(response) {
+        console.log('📡 Status:', response.status);
+        return response.text().then(function(text) {
+            let data;
+            try { data = JSON.parse(text); } catch (e) { data = { error: 'Invalid JSON' }; }
+            return { status: response.status, ok: response.ok, data: data };
+        });
+    })
+    .then(function(result) {
+        console.log('📡 Response:', result.data);
+        
+        if (result.ok && result.data && result.data.success) {
+            console.log('✅ Login SUCCESS!');
+            
+            const userData = result.data.user || result.data.data?.user || result.data;
+            
+            // ✅ استخدام SessionStorage بدلاً من LocalStorage
+            saveSession(userData, result.data.token || result.data.data?.token || 'token-' + Date.now());
+            
+            // إخفاء شاشة الدخول
+            const overlay = document.getElementById('loginOverlay');
+            const mainApp = document.getElementById('mainApp');
+            
+            if (overlay) {
+                overlay.style.display = 'none';
+                overlay.style.visibility = 'hidden';
+                overlay.style.opacity = '0';
+            }
+            if (mainApp) {
+                mainApp.style.display = 'block';
+                mainApp.style.visibility = 'visible';
+                mainApp.style.opacity = '1';
+            }
+            
+            updateUserDisplay();
+            loadDashboard();
+            
+            if (errorEl) {
+                errorEl.textContent = '✅ مرحباً ' + (userData.name || userData.username || user);
+                errorEl.className = 'error-msg show success';
+                setTimeout(function() { errorEl.className = 'error-msg'; }, 3000);
+            }
+            
+        } else {
+            console.log('❌ Login FAILED');
+            const errorMsg = result.data?.error || result.data?.message || 'بيانات الدخول غير صحيحة';
+            
+            if (errorEl) {
+                errorEl.textContent = '❌ ' + errorMsg;
+                errorEl.className = 'error-msg show error';
             }
         }
+    })
+    .catch(function(error) {
+        console.error('❌ Network error:', error);
+        if (errorEl) {
+            errorEl.textContent = '❌ لا يمكن الاتصال بالسيرفر: ' + error.message;
+            errorEl.className = 'error-msg show error';
+        }
+    })
+    .finally(function() {
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.classList.remove('loading');
+        }
     });
-});
+};
 
 // ============================================================
-// 💥 GLOBAL ERROR HANDLER
+// 🚪 LOGOUT
 // ============================================================
 
-app.use((err, req, res, next) => {
-    console.error('💥 SERVER ERROR:', err);
-
-    if (res.headersSent) return next(err);
-
-    if (err.name === 'ValidationError') {
-        return res.status(400).json({
-            success: false,
-            error: 'Validation error',
-            details: Object.values(err.errors || {}).map(e => e.message)
-        });
+window.doLogout = function() {
+    console.log('🚪 [doLogout] CALLED');
+    
+    if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    // ✅ مسح SessionStorage فقط
+    clearSession();
+    
+    const overlay = document.getElementById('loginOverlay');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (overlay) {
+        overlay.style.display = 'flex';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
     }
-
-    if (err.name === 'CastError') {
-        return res.status(400).json({ success: false, error: 'Invalid ID format' });
+    if (mainApp) {
+        mainApp.style.display = 'none';
+        mainApp.style.visibility = 'hidden';
+        mainApp.style.opacity = '0';
     }
-
-    if (err.code === 11000) {
-        return res.status(409).json({ success: false, error: 'Duplicate key error' });
+    
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+    const errorEl = document.getElementById('loginError');
+    
+    if (username) username.value = '';
+    if (password) password.value = '';
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.className = 'error-msg';
     }
+    
+    console.log('👋 Logged out - Session cleared');
+};
 
-    if (err.message === 'CORS origin not allowed') {
-        return res.status(403).json({ success: false, error: 'Origin not allowed' });
+// ============================================================
+// 👤 USER DISPLAY
+// ============================================================
+
+window.updateUserDisplay = function() {
+    console.log('👤 [updateUserDisplay] CALLED');
+    
+    const display = document.getElementById('userRoleDisplay');
+    if (!display) return;
+    
+    const session = getSession();
+    if (session && session.user) {
+        const user = session.user;
+        const emojis = { 'admin': '👑', 'manager': '⭐', 'operator': '🔧', 'viewer': '👀' };
+        const emoji = emojis[user.role] || '👤';
+        display.textContent = `${emoji} ${user.name || user.username || 'مستخدم'}`;
+    } else {
+        display.textContent = '👤';
     }
+};
 
-    res.status(500).json({
-        success: false,
-        error: IS_PRODUCTION ? 'Internal server error' : err.message
+// ============================================================
+// 📄 PAGE FUNCTIONS
+// ============================================================
+
+window.loadDashboard = function() {
+    console.log('📊 [loadDashboard] CALLED');
+    
+    const container = document.getElementById('pageContainer');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:60px 20px;">
+                <h2 style="color:#60a5fa;font-size:28px;">📊 لوحة التحكم</h2>
+                <p style="color:rgba(255,255,255,0.3);margin-top:8px;">مرحباً بك في منظومة الوسائل البحرية</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:30px;max-width:800px;margin-left:auto;margin-right:auto;">
+                    <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+                        <div style="font-size:32px;">🚢</div>
+                        <div style="font-size:24px;font-weight:700;color:#60a5fa;" id="dashTotal">0</div>
+                        <div style="color:rgba(255,255,255,0.3);font-size:13px;">السفن</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+                        <div style="font-size:32px;">🔧</div>
+                        <div style="font-size:24px;font-weight:700;color:#4ade80;" id="dashMaintenance">0</div>
+                        <div style="color:rgba(255,255,255,0.3);font-size:13px;">مهام الصيانة</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04);padding:20px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+                        <div style="font-size:32px;">👥</div>
+                        <div style="font-size:24px;font-weight:700;color:#fbbf24;" id="dashUsers">0</div>
+                        <div style="color:rgba(255,255,255,0.3);font-size:13px;">المستخدمين</div>
+                    </div>
+                </div>
+                <div style="margin-top:30px;padding:20px;background:rgba(96,165,250,0.05);border-radius:12px;border:1px solid rgba(96,165,250,0.1);">
+                    <p style="color:rgba(255,255,255,0.3);font-size:13px;">
+                        ✅ متصل بالسيرفر: ${API_BASE_URL}
+                    </p>
+                    <p style="color:rgba(255,255,255,0.2);font-size:11px;margin-top:8px;">
+                        🔐 الجلسة تنتهي عند إغلاق المتصفح
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+};
+
+window.showPage = function(pageName) {
+    console.log('📄 [showPage]', pageName);
+    const container = document.getElementById('pageContainer');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:60px 20px;">
+                <h2 style="color:#60a5fa;">📄 ${pageName}</h2>
+                <p style="color:rgba(255,255,255,0.3);">جاري تحميل الصفحة...</p>
+            </div>
+        `;
+    }
+    document.querySelectorAll('.nav-btn').forEach(function(btn) {
+        btn.classList.remove('active');
     });
-});
+};
+
+window.toggleSidebar = function() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('open');
+};
 
 // ============================================================
-// 🗄️ DATABASE
+// 🚀 INITIALIZATION
 // ============================================================
 
-async function connectDatabase() {
-    console.log('🗄️ Connecting to MongoDB...');
-    try {
-        await mongoose.connect(MONGODB_URI, {
-            serverSelectionTimeoutMS: 15000,
-            socketTimeoutMS: 45000,
-            maxPoolSize: 20,
-            minPoolSize: 2,
-            retryWrites: true
-        });
-        console.log('✅ MongoDB Connected');
-        console.log(`📚 Database: ${mongoose.connection.name}`);
-        
-        mongoose.connection.on('disconnected', () => {
-            console.warn('⚠️ MongoDB disconnected');
-        });
-        
-        mongoose.connection.on('reconnected', () => {
-            console.log('✅ MongoDB reconnected');
-        });
-
-    } catch (error) {
-        console.error('❌ MongoDB Connection Failed:', error.message);
-        throw error;
-    }
-}
-
-// ============================================================
-// 🚀 START SERVER
-// ============================================================
-
-async function startServer() {
-    try {
-        await connectDatabase();
-        await createInitialAdmin();
-
-        const server = app.listen(PORT, '0.0.0.0', () => {
-            console.log('\n' + '='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v19.0 - PRODUCTION READY');
-            console.log('='.repeat(60));
-            console.log(`🚀 PORT: ${PORT}`);
-            console.log(`🌍 ENV: ${NODE_ENV}`);
-            console.log('🗄️ DATABASE: MongoDB');
-            console.log('🔐 JWT: ENABLED (15min access)');
-            console.log('🍪 HTTPONLY COOKIES: ENABLED');
-            console.log('🔄 TOKEN VERSION: ENABLED');
-            console.log('🛡️ HELMET + CSP: ENABLED');
-            console.log('🚦 RATE LIMIT: ENABLED');
-            console.log('📜 AUDIT LOGS: ENABLED');
-            console.log('🔐 SECURITY LOGGING: ENABLED');
-            console.log('✅ INPUT VALIDATION: ENABLED');
-            console.log('🔑 REFRESH TOKEN HASH: ENABLED');
-            console.log('🔄 REFRESH TOKEN REUSE DETECTION: ENABLED');
-            console.log('📝 PARTIAL VALIDATION: ENABLED');
-            console.log('📊 PAGINATION: ENABLED');
-            console.log('🔒 DATA-LEVEL RBAC: ENABLED');
-            console.log('🛡️ ADMIN PROTECTION: ENABLED');
-            console.log(`❤️ HEALTH: /health`);
-            console.log(`🔐 LOGIN: /api/auth/login`);
-            console.log(`🌐 FRONTEND: ${FRONTEND_URL}`);
-            console.log('📄 PAGES: /dashboard, /fleet, /maintenance, /users, /ai-assistant');
-            console.log('📊 API: /api/dashboard, /api/vessels, /api/maintenance');
-            console.log('='.repeat(60) + '\n');
-        });
-
-        let shuttingDown = false;
-        const shutdown = async (signal) => {
-            if (shuttingDown) return;
-            shuttingDown = true;
-            console.log(`🛑 ${signal} - Shutting down...`);
-            server.close(async () => {
-                try {
-                    await mongoose.connection.close();
-                    console.log('✅ MongoDB closed');
-                    process.exit(0);
-                } catch (error) {
-                    console.error('❌ Shutdown error:', error);
-                    process.exit(1);
-                }
-            });
-            setTimeout(() => process.exit(1), 10000).unref();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 DOM ready - initializing...');
+    console.log('📡 Server URL:', API_BASE_URL);
+    console.log('🔐 Credentials: admin / MarineDB2026Secure');
+    console.log('💡 SessionStorage only - no persistence after browser close');
+    
+    // ربط زر الدخول
+    const loginBtn = document.getElementById('loginButton');
+    if (loginBtn) {
+        loginBtn.onclick = function() {
+            console.log('🖱️ Login button clicked!');
+            window.doLogin();
         };
-
-        process.once('SIGTERM', () => shutdown('SIGTERM'));
-        process.once('SIGINT', () => shutdown('SIGINT'));
-
-    } catch (error) {
-        console.error('💥 Failed to start Marine System:', error);
-        process.exit(1);
+        console.log('✅ Login button bound');
     }
-}
+    
+    // ربط Enter
+    const passwordField = document.getElementById('password');
+    const usernameField = document.getElementById('username');
+    
+    if (passwordField) {
+        passwordField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                console.log('⌨️ Enter pressed');
+                window.doLogin();
+            }
+        });
+    }
+    
+    if (usernameField) {
+        usernameField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (passwordField) passwordField.focus();
+            }
+        });
+    }
+    
+    // ✅ التحقق من SessionStorage (بدون LocalStorage)
+    const session = getSession();
+    
+    if (session && session.user && session.token) {
+        console.log('🔄 Session found - auto-login');
+        const overlay = document.getElementById('loginOverlay');
+        const mainApp = document.getElementById('mainApp');
+        
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            overlay.style.opacity = '0';
+        }
+        if (mainApp) {
+            mainApp.style.display = 'block';
+            mainApp.style.visibility = 'visible';
+            mainApp.style.opacity = '1';
+        }
+        
+        updateUserDisplay();
+        loadDashboard();
+        console.log('✅ Auto-login from session');
+    } else {
+        console.log('🔐 No session - showing login');
+        const overlay = document.getElementById('loginOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.style.visibility = 'visible';
+            overlay.style.opacity = '1';
+        }
+    }
+    
+    console.log('🚀 Marine System v13.0 - Ready!');
+    console.log('🔐 SessionStorage only - no LocalStorage');
+});
 
-startServer();
+// التأكد من أن جميع الدوال معروفة
+console.log('✅ Functions: doLogin, doLogout, showPage, toggleSidebar');
+</script>
 
-module.exports = app;
+</body>
+</html>
