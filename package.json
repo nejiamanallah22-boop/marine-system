@@ -1,6 +1,6 @@
 {
   "name": "marine-system",
-  "version": "20.0.0",
+  "version": "35.0.0",
   "description": "Marine Fleet Management System - Production Ready - Enterprise Edition",
   "main": "server.js",
   "scripts": {
