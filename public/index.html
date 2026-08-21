@@ -174,6 +174,24 @@
             font-weight: 600;
             color: var(--primary);
         }
+        .skip-btn {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: 0.3s;
+        }
+        .skip-btn:hover {
+            background: #5a6268;
+            transform: scale(1.02);
+        }
         #mainApp {
             display: none;
             width: 100%;
@@ -638,16 +656,19 @@
             </div>
             <div class="input-group">
                 <i class="fas fa-user input-icon"></i>
-                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
+                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" value="admin">
             </div>
             <div class="input-group">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
+                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" value="Marine@2024#Secure">
             </div>
-            <button type="button" class="login-btn" id="loginButton">
+            <button type="button" class="login-btn" id="loginButton" onclick="handleLogin()">
                 <span id="loginButtonIcon">🚀</span>
                 <span id="loginButtonText">دخول</span>
                 <span class="spinner"></span>
+            </button>
+            <button type="button" class="skip-btn" onclick="bypassLogin()">
+                ⏭️ تجاوز (تجربة)
             </button>
             <div id="loginError" class="error-msg" role="alert"></div>
             <div class="login-footer">
@@ -747,19 +768,19 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    📝 JavaScript - جميع المنطق
+    📝 JavaScript - الكود الكامل
     ============================================================ -->
     <script>
         /**
          * ============================================================
          * ⚓ منظومة الوسائل البحرية - الكود الكامل
-         * ✅ تم إصلاح SyntaxError
+         * ✅ مع زر تجاوز لتجربة التطبيق
          * 📌 الإصدار: 5.1
          * ============================================================
          */
 
         // ============================================================
-        // ✅ المتغيرات العامة - جميعها مسماة بشكل صحيح
+        // 📦 المتغيرات العامة
         // ============================================================
 
         var currentUser = null;
@@ -785,7 +806,7 @@
 
         async function login(username, password) {
             try {
-                const response = await fetch('/api/auth/login', {
+                var response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -797,7 +818,7 @@
                     })
                 });
 
-                const data = await response.json();
+                var data = await response.json();
 
                 if (!response.ok || !data.success) {
                     throw new Error(data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة');
@@ -830,6 +851,8 @@
         }
 
         async function handleLogin() {
+            console.log('🟢 handleLogin تم استدعاؤها');
+
             var username = document.getElementById('username').value.trim();
             var password = document.getElementById('password').value.trim();
             var errorEl = document.getElementById('loginError');
@@ -837,6 +860,8 @@
 
             errorEl.classList.remove('show');
             errorEl.textContent = '';
+
+            console.log('👤 محاولة تسجيل دخول:', username);
 
             if (!username || !password) {
                 errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
@@ -875,6 +900,58 @@
                 loginBtn.classList.remove('loading');
                 loginBtn.disabled = false;
             }
+        }
+
+        // ============================================================
+        // ⏭️ تجاوز تسجيل الدخول (للتجربة)
+        // ============================================================
+
+        function bypassLogin() {
+            console.log('🟢 bypassLogin - تجاوز تسجيل الدخول');
+
+            currentUser = {
+                id: '1',
+                name: 'admin',
+                username: 'admin',
+                role: 'مسؤول'
+            };
+            authToken = 'fake-token-123';
+
+            localStorage.setItem('authToken', authToken);
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'flex';
+
+            document.getElementById('userRoleDisplay').textContent =
+                '👤 admin | مسؤول';
+
+            // تحميل بيانات وهمية للتجربة
+            vessels = [
+                { _id: '1', name: 'المركب 1', num: 'M001', len: 12, reg: 'الشمال', port: 'تونس', stat: 'صالح', cat: 'صقور' },
+                { _id: '2', name: 'المركب 2', num: 'M002', len: 8, reg: 'الساحل', port: 'سوسة', stat: 'صيانة', cat: 'البروق' }
+            ];
+            users = [
+                { _id: '1', name: 'admin', username: 'admin', email: 'admin@marine.com', role: 'مسؤول', isActive: true },
+                { _id: '2', name: 'user', username: 'user', email: 'user@marine.com', role: 'محرر', isActive: true }
+            ];
+
+            renderDashboard();
+            renderVessels();
+            renderMaintenance();
+            renderEfficiency();
+            renderUsers();
+            renderTickets();
+            renderLogs();
+            renderNotes();
+            renderSessions();
+            updateStats();
+
+            connectSocket();
+            showPage('dashboard');
+
+            showToast('✅ تم الدخول كـ admin (تجاوز)', 'success');
+            console.log('✅ تم تجاوز شاشة الدخول');
         }
 
         function doLogout() {
@@ -938,8 +1015,7 @@
         }
 
         // ============================================================
-        // 📊 تحميل البيانات
-        // ============================================================
+        // 📊 تحميل البيانات        // ============================================================
 
         async function loadAllData() {
             try {
@@ -1045,11 +1121,11 @@
         }
 
         function updateStats() {
-            document.getElementById('statVessels').textContent = vessels.length || 0;
-            document.getElementById('statUsers').textContent = users.length || 0;
-            document.getElementById('statTickets').textContent = tickets.length || 0;
-            document.getElementById('statOnline').textContent = onlineUsers.length || 0;
-            document.getElementById('statLocations').textContent = locations.length || 0;
+            document.getElementById('statVessels')?.textContent = vessels.length || 0;
+            document.getElementById('statUsers')?.textContent = users.length || 0;
+            document.getElementById('statTickets')?.textContent = tickets.length || 0;
+            document.getElementById('statOnline')?.textContent = onlineUsers.length || 0;
+            document.getElementById('statLocations')?.textContent = locations.length || 0;
         }
 
         // ============================================================
@@ -2274,6 +2350,7 @@
 
             console.log('⚓ منظومة الوسائل البحرية v5.1');
             console.log('🔐 استخدم بيانات تسجيل الدخول من Render (ADMIN_USERNAME / ADMIN_PASSWORD)');
+            console.log('💡 أو اضغط على زر "تجاوز" لتجربة التطبيق');
         });
 
         // ============================================================
@@ -2281,6 +2358,7 @@
         // ============================================================
 
         window.handleLogin = handleLogin;
+        window.bypassLogin = bypassLogin;
         window.doLogout = doLogout;
         window.showPage = showPage;
         window.toggleSidebar = toggleSidebar;
@@ -2315,6 +2393,5 @@
 
         console.log('✅ تم تحميل التطبيق بنجاح');
     </script>
-
 </body>
 </html>
