@@ -1,803 +1,516 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة الأسطول البحري</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Tajawal',sans-serif;background:#eef2f5;padding:15px;direction:rtl;min-height:100vh}
-        :root{--primary:#2e7d32;--accent:#d9534f;--success:#28a745;--orange:#f39c12;--bg:#eef2f5;--navy-900:#0b2740;--navy-700:#14456b;--teal-600:#0b8f83;--gray-600:#6c757d}
-        
-        .page-main{max-width:1200px;margin:0 auto}
-        .section{margin-bottom:25px}
-        .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-        .section-eyebrow{font-size:11px;color:var(--teal-600);letter-spacing:1px;display:block;margin-bottom:2px}
-        .section-title{font-size:20px;font-weight:900;margin:0;color:var(--navy-900)}
-        
-        .filter-bar{background:#fff;border:1px solid #dde3e8;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-        .filter-bar .search-input{flex:1;min-width:160px}
-        .filter-bar .search-input input{width:100%;padding:7px 14px;border:1px solid #dde3e8;border-radius:20px;font-size:13px;background:#f6f8fa;font-family:inherit;transition:border-color .2s}
-        .filter-bar .search-input input:focus{outline:none;border-color:var(--teal-600);background:#fff}
-        .filter-bar select{padding:7px 12px;border:1px solid #dde3e8;border-radius:6px;font-size:13px;background:#f6f8fa;font-family:inherit;cursor:pointer}
-        .filter-bar select:focus{outline:none;border-color:var(--teal-600)}
-        
-        .btn{padding:7px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:700;font-size:13px;color:#fff;transition:all .2s;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
-        .btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-        .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none!important}
-        .btn-blue{background:var(--primary)}
-        .btn-blue:hover:not(:disabled){background:#1e5a22}
-        .btn-green{background:var(--success)}
-        .btn-green:hover:not(:disabled){background:#218838}
-        .btn-orange{background:var(--orange)}
-        .btn-orange:hover:not(:disabled){background:#d39e00}
-        .btn-red{background:var(--accent)}
-        .btn-red:hover:not(:disabled){background:#c82333}
-        .btn-teal{background:var(--teal-600)}
-        .btn-teal:hover:not(:disabled){background:#0a7a6f}
-        .btn-sm{padding:3px 8px;font-size:11px;border-radius:4px}
-        .btn-secondary{background:var(--gray-600);color:#fff}
-        .btn-secondary:hover:not(:disabled){background:#5a6268}
-        
-        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;background:#fff;padding:16px;border-radius:10px;border:1px solid #dde3e8;margin-bottom:16px}
-        .form-grid input,.form-grid select{padding:7px 10px;border:1px solid #dde3e8;border-radius:6px;font-size:13px;background:#f6f8fa;font-family:inherit;width:100%;transition:border-color .2s}
-        .form-grid input:focus,.form-grid select:focus{outline:none;border-color:var(--teal-600);background:#fff}
-        .form-grid input:disabled{opacity:0.6}
-        .form-grid .field-error{color:var(--accent);font-size:11px;margin-top:2px;display:none}
-        .form-grid .field.has-error input,.form-grid .field.has-error select{border-color:var(--accent);background:#fdf2f2}
-        .form-grid .field.has-error .field-error{display:block}
-        .form-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-        .form-actions .btn{padding:8px 20px}
-        
-        .table-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px;overflow:hidden}
-        .table-card .table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
-        .table-card .table-header h3{font-size:15px;color:var(--navy-900);font-weight:700}
-        .table-card .table-header .count-badge{font-size:12px;color:var(--gray-600);background:#f8f9fa;padding:3px 12px;border-radius:20px}
-        .table-wrap{overflow-x:auto}
-        table{width:100%;border-collapse:collapse;font-size:12.5px}
-        th{background:#f8f9fa;color:var(--navy-900);padding:8px 10px;text-align:center;font-weight:700;border-bottom:2px solid #e0e0e0;position:sticky;top:0;font-size:11.5px}
-        td{padding:8px 10px;text-align:center;border-bottom:1px solid #f0f0f0;vertical-align:middle}
-        tr:hover{background:#f8f9fa}
-        .status-صالح{color:#28a745;font-weight:700}
-        .status-معطب{color:#dc3545;font-weight:700}
-        .status-صيانة{color:#f39c12;font-weight:700}
-        
-        .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700}
-        .badge-success{background:#d4edda;color:#155724}
-        .badge-danger{background:#f8d7da;color:#721c24}
-        .badge-warning{background:#fff3cd;color:#856404}
-        
-        .empty-state{background:#fff;border:2px dashed #dde3e8;border-radius:10px;padding:30px 20px;text-align:center;color:#6c757d;font-size:13px}
-        .empty-state .em-icon{font-size:24px;margin-bottom:6px;display:block}
-        
-        .role-badge{font-size:12px;color:var(--gray-600);background:#f8f9fa;border:1px solid #dde3e8;border-radius:6px;padding:3px 12px;display:inline-flex;align-items:center;gap:5px}
-        
-        .toast-container{position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;max-width:90%;width:400px}
-        .toast-item{padding:10px 16px;border-radius:8px;font-weight:700;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,0.2);animation:slideIn 0.3s ease;font-size:13px}
-        .toast-item.success{background:#28a745}
-        .toast-item.error{background:#dc3545}
-        .toast-item.info{background:#17a2b8}
-        @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-        .toast-item.hide{animation:slideOut 0.3s ease forwards}
-        @keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
-        
-        .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:none;justify-content:center;align-items:center;z-index:99998}
-        .loading-overlay.active{display:flex}
-        .loading-spinner{width:50px;height:50px;border:4px solid #fff;border-top-color:var(--teal-600);border-radius:50%;animation:spin 0.8s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        
-        @media (max-width:768px){
-            .form-grid{grid-template-columns:1fr 1fr}
-            .filter-bar{flex-direction:column;align-items:stretch}
-            .filter-bar .search-input{min-width:unset}
-            thead{display:none}
-            table,tbody,tr,td{display:block;width:100%}
-            tbody tr{border:1px solid #dde3e8;border-radius:8px;margin-bottom:8px;padding:4px 0;background:#fff}
-            tbody td{border-top:none;padding:4px 10px;display:flex;justify-content:space-between;gap:8px;align-items:center;border-bottom:1px solid #f5f5f5}
-            tbody td:last-child{border-bottom:none}
-            tbody td::before{content:attr(data-label);font-weight:700;color:#6c757d;font-size:10.5px;flex:0 0 30%}
-        }
-        @media (max-width:480px){
-            .form-grid{grid-template-columns:1fr}
-            .form-actions .btn{width:100%;justify-content:center}
-        }
-    </style>
-</head>
-<body>
-
-<div class="page-main">
-
-    <!-- ===== شريط الفلترة ===== -->
-    <div class="filter-bar">
-        <div class="search-input">
-            <input type="text" id="searchMain" placeholder="🔍 بحث في الأسطول..." oninput="applyLocalFilter()" aria-label="بحث">
+<!-- public/pages/fleet.html -->
+<div id="page-fleet">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <div>
+            <h2 style="margin:0; color:white; font-size:22px;">🚢 إدارة الأسطول</h2>
+            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">إدارة المراكب البحرية والوحدات التابعة للحرس البحري</p>
         </div>
-        <select id="fCatMain" onchange="applyLocalFilter()" aria-label="تصفية حسب الفئة">
-            <option value="الكل">📋 جميع الفئات</option>
-            <option value="البروق">البروق</option>
-            <option value="صقور">صقور</option>
-            <option value="خوافر">خوافر</option>
-            <option value="زوارق مزدوجة">زوارق مزدوجة</option>
-            <option value="طوافات">طوافات</option>
-        </select>
-        <select id="fRegMain" onchange="applyLocalFilter()" aria-label="تصفية حسب الإقليم">
-            <option value="الكل">🌍 جميع الأقاليم</option>
-            <option value="الشمال">الشمال</option>
-            <option value="الساحل">الساحل</option>
-            <option value="الوسط">الوسط</option>
-            <option value="الجنوب">الجنوب</option>
-        </select>
-        <button class="btn btn-blue" onclick="clearMainSearch()" title="مسح البحث">🗑️ مسح</button>
-        <button class="btn btn-green" onclick="refreshMain()" title="تحديث البيانات">🔄 تحديث</button>
-        <span class="role-badge" id="roleBadge">👤 مشاهد</span>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span style="background:rgba(255,255,255,0.04); padding:6px 16px; border-radius:20px; font-size:12px; color:rgba(255,255,255,0.5);">
+                🚢 عدد المراكب: <span id="fleetCount">0</span>
+            </span>
+            <button onclick="refreshAllPages()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
+        </div>
     </div>
 
     <!-- ===== نموذج إضافة مركب ===== -->
-    <div id="inputArea" class="form-grid">
-        <div class="field" id="field-name">
-            <input type="text" id="iName" placeholder="اسم المركب *" maxlength="100" aria-label="اسم المركب" autocomplete="off">
-            <span class="field-error">الاسم مطلوب (حرفين على الأقل)</span>
+    <div class="stat-card" style="padding:15px; margin:15px 0; border-color:rgba(96,165,250,0.1);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">➕ إضافة مركب جديد</h4>
+            <span style="font-size:11px; color:rgba(255,255,255,0.2);" id="formMode">وضع الإضافة</span>
         </div>
-        <div class="field">
-            <input type="text" id="iNum" placeholder="الرقم" maxlength="50" aria-label="رقم المركب" autocomplete="off">
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:10px;">
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🚢 اسم المركب</label>
+                <input type="text" id="iName" placeholder="اسم المركب" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;"># الرقم</label>
+                <input type="text" id="iNum" placeholder="الرقم التسلسلي" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📏 الطول (م)</label>
+                <input type="number" id="iLen" placeholder="الطول" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🏷️ الفئة</label>
+                <select id="iCat" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                    <option value="البروق">البروق</option>
+                    <option value="صقور">صقور</option>
+                    <option value="خوافر">خوافر</option>
+                    <option value="طوافات">طوافات</option>
+                    <option value="زوارق مزدوجة">زوارق مزدوجة</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🗺️ الإقليم</label>
+                <select id="iReg" onchange="updateZones()" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                    <option value="">اختر الإقليم</option>
+                    <option value="الشمال">الشمال</option>
+                    <option value="الساحل">الساحل</option>
+                    <option value="الوسط">الوسط</option>
+                    <option value="الجنوب">الجنوب</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📍 المنطقة</label>
+                <select id="iZone" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                    <option value="">اختر المنطقة</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">⚓ الميناء</label>
+                <input type="text" id="iPort" placeholder="الميناء" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🔧 التعزيز</label>
+                <input type="text" id="iSupp" placeholder="الوحدة" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">✅ الحالة</label>
+                <select id="iStat" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+                    <option value="صالح">✅ صالح</option>
+                    <option value="معطب">🛠️ معطب</option>
+                    <option value="صيانة">🔧 صيانة</option>
+                    <option value="خارج الخدمة">⛔ خارج الخدمة</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🛠️ العطب</label>
+                <input type="text" id="iBreak" placeholder="نوع العطل" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📅 تاريخ العطب</label>
+                <input type="date" id="iDate" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📅 تاريخ الصلاحية</label>
+                <input type="date" id="iEnd" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📄 المرجع</label>
+                <input type="text" id="iRef" placeholder="رقم المرجع" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
+            <div>
+                <label style="display:block; font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:3px;">👨‍🔧 المسؤول</label>
+                <input type="text" id="iRepairer" placeholder="الفني المسؤول" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
+            </div>
         </div>
-        <div class="field" id="field-len">
-            <input type="number" id="iLen" placeholder="الطول (م)" min="0.1" step="0.1" aria-label="طول المركب" autocomplete="off">
-            <span class="field-error">الطول يجب أن يكون أكبر من 0</span>
-        </div>
-        <div class="field">
-            <select id="iReg" onchange="updateZones()" aria-label="الإقليم">
-                <option value="">الإقليم</option>
-                <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-                <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-                <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-                <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            </select>
-        </div>
-        <div class="field">
-            <select id="iZone" aria-label="المنطقة">
-                <option value="">المنطقة</option>
-            </select>
-        </div>
-        <div class="field">
-            <input type="text" id="iPort" placeholder="الميناء" maxlength="100" aria-label="الميناء" autocomplete="off">
-        </div>
-        <div class="field">
-            <input type="text" id="iSupp" placeholder="التعزيز" maxlength="100" aria-label="التعزيز" autocomplete="off">
-        </div>
-        <div class="field">
-            <select id="iStat" aria-label="الحالة">
-                <option value="صالح">✅ صالح</option>
-                <option value="معطب">❌ معطب</option>
-                <option value="صيانة">🔧 صيانة</option>
-            </select>
-        </div>
-        <div class="field">
-            <input type="text" id="iBreak" placeholder="نوع العطب" maxlength="200" aria-label="نوع العطب" autocomplete="off">
-        </div>
-        <div class="field" id="field-fdate">
-            <input type="date" id="iDate" aria-label="تاريخ العطب">
-            <span class="field-error">تاريخ العطب مطلوب للمراكب المعطوبة</span>
-        </div>
-        <div class="field" id="field-edate">
-            <input type="date" id="iEnd" aria-label="تاريخ الانتهاء">
-            <span class="field-error">تاريخ الانتهاء لا يمكن أن يسبق تاريخ العطب</span>
-        </div>
-        <div class="field">
-            <input type="text" id="iRef" placeholder="المرجع" maxlength="50" aria-label="المرجع" autocomplete="off">
-        </div>
-        <div class="form-actions">
-            <button class="btn btn-green" id="saveBtn" onclick="handleAddItem()">✅ حفظ</button>
-            <button class="btn btn-secondary" id="cancelBtn" onclick="clearForm()" style="display:none">❌ إلغاء</button>
+        
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button onclick="addItem()" class="btn-sm btn-success" style="padding:8px 24px; background:rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.1); color:#4ade80; border-radius:8px; cursor:pointer; font-size:13px; font-family:'Cairo',sans-serif;">
+                💾 حفظ المركب
+            </button>
+            <button onclick="clearVesselInputs()" class="btn-sm" style="padding:8px 20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); border-radius:8px; cursor:pointer; font-size:13px; font-family:'Cairo',sans-serif;">
+                🗑️ إلغاء
+            </button>
+            <span id="vesselFormMessage" style="font-size:12px; color:rgba(255,255,255,0.3); padding:8px;"></span>
         </div>
     </div>
 
-    <!-- ===== جدول الأسطول ===== -->
-    <div class="table-card">
-        <div class="table-header">
-            <h3>🚢 الأسطول البحري</h3>
-            <span class="count-badge" id="vesselCount">0 مركب</span>
+    <!-- ===== جدول المراكب ===== -->
+    <div class="stat-card" style="padding:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة المراكب</h4>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span style="color:rgba(255,255,255,0.3); font-size:12px;">المجموع: <span id="fleetTotal">0</span></span>
+                <input type="text" id="fleetSearch" placeholder="🔍 بحث..." style="padding:4px 10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-size:12px; width:120px;" oninput="filterFleet()">
+            </div>
         </div>
-        <div class="table-wrap">
+        
+        <div class="scrollable-table">
             <table>
                 <thead>
                     <tr>
-                        <th>الاسم</th>
-                        <th>الرقم</th>
-                        <th>الطول</th>
-                        <th>الفئة</th>
-                        <th>الإقليم</th>
-                        <th>المنطقة</th>
-                        <th>الميناء</th>
-                        <th>الحالة</th>
-                        <th>العطب</th>
-                        <th>تاريخ العطب</th>
-                        <th>الانتهاء</th>
-                        <th>إجراءات</th>
+                        <th>🚢 الاسم</th>
+                        <th># الرقم</th>
+                        <th>📏 الطول</th>
+                        <th>🏷️ الفئة</th>
+                        <th>🗺️ الإقليم</th>
+                        <th>📍 المنطقة</th>
+                        <th>⚓ الميناء</th>
+                        <th>🔧 التعزيز</th>
+                        <th>✅ الحالة</th>
+                        <th>🛠️ العطب</th>
+                        <th>📅 تاريخ العطب</th>
+                        <th>📅 الصلاحية</th>
+                        <th>📄 المرجع</th>
+                        <th>👨‍🔧 المسؤول</th>
+                        <th>⚙️ إجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="mainBody">
-                    <tr><td colspan="12" style="text-align:center;padding:30px;color:#6c757d">⏳ جاري تحميل البيانات...</td></tr>
+                    <tr><td colspan="15" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مراكب</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
-
 </div>
 
-<!-- ===== Toast Container ===== -->
-<div class="toast-container" id="toastContainer"></div>
+<style>
+    .stat-card {
+        background: rgba(255,255,255,0.02);
+        border-radius: 10px;
+        padding: 15px;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 13px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: 'Cairo', sans-serif;
+    }
+    .btn-sm:hover { opacity: 0.8; transform: translateY(-1px); }
+    .btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+    .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+    .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+    .scrollable-table { overflow-x: auto; }
+    .scrollable-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .scrollable-table table th {
+        background: rgba(255,255,255,0.04);
+        padding: 10px;
+        border-bottom: 2px solid rgba(255,255,255,0.06);
+        text-align: center;
+        color: rgba(255,255,255,0.7);
+        font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    .scrollable-table table td {
+        padding: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        text-align: center;
+        color: rgba(255,255,255,0.6);
+        font-size: 12px;
+    }
+    .scrollable-table table tr:hover { background: rgba(255,255,255,0.03); }
+    .scrollable-table table tr.hidden-row { display: none; }
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .status-ready { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
+    .status-broken { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
+    .status-maintenance { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
+    .status-out { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.04); }
+    
+    @media (max-width: 768px) {
+        .stat-card { padding: 10px; }
+        .scrollable-table table { font-size: 11px; }
+        .scrollable-table table th, .scrollable-table table td { padding: 5px; }
+    }
+</style>
 
 <script>
 // ============================================================
-// إدارة الأسطول البحري - v6.0 (Production Ready)
+// 🚢 صفحة الأسطول - كود مستقل
 // ============================================================
 
-// ===== المتغيرات العامة =====
-let currentUser = null;
-let vessels = [];
-let filteredVessels = [];
-let isEditing = false;
-let editingId = null;
-let vesselsRequest = null;
-let isSubmitting = false;
-let loadingOverlay = null;
-
-const ZONES_DATA = {
-    "الشمال": ["تونس", "بنزرت", "طبرقة"],
-    "الساحل": ["سوسة", "المنستير", "نابل"],
-    "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-    "الجنوب": ["جرجيس", "جربة", "قابس"]
-};
-const REGION_NAMES = {
-    "الشمال": "🗺️ الحرس البحري بالشمال",
-    "الساحل": "🗺️ الحرس البحري بالساحل",
-    "الوسط": "🗺️ الحرس البحري بالوسط",
-    "الجنوب": "🗺️ الحرس البحري بالجنوب"
-};
-
-// ===== دوال مساعدة =====
-function escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
+// تحديث عدد المراكب
+function updateFleetCount() {
+    const count = document.getElementById('fleetCount');
+    const total = document.getElementById('fleetTotal');
+    const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
+    if (count) count.textContent = vessels.length;
+    if (total) total.textContent = vessels.length;
 }
 
-function getVesselId(vessel) {
-    return vessel._id || vessel.id;
-}
-
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast-item ${type}`;
-    toast.textContent = message;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('hide');
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
-}
-
-function formatDate(d) {
-    if (!d) return '-';
-    try {
-        const date = new Date(d);
-        if (isNaN(date.getTime())) return d;
-        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-    } catch(e) { return d; }
-}
-
-function getCategory(len) {
-    const n = parseFloat(len);
-    if (n === 11) return "البروق";
-    if (n >= 8 && n <= 12) return "صقور";
-    if (n > 12 && n <= 25) return "خوافر";
-    if (n >= 30) return "طوافات";
-    return "زوارق مزدوجة";
-}
-
-function canEdit() { 
-    return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); 
-}
-
-function canDelete() { 
-    return currentUser && currentUser.role === "مسؤول"; 
-}
-
-function validateForm() {
-    let valid = true;
-    document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
-    
-    const name = document.getElementById('iName').value.trim();
-    if (!name || name.length < 2) {
-        document.getElementById('field-name').classList.add('has-error');
-        valid = false;
-    }
-    
-    const len = parseFloat(document.getElementById('iLen').value);
-    if (!len || len <= 0) {
-        document.getElementById('field-len').classList.add('has-error');
-        valid = false;
-    }
-    
-    const stat = document.getElementById('iStat').value;
-    const fDate = document.getElementById('iDate').value;
-    if ((stat === 'معطب' || stat === 'صيانة') && !fDate) {
-        document.getElementById('field-fdate').classList.add('has-error');
-        valid = false;
-    }
-    
-    const eDate = document.getElementById('iEnd').value;
-    if (fDate && eDate && eDate < fDate) {
-        document.getElementById('field-edate').classList.add('has-error');
-        valid = false;
-    }
-    
-    return valid;
-}
-
-function showLoading(show) {
-    if (!loadingOverlay) {
-        loadingOverlay = document.createElement('div');
-        loadingOverlay.className = 'loading-overlay';
-        loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
-        document.body.appendChild(loadingOverlay);
-    }
-    loadingOverlay.classList.toggle('active', show);
-}
-
-// ===== التحقق من الجلسة =====
-async function checkSession() {
-    try {
-        const response = await fetch('/api/me', {
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = data;
-            document.getElementById('roleBadge').textContent = `👤 ${currentUser.role}`;
-            const isViewer = currentUser && currentUser.role === 'مشاهد';
-            document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
-            return true;
+// فلترة المراكب
+function filterFleet() {
+    const search = document.getElementById('fleetSearch')?.value?.toLowerCase() || '';
+    const rows = document.querySelectorAll('#mainBody tr');
+    let visible = 0;
+    rows.forEach(row => {
+        const text = row.textContent?.toLowerCase() || '';
+        if (text.includes(search)) {
+            row.classList.remove('hidden-row');
+            visible++;
+        } else {
+            row.classList.add('hidden-row');
         }
-    } catch(e) {}
-    
-    try {
-        const parentUser = window.parent?.currentUser;
-        if (parentUser) {
-            currentUser = parentUser;
-            document.getElementById('roleBadge').textContent = `👤 ${currentUser.role}`;
-            const isViewer = currentUser && currentUser.role === 'مشاهد';
-            document.getElementById('inputArea').style.display = isViewer ? 'none' : 'grid';
-            return true;
-        }
-    } catch(e) {}
-    
-    return false;
-}
-
-// ===== دوال API =====
-async function loadVessels(force = false) {
-    if (vesselsRequest && !force) {
-        return vesselsRequest;
-    }
-    
-    vesselsRequest = (async () => {
-        try {
-            const response = await fetch('/api/vessels', {
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
-            });
-            if (response.status === 401) throw new Error('SESSION_EXPIRED');
-            if (!response.ok) throw new Error('فشل في تحميل البيانات');
-            const data = await response.json();
-            vessels = Array.isArray(data) ? data : [];
-            return vessels;
-        } catch(error) {
-            if (error.message === 'SESSION_EXPIRED') {
-                showToast('جلسة منتهية، يرجى تسجيل الدخول مرة أخرى', 'error');
-            } else {
-                showToast('خطأ في تحميل البيانات: ' + error.message, 'error');
-            }
-            vessels = [];
-            return vessels;
-        } finally {
-            vesselsRequest = null;
-        }
-    })();
-    
-    return vesselsRequest;
-}
-
-async function saveVessel(vessel) {
-    const response = await fetch('/api/vessels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify(vessel)
     });
-    if (response.status === 403) throw new Error('غير مصرح: لا تملك صلاحية الإضافة');
-    if (response.status === 401) throw new Error('جلسة منتهية');
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'خطأ غير معروف' }));
-        throw new Error(error.error || 'فشل في الحفظ');
-    }
-    return response.json();
 }
 
-async function updateVessel(id, vessel) {
-    const response = await fetch(`/api/vessels/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify(vessel)
+// تحديث المناطق حسب الإقليم
+function updateZones() {
+    const reg = document.getElementById('iReg')?.value;
+    const zoneSelect = document.getElementById('iZone');
+    if (!zoneSelect) return;
+    const zones = {
+        'الشمال': ['بنزرت', 'طبرقة', 'المرسى', 'غار الملح', 'رأس الجبل'],
+        'الساحل': ['سوسة', 'المنستير', 'المهدية', 'حمام سوسة', 'قليبية', 'نابل'],
+        'الوسط': ['صفاقس', 'قابس', 'جربة', 'القطار', 'المحرس'],
+        'الجنوب': ['جرجيس', 'بن قردان', 'ذراع الساحل', 'الطينة']
+    };
+    const options = zones[reg] || ['المنطقة غير محددة'];
+    zoneSelect.innerHTML = '<option value="">📍 المنطقة</option>';
+    options.forEach(z => {
+        zoneSelect.innerHTML += `<option value="${z}">📍 ${z}</option>`;
     });
-    if (response.status === 403) throw new Error('غير مصرح: لا تملك صلاحية التعديل');
-    if (response.status === 401) throw new Error('جلسة منتهية');
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'خطأ غير معروف' }));
-        throw new Error(error.error || 'فشل في التحديث');
-    }
-    return response.json();
 }
 
-async function deleteVessel(id) {
-    const response = await fetch(`/api/vessels/${id}`, {
-        method: 'DELETE',
-        credentials: 'same-origin'
+// مسح حقول الإدخال
+function clearVesselInputs() {
+    ['iName','iNum','iLen','iReg','iZone','iPort','iSupp','iBreak','iDate','iEnd','iRef','iRepairer'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
     });
-    if (response.status === 403) throw new Error('غير مصرح: لا تملك صلاحية الحذف');
-    if (response.status === 401) throw new Error('جلسة منتهية');
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'خطأ غير معروف' }));
-        throw new Error(error.error || 'فشل في الحذف');
-    }
-    return response.json();
+    const stat = document.getElementById('iStat');
+    if (stat) stat.value = 'صالح';
+    const cat = document.getElementById('iCat');
+    if (cat) cat.value = 'البروق';
+    const zone = document.getElementById('iZone');
+    if (zone) zone.innerHTML = '<option value="">📍 المنطقة</option>';
+    document.getElementById('vesselFormMessage').textContent = '';
+    editingVesselId = null;
+    document.getElementById('formMode').textContent = 'وضع الإضافة';
 }
 
-// ===== عرض الأسطول =====
-function applyLocalFilter() {
-    const fCat = document.getElementById('fCatMain').value;
-    const fReg = document.getElementById('fRegMain').value;
-    const searchText = document.getElementById('searchMain').value.toLowerCase();
-    
-    filteredVessels = vessels.filter(x => {
-        const matchCat = (fCat === "الكل" || x.cat === fCat);
-        const matchReg = (fReg === "الكل" || x.reg === fReg);
-        const matchSearch = !searchText || 
-            (x.name && x.name.toLowerCase().includes(searchText)) ||
-            (x.num && x.num.toLowerCase().includes(searchText)) ||
-            (x.reg && x.reg.toLowerCase().includes(searchText)) ||
-            (x.zone && x.zone.toLowerCase().includes(searchText)) ||
-            (x.port && x.port.toLowerCase().includes(searchText));
-        return matchCat && matchReg && matchSearch;
-    });
-    renderTable();
-}
-
-function renderTable() {
-    const tbody = document.getElementById('mainBody');
-    const count = filteredVessels.length;
-    document.getElementById('vesselCount').textContent = `${count} مركب`;
-    
-    if (count === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="12">
-                <div class="empty-state" style="grid-column:1/-1;margin:15px 0">
-                    <span class="em-icon">🚢</span>
-                    ${vessels.length === 0 ? 'لا توجد مراكب مسجلة' : 'لا توجد مراكب تطابق معايير البحث'}
-                </div>
-            </td></tr>
-        `;
+// إضافة أو تحديث مركب
+function addItem() {
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
-    const canEditFlag = canEdit();
-    const canDeleteFlag = canDelete();
+    const name = document.getElementById('iName')?.value.trim();
+    if (!name) {
+        showAlert('⚠️ الرجاء إدخال اسم المركب', 'warning');
+        return;
+    }
     
-    let html = '';
-    for (const x of filteredVessels) {
-        const vesselId = getVesselId(x);
-        const safeId = escapeHtml(String(vesselId));
-        const regionDisplay = REGION_NAMES[x.reg] || x.reg || '-';
-        const statusClass = x.stat === 'صالح' ? 'status-صالح' : (x.stat === 'معطب' ? 'status-معطب' : 'status-صيانة');
+    const data = {
+        name: name,
+        num: document.getElementById('iNum')?.value || '',
+        len: parseFloat(document.getElementById('iLen')?.value) || 0,
+        cat: document.getElementById('iCat')?.value || 'البروق',
+        reg: document.getElementById('iReg')?.value || '',
+        zone: document.getElementById('iZone')?.value || '',
+        port: document.getElementById('iPort')?.value || '',
+        supp: document.getElementById('iSupp')?.value || '',
+        stat: document.getElementById('iStat')?.value || 'صالح',
+        break: document.getElementById('iBreak')?.value || '',
+        fDate: document.getElementById('iDate')?.value || '',
+        eDate: document.getElementById('iEnd')?.value || '',
+        ref: document.getElementById('iRef')?.value || '',
+        repairer: document.getElementById('iRepairer')?.value || ''
+    };
+    
+    const url = editingVesselId ? `/api/vessels/${editingVesselId}` : '/api/vessels';
+    const method = editingVesselId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(editingVesselId ? '✅ تم تحديث المركب' : '✅ تم إضافة المركب', 'success');
+            clearVesselInputs();
+            loadVessels();
+            document.getElementById('formMode').textContent = 'وضع الإضافة';
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في العملية'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
+    });
+}
+
+// تعديل مركب
+function editVessel(id) {
+    const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
+    const vessel = vessels.find(v => v.id === id);
+    if (!vessel) {
+        showAlert('⚠️ المركب غير موجود', 'warning');
+        return;
+    }
+    
+    editingVesselId = vessel.id;
+    document.getElementById('iName').value = vessel.name || '';
+    document.getElementById('iNum').value = vessel.num || '';
+    document.getElementById('iLen').value = vessel.len || 0;
+    document.getElementById('iCat').value = vessel.cat || 'البروق';
+    document.getElementById('iReg').value = vessel.reg || '';
+    
+    // تحديث المناطق
+    updateZones();
+    setTimeout(() => {
+        document.getElementById('iZone').value = vessel.zone || '';
+    }, 50);
+    
+    document.getElementById('iPort').value = vessel.port || '';
+    document.getElementById('iSupp').value = vessel.supp || '';
+    document.getElementById('iStat').value = vessel.stat || 'صالح';
+    document.getElementById('iBreak').value = vessel.break || '';
+    document.getElementById('iDate').value = vessel.fDate || '';
+    document.getElementById('iEnd').value = vessel.eDate || '';
+    document.getElementById('iRef').value = vessel.ref || '';
+    document.getElementById('iRepairer').value = vessel.repairer || '';
+    
+    document.getElementById('formMode').textContent = '✏️ وضع التعديل';
+    document.getElementById('formMode').style.color = '#fbbf24';
+    
+    // تمرير إلى النموذج
+    document.querySelector('.stat-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    showAlert('✏️ جارٍ تعديل المركب: ' + vessel.name, 'info');
+}
+
+// حذف مركب
+function deleteVessel(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المركب؟')) return;
+    const token = getToken();
+    if (!token) {
+        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch(`/api/vessels/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('✅ تم الحذف', 'success');
+            loadVessels();
+        } else {
+            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
+        }
+    })
+    .catch(err => {
+        console.error('Delete error:', err);
+        showAlert('❌ خطأ في حذف المركب', 'danger');
+    });
+}
+
+// ============================================================
+// تحميل المراكب وعرضها
+// ============================================================
+
+function loadVessels() {
+    const token = getToken();
+    if (!token) {
+        if (typeof allVessels !== 'undefined') {
+            renderMainTable();
+            updateFleetCount();
+        }
+        return;
+    }
+    
+    fetch('/api/vessels', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('فشل تحميل المراكب');
+        return res.json();
+    })
+    .then(data => {
+        if (typeof allVessels !== 'undefined') {
+            allVessels = data || [];
+        }
+        renderMainTable();
+        updateFleetCount();
+    })
+    .catch(err => {
+        console.error('Load vessels error:', err);
+        if (typeof allVessels !== 'undefined' && allVessels.length > 0) {
+            renderMainTable();
+            updateFleetCount();
+        } else {
+            // استخدام بيانات تجريبية
+            const demo = getDemoVesselsForFleet();
+            if (typeof allVessels !== 'undefined') {
+                allVessels = demo;
+            }
+            renderMainTable();
+            updateFleetCount();
+        }
+    });
+}
+
+function renderMainTable() {
+    const tbody = document.getElementById('mainBody');
+    if (!tbody) return;
+    
+    const vessels = typeof allVessels !== 'undefined' ? allVessels : [];
+    
+    if (!vessels || vessels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مراكب</td></tr>`;
+        return;
+    }
+    
+    tbody.innerHTML = vessels.map(v => {
+        const statusClass = {
+            'صالح': 'status-ready',
+            'معطب': 'status-broken',
+            'صيانة': 'status-maintenance',
+            'خارج الخدمة': 'status-out'
+        }[v.stat] || 'status-out';
         
-        let actions = '';
-        if (canEditFlag) {
-            actions += `<button class="btn btn-orange btn-sm edit-btn" data-id="${safeId}" title="تعديل">✏️</button>`;
-        }
-        if (canDeleteFlag) {
-            actions += `<button class="btn btn-red btn-sm delete-btn" data-id="${safeId}" title="حذف">🗑️</button>`;
-        }
-        if (!canEditFlag && !canDeleteFlag) {
-            actions = '—';
-        }
-        
-        html += `
-            <tr data-id="${safeId}">
-                <td data-label="الاسم"><strong>${escapeHtml(x.name)}</strong></td>
-                <td data-label="الرقم">${escapeHtml(x.num || '-')}</td>
-                <td data-label="الطول">${escapeHtml(x.len || '-')}</td>
-                <td data-label="الفئة">${escapeHtml(x.cat || '-')}</td>
-                <td data-label="الإقليم">${escapeHtml(regionDisplay)}</td>
-                <td data-label="المنطقة">${escapeHtml(x.zone || '-')}</td>
-                <td data-label="الميناء">${escapeHtml(x.port || '-')}</td>
-                <td data-label="الحالة"><span class="${statusClass}">${escapeHtml(x.stat)}</span></td>
-                <td data-label="العطب">${escapeHtml(x.break || '-')}</td>
-                <td data-label="تاريخ العطب">${formatDate(x.fDate)}</td>
-                <td data-label="الانتهاء">${formatDate(x.eDate)}</td>
-                <td data-label="إجراءات">${actions}</td>
+        return `
+            <tr>
+                <td><strong>${v.name || '-'}</strong></td>
+                <td>${v.num || '-'}</td>
+                <td>${v.len || 0}</td>
+                <td>${v.cat || '-'}</td>
+                <td>${v.reg || '-'}</td>
+                <td>${v.zone || '-'}</td>
+                <td>${v.port || '-'}</td>
+                <td>${v.supp || '-'}</td>
+                <td><span class="status-badge ${statusClass}">${v.stat || 'صالح'}</span></td>
+                <td>${v.break || '-'}</td>
+                <td>${v.fDate || '-'}</td>
+                <td>${v.eDate || '-'}</td>
+                <td>${v.ref || '-'}</td>
+                <td>${v.repairer || '-'}</td>
+                <td>
+                    <button class="btn-sm btn-warning" onclick="editVessel(${v.id})" title="تعديل">✏️</button>
+                    <button class="btn-sm btn-danger" onclick="deleteVessel(${v.id})" title="حذف">🗑️</button>
+                </td>
             </tr>
         `;
-    }
-    
-    tbody.innerHTML = html;
-    
-    tbody.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleEditItem(this.dataset.id);
-        });
-    });
-    
-    tbody.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleDeleteItem(this.dataset.id);
-        });
-    });
+    }).join('');
 }
 
-async function renderMain() {
-    showLoading(true);
-    try {
-        await loadVessels();
-        applyLocalFilter();
-    } finally {
-        showLoading(false);
-    }
+// بيانات تجريبية للأسطول
+function getDemoVesselsForFleet() {
+    return [
+        { id: 1, name: 'البروق 1', num: 'B001', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'بنزرت', port: 'بنزرت', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-001', repairer: 'فني 1' },
+        { id: 2, name: 'البروق 2', num: 'B002', len: 25, cat: 'البروق', reg: 'الشمال', zone: 'طبرقة', port: 'طبرقة', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-002', repairer: 'فني 1' },
+        { id: 3, name: 'البروق 3', num: 'B003', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'سوسة', port: 'سوسة', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-003', repairer: 'فني 2' },
+        { id: 4, name: 'البروق 4', num: 'B004', len: 25, cat: 'البروق', reg: 'الساحل', zone: 'المنستير', port: 'المنستير', supp: 'الوحدة 2', stat: 'معطب', break: 'عطل محرك', fDate: '2026-01-15', eDate: '2026-12-31', ref: 'REF-004', repairer: 'فني 2' },
+        { id: 5, name: 'البروق 5', num: 'B005', len: 25, cat: 'البروق', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-005', repairer: 'فني 3' },
+        { id: 6, name: 'صقر 1', num: 'S001', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'المرسى', port: 'المرسى', supp: 'الوحدة 1', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-006', repairer: 'فني 1' },
+        { id: 7, name: 'صقر 2', num: 'S002', len: 30, cat: 'صقور', reg: 'الشمال', zone: 'غار الملح', port: 'غار الملح', supp: 'الوحدة 1', stat: 'معطب', break: 'عطل هيدروليك', fDate: '2026-01-20', eDate: '2026-12-31', ref: 'REF-007', repairer: 'فني 1' },
+        { id: 8, name: 'خافر 1', num: 'K001', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'المهدية', port: 'المهدية', supp: 'الوحدة 2', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-008', repairer: 'فني 2' },
+        { id: 9, name: 'خافر 2', num: 'K002', len: 20, cat: 'خوافر', reg: 'الساحل', zone: 'نابل', port: 'نابل', supp: 'الوحدة 2', stat: 'صيانة', break: 'صيانة دورية', fDate: '2026-02-15', eDate: '2026-12-31', ref: 'REF-009', repairer: 'فني 2' },
+        { id: 10, name: 'زورق مزدوج 1', num: 'Z001', len: 35, cat: 'زوارق مزدوجة', reg: 'الوسط', zone: 'صفاقس', port: 'صفاقس', supp: 'الوحدة 3', stat: 'صالح', break: '', fDate: '2026-01-01', eDate: '2026-12-31', ref: 'REF-010', repairer: 'فني 3' }
+    ];
 }
 
-// ===== إضافة مركب =====
-async function handleAddItem() {
-    if (isSubmitting) return;
-    if (!canEdit()) {
-        showToast('ليس لديك صلاحية للإضافة!', 'error');
-        return;
-    }
-    if (!validateForm()) {
-        showToast('الرجاء تصحيح الأخطاء في النموذج', 'error');
-        return;
-    }
-    
-    const name = document.getElementById('iName').value.trim();
-    const len = parseFloat(document.getElementById('iLen').value);
-    const stat = document.getElementById('iStat').value;
-    const fDate = document.getElementById('iDate').value;
-    const eDate = document.getElementById('iEnd').value;
-    
-    const newItem = Object.create(null);
-    newItem.name = name;
-    newItem.num = document.getElementById('iNum').value.trim() || '';
-    newItem.len = len;
-    newItem.reg = document.getElementById('iReg').value || '';
-    newItem.zone = document.getElementById('iZone').value || '';
-    newItem.port = document.getElementById('iPort').value.trim() || '';
-    newItem.supp = document.getElementById('iSupp').value.trim() || '';
-    newItem.stat = stat;
-    newItem.break = document.getElementById('iBreak').value.trim() || '';
-    newItem.fDate = fDate || '';
-    newItem.eDate = eDate || '';
-    newItem.ref = document.getElementById('iRef').value.trim() || '';
-    newItem.cat = getCategory(len);
-    
-    const btn = document.getElementById('saveBtn');
-    isSubmitting = true;
-    btn.disabled = true;
-    btn.textContent = '⏳ جارٍ الحفظ...';
-    
-    try {
-        await saveVessel(newItem);
-        showToast('✅ تم إضافة المركب بنجاح', 'success');
-        clearForm();
-        await renderMain();
-    } catch(e) {
-        showToast('❌ خطأ في الإضافة: ' + e.message, 'error');
-    } finally {
-        isSubmitting = false;
-        btn.disabled = false;
-        btn.textContent = '✅ حفظ';
-    }
+// ============================================================
+// تهيئة الصفحة
+// ============================================================
+
+if (document.getElementById('page-fleet')) {
+    console.log('📄 Fleet page loaded');
+    setTimeout(loadVessels, 300);
+    setTimeout(loadVessels, 1000);
 }
-
-// ===== تعديل مركب =====
-async function handleEditItem(id) {
-    if (isSubmitting) return;
-    if (!canEdit()) {
-        showToast('ليس لديك صلاحية للتعديل!', 'error');
-        return;
-    }
-    
-    try {
-        const item = vessels.find(x => String(getVesselId(x)) === String(id));
-        if (!item) {
-            showToast('المركب غير موجود', 'error');
-            return;
-        }
-        
-        isEditing = true;
-        editingId = id;
-        
-        document.getElementById('iName').value = item.name || '';
-        document.getElementById('iNum').value = item.num || '';
-        document.getElementById('iLen').value = item.len || '';
-        document.getElementById('iReg').value = item.reg || '';
-        updateZones(item.zone || '');
-        document.getElementById('iPort').value = item.port || '';
-        document.getElementById('iSupp').value = item.supp || '';
-        document.getElementById('iStat').value = item.stat || 'صالح';
-        document.getElementById('iBreak').value = item.break || '';
-        document.getElementById('iDate').value = item.fDate || '';
-        document.getElementById('iEnd').value = item.eDate || '';
-        document.getElementById('iRef').value = item.ref || '';
-        
-        document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.textContent = '🔄 تحديث';
-        saveBtn.onclick = handleUpdateItem;
-        document.getElementById('cancelBtn').style.display = 'inline-flex';
-        
-        showToast('✏️ قم بتعديل البيانات ثم اضغط تحديث', 'info');
-    } catch(e) {
-        showToast('❌ خطأ: ' + e.message, 'error');
-    }
-}
-
-async function handleUpdateItem() {
-    if (isSubmitting) return;
-    if (!isEditing || !editingId) return;
-    if (!validateForm()) {
-        showToast('الرجاء تصحيح الأخطاء في النموذج', 'error');
-        return;
-    }
-    
-    const name = document.getElementById('iName').value.trim();
-    const len = parseFloat(document.getElementById('iLen').value);
-    const stat = document.getElementById('iStat').value;
-    const fDate = document.getElementById('iDate').value;
-    const eDate = document.getElementById('iEnd').value;
-    
-    const updatedItem = Object.create(null);
-    updatedItem.name = name;
-    updatedItem.num = document.getElementById('iNum').value.trim() || '';
-    updatedItem.len = len;
-    updatedItem.reg = document.getElementById('iReg').value || '';
-    updatedItem.zone = document.getElementById('iZone').value || '';
-    updatedItem.port = document.getElementById('iPort').value.trim() || '';
-    updatedItem.supp = document.getElementById('iSupp').value.trim() || '';
-    updatedItem.stat = stat;
-    updatedItem.break = document.getElementById('iBreak').value.trim() || '';
-    updatedItem.fDate = fDate || '';
-    updatedItem.eDate = eDate || '';
-    updatedItem.ref = document.getElementById('iRef').value.trim() || '';
-    updatedItem.cat = getCategory(len);
-    
-    const btn = document.getElementById('saveBtn');
-    isSubmitting = true;
-    btn.disabled = true;
-    btn.textContent = '⏳ جارٍ التحديث...';
-    
-    try {
-        await updateVessel(editingId, updatedItem);
-        showToast('✅ تم تحديث المركب بنجاح', 'success');
-        clearForm();
-        await renderMain();
-    } catch(e) {
-        showToast('❌ خطأ في التحديث: ' + e.message, 'error');
-    } finally {
-        isSubmitting = false;
-        btn.disabled = false;
-        btn.textContent = '✅ حفظ';
-        btn.onclick = handleAddItem;
-        document.getElementById('cancelBtn').style.display = 'none';
-        isEditing = false;
-        editingId = null;
-    }
-}
-
-// ===== حذف مركب =====
-async function handleDeleteItem(id) {
-    if (isSubmitting) return;
-    if (!canDelete()) {
-        showToast('ليس لديك صلاحية للحذف!', 'error');
-        return;
-    }
-    
-    const item = vessels.find(x => String(getVesselId(x)) === String(id));
-    if (!item) {
-        showToast('المركب غير موجود', 'error');
-        return;
-    }
-    if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${item.name}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return;
-    
-    try {
-        await deleteVessel(id);
-        showToast('✅ تم حذف المركب بنجاح', 'success');
-        await renderMain();
-    } catch(e) {
-        showToast('❌ خطأ في الحذف: ' + e.message, 'error');
-    }
-}
-
-// ===== دوال مساعدة =====
-function clearForm() {
-    ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
-        document.getElementById(id).value = '';
-    });
-    document.getElementById('iReg').value = '';
-    document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-    document.querySelectorAll('.field').forEach(f => f.classList.remove('has-error'));
-    
-    const saveBtn = document.getElementById('saveBtn');
-    saveBtn.textContent = '✅ حفظ';
-    saveBtn.onclick = handleAddItem;
-    document.getElementById('cancelBtn').style.display = 'none';
-    isEditing = false;
-    editingId = null;
-}
-
-function updateZones(selectedZone = '') {
-    const reg = document.getElementById('iReg').value;
-    const zoneSel = document.getElementById('iZone');
-    zoneSel.innerHTML = '<option value="">المنطقة</option>';
-    if (ZONES_DATA[reg]) {
-        for (const zone of ZONES_DATA[reg]) {
-            const option = document.createElement('option');
-            option.value = zone;
-            option.textContent = zone;
-            if (zone === selectedZone) option.selected = true;
-            zoneSel.appendChild(option);
-        }
-    }
-}
-
-function clearMainSearch() {
-    document.getElementById('searchMain').value = '';
-    applyLocalFilter();
-}
-
-async function refreshMain() {
-    showToast('🔄 جاري تحديث البيانات...', 'info');
-    vesselsRequest = null;
-    await renderMain();
-    showToast('✅ تم التحديث', 'success');
-}
-
-// ===== تهيئة الصفحة =====
-document.addEventListener('DOMContentLoaded', async function() {
-    await checkSession();
-    await renderMain();
-});
-
-// ===== ربط الدوال =====
-window.renderMain = renderMain;
-window.refreshMain = refreshMain;
-window.clearMainSearch = clearMainSearch;
-window.handleAddItem = handleAddItem;
-window.handleEditItem = handleEditItem;
-window.handleDeleteItem = handleDeleteItem;
-window.updateZones = updateZones;
-window.applyLocalFilter = applyLocalFilter;
-window.clearForm = clearForm;
-window.showToast = showToast;
-
-console.log('✅ fleet.html v6.0 (Production Hardened) loaded');
 </script>
-</body>
-</html>
