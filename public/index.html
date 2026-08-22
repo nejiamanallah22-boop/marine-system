@@ -3,159 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
-    
-    <!-- ✅ CSS خارجي -->
-    <link rel="stylesheet" href="/css/style.css">
-    
-    <!-- ✅ خطوط وأيقونات -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>⚓ Marine System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #0a0e17;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #062f24, #0a4b3a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: #141b2d;
+            padding: 40px;
+            border-radius: 16px;
+            width: 380px;
+            max-width: 95%;
+            text-align: center;
+            border: 1px solid rgba(96,165,250,0.1);
+        }
+        .login-box h1 { color: #60a5fa; font-size: 24px; }
+        .login-box .sub { color: #94a3b8; font-size: 14px; margin: 8px 0 20px; }
+        .developer { color: #60a5fa; font-size: 13px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 14px; }
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-family: 'Cairo', sans-serif;
+        }
+        .input-group input:focus { outline: none; border-color: #60a5fa; }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+        }
+        .login-btn:hover { background: #3b82f6; }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-msg {
+            color: #f87171;
+            margin-top: 12px;
+            padding: 8px;
+            background: rgba(248,113,113,0.08);
+            border-radius: 8px;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+        .error-msg.success { color: #4ade80; background: rgba(74,222,128,0.08); }
+        .version { color: #64748b; font-size: 12px; margin-top: 16px; }
+        #mainApp { display: none; width: 100%; min-height: 100vh; flex-direction: column; }
+        header {
+            background: #0a4b3a;
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0; right: 0;
+            width: 240px;
+            height: 100%;
+            background: #141b2d;
+            padding-top: 70px;
+            overflow-y: auto;
+        }
+        .sidebar-brand {
+            position: absolute;
+            top: 0; right: 0;
+            width: 100%;
+            padding: 16px 20px;
+            background: #0a4b3a;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            color: #94a3b8;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.04); color: white; }
+        .nav-btn.active { background: rgba(96,165,250,0.08); color: #60a5fa; }
+        .main-content { margin-right: 240px; padding: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: #141b2d; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.04); }
+        .stat-card .number { font-size: 28px; font-weight: 800; color: #60a5fa; }
+        .stat-card .label { color: #94a3b8; font-size: 13px; }
+        .table-wrapper { background: #141b2d; border-radius: 12px; padding: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; color: #e2e8f0; }
+        th { padding: 10px; text-align: right; color: #94a3b8; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .btn-logout { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .btn-logout:hover { background: rgba(239,68,68,0.2); }
+        @media (max-width: 768px) { .sidebar { transform: translateX(100%); } .main-content { margin-right: 0; } .sidebar.open { transform: translateX(0); } }
+    </style>
 </head>
 <body>
 
-    <!-- ============================================================
-    🔐 شاشة تسجيل الدخول
-    ============================================================ -->
-
+    <!-- ===== شاشة تسجيل الدخول ===== -->
     <div id="loginOverlay">
         <div class="login-box">
-            <div class="login-logo">
-                <span class="logo-icon">⚓</span>
-                <span class="logo-text">منظومة الوسائل البحرية</span>
-            </div>
-            <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-
-            <div class="developer">
-                <span class="dev-label">الوكيل</span>
-                <span class="dev-name">أمان الله ناجي</span>
-            </div>
-
+            <h1>⚓ منظومة الوسائل البحرية</h1>
+            <p class="sub">نظام متابعة وإدارة الأسطول البحري</p>
+            <div class="developer">الوكيل أمان الله ناجي</div>
             <div class="input-group">
-                <i class="fas fa-user input-icon"></i>
-                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
+                <input type="text" id="username" placeholder="اسم المستخدم">
             </div>
-
             <div class="input-group">
-                <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+                <input type="password" id="password" placeholder="كلمة المرور">
             </div>
-
-            <button type="button" class="login-btn" id="loginButton">
-                <span class="spinner"></span>
-                <span class="btn-text">🚀 دخول</span>
-            </button>
-
+            <button class="login-btn" id="loginButton">🚀 دخول</button>
             <div id="loginError" class="error-msg"></div>
-
-            <div class="login-footer">
-                <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                <span class="version">v3.0</span>
-            </div>
+            <div class="version">v4.0</div>
         </div>
     </div>
 
-    <!-- ============================================================
-    📱 التطبيق الرئيسي
-    ============================================================ -->
-
+    <!-- ===== التطبيق الرئيسي ===== -->
     <div id="mainApp" style="display:none;">
-        <!-- Header -->
         <header>
-            <div class="header-left">
-                <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-                <h1>
-                    <span>⚓</span>
-                    منظومة الوسائل البحرية
-                    <span class="developer-tag">الوكيل أمان الله ناجي</span>
-                </h1>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <span onclick="toggleSidebar()" style="cursor:pointer;font-size:22px;">☰</span>
+                <h1>⚓ منظومة الوسائل البحرية</h1>
             </div>
-            <div class="header-right">
-                <span class="notification-icon">
-                    🔔 <span class="notification-badge">0</span>
-                </span>
-                <span class="role-badge" id="userRoleDisplay">👤</span>
-                <button class="btn-outline-white" onclick="window.print()" title="طباعة">
-                    <i class="fas fa-print"></i>
-                </button>
-                <button class="btn-outline-white" onclick="refreshAllPages()" title="تحديث">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button class="btn-outline-white btn-logout" onclick="doLogout()" title="تسجيل الخروج">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span id="userRoleDisplay" style="color:#60a5fa;">👤</span>
+                <button class="btn-logout" onclick="doLogout()">🚪 خروج</button>
             </div>
         </header>
 
-        <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <span>⚓</span>
-                <span>الأسطول البحري</span>
-            </div>
-            <button class="nav-btn active" onclick="showPage('dashboard')">
-                <i class="fas fa-chart-pie"></i> لوحة التحكم
-            </button>
-            <button class="nav-btn" onclick="showPage('fleet')">
-                <i class="fas fa-ship"></i> الأسطول
-            </button>
-            <button class="nav-btn" onclick="showPage('maintenance')">
-                <i class="fas fa-wrench"></i> الصيانة
-            </button>
-            <button class="nav-btn" onclick="showPage('efficiency')">
-                <i class="fas fa-chart-line"></i> الجاهزية
-            </button>
-            <button class="nav-btn" onclick="showPage('support')">
-                <i class="fas fa-headset"></i> الدعم
-            </button>
-            <button class="nav-btn" onclick="showPage('users')">
-                <i class="fas fa-users"></i> المستخدمين
-            </button>
-            <button class="nav-btn" onclick="showPage('notes')">
-                <i class="fas fa-sticky-note"></i> Note Verbale
-            </button>
-            <button class="nav-btn" onclick="showPage('sessions')">
-                <i class="fas fa-users-cog"></i> المراقبة
-            </button>
-            <button class="nav-btn" onclick="showPage('ai-assistant')">
-                <i class="fas fa-robot"></i> 🤖 المساعد الذكي
-            </button>
-            <button class="nav-btn" onclick="showPage('settings')">
-                <i class="fas fa-cog"></i> ⚙️ الإعدادات
-            </button>
-            <button class="nav-btn" onclick="showPage('logs')">
-                <i class="fas fa-history"></i> السجلات
-            </button>
-            <div class="sidebar-footer">
-                <span>الوكيل أمان الله ناجي</span>
-            </div>
+            <div class="sidebar-brand">⚓ الأسطول البحري</div>
+            <button class="nav-btn active" onclick="showPage('dashboard')">📊 لوحة التحكم</button>
+            <button class="nav-btn" onclick="showPage('fleet')">🚢 الأسطول</button>
+            <button class="nav-btn" onclick="showPage('users')">👥 المستخدمين</button>
         </nav>
 
-        <!-- Content -->
         <div class="main-content">
             <div id="pageContainer">
-                <div class="page-content active" id="page-dashboard">
-                    <div class="text-center" style="padding:60px 20px;color:rgba(255,255,255,0.3);">
-                        <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-                        <p>جاري تحميل لوحة التحكم...</p>
-                    </div>
-                </div>
+                <div style="text-align:center;padding:40px;color:#94a3b8;">🚀 جاري التحميل...</div>
             </div>
         </div>
     </div>
 
     <!-- ============================================================
-    🍞 Toast Container
+    📝 JAVASCRIPT - أبسط نسخة ممكنة
     ============================================================ -->
+    <script>
+        console.log('🚀 Marine System v4.0 - Simple Version');
 
-    <div class="toast-container" id="toastContainer"></div>
+        // ============================================================
+        // 🔐 تسجيل الدخول - أبسط نسخة
+        // ============================================================
 
-    <!-- ============================================================
-    📝 JavaScript خارجي
-    ============================================================ -->
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 DOM ready');
 
-    <script src="/js/app.js"></script>
+            var loginBtn = document.getElementById('loginButton');
+
+            if (loginBtn) {
+                loginBtn.onclick = function() {
+                    console.log('🖱️ زر الدخول تم الضغط عليه!');
+
+                    var username = document.getElementById('username');
+                    var password = document.getElementById('password');
+                    var errorEl = document.getElementById('loginError');
+
+                    var user = username.value.trim();
+                    var pass = password.value;
+
+                    errorEl.className = 'error-msg';
+                    errorEl.textContent = '';
+
+                    if (!user || !pass) {
+                        errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                        errorEl.className = 'error-msg show';
+                        return;
+                    }
+
+                    loginBtn.disabled = true;
+                    loginBtn.textContent = '⏳ جاري...';
+
+                    // ✅ ✅ ✅ إرسال الطلب
+                    console.log('📡 إرسال طلب إلى: /api/auth/login');
+                    console.log('👤 اسم المستخدم:', user);
+
+                    fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ username: user, password: pass })
+                    })
+                    .then(function(response) {
+                        console.log('📡 حالة الاستجابة:', response.status);
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        console.log('📡 البيانات:', data);
+
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = '🚀 دخول';
+
+                        if (data.success) {
+                            // ✅ حفظ البيانات
+                            localStorage.setItem('auth_token', data.token);
+                            localStorage.setItem('auth_user', JSON.stringify(data.user));
+
+                            // ✅ إظهار التطبيق
+                            document.getElementById('loginOverlay').style.display = 'none';
+                            document.getElementById('mainApp').style.display = 'block';
+
+                            // ✅ عرض اسم المستخدم
+                            var display = document.getElementById('userRoleDisplay');
+                            display.textContent = '👤 ' + (data.user.name || data.user.username);
+
+                            errorEl.textContent = '✅ مرحباً ' + (data.user.name || user);
+                            errorEl.className = 'error-msg show success';
+
+                            // ✅ تحميل لوحة التحكم
+                            loadDashboard();
+
+                            console.log('✅ تسجيل الدخول ناجح');
+
+                        } else {
+                            errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                            errorEl.className = 'error-msg show';
+                            console.log('❌ فشل تسجيل الدخول');
+                        }
+                    })
+                    .catch(function(error) {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = '🚀 دخول';
+                        errorEl.textContent = '❌ خطأ في الاتصال: ' + error.message;
+                        errorEl.className = 'error-msg show';
+                        console.error('❌ خطأ:', error);
+                    });
+                };
+
+                console.log('✅ زر الدخول مرتبط');
+            }
+
+            // ✅ التحقق من الجلسة
+            var token = localStorage.getItem('auth_token');
+            var user = JSON.parse(localStorage.getItem('auth_user') || 'null');
+
+            if (token && user) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+
+                var display = document.getElementById('userRoleDisplay');
+                display.textContent = '👤 ' + (user.name || user.username);
+
+                loadDashboard();
+                console.log('✅ تم استعادة الجلسة');
+            }
+        });
+
+        // ============================================================
+        // 📊 لوحة التحكم
+        // ============================================================
+
+        function loadDashboard() {
+            var container = document.getElementById('pageContainer');
+
+            // ✅ عرض إحصائيات بسيطة
+            container.innerHTML = `
+                <div style="text-align:center;padding:40px;">
+                    <h2 style="color:#60a5fa;">📊 لوحة التحكم</h2>
+                    <p style="color:#94a3b8;margin:16px 0;">مرحباً بك في منظومة الوسائل البحرية</p>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="number">0</div><div class="label">🚢 إجمالي المراكب</div></div>
+                        <div class="stat-card"><div class="number">0</div><div class="label">✅ الصالح</div></div>
+                        <div class="stat-card"><div class="number">0</div><div class="label">👥 المستخدمين</div></div>
+                    </div>
+                    <button onclick="showPage('fleet')" style="padding:10px 20px;background:#2563eb;border:none;border-radius:8px;color:white;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;">
+                        ⚓ إدارة الأسطول
+                    </button>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // 📄 الصفحات
+        // ============================================================
+
+        function showPage(pageName) {
+            var container = document.getElementById('pageContainer');
+
+            var pages = {
+                'dashboard': function() { loadDashboard(); },
+                'fleet': function() {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:40px;">
+                            <h2 style="color:#60a5fa;">🚢 الأسطول</h2>
+                            <p style="color:#94a3b8;margin:16px 0;">لا توجد مراكب</p>
+                            <button onclick="showPage('dashboard')" style="padding:10px 20px;background:#60a5fa;border:none;border-radius:8px;color:#0a0e17;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;">
+                                📊 العودة
+                            </button>
+                        </div>
+                    `;
+                },
+                'users': function() {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:40px;">
+                            <h2 style="color:#60a5fa;">👥 المستخدمين</h2>
+                            <p style="color:#94a3b8;margin:16px 0;">لا توجد مستخدمين</p>
+                            <button onclick="showPage('dashboard')" style="padding:10px 20px;background:#60a5fa;border:none;border-radius:8px;color:#0a0e17;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;">
+                                📊 العودة
+                            </button>
+                        </div>
+                    `;
+                }
+            };
+
+            if (pages[pageName]) {
+                pages[pageName]();
+            }
+
+            // ✅ تحديث الأزرار
+            document.querySelectorAll('.nav-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(pageName === 'dashboard' ? 'لوحة التحكم' : pageName)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // ============================================================
+        // 🚪 تسجيل الخروج
+        // ============================================================
+
+        function doLogout() {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
+
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').className = 'error-msg';
+        }
+
+        // ============================================================
+        // 📱 الوظائف الأخرى
+        // ============================================================
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function refreshAllPages() {
+            console.log('🔄 تحديث');
+        }
+
+        // ============================================================
+        // 🌐 جعل الدوال عالمية
+        // ============================================================
+
+        window.showPage = showPage;
+        window.toggleSidebar = toggleSidebar;
+        window.doLogout = doLogout;
+        window.refreshAllPages = refreshAllPages;
+
+        console.log('✅ Marine System v4.0 ready');
+        console.log('🔑 استخدم: admin / (كلمة المرور من Render)');
+    </script>
 
 </body>
 </html>
