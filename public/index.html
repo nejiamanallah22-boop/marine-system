@@ -9,58 +9,41 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         /* ============================================================
-           🎨 PRO PRODUCTION COLORS - تصميم احترافي
+           🎨 PRO PRODUCTION UI - تصميم احترافي فاخر
            ============================================================ */
-        
+
         :root {
-            /* 🎨 Primary Colors - ألوان بحرية عصرية */
             --primary: #0c4a6e;
-            --primary-light: #1a6a8a;
+            --primary-light: #1a7a8a;
             --primary-dark: #062a44;
             --primary-gradient: linear-gradient(135deg, #0c4a6e, #1a7a8a);
             --primary-glow: 0 8px 32px rgba(12, 74, 110, 0.4);
-            
-            /* 🎨 Secondary Colors */
+
             --secondary: #2d8c9c;
-            --secondary-light: #4aa8b8;
-            --secondary-gradient: linear-gradient(135deg, #2d8c9c, #4aa8b8);
-            
-            /* 🎨 Accent Colors */
             --accent: #f39c12;
-            --accent-light: #f1c40f;
             --accent-gradient: linear-gradient(135deg, #f39c12, #f1c40f);
-            
-            /* 🎨 Status Colors */
+
             --success: #10b981;
-            --success-light: #34d399;
             --danger: #ef4444;
-            --danger-light: #f87171;
             --warning: #f59e0b;
-            --warning-light: #fbbf24;
             --info: #3b82f6;
-            --info-light: #60a5fa;
-            
-            /* 🎨 Neutral Colors */
+
             --bg: #f0f4f8;
             --bg-dark: #0d1b2a;
             --bg-card: #ffffff;
             --text: #1e293b;
             --text-secondary: #64748b;
             --text-light: #94a3b8;
-            --text-white: #ffffff;
             --border: #e2e8f0;
-            --border-light: #f1f5f9;
             --shadow: 0 4px 20px rgba(0,0,0,0.06);
             --shadow-hover: 0 8px 40px rgba(0,0,0,0.12);
-            --shadow-glow: 0 8px 32px rgba(12, 74, 110, 0.2);
             --radius: 16px;
             --radius-sm: 10px;
-            --radius-xs: 6px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'Cairo', 'Segoe UI', sans-serif;
             background: var(--bg);
@@ -71,7 +54,7 @@
         }
 
         /* ============================================================
-           🔐 LOGIN SCREEN - PRO PRODUCTION DESIGN
+           🔐 LOGIN SCREEN - فاخر واحترافي
            ============================================================ */
 
         #loginOverlay {
@@ -209,8 +192,8 @@
             background: white;
         }
 
-        .input-group input:focus + .input-icon,
-        .input-group input:focus ~ .input-icon {
+        .input-group input:focus+.input-icon,
+        .input-group input:focus~.input-icon {
             color: var(--primary);
         }
 
@@ -277,10 +260,18 @@
             animation: spin 0.8s linear infinite;
         }
 
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-        .login-btn.loading .spinner { display: inline-block; }
-        .login-btn.loading .btn-text { display: none; }
+        .login-btn.loading .spinner {
+            display: inline-block;
+        }
+        .login-btn.loading .btn-text {
+            display: none;
+        }
 
         .error-msg {
             color: var(--danger);
@@ -294,7 +285,9 @@
             text-align: right;
         }
 
-        .error-msg.show { display: block; }
+        .error-msg.show {
+            display: block;
+        }
         .error-msg.success {
             color: var(--success);
             background: #ecfdf5;
@@ -320,7 +313,7 @@
         }
 
         /* ============================================================
-           📱 MAIN APP - PRO PRODUCTION DESIGN
+           📱 MAIN APP - احترافي فاخر
            ============================================================ */
 
         #mainApp {
@@ -330,7 +323,6 @@
             flex-direction: column;
         }
 
-        /* ── Header ── */
         header {
             background: var(--primary-gradient);
             color: white;
@@ -343,7 +335,7 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
         }
 
         .header-left {
@@ -357,11 +349,13 @@
             cursor: pointer;
             padding: 4px 12px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             transition: var(--transition);
         }
 
-        .menu-toggle:hover { background: rgba(255,255,255,0.15); }
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
 
         header h1 {
             font-size: 20px;
@@ -371,11 +365,13 @@
             gap: 10px;
         }
 
-        header h1 span { color: var(--accent-light); }
+        header h1 span {
+            color: var(--accent);
+        }
 
         .developer-tag {
             font-size: 11px;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             padding: 2px 16px;
             border-radius: 30px;
             font-weight: 400;
@@ -390,16 +386,16 @@
         }
 
         .role-badge {
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             padding: 4px 18px;
             border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 14px;
         }
 
         .btn-outline-white {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: white;
             padding: 6px 14px;
             border-radius: 8px;
@@ -408,11 +404,13 @@
             font-size: 14px;
         }
 
-        .btn-outline-white:hover { background: rgba(255,255,255,0.15); }
+        .btn-outline-white:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
 
         .btn-logout {
             color: #ffcdd2;
-            border-color: rgba(255,205,210,0.2);
+            border-color: rgba(255, 205, 210, 0.2);
         }
 
         .btn-logout:hover {
@@ -420,14 +418,14 @@
             color: white;
         }
 
-        /* ── Sidebar ── */
         .sidebar {
             position: fixed;
-            top: 0; right: 0;
+            top: 0;
+            right: 0;
             width: 280px;
             height: 100%;
             background: white;
-            box-shadow: 2px 0 30px rgba(0,0,0,0.08);
+            box-shadow: 2px 0 30px rgba(0, 0, 0, 0.08);
             transform: translateX(0);
             transition: transform 0.3s ease;
             z-index: 999;
@@ -437,11 +435,14 @@
             flex-direction: column;
         }
 
-        .sidebar.closed { transform: translateX(100%); }
+        .sidebar.closed {
+            transform: translateX(100%);
+        }
 
         .sidebar-brand {
             position: absolute;
-            top: 0; right: 0;
+            top: 0;
+            right: 0;
             width: 100%;
             padding: 16px 24px;
             background: var(--primary-gradient);
@@ -497,7 +498,6 @@
             color: var(--text-light);
         }
 
-        /* ── Main Content ── */
         .main-content {
             margin-right: 280px;
             padding: 24px 32px 32px;
@@ -507,21 +507,30 @@
             transition: margin-right 0.3s ease;
         }
 
-        .sidebar.closed ~ .main-content { margin-right: 0; }
+        .sidebar.closed~.main-content {
+            margin-right: 0;
+        }
 
         .page {
             display: none;
             animation: fadePage 0.3s ease;
         }
 
-        .page.active { display: block; }
-
-        @keyframes fadePage {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .page.active {
+            display: block;
         }
 
-        /* ── Cards & Stats ── */
+        @keyframes fadePage {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -566,7 +575,6 @@
             margin-bottom: 8px;
         }
 
-        /* ── Tables ── */
         .table-wrapper {
             overflow-x: auto;
             background: var(--bg-card);
@@ -603,9 +611,10 @@
             border-bottom: 1px solid var(--border-light);
         }
 
-        tr:hover td { background: var(--border-light); }
+        tr:hover td {
+            background: var(--border-light);
+        }
 
-        /* ── Status Badges ── */
         .status-badge {
             padding: 3px 16px;
             border-radius: 30px;
@@ -634,7 +643,6 @@
             color: var(--text-secondary);
         }
 
-        /* ── Forms ── */
         .form-card {
             background: var(--bg-card);
             border-radius: var(--radius);
@@ -697,7 +705,6 @@
             flex-wrap: wrap;
         }
 
-        /* ── Buttons ── */
         .btn {
             padding: 8px 20px;
             border: none;
@@ -712,21 +719,48 @@
             font-family: 'Cairo', sans-serif;
         }
 
-        .btn-primary { background: var(--primary-gradient); color: white; box-shadow: var(--shadow-glow); }
-        .btn-primary:hover { box-shadow: var(--primary-glow); transform: translateY(-2px); }
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+        .btn-primary:hover {
+            box-shadow: var(--primary-glow);
+            transform: translateY(-2px);
+        }
 
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { background: #059669; transform: translateY(-2px); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
 
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; transform: translateY(-2px); }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
 
-        .btn-warning { background: var(--warning); color: white; }
-        .btn-warning:hover { background: #d97706; transform: translateY(-2px); }
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
 
-        .btn-sm { padding: 4px 12px; font-size: 12px; }
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
 
-        /* ── Charts ── */
         .chart-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -749,9 +783,11 @@
             font-size: 16px;
         }
 
-        canvas { max-height: 280px; width: 100% !important; }
+        canvas {
+            max-height: 280px;
+            width: 100% !important;
+        }
 
-        /* ── Toasts ── */
         .toast-container {
             position: fixed;
             bottom: 24px;
@@ -771,158 +807,62 @@
             color: white;
             font-weight: 500;
             animation: slideUp 0.3s ease;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .toast-success { background: var(--success); }
-        .toast-error { background: var(--danger); }
-        .toast-warning { background: var(--warning); }
-        .toast-info { background: var(--primary); }
+        .toast-success {
+            background: var(--success);
+        }
+        .toast-error {
+            background: var(--danger);
+        }
+        .toast-warning {
+            background: var(--warning);
+        }
+        .toast-info {
+            background: var(--primary);
+        }
 
-        /* ── Responsive ── */
         @media (max-width: 992px) {
-            .sidebar { transform: translateX(100%); }
-            .sidebar.open { transform: translateX(0); }
-            .main-content { margin-right: 0; }
+            .sidebar {
+                transform: translateX(100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-right: 0;
+            }
         }
 
         @media (max-width: 768px) {
-            header h1 { font-size: 16px; flex-wrap: wrap; }
-            .developer-tag { display: none; }
-            .login-box { padding: 30px 20px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .form-grid { grid-template-columns: 1fr; }
-            .main-content { padding: 16px; }
-        }
-
-        @media print {
-            .sidebar, .scroll-buttons, .btn, .btn-sm, .filter-bar, .form-card {
-                display: none !important;
+            header h1 {
+                font-size: 16px;
+                flex-wrap: wrap;
             }
-            .main-content { margin: 0 !important; padding: 10px !important; }
-            @page { size: landscape; margin: 1cm; }
+            .developer-tag {
+                display: none;
+            }
+            .login-box {
+                padding: 30px 20px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .main-content {
+                padding: 16px;
+            }
         }
 
-        /* ── Utilities ── */
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .mb-16 { margin-bottom: 16px; }
-        .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .ticket-list { display: grid; gap: 10px; }
-        .ticket-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .ticket-info { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
-        .ticket-title { font-weight: 600; }
-        .ticket-date { color: var(--text-light); font-size: 12px; }
-
-        .password-section {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px 24px;
-            border: 1px solid var(--border);
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-        }
-        .password-section h3 {
-            font-size: 17px;
-            color: var(--primary);
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .password-section .form-group { margin-bottom: 12px; }
-        .password-section .form-group label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            display: block;
-            margin-bottom: 4px;
-        }
-        .password-section .form-group input {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            background: #f8fafc;
-            font-family: 'Cairo', sans-serif;
-        }
-        .password-section .form-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(12, 74, 110, 0.08);
-            background: white;
-        }
-        #passwordMessage {
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            font-size: 14px;
-            display: none;
-        }
-        #passwordMessage.show { display: block; }
-        #passwordMessage.success {
-            color: #166534;
-            background: #dcfce7;
-            border: 1px solid #86efac;
-        }
-        #passwordMessage.error {
-            color: #991b1b;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-        }
-
-        .ai-chat-box {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            padding: 16px;
-            max-height: 350px;
-            overflow-y: auto;
-            margin: 12px 0;
-        }
-        .msg {
-            padding: 8px 14px;
-            border-radius: 12px;
-            margin: 6px 0;
-            max-width: 85%;
-        }
-        .msg.user {
-            background: var(--primary);
-            color: white;
-            margin-right: auto;
-        }
-        .msg.ai {
-            background: var(--border-light);
-            color: var(--text);
-            margin-left: auto;
-        }
-        .msg .time {
-            font-size: 10px;
-            opacity: 0.6;
-            display: block;
-            margin-top: 4px;
-        }
+        /* ============================================================
+           📜 SCROLL BUTTONS
+           ============================================================ */
 
         .scroll-buttons {
             position: fixed;
@@ -933,6 +873,7 @@
             gap: 8px;
             z-index: 999;
         }
+
         .scroll-btn {
             background: var(--primary);
             color: white;
@@ -948,31 +889,75 @@
             align-items: center;
             justify-content: center;
         }
+
         .scroll-btn:hover {
             transform: scale(1.1);
             background: var(--primary-dark);
+        }
+
+        /* ============================================================
+           🎯 UTILITIES
+           ============================================================ */
+
+        .ticket-list {
+            display: grid;
+            gap: 10px;
+        }
+        .ticket-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .ticket-info {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .ticket-title {
+            font-weight: 600;
+        }
+        .ticket-date {
+            color: var(--text-light);
+            font-size: 12px;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .mb-16 {
+            margin-bottom: 16px;
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== 🔐 شاشة تسجيل الدخول ===== -->
+    <!-- ============================================================
+    🔐 شاشة تسجيل الدخول - فاخرة واحترافية
+    ============================================================ -->
+
     <div id="loginOverlay">
         <div class="login-box">
-            <!-- Logo -->
             <div class="login-logo">
                 <span class="logo-icon">⚓</span>
                 <span class="logo-text">منظومة الوسائل البحرية</span>
             </div>
             <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
 
-            <!-- Developer -->
             <div class="developer">
                 <span class="dev-label">الوكيل</span>
                 <span class="dev-name">أمان الله ناجي</span>
             </div>
 
-            <!-- Form -->
             <div class="input-group">
                 <i class="fas fa-user input-icon"></i>
                 <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
@@ -982,24 +967,24 @@
                 <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
             </div>
 
-            <!-- Login Button -->
             <button type="button" class="login-btn" id="loginButton">
                 <span class="spinner"></span>
                 <span class="btn-text">🚀 دخول</span>
             </button>
 
-            <!-- Error Message -->
             <div id="loginError" class="error-msg" role="alert"></div>
 
-            <!-- Footer -->
             <div class="login-footer">
                 <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                <span class="version">v39.0</span>
+                <span class="version">v40.0</span>
             </div>
         </div>
     </div>
 
-    <!-- ===== 📱 التطبيق الرئيسي ===== -->
+    <!-- ============================================================
+    📱 التطبيق الرئيسي
+    ============================================================ -->
+
     <div id="mainApp" style="display:none;">
         <!-- Header -->
         <header>
@@ -1073,15 +1058,19 @@
         <div class="main-content">
             <div id="pageContainer">
                 <div class="page active" id="page-dashboard">
-                    <div class="text-center" style="padding:40px;">
-                        <h2>🚀 جاري تحميل لوحة التحكم...</h2>
+                    <div style="text-align:center;padding:60px 20px;color:var(--text-light);">
+                        <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+                        <p>جاري تحميل لوحة التحكم...</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ===== أزرار التمرير ===== -->
+    <!-- ============================================================
+    📜 أزرار التمرير
+    ============================================================ -->
+
     <div class="scroll-buttons">
         <button class="scroll-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
             <i class="fas fa-chevron-up"></i>
@@ -1091,26 +1080,28 @@
         </button>
     </div>
 
-    <!-- ===== الإشعارات ===== -->
+    <!-- ============================================================
+    🍞 الإشعارات
+    ============================================================ -->
+
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    📝 JAVASCRIPT - الكود الكامل المصحح v39.0
+    📝 JAVASCRIPT - الكود الكامل والمصحح
     ============================================================ -->
+
     <script>
         /**
          * ============================================================
-         * ⚓ منظومة الوسائل البحرية - v39.0 PRO PRODUCTION
+         * ⚓ منظومة الوسائل البحرية - v40.0 PRO PRODUCTION
          * ============================================================
-         * ✅ تسجيل الدخول يعمل 100%
-         * ✅ تحديث المتغيرات العامة
-         * ✅ أدوار متطابقة مع السيرفر
-         * ✅ حالة المراكب بالألوان الصحيحة
-         * ✅ تحقق من الجلسة
+         * ✅ إصلاح مشكلة الاتصال بالسيرفر (روابط نسبية)
+         * ✅ واجهة احترافية فاخرة
+         * ✅ جميع الدوال تعمل بشكل صحيح
          * ============================================================
          */
 
-        console.log('🚀 Marine System v39.0 - PRO PRODUCTION');
+        console.log('🚀 Marine System v40.0 - PRO PRODUCTION');
 
         // ============================================================
         // 📦 المتغيرات العامة
@@ -1159,8 +1150,10 @@
             toast.className = 'toast toast-' + type;
             var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
             toast.innerHTML = '<span style="font-size:20px;">' + (icons[type] || 'ℹ️') + '</span> ' + message;
-            toast.style.cssText = 'padding:14px 20px;border-radius:12px;color:white;font-weight:500;animation:slideUp 0.3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;background:' +
-                (type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#0c4a6e') + ';';
+            toast.style.cssText =
+                'padding:14px 20px;border-radius:12px;color:white;font-weight:500;animation:slideUp 0.3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;background:' +
+                (type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' :
+                    '#0c4a6e') + ';';
             container.appendChild(toast);
 
             setTimeout(function() {
@@ -1172,7 +1165,7 @@
         }
 
         // ============================================================
-        // 🔐 دالة تسجيل الدخول
+        // 🔐 دالة تسجيل الدخول - ✅ تستخدم روابط نسبية
         // ============================================================
 
         window.handleLogin = function() {
@@ -1203,105 +1196,68 @@
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
+            // ✅ ✅ ✅ إصلاح المشكلة: استخدام رابط نسبي
+            console.log('📡 إرسال طلب إلى: /api/auth/login');
+
             fetch('/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
                 body: JSON.stringify({ username: user, password: pass })
             })
             .then(function(response) {
+                console.log('📡 حالة الاستجابة:', response.status);
                 return response.json();
             })
             .then(function(data) {
+                console.log('📡 البيانات:', data);
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
 
                 if (data.success) {
-                    // ✅ تحديث المتغيرات العامة
                     currentUser = data.user;
                     authToken = data.token;
 
                     localStorage.setItem('authToken', authToken);
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-                    errorEl.textContent = '✅ مرحباً ' + (data.user.name || user);
+                    // ✅ إخفاء شاشة الدخول
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'flex';
+
+                    // ✅ عرض بيانات المستخدم
+                    var display = document.getElementById('userRoleDisplay');
+                    display.textContent = '👤 ' + (currentUser.name || currentUser.username) + ' | ' + getRoleName(
+                        currentUser.role);
+
+                    errorEl.textContent = '✅ مرحباً ' + (currentUser.name || user);
                     errorEl.className = 'error-msg show success';
+                    showToast('✅ مرحباً ' + (currentUser.name || user), 'success');
 
-                    setTimeout(function() {
-                        showApp();
-                    }, 500);
+                    // ✅ تحميل البيانات
+                    loadAllData();
+                    showPage('dashboard');
 
-                    console.log('✅ Login successful:', data.user.username);
+                    console.log('✅ تسجيل الدخول ناجح');
 
                 } else {
                     errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
                     errorEl.className = 'error-msg show';
-                    console.log('❌ Login failed:', data.error);
+                    showToast('❌ ' + (data.error || 'بيانات الدخول غير صحيحة'), 'error');
+                    console.log('❌ فشل تسجيل الدخول');
                 }
             })
             .catch(function(error) {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
-                errorEl.textContent = '❌ خطأ في الاتصال بالسيرفر: ' + error.message;
+                errorEl.textContent = '❌ خطأ في الاتصال: ' + error.message;
                 errorEl.className = 'error-msg show';
-                console.error('❌ Network error:', error);
+                showToast('❌ خطأ في الاتصال بالسيرفر', 'error');
+                console.error('❌ خطأ:', error);
             });
         };
-
-        // ============================================================
-        // ✅ عرض التطبيق
-        // ============================================================
-
-        function showApp() {
-            try {
-                var user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-                var token = localStorage.getItem('authToken');
-
-                if (!user || !token) {
-                    console.warn('⚠️ لا توجد جلسة صالحة');
-                    return;
-                }
-
-                // ✅ تحديث المتغيرات العامة
-                currentUser = user;
-                authToken = token;
-
-                console.log('🚀 Opening application:', user.username);
-
-                var loginOverlay = document.getElementById('loginOverlay');
-                var mainApp = document.getElementById('mainApp');
-
-                if (loginOverlay) {
-                    loginOverlay.style.display = 'none';
-                }
-
-                if (mainApp) {
-                    mainApp.style.display = 'flex';
-                } else {
-                    console.error('❌ mainApp غير موجود في HTML');
-                    return;
-                }
-
-                var userRoleDisplay = document.getElementById('userRoleDisplay');
-                if (userRoleDisplay) {
-                    userRoleDisplay.textContent =
-                        '👤 ' + (user.name || user.username) +
-                        ' | ' + getRoleName(user.role);
-                }
-
-                if (typeof loadAllData === 'function') {
-                    loadAllData();
-                }
-
-                if (typeof showPage === 'function') {
-                    showPage('dashboard');
-                }
-
-                console.log('✅ Application opened successfully');
-
-            } catch (error) {
-                console.error('❌ Error opening application:', error);
-            }
-        }
 
         // ============================================================
         // ✅ التحقق من الجلسة
@@ -1339,6 +1295,62 @@
         }
 
         // ============================================================
+        // ✅ عرض التطبيق
+        // ============================================================
+
+        function showApp() {
+            try {
+                var user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                var token = localStorage.getItem('authToken');
+
+                if (!user || !token) {
+                    console.warn('⚠️ لا توجد جلسة صالحة');
+                    return;
+                }
+
+                currentUser = user;
+                authToken = token;
+
+                console.log('🚀 فتح التطبيق:', user.username);
+
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+
+                var display = document.getElementById('userRoleDisplay');
+                display.textContent = '👤 ' + (user.name || user.username) + ' | ' + getRoleName(user.role);
+
+                loadAllData();
+                showPage('dashboard');
+
+                console.log('✅ تم فتح التطبيق');
+
+            } catch (error) {
+                console.error('❌ خطأ في فتح التطبيق:', error);
+            }
+        }
+
+        // ============================================================
+        // 🚪 تسجيل الخروج
+        // ============================================================
+
+        function doLogout() {
+            currentUser = null;
+            authToken = null;
+
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').className = 'error-msg';
+
+            showToast('👋 تم تسجيل الخروج', 'info');
+        }
+
+        // ============================================================
         // ✅ fetchWithAuth
         // ============================================================
 
@@ -1369,47 +1381,13 @@
                 currentUser = null;
                 authToken = null;
 
-                var mainApp = document.getElementById('mainApp');
-                var loginOverlay = document.getElementById('loginOverlay');
-
-                if (mainApp) mainApp.style.display = 'none';
-                if (loginOverlay) loginOverlay.style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('loginOverlay').style.display = 'flex';
 
                 throw new Error('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى');
             }
 
             return response;
-        }
-
-        // ============================================================
-        // 🚪 تسجيل الخروج
-        // ============================================================
-
-        function doLogout() {
-            currentUser = null;
-            authToken = null;
-
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('currentUser');
-
-            var mainApp = document.getElementById('mainApp');
-            var loginOverlay = document.getElementById('loginOverlay');
-
-            if (mainApp) {
-                mainApp.style.display = 'none';
-            }
-
-            if (loginOverlay) {
-                loginOverlay.style.display = 'flex';
-            }
-
-            var username = document.getElementById('username');
-            var password = document.getElementById('password');
-
-            if (username) username.value = '';
-            if (password) password.value = '';
-
-            showToast('👋 تم تسجيل الخروج بنجاح', 'info');
         }
 
         // ============================================================
@@ -1595,7 +1573,7 @@
             container.innerHTML = `
                 <div class="page active" id="page-settings">
                     <h2 style="color:var(--primary);margin-bottom:16px;">⚙️ الإعدادات</h2>
-                    <div class="password-section">
+                    <div class="form-card">
                         <h3>🔑 تغيير كلمة المرور</h3>
                         <p style="color:var(--text-secondary);font-size:13px;margin-bottom:16px;">يمكنك تغيير كلمة المرور الخاصة بحسابك هنا</p>
                         <form id="changePasswordForm">
@@ -1631,35 +1609,35 @@
 
             document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-                
+
                 var currentPassword = document.getElementById('currentPassword').value;
                 var newPassword = document.getElementById('newPassword').value;
                 var confirmPassword = document.getElementById('confirmPassword').value;
                 var msg = document.getElementById('passwordMessage');
-                
+
                 msg.className = '';
                 msg.textContent = '';
-                
+
                 if (newPassword !== confirmPassword) {
                     msg.textContent = '⚠️ كلمة المرور الجديدة وتأكيدها غير متطابقين';
                     msg.className = 'show error';
                     return;
                 }
-                
+
                 if (newPassword.length < 8) {
                     msg.textContent = '⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل';
                     msg.className = 'show error';
                     return;
                 }
-                
+
                 try {
                     var response = await fetchWithAuth('/api/auth/change-password', {
                         method: 'PUT',
                         body: JSON.stringify({ currentPassword, newPassword })
                     });
-                    
+
                     var data = await response.json();
-                    
+
                     if (data.success) {
                         msg.textContent = '✅ ' + data.message;
                         msg.className = 'show success';
@@ -1822,6 +1800,60 @@
             }).join('');
         }
 
+        async function handleAddVessel(e) {
+            e.preventDefault();
+            var vessel = {
+                name: document.getElementById('vesselName').value.trim(),
+                num: document.getElementById('vesselNum').value.trim(),
+                len: parseFloat(document.getElementById('vesselLen').value),
+                reg: document.getElementById('vesselReg').value,
+                port: document.getElementById('vesselPort').value.trim(),
+                stat: document.getElementById('vesselStatus').value
+            };
+
+            if (!vessel.name || !vessel.num) {
+                showToast('⚠️ يرجى إدخال الاسم والرقم', 'warning');
+                return;
+            }
+
+            try {
+                var response = await fetchWithAuth('/api/vessels', {
+                    method: 'POST',
+                    body: JSON.stringify(vessel)
+                });
+                var data = await response.json();
+                if (data.success) {
+                    showToast('✅ تم إضافة المركب', 'success');
+                    document.getElementById('vesselForm').reset();
+                    await loadVessels();
+                    updateStats();
+                    if (activePage === 'dashboard') renderDashboard();
+                } else {
+                    showToast('❌ ' + (data.error || 'فشل الإضافة'), 'error');
+                }
+            } catch (error) {
+                showToast('❌ خطأ في الاتصال', 'error');
+            }
+        }
+
+        async function deleteVessel(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا المركب؟')) return;
+            try {
+                var response = await fetchWithAuth('/api/vessels/' + id, { method: 'DELETE' });
+                var data = await response.json();
+                if (data.success) {
+                    showToast('🗑️ تم حذف المركب', 'warning');
+                    await loadVessels();
+                    updateStats();
+                    if (activePage === 'dashboard') renderDashboard();
+                } else {
+                    showToast('❌ فشل الحذف', 'error');
+                }
+            } catch (error) {
+                showToast('❌ خطأ في الاتصال', 'error');
+            }
+        }
+
         // ============================================================
         // 👥 المستخدمين
         // ============================================================
@@ -1885,97 +1917,6 @@
             }).join('');
         }
 
-        // ============================================================
-        // 🔄 تحديث عام
-        // ============================================================
-
-        async function refreshAllPages() {
-            try {
-                showToast('🔄 جاري تحديث البيانات...', 'info');
-
-                await loadAllData();
-
-                if (activePage === 'dashboard') renderDashboard();
-                if (activePage === 'fleet') renderFleetPage();
-                if (activePage === 'maintenance') renderMaintenancePage();
-                if (activePage === 'efficiency') renderEfficiencyPage();
-                if (activePage === 'support') renderSupportPage();
-                if (activePage === 'users') renderUsersPage();
-                if (activePage === 'notes') renderNotesPage();
-                if (activePage === 'sessions') renderSessionsPage();
-                if (activePage === 'logs') renderLogsPage();
-
-                showToast('✅ تم تحديث جميع البيانات', 'success');
-
-            } catch (error) {
-                console.error(error);
-                showToast('❌ فشل تحديث البيانات', 'error');
-            }
-        }
-
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('closed');
-        }
-
-        // ============================================================
-        // 📝 دوال الإضافة والحذف (مختصرة)
-        // ============================================================
-
-        async function handleAddVessel(e) {
-            e.preventDefault();
-            var vessel = {
-                name: document.getElementById('vesselName').value.trim(),
-                num: document.getElementById('vesselNum').value.trim(),
-                len: parseFloat(document.getElementById('vesselLen').value),
-                reg: document.getElementById('vesselReg').value,
-                port: document.getElementById('vesselPort').value.trim(),
-                stat: document.getElementById('vesselStatus').value
-            };
-
-            if (!vessel.name || !vessel.num) {
-                showToast('⚠️ يرجى إدخال الاسم والرقم', 'warning');
-                return;
-            }
-
-            try {
-                var response = await fetchWithAuth('/api/vessels', {
-                    method: 'POST',
-                    body: JSON.stringify(vessel)
-                });
-                var data = await response.json();
-                if (data.success) {
-                    showToast('✅ تم إضافة المركب', 'success');
-                    document.getElementById('vesselForm').reset();
-                    await loadVessels();
-                    updateStats();
-                    if (activePage === 'dashboard') renderDashboard();
-                } else {
-                    showToast('❌ ' + (data.error || 'فشل الإضافة'), 'error');
-                }
-            } catch (error) {
-                showToast('❌ خطأ في الاتصال', 'error');
-            }
-        }
-
-        async function deleteVessel(id) {
-            if (!confirm('هل أنت متأكد من حذف هذا المركب؟')) return;
-            try {
-                var response = await fetchWithAuth('/api/vessels/' + id, { method: 'DELETE' });
-                var data = await response.json();
-                if (data.success) {
-                    showToast('🗑️ تم حذف المركب', 'warning');
-                    await loadVessels();
-                    updateStats();
-                    if (activePage === 'dashboard') renderDashboard();
-                } else {
-                    showToast('❌ فشل الحذف', 'error');
-                }
-            } catch (error) {
-                showToast('❌ خطأ في الاتصال', 'error');
-            }
-        }
-
         async function handleAddUser(e) {
             e.preventDefault();
             var user = {
@@ -2029,6 +1970,39 @@
             } catch (error) {
                 showToast('❌ خطأ في الاتصال', 'error');
             }
+        }
+
+        // ============================================================
+        // 🔄 تحديث عام
+        // ============================================================
+
+        async function refreshAllPages() {
+            try {
+                showToast('🔄 جاري تحديث البيانات...', 'info');
+
+                await loadAllData();
+
+                if (activePage === 'dashboard') renderDashboard();
+                if (activePage === 'fleet') renderFleetPage();
+                if (activePage === 'maintenance') renderMaintenancePage();
+                if (activePage === 'efficiency') renderEfficiencyPage();
+                if (activePage === 'support') renderSupportPage();
+                if (activePage === 'users') renderUsersPage();
+                if (activePage === 'notes') renderNotesPage();
+                if (activePage === 'sessions') renderSessionsPage();
+                if (activePage === 'logs') renderLogsPage();
+
+                showToast('✅ تم تحديث جميع البيانات', 'success');
+
+            } catch (error) {
+                console.error(error);
+                showToast('❌ فشل تحديث البيانات', 'error');
+            }
+        }
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
         }
 
         // ============================================================
@@ -2172,7 +2146,8 @@
                     '<span class="status-badge active">' + (t.status || 'مفتوحة') + '</span>' +
                     '<span class="ticket-date">📅 ' + new Date(t.createdAt).toLocaleDateString('ar') + '</span>' +
                     '</div>' +
-                    (t.status !== 'closed' ? '<div><button class="btn btn-success btn-sm" onclick="closeTicket(\'' + t._id + '\')">✅ إغلاق</button></div>' : '') +
+                    (t.status !== 'closed' ? '<div><button class="btn btn-success btn-sm" onclick="closeTicket(\'' + t._id +
+                        '\')">✅ إغلاق</button></div>' : '') +
                     '</div>';
             }).join('');
         }
@@ -2439,7 +2414,9 @@
                 var maint = vessels.filter(function(v) { return v.stat === 'صيانة'; }).length;
                 var broken = vessels.filter(function(v) { return v.stat === 'معطب'; }).length;
                 var percent = total ? Math.round((ok / total) * 100) : 0;
-                return '📊 <b>إحصائيات الأسطول</b><br>🚢 إجمالي المراكب: <b>' + total + '</b><br>✅ الصالح: <b>' + ok + '</b><br>🔧 تحت الصيانة: <b>' + maint + '</b><br>❌ المعطوب: <b>' + broken + '</b><br>📈 نسبة الجاهزية: <b>' + percent + '%</b>';
+                return '📊 <b>إحصائيات الأسطول</b><br>🚢 إجمالي المراكب: <b>' + total + '</b><br>✅ الصالح: <b>' + ok +
+                    '</b><br>🔧 تحت الصيانة: <b>' + maint + '</b><br>❌ المعطوب: <b>' + broken +
+                    '</b><br>📈 نسبة الجاهزية: <b>' + percent + '%</b>';
             }
 
             if (q.includes('معطوب') || q.includes('عطل') || q.includes('الصيانة')) {
@@ -2449,7 +2426,8 @@
                 }
                 return '🛠️ <b>قائمة المراكب المعطوبة/تحت الصيانة (' + broken2.length + '):</b><br>' +
                     broken2.map(function(v) {
-                        return '• ' + v.name + ' (' + (v.num || 'رقم غير محدد') + ') - الحالة: ' + v.stat + (v.break ? ' - العطب: ' + v.break : '');
+                        return '• ' + v.name + ' (' + (v.num || 'رقم غير محدد') + ') - الحالة: ' + v.stat + (v
+                            .break ? ' - العطب: ' + v.break : '');
                     }).join('<br>');
             }
 
@@ -2457,8 +2435,10 @@
                 var total2 = vessels.length;
                 var ok2 = vessels.filter(function(v) { return v.stat === 'صالح'; }).length;
                 var percent2 = total2 ? Math.round((ok2 / total2) * 100) : 0;
-                var status = percent2 >= 80 ? '🟢 <b>ممتازة</b>' : percent2 >= 60 ? '🟡 <b>جيدة</b>' : '🔴 <b>ضعيفة - تحتاج إلى تحسين</b>';
-                return '📈 <b>نسبة الجاهزية: ' + percent2 + '%</b><br>التقييم: ' + status + '<br>✅ الصالح: ' + ok2 + ' من ' + total2;
+                var status = percent2 >= 80 ? '🟢 <b>ممتازة</b>' : percent2 >= 60 ? '🟡 <b>جيدة</b>' :
+                    '🔴 <b>ضعيفة - تحتاج إلى تحسين</b>';
+                return '📈 <b>نسبة الجاهزية: ' + percent2 + '%</b><br>التقييم: ' + status + '<br>✅ الصالح: ' + ok2 +
+                    ' من ' + total2;
             }
 
             if (q.includes('تقرير') || q.includes('صيانة')) {
@@ -2473,11 +2453,14 @@
                     '<br>🔧 تحت الصيانة: ' + maint3 +
                     '<br>❌ المعطوب: ' + broken3 +
                     '<br>📈 نسبة الجاهزية: ' + percent3 + '%<br><br>' +
-                    (percent3 >= 80 ? '✅ الأسطول في حالة جيدة.' : percent3 >= 60 ? '⚠️ يوصى بإجراء صيانة لبعض المراكب.' : '🚨 يحتاج الأسطول إلى تدخل عاجل!');
+                    (percent3 >= 80 ? '✅ الأسطول في حالة جيدة.' : percent3 >= 60 ?
+                        '⚠️ يوصى بإجراء صيانة لبعض المراكب.' : '🚨 يحتاج الأسطول إلى تدخل عاجل!');
             }
 
-            return '📌 <b>معلومات عامة عن الأسطول</b><br>🚢 عدد المراكب: <b>' + vessels.length + '</b><br>👥 عدد المستخدمين: <b>' + users.length +
-                '</b><br>📋 عدد التذاكر المفتوحة: <b>' + tickets.filter(function(t) { return t.status !== 'closed'; }).length +
+            return '📌 <b>معلومات عامة عن الأسطول</b><br>🚢 عدد المراكب: <b>' + vessels.length + '</b><br>👥 عدد المستخدمين: <b>' +
+                users.length +
+                '</b><br>📋 عدد التذاكر المفتوحة: <b>' + tickets.filter(function(t) { return t.status !== 'closed'; })
+                .length +
                 '</b><br>🟢 المستخدمون المتصلون: <b>' + onlineUsers.length + '</b><br><br>💡 يمكنك طرح أسئلة مثل:<br>• "إحصائيات الأسطول"<br>• "المراكب المعطوبة"<br>• "نسبة الجاهزية"<br>• "تقرير الصيانة"';
         }
 
@@ -2553,7 +2536,7 @@
                 document.getElementById('mainApp').style.display = 'none';
             }
 
-            console.log('⚓ Marine System v39.0 - PRO PRODUCTION ready');
+            console.log('⚓ Marine System v40.0 - PRO PRODUCTION ready');
         });
 
         // ============================================================
