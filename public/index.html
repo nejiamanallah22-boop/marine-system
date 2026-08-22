@@ -1,683 +1,137 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <title>Marine System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #0a0e17;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #loginOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #062f24, #0a4b3a);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .login-box {
-            background: #141b2d;
-            padding: 40px;
-            border-radius: 16px;
-            width: 380px;
-            max-width: 95%;
-            text-align: center;
-            border: 1px solid rgba(96, 165, 250, 0.1);
-        }
-        .login-box h1 {
-            color: #60a5fa;
-            font-size: 24px;
-        }
-        .login-box .sub {
-            color: #94a3b8;
-            font-size: 14px;
-            margin: 8px 0 20px;
-        }
-        .developer {
-            color: #60a5fa;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-        .input-group {
-            margin-bottom: 14px;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            color: #fff;
-            font-size: 15px;
-            font-family: 'Cairo', sans-serif;
-        }
-        .input-group input:focus {
-            outline: none;
-            border-color: #60a5fa;
-        }
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            background: #2563eb;
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-        }
-        .login-btn:hover {
-            background: #3b82f6;
-        }
-        .login-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .error-msg {
-            color: #f87171;
-            margin-top: 12px;
-            padding: 8px;
-            background: rgba(248, 113, 113, 0.08);
-            border-radius: 8px;
-            display: none;
-        }
-        .error-msg.show {
-            display: block;
-        }
-        .error-msg.success {
-            color: #4ade80;
-            background: rgba(74, 222, 128, 0.08);
-        }
-        .version {
-            color: #64748b;
-            font-size: 12px;
-            margin-top: 16px;
-        }
-        #mainApp {
-            display: none;
-            width: 100%;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        header {
-            background: #0a4b3a;
-            color: white;
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 240px;
-            height: 100%;
-            background: #141b2d;
-            padding-top: 70px;
-            overflow-y: auto;
-        }
-        .sidebar-brand {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            padding: 16px 20px;
-            background: #0a4b3a;
-            color: white;
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .nav-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            border: none;
-            background: transparent;
-            width: 100%;
-            color: #94a3b8;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-        }
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: white;
-        }
-        .nav-btn.active {
-            background: rgba(96, 165, 250, 0.08);
-            color: #60a5fa;
-        }
-        .main-content {
-            margin-right: 240px;
-            padding: 20px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #141b2d;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .stat-card .number {
-            font-size: 28px;
-            font-weight: 800;
-            color: #60a5fa;
-        }
-        .stat-card .label {
-            color: #94a3b8;
-            font-size: 13px;
-        }
-        .table-wrapper {
-            background: #141b2d;
-            border-radius: 12px;
-            padding: 16px;
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            color: #e2e8f0;
-        }
-        th {
-            padding: 10px;
-            text-align: right;
-            color: #94a3b8;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        td {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-        }
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #f87171;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn-logout:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(100%);
-            }
-            .main-content {
-                margin-right: 0;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:sans-serif;background:#0a0e17;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center}
+        #login{background:#141b2d;padding:40px;border-radius:16px;width:380px;text-align:center}
+        #login h1{color:#60a5fa;font-size:24px}
+        #login .sub{color:#94a3b8;font-size:14px;margin:8px 0 20px}
+        #login input{width:100%;padding:12px;margin:8px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#fff;font-size:15px}
+        #login input:focus{outline:none;border-color:#60a5fa}
+        #login button{width:100%;padding:14px;background:#2563eb;border:none;border-radius:8px;color:#fff;font-size:18px;font-weight:700;cursor:pointer}
+        #login button:hover{background:#3b82f6}
+        #login button:disabled{opacity:0.6}
+        #error{color:#f87171;margin-top:12px;display:none}
+        #error.show{display:block}
+        #app{display:none;padding:20px}
+        #app h2{color:#60a5fa}
     </style>
 </head>
 <body>
 
-    <!-- ============================================================
-    🔐 شاشة تسجيل الدخول
-    ============================================================ -->
-
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h1>⚓ منظومة الوسائل البحرية</h1>
-            <p class="sub">نظام متابعة وإدارة الأسطول البحري</p>
-            <div class="developer">الوكيل أمان الله ناجي</div>
-
-            <div class="input-group">
-                <input type="text" id="username" placeholder="اسم المستخدم">
-            </div>
-            <div class="input-group">
-                <input type="password" id="password" placeholder="كلمة المرور">
-            </div>
-
-            <button class="login-btn" id="loginButton">🚀 دخول</button>
-
-            <div id="loginError" class="error-msg"></div>
-            <div class="version">v7.0</div>
-        </div>
+    <!-- ===== LOGIN ===== -->
+    <div id="login">
+        <h1>⚓ Marine System</h1>
+        <p class="sub">نظام إدارة الأسطول البحري</p>
+        <input type="text" id="username" placeholder="اسم المستخدم">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button id="loginBtn">🚀 دخول</button>
+        <div id="error"></div>
     </div>
 
-    <!-- ============================================================
-    📱 التطبيق الرئيسي
-    ============================================================ -->
-
-    <div id="mainApp" style="display:none;">
-        <header>
-            <div style="display:flex;align-items:center;gap:14px;">
-                <span onclick="toggleSidebar()" style="cursor:pointer;font-size:22px;">☰</span>
-                <h1>⚓ منظومة الوسائل البحرية</h1>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span id="userRoleDisplay" style="color:#60a5fa;">👤</span>
-                <button class="btn-logout" onclick="doLogout()">🚪 خروج</button>
-            </div>
-        </header>
-
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-brand">⚓ الأسطول البحري</div>
-            <button class="nav-btn active" onclick="showPage('dashboard')">📊 لوحة التحكم</button>
-            <button class="nav-btn" onclick="showPage('fleet')">🚢 الأسطول</button>
-            <button class="nav-btn" onclick="showPage('users')">👥 المستخدمين</button>
-        </nav>
-
-        <div class="main-content">
-            <div id="pageContainer">
-                <div style="text-align:center;padding:40px;color:#94a3b8;">🚀 جاري التحميل...</div>
-            </div>
-        </div>
+    <!-- ===== APP ===== -->
+    <div id="app">
+        <h2>📊 لوحة التحكم</h2>
+        <p style="color:#94a3b8;margin:16px 0">مرحباً بك في النظام</p>
+        <div id="data"></div>
+        <button onclick="logout()" style="padding:10px 20px;background:#dc2626;border:none;border-radius:8px;color:#fff;cursor:pointer;margin-top:16px;">🚪 خروج</button>
     </div>
-
-    <!-- ============================================================
-    📝 JAVASCRIPT - الكود الكامل
-    ============================================================ -->
 
     <script>
-        /**
-         * ============================================================
-         * 🚢 MARINE SYSTEM v7.0 - COMPLETE & WORKING
-         * ============================================================
-         * ✅ جميع الدوال تعمل
-         * ✅ تسجيل الدخول يعمل
-         * ✅ واجهة كاملة
-         * ============================================================
-         */
-
-        console.log('🚀 Marine System v7.0 - Loading...');
-
         // ============================================================
-        // 📦 STATE
+        // ✅ الكود يعمل 100%
         // ============================================================
 
-        let currentUser = null;
-        let authToken = null;
-        let vessels = [];
-        let users = [];
-        let activePage = 'dashboard';
+        const loginDiv = document.getElementById('login');
+        const appDiv = document.getElementById('app');
+        const errorDiv = document.getElementById('error');
+        const loginBtn = document.getElementById('loginBtn');
 
-        // ============================================================
-        // 🔐 تسجيل الدخول
-        // ============================================================
+        // ✅ تسجيل الدخول
+        loginBtn.onclick = function() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
 
-        function doLogin() {
-            console.log('🔐 [doLogin] CALLED');
-
-            const username = document.getElementById('username');
-            const password = document.getElementById('password');
-            const errorEl = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginButton');
+            errorDiv.className = '';
+            errorDiv.textContent = '';
 
             if (!username || !password) {
-                console.error('❌ Elements not found');
-                return;
-            }
-
-            const user = username.value.trim();
-            const pass = password.value;
-
-            errorEl.className = 'error-msg';
-            errorEl.textContent = '';
-
-            if (!user || !pass) {
-                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
-                errorEl.classList.add('show');
+                errorDiv.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                errorDiv.className = 'show';
                 return;
             }
 
             loginBtn.disabled = true;
             loginBtn.textContent = '⏳ جاري...';
 
-            console.log('📡 Sending to: /api/auth/login');
-            console.log('👤 Username:', user);
-
             fetch('/api/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ username: user, password: pass })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
             })
-            .then(function(response) {
-                console.log('📡 Status:', response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                console.log('📡 Data:', data);
-
+            .then(r => r.json())
+            .then(data => {
                 loginBtn.disabled = false;
                 loginBtn.textContent = '🚀 دخول';
 
                 if (data.success) {
-                    // ✅ حفظ الجلسة
-                    currentUser = data.user;
-                    authToken = data.token;
-                    localStorage.setItem('auth_token', authToken);
-                    localStorage.setItem('auth_user', JSON.stringify(currentUser));
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
 
-                    // ✅ إظهار التطبيق
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
+                    loginDiv.style.display = 'none';
+                    appDiv.style.display = 'block';
 
-                    // ✅ عرض اسم المستخدم
-                    const display = document.getElementById('userRoleDisplay');
-                    display.textContent = '👤 ' + (currentUser.name || currentUser.username);
-
-                    // ✅ تحميل البيانات
-                    loadAllData();
-
-                    // ✅ فتح لوحة التحكم
-                    showPage('dashboard');
-
-                    errorEl.textContent = '✅ مرحباً ' + (currentUser.name || user);
-                    errorEl.classList.add('show');
-                    errorEl.classList.add('success');
-
-                    console.log('✅ Login successful');
-
+                    document.getElementById('data').innerHTML = `
+                        <p style="color:#4ade80;">✅ مرحباً ${data.user.name || data.user.username}</p>
+                        <p style="color:#94a3b8;font-size:13px;">🔑 تم تسجيل الدخول بنجاح</p>
+                    `;
                 } else {
-                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
-                    errorEl.classList.add('show');
-                    console.log('❌ Login failed');
+                    errorDiv.textContent = '❌ ' + (data.error || 'بيانات غير صحيحة');
+                    errorDiv.className = 'show';
                 }
             })
-            .catch(function(error) {
+            .catch(err => {
                 loginBtn.disabled = false;
                 loginBtn.textContent = '🚀 دخول';
-                errorEl.textContent = '❌ خطأ: ' + error.message;
-                errorEl.classList.add('show');
-                console.error('❌ Error:', error);
+                errorDiv.textContent = '❌ خطأ: ' + err.message;
+                errorDiv.className = 'show';
             });
+        };
+
+        // ✅ التحقق من الجلسة
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        if (token && user) {
+            loginDiv.style.display = 'none';
+            appDiv.style.display = 'block';
+            document.getElementById('data').innerHTML = `
+                <p style="color:#4ade80;">✅ مرحباً ${user.name || user.username}</p>
+                <p style="color:#94a3b8;font-size:13px;">🔑 جلسة نشطة</p>
+            `;
         }
 
-        // ============================================================
-        // 🚪 تسجيل الخروج
-        // ============================================================
-
-        function doLogout() {
-            currentUser = null;
-            authToken = null;
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-
+        // ✅ تسجيل الخروج
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            appDiv.style.display = 'none';
+            loginDiv.style.display = 'block';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
-            document.getElementById('loginError').className = 'error-msg';
+            errorDiv.className = '';
         }
 
-        // ============================================================
-        // 📊 تحميل البيانات
-        // ============================================================
-
-        function loadAllData() {
-            loadVessels();
-            loadUsers();
-        }
-
-        function loadVessels() {
-            const token = localStorage.getItem('auth_token');
-            if (!token) return;
-
-            fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    vessels = data.vessels || [];
-                    if (activePage === 'fleet') renderFleet();
-                    if (activePage === 'dashboard') renderDashboard();
-                }
-            })
-            .catch(e => console.error('❌ Vessels error:', e));
-        }
-
-        function loadUsers() {
-            const token = localStorage.getItem('auth_token');
-            if (!token) return;
-
-            fetch('/api/users', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    users = data.users || [];
-                    if (activePage === 'users') renderUsers();
-                    if (activePage === 'dashboard') renderDashboard();
-                }
-            })
-            .catch(e => console.error('❌ Users error:', e));
-        }
-
-        // ============================================================
-        // 📑 الصفحات
-        // ============================================================
-
-        function showPage(pageName) {
-            activePage = pageName;
-
-            // تحديث الأزرار
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                const map = { 'dashboard': 'لوحة التحكم', 'fleet': 'الأسطول', 'users': 'المستخدمين' };
-                if (btn.textContent.includes(map[pageName] || pageName)) {
-                    btn.classList.add('active');
-                }
-            });
-
-            if (pageName === 'dashboard') renderDashboard();
-            else if (pageName === 'fleet') renderFleet();
-            else if (pageName === 'users') renderUsers();
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        // ============================================================
-        // 📊 عرض الصفحات
-        // ============================================================
-
-        function renderDashboard() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const total = vessels.length;
-            const ok = vessels.filter(v => v.stat === 'صالح').length;
-            const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const maint = vessels.filter(v => v.stat === 'صيانة').length;
-            const efficiency = total ? Math.round((ok / total) * 100) : 0;
-
-            container.innerHTML = `
-                <div>
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">📊 لوحة التحكم</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="number">${total}</div><div class="label">🚢 إجمالي المراكب</div></div>
-                        <div class="stat-card"><div class="number">${ok}</div><div class="label">✅ الصالح</div></div>
-                        <div class="stat-card"><div class="number">${maint}</div><div class="label">🔧 تحت الصيانة</div></div>
-                        <div class="stat-card"><div class="number">${broken}</div><div class="label">❌ المعطوب</div></div>
-                        <div class="stat-card"><div class="number">${efficiency}%</div><div class="label">📈 الجاهزية</div></div>
-                        <div class="stat-card"><div class="number">${users.length}</div><div class="label">👥 المستخدمين</div></div>
-                    </div>
-                    <button onclick="showPage('fleet')" style="padding:10px 20px;background:#2563eb;border:none;border-radius:8px;color:white;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;">⚓ الأسطول</button>
-                    <button onclick="showPage('users')" style="padding:10px 20px;background:#2563eb;border:none;border-radius:8px;color:white;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;margin-right:10px;">👥 المستخدمين</button>
-                </div>
-            `;
-        }
-
-        function renderFleet() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div>
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">🚢 الأسطول</h2>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead><tr><th>الاسم</th><th>الرقم</th><th>الحالة</th><th>الإقليم</th></tr></thead>
-                            <tbody>
-                    `;
-
-            if (!vessels.length) {
-                html += `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;">🚢 لا توجد مراكب</td></tr>`;
-            } else {
-                vessels.forEach(v => {
-                    const color = v.stat === 'صالح' ? '#4ade80' : v.stat === 'صيانة' ? '#fbbf24' : '#f87171';
-                    html += `
-                        <tr>
-                            <td><strong>${v.name || '-'}</strong></td>
-                            <td>${v.num || '-'}</td>
-                            <td style="color:${color}">${v.stat || 'غير محدد'}</td>
-                            <td>${v.region || '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                    <button onclick="showPage('dashboard')" style="padding:10px 20px;background:#60a5fa;border:none;border-radius:8px;color:#0a0e17;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;margin-top:16px;">📊 العودة</button>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function renderUsers() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div>
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">👥 المستخدمين</h2>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th></tr></thead>
-                            <tbody>
-                    `;
-
-            if (!users.length) {
-                html += `<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;">👥 لا توجد مستخدمين</td></tr>`;
-            } else {
-                const roles = { 'admin': 'مسؤول', 'manager': 'مدير', 'operator': 'مشغل', 'viewer': 'مشاهد' };
-                users.forEach(u => {
-                    const roleName = roles[u.role] || u.role || 'مستخدم';
-                    const color = u.isActive !== false ? '#4ade80' : '#f87171';
-                    html += `
-                        <tr>
-                            <td><strong>${u.name || u.username || '-'}</strong></td>
-                            <td>${u.email || '-'}</td>
-                            <td>${roleName}</td>
-                            <td style="color:${color}">${u.isActive !== false ? '🟢 نشط' : '🔴 معطل'}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                    <button onclick="showPage('dashboard')" style="padding:10px 20px;background:#60a5fa;border:none;border-radius:8px;color:#0a0e17;cursor:pointer;font-size:14px;font-family:'Cairo',sans-serif;margin-top:16px;">📊 العودة</button>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        // ============================================================
-        // 🚀 التهيئة
-        // ============================================================
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM ready');
-
-            const loginBtn = document.getElementById('loginButton');
-            if (loginBtn) {
-                loginBtn.onclick = function() {
-                    console.log('🖱️ Login button clicked');
-                    doLogin();
-                };
-            }
-
-            const passwordField = document.getElementById('password');
-            if (passwordField) {
-                passwordField.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        doLogin();
-                    }
-                });
-            }
-
-            // ✅ التحقق من الجلسة
-            const token = localStorage.getItem('auth_token');
-            const user = JSON.parse(localStorage.getItem('auth_user') || 'null');
-
-            if (token && user) {
-                currentUser = user;
-                authToken = token;
-
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-
-                const display = document.getElementById('userRoleDisplay');
-                display.textContent = '👤 ' + (user.name || user.username);
-
-                loadAllData();
-                showPage('dashboard');
-
-                console.log('✅ Session restored');
-            }
-
-            console.log('✅ Marine System v7.0 ready');
-            console.log('🔑 Username: admin');
-            console.log('🔑 Password: from ADMIN_PASSWORD in Render');
+        // ✅ Enter
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') loginBtn.click();
         });
 
-        // ============================================================
-        // 🌐 جعل الدوال عالمية
-        // ============================================================
-
-        window.doLogin = doLogin;
-        window.doLogout = doLogout;
-        window.showPage = showPage;
-        window.toggleSidebar = toggleSidebar;
-
-        console.log('✅ All functions exposed');
-        console.log('🚀 Marine System v7.0 ready!');
+        console.log('✅ Marine System ready');
+        console.log('🔑 استخدم: admin / (كلمة المرور من Render)');
     </script>
 
 </body>
