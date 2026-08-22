@@ -10,10 +10,7 @@
 </head>
 <body>
 
-    <!-- ============================================================
-    🔐 شاشة تسجيل الدخول
-    ============================================================ -->
-
+    <!-- ===== شاشة الدخول ===== -->
     <div id="loginOverlay">
         <div class="login-box">
             <div class="login-logo">
@@ -25,23 +22,19 @@
                 <span class="dev-label">الوكيل</span>
                 <span class="dev-name">أمان الله ناجي</span>
             </div>
-
             <div class="input-group">
                 <i class="fas fa-user input-icon"></i>
-                <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
+                <input type="text" id="username" placeholder="اسم المستخدم">
             </div>
             <div class="input-group">
                 <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+                <input type="password" id="password" placeholder="كلمة المرور">
             </div>
-
-            <button type="button" class="login-btn" id="loginButton">
+            <button class="login-btn" id="loginButton">
                 <span class="spinner"></span>
                 <span class="btn-text">🚀 دخول</span>
             </button>
-
             <div id="loginError" class="error-msg"></div>
-
             <div class="login-footer">
                 <span>نظام إدارة وإسناد الوحدات البحرية</span>
                 <span class="version">v6.0</span>
@@ -49,82 +42,40 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    📱 التطبيق الرئيسي
-    ============================================================ -->
-
+    <!-- ===== التطبيق ===== -->
     <div id="mainApp" style="display:none;">
         <header>
             <div class="header-left">
                 <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-                <h1>
-                    <span>⚓</span>
-                    منظومة الوسائل البحرية
-                    <span class="developer-tag">الوكيل أمان الله ناجي</span>
-                </h1>
+                <h1>⚓ منظومة الوسائل البحرية <span class="developer-tag">الوكيل أمان الله ناجي</span></h1>
             </div>
             <div class="header-right">
                 <span class="role-badge" id="userRoleDisplay">👤</span>
-                <button class="btn-outline-white" onclick="window.print()" title="طباعة">
-                    <i class="fas fa-print"></i>
-                </button>
-                <button class="btn-outline-white" onclick="refreshAllPages()" title="تحديث">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button class="btn-outline-white btn-logout" onclick="doLogout()" title="تسجيل الخروج">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+                <button class="btn-outline-white" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
         <nav class="sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <span>⚓</span>
-                <span>الأسطول البحري</span>
-            </div>
-            <button class="nav-btn active" onclick="showPage('dashboard')">
-                <i class="fas fa-chart-pie"></i> لوحة التحكم
-            </button>
-            <button class="nav-btn" onclick="showPage('fleet')">
-                <i class="fas fa-ship"></i> الأسطول
-            </button>
-            <button class="nav-btn" onclick="showPage('maintenance')">
-                <i class="fas fa-wrench"></i> الصيانة
-            </button>
-            <button class="nav-btn" onclick="showPage('efficiency')">
-                <i class="fas fa-chart-line"></i> الجاهزية
-            </button>
-            <button class="nav-btn" onclick="showPage('support')">
-                <i class="fas fa-headset"></i> الدعم
-            </button>
-            <button class="nav-btn" onclick="showPage('users')">
-                <i class="fas fa-users"></i> المستخدمين
-            </button>
-            <button class="nav-btn" onclick="showPage('notes')">
-                <i class="fas fa-sticky-note"></i> Note Verbale
-            </button>
-            <button class="nav-btn" onclick="showPage('sessions')">
-                <i class="fas fa-users-cog"></i> المراقبة
-            </button>
-            <button class="nav-btn" onclick="showPage('ai-assistant')">
-                <i class="fas fa-robot"></i> 🤖 المساعد الذكي
-            </button>
-            <button class="nav-btn" onclick="showPage('settings')">
-                <i class="fas fa-cog"></i> ⚙️ الإعدادات
-            </button>
-            <button class="nav-btn" onclick="showPage('logs')">
-                <i class="fas fa-history"></i> السجلات
-            </button>
-            <div class="sidebar-footer">
-                <span>الوكيل أمان الله ناجي</span>
-            </div>
+            <div class="sidebar-brand">⚓ الأسطول البحري</div>
+            <button class="nav-btn active" data-page="dashboard"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
+            <button class="nav-btn" data-page="fleet"><i class="fas fa-ship"></i> الأسطول</button>
+            <button class="nav-btn" data-page="maintenance"><i class="fas fa-wrench"></i> الصيانة</button>
+            <button class="nav-btn" data-page="efficiency"><i class="fas fa-chart-line"></i> الجاهزية</button>
+            <button class="nav-btn" data-page="support"><i class="fas fa-headset"></i> الدعم</button>
+            <button class="nav-btn" data-page="users"><i class="fas fa-users"></i> المستخدمين</button>
+            <button class="nav-btn" data-page="notes"><i class="fas fa-sticky-note"></i> Note Verbale</button>
+            <button class="nav-btn" data-page="sessions"><i class="fas fa-users-cog"></i> المراقبة</button>
+            <button class="nav-btn" data-page="ai-assistant"><i class="fas fa-robot"></i> المساعد الذكي</button>
+            <button class="nav-btn" data-page="settings"><i class="fas fa-cog"></i> الإعدادات</button>
+            <button class="nav-btn" data-page="logs"><i class="fas fa-history"></i> السجلات</button>
+            <div class="sidebar-footer">الوكيل أمان الله ناجي</div>
         </nav>
 
         <div class="main-content">
             <div id="pageContainer">
-                <!-- يتم تحميل المحتوى هنا عبر JavaScript -->
-                <div class="page-content active" id="page-dashboard">
-                    <div class="text-center" style="padding:60px 20px;color:rgba(255,255,255,0.3);">
+                <div class="page-content active">
+                    <div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
                         <div style="font-size:48px;margin-bottom:16px;">🚀</div>
                         <p>جاري تحميل لوحة التحكم...</p>
                     </div>
@@ -133,139 +84,44 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    🍞 Toast Container
-    ============================================================ -->
-
+    <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ============================================================
-    📝 JAVASCRIPT - الكود الكامل
-    ============================================================ -->
-
     <script>
-        /**
-         * ============================================================
-         * 🚢 MARINE SYSTEM v6.0 - PROFESSIONAL EDITION
-         * ============================================================
-         * ✅ تسجيل الدخول يعمل 100%
-         * ✅ واجهة احترافية
-         * ✅ جميع الدوال تعمل
-         * ============================================================
-         */
-
-        console.log('🚀 Marine System v6.0 - Professional Edition');
-
         // ============================================================
-        // 📦 CONFIGURATION
+        // 🚢 MARINE SYSTEM - مختصر جداً، بدون تخزين محلي
         // ============================================================
 
-        const CONFIG = {
-            API_BASE: '/api',
-            USER_KEY: 'auth_user',
-            TOKEN_KEY: 'auth_token',
-            CURRENT_PAGE_KEY: 'currentPage'
-        };
+        console.log('🚀 Marine System v6.0 - No Local Storage');
 
-        // ============================================================
-        // 📦 STATE
-        // ============================================================
-
+        // ===== STATE (في الذاكرة فقط) =====
         let currentUser = null;
         let authToken = null;
-        let vessels = [];
-        let users = [];
-        let maintenance = [];
-        let tickets = [];
-        let notes = [];
         let activePage = 'dashboard';
 
-        // ============================================================
-        // 🧰 HELPERS
-        // ============================================================
-
-        function getRoleName(role) {
-            const roles = { 'admin': 'مسؤول', 'manager': 'مدير', 'operator': 'مشغل', 'viewer': 'مشاهد' };
-            return roles[role] || role || 'مستخدم';
+        // ===== HELPERS =====
+        function getRoleName(r) {
+            const roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
+            return roles[r] || r || 'مستخدم';
         }
 
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            if (!container) return;
-
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            if (!c) return;
+            const t = document.createElement('div');
+            t.className = `toast toast-${type}`;
             const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+            t.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4000);
         }
 
-        function escapeHTML(text) {
-            if (!text) return '';
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return String(text).replace(/[&<>"']/g, m => map[m]);
-        }
-
-        function formatDate(date) {
-            if (!date) return '-';
-            const d = new Date(date);
-            return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-        }
-
-        // ============================================================
-        // 🔐 AUTHENTICATION
-        // ============================================================
-
-        function loadSession() {
-            try {
-                const userData = localStorage.getItem(CONFIG.USER_KEY);
-                const tokenData = localStorage.getItem(CONFIG.TOKEN_KEY);
-                if (userData && tokenData) {
-                    currentUser = JSON.parse(userData);
-                    authToken = tokenData;
-                    return true;
-                }
-            } catch (e) {
-                console.warn('⚠️ Session load failed:', e);
-            }
-            return false;
-        }
-
-        function saveSession(user, token) {
-            currentUser = user;
-            authToken = token;
-            localStorage.setItem(CONFIG.USER_KEY, JSON.stringify(user));
-            localStorage.setItem(CONFIG.TOKEN_KEY, token);
-        }
-
-        function clearSession() {
-            currentUser = null;
-            authToken = null;
-            localStorage.removeItem(CONFIG.USER_KEY);
-            localStorage.removeItem(CONFIG.TOKEN_KEY);
-            localStorage.removeItem(CONFIG.CURRENT_PAGE_KEY);
-        }
-
-        // ============================================================
-        // 🔐 LOGIN
-        // ============================================================
-
+        // ===== LOGIN =====
         async function doLogin() {
             const username = document.getElementById('username');
             const password = document.getElementById('password');
             const errorEl = document.getElementById('loginError');
             const loginBtn = document.getElementById('loginButton');
-
-            if (!username || !password) {
-                console.error('❌ عناصر الدخول غير موجودة');
-                return;
-            }
 
             const user = username.value.trim();
             const pass = password.value;
@@ -282,128 +138,67 @@
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
-            console.log('🔐 محاولة تسجيل الدخول:', user);
-            console.log('📡 إرسال طلب إلى: /api/auth/login');
-
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: user, password: pass })
                 });
 
-                console.log('📡 حالة الاستجابة:', response.status);
-
                 const data = await response.json();
-                console.log('📡 البيانات:', data);
 
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
 
                 if (!response.ok || !data.success) {
-                    throw new Error(data.error || data.message || 'بيانات الدخول غير صحيحة');
+                    throw new Error(data.error || 'بيانات غير صحيحة');
                 }
 
-                if (!data.token) {
-                    throw new Error('الخادم لم يرسل Token');
-                }
+                // ✅ تخزين في الذاكرة فقط (وليس localStorage)
+                currentUser = data.user;
+                authToken = data.token;
 
-                if (!data.user) {
-                    throw new Error('الخادم لم يرسل بيانات المستخدم');
-                }
-
-                saveSession(data.user, data.token);
-                console.log('✅ تم تسجيل الدخول بنجاح');
-
-                const overlay = document.getElementById('loginOverlay');
-                const mainApp = document.getElementById('mainApp');
-
-                if (overlay) {
-                    overlay.style.display = 'none';
-                    overlay.style.visibility = 'hidden';
-                    overlay.style.opacity = '0';
-                }
-                if (mainApp) {
-                    mainApp.style.display = 'block';
-                    mainApp.style.visibility = 'visible';
-                    mainApp.style.opacity = '1';
-                }
+                // إظهار التطبيق
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
 
                 updateUserDisplay();
-                await loadAllData();
                 showPage('dashboard');
-
-                showToast(`✅ مرحباً ${data.user.name || data.user.username || 'مدير النظام'}!`, 'success');
+                showToast(`✅ مرحباً ${data.user.name || data.user.username}`, 'success');
 
             } catch (error) {
-                console.error('❌ فشل تسجيل الدخول:', error);
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
                 errorEl.textContent = `❌ ${error.message}`;
                 errorEl.classList.add('show');
-                showToast(`❌ ${error.message}`, 'error');
             }
         }
 
-        // ============================================================
-        // 🚪 LOGOUT
-        // ============================================================
-
+        // ===== LOGOUT =====
         function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
-            clearSession();
+            // ✅ مسح البيانات من الذاكرة
+            currentUser = null;
+            authToken = null;
 
-            const overlay = document.getElementById('loginOverlay');
-            const mainApp = document.getElementById('mainApp');
-
-            if (overlay) {
-                overlay.style.display = 'flex';
-                overlay.style.visibility = 'visible';
-                overlay.style.opacity = '1';
-            }
-            if (mainApp) {
-                mainApp.style.display = 'none';
-                mainApp.style.visibility = 'hidden';
-                mainApp.style.opacity = '0';
-            }
-
-            const username = document.getElementById('username');
-            const password = document.getElementById('password');
-            const errorEl = document.getElementById('loginError');
-
-            if (username) username.value = '';
-            if (password) password.value = '';
-            if (errorEl) {
-                errorEl.textContent = '';
-                errorEl.className = 'error-msg';
-            }
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
 
             showToast('👋 تم تسجيل الخروج', 'info');
         }
 
-        // ============================================================
-        // 👤 USER DISPLAY
-        // ============================================================
-
+        // ===== UPDATE USER DISPLAY =====
         function updateUserDisplay() {
-            const display = document.getElementById('userRoleDisplay');
-            if (!display) return;
-
-            if (currentUser) {
-                display.textContent = `👤 ${currentUser.name || currentUser.username} | ${getRoleName(currentUser.role)}`;
-            } else {
-                display.textContent = '👤';
+            const d = document.getElementById('userRoleDisplay');
+            if (d && currentUser) {
+                d.textContent = `👤 ${currentUser.name || currentUser.username} | ${getRoleName(currentUser.role)}`;
             }
         }
 
-        // ============================================================
-        // 📡 API CLIENT
-        // ============================================================
-
+        // ===== API =====
         async function fetchWithAuth(url, options = {}) {
             if (!authToken) {
                 throw new Error('انتهت الجلسة، يرجى تسجيل الدخول');
@@ -415,167 +210,59 @@
                 'Content-Type': 'application/json'
             };
 
-            const response = await fetch(url, {
-                ...options,
-                headers
-            });
+            const response = await fetch(url, { ...options, headers });
 
             if (response.status === 401) {
-                clearSession();
-                const overlay = document.getElementById('loginOverlay');
-                const mainApp = document.getElementById('mainApp');
-                if (overlay) overlay.style.display = 'flex';
-                if (mainApp) mainApp.style.display = 'none';
-                throw new Error('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى');
+                currentUser = null;
+                authToken = null;
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainApp').style.display = 'none';
+                throw new Error('انتهت صلاحية الجلسة');
             }
 
             return response;
         }
 
-        async function apiGet(endpoint) {
-            const response = await fetchWithAuth(`/api${endpoint}`);
-            return response.json();
-        }
-
-        async function apiPost(endpoint, data) {
-            const response = await fetchWithAuth(`/api${endpoint}`, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            return response.json();
-        }
-
-        // ============================================================
-        // 📊 DATA LOADERS
-        // ============================================================
-
-        async function loadAllData() {
-            try {
-                await Promise.all([
-                    loadVessels(),
-                    loadUsers(),
-                    loadMaintenance(),
-                    loadTickets(),
-                    loadNotes()
-                ]);
-            } catch (error) {
-                console.error('❌ خطأ في تحميل البيانات:', error);
-            }
-        }
-
-        async function loadVessels() {
-            try {
-                const data = await apiGet('/vessels');
-                if (data.success) {
-                    vessels = data.vessels || [];
-                    if (activePage === 'fleet') renderFleet();
-                    if (activePage === 'dashboard') renderDashboard();
-                }
-            } catch (error) {
-                console.error('❌ Vessels error:', error);
-            }
-        }
-
-        async function loadUsers() {
-            try {
-                const data = await apiGet('/users');
-                if (data.success) {
-                    users = data.users || [];
-                    if (activePage === 'users') renderUsers();
-                    if (activePage === 'dashboard') renderDashboard();
-                }
-            } catch (error) {
-                console.error('❌ Users error:', error);
-            }
-        }
-
-        async function loadMaintenance() {
-            try {
-                const data = await apiGet('/maintenance');
-                if (data.success) {
-                    maintenance = data.maintenance || [];
-                    if (activePage === 'maintenance') renderMaintenance();
-                }
-            } catch (error) {
-                console.error('❌ Maintenance error:', error);
-            }
-        }
-
-        async function loadTickets() {
-            try {
-                const data = await apiGet('/tickets');
-                if (data.success) {
-                    tickets = data.tickets || [];
-                    if (activePage === 'support') renderSupport();
-                }
-            } catch (error) {
-                console.error('❌ Tickets error:', error);
-            }
-        }
-
-        async function loadNotes() {
-            try {
-                const data = await apiGet('/notes');
-                if (data.success) {
-                    notes = data.notes || [];
-                    if (activePage === 'notes') renderNotes();
-                }
-            } catch (error) {
-                console.error('❌ Notes error:', error);
-            }
-        }
-
-        // ============================================================
-        // 📄 PAGE FUNCTIONS
-        // ============================================================
-
+        // ===== SHOW PAGE (تحميل من مجلد pages) =====
         function showPage(pageName) {
             activePage = pageName;
 
             // تحديث الأزرار
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                const pageMap = {
-                    'dashboard': 'لوحة التحكم',
-                    'fleet': 'الأسطول',
-                    'maintenance': 'الصيانة',
-                    'efficiency': 'الجاهزية',
-                    'support': 'الدعم',
-                    'users': 'المستخدمين',
-                    'notes': 'Note Verbale',
-                    'sessions': 'المراقبة',
-                    'ai-assistant': 'المساعد الذكي',
-                    'settings': 'الإعدادات',
-                    'logs': 'السجلات'
-                };
-                if (btn.textContent.includes(pageMap[pageName] || pageName)) {
+                if (btn.dataset.page === pageName) {
                     btn.classList.add('active');
                 }
             });
 
-            // عرض الصفحة
-            if (pageName === 'dashboard') renderDashboard();
-            else if (pageName === 'fleet') renderFleet();
-            else if (pageName === 'maintenance') renderMaintenance();
-            else if (pageName === 'efficiency') renderEfficiency();
-            else if (pageName === 'support') renderSupport();
-            else if (pageName === 'users') renderUsers();
-            else if (pageName === 'notes') renderNotes();
-            else if (pageName === 'sessions') renderSessions();
-            else if (pageName === 'ai-assistant') renderAIAssistant();
-            else if (pageName === 'settings') renderSettings();
-            else if (pageName === 'logs') renderLogs();
-            else {
-                const container = document.getElementById('pageContainer');
-                if (container) {
+            // تحميل الصفحة من الخادم
+            const container = document.getElementById('pageContainer');
+
+            fetch(`/api/pages/${pageName}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.html) {
+                    container.innerHTML = data.html;
+                } else {
                     container.innerHTML = `
                         <div class="page-content active">
                             <h2 style="color:#60a5fa;">📄 ${pageName}</h2>
-                            <p style="color:rgba(255,255,255,0.3);">جاري تحميل الصفحة...</p>
+                            <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
+                            <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
                         </div>
                     `;
                 }
-            }
+            })
+            .catch(() => {
+                container.innerHTML = `
+                    <div class="page-content active">
+                        <h2 style="color:#f87171;">❌ خطأ في تحميل الصفحة</h2>
+                        <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
+                    </div>
+                `;
+            });
 
             // تحديث العنوان
             const titles = {
@@ -592,732 +279,48 @@
                 'logs': '📜 السجلات'
             };
             document.title = `⚓ ${titles[pageName] || pageName}`;
-            
-            localStorage.setItem(CONFIG.CURRENT_PAGE_KEY, pageName);
         }
 
+        // ===== SIDEBAR =====
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
         }
 
+        // ===== REFRESH =====
         function refreshAllPages() {
-            loadAllData();
-            showToast('🔄 تم تحديث جميع البيانات', 'success');
-        }
-
-        // ============================================================
-        // 📊 RENDER FUNCTIONS
-        // ============================================================
-
-        function renderDashboard() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const total = vessels.length;
-            const ok = vessels.filter(v => v.stat === 'صالح').length;
-            const maint = vessels.filter(v => v.stat === 'صيانة').length;
-            const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const efficiency = total ? Math.round((ok / total) * 100) : 0;
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">📊 لوحة التحكم</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="icon">🚢</span>
-                            <span class="number">${total}</span>
-                            <span class="label">إجمالي المراكب</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">✅</span>
-                            <span class="number">${ok}</span>
-                            <span class="label">الصالح</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">🔧</span>
-                            <span class="number">${maint}</span>
-                            <span class="label">تحت الصيانة</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">❌</span>
-                            <span class="number">${broken}</span>
-                            <span class="label">المعطوب</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">📈</span>
-                            <span class="number">${efficiency}%</span>
-                            <span class="label">نسبة الجاهزية</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">👥</span>
-                            <span class="number">${users.length}</span>
-                            <span class="label">المستخدمين</span>
-                        </div>
-                    </div>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
-                        <button class="btn btn-primary" onclick="showPage('fleet')">⚓ إدارة الأسطول</button>
-                        <button class="btn btn-success" onclick="showPage('users')">👥 المستخدمين</button>
-                        <button class="btn" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);color:#fff;" onclick="showPage('ai-assistant')">🤖 المساعد الذكي</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderFleet() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div class="page-content active">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                        <h2 style="color:#60a5fa;">⚓ الأسطول البحري</h2>
-                        <button class="btn btn-primary" onclick="addVessel()">➕ إضافة مركب</button>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>الاسم</th>
-                                    <th>الرقم</th>
-                                    <th>الحالة</th>
-                                    <th>الإقليم</th>
-                                    <th>الميناء</th>
-                                    <th>الطول</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-            if (!vessels.length) {
-                html += `<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:20px;">🚢 لا توجد مراكب</td></tr>`;
-            } else {
-                vessels.forEach(v => {
-                    const statusClass = v.stat === 'صالح' ? 'status-ready' : v.stat === 'صيانة' ? 'status-maintenance' :
-                        'status-broken';
-                    html += `
-                        <tr>
-                            <td><strong>${escapeHTML(v.name || '-')}</strong></td>
-                            <td>${escapeHTML(v.num || '-')}</td>
-                            <td><span class="status-badge ${statusClass}">${escapeHTML(v.stat || 'غير محدد')}</span></td>
-                            <td>${escapeHTML(v.region || '-')}</td>
-                            <td>${escapeHTML(v.port || '-')}</td>
-                            <td>${escapeHTML(v.len || '-')}</td>
-                        </tr>
-                    `;
-                });
+            if (activePage) {
+                showPage(activePage);
             }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
+            showToast('🔄 تم التحديث', 'success');
         }
 
-        function renderMaintenance() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div class="page-content active">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                        <h2 style="color:#60a5fa;">🛠️ مهام الصيانة</h2>
-                        <button class="btn btn-primary" onclick="addMaintenance()">➕ إضافة مهمة</button>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>المركب</th>
-                                    <th>النوع</th>
-                                    <th>الفني</th>
-                                    <th>الوصف</th>
-                                    <th>التكلفة</th>
-                                    <th>الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-            if (!maintenance.length) {
-                html += `<tr><td colspan="6" style="text-align:center;color:rgba(255,255,255,0.2);padding:20px;">🔧 لا توجد مهام صيانة</td></tr>`;
-            } else {
-                maintenance.forEach(m => {
-                    const statusMap = {
-                        'معلقة': 'status-warning',
-                        'قيد التنفيذ': 'status-info',
-                        'مكتملة': 'status-ready',
-                        'ملغاة': 'status-broken'
-                    };
-                    html += `
-                        <tr>
-                            <td><strong>${escapeHTML(m.vesselName || '-')}</strong></td>
-                            <td>${escapeHTML(m.type || '-')}</td>
-                            <td>${escapeHTML(m.technician || '-')}</td>
-                            <td>${escapeHTML(m.description || '-')}</td>
-                            <td>${m.cost ? `${m.cost} د.ل` : '-'}</td>
-                            <td><span class="status-badge ${statusMap[m.status] || 'status-info'}">${escapeHTML(m.status || 'معلقة')}</span></td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function renderEfficiency() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const total = vessels.length;
-            const ok = vessels.filter(v => v.stat === 'صالح').length;
-            const maint = vessels.filter(v => v.stat === 'صيانة').length;
-            const broken = vessels.filter(v => v.stat === 'معطب').length;
-            const efficiency = total ? Math.round((ok / total) * 100) : 0;
-
-            // إحصائيات حسب الأقاليم
-            const regionStats = {};
-            vessels.forEach(v => {
-                const region = v.region || 'غير محدد';
-                if (!regionStats[region]) regionStats[region] = { total: 0, ok: 0 };
-                regionStats[region].total++;
-                if (v.stat === 'صالح') regionStats[region].ok++;
-            });
-
-            let regionHtml = '';
-            Object.entries(regionStats).forEach(([region, stats]) => {
-                const pct = stats.total ? Math.round((stats.ok / stats.total) * 100) : 0;
-                const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
-                regionHtml += `
-                    <div class="region-bar">
-                        <span class="region-name">${escapeHTML(region)}</span>
-                        <span class="region-stats">${stats.ok}/${stats.total} (${pct}%)</span>
-                        <div style="flex:1;max-width:200px;background:rgba(255,255,255,0.05);height:8px;border-radius:4px;overflow:hidden;margin:0 12px;">
-                            <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width 0.5s ease;"></div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">📈 تقرير الجاهزية</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <span class="icon">📊</span>
-                            <span class="number">${efficiency}%</span>
-                            <span class="label">نسبة الجاهزية الإجمالية</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">✅</span>
-                            <span class="number">${ok}</span>
-                            <span class="label">صالح</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">🔧</span>
-                            <span class="number">${maint}</span>
-                            <span class="label">تحت الصيانة</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="icon">❌</span>
-                            <span class="number">${broken}</span>
-                            <span class="label">معطوب</span>
-                        </div>
-                    </div>
-                    <h3 style="color:#94a3b8;font-size:16px;margin:16px 0 12px;">🌍 حسب الأقاليم</h3>
-                    <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${regionHtml || '<p style="color:rgba(255,255,255,0.2);">لا توجد بيانات</p>'}
-                    </div>
-                    <button class="btn btn-primary" onclick="showPage('fleet')" style="margin-top:16px;">🚢 عرض الأسطول</button>
-                </div>
-            `;
-        }
-
-        function renderSupport() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div class="page-content active">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                        <h2 style="color:#60a5fa;">📞 تذاكر الدعم</h2>
-                        <button class="btn btn-primary" onclick="addTicket()">➕ تذكرة جديدة</button>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>العنوان</th>
-                                    <th>الأولوية</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-            if (!tickets.length) {
-                html += `<tr><td colspan="4" style="text-align:center;color:rgba(255,255,255,0.2);padding:20px;">📋 لا توجد تذاكر</td></tr>`;
-            } else {
-                const priorityMap = { 'critical': '🔴 عاجل', 'high': '🟠 مرتفع', 'medium': '🟡 متوسط', 'low': '🟢 منخفض' };
-                const statusMap = {
-                    'open': 'مفتوحة',
-                    'in_progress': 'قيد التنفيذ',
-                    'pending': 'معلقة',
-                    'resolved': 'محلولة',
-                    'closed': 'مغلقة',
-                    'rejected': 'مرفوضة'
-                };
-                tickets.forEach(t => {
-                    html += `
-                        <tr>
-                            <td><strong>${escapeHTML(t.title || '-')}</strong></td>
-                            <td>${priorityMap[t.priority] || t.priority || '-'}</td>
-                            <td>${statusMap[t.status] || t.status || '-'}</td>
-                            <td>${formatDate(t.createdAt)}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function renderUsers() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">👥 المستخدمين</h2>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>الاسم</th>
-                                    <th>البريد</th>
-                                    <th>الدور</th>
-                                    <th>الحالة</th>
-                                    <th>آخر دخول</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-            if (!users.length) {
-                html += `<tr><td colspan="5" style="text-align:center;color:rgba(255,255,255,0.2);padding:20px;">👥 لا توجد مستخدمين</td></tr>`;
-            } else {
-                users.forEach(u => {
-                    html += `
-                        <tr>
-                            <td><strong>${escapeHTML(u.name || u.username || '-')}</strong></td>
-                            <td>${escapeHTML(u.email || '-')}</td>
-                            <td>${getRoleName(u.role)}</td>
-                            <td>${u.isActive !== false ? '🟢 نشط' : '🔴 معطل'}</td>
-                            <td>${formatDate(u.lastLogin)}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function renderNotes() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            let html = `
-                <div class="page-content active">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-                        <h2 style="color:#60a5fa;">📝 Note Verbale</h2>
-                        <button class="btn btn-primary" onclick="addNote()">➕ إضافة مذكرة</button>
-                    </div>
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>العنوان</th>
-                                    <th>الحالة</th>
-                                    <th>التاريخ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-            if (!notes.length) {
-                html += `<tr><td colspan="3" style="text-align:center;color:rgba(255,255,255,0.2);padding:20px;">📝 لا توجد مذكرات</td></tr>`;
-            } else {
-                notes.forEach(n => {
-                    html += `
-                        <tr>
-                            <td><strong>${escapeHTML(n.title || '-')}</strong></td>
-                            <td>${escapeHTML(n.status || 'مسودة')}</td>
-                            <td>${formatDate(n.createdAt)}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            container.innerHTML = html;
-        }
-
-        function renderSessions() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">👥 مراقبة الجلسات</h2>
-                    <p style="color:#94a3b8;">🟢 أنت متصل حالياً</p>
-                    <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;margin-top:12px;border:1px solid rgba(255,255,255,0.05);">
-                        <p><strong>المستخدم:</strong> ${currentUser?.name || currentUser?.username || 'غير معروف'}</p>
-                        <p><strong>الدور:</strong> ${getRoleName(currentUser?.role)}</p>
-                        <p><strong>تاريخ الدخول:</strong> ${formatDate(currentUser?.lastLogin)}</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
-                </div>
-            `;
-        }
-
-        function renderAIAssistant() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">🤖 المساعد الذكي</h2>
-                    <p style="color:#94a3b8;">اطرح سؤالك عن الأسطول البحري</p>
-                    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
-                        <input type="text" id="aiQuestion" placeholder="اكتب سؤالك هنا..." style="flex:1;min-width:200px;padding:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#fff;font-size:15px;">
-                        <button class="btn btn-primary" onclick="askAI()">💬 اسأل</button>
-                    </div>
-                    <div id="aiResponse" style="margin-top:16px;padding:16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);min-height:80px;color:#94a3b8;">
-                        💡 اسأل عن: الأسطول، الجاهزية، الصيانة
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderSettings() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">⚙️ الإعدادات</h2>
-                    <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
-                        <div class="settings-group">
-                            <h3>🔑 تغيير كلمة المرور</h3>
-                            <input type="password" id="currentPassword" placeholder="كلمة المرور الحالية">
-                            <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-                            <button class="btn btn-primary" onclick="changePassword()" style="width:fit-content;">تغيير</button>
-                        </div>
-                        <div class="settings-group">
-                            <h3>ℹ️ معلومات النظام</h3>
-                            <p style="color:#64748b;font-size:13px;">الإصدار: v6.0</p>
-                            <p style="color:#64748b;font-size:13px;">المطور: أمان الله ناجي</p>
-                            <p style="color:#64748b;font-size:13px;">عدد المراكب: ${vessels.length}</p>
-                            <p style="color:#64748b;font-size:13px;">عدد المستخدمين: ${users.length}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderLogs() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const logs = [
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: '📡 النظام يعمل بشكل طبيعي' },
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: '✅ متصل بقاعدة البيانات' },
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: `👤 المستخدم: ${currentUser?.username || 'غير معروف'}` },
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: `🚢 عدد المراكب: ${vessels.length}` },
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: `👥 عدد المستخدمين: ${users.length}` },
-                { time: new Date().toLocaleTimeString('ar-EG'), msg: `🔧 مهام الصيانة: ${maintenance.length}` },
-            ];
-
-            let logsHtml = logs.map(log => `
-                <div class="log-entry">
-                    <span class="log-time">${log.time}</span>
-                    ${log.msg}
-                </div>
-            `).join('');
-
-            container.innerHTML = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;margin-bottom:16px;">📜 سجلات النظام</h2>
-                    <div class="log-viewer">
-                        ${logsHtml}
-                        <div class="log-entry" style="color:#64748b;border-bottom:none;padding-top:8px;">
-                            📅 ${new Date().toLocaleString('ar-EG')}
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" onclick="refreshAllPages()" style="margin-top:16px;">🔄 تحديث</button>
-                </div>
-            `;
-        }
-
-        // ============================================================
-        // 🤖 AI Assistant
-        // ============================================================
-
-        async function askAI() {
-            const input = document.getElementById('aiQuestion');
-            const responseDiv = document.getElementById('aiResponse');
-            if (!input || !responseDiv) return;
-
-            const question = input.value.trim();
-            if (!question) {
-                showToast('⚠️ يرجى كتابة سؤال', 'warning');
-                return;
-            }
-
-            responseDiv.innerHTML = '⏳ جاري التفكير...';
-            responseDiv.style.color = '#94a3b8';
-
-            try {
-                const response = await fetchWithAuth('/api/ai/ask', {
-                    method: 'POST',
-                    body: JSON.stringify({ message: question })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    responseDiv.innerHTML = `🤖 ${data.response}`;
-                    responseDiv.style.color = '#e2e8f0';
-                } else {
-                    responseDiv.innerHTML = `❌ ${data.error || 'حدث خطأ'}`;
-                    responseDiv.style.color = '#f87171';
-                }
-            } catch (error) {
-                responseDiv.innerHTML = `❌ ${error.message}`;
-                responseDiv.style.color = '#f87171';
-            }
-        }
-
-        // ============================================================
-        // ➕ Add Functions
-        // ============================================================
-
-        function addVessel() {
-            const name = prompt('اسم المركب:');
-            if (!name) return;
-            const num = prompt('الرقم:') || '';
-            const stat = prompt('الحالة (صالح/معطب/صيانة):') || 'صالح';
-            const region = prompt('الإقليم (الشمال/الساحل/الوسط/الجنوب):') || '';
-            
-            apiPost('/vessels', { name, num, stat, region })
-                .then(data => {
-                    if (data.success) {
-                        showToast('✅ تم إضافة المركب', 'success');
-                        loadVessels();
-                        loadAllData();
-                    } else {
-                        showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
-                    }
-                })
-                .catch(err => showToast('❌ ' + err.message, 'error'));
-        }
-
-        function addMaintenance() {
-            const vesselName = prompt('اسم المركب:');
-            if (!vesselName) return;
-            const description = prompt('وصف المهمة:');
-            if (!description) return;
-            const technician = prompt('اسم الفني:') || '';
-            
-            apiPost('/maintenance', { vesselName, description, technician })
-                .then(data => {
-                    if (data.success) {
-                        showToast('✅ تم إضافة مهمة الصيانة', 'success');
-                        loadMaintenance();
-                    } else {
-                        showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
-                    }
-                })
-                .catch(err => showToast('❌ ' + err.message, 'error'));
-        }
-
-        function addTicket() {
-            const title = prompt('عنوان التذكرة:');
-            if (!title) return;
-            const description = prompt('الوصف:');
-            if (!description) return;
-            const priority = prompt('الأولوية (low/medium/high/critical):') || 'medium';
-            
-            apiPost('/tickets', { title, description, priority })
-                .then(data => {
-                    if (data.success) {
-                        showToast('✅ تم إضافة التذكرة', 'success');
-                        loadTickets();
-                    } else {
-                        showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
-                    }
-                })
-                .catch(err => showToast('❌ ' + err.message, 'error'));
-        }
-
-        function addNote() {
-            const title = prompt('عنوان المذكرة:');
-            if (!title) return;
-            const content = prompt('المحتوى:');
-            if (!content) return;
-            
-            apiPost('/notes', { title, content })
-                .then(data => {
-                    if (data.success) {
-                        showToast('✅ تم إضافة المذكرة', 'success');
-                        loadNotes();
-                    } else {
-                        showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
-                    }
-                })
-                .catch(err => showToast('❌ ' + err.message, 'error'));
-        }
-
-        // ============================================================
-        // 🔑 Change Password
-        // ============================================================
-
-        async function changePassword() {
-            const currentPassword = document.getElementById('currentPassword')?.value;
-            const newPassword = document.getElementById('newPassword')?.value;
-
-            if (!currentPassword || !newPassword) {
-                showToast('⚠️ يرجى ملء جميع الحقول', 'warning');
-                return;
-            }
-
-            if (newPassword.length < 8) {
-                showToast('⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل', 'warning');
-                return;
-            }
-
-            try {
-                const response = await fetchWithAuth('/api/auth/change-password', {
-                    method: 'PUT',
-                    body: JSON.stringify({ currentPassword, newPassword })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    showToast('✅ تم تغيير كلمة المرور بنجاح', 'success');
-                    document.getElementById('currentPassword').value = '';
-                    document.getElementById('newPassword').value = '';
-                } else {
-                    showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
-                }
-            } catch (error) {
-                showToast('❌ ' + error.message, 'error');
-            }
-        }
-
-        // ============================================================
-        // 🚀 INITIALIZATION
-        // ============================================================
-
+        // ===== INIT =====
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM ready');
+            // ربط زر الدخول
+            document.getElementById('loginButton').onclick = doLogin;
 
-            const loginBtn = document.getElementById('loginButton');
-            if (loginBtn) {
-                loginBtn.onclick = function() {
-                    console.log('🖱️ زر الدخول تم الضغط عليه');
-                    doLogin();
+            // Enter
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') doLogin();
+            });
+
+            // ربط أزرار التنقل
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.onclick = function() {
+                    showPage(this.dataset.page);
                 };
-            }
+            });
 
-            const passwordField = document.getElementById('password');
-            if (passwordField) {
-                passwordField.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        doLogin();
-                    }
-                });
-            }
-
-            if (loadSession()) {
-                const overlay = document.getElementById('loginOverlay');
-                const mainApp = document.getElementById('mainApp');
-
-                if (overlay) {
-                    overlay.style.display = 'none';
-                    overlay.style.visibility = 'hidden';
-                    overlay.style.opacity = '0';
-                }
-                if (mainApp) {
-                    mainApp.style.display = 'block';
-                    mainApp.style.visibility = 'visible';
-                    mainApp.style.opacity = '1';
-                }
-
-                updateUserDisplay();
-                loadAllData();
-
-                const savedPage = localStorage.getItem(CONFIG.CURRENT_PAGE_KEY) || 'dashboard';
-                showPage(savedPage);
-
-                console.log('✅ تم استعادة الجلسة');
-            }
-
-            console.log('✅ Marine System v6.0 ready');
-            console.log('🔑 استخدم: admin / (كلمة المرور من Render)');
+            console.log('✅ Marine System v6.0 ready - No Local Storage');
         });
 
-        // ============================================================
-        // 🌐 GLOBAL EXPOSURE
-        // ============================================================
-
+        // ===== EXPOSE =====
         window.doLogin = doLogin;
         window.doLogout = doLogout;
         window.showPage = showPage;
         window.toggleSidebar = toggleSidebar;
         window.refreshAllPages = refreshAllPages;
         window.showToast = showToast;
-        window.askAI = askAI;
-        window.addVessel = addVessel;
-        window.addMaintenance = addMaintenance;
-        window.addTicket = addTicket;
-        window.addNote = addNote;
-        window.changePassword = changePassword;
-        window.formatDate = formatDate;
-        window.escapeHTML = escapeHTML;
-
-        console.log('✅ Marine System v6.0 loaded successfully');
     </script>
 
 </body>
