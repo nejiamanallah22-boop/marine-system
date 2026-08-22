@@ -32,7 +32,7 @@
             --sidebar-width: 280px;
             --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             --radius: 14px;
-            --transition: 0.4s ease;
+            --transition: 0.3s ease;
             --font: 'Segoe UI', 'Tahoma', system-ui, sans-serif;
         }
 
@@ -47,17 +47,70 @@
             background: #f0f4f8;
             color: var(--gray-800);
             min-height: 100vh;
-            display: flex;
             overflow-x: hidden;
         }
 
         /* ==========================
-               لوحة التحكم الجانبية
+               زر فتح القائمة
             ========================== */
-        .sidebar {
+        .menu-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-toggle-btn:hover {
+            transform: scale(1.05);
+            background: var(--primary-light);
+        }
+
+        .menu-toggle-btn i {
+            transition: transform var(--transition);
+        }
+
+        .menu-toggle-btn.open i {
+            transform: rotate(90deg);
+        }
+
+        /* ==========================
+               القائمة الجانبية (تظهر/تختفي)
+            ========================== */
+        .overlay {
             position: fixed;
             top: 0;
             right: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition);
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -100%;
             width: var(--sidebar-width);
             height: 100vh;
             background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
@@ -65,14 +118,14 @@
             padding: 30px 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transition: transform var(--transition);
-            transform: translateX(0);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
+            z-index: 999;
+            transition: right var(--transition);
+            overflow-y: auto;
         }
 
-        .sidebar.hidden {
-            transform: translateX(100%);
+        .sidebar.active {
+            right: 0;
         }
 
         .sidebar-brand {
@@ -102,7 +155,6 @@
         .sidebar-menu {
             flex: 1;
             padding: 0 12px;
-            overflow-y: auto;
         }
 
         .sidebar-menu .menu-label {
@@ -125,6 +177,10 @@
             font-size: 0.95rem;
             transition: all var(--transition);
             cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: right;
         }
 
         .sidebar-menu a:hover {
@@ -151,51 +207,12 @@
         }
 
         /* ==========================
-               زر تبديل اللوحة
-            ========================== */
-        .toggle-sidebar-btn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1001;
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .toggle-sidebar-btn:hover {
-            transform: scale(1.05);
-            background: var(--primary-light);
-        }
-
-        .toggle-sidebar-btn.shifted {
-            right: calc(var(--sidebar-width) + 20px);
-        }
-
-        /* ==========================
                المحتوى الرئيسي
             ========================== */
         .main-content {
-            flex: 1;
-            padding: 30px 30px 30px 30px;
-            margin-right: var(--sidebar-width);
+            padding: 80px 30px 30px;
             min-height: 100vh;
-            transition: margin var(--transition);
             width: 100%;
-        }
-
-        .main-content.expanded {
-            margin-right: 0;
         }
 
         .main-content .container {
@@ -483,25 +500,22 @@
         }
 
         /* ==========================
+               إخفاء الصفحات
+            ========================== */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* ==========================
                استجابة
             ========================== */
         @media (max-width: 768px) {
-            .sidebar {
-                width: 260px;
-                transform: translateX(100%);
-            }
-            .sidebar.visible {
-                transform: translateX(0);
-            }
             .main-content {
-                margin-right: 0;
-                padding: 20px 15px;
-            }
-            .toggle-sidebar-btn {
-                right: 15px;
-            }
-            .toggle-sidebar-btn.shifted {
-                right: 15px;
+                padding: 75px 15px 20px;
             }
             .input-grid {
                 grid-template-columns: 1fr;
@@ -511,14 +525,11 @@
                 border-radius: 20px;
                 padding: 14px;
             }
-        }
-
-        @media (min-width: 769px) {
-            .sidebar.hidden {
-                transform: translateX(100%);
+            .page-header h2 {
+                font-size: 1.4rem;
             }
-            .sidebar:not(.hidden) {
-                transform: translateX(0);
+            .sidebar {
+                width: 260px;
             }
         }
 
@@ -526,13 +537,13 @@
                طباعة
             ========================== */
         @media print {
+            .menu-toggle-btn,
+            .overlay,
             .sidebar,
-            .toggle-sidebar-btn,
             .no-print {
                 display: none !important;
             }
             .main-content {
-                margin-right: 0 !important;
                 padding: 10px !important;
             }
             thead {
@@ -545,12 +556,15 @@
 </head>
 <body>
 
-    <!-- ====== زر تبديل اللوحة ====== -->
-    <button class="toggle-sidebar-btn" id="toggleSidebarBtn" title="إظهار/إخفاء لوحة التحكم">
+    <!-- ====== زر فتح القائمة ====== -->
+    <button class="menu-toggle-btn" id="menuToggleBtn" title="فتح القائمة">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- ====== لوحة التحكم الجانبية ====== -->
+    <!-- ====== الخلفية المعتمة ====== -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- ====== القائمة الجانبية ====== -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <h2><i class="fas fa-anchor"></i> منظومة البحرية</h2>
@@ -596,7 +610,7 @@
         <div class="container">
 
             <!-- ====== صفحة السجل العام ====== -->
-            <div id="page-vessels">
+            <div class="page-content active" id="page-vessels">
                 <!-- عنوان الصفحة -->
                 <div class="page-header">
                     <div>
@@ -715,61 +729,61 @@
                 </div>
             </div>
 
-            <!-- ====== صفحات أخرى (محتوى تجريبي) ====== -->
-            <div id="page-dashboard" style="display:none;">
+            <!-- ====== صفحات أخرى ====== -->
+            <div class="page-content" id="page-dashboard">
                 <div class="page-header">
                     <h2><i class="fas fa-chart-pie"></i> لوحة المعلومات</h2>
                     <p>نظرة عامة على النظام</p>
                 </div>
-                <div style="background:var(--gray-100);padding:40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
                     <i class="fas fa-chart-line" style="font-size:4rem;color:var(--primary);margin-bottom:20px;"></i>
                     <h3>مرحباً بك في لوحة المعلومات</h3>
                     <p style="color:var(--gray-600);">هذه صفحة تجريبية، يمكنك تخصيصها حسب احتياجاتك</p>
                 </div>
             </div>
 
-            <div id="page-maintenance" style="display:none;">
+            <div class="page-content" id="page-maintenance">
                 <div class="page-header">
                     <h2><i class="fas fa-tools"></i> الصيانة</h2>
                     <p>إدارة أعمال الصيانة</p>
                 </div>
-                <div style="background:var(--gray-100);padding:40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
                     <i class="fas fa-tools" style="font-size:4rem;color:var(--warning);margin-bottom:20px;"></i>
                     <h3>قسم الصيانة</h3>
                     <p style="color:var(--gray-600);">صفحة الصيانة قيد التطوير</p>
                 </div>
             </div>
 
-            <div id="page-reports" style="display:none;">
+            <div class="page-content" id="page-reports">
                 <div class="page-header">
                     <h2><i class="fas fa-file-alt"></i> التقارير</h2>
                     <p>عرض وإنشاء التقارير</p>
                 </div>
-                <div style="background:var(--gray-100);padding:40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
                     <i class="fas fa-file-alt" style="font-size:4rem;color:var(--success);margin-bottom:20px;"></i>
                     <h3>التقارير</h3>
                     <p style="color:var(--gray-600);">صفحة التقارير قيد التطوير</p>
                 </div>
             </div>
 
-            <div id="page-settings" style="display:none;">
+            <div class="page-content" id="page-settings">
                 <div class="page-header">
                     <h2><i class="fas fa-cog"></i> الإعدادات</h2>
                     <p>تخصيص النظام</p>
                 </div>
-                <div style="background:var(--gray-100);padding:40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
                     <i class="fas fa-cog" style="font-size:4rem;color:var(--gray-600);margin-bottom:20px;"></i>
                     <h3>الإعدادات</h3>
                     <p style="color:var(--gray-600);">صفحة الإعدادات قيد التطوير</p>
                 </div>
             </div>
 
-            <div id="page-profile" style="display:none;">
+            <div class="page-content" id="page-profile">
                 <div class="page-header">
                     <h2><i class="fas fa-user"></i> الملف الشخصي</h2>
                     <p>معلومات المستخدم</p>
                 </div>
-                <div style="background:var(--gray-100);padding:40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
                     <i class="fas fa-user-circle" style="font-size:4rem;color:var(--primary);margin-bottom:20px;"></i>
                     <h3>الملف الشخصي</h3>
                     <p style="color:var(--gray-600);">صفحة الملف الشخصي قيد التطوير</p>
@@ -797,48 +811,55 @@
             // عناصر DOM
             // ==========================
             const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('toggleSidebarBtn');
+            const overlay = document.getElementById('overlay');
+            const menuToggleBtn = document.getElementById('menuToggleBtn');
             const menuLinks = document.querySelectorAll('.sidebar-menu a[data-page]');
             const userRoleDisplay = document.getElementById('userRoleDisplay');
 
             // ==========================
-            // التحكم في ظهور/اختفاء اللوحة
+            // فتح/إغلاق القائمة
             // ==========================
-            let isSidebarVisible = true;
-
-            function toggleSidebar() {
-                isSidebarVisible = !isSidebarVisible;
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.toggle('visible', isSidebarVisible);
-                    sidebar.classList.toggle('hidden', !isSidebarVisible);
-                } else {
-                    sidebar.classList.toggle('hidden', !isSidebarVisible);
-                }
-                mainContent.classList.toggle('expanded', !isSidebarVisible);
-                toggleBtn.classList.toggle('shifted', isSidebarVisible);
-                // تغيير الأيقونة
-                toggleBtn.innerHTML = isSidebarVisible ?
-                    '<i class="fas fa-times"></i>' :
-                    '<i class="fas fa-bars"></i>';
+            function openMenu() {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                menuToggleBtn.classList.add('open');
+                document.body.style.overflow = 'hidden';
             }
 
-            // زر تبديل اللوحة
-            toggleBtn.addEventListener('click', toggleSidebar);
+            function closeMenu() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                menuToggleBtn.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            function toggleMenu() {
+                if (sidebar.classList.contains('active')) {
+                    closeMenu();
+                } else {
+                    openMenu();
+                }
+            }
+
+            // زر فتح القائمة
+            menuToggleBtn.addEventListener('click', toggleMenu);
+
+            // الخلفية المعتمة
+            overlay.addEventListener('click', closeMenu);
 
             // ==========================
             // التنقل بين الصفحات
             // ==========================
             function navigateTo(page) {
                 // إخفاء جميع الصفحات
-                document.querySelectorAll('[id^="page-"]').forEach(el => {
-                    el.style.display = 'none';
+                document.querySelectorAll('.page-content').forEach(el => {
+                    el.classList.remove('active');
                 });
 
                 // إظهار الصفحة المطلوبة
                 const targetPage = document.getElementById(`page-${page}`);
                 if (targetPage) {
-                    targetPage.style.display = 'block';
+                    targetPage.classList.add('active');
                 }
 
                 // تحديث القائمة النشطة
@@ -846,10 +867,8 @@
                     link.classList.toggle('active', link.dataset.page === page);
                 });
 
-                // إخفاء اللوحة بعد اختيار الصفحة (على الجوال)
-                if (window.innerWidth <= 768 && isSidebarVisible) {
-                    toggleSidebar();
-                }
+                // إغلاق القائمة بعد اختيار الصفحة
+                closeMenu();
 
                 // حفظ الصفحة الحالية
                 localStorage.setItem('currentPage', page);
@@ -1239,47 +1258,16 @@
                 const savedPage = localStorage.getItem('currentPage') || 'vessels';
                 navigateTo(savedPage);
 
-                // تحميل بيانات السجل العام
+                // تحميل بيانات السجل العام إذا كانت الصفحة المطلوبة هي السجل
                 if (savedPage === 'vessels') {
                     await renderMain();
                 }
-
-                // ضبط حالة اللوحة حسب حجم الشاشة
-                if (window.innerWidth <= 768) {
-                    sidebar.classList.add('hidden');
-                    sidebar.classList.remove('visible');
-                    mainContent.classList.add('expanded');
-                    isSidebarVisible = false;
-                    toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                } else {
-                    sidebar.classList.remove('hidden');
-                    sidebar.classList.remove('visible');
-                    mainContent.classList.remove('expanded');
-                    isSidebarVisible = true;
-                    toggleBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    toggleBtn.classList.add('shifted');
-                }
             });
 
-            // تحديث عند تغيير حجم الشاشة
-            window.addEventListener('resize', function() {
-                if (window.innerWidth <= 768) {
-                    if (isSidebarVisible) {
-                        sidebar.classList.add('visible');
-                        sidebar.classList.remove('hidden');
-                    } else {
-                        sidebar.classList.add('hidden');
-                        sidebar.classList.remove('visible');
-                    }
-                } else {
-                    sidebar.classList.remove('visible');
-                    if (!isSidebarVisible) {
-                        sidebar.classList.add('hidden');
-                        mainContent.classList.add('expanded');
-                    } else {
-                        sidebar.classList.remove('hidden');
-                        mainContent.classList.remove('expanded');
-                    }
+            // إغلاق القائمة عند الضغط على Esc
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                    closeMenu();
                 }
             });
 
