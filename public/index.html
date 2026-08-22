@@ -122,6 +122,7 @@
 
         <div class="main-content">
             <div id="pageContainer">
+                <!-- يتم تحميل المحتوى هنا عبر JavaScript -->
                 <div class="page-content active" id="page-dashboard">
                     <div class="text-center" style="padding:60px 20px;color:rgba(255,255,255,0.3);">
                         <div style="font-size:48px;margin-bottom:16px;">🚀</div>
@@ -139,7 +140,7 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============================================================
-    📝 JAVASCRIPT - الكود الاحترافي الكامل
+    📝 JAVASCRIPT - الكود الكامل
     ============================================================ -->
 
     <script>
@@ -531,6 +532,7 @@
         function showPage(pageName) {
             activePage = pageName;
 
+            // تحديث الأزرار
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 const pageMap = {
@@ -551,6 +553,7 @@
                 }
             });
 
+            // عرض الصفحة
             if (pageName === 'dashboard') renderDashboard();
             else if (pageName === 'fleet') renderFleet();
             else if (pageName === 'maintenance') renderMaintenance();
@@ -574,6 +577,7 @@
                 }
             }
 
+            // تحديث العنوان
             const titles = {
                 'dashboard': '📊 لوحة التحكم',
                 'fleet': '🚢 الأسطول',
@@ -781,6 +785,7 @@
             const broken = vessels.filter(v => v.stat === 'معطب').length;
             const efficiency = total ? Math.round((ok / total) * 100) : 0;
 
+            // إحصائيات حسب الأقاليم
             const regionStats = {};
             vessels.forEach(v => {
                 const region = v.region || 'غير محدد';
@@ -792,12 +797,13 @@
             let regionHtml = '';
             Object.entries(regionStats).forEach(([region, stats]) => {
                 const pct = stats.total ? Math.round((stats.ok / stats.total) * 100) : 0;
+                const color = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444';
                 regionHtml += `
-                    <div style="background:rgba(255,255,255,0.03);padding:12px 16px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.05);">
-                        <span style="font-weight:600;">${region}</span>
-                        <span>${stats.ok}/${stats.total} (${pct}%)</span>
+                    <div class="region-bar">
+                        <span class="region-name">${escapeHTML(region)}</span>
+                        <span class="region-stats">${stats.ok}/${stats.total} (${pct}%)</span>
                         <div style="flex:1;max-width:200px;background:rgba(255,255,255,0.05);height:8px;border-radius:4px;overflow:hidden;margin:0 12px;">
-                            <div style="width:${pct}%;height:100%;background:${pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'};border-radius:4px;"></div>
+                            <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width 0.5s ease;"></div>
                         </div>
                     </div>
                 `;
@@ -830,7 +836,7 @@
                     </div>
                     <h3 style="color:#94a3b8;font-size:16px;margin:16px 0 12px;">🌍 حسب الأقاليم</h3>
                     <div style="display:flex;flex-direction:column;gap:8px;">
-                        ${regionHtml}
+                        ${regionHtml || '<p style="color:rgba(255,255,255,0.2);">لا توجد بيانات</p>'}
                     </div>
                     <button class="btn btn-primary" onclick="showPage('fleet')" style="margin-top:16px;">🚢 عرض الأسطول</button>
                 </div>
@@ -1032,18 +1038,18 @@
                 <div class="page-content active">
                     <h2 style="color:#60a5fa;margin-bottom:16px;">⚙️ الإعدادات</h2>
                     <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
-                        <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);">
-                            <h3 style="color:#94a3b8;font-size:14px;">🔑 تغيير كلمة المرور</h3>
-                            <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
-                                <input type="password" id="currentPassword" placeholder="كلمة المرور الحالية" style="padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;">
-                                <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" style="padding:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;">
-                                <button class="btn btn-primary" onclick="changePassword()" style="width:fit-content;">تغيير</button>
-                            </div>
+                        <div class="settings-group">
+                            <h3>🔑 تغيير كلمة المرور</h3>
+                            <input type="password" id="currentPassword" placeholder="كلمة المرور الحالية">
+                            <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+                            <button class="btn btn-primary" onclick="changePassword()" style="width:fit-content;">تغيير</button>
                         </div>
-                        <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);">
-                            <h3 style="color:#94a3b8;font-size:14px;">ℹ️ معلومات النظام</h3>
+                        <div class="settings-group">
+                            <h3>ℹ️ معلومات النظام</h3>
                             <p style="color:#64748b;font-size:13px;">الإصدار: v6.0</p>
                             <p style="color:#64748b;font-size:13px;">المطور: أمان الله ناجي</p>
+                            <p style="color:#64748b;font-size:13px;">عدد المراكب: ${vessels.length}</p>
+                            <p style="color:#64748b;font-size:13px;">عدد المستخدمين: ${users.length}</p>
                         </div>
                     </div>
                 </div>
@@ -1054,18 +1060,32 @@
             const container = document.getElementById('pageContainer');
             if (!container) return;
 
+            const logs = [
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: '📡 النظام يعمل بشكل طبيعي' },
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: '✅ متصل بقاعدة البيانات' },
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: `👤 المستخدم: ${currentUser?.username || 'غير معروف'}` },
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: `🚢 عدد المراكب: ${vessels.length}` },
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: `👥 عدد المستخدمين: ${users.length}` },
+                { time: new Date().toLocaleTimeString('ar-EG'), msg: `🔧 مهام الصيانة: ${maintenance.length}` },
+            ];
+
+            let logsHtml = logs.map(log => `
+                <div class="log-entry">
+                    <span class="log-time">${log.time}</span>
+                    ${log.msg}
+                </div>
+            `).join('');
+
             container.innerHTML = `
                 <div class="page-content active">
                     <h2 style="color:#60a5fa;margin-bottom:16px;">📜 سجلات النظام</h2>
-                    <div style="background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;font-family:monospace;font-size:12px;color:#94a3b8;max-height:400px;overflow-y:auto;border:1px solid rgba(255,255,255,0.05);">
-                        <div>📡 النظام يعمل بشكل طبيعي</div>
-                        <div>✅ متصل بقاعدة البيانات</div>
-                        <div>👤 المستخدم: ${currentUser?.username || 'غير معروف'}</div>
-                        <div>📅 ${new Date().toLocaleString('ar-EG')}</div>
-                        <div style="color:#64748b;margin-top:8px;">🚢 عدد المراكب: ${vessels.length}</div>
-                        <div style="color:#64748b;">👥 عدد المستخدمين: ${users.length}</div>
-                        <div style="color:#64748b;">🔧 مهام الصيانة: ${maintenance.length}</div>
+                    <div class="log-viewer">
+                        ${logsHtml}
+                        <div class="log-entry" style="color:#64748b;border-bottom:none;padding-top:8px;">
+                            📅 ${new Date().toLocaleString('ar-EG')}
+                        </div>
                     </div>
+                    <button class="btn btn-primary" onclick="refreshAllPages()" style="margin-top:16px;">🔄 تحديث</button>
                 </div>
             `;
         }
@@ -1124,6 +1144,7 @@
                     if (data.success) {
                         showToast('✅ تم إضافة المركب', 'success');
                         loadVessels();
+                        loadAllData();
                     } else {
                         showToast('❌ ' + (data.error || 'حدث خطأ'), 'error');
                     }
