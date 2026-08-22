@@ -15,7 +15,10 @@
 </head>
 <body>
 
-    <!-- ===== شاشة تسجيل الدخول ===== -->
+    <!-- ============================================================
+    🔐 شاشة تسجيل الدخول
+    ============================================================ -->
+
     <div id="loginOverlay">
         <div class="login-box">
             <div class="login-logo">
@@ -23,23 +26,29 @@
                 <span class="logo-text">منظومة الوسائل البحرية</span>
             </div>
             <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
+
             <div class="developer">
                 <span class="dev-label">الوكيل</span>
                 <span class="dev-name">أمان الله ناجي</span>
             </div>
+
             <div class="input-group">
                 <i class="fas fa-user input-icon"></i>
                 <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username">
             </div>
+
             <div class="input-group">
                 <i class="fas fa-lock input-icon"></i>
                 <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
             </div>
+
             <button type="button" class="login-btn" id="loginButton">
                 <span class="spinner"></span>
                 <span class="btn-text">🚀 دخول</span>
             </button>
+
             <div id="loginError" class="error-msg"></div>
+
             <div class="login-footer">
                 <span>نظام إدارة وإسناد الوحدات البحرية</span>
                 <span class="version">v3.0</span>
@@ -47,8 +56,12 @@
         </div>
     </div>
 
-    <!-- ===== التطبيق الرئيسي ===== -->
+    <!-- ============================================================
+    📱 التطبيق الرئيسي
+    ============================================================ -->
+
     <div id="mainApp" style="display:none;">
+        <!-- Header -->
         <header>
             <div class="header-left">
                 <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
@@ -75,6 +88,7 @@
             </div>
         </header>
 
+        <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-brand">
                 <span>⚓</span>
@@ -118,6 +132,7 @@
             </div>
         </nav>
 
+        <!-- Content -->
         <div class="main-content">
             <div id="pageContainer">
                 <div class="page-content active" id="page-dashboard">
@@ -130,10 +145,17 @@
         </div>
     </div>
 
-    <!-- ===== Toast Container ===== -->
-    <div id="toastContainer"></div>
+    <!-- ============================================================
+    🍞 Toast Container
+    ============================================================ -->
 
-    <!-- ===== JS خارجي ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ============================================================
+    📝 JavaScript خارجي
+    ============================================================ -->
+
     <script src="/js/app.js"></script>
+
 </body>
 </html>
