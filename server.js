@@ -24,7 +24,6 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 
@@ -40,7 +39,7 @@ const IS_PRODUCTION = NODE_ENV === 'production';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// ✅ JWT_SECRET - إجبار وجوده
+// ✅ JWT_SECRET
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
     console.error('❌ JWT_SECRET is missing or too short (must be at least 32 characters)');
@@ -120,14 +119,12 @@ UserSchema.methods.resetLoginAttempts = async function() {
     await this.save();
 };
 
-// ✅ دالة التحقق من القفل
 UserSchema.methods.checkLock = function() {
     if (!this.isLocked) return null;
     if (this.lockUntil && this.lockUntil > new Date()) {
         const remainingMinutes = Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000);
         return { locked: true, remainingMinutes };
     }
-    // انتهت مدة القفل
     this.isLocked = false;
     this.lockUntil = null;
     this.loginAttempts = 0;
@@ -244,7 +241,7 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 📝 LOGGING MIDDLEWARE - ✅ NEW: تسجيل كل الطلبات في Render
+// 📝 LOGGING MIDDLEWARE - تسجيل كل الطلبات في Render
 // ============================================================
 
 app.use((req, res, next) => {
@@ -253,14 +250,11 @@ app.use((req, res, next) => {
     const method = req.method;
     const url = req.originalUrl || req.url;
     const userAgent = req.headers['user-agent'] || 'unknown';
-    const contentType = req.headers['content-type'] || '';
 
-    // تسجيل بداية الطلب
     console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
     console.log(`   👤 IP: ${ip}`);
     console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
 
-    // تسجيل الجسم (Body) للطلبات POST/PUT/PATCH
     if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
         const sanitizedBody = { ...req.body };
         if (sanitizedBody.password) sanitizedBody.password = '******';
@@ -269,19 +263,16 @@ app.use((req, res, next) => {
         console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
     }
 
-    // اعتراض الاستجابة لتسجيل الوقت
     const originalSend = res.send;
     res.send = function(data) {
         const duration = Date.now() - start;
         const status = res.statusCode;
         console.log(`   ⏱️ ${duration}ms | ${status}`);
         
-        // تسجيل الاستجابة للـ APIs
         if (url.startsWith('/api/')) {
             try {
                 const responseData = typeof data === 'string' ? JSON.parse(data) : data;
                 if (responseData && typeof responseData === 'object') {
-                    // حذف البيانات الحساسة من السجلات
                     if (responseData.token) {
                         console.log(`   🔑 Token: ✓ (${responseData.token.substring(0, 15)}...)`);
                         delete responseData.token;
@@ -291,11 +282,8 @@ app.use((req, res, next) => {
                     }
                     console.log(`   📤 Response:`, JSON.stringify(responseData, null, 2));
                 }
-            } catch (e) {
-                // ليست JSON
-            }
+            } catch (e) {}
         }
-        
         originalSend.call(res, data);
     };
 
@@ -303,7 +291,7 @@ app.use((req, res, next) => {
 });
 
 // ============================================================
-// 🚦 RATE LIMITING - تسجيل محاولات التجاوز
+// 🚦 RATE LIMITING
 // ============================================================
 
 const limiter = rateLimit({
@@ -319,12 +307,11 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // ============================================================
-// 🔐 MIDDLEWARE - ✅ FIXED CORS
+// 🔐 MIDDLEWARE
 // ============================================================
 
 app.disable('x-powered-by');
 
-// ✅ CORS - بدون credentials مع origin: '*'
 app.use(cors({
     origin: '*',
     credentials: false,
@@ -343,7 +330,25 @@ app.use(compression());
 app.use(cookieParser());
 
 // ============================================================
-// 🗄️ DATABASE CONNECTION - مع تسجيل
+// 📁 STATIC FILES
+// ============================================================
+
+const publicPath = path.join(__dirname, 'public');
+const cssPath = path.join(publicPath, 'css');
+const pagesPath = path.join(publicPath, 'pages');
+
+if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
+if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
+if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
+
+app.use(express.static(publicPath, {
+    index: false,
+    maxAge: 0,
+    etag: false
+}));
+
+// ============================================================
+// 🗄️ DATABASE CONNECTION
 // ============================================================
 
 async function connectDB() {
@@ -370,7 +375,7 @@ async function connectDB() {
 }
 
 // ============================================================
-// 🔐 CREATE/UPDATE ADMIN - ✅ FIXED
+// 🔐 CREATE/UPDATE ADMIN
 // ============================================================
 
 async function createAdmin() {
@@ -432,7 +437,7 @@ async function createAdmin() {
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION - ✅ FIXED
+// 🔐 AUTHENTICATION
 // ============================================================
 
 async function authenticate(req, res, next) {
@@ -487,45 +492,21 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-const publicPath = path.join(__dirname, 'public');
-const pagesPath = path.join(publicPath, 'pages');
-
-if (!fs.existsSync(pagesPath)) {
-    fs.mkdirSync(pagesPath, { recursive: true });
-}
-
-app.use(express.static(publicPath, {
-    index: 'index.html',
-    maxAge: 0,
-    etag: false
-}));
-
-app.use('/pages', express.static(pagesPath, {
-    maxAge: 0,
-    etag: false
-}));
-
-// ============================================================
 // ❤️ HEALTH
 // ============================================================
 
 app.get('/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
-    const response = {
+    res.json({
         status: dbState === 1 ? 'ok' : 'degraded',
         mongodb: dbState === 1 ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString(),
         uptime: process.uptime()
-    };
-    console.log(`❤️ [HEALTH] ${response.status} - DB: ${response.mongodb}`);
-    res.json(response);
+    });
 });
 
 // ============================================================
-// 🔐 LOGIN - ✅ FIXED مع تسجيل مفصل
+// 🔐 LOGIN
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
@@ -609,7 +590,6 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (error) {
         console.error('❌ [LOGIN] Error:', error.message);
-        console.error('   Stack:', error.stack);
         return res.status(500).json({
             success: false,
             error: '❌ خطأ في الخادم'
@@ -636,7 +616,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 });
 
 // ============================================================
-// 🔑 CHANGE PASSWORD - ADMIN ONLY
+// 🔑 CHANGE PASSWORD
 // ============================================================
 
 app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
@@ -695,11 +675,13 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
 app.get('/api/dashboard', authenticate, async (req, res) => {
     console.log(`📊 [DASHBOARD] User: ${req.user.username}`);
     try {
-        const [totalVessels, validVessels, damagedVessels, maintenanceVessels] = await Promise.all([
+        const [totalVessels, validVessels, damagedVessels, maintenanceVessels, totalUsers, totalTickets] = await Promise.all([
             Vessel.countDocuments(),
             Vessel.countDocuments({ stat: 'صالح' }),
             Vessel.countDocuments({ stat: 'معطب' }),
-            Vessel.countDocuments({ stat: 'صيانة' })
+            Vessel.countDocuments({ stat: 'صيانة' }),
+            User.countDocuments(),
+            Ticket.countDocuments()
         ]);
 
         res.json({
@@ -710,7 +692,9 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
                     valid: validVessels,
                     damaged: damagedVessels,
                     maintenance: maintenanceVessels
-                }
+                },
+                users: totalUsers,
+                tickets: totalTickets
             }
         });
     } catch (error) {
@@ -829,6 +813,70 @@ app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
+// 🎫 TICKETS
+// ============================================================
+
+app.get('/api/tickets', authenticate, async (req, res) => {
+    console.log(`🎫 [TICKETS] GET - User: ${req.user.username}`);
+    try {
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${tickets.length} tickets`);
+        res.json({ success: true, tickets });
+    } catch (error) {
+        console.error('❌ [TICKETS] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/tickets', authenticate, async (req, res) => {
+    console.log(`🎫 [TICKETS] POST - User: ${req.user.username}`);
+    try {
+        const ticket = new Ticket({
+            ...req.body,
+            createdBy: req.user._id
+        });
+        await ticket.save();
+        console.log(`   ✅ Created: ${ticket.title}`);
+        res.status(201).json({ success: true, ticket });
+    } catch (error) {
+        console.error('❌ [TICKETS] POST Error:', error.message);
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 📝 NOTES
+// ============================================================
+
+app.get('/api/notes', authenticate, async (req, res) => {
+    console.log(`📝 [NOTES] GET - User: ${req.user.username}`);
+    try {
+        const notes = await Note.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${notes.length} notes`);
+        res.json({ success: true, notes });
+    } catch (error) {
+        console.error('❌ [NOTES] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/notes', authenticate, async (req, res) => {
+    console.log(`📝 [NOTES] POST - User: ${req.user.username}`);
+    try {
+        const note = new Note({
+            ...req.body,
+            createdBy: req.user._id
+        });
+        await note.save();
+        console.log(`   ✅ Created: ${note.title}`);
+        res.status(201).json({ success: true, note });
+    } catch (error) {
+        console.error('❌ [NOTES] POST Error:', error.message);
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
 // 🤖 AI
 // ============================================================
 
@@ -849,8 +897,16 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         } else if (msg.includes('الأسطول')) {
             const total = await Vessel.countDocuments();
             response = `🚢 عدد المراكب في الأسطول: ${total}`;
+        } else if (msg.includes('الجاهزية')) {
+            const total = await Vessel.countDocuments();
+            const ok = await Vessel.countDocuments({ stat: 'صالح' });
+            const efficiency = total ? Math.round((ok / total) * 100) : 0;
+            response = `📈 نسبة الجاهزية: ${efficiency}% (${ok} من ${total})`;
+        } else if (msg.includes('الصيانة')) {
+            const count = await Maintenance.countDocuments();
+            response = `🔧 عدد مهام الصيانة: ${count}`;
         } else {
-            response = '📌 يمكنني مساعدتك في معلومات عن الأسطول البحري.';
+            response = '📌 يمكنني مساعدتك في معلومات عن الأسطول البحري. اسأل عن: الأسطول، الجاهزية، الصيانة';
         }
 
         console.log(`   🤖 Response: ${response.substring(0, 40)}...`);
@@ -866,6 +922,33 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
 });
 
 // ============================================================
+// 📄 PAGES API
+// ============================================================
+
+app.get('/api/pages/:page', authenticate, async (req, res) => {
+    try {
+        const pageName = req.params.page;
+        const filePath = path.join(pagesPath, pageName + '.html');
+        
+        if (fs.existsSync(filePath)) {
+            const html = fs.readFileSync(filePath, 'utf8');
+            res.json({ success: true, html });
+        } else {
+            const defaultHtml = `
+                <div class="page-content active">
+                    <h2 style="color:#60a5fa;">📄 صفحة ${pageName}</h2>
+                    <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
+                    <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
+                </div>
+            `;
+            res.json({ success: true, html: defaultHtml });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
 // 🏠 HOME
 // ============================================================
 
@@ -874,36 +957,20 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
-app.get('/pages/:page', (req, res) => {
-    console.log(`📄 [PAGES] GET: ${req.params.page} - IP: ${req.ip || 'unknown'}`);
-    const filePath = path.join(publicPath, 'pages', req.params.page + '.html');
-    if (fs.existsSync(filePath)) {
-        res.sendFile(filePath);
-    } else {
-        console.warn(`   ❌ Page not found: ${req.params.page}`);
-        res.status(404).json({ success: false, error: 'Page not found' });
-    }
-});
-
 // ============================================================
 // ❌ 404
 // ============================================================
 
 app.use('/api', (req, res) => {
-    console.warn(`❌ [404] API not found: ${req.method} ${req.url} - IP: ${req.ip || 'unknown'}`);
+    console.warn(`❌ [404] API not found: ${req.method} ${req.url}`);
     res.status(404).json({ success: false, error: 'API not found' });
 });
 
 app.use((req, res) => {
     if (req.method === 'GET') {
-        console.log(`📄 [404] Serving index.html for: ${req.url}`);
         return res.sendFile(path.join(publicPath, 'index.html'));
     }
-    console.warn(`❌ [404] ${req.method} ${req.url} - IP: ${req.ip || 'unknown'}`);
-    res.status(404).json({
-        success: false,
-        error: 'Not found'
-    });
+    res.status(404).json({ success: false, error: 'Not found' });
 });
 
 // ============================================================
@@ -913,10 +980,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error('❌ [ERROR]', err.message);
     console.error('   Stack:', err.stack);
-    res.status(500).json({
-        success: false,
-        error: 'Internal server error'
-    });
+    res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
 // ============================================================
