@@ -42,8 +42,9 @@
         </div>
     </div>
 
-    <!-- ===== التطبيق ===== -->
+    <!-- ===== التطبيق الرئيسي ===== -->
     <div id="mainApp" style="display:none;">
+        <!-- الهيدر -->
         <header>
             <div class="header-left">
                 <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
@@ -51,34 +52,60 @@
             </div>
             <div class="header-right">
                 <span class="role-badge" id="userRoleDisplay">👤</span>
-                <button class="btn-outline-white" onclick="refreshAllPages()"><i class="fas fa-sync-alt"></i></button>
+                <button class="btn-outline-white" onclick="refreshPage()"><i class="fas fa-sync-alt"></i></button>
                 <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
+        <!-- الشريط الجانبي -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-brand">⚓ الأسطول البحري</div>
-            <button class="nav-btn active" data-page="dashboard"><i class="fas fa-chart-pie"></i> لوحة التحكم</button>
-            <button class="nav-btn" data-page="fleet"><i class="fas fa-ship"></i> الأسطول</button>
-            <button class="nav-btn" data-page="maintenance"><i class="fas fa-wrench"></i> الصيانة</button>
-            <button class="nav-btn" data-page="efficiency"><i class="fas fa-chart-line"></i> الجاهزية</button>
-            <button class="nav-btn" data-page="support"><i class="fas fa-headset"></i> الدعم</button>
-            <button class="nav-btn" data-page="users"><i class="fas fa-users"></i> المستخدمين</button>
-            <button class="nav-btn" data-page="notes"><i class="fas fa-sticky-note"></i> Note Verbale</button>
-            <button class="nav-btn" data-page="sessions"><i class="fas fa-users-cog"></i> المراقبة</button>
-            <button class="nav-btn" data-page="ai-assistant"><i class="fas fa-robot"></i> المساعد الذكي</button>
-            <button class="nav-btn" data-page="settings"><i class="fas fa-cog"></i> الإعدادات</button>
-            <button class="nav-btn" data-page="logs"><i class="fas fa-history"></i> السجلات</button>
+            
+            <button class="nav-btn active" onclick="loadPage('dashboard')">
+                <i class="fas fa-chart-pie"></i> لوحة التحكم
+            </button>
+            <button class="nav-btn" onclick="loadPage('fleet')">
+                <i class="fas fa-ship"></i> الأسطول
+            </button>
+            <button class="nav-btn" onclick="loadPage('maintenance')">
+                <i class="fas fa-wrench"></i> الصيانة
+            </button>
+            <button class="nav-btn" onclick="loadPage('efficiency')">
+                <i class="fas fa-chart-line"></i> الجاهزية
+            </button>
+            <button class="nav-btn" onclick="loadPage('support')">
+                <i class="fas fa-headset"></i> الدعم
+            </button>
+            <button class="nav-btn" onclick="loadPage('users')">
+                <i class="fas fa-users"></i> المستخدمين
+            </button>
+            <button class="nav-btn" onclick="loadPage('notes')">
+                <i class="fas fa-sticky-note"></i> Note Verbale
+            </button>
+            <button class="nav-btn" onclick="loadPage('sessions')">
+                <i class="fas fa-users-cog"></i> المراقبة
+            </button>
+            <button class="nav-btn" onclick="loadPage('ai-assistant')">
+                <i class="fas fa-robot"></i> المساعد الذكي
+            </button>
+            <button class="nav-btn" onclick="loadPage('settings')">
+                <i class="fas fa-cog"></i> الإعدادات
+            </button>
+            <button class="nav-btn" onclick="loadPage('logs')">
+                <i class="fas fa-history"></i> السجلات
+            </button>
+            
             <div class="sidebar-footer">الوكيل أمان الله ناجي</div>
         </nav>
 
+        <!-- المحتوى الرئيسي -->
         <div class="main-content">
             <div id="pageContainer">
-                <div class="page-content active">
-                    <div style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
-                        <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-                        <p>جاري تحميل لوحة التحكم...</p>
-                    </div>
+                <!-- يتم تحميل الصفحات هنا عبر JavaScript -->
+                <div class="page-content active" style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
+                    <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+                    <p>مرحباً بك في منظومة الوسائل البحرية</p>
+                    <p style="font-size:13px;margin-top:8px;">اختر صفحة من القائمة الجانبية</p>
                 </div>
             </div>
         </div>
@@ -89,15 +116,15 @@
 
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - مختصر جداً، بدون تخزين محلي
+        // 🚢 MARINE SYSTEM - التطبيق الرئيسي
         // ============================================================
 
-        console.log('🚀 Marine System v6.0 - No Local Storage');
+        console.log('🚀 Marine System v6.0');
 
         // ===== STATE (في الذاكرة فقط) =====
         let currentUser = null;
         let authToken = null;
-        let activePage = 'dashboard';
+        let currentPage = 'dashboard';
 
         // ===== HELPERS =====
         function getRoleName(r) {
@@ -154,7 +181,7 @@
                     throw new Error(data.error || 'بيانات غير صحيحة');
                 }
 
-                // ✅ تخزين في الذاكرة فقط (وليس localStorage)
+                // تخزين في الذاكرة فقط
                 currentUser = data.user;
                 authToken = data.token;
 
@@ -163,7 +190,7 @@
                 document.getElementById('mainApp').style.display = 'block';
 
                 updateUserDisplay();
-                showPage('dashboard');
+                loadPage('dashboard');
                 showToast(`✅ مرحباً ${data.user.name || data.user.username}`, 'success');
 
             } catch (error) {
@@ -178,7 +205,6 @@
         function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
 
-            // ✅ مسح البيانات من الذاكرة
             currentUser = null;
             authToken = null;
 
@@ -198,87 +224,68 @@
             }
         }
 
-        // ===== API =====
-        async function fetchWithAuth(url, options = {}) {
-            if (!authToken) {
-                throw new Error('انتهت الجلسة، يرجى تسجيل الدخول');
-            }
-
-            const headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
-            };
-
-            const response = await fetch(url, { ...options, headers });
-
-            if (response.status === 401) {
-                currentUser = null;
-                authToken = null;
-                document.getElementById('loginOverlay').style.display = 'flex';
-                document.getElementById('mainApp').style.display = 'none';
-                throw new Error('انتهت صلاحية الجلسة');
-            }
-
-            return response;
-        }
-
-        // ===== SHOW PAGE (تحميل من مجلد pages) =====
-        function showPage(pageName) {
-            activePage = pageName;
+        // ===== تحميل الصفحة =====
+        function loadPage(pageName) {
+            currentPage = pageName;
 
             // تحديث الأزرار
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                if (btn.dataset.page === pageName) {
+                if (btn.textContent.includes(getPageTitle(pageName))) {
                     btn.classList.add('active');
                 }
             });
 
-            // تحميل الصفحة من الخادم
+            // تحميل الصفحة من مجلد pages
             const container = document.getElementById('pageContainer');
 
-            fetch(`/api/pages/${pageName}`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.html) {
-                    container.innerHTML = data.html;
-                } else {
+            // إظهار مؤقت تحميل
+            container.innerHTML = `
+                <div class="page-content active" style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
+                    <div style="font-size:32px;margin-bottom:16px;">⏳</div>
+                    <p>جاري تحميل ${getPageTitle(pageName)}...</p>
+                </div>
+            `;
+
+            // تحميل الصفحة عبر iframe أو fetch
+            fetch(`/pages/${pageName}.html`)
+                .then(response => {
+                    if (!response.ok) throw new Error('الصفحة غير موجودة');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .catch(error => {
                     container.innerHTML = `
                         <div class="page-content active">
-                            <h2 style="color:#60a5fa;">📄 ${pageName}</h2>
-                            <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
-                            <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
+                            <h2 style="color:#f87171;">❌ خطأ في تحميل الصفحة</h2>
+                            <p style="color:#94a3b8;">${error.message}</p>
+                            <button class="btn btn-primary" onclick="loadPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
                         </div>
                     `;
-                }
-            })
-            .catch(() => {
-                container.innerHTML = `
-                    <div class="page-content active">
-                        <h2 style="color:#f87171;">❌ خطأ في تحميل الصفحة</h2>
-                        <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
-                    </div>
-                `;
-            });
+                });
 
             // تحديث العنوان
+            document.title = `⚓ ${getPageTitle(pageName)}`;
+        }
+
+        // ===== مساعد لعناوين الصفحات =====
+        function getPageTitle(page) {
             const titles = {
-                'dashboard': '📊 لوحة التحكم',
-                'fleet': '🚢 الأسطول',
-                'maintenance': '🛠️ الصيانة',
-                'efficiency': '📈 الجاهزية',
-                'support': '📞 الدعم',
-                'users': '👥 المستخدمين',
-                'notes': '📝 Note Verbale',
-                'sessions': '👥 المراقبة',
-                'ai-assistant': '🤖 المساعد الذكي',
-                'settings': '⚙️ الإعدادات',
-                'logs': '📜 السجلات'
+                'dashboard': 'لوحة التحكم',
+                'fleet': 'الأسطول',
+                'maintenance': 'الصيانة',
+                'efficiency': 'الجاهزية',
+                'support': 'الدعم',
+                'users': 'المستخدمين',
+                'notes': 'Note Verbale',
+                'sessions': 'المراقبة',
+                'ai-assistant': 'المساعد الذكي',
+                'settings': 'الإعدادات',
+                'logs': 'السجلات'
             };
-            document.title = `⚓ ${titles[pageName] || pageName}`;
+            return titles[page] || page;
         }
 
         // ===== SIDEBAR =====
@@ -287,9 +294,9 @@
         }
 
         // ===== REFRESH =====
-        function refreshAllPages() {
-            if (activePage) {
-                showPage(activePage);
+        function refreshPage() {
+            if (currentPage) {
+                loadPage(currentPage);
             }
             showToast('🔄 تم التحديث', 'success');
         }
@@ -304,22 +311,15 @@
                 if (e.key === 'Enter') doLogin();
             });
 
-            // ربط أزرار التنقل
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.onclick = function() {
-                    showPage(this.dataset.page);
-                };
-            });
-
-            console.log('✅ Marine System v6.0 ready - No Local Storage');
+            console.log('✅ Marine System v6.0 ready');
         });
 
         // ===== EXPOSE =====
         window.doLogin = doLogin;
         window.doLogout = doLogout;
-        window.showPage = showPage;
+        window.loadPage = loadPage;
         window.toggleSidebar = toggleSidebar;
-        window.refreshAllPages = refreshAllPages;
+        window.refreshPage = refreshPage;
         window.showToast = showToast;
     </script>
 
