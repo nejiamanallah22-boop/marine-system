@@ -52,7 +52,7 @@ body {
     left: -50%;
     right: -50%;
     bottom: -50%;
-    background: 
+    background:
         radial-gradient(ellipse at 20% 50%, rgba(14,165,233,0.08) 0%, transparent 60%),
         radial-gradient(ellipse at 80% 50%, rgba(230,179,30,0.06) 0%, transparent 60%),
         radial-gradient(ellipse at 50% 100%, rgba(14,165,233,0.05) 0%, transparent 50%);
@@ -60,8 +60,15 @@ body {
 }
 
 @keyframes backgroundPulse {
-    0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
-    50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+    0%,
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
 }
 
 #loginOverlay::after {
@@ -71,7 +78,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: 
+    background-image:
         radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.2), transparent),
         radial-gradient(2px 2px at 20% 60%, rgba(255,255,255,0.15), transparent),
         radial-gradient(2px 2px at 40% 10%, rgba(255,255,255,0.2), transparent),
@@ -84,8 +91,12 @@ body {
 }
 
 @keyframes starsFloat {
-    0% { transform: translateY(0) translateX(0); }
-    100% { transform: translateY(-200px) translateX(50px); }
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    100% {
+        transform: translateY(-200px) translateX(50px);
+    }
 }
 
 .login-box {
@@ -105,8 +116,14 @@ body {
 }
 
 @keyframes loginSlideUp {
-    from { opacity: 0; transform: translateY(40px) scale(0.96); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .login-logo {
@@ -123,8 +140,13 @@ body {
 }
 
 @keyframes logoFloat {
-    0%, 100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-8px) scale(1.05); }
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-8px) scale(1.05);
+    }
 }
 
 .login-logo .logo-text {
@@ -238,7 +260,50 @@ body {
     cursor: not-allowed;
 }
 
-.login-box .login-footer {
+.login-btn .spinner {
+    display: none;
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(0,0,0,0.15);
+    border-top-color: #0a0a1a;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.login-btn.loading .spinner {
+    display: inline-block;
+}
+.login-btn.loading .btn-text {
+    display: none;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-msg {
+    color: #f87171;
+    font-size: 14px;
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(248,113,113,0.08);
+    border-radius: 12px;
+    border-right: 4px solid #f87171;
+    display: none;
+}
+
+.error-msg.show {
+    display: block;
+}
+.error-msg.success {
+    color: #4ade80;
+    border-right-color: #4ade80;
+    background: rgba(74,222,128,0.08);
+}
+
+.login-footer {
     margin-top: 25px;
     display: flex;
     justify-content: space-between;
@@ -247,7 +312,7 @@ body {
     color: rgba(255,255,255,0.2);
 }
 
-.login-box .login-footer .version {
+.login-footer .version {
     background: rgba(255,255,255,0.03);
     padding: 2px 12px;
     border-radius: 10px;
@@ -472,18 +537,19 @@ header h1 .developer-tag {
     min-height: calc(100vh - 65px);
 }
 
-#pageContainer {
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
 .page-content {
     animation: pageFade 0.4s ease-out;
 }
 
 @keyframes pageFade {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================================
@@ -558,10 +624,26 @@ header h1 .developer-tag {
     display: inline-block;
 }
 
-.status-broken { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-.status-maintenance { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-.status-ready { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-.status-closed { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.03); }
+.status-broken {
+    background: rgba(248,113,113,0.15);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.1);
+}
+.status-maintenance {
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.1);
+}
+.status-ready {
+    background: rgba(74,222,128,0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.1);
+}
+.status-closed {
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.3);
+    border: 1px solid rgba(255,255,255,0.03);
+}
 
 /* ============================================================
    🔘 الأزرار
@@ -583,17 +665,100 @@ header h1 .developer-tag {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-.btn-warning:hover { background: rgba(251,191,36,0.25); }
+.btn-warning {
+    background: rgba(251,191,36,0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(251,191,36,0.1);
+}
+.btn-warning:hover {
+    background: rgba(251,191,36,0.25);
+}
 
-.btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-.btn-danger:hover { background: rgba(248,113,113,0.25); }
+.btn-danger {
+    background: rgba(248,113,113,0.15);
+    color: #f87171;
+    border: 1px solid rgba(248,113,113,0.1);
+}
+.btn-danger:hover {
+    background: rgba(248,113,113,0.25);
+}
 
-.btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-.btn-success:hover { background: rgba(74,222,128,0.25); }
+.btn-success {
+    background: rgba(74,222,128,0.15);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,0.1);
+}
+.btn-success:hover {
+    background: rgba(74,222,128,0.25);
+}
 
-.btn-primary { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
-.btn-primary:hover { background: rgba(96,165,250,0.25); }
+.btn-primary {
+    background: rgba(96,165,250,0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(96,165,250,0.1);
+}
+.btn-primary:hover {
+    background: rgba(96,165,250,0.25);
+}
+
+/* ============================================================
+   🍞 Toast الإشعارات
+   ============================================================ */
+
+.toast-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 420px;
+    width: 95%;
+}
+
+.toast {
+    padding: 12px 18px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    animation: toastSlide 0.4s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.toast-success {
+    background: rgba(16,185,129,0.9);
+    border: 1px solid rgba(16,185,129,0.2);
+}
+.toast-error {
+    background: rgba(239,68,68,0.9);
+    border: 1px solid rgba(239,68,68,0.2);
+}
+.toast-warning {
+    background: rgba(245,158,11,0.9);
+    border: 1px solid rgba(245,158,11,0.2);
+}
+.toast-info {
+    background: rgba(59,130,246,0.9);
+    border: 1px solid rgba(59,130,246,0.2);
+}
+
+@keyframes toastSlide {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 /* ============================================================
    📱 شاشة الجوال
@@ -657,7 +822,10 @@ header h1 .developer-tag {
    ============================================================ */
 
 @media print {
-    header, .sidebar, .scroll-buttons, .no-print {
+    header,
+    .sidebar,
+    .scroll-buttons,
+    .no-print {
         display: none !important;
     }
     .main-content {
@@ -676,74 +844,4 @@ header h1 .developer-tag {
         color: #000;
         border-bottom: 1px solid #eee;
     }
-}
-
-/* ============================================================
-   📦 صناديق الحالة
-   ============================================================ */
-
-.region-table-card {
-    background: rgba(255,255,255,0.02);
-    border-radius: 14px;
-    padding: 16px;
-    margin: 16px 0;
-    border: 1px solid rgba(255,255,255,0.04);
-}
-
-.region-table-header {
-    font-weight: 700;
-    padding: 10px;
-    background: rgba(255,255,255,0.03);
-    border-radius: 10px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    color: rgba(255,255,255,0.7);
-}
-
-/* ============================================================
-   🔄 أنيميشن الإشعارات
-   ============================================================ */
-
-@keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-/* ============================================================
-   📊 لوحة التحكم
-   ============================================================ */
-
-#dashActivity::-webkit-scrollbar {
-    width: 4px;
-}
-#dashActivity::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.02);
-    border-radius: 10px;
-}
-#dashActivity::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-}
-
-.activity-item {
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.6);
-    animation: slideIn 0.3s ease;
-}
-.activity-item:hover {
-    background: rgba(255,255,255,0.02);
-}
-.activity-icon {
-    font-size: 18px;
-    opacity: 0.5;
-}
-.activity-time {
-    margin-right: auto;
-    font-size: 11px;
-    color: rgba(255,255,255,0.2);
 }
