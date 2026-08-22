@@ -244,63 +244,106 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION - ✅ FIXED
+// 📝 LOGGING MIDDLEWARE - ✅ NEW: تسجيل كل الطلبات في Render
 // ============================================================
 
-async function authenticate(req, res, next) {
-    try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
+app.use((req, res, next) => {
+    const start = Date.now();
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
+    const method = req.method;
+    const url = req.originalUrl || req.url;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    const contentType = req.headers['content-type'] || '';
 
-        const token = authHeader.substring(7).trim();
-        const decoded = verifyToken(token);
+    // تسجيل بداية الطلب
+    console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
+    console.log(`   👤 IP: ${ip}`);
+    console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
 
-        const user = await User.findById(decoded.id);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        // ✅ التحقق من القفل
-        const lockCheck = user.checkLock();
-        if (lockCheck && lockCheck.locked) {
-            return res.status(423).json({
-                success: false,
-                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
-            });
-        }
-        if (lockCheck && !lockCheck.locked) {
-            await user.save();
-        }
-
-        // ✅ التحقق من tokenVersion
-        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
-            return res.status(401).json({
-                success: false,
-                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
-            });
-        }
-
-        req.user = user;
-        next();
-
-    } catch (error) {
-        return res.status(401).json({ success: false, error: 'غير مصرح' });
+    // تسجيل الجسم (Body) للطلبات POST/PUT/PATCH
+    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
+        const sanitizedBody = { ...req.body };
+        if (sanitizedBody.password) sanitizedBody.password = '******';
+        if (sanitizedBody.currentPassword) sanitizedBody.currentPassword = '******';
+        if (sanitizedBody.newPassword) sanitizedBody.newPassword = '******';
+        console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
     }
-}
 
-function authorize(...roles) {
-    return (req, res, next) => {
-        if (!req.user || !roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+    // اعتراض الاستجابة لتسجيل الوقت
+    const originalSend = res.send;
+    res.send = function(data) {
+        const duration = Date.now() - start;
+        const status = res.statusCode;
+        console.log(`   ⏱️ ${duration}ms | ${status}`);
+        
+        // تسجيل الاستجابة للـ APIs
+        if (url.startsWith('/api/')) {
+            try {
+                const responseData = typeof data === 'string' ? JSON.parse(data) : data;
+                if (responseData && typeof responseData === 'object') {
+                    // حذف البيانات الحساسة من السجلات
+                    if (responseData.token) {
+                        console.log(`   🔑 Token: ✓ (${responseData.token.substring(0, 15)}...)`);
+                        delete responseData.token;
+                    }
+                    if (responseData.user && responseData.user.password) {
+                        delete responseData.user.password;
+                    }
+                    console.log(`   📤 Response:`, JSON.stringify(responseData, null, 2));
+                }
+            } catch (e) {
+                // ليست JSON
+            }
         }
-        next();
+        
+        originalSend.call(res, data);
     };
-}
+
+    next();
+});
 
 // ============================================================
-// 🗄️ DATABASE CONNECTION
+// 🚦 RATE LIMITING - تسجيل محاولات التجاوز
+// ============================================================
+
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' },
+    handler: (req, res) => {
+        console.warn(`🚫 [RATE LIMIT] ${req.ip} exceeded rate limit on ${req.url}`);
+        res.status(429).json({ success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' });
+    }
+});
+
+app.use('/api', limiter);
+
+// ============================================================
+// 🔐 MIDDLEWARE - ✅ FIXED CORS
+// ============================================================
+
+app.disable('x-powered-by');
+
+// ✅ CORS - بدون credentials مع origin: '*'
+app.use(cors({
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
+app.use(cookieParser());
+
+// ============================================================
+// 🗄️ DATABASE CONNECTION - مع تسجيل
 // ============================================================
 
 async function connectDB() {
@@ -310,6 +353,7 @@ async function connectDB() {
     }
 
     try {
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
@@ -347,18 +391,14 @@ async function createAdmin() {
         if (existing) {
             const passwordMatches = await bcrypt.compare(adminPassword, existing.password);
 
-            // تحديث البيانات الأساسية
             existing.name = ADMIN_NAME || 'مدير النظام';
             existing.email = adminEmail;
             existing.role = 'admin';
             existing.isActive = true;
-
-            // ✅ فك القفل عند إعادة التشغيل
             existing.isLocked = false;
             existing.lockUntil = null;
             existing.loginAttempts = 0;
 
-            // ✅ تحديث كلمة المرور فقط إذا تغيرت
             if (!passwordMatches) {
                 existing.password = adminPassword;
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
@@ -371,7 +411,6 @@ async function createAdmin() {
             return;
         }
 
-        // إنشاء المدير لأول مرة
         const admin = new User({
             name: ADMIN_NAME || 'مدير النظام',
             username: adminUsername,
@@ -393,40 +432,59 @@ async function createAdmin() {
 }
 
 // ============================================================
-// 🔐 MIDDLEWARE - ✅ FIXED CORS
+// 🔐 AUTHENTICATION - ✅ FIXED
 // ============================================================
 
-app.disable('x-powered-by');
+async function authenticate(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
 
-// ✅ CORS - بدون credentials مع origin: '*'
-app.use(cors({
-    origin: '*',
-    credentials: false,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
+        const token = authHeader.substring(7).trim();
+        const decoded = verifyToken(token);
 
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false
-}));
+        const user = await User.findById(decoded.id);
+        if (!user || !user.isActive) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-app.use(cookieParser());
+        const lockCheck = user.checkLock();
+        if (lockCheck && lockCheck.locked) {
+            return res.status(423).json({
+                success: false,
+                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
+            });
+        }
+        if (lockCheck && !lockCheck.locked) {
+            await user.save();
+        }
 
-// ============================================================
-// 🚦 RATE LIMITING
-// ============================================================
+        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
+            return res.status(401).json({
+                success: false,
+                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
+            });
+        }
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' }
-});
+        req.user = user;
+        next();
 
-app.use('/api', limiter);
+    } catch (error) {
+        console.error('❌ Auth error:', error.message);
+        return res.status(401).json({ success: false, error: 'غير مصرح' });
+    }
+}
+
+function authorize(...roles) {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        }
+        next();
+    };
+}
 
 // ============================================================
 // 📁 STATIC FILES
@@ -456,24 +514,30 @@ app.use('/pages', express.static(pagesPath, {
 
 app.get('/health', (req, res) => {
     const dbState = mongoose.connection.readyState;
-    res.json({
+    const response = {
         status: dbState === 1 ? 'ok' : 'degraded',
         mongodb: dbState === 1 ? 'connected' : 'disconnected',
-        timestamp: new Date().toISOString()
-    });
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+    };
+    console.log(`❤️ [HEALTH] ${response.status} - DB: ${response.mongodb}`);
+    res.json(response);
 });
 
 // ============================================================
-// 🔐 LOGIN - ✅ FIXED
+// 🔐 LOGIN - ✅ FIXED مع تسجيل مفصل
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
-    console.log('📡 [LOGIN] Request received');
+    console.log('🔐 [LOGIN] Request received');
+    console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
+    console.log(`   📡 IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
 
     try {
         const { username, password } = req.body;
 
         if (!username || !password) {
+            console.warn('⚠️ [LOGIN] Missing credentials');
             return res.status(400).json({
                 success: false,
                 error: '⚠️ اسم المستخدم وكلمة المرور مطلوبان'
@@ -488,22 +552,26 @@ app.post('/api/auth/login', async (req, res) => {
         }).select('+password');
 
         if (!user) {
+            console.warn(`❌ [LOGIN] User not found: ${username}`);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
+        console.log(`   👤 Found user: ${user.username} (${user.role})`);
+
         if (!user.isActive) {
+            console.warn(`⚠️ [LOGIN] Account disabled: ${user.username}`);
             return res.status(403).json({
                 success: false,
                 error: '❌ الحساب معطل'
             });
         }
 
-        // ✅ التحقق من القفل مع الوقت المتبقي
         const lockCheck = user.checkLock();
         if (lockCheck && lockCheck.locked) {
+            console.warn(`🔒 [LOGIN] Account locked: ${user.username}, remaining: ${lockCheck.remainingMinutes} min`);
             return res.status(423).json({
                 success: false,
                 error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
@@ -516,6 +584,7 @@ app.post('/api/auth/login', async (req, res) => {
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             await user.incrementLoginAttempts();
+            console.warn(`❌ [LOGIN] Invalid password for: ${user.username} (attempt ${user.loginAttempts})`);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -529,6 +598,8 @@ app.post('/api/auth/login', async (req, res) => {
         await user.save();
 
         const token = generateToken(user);
+        console.log(`✅ [LOGIN] Success: ${user.username} (${user.role})`);
+        console.log(`   🔑 Token: ${token.substring(0, 20)}...`);
 
         return res.json({
             success: true,
@@ -537,7 +608,8 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Login error:', error);
+        console.error('❌ [LOGIN] Error:', error.message);
+        console.error('   Stack:', error.stack);
         return res.status(500).json({
             success: false,
             error: '❌ خطأ في الخادم'
@@ -550,6 +622,7 @@ app.post('/api/auth/login', async (req, res) => {
 // ============================================================
 
 app.post('/api/auth/logout', authenticate, async (req, res) => {
+    console.log(`🚪 [LOGOUT] User: ${req.user.username}`);
     res.json({ success: true, message: 'تم تسجيل الخروج' });
 });
 
@@ -558,6 +631,7 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/api/auth/me', authenticate, (req, res) => {
+    console.log(`👤 [ME] User: ${req.user.username}`);
     res.json({ success: true, user: cleanUser(req.user) });
 });
 
@@ -566,6 +640,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 // ============================================================
 
 app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`🔑 [CHANGE PASSWORD] User: ${req.user.username}`);
     try {
         const { currentPassword, newPassword } = req.body;
 
@@ -587,6 +662,7 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
         const isValid = await user.comparePassword(currentPassword);
 
         if (!isValid) {
+            console.warn(`❌ [CHANGE PASSWORD] Invalid current password for: ${req.user.username}`);
             return res.status(401).json({
                 success: false,
                 error: '❌ كلمة المرور الحالية غير صحيحة'
@@ -597,13 +673,14 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
+        console.log(`✅ [CHANGE PASSWORD] Success for: ${req.user.username}`);
         return res.json({
             success: true,
             message: '✅ تم تغيير كلمة المرور بنجاح'
         });
 
     } catch (error) {
-        console.error('❌ Change password error:', error);
+        console.error('❌ [CHANGE PASSWORD] Error:', error.message);
         return res.status(500).json({
             success: false,
             error: '❌ خطأ في تغيير كلمة المرور'
@@ -616,6 +693,7 @@ app.put('/api/auth/change-password', authenticate, authorize('admin'), async (re
 // ============================================================
 
 app.get('/api/dashboard', authenticate, async (req, res) => {
+    console.log(`📊 [DASHBOARD] User: ${req.user.username}`);
     try {
         const [totalVessels, validVessels, damagedVessels, maintenanceVessels] = await Promise.all([
             Vessel.countDocuments(),
@@ -636,6 +714,7 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('❌ [DASHBOARD] Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -645,44 +724,58 @@ app.get('/api/dashboard', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/api/vessels', authenticate, async (req, res) => {
+    console.log(`🚢 [VESSELS] GET - User: ${req.user.username}`);
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${vessels.length} vessels`);
         res.json({ success: true, vessels });
     } catch (error) {
+        console.error('❌ [VESSELS] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🚢 [VESSELS] POST - User: ${req.user.username}`);
     try {
         const vessel = new Vessel(req.body);
         await vessel.save();
+        console.log(`   ✅ Created: ${vessel.name}`);
         res.status(201).json({ success: true, vessel });
     } catch (error) {
+        console.error('❌ [VESSELS] POST Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
 
 app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🚢 [VESSELS] PUT - User: ${req.user.username}, ID: ${req.params.id}`);
     try {
         const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!vessel) {
+            console.warn(`   ❌ Not found: ${req.params.id}`);
             return res.status(404).json({ success: false, error: 'Vessel not found' });
         }
+        console.log(`   ✅ Updated: ${vessel.name}`);
         res.json({ success: true, vessel });
     } catch (error) {
+        console.error('❌ [VESSELS] PUT Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
 
 app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`🚢 [VESSELS] DELETE - User: ${req.user.username}, ID: ${req.params.id}`);
     try {
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
         if (!vessel) {
+            console.warn(`   ❌ Not found: ${req.params.id}`);
             return res.status(404).json({ success: false, error: 'Vessel not found' });
         }
+        console.log(`   ✅ Deleted: ${vessel.name}`);
         res.json({ success: true, message: 'Vessel deleted' });
     } catch (error) {
+        console.error('❌ [VESSELS] DELETE Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -692,23 +785,29 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res
 // ============================================================
 
 app.get('/api/maintenance', authenticate, async (req, res) => {
+    console.log(`🔧 [MAINTENANCE] GET - User: ${req.user.username}`);
     try {
         const records = await Maintenance.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${records.length} records`);
         res.json({ success: true, maintenance: records });
     } catch (error) {
+        console.error('❌ [MAINTENANCE] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🔧 [MAINTENANCE] POST - User: ${req.user.username}`);
     try {
         const record = new Maintenance({
             ...req.body,
             supervisor: req.user._id
         });
         await record.save();
+        console.log(`   ✅ Created: ${record.description.substring(0, 30)}...`);
         res.status(201).json({ success: true, maintenance: record });
     } catch (error) {
+        console.error('❌ [MAINTENANCE] POST Error:', error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 });
@@ -718,10 +817,13 @@ app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async 
 // ============================================================
 
 app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`👥 [USERS] GET - User: ${req.user.username}`);
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${users.length} users`);
         res.json({ success: true, users });
     } catch (error) {
+        console.error('❌ [USERS] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -731,11 +833,13 @@ app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
+    console.log(`🤖 [AI] Ask - User: ${req.user.username}`);
     try {
         const { message } = req.body;
         if (!message) {
             return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
         }
+        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
         let response = 'عذراً، لم أستطع فهم سؤالك.';
         const msg = message.toLowerCase();
@@ -749,12 +853,14 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
             response = '📌 يمكنني مساعدتك في معلومات عن الأسطول البحري.';
         }
 
+        console.log(`   🤖 Response: ${response.substring(0, 40)}...`);
         res.json({
             success: true,
             response: response
         });
 
     } catch (error) {
+        console.error('❌ [AI] Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -764,14 +870,17 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/', (req, res) => {
+    console.log(`🏠 [HOME] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
     res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 app.get('/pages/:page', (req, res) => {
+    console.log(`📄 [PAGES] GET: ${req.params.page} - IP: ${req.ip || 'unknown'}`);
     const filePath = path.join(publicPath, 'pages', req.params.page + '.html');
     if (fs.existsSync(filePath)) {
         res.sendFile(filePath);
     } else {
+        console.warn(`   ❌ Page not found: ${req.params.page}`);
         res.status(404).json({ success: false, error: 'Page not found' });
     }
 });
@@ -781,13 +890,16 @@ app.get('/pages/:page', (req, res) => {
 // ============================================================
 
 app.use('/api', (req, res) => {
+    console.warn(`❌ [404] API not found: ${req.method} ${req.url} - IP: ${req.ip || 'unknown'}`);
     res.status(404).json({ success: false, error: 'API not found' });
 });
 
 app.use((req, res) => {
     if (req.method === 'GET') {
+        console.log(`📄 [404] Serving index.html for: ${req.url}`);
         return res.sendFile(path.join(publicPath, 'index.html'));
     }
+    console.warn(`❌ [404] ${req.method} ${req.url} - IP: ${req.ip || 'unknown'}`);
     res.status(404).json({
         success: false,
         error: 'Not found'
@@ -799,7 +911,8 @@ app.use((req, res) => {
 // ============================================================
 
 app.use((err, req, res, next) => {
-    console.error('❌ Error:', err.message);
+    console.error('❌ [ERROR]', err.message);
+    console.error('   Stack:', err.stack);
     res.status(500).json({
         success: false,
         error: 'Internal server error'
@@ -837,6 +950,7 @@ async function startServer() {
         console.log('   🔑 Password: from ADMIN_PASSWORD in Render');
         console.log('='.repeat(60));
         console.log('✅ All issues fixed - Production Ready');
+        console.log('📡 All requests will be logged in Render console');
         console.log('='.repeat(60));
         console.log('');
     });
