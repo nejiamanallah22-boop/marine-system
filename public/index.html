@@ -7,17 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ===== RESET & BASE ===== */
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}
         :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}
-        
         ::-webkit-scrollbar{width:6px}
         ::-webkit-scrollbar-track{background:#0a1628}
         ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}
         ::-webkit-scrollbar-thumb:hover{background:var(--gold)}
         
-        /* ===== LOGIN ===== */
         #loginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);overflow:hidden}
         #loginOverlay::before{content:'';position:absolute;inset:-50%;background:radial-gradient(ellipse at 20% 50%,rgba(14,165,233,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(230,179,30,0.04) 0%,transparent 60%);animation:bgPulse 12s ease-in-out infinite}
         @keyframes bgPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(3deg)}}
@@ -77,7 +74,6 @@
         .login-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.15);font-size:11px}
         .login-footer .footer-version{background:rgba(255,255,255,0.03);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.03)}
         
-        /* ===== MAIN APP ===== */
         #mainApp{display:none;min-height:100vh}
         .main-header{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);height:64px;display:flex;align-items:center}
         .header-container{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 20px;max-width:1440px;margin:0 auto}
@@ -116,7 +112,6 @@
         .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}
         .user-btn:hover .user-arrow{color:#fff}
         
-        /* ===== SIDEBAR ===== */
         .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
         .sidebar::-webkit-scrollbar{width:4px}
         .sidebar::-webkit-scrollbar-track{background:transparent}
@@ -161,15 +156,14 @@
         .footer-logout:hover{background:rgba(239,68,68,0.16)}
         .footer-logout i{font-size:14px}
         
-        /* ===== MAIN CONTENT ===== */
         .main-content{margin-right:240px;min-height:calc(100vh - 64px);padding:20px 24px}
-        .page-container{max-width:1440px;margin:0 auto}
-        .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:200px}
+        .page-container{max-width:1440px;margin:0 auto;position:relative}
+        .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;min-height:200px}
         .loader-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.04);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
         .page-loader p{margin-top:16px;color:rgba(255,255,255,0.2);font-size:14px}
+        #pageContainer{min-height:300px}
         .page-content{animation:fadePage 0.4s ease-out}
         @keyframes fadePage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        #pageContainer{min-height:300px}
         
         .back-to-top{position:fixed;bottom:30px;right:30px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);border:none;color:#0a1628;font-size:20px;cursor:pointer;box-shadow:0 4px 30px rgba(230,179,30,0.15);transition:all 0.3s;z-index:40;display:none;align-items:center;justify-content:center}
         .back-to-top:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}
@@ -372,7 +366,6 @@
             <div class="sidebar-nav">
                 <div class="nav-group">
                     <span class="nav-group-title">الرئيسية</span>
-                    <!-- ✅ تم حذف onclick من HTML -->
                     <button class="nav-btn active" data-page="dashboard">
                         <i class="fas fa-chart-pie"></i> لوحة التحكم
                     </button>
@@ -435,12 +428,10 @@
 
         <main class="main-content">
             <div class="page-container">
-                <!-- ✅ pageLoader خارج pageContainer -->
                 <div class="page-loader" id="pageLoader" style="display:none;">
                     <div class="loader-spinner"></div>
                     <p>جاري التحميل...</p>
                 </div>
-                <!-- ✅ محتوى الصفحة هنا -->
                 <div id="pageContainer"></div>
             </div>
         </main>
@@ -453,10 +444,8 @@
         </div>
     </div>
 
-    <!-- ===== TOAST ===== -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ===== MODAL ===== -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;">
         <div class="modal-box">
             <div class="modal-header">
@@ -472,7 +461,7 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - الكود 10/10
+    📦 JAVASCRIPT
     ============================================================ -->
     <script>
         // ============================================================
@@ -646,7 +635,6 @@
                     loginBtn.classList.remove('loading');
 
                     if (data.success && data.user) {
-                        // ✅ مرونة في اسم التوكن
                         const token = data.token || data.accessToken || data.access_token;
 
                         if (!token) {
@@ -714,7 +702,7 @@
         }
 
         // ============================================================
-        // 📊 تحميل البيانات - نسخة 10/10
+        // 📊 تحميل البيانات
         // ============================================================
 
         async function loadAllData() {
@@ -739,7 +727,6 @@
                     fetch(CONFIG.API + '/sessions', { headers })
                 ]);
 
-                // ✅ المراكب
                 if (vesselsRes.status === 'fulfilled' && vesselsRes.value.ok) {
                     const data = await vesselsRes.value.json();
                     _allVessels =
@@ -749,7 +736,6 @@
                         [];
                 }
 
-                // ✅ المستخدمين
                 if (usersRes.status === 'fulfilled' && usersRes.value.ok) {
                     const data = await usersRes.value.json();
                     _allUsers =
@@ -759,7 +745,6 @@
                         [];
                 }
 
-                // ✅ السجلات
                 if (logsRes.status === 'fulfilled' && logsRes.value.ok) {
                     const data = await logsRes.value.json();
                     _allLogs =
@@ -769,7 +754,6 @@
                         [];
                 }
 
-                // ✅ الجلسات
                 if (sessionsRes.status === 'fulfilled' && sessionsRes.value.ok) {
                     const data = await sessionsRes.value.json();
                     _sessionsData =
@@ -813,7 +797,7 @@
         }
 
         // ============================================================
-        // 📄 PAGE LOADER - 10/10
+        // 📄 PAGE LOADER
         // ============================================================
 
         function loadPage(page) {
@@ -822,7 +806,6 @@
             currentPage = page;
             localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
-            // ✅ تحديث الأزرار (بدون onclick في HTML)
             document.querySelectorAll('.nav-btn').forEach(button => {
                 button.classList.toggle('active', button.dataset.page === page);
             });
@@ -838,9 +821,7 @@
             loader.style.display = 'flex';
             container.innerHTML = '';
 
-            fetch('/pages/' + page + '.html', {
-                    cache: 'no-store'
-                })
+            fetch('/pages/' + page + '.html', { cache: 'no-store' })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('فشل تحميل الصفحة (' + response.status + ')');
@@ -850,7 +831,6 @@
                 .then(html => {
                     container.innerHTML = html;
 
-                    // ✅ تشغيل السكريبتات بشكل صحيح
                     container.querySelectorAll('script').forEach(oldScript => {
                         const newScript = document.createElement('script');
                         if (oldScript.src) {
@@ -873,16 +853,21 @@
                     loader.style.display = 'none';
                     container.innerHTML = `
                         <div class="page-content">
-                            <div style="text-align:center;padding:60px 20px">
-                                <div style="font-size:48px;margin-bottom:16px;">❌</div>
-                                <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>
+                            <div style="text-align:center;padding:60px 20px;">
+                                <div style="font-size:48px;margin-bottom:16px;">📄</div>
+                                <h2 style="color:#f87171;">الصفحة غير موجودة</h2>
                                 <p style="color:#94a3b8;margin-top:10px;">${escapeHTML(error.message)}</p>
                                 <p style="color:#64748b;font-size:12px;margin-top:8px;">
-                                    تأكد من وجود الملف: /pages/${escapeHTML(page)}.html
+                                    ⚠️ تأكد من وجود الملف: <strong>/pages/${escapeHTML(page)}.html</strong>
                                 </p>
-                                <button class="btn btn-primary" onclick="loadPage('dashboard')" style="margin-top:16px;">
-                                    📊 العودة للرئيسية
-                                </button>
+                                <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                                    <button class="btn btn-primary" onclick="loadPage('dashboard')">
+                                        📊 العودة للرئيسية
+                                    </button>
+                                    <button class="btn btn-gold" onclick="loadPage('${escapeHTML(page)}')">
+                                        🔄 إعادة المحاولة
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1005,13 +990,12 @@
         });
 
         // ============================================================
-        // 🚀 INIT - 10/10
+        // 🚀 INIT
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM جاهز');
 
-            // ✅ منع تنفيذ doLogin مرتين - Form فقط
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const button = document.getElementById('loginButton');
@@ -1020,7 +1004,6 @@
                 }
             });
 
-            // ✅ إظهار/إخفاء كلمة المرور
             document.getElementById('togglePassword').onclick = function() {
                 const i = document.getElementById('password');
                 const ic = this.querySelector('i');
@@ -1029,11 +1012,9 @@
                     ic.className = 'fas fa-eye'; }
             };
 
-            // ✅ القائمة الجانبية
             document.getElementById('menuToggle').onclick = toggleSidebar;
             document.getElementById('sidebarClose').onclick = closeSidebar;
 
-            // ✅ أزرار التنقل - بدون onclick في HTML
             document.querySelectorAll('.nav-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const page = this.dataset.page;
@@ -1042,18 +1023,15 @@
                 });
             });
 
-            // ✅ الإشعارات
             document.getElementById('notifBtn').onclick = function() {
                 addNotification('مرحباً', 'نظام الوسائل البحرية جاهز', 'success');
                 showToast('📬 تم فتح الإشعارات', 'info');
             };
 
-            // ✅ المستخدم
             document.getElementById('userBtn').onclick = function() {
                 if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
             };
 
-            // ✅ العودة للأعلى
             document.getElementById('backToTop').onclick = function() {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
@@ -1061,7 +1039,6 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
-            // ✅ التحقق من صلاحية التوكن
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
             const user = JSON.parse(localStorage.getItem(CONFIG.KEYS.USER) || 'null');
 
@@ -1092,13 +1069,11 @@
                 console.log('ℹ️ لا توجد جلسة، شاشة الدخول');
             }
 
-            // ✅ إشعارات ترحيبية
             setTimeout(() => {
                 addNotification('مرحباً بك', 'نظام الوسائل البحرية جاهز للاستخدام', 'success');
                 addNotification('تحديث جديد', 'تم تحديث بيانات الأسطول', 'info');
             }, 2000);
 
-            // ✅ تحديث الشارات
             setTimeout(updateBadges, 1000);
             setInterval(() => { if (currentUser) updateBadges(); }, 30000);
 
@@ -1123,7 +1098,6 @@
         window.loadAllData = loadAllData;
         window.verifyToken = verifyToken;
 
-        // ✅ Getters/Setters
         Object.defineProperty(window, 'allVessels', {
             get: function() { return _allVessels; },
             set: function(val) { _allVessels = val; }
