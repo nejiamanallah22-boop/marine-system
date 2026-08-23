@@ -1,962 +1,962 @@
-<!-- ============================================================
-🔄 صفحة المراقبة - Sessions v7.0 PRO MAX
-============================================================ -->
-<div id="page-sessions" class="page-content sessions-page">
-    
-    <!-- ===== رأس الصفحة ===== -->
-    <div class="page-header">
-        <div>
-            <h2>🔄 المراقبة</h2>
-            <p class="page-subtitle">مراقبة الجلسات النشطة والأجهزة المتصلة في الوقت الفعلي</p>
+<!-- public/pages/ai-assistant.html -->
+<div id="page-ai-assistant">
+    <style>
+        /* ===== AI ASSISTANT STYLES ===== */
+        .ai-container {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+        
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .ai-header .ai-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .ai-header .ai-brand .ai-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
+            50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
+        }
+        
+        .ai-header .ai-brand .ai-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .ai-header .ai-brand .ai-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+        
+        .ai-header .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .ai-header .ai-status .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .ai-header .ai-status .status-dot.online {
+            background: #4ade80;
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+        
+        .ai-header .ai-status .status-dot.offline {
+            background: #f87171;
+        }
+        
+        /* ===== CHAT MESSAGES ===== */
+        .ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 300px;
+        }
+        
+        .ai-messages::-webkit-scrollbar { width: 4px; }
+        .ai-messages::-webkit-scrollbar-track { background: transparent; }
+        .ai-messages::-webkit-scrollbar-thumb { background: rgba(230,179,30,0.3); border-radius: 10px; }
+        
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message.assistant { align-self: flex-start; }
+        
+        .message .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .message.user .avatar { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #fff; }
+        .message.assistant .avatar { background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; }
+        
+        .message .bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        
+        .message.user .bubble {
+            background: rgba(59,130,246,0.15);
+            border: 1px solid rgba(59,130,246,0.1);
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.assistant .bubble {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #e2e8f0;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message .bubble .message-time {
+            font-size: 10px;
+            color: rgba(255,255,255,0.2);
+            margin-top: 6px;
+            display: block;
+        }
+        
+        .message .bubble .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 4px 0;
+        }
+        
+        .message .bubble .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            animation: typingBounce 1.2s ease-in-out infinite;
+        }
+        
+        .message .bubble .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .message .bubble .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+        
+        .message .bubble .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        
+        .message .bubble .suggestions .suggestion-btn {
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(230,179,30,0.2);
+            background: rgba(230,179,30,0.06);
+            color: var(--gold-light);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .message .bubble .suggestions .suggestion-btn:hover {
+            background: rgba(230,179,30,0.12);
+            border-color: var(--gold);
+        }
+        
+        /* ===== AI INPUT ===== */
+        .ai-input-area {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .ai-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .ai-input-wrapper .input-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .ai-input-wrapper textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: all 0.3s;
+            line-height: 1.5;
+        }
+        
+        .ai-input-wrapper textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+        }
+        
+        .ai-input-wrapper textarea::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+        
+        .ai-input-wrapper .input-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .ai-input-wrapper .send-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 50px;
+            white-space: nowrap;
+        }
+        
+        .ai-input-wrapper .send-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 4px 30px rgba(230,179,30,0.25);
+        }
+        
+        .ai-input-wrapper .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .ai-input-wrapper .send-btn .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0,0,0,0.15);
+            border-top-color: #0a1628;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .ai-input-wrapper .send-btn.loading .spinner { display: inline-block; }
+        .ai-input-wrapper .send-btn.loading .btn-text { display: none; }
+        
+        .ai-input-wrapper .voice-btn {
+            padding: 12px 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .ai-input-wrapper .voice-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .ai-input-wrapper .voice-btn.recording { color: #f87171; border-color: #f87171; animation: pulseRec 1s ease-in-out infinite; }
+        
+        @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
+        .ai-input-wrapper .char-counter {
+            font-size: 11px;
+            color: rgba(255,255,255,0.15);
+            text-align: left;
+            margin-top: 4px;
+        }
+        
+        /* ===== QUICK ACTIONS ===== */
+        .ai-quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px 20px 4px;
+        }
+        
+        .ai-quick-actions .quick-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        .ai-quick-actions .quick-btn:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            border-color: rgba(230,179,30,0.2);
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .ai-container { height: calc(100vh - 150px); min-height: 400px; }
+            .message { max-width: 95%; }
+            .ai-input-wrapper { flex-wrap: wrap; }
+            .ai-input-wrapper .input-actions { width: 100%; }
+            .ai-input-wrapper .send-btn { flex: 1; justify-content: center; }
+            .ai-header .ai-brand .ai-subtitle { display: none; }
+            .ai-quick-actions .quick-btn { font-size: 10px; padding: 4px 10px; }
+        }
+        
+        @media (max-width: 480px) {
+            .ai-container { height: calc(100vh - 120px); min-height: 350px; }
+            .ai-header { padding: 10px 14px; }
+            .ai-header .ai-brand .ai-title { font-size: 15px; }
+            .ai-messages { padding: 12px; }
+            .message .bubble { font-size: 13px; padding: 10px 14px; }
+            .ai-input-area { padding: 10px 14px; }
+            .ai-input-wrapper textarea { font-size: 13px; padding: 10px 14px; min-height: 42px; }
+            .ai-input-wrapper .send-btn { padding: 10px 16px; min-height: 42px; font-size: 13px; }
+        }
+    </style>
+
+    <!-- ===== AI CONTAINER ===== -->
+    <div class="ai-container">
+        <!-- HEADER -->
+        <div class="ai-header">
+            <div class="ai-brand">
+                <div class="ai-icon">⚓</div>
+                <div>
+                    <div class="ai-title">المساعد البحري الذكي</div>
+                    <div class="ai-subtitle">متخصص في الأسطول البحري فقط</div>
+                </div>
+            </div>
+            <div class="ai-status">
+                <span class="status-dot online" id="aiStatusDot"></span>
+                <span id="aiStatusText">متصل</span>
+                <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
+                <span id="aiModel">DeepSeek-V3</span>
+            </div>
         </div>
-        <div class="page-actions">
-            <span class="online-badge">
-                <span class="status-dot online"></span>
-                <span id="sessionOnline">0</span> متصل
-            </span>
-            <button class="btn btn-outline btn-sm" onclick="refreshSessions()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="centerSessionMap()">
-                <i class="fas fa-crosshairs"></i> مركز الخريطة
-            </button>
+
+        <!-- QUICK ACTIONS -->
+        <div class="ai-quick-actions">
+            <button class="quick-btn" onclick="sendQuickPrompt('عرض حالة الأسطول الحالية')">📊 حالة الأسطول</button>
+            <button class="quick-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
+            <button class="quick-btn" onclick="sendQuickPrompt('تقرير الصيانة الشهري')">🛠️ الصيانة</button>
+            <button class="quick-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
+            <button class="quick-btn" onclick="sendQuickPrompt('وحدات الصيانة')">🏭 وحدات الصيانة</button>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="ai-messages" id="aiMessages">
+            <!-- Welcome Message -->
+            <div class="message assistant">
+                <div class="avatar">⚓</div>
+                <div class="bubble">
+                    <div>مرحباً بك في المساعد البحري الذكي! 👋</div>
+                    <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
+                        أنا مساعد متخصص <strong>فقط</strong> في شؤون الأسطول البحري. 
+                        يمكنني مساعدتك في:
+                        <ul style="margin:6px 0 0 20px; color:rgba(255,255,255,0.4);">
+                            <li>📊 تحليل بيانات المراكب</li>
+                            <li>🔧 متابعة الصيانة والأعطال</li>
+                            <li>📈 حساب نسب الجاهزية</li>
+                            <li>📋 تقارير وحدات الصيانة</li>
+                            <li>💡 توصيات لتحسين الأداء</li>
+                        </ul>
+                    </div>
+                    <div style="color:rgba(230,179,30,0.4); font-size:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:6px;">
+                        ⚠️ لا أجيب على أسئلة خارج الأسطول البحري
+                    </div>
+                    <div class="suggestions">
+                        <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
+                        <button class="suggestion-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
+                        <button class="suggestion-btn" onclick="sendQuickPrompt('تقرير الصيانة')">🛠️ الصيانة</button>
+                        <button class="suggestion-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
+                    </div>
+                    <span class="message-time">الآن</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- INPUT -->
+        <div class="ai-input-area">
+            <div class="ai-input-wrapper">
+                <div class="input-container">
+                    <textarea id="aiInput" rows="1" placeholder="اسأل عن الأسطول البحري فقط..." onkeydown="handleAIKey(event)"></textarea>
+                    <div class="char-counter" id="charCounter">0 / 2000</div>
+                </div>
+                <div class="input-actions">
+                    <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="إدخال صوتي">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="send-btn" id="sendBtn" onclick="sendAIMessage()">
+                        <span class="btn-text">إرسال</span>
+                        <span class="spinner"></span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- ===== الإحصائيات ===== -->
-    <div class="stats-grid sessions-stats">
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-value" id="totalSessions">0</div>
-            <div class="stat-label">إجمالي الجلسات</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">🟢</div>
-            <div class="stat-value" style="color: var(--color-success);" id="activeSessions">0</div>
-            <div class="stat-label">جلسات نشطة</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">🔴</div>
-            <div class="stat-value" style="color: var(--color-danger);" id="expiredSessions">0</div>
-            <div class="stat-label">جلسات منتهية</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">👤</div>
-            <div class="stat-value" style="color: var(--color-gold);" id="uniqueUsers">0</div>
-            <div class="stat-label">مستخدمين فريدين</div>
-        </div>
-    </div>
-
-    <!-- ===== الخريطة ===== -->
-    <div class="map-container">
-        <div class="map-header">
-            <span class="map-title"><i class="fas fa-map-marked-alt"></i> مواقع الجلسات</span>
-            <span class="map-status" id="mapStatus">📍 تحميل الخريطة...</span>
-        </div>
-        <div id="sessionMap" class="session-map"></div>
-    </div>
-
-    <!-- ===== قائمة الجلسات ===== -->
-    <div class="sessions-table-container">
-        <div class="table-header">
-            <h4><i class="fas fa-list"></i> قائمة الجلسات</h4>
-            <span class="session-count" id="sessionCount">0 جلسة</span>
-        </div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>👤 المستخدم</th>
-                        <th>📍 الجهاز</th>
-                        <th>🌐 IP</th>
-                        <th>🕐 بداية الجلسة</th>
-                        <th>📊 الحالة</th>
-                        <th>⚡ الإجراءات</th>
-                    </tr>
-                </thead>
-                <tbody id="sessionsBody">
-                    <tr>
-                        <td colspan="7" class="loading-text">
-                            <div class="loader-spinner"></div>
-                            جاري تحميل الجلسات...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 
-<!-- ============================================================
-📦 CSS الخاص بالصفحة
-============================================================ -->
-<style>
-/* ===== صفحة المراقبة ===== */
-.sessions-page .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.sessions-page .page-header h2 {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--color-text-primary);
-}
-
-.sessions-page .page-subtitle {
-    color: var(--color-text-muted);
-    font-size: 13px;
-}
-
-.sessions-page .page-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.online-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 16px;
-    background: rgba(34, 197, 94, 0.12);
-    border: 1px solid rgba(34, 197, 94, 0.15);
-    border-radius: var(--radius-full);
-    color: var(--color-success);
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.online-badge .status-dot {
-    width: 8px;
-    height: 8px;
-}
-
-/* ===== إحصائيات ===== */
-.sessions-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.sessions-stats .stat-card {
-    padding: 16px 20px;
-}
-
-.sessions-stats .stat-card .stat-value {
-    font-size: 28px;
-}
-
-/* ===== الخريطة ===== */
-.map-container {
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    margin-bottom: 20px;
-}
-
-.map-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 18px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.map-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text-primary);
-}
-
-.map-title i {
-    color: var(--color-gold);
-    margin-left: 8px;
-}
-
-.map-status {
-    font-size: 12px;
-    color: var(--color-text-muted);
-}
-
-.session-map {
-    height: 400px;
-    width: 100%;
-    background: var(--color-bg-primary);
-}
-
-/* ===== تخصيص Leaflet ===== */
-.session-marker {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 12px;
-    color: white;
-    font-weight: bold;
-    text-align: center;
-}
-
-.session-marker .avatar {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    border: 2px solid white;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
-    transition: all 0.3s;
-}
-
-.session-marker .avatar.active {
-    background: var(--color-success);
-    border-color: var(--color-success);
-    animation: pulse-marker 2s infinite;
-}
-
-.session-marker .avatar.inactive {
-    background: #6c757d;
-    border-color: #6c757d;
-}
-
-.session-marker .avatar.expired {
-    background: var(--color-danger);
-    border-color: var(--color-danger);
-}
-
-.session-marker .name {
-    font-size: 10px;
-    margin-top: 3px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 2px 10px;
-    border-radius: 10px;
-    backdrop-filter: blur(4px);
-    max-width: 80px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-@keyframes pulse-marker {
-    0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
-    50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.5); }
-}
-
-/* ===== جدول الجلسات ===== */
-.sessions-table-container {
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-}
-
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--color-border);
-}
-
-.table-header h4 {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    margin: 0;
-}
-
-.table-header h4 i {
-    color: var(--color-gold);
-    margin-left: 8px;
-}
-
-.session-count {
-    font-size: 12px;
-    color: var(--color-text-muted);
-}
-
-.sessions-table-container .table-wrapper {
-    border: none;
-    border-radius: 0;
-}
-
-.sessions-table-container .table-wrapper table {
-    font-size: 13px;
-}
-
-.sessions-table-container .table-wrapper table th {
-    background: var(--color-bg-glass);
-    padding: 10px 14px;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.sessions-table-container .table-wrapper table td {
-    padding: 9px 14px;
-}
-
-.sessions-table-container .table-wrapper table tr:hover td {
-    background: var(--color-bg-card-hover);
-}
-
-/* ===== الحالات ===== */
-.status-badge {
-    padding: 4px 14px;
-    border-radius: var(--radius-full);
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-}
-
-.status-active {
-    background: rgba(34, 197, 94, 0.15);
-    color: var(--color-success);
-    border: 1px solid rgba(34, 197, 94, 0.1);
-}
-
-.status-inactive {
-    background: rgba(108, 117, 125, 0.15);
-    color: #adb5bd;
-    border: 1px solid rgba(108, 117, 125, 0.1);
-}
-
-.status-expired {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--color-danger);
-    border: 1px solid rgba(239, 68, 68, 0.1);
-}
-
-/* ===== أزرار الإجراءات ===== */
-.btn-sm {
-    padding: 4px 12px;
-    font-size: 12px;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition-base);
-    font-family: inherit;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.btn-sm:hover {
-    transform: scale(1.05);
-}
-
-.btn-danger-sm {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--color-danger);
-    border: 1px solid rgba(239, 68, 68, 0.1);
-}
-
-.btn-danger-sm:hover {
-    background: rgba(239, 68, 68, 0.25);
-}
-
-.btn-warning-sm {
-    background: rgba(234, 179, 8, 0.15);
-    color: var(--color-warning);
-    border: 1px solid rgba(234, 179, 8, 0.1);
-}
-
-.btn-warning-sm:hover {
-    background: rgba(234, 179, 8, 0.25);
-}
-
-/* ===== نص التحميل ===== */
-.loading-text {
-    text-align: center;
-    padding: 40px 20px !important;
-    color: var(--color-text-dim);
-}
-
-.loading-text .loader-spinner {
-    margin: 0 auto 12px;
-    width: 32px;
-    height: 32px;
-}
-
-/* ============================================================
-📱 RESPONSIVE
-============================================================ */
-@media (max-width: 992px) {
-    .sessions-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-    
-    .session-map {
-        height: 300px;
-    }
-}
-
-@media (max-width: 768px) {
-    .sessions-page .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .sessions-page .page-actions {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
-    .sessions-stats {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .sessions-stats .stat-card .stat-value {
-        font-size: 22px;
-    }
-    
-    .session-map {
-        height: 250px;
-    }
-    
-    .sessions-table-container .table-wrapper table {
-        font-size: 12px;
-        min-width: 600px;
-    }
-}
-
-@media (max-width: 480px) {
-    .sessions-stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-    }
-    
-    .sessions-stats .stat-card {
-        padding: 12px 14px;
-    }
-    
-    .sessions-stats .stat-card .stat-value {
-        font-size: 18px;
-    }
-    
-    .online-badge {
-        font-size: 11px;
-        padding: 4px 12px;
-    }
-    
-    .map-header {
-        flex-direction: column;
-        gap: 4px;
-        align-items: flex-start;
-    }
-}
-</style>
-
-<!-- ============================================================
-📦 JavaScript الخاص بالصفحة
-============================================================ -->
+<!-- ============================================================ -->
+<!-- 📦 JAVASCRIPT - المساعد الذكي (نسخة الأسطول فقط) -->
+<!-- ============================================================ -->
 <script>
 // ============================================================
-// 🔄 SESSIONS PAGE - v7.0 PRO MAX
+// 🤖 AI ASSISTANT - MARINE FLEET SPECIALIST
 // ============================================================
 
 // ============================================================
-// 1. المتغيرات العامة
+// 1. CONFIGURATION
 // ============================================================
 
-let sessionMap = null;
-let sessionMarkers = {};
-let sessionsData = [];
-let mapInitialized = false;
-let sessionsRefreshTimer = null;
-let isPageActive = false;
+const AI_CONFIG = {
+    // ⚠️ استبدل بمفتاح DeepSeek API الخاص بك
+    API_KEY: 'sk-d4a4eac0b12a4015b8bad1895bd4a2f2',
+    API_URL: 'https://api.deepseek.com/v1/chat/completions',
+    MODEL: 'deepseek-chat',
+    MAX_TOKENS: 2000,
+    TEMPERATURE: 0.7,
+    SYSTEM_PROMPT: `أنت مساعد ذكي متخصص حصرياً في الأسطول البحري التونسي.
+
+    ⚠️ قواعد صارمة:
+    1. أنت تتحدث فقط عن الأسطول البحري والمراكب والصيانة والجاهزية
+    2. إذا سألك المستخدم عن أي موضوع خارج الأسطول البحري، ارفض الإجابة بأدب
+    3. لا تجيب على أسئلة عامة أو سياسية أو دينية أو غير متعلقة بالبحرية
+    4. ردك يجب أن يكون: "آسف، أنا مساعد متخصص فقط في شؤون الأسطول البحري. هل لديك سؤال عن المراكب أو الصيانة؟"
+
+    معلومات النظام:
+    - المنظومة: منظومة متابعة الوسائل البحرية التونسية
+    - المطور: أمان الله ناجي
+    - الإصدار: v7.0
+    - اختصاصك: الأسطول البحري، الصيانة، الجاهزية، وحدات الصيانة
+
+    كن دقيقاً ومفصلاً في إجاباتك عن الأسطول، واستخدم الأرقام والإحصائيات عند الحاجة.
+    إذا لم تكن تعرف إجابة عن الأسطول، قل ذلك بصراحة.`
+};
 
 // ============================================================
-// 2. دوال مساعدة
+// 2. STATE
 // ============================================================
 
-function escapeHTML(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
+let chatHistory = [];
+let isProcessing = false;
+let isVoiceRecording = false;
+let recognition = null;
+let vesselData = [];
 
-function getToken() {
-    return localStorage.getItem('marine_auth_token') || localStorage.getItem('token');
-}
+// الكلمات الممنوعة (للتأكد من عدم الإجابة على أسئلة خارجية)
+const FORBIDDEN_KEYWORDS = [
+    'السياسة', 'سياسي', 'دين', 'ديني', 'رياضة', 'كرة قدم', 'فن', 'سينما', 
+    'مسلسل', 'أغاني', 'موسيقى', 'طبخ', 'أكل', 'طعام', 'ازياء', 'موضة',
+    'تكنولوجيا عامة', 'برمجة', 'حاسوب', 'هاتف', 'جوال', 'سيارة', 'طيران',
+    'اقتصاد', 'مال', 'استثمار', 'بورصة', 'عملات', 'ذهب', 'فضة',
+    'صحة', 'طب', 'مرض', 'علاج', 'دواء', 'تعليم', 'مدرسة', 'جامعة',
+    'تاريخ', 'جغرافيا', 'سياحة', 'سفر', 'ثقافة', 'أدب', 'شعر',
+    'زواج', 'طلاق', 'علاقات', 'عائلة', 'أطفال', 'تربية'
+];
 
-function getTimeAgo(dateStr) {
-    if (!dateStr) return '--';
+// ============================================================
+// 3. LOAD DATA
+// ============================================================
+
+function loadVesselData() {
     try {
-        const date = new Date(dateStr);
-        const now = Date.now();
-        const diff = now - date.getTime();
+        if (window.allVessels && Array.isArray(window.allVessels)) {
+            vesselData = window.allVessels;
+        } else {
+            // بيانات تجريبية
+            vesselData = [
+                { name: 'البروق 1', num: 'B001', stat: 'صالح', reg: 'الشمال', len: 11, zone: 'تونس' },
+                { name: 'صقر 2', num: 'S002', stat: 'صالح', reg: 'الساحل', len: 10, zone: 'سوسة' },
+                { name: 'خافرة 3', num: 'K003', stat: 'معطب', reg: 'الوسط', len: 20, zone: 'صفاقس', break: 'عطل في المحرك' },
+                { name: 'طوافة 4', num: 'T004', stat: 'صيانة', reg: 'الجنوب', len: 35, zone: 'جرجيس', break: 'أعطال كهربائية' },
+                { name: 'زورق سريع 5', num: 'Z005', stat: 'صالح', reg: 'الشمال', len: 15, zone: 'بنزرت' },
+                { name: 'البروق 6', num: 'B006', stat: 'صيانة', reg: 'الساحل', len: 11, zone: 'المنستير', break: 'نظام ملاحة' },
+                { name: 'صقر 7', num: 'S007', stat: 'صالح', reg: 'الجنوب', len: 9, zone: 'جربة' },
+            ];
+        }
+        console.log('✅ بيانات الأسطول محملة:', vesselData.length, 'مركب');
+    } catch(e) {
+        console.warn('⚠️ فشل تحميل بيانات الأسطول:', e);
+    }
+}
+
+// ============================================================
+// 4. CHECK IF QUESTION IS ABOUT MARINE FLEET
+// ============================================================
+
+function isMarineRelated(text) {
+    const marineKeywords = [
+        'مركب', 'مراكب', 'أسطول', 'بحر', 'بحري', 'ميناء', 'سفينة', 'زورق',
+        'صيانة', 'عطب', 'معطب', 'جاهزية', 'البروق', 'صقر', 'خافرة', 'طوافة',
+        'وحدات الصيانة', 'تونس', 'بنزرت', 'سوسة', 'صفاقس', 'جرجيس', 'المنستير',
+        'الحرس البحري', 'الوسائل البحرية', 'قبيبة', 'مجمع أمني',
+        'الشمال', 'الساحل', 'الوسط', 'الجنوب',
+        'محرك', 'كهرباء', 'ملاحة', 'عطل', 'إصلاح', 'قطع غيار',
+        'نسبة النجاعة', 'إحصائيات الأسطول', 'تقرير الأسطول',
+        'B001', 'S002', 'K003', 'T004', 'Z005', 'B006', 'S007',
+        'REF001', 'REF002', 'REF003'
+    ];
+    
+    const lower = text.toLowerCase();
+    const hasMarine = marineKeywords.some(kw => lower.includes(kw));
+    
+    // إذا لم يجد أي كلمة بحرية، يتحقق من الكلمات الممنوعة
+    if (!hasMarine) {
+        const hasForbidden = FORBIDDEN_KEYWORDS.some(kw => lower.includes(kw));
+        if (hasForbidden) return false;
+        // إذا كانت الكلمات غير واضحة، يفترض أنها ليست بحرية
+        return false;
+    }
+    
+    return true;
+}
+
+// ============================================================
+// 5. GET MARINE CONTEXT DATA
+// ============================================================
+
+function getMarineContext() {
+    try {
+        const vessels = vesselData || [];
+        const total = vessels.length;
+        const active = vessels.filter(v => v.stat === 'صالح').length;
+        const maintenance = vessels.filter(v => v.stat === 'صيانة').length;
+        const broken = vessels.filter(v => v.stat === 'معطب').length;
+        const efficiency = total ? ((active / total) * 100).toFixed(1) : 0;
         
-        if (diff < 60000) return 'الآن';
-        if (diff < 3600000) return Math.floor(diff / 60000) + ' دقيقة';
-        if (diff < 86400000) return Math.floor(diff / 3600000) + ' ساعة';
-        return Math.floor(diff / 86400000) + ' يوم';
-    } catch {
-        return '--';
-    }
-}
-
-function isValidCoordinate(lat, lng) {
-    return typeof lat === 'number' && 
-           typeof lng === 'number' &&
-           lat >= -90 && lat <= 90 &&
-           lng >= -180 && lng <= 180;
-}
-
-function showToast(msg, type = 'info') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    
-    const icons = {
-        success: '✅',
-        error: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
-    };
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(30px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// ============================================================
-// 3. تهيئة الخريطة
-// ============================================================
-
-function initSessionMap() {
-    console.log('🗺️ تهيئة الخريطة...');
-    
-    // التحقق من وجود Leaflet
-    if (typeof L === 'undefined') {
-        console.warn('⚠️ Leaflet غير محمّل، إعادة محاولة...');
-        document.getElementById('mapStatus').textContent = '⏳ جاري تحميل الخريطة...';
-        setTimeout(initSessionMap, 500);
-        return;
-    }
-    
-    const mapContainer = document.getElementById('sessionMap');
-    if (!mapContainer) return;
-    
-    // إذا كانت الخريطة موجودة
-    if (sessionMap) {
-        setTimeout(() => sessionMap.invalidateSize(true), 300);
-        return;
-    }
-    
-    try {
-        // إنشاء الخريطة
-        sessionMap = L.map('sessionMap', {
-            center: [36.8065, 10.1815], // تونس
-            zoom: 12,
-            zoomControl: true
+        // إحصائيات حسب الأقاليم
+        const regions = {};
+        vessels.forEach(v => {
+            if (!regions[v.reg]) regions[v.reg] = { total: 0, active: 0 };
+            regions[v.reg].total++;
+            if (v.stat === 'صالح') regions[v.reg].active++;
         });
         
-        // إضافة طبقة الخريطة
-        L.tileLayer(
-            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            {
-                maxZoom: 19,
-                attribution: '&copy; OpenStreetMap contributors'
-            }
-        ).addTo(sessionMap);
+        let regionStats = '';
+        Object.entries(regions).forEach(([name, data]) => {
+            const eff = data.total ? ((data.active / data.total) * 100).toFixed(1) : 0;
+            regionStats += `- ${name}: ${data.active}/${data.total} صالح (${eff}%)\n`;
+        });
         
-        mapInitialized = true;
-        document.getElementById('mapStatus').textContent = '📍 الخريطة جاهزة';
-        console.log('✅ تم تهيئة الخريطة');
+        // المراكب المعطوبة
+        const brokenList = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
+        let brokenStats = '';
+        brokenList.forEach(v => {
+            brokenStats += `- ${v.name} (${v.num}): ${v.stat} - ${v.break || 'بدون تفاصيل'}\n`;
+        });
         
-        // تحديث حجم الخريطة
-        setTimeout(() => {
-            if (sessionMap) sessionMap.invalidateSize(true);
-        }, 500);
-        
-        // تحديث الماركرز
-        setTimeout(updateMarkers, 300);
-        
-    } catch (error) {
-        console.error('❌ خطأ في الخريطة:', error);
-        document.getElementById('sessionMap').innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--color-danger); flex-direction:column; padding:20px; text-align:center;">
-                <div style="font-size:48px;">🗺️</div>
-                <div style="margin-top:10px;">❌ خطأ في تحميل الخريطة</div>
-                <div style="font-size:12px; color:var(--color-text-dim);">${escapeHTML(error.message)}</div>
-                <button onclick="initSessionMap()" style="margin-top:10px; padding:8px 20px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.1); border-radius:8px; color:var(--color-info); cursor:pointer; font-family:inherit;">
-                    🔄 إعادة المحاولة
-                </button>
-            </div>
-        `;
+        return {
+            total,
+            active,
+            maintenance,
+            broken,
+            efficiency,
+            regionStats,
+            brokenStats,
+            brokenCount: brokenList.length,
+            vessels
+        };
+    } catch(e) {
+        console.error('❌ خطأ في جلب السياق:', e);
+        return null;
     }
 }
 
 // ============================================================
-// 4. مركز الخريطة
+// 6. SEND TO AI
 // ============================================================
 
-function centerSessionMap() {
-    if (!sessionMap) {
-        showToast('⚠️ الخريطة غير جاهزة', 'warning');
-        return;
+async function sendToAI(userMessage) {
+    const context = getMarineContext();
+    
+    // إذا لم يكن السؤال عن الأسطول، ارفض
+    if (!isMarineRelated(userMessage)) {
+        return "آسف، أنا مساعد متخصص فقط في شؤون الأسطول البحري. 🚫\n\nلا يمكنني الإجابة عن أسئلة خارج نطاق:\\n- المراكب البحرية\\n- الصيانة والأعطال\\n- نسب الجاهزية\\n- وحدات الصيانة\n\nهل لديك سؤال عن الأسطول البحري؟ ⚓";
     }
     
-    // البحث عن جلسة نشطة
-    const activeSession = sessionsData.find(s => 
-        s.status === 'active' && isValidCoordinate(s.lat, s.lng)
-    );
+    // بناء السياق الكامل
+    const contextText = `
+📊 بيانات الأسطول الحالية:
+- إجمالي المراكب: ${context.total}
+- الصالح: ${context.active} (${context.efficiency}%)
+- تحت الصيانة: ${context.maintenance}
+- المعطوب: ${context.broken}
+
+📋 تفاصيل الأقاليم:
+${context.regionStats}
+
+⚠️ المراكب المعطوبة (${context.brokenCount}):
+${context.brokenStats || 'لا توجد مراكب معطوبة'}
+
+📌 المراكب:
+${context.vessels.map(v => `- ${v.name} (${v.num}) - ${v.stat} - ${v.reg} - ${v.zone}`).join('\n')}
+`;
     
-    if (activeSession) {
-        sessionMap.setView([activeSession.lat, activeSession.lng], 13);
-        showToast('🎯 تم التوجيه إلى موقع نشط', 'success');
-    } else {
-        sessionMap.setView([36.8065, 10.1815], 12);
-        showToast('🎯 تم التوجيه إلى المركز', 'info');
+    try {
+        const response = await fetch(AI_CONFIG.API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + AI_CONFIG.API_KEY
+            },
+            body: JSON.stringify({
+                model: AI_CONFIG.MODEL,
+                messages: [
+                    { role: 'system', content: AI_CONFIG.SYSTEM_PROMPT },
+                    { role: 'system', content: `هذه هي بيانات الأسطول الحالية:\n${contextText}` },
+                    ...chatHistory.slice(-6),
+                    { role: 'user', content: userMessage }
+                ],
+                max_tokens: AI_CONFIG.MAX_TOKENS,
+                temperature: AI_CONFIG.TEMPERATURE,
+                stream: false
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.text();
+            console.error('❌ API Error:', errorData);
+            throw new Error('فشل الاتصال بالذكاء الاصطناعي');
+        }
+        
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || 'عذراً، لم أستطع معالجة طلبك.';
+        
+        // حفظ في المحادثة
+        chatHistory.push({ role: 'user', content: userMessage });
+        chatHistory.push({ role: 'assistant', content: reply });
+        
+        return reply;
+        
+    } catch(error) {
+        console.error('❌ AI Error:', error);
+        return 'عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي. يرجى المحاولة لاحقاً. 🔄';
     }
 }
 
 // ============================================================
-// 5. تحميل الجلسات
+// 7. UI FUNCTIONS
 // ============================================================
 
-function loadSessions() {
-    console.log('🔄 تحميل الجلسات...');
+function addMessage(text, type = 'assistant', isHtml = false) {
+    const container = document.getElementById('aiMessages');
+    const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
     
-    const token = getToken();
-    if (!token) {
-        document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-warning);">
-                ⚠️ الرجاء تسجيل الدخول أولاً
-            </td></tr>
-        `;
-        return;
-    }
+    const avatar = type === 'user' ? '👤' : '⚓';
+    const bubbleClass = type === 'user' ? 'user' : 'assistant';
     
-    // عرض حالة التحميل
-    document.getElementById('sessionsBody').innerHTML = `
-        <tr><td colspan="7" class="loading-text">
-            <div class="loader-spinner"></div>
-            جاري تحميل الجلسات...
-        </td></tr>
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${bubbleClass}`;
+    
+    msgDiv.innerHTML = `
+        <div class="avatar">${avatar}</div>
+        <div class="bubble">
+            ${isHtml ? text : text.replace(/\n/g, '<br>')}
+            <span class="message-time">${time}</span>
+        </div>
     `;
     
-    fetch('/api/sessions', {
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => {
-        if (!res.ok) {
-            if (res.status === 401) throw new Error('غير مصرح - يرجى تسجيل الدخول من جديد');
-            if (res.status === 403) throw new Error('ليس لديك صلاحية للوصول');
-            throw new Error('خطأ ' + res.status + ': ' + res.statusText);
-        }
-        return res.json();
-    })
-    .then(data => {
-        // التحقق من صيغة البيانات
-        if (data.success !== undefined && !data.success) {
-            throw new Error(data.error || 'فشل تحميل الجلسات');
-        }
-        
-        sessionsData = Array.isArray(data.sessions) ? data.sessions : [];
-        console.log('✅ تم تحميل الجلسات:', sessionsData.length);
-        
-        renderSessions(sessionsData);
-        updateStats(sessionsData);
-        updateMarkers();
-        
-        // تحديث حالة الخريطة
-        const hasLocations = sessionsData.some(s => isValidCoordinate(s.lat, s.lng));
-        document.getElementById('mapStatus').textContent = hasLocations 
-            ? '📍 ' + sessionsData.filter(s => isValidCoordinate(s.lat, s.lng)).length + ' موقع متاح'
-            : '📍 لا توجد مواقع متاحة حالياً';
-    })
-    .catch(err => {
-        console.error('❌ خطأ في تحميل الجلسات:', err);
-        document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-danger);">
-                ❌ ${escapeHTML(err.message)}
-            </td></tr>
-        `;
-        document.getElementById('mapStatus').textContent = '❌ خطأ في تحميل البيانات';
-        showToast('❌ ' + err.message, 'error');
-    });
+    container.appendChild(msgDiv);
+    container.scrollTop = container.scrollHeight;
 }
 
-// ============================================================
-// 6. عرض الجلسات
-// ============================================================
-
-function renderSessions(sessions) {
-    const tbody = document.getElementById('sessionsBody');
-    if (!tbody) return;
+function addTypingIndicator() {
+    const container = document.getElementById('aiMessages');
+    const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
     
-    document.getElementById('sessionCount').textContent = sessions.length + ' جلسة';
-    
-    if (!sessions || sessions.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-text-dim);">
-                🚫 لا توجد جلسات حالياً
-            </td></tr>
-        `;
-        return;
-    }
-    
-    tbody.innerHTML = sessions.map((s, i) => {
-        const username = escapeHTML(s.username || s.userName || 'مجهول');
-        const device = escapeHTML(s.device || s.userAgent || 'جهاز غير معروف');
-        const ip = escapeHTML(s.ip || s.ipAddress || '--');
-        
-        const statusClass = s.status === 'active' ? 'status-active' : 
-                           s.status === 'expired' ? 'status-expired' : 'status-inactive';
-        const statusText = s.status === 'active' ? '🟢 نشط' : 
-                          s.status === 'expired' ? '🔴 منتهية' : '⚪ غير نشط';
-        
-        const createdAt = s.createdAt ? new Date(s.createdAt).toLocaleString('ar-TN') : '--';
-        const sessionId = s.sessionId || s.id || s._id || i;
-        
-        return `
-            <tr>
-                <td>${i + 1}</td>
-                <td><strong>${username}</strong></td>
-                <td>${device}</td>
-                <td>${ip}</td>
-                <td>${createdAt}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>
-                    <button class="btn-sm btn-danger-sm" onclick="terminateSession('${escapeHTML(sessionId)}')">
-                        <i class="fas fa-power-off"></i> إنهاء
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
-
-// ============================================================
-// 7. تحديث الإحصائيات
-// ============================================================
-
-function updateStats(sessions) {
-    const total = sessions.length;
-    const active = sessions.filter(s => s.status === 'active').length;
-    const expired = sessions.filter(s => s.status === 'expired').length;
-    const inactive = sessions.filter(s => s.status === 'inactive').length;
-    const uniqueUsers = new Set(sessions.map(s => s.userId || s.userName)).size;
-    
-    document.getElementById('totalSessions').textContent = total;
-    document.getElementById('activeSessions').textContent = active;
-    document.getElementById('expiredSessions').textContent = expired + inactive;
-    document.getElementById('uniqueUsers').textContent = uniqueUsers || sessions.length;
-    document.getElementById('sessionOnline').textContent = active;
-}
-
-// ============================================================
-// 8. تحديث الماركرز
-// ============================================================
-
-function updateMarkers() {
-    if (!mapInitialized || !sessionMap) {
-        console.warn('⚠️ الخريطة غير جاهزة للماركرز');
-        return;
-    }
-    
-    // حذف الماركرز القديمة
-    Object.values(sessionMarkers).forEach(marker => {
-        if (marker && sessionMap) {
-            sessionMap.removeLayer(marker);
-        }
-    });
-    sessionMarkers = {};
-    
-    // إضافة ماركرز جديدة
-    let markerCount = 0;
-    
-    sessionsData.forEach(s => {
-        // التحقق من صحة الإحداثيات
-        if (!isValidCoordinate(s.lat, s.lng)) return;
-        
-        const isActive = s.status === 'active';
-        const isExpired = s.status === 'expired';
-        const avatarClass = isActive ? 'active' : isExpired ? 'expired' : 'inactive';
-        const avatarIcon = s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤';
-        const username = escapeHTML(s.username || s.userName || '?');
-        
-        // إنشاء أيقونة مخصصة
-        const icon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `
-                <div class="session-marker">
-                    <div class="avatar ${avatarClass}">
-                        ${avatarIcon}
-                    </div>
-                    <div class="name">${username}</div>
-                </div>
-            `,
-            iconSize: [50, 50],
-            iconAnchor: [25, 25],
-            popupAnchor: [0, -25]
-        });
-        
-        const marker = L.marker([s.lat, s.lng], { icon }).addTo(sessionMap);
-        
-        // نافذة منبثقة
-        const statusText = isActive ? '🟢 نشط' : isExpired ? '🔴 منتهية' : '⚪ غير نشط';
-        const updatedAt = s.updatedAt ? getTimeAgo(s.updatedAt) : '--';
-        
-        const popupContent = `
-            <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px; direction:rtl;">
-                <div style="font-weight:bold; font-size:14px; color:#fff;">${username}</div>
-                <div style="color:rgba(255,255,255,0.6); font-size:12px;">${escapeHTML(s.role || 'مشاهد')}</div>
-                <div style="margin:4px 0;">
-                    <span style="color:${isActive ? '#4ade80' : isExpired ? '#ef4444' : '#adb5bd'}; font-size:11px;">${statusText}</span>
-                </div>
-                <div style="color:rgba(255,255,255,0.4); font-size:10px;">
-                    📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}
-                </div>
-                <div style="color:rgba(255,255,255,0.2); font-size:9px; margin-top:2px;">
-                    🕐 ${updatedAt}
-                </div>
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message assistant';
+    typingDiv.id = 'typingIndicator';
+    typingDiv.innerHTML = `
+        <div class="avatar">⚓</div>
+        <div class="bubble">
+            <div class="typing-indicator">
+                <span></span><span></span><span></span>
             </div>
-        `;
-        marker.bindPopup(popupContent);
-        
-        const key = s.sessionId || s.id || s._id || markerCount;
-        sessionMarkers[key] = marker;
-        markerCount++;
-    });
+            <span class="message-time">${time}</span>
+        </div>
+    `;
     
-    // إذا كانت هناك ماركرات، نغير المركز إلى أول موقع نشط
-    if (markerCount > 0) {
-        const firstActive = sessionsData.find(s => 
-            s.status === 'active' && isValidCoordinate(s.lat, s.lng)
-        );
-        if (firstActive) {
-            sessionMap.setView([firstActive.lat, firstActive.lng], 13);
-        }
+    container.appendChild(typingDiv);
+    container.scrollTop = container.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+}
+
+function updateAIStatus(online = true) {
+    const dot = document.getElementById('aiStatusDot');
+    const text = document.getElementById('aiStatusText');
+    if (online) {
+        dot.className = 'status-dot online';
+        text.textContent = 'متصل';
+    } else {
+        dot.className = 'status-dot offline';
+        text.textContent = 'غير متصل';
     }
-    
-    console.log('✅ تم تحديث الماركرز:', markerCount);
+}
+
+function autoResizeTextarea(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 150) + 'px';
 }
 
 // ============================================================
-// 9. إنهاء جلسة
+// 8. MAIN FUNCTIONS
 // ============================================================
 
-function terminateSession(id) {
-    if (!confirm('⚠️ هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
+async function sendAIMessage() {
+    const input = document.getElementById('aiInput');
+    const text = input.value.trim();
+    const sendBtn = document.getElementById('sendBtn');
     
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+    if (!text || isProcessing) return;
+    
+    // عداد الأحرف
+    if (text.length > 2000) {
+        showToast('⚠️ الرسالة طويلة جداً (حد أقصى 2000 حرف)', 'warning');
         return;
     }
     
-    const sessionId = String(id);
+    // إضافة رسالة المستخدم
+    addMessage(text, 'user');
+    input.value = '';
+    document.getElementById('charCounter').textContent = '0 / 2000';
+    autoResizeTextarea(input);
     
-    fetch(`/api/sessions/${encodeURIComponent(sessionId)}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => {
-        if (!res.ok) {
-            if (res.status === 401) throw new Error('غير مصرح');
-            if (res.status === 403) throw new Error('ليس لديك صلاحية');
-            if (res.status === 404) throw new Error('الجلسة غير موجودة');
-            throw new Error('خطأ ' + res.status);
-        }
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showToast('✅ تم إنهاء الجلسة بنجاح', 'success');
-            loadSessions();
-        } else {
-            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسة'), 'error');
-        }
-    })
-    .catch(err => {
-        console.error('❌ خطأ في إنهاء الجلسة:', err);
-        showToast('❌ ' + err.message, 'error');
-    });
-}
-
-// ============================================================
-// 10. تحديث تلقائي
-// ============================================================
-
-function startAutoRefresh() {
-    if (sessionsRefreshTimer) {
-        clearInterval(sessionsRefreshTimer);
-        sessionsRefreshTimer = null;
+    isProcessing = true;
+    sendBtn.disabled = true;
+    sendBtn.classList.add('loading');
+    
+    addTypingIndicator();
+    
+    try {
+        const reply = await sendToAI(text);
+        removeTypingIndicator();
+        addMessage(reply, 'assistant', true);
+    } catch(error) {
+        removeTypingIndicator();
+        addMessage('❌ عذراً، حدث خطأ: ' + error.message, 'assistant');
     }
     
-    sessionsRefreshTimer = setInterval(() => {
-        if (document.getElementById('page-sessions')) {
-            loadSessions();
-        }
-    }, 30000);
+    isProcessing = false;
+    sendBtn.disabled = false;
+    sendBtn.classList.remove('loading');
+}
+
+function sendQuickPrompt(text) {
+    document.getElementById('aiInput').value = text;
+    document.getElementById('charCounter').textContent = text.length + ' / 2000';
+    sendAIMessage();
+}
+
+function handleAIKey(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendAIMessage();
+    }
+}
+
+function clearChat() {
+    if (!confirm('هل تريد مسح جميع الرسائل؟')) return;
+    const container = document.getElementById('aiMessages');
+    // الاحتفاظ بالرسالة الترحيبية فقط
+    container.innerHTML = `
+        <div class="message assistant">
+            <div class="avatar">⚓</div>
+            <div class="bubble">
+                <div>مرحباً بك في المساعد البحري الذكي! 👋</div>
+                <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
+                    أنا مساعد متخصص <strong>فقط</strong> في شؤون الأسطول البحري.
+                </div>
+                <div style="color:rgba(230,179,30,0.4); font-size:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:6px;">
+                    ⚠️ لا أجيب على أسئلة خارج الأسطول البحري
+                </div>
+                <div class="suggestions">
+                    <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
+                    <button class="suggestion-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
+                    <button class="suggestion-btn" onclick="sendQuickPrompt('تقرير الصيانة')">🛠️ الصيانة</button>
+                    <button class="suggestion-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
+                </div>
+                <span class="message-time">الآن</span>
+            </div>
+        </div>
+    `;
+    chatHistory = [];
+    showToast('🗑️ تم مسح المحادثة', 'info');
 }
 
 // ============================================================
-// 11. تهيئة الصفحة
+// 9. VOICE RECOGNITION
 // ============================================================
 
-function initSessionsPage() {
-    console.log('🔄 تهيئة صفحة المراقبة...');
-    isPageActive = true;
+function setupVoiceRecognition() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        document.getElementById('voiceBtn').style.display = 'none';
+        return;
+    }
     
-    setTimeout(() => {
-        initSessionMap();
-        loadSessions();
-        startAutoRefresh();
-    }, 300);
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-TN';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    
+    recognition.onresult = function(event) {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+                transcript += event.results[i][0].transcript;
+            }
+        }
+        if (transcript) {
+            document.getElementById('aiInput').value = transcript;
+            document.getElementById('charCounter').textContent = transcript.length + ' / 2000';
+            autoResizeTextarea(document.getElementById('aiInput'));
+            stopVoiceRecording();
+            setTimeout(sendAIMessage, 300);
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.warn('Voice error:', event.error);
+        stopVoiceRecording();
+        if (event.error === 'not-allowed') {
+            showToast('⚠️ يرجى السماح بالوصول إلى الميكروفون', 'warning');
+        }
+    };
+    
+    recognition.onend = function() {
+        stopVoiceRecording();
+    };
+}
+
+function toggleVoiceInput() {
+    if (!recognition) {
+        showToast('⚠️ الإدخال الصوتي غير مدعوم في هذا المتصفح', 'warning');
+        return;
+    }
+    
+    if (isVoiceRecording) {
+        stopVoiceRecording();
+    } else {
+        startVoiceRecording();
+    }
+}
+
+function startVoiceRecording() {
+    try {
+        recognition.start();
+        isVoiceRecording = true;
+        document.getElementById('voiceBtn').classList.add('recording');
+        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop"></i>';
+        showToast('🎤 سجل الآن...', 'info');
+    } catch(e) {
+        console.warn('Voice start error:', e);
+    }
+}
+
+function stopVoiceRecording() {
+    try {
+        recognition.stop();
+    } catch(e) {}
+    isVoiceRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
 }
 
 // ============================================================
-// 12. تنشيط عند ظهور الصفحة
+// 10. INIT
 // ============================================================
 
-if (document.getElementById('page-sessions')) {
-    console.log('📄 تم اكتشاف صفحة المراقبة');
-    setTimeout(initSessionsPage, 300);
-}
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🤖 AI Marine Assistant loaded');
+    loadVesselData();
+    setupVoiceRecognition();
+    updateAIStatus(true);
+    
+    const input = document.getElementById('aiInput');
+    if (input) {
+        input.addEventListener('input', function() {
+            document.getElementById('charCounter').textContent = this.value.length + ' / 2000';
+            autoResizeTextarea(this);
+        });
+    }
+    
+    // تحديث بيانات الأسطول من التطبيق الرئيسي
+    if (window.loadAllData) {
+        window.loadAllData();
+    }
+});
 
 // ============================================================
-// 13. دوال عالمية
+// 11. GLOBAL FUNCTIONS
 // ============================================================
 
-window.initSessionsPage = initSessionsPage;
-window.loadSessions = loadSessions;
-window.refreshSessions = loadSessions;
-window.terminateSession = terminateSession;
-window.initSessionMap = initSessionMap;
-window.centerSessionMap = centerSessionMap;
-window.startAutoRefresh = startAutoRefresh;
+window.sendAIMessage = sendAIMessage;
+window.sendQuickPrompt = sendQuickPrompt;
+window.handleAIKey = handleAIKey;
+window.clearChat = clearChat;
+window.toggleVoiceInput = toggleVoiceInput;
+window.loadVesselData = loadVesselData;
+window.getMarineContext = getMarineContext;
+window.isMarineRelated = isMarineRelated;
 
-console.log('✅ صفحة المراقبة v7.0 جاهزة');
+console.log('✅ AI Marine Assistant ready - Only answers marine fleet questions');
 </script>
+</div>
