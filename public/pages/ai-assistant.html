@@ -1,7 +1,6 @@
 <!-- public/pages/ai-assistant.html -->
 <div id="page-ai-assistant">
     <style>
-        /* ===== AI ASSISTANT STYLES ===== */
         .ai-container {
             display: flex;
             flex-direction: column;
@@ -20,6 +19,8 @@
             padding: 16px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
         }
         
         .ai-header .ai-brand {
@@ -32,18 +33,18 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            background: linear-gradient(135deg, #4285F4, #34A853);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            color: #0a1628;
+            color: #fff;
             animation: pulseGlow 2s ease-in-out infinite;
         }
         
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
+            0%, 100% { box-shadow: 0 0 20px rgba(66,133,244,0.1); }
+            50% { box-shadow: 0 0 40px rgba(66,133,244,0.25); }
         }
         
         .ai-header .ai-brand .ai-title {
@@ -81,6 +82,73 @@
             background: #f87171;
         }
         
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* ===== API Key Input ===== */
+        .api-key-section {
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .api-key-section label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .api-key-section input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.04);
+            color: #e2e8f0;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            direction: ltr;
+        }
+        
+        .api-key-section input:focus {
+            outline: none;
+            border-color: #4285F4;
+            background: rgba(255,255,255,0.06);
+        }
+        
+        .api-key-section input::placeholder {
+            color: rgba(255,255,255,0.2);
+        }
+        
+        .api-key-section .key-status {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        
+        .api-key-section .key-status.valid {
+            color: #4ade80;
+            background: rgba(74,222,128,0.1);
+        }
+        
+        .api-key-section .key-status.invalid {
+            color: #f87171;
+            background: rgba(248,113,113,0.1);
+        }
+        
+        .api-key-section .key-status.checking {
+            color: #fbbf24;
+            background: rgba(251,191,36,0.1);
+        }
+        
         /* ===== CHAT MESSAGES ===== */
         .ai-messages {
             flex: 1;
@@ -94,7 +162,7 @@
         
         .ai-messages::-webkit-scrollbar { width: 4px; }
         .ai-messages::-webkit-scrollbar-track { background: transparent; }
-        .ai-messages::-webkit-scrollbar-thumb { background: rgba(230,179,30,0.3); border-radius: 10px; }
+        .ai-messages::-webkit-scrollbar-thumb { background: rgba(66,133,244,0.3); border-radius: 10px; }
         
         .message {
             display: flex;
@@ -122,8 +190,8 @@
             font-size: 16px;
         }
         
-        .message.user .avatar { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #fff; }
-        .message.assistant .avatar { background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; }
+        .message.user .avatar { background: linear-gradient(135deg, #4285F4, #34A853); color: #fff; }
+        .message.assistant .avatar { background: linear-gradient(135deg, #FBBC04, #EA4335); color: #fff; }
         
         .message .bubble {
             padding: 12px 16px;
@@ -131,11 +199,12 @@
             font-size: 14px;
             line-height: 1.6;
             word-wrap: break-word;
+            max-width: 100%;
         }
         
         .message.user .bubble {
-            background: rgba(59,130,246,0.15);
-            border: 1px solid rgba(59,130,246,0.1);
+            background: rgba(66,133,244,0.15);
+            border: 1px solid rgba(66,133,244,0.1);
             color: #e2e8f0;
             border-bottom-left-radius: 4px;
         }
@@ -186,9 +255,9 @@
         .message .bubble .suggestions .suggestion-btn {
             padding: 4px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(230,179,30,0.2);
-            background: rgba(230,179,30,0.06);
-            color: var(--gold-light);
+            border: 1px solid rgba(66,133,244,0.2);
+            background: rgba(66,133,244,0.06);
+            color: #60a5fa;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
@@ -196,8 +265,8 @@
         }
         
         .message .bubble .suggestions .suggestion-btn:hover {
-            background: rgba(230,179,30,0.12);
-            border-color: var(--gold);
+            background: rgba(66,133,244,0.12);
+            border-color: #4285F4;
         }
         
         /* ===== AI INPUT ===== */
@@ -236,9 +305,9 @@
         
         .ai-input-wrapper textarea:focus {
             outline: none;
-            border-color: var(--gold);
+            border-color: #4285F4;
             background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
         }
         
         .ai-input-wrapper textarea::placeholder {
@@ -255,8 +324,8 @@
             padding: 12px 20px;
             border: none;
             border-radius: 12px;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
+            background: linear-gradient(135deg, #4285F4, #34A853);
+            color: #fff;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
@@ -271,7 +340,7 @@
         
         .ai-input-wrapper .send-btn:hover:not(:disabled) {
             transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(230,179,30,0.25);
+            box-shadow: 0 4px 30px rgba(66,133,244,0.25);
         }
         
         .ai-input-wrapper .send-btn:disabled {
@@ -283,8 +352,8 @@
             display: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(0,0,0,0.15);
-            border-top-color: #0a1628;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -292,25 +361,7 @@
         .ai-input-wrapper .send-btn.loading .spinner { display: inline-block; }
         .ai-input-wrapper .send-btn.loading .btn-text { display: none; }
         
-        .ai-input-wrapper .voice-btn {
-            padding: 12px 14px;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            transition: all 0.3s;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-        
-        .ai-input-wrapper .voice-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .ai-input-wrapper .voice-btn.recording { color: #f87171; border-color: #f87171; animation: pulseRec 1s ease-in-out infinite; }
-        
-        @keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         
         .ai-input-wrapper .char-counter {
             font-size: 11px;
@@ -342,7 +393,7 @@
         .ai-quick-actions .quick-btn:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
-            border-color: rgba(230,179,30,0.2);
+            border-color: rgba(66,133,244,0.2);
         }
         
         /* ===== RESPONSIVE ===== */
@@ -353,7 +404,7 @@
             .ai-input-wrapper .input-actions { width: 100%; }
             .ai-input-wrapper .send-btn { flex: 1; justify-content: center; }
             .ai-header .ai-brand .ai-subtitle { display: none; }
-            .ai-quick-actions .quick-btn { font-size: 10px; padding: 4px 10px; }
+            .api-key-section input { min-width: 150px; }
         }
         
         @media (max-width: 480px) {
@@ -365,6 +416,7 @@
             .ai-input-area { padding: 10px 14px; }
             .ai-input-wrapper textarea { font-size: 13px; padding: 10px 14px; min-height: 42px; }
             .ai-input-wrapper .send-btn { padding: 10px 16px; min-height: 42px; font-size: 13px; }
+            .api-key-section { flex-direction: column; align-items: stretch; padding: 10px 14px; }
         }
     </style>
 
@@ -373,18 +425,28 @@
         <!-- HEADER -->
         <div class="ai-header">
             <div class="ai-brand">
-                <div class="ai-icon">⚓</div>
+                <div class="ai-icon">🧠</div>
                 <div>
-                    <div class="ai-title">المساعد البحري الذكي</div>
-                    <div class="ai-subtitle">متخصص في الأسطول البحري فقط</div>
+                    <div class="ai-title">المساعد الذكي</div>
+                    <div class="ai-subtitle">بواسطة Google Gemini</div>
                 </div>
             </div>
             <div class="ai-status">
                 <span class="status-dot online" id="aiStatusDot"></span>
                 <span id="aiStatusText">متصل</span>
                 <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
-                <span id="aiModel">DeepSeek-V3</span>
+                <span id="aiModel">Gemini 2.5 Flash</span>
             </div>
+        </div>
+
+        <!-- ===== API KEY INPUT ===== -->
+        <div class="api-key-section">
+            <label>🔑 <span style="font-weight:400;color:rgba(255,255,255,0.3);">مفتاح Gemini:</span></label>
+            <input type="password" id="apiKeyInput" placeholder="أدخل مفتاح Gemini API هنا..." dir="ltr">
+            <button onclick="saveApiKey()" style="padding:6px 16px; border:none; border-radius:8px; background:linear-gradient(135deg,#4285F4,#34A853); color:#fff; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;">
+                💾 حفظ
+            </button>
+            <span class="key-status" id="keyStatus">غير محدد</span>
         </div>
 
         <!-- QUICK ACTIONS -->
@@ -393,35 +455,31 @@
             <button class="quick-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
             <button class="quick-btn" onclick="sendQuickPrompt('تقرير الصيانة الشهري')">🛠️ الصيانة</button>
             <button class="quick-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
-            <button class="quick-btn" onclick="sendQuickPrompt('وحدات الصيانة')">🏭 وحدات الصيانة</button>
+            <button class="quick-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
         </div>
 
         <!-- MESSAGES -->
         <div class="ai-messages" id="aiMessages">
-            <!-- Welcome Message -->
             <div class="message assistant">
-                <div class="avatar">⚓</div>
+                <div class="avatar">🧠</div>
                 <div class="bubble">
-                    <div>مرحباً بك في المساعد البحري الذكي! 👋</div>
+                    <div>مرحباً بك في المساعد الذكي! 👋</div>
                     <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                        أنا مساعد متخصص <strong>فقط</strong> في شؤون الأسطول البحري. 
-                        يمكنني مساعدتك في:
+                        أنا مدعوم من <strong>Google Gemini</strong>. يمكنني الإجابة عن أي سؤال:
                         <ul style="margin:6px 0 0 20px; color:rgba(255,255,255,0.4);">
-                            <li>📊 تحليل بيانات المراكب</li>
-                            <li>🔧 متابعة الصيانة والأعطال</li>
-                            <li>📈 حساب نسب الجاهزية</li>
-                            <li>📋 تقارير وحدات الصيانة</li>
-                            <li>💡 توصيات لتحسين الأداء</li>
+                            <li>⚓ شؤون الأسطول البحري</li>
+                            <li>🌍 معلومات عامة</li>
+                            <li>📊 تحليل البيانات</li>
+                            <li>💡 توصيات ذكية</li>
                         </ul>
                     </div>
-                    <div style="color:rgba(230,179,30,0.4); font-size:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:6px;">
-                        ⚠️ لا أجيب على أسئلة خارج الأسطول البحري
+                    <div style="color:rgba(255,255,255,0.2); font-size:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:6px;">
+                        💡 أضف مفتاح Gemini API أعلاه للبدء
                     </div>
                     <div class="suggestions">
                         <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
+                        <button class="suggestion-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
                         <button class="suggestion-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
-                        <button class="suggestion-btn" onclick="sendQuickPrompt('تقرير الصيانة')">🛠️ الصيانة</button>
-                        <button class="suggestion-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
                     </div>
                     <span class="message-time">الآن</span>
                 </div>
@@ -432,13 +490,10 @@
         <div class="ai-input-area">
             <div class="ai-input-wrapper">
                 <div class="input-container">
-                    <textarea id="aiInput" rows="1" placeholder="اسأل عن الأسطول البحري فقط..." onkeydown="handleAIKey(event)"></textarea>
+                    <textarea id="aiInput" rows="1" placeholder="اسأل عن أي شيء..." onkeydown="handleAIKey(event)"></textarea>
                     <div class="char-counter" id="charCounter">0 / 2000</div>
                 </div>
                 <div class="input-actions">
-                    <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceInput()" title="إدخال صوتي">
-                        <i class="fas fa-microphone"></i>
-                    </button>
                     <button class="send-btn" id="sendBtn" onclick="sendAIMessage()">
                         <span class="btn-text">إرسال</span>
                         <span class="spinner"></span>
@@ -450,40 +505,35 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - المساعد الذكي (نسخة الأسطول فقط) -->
+<!-- 📦 JAVASCRIPT - Gemini API -->
 <!-- ============================================================ -->
 <script>
 // ============================================================
-// 🤖 AI ASSISTANT - MARINE FLEET SPECIALIST
+// 🤖 GEMINI AI ASSISTANT
 // ============================================================
 
 // ============================================================
 // 1. CONFIGURATION
 // ============================================================
 
-const AI_CONFIG = {
-    // ⚠️ استبدل بمفتاح DeepSeek API الخاص بك
-    API_KEY: 'sk-d4a4eac0b12a4015b8bad1895bd4a2f2',
-    API_URL: 'https://api.deepseek.com/v1/chat/completions',
-    MODEL: 'deepseek-chat',
-    MAX_TOKENS: 2000,
+const GEMINI_CONFIG = {
+    // ✅ استخدم API endpoint المتوافق مع OpenAI
+    API_URL: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    MODEL: 'gemini-2.5-flash',  // أو gemini-2.5-pro
+    MAX_TOKENS: 1000,
     TEMPERATURE: 0.7,
-    SYSTEM_PROMPT: `أنت مساعد ذكي متخصص حصرياً في الأسطول البحري التونسي.
-
-    ⚠️ قواعد صارمة:
-    1. أنت تتحدث فقط عن الأسطول البحري والمراكب والصيانة والجاهزية
-    2. إذا سألك المستخدم عن أي موضوع خارج الأسطول البحري، ارفض الإجابة بأدب
-    3. لا تجيب على أسئلة عامة أو سياسية أو دينية أو غير متعلقة بالبحرية
-    4. ردك يجب أن يكون: "آسف، أنا مساعد متخصص فقط في شؤون الأسطول البحري. هل لديك سؤال عن المراكب أو الصيانة؟"
-
-    معلومات النظام:
-    - المنظومة: منظومة متابعة الوسائل البحرية التونسية
+    SYSTEM_PROMPT: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي، ولديك معرفة عامة واسعة.
+    
+    ⚓ الأسطول البحري التونسي:
+    - المنظومة: منظومة متابعة الوسائل البحرية
     - المطور: أمان الله ناجي
     - الإصدار: v7.0
-    - اختصاصك: الأسطول البحري، الصيانة، الجاهزية، وحدات الصيانة
-
-    كن دقيقاً ومفصلاً في إجاباتك عن الأسطول، واستخدم الأرقام والإحصائيات عند الحاجة.
-    إذا لم تكن تعرف إجابة عن الأسطول، قل ذلك بصراحة.`
+    
+    🌍 المعرفة العامة:
+    - أنت خبير في جميع المجالات: التاريخ، الجغرافيا، العلوم، الثقافة، السياسة، الاقتصاد، الرياضة، إلخ.
+    - تجيب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
+    - كن دقيقاً ومفصلاً في إجاباتك.
+    - إذا لم تكن تعرف الإجابة، قل ذلك بصراحة.`
 };
 
 // ============================================================
@@ -492,20 +542,8 @@ const AI_CONFIG = {
 
 let chatHistory = [];
 let isProcessing = false;
-let isVoiceRecording = false;
-let recognition = null;
+let apiKey = localStorage.getItem('gemini_api_key') || '';
 let vesselData = [];
-
-// الكلمات الممنوعة (للتأكد من عدم الإجابة على أسئلة خارجية)
-const FORBIDDEN_KEYWORDS = [
-    'السياسة', 'سياسي', 'دين', 'ديني', 'رياضة', 'كرة قدم', 'فن', 'سينما', 
-    'مسلسل', 'أغاني', 'موسيقى', 'طبخ', 'أكل', 'طعام', 'ازياء', 'موضة',
-    'تكنولوجيا عامة', 'برمجة', 'حاسوب', 'هاتف', 'جوال', 'سيارة', 'طيران',
-    'اقتصاد', 'مال', 'استثمار', 'بورصة', 'عملات', 'ذهب', 'فضة',
-    'صحة', 'طب', 'مرض', 'علاج', 'دواء', 'تعليم', 'مدرسة', 'جامعة',
-    'تاريخ', 'جغرافيا', 'سياحة', 'سفر', 'ثقافة', 'أدب', 'شعر',
-    'زواج', 'طلاق', 'علاقات', 'عائلة', 'أطفال', 'تربية'
-];
 
 // ============================================================
 // 3. LOAD DATA
@@ -516,11 +554,10 @@ function loadVesselData() {
         if (window.allVessels && Array.isArray(window.allVessels)) {
             vesselData = window.allVessels;
         } else {
-            // بيانات تجريبية
             vesselData = [
                 { name: 'البروق 1', num: 'B001', stat: 'صالح', reg: 'الشمال', len: 11, zone: 'تونس' },
                 { name: 'صقر 2', num: 'S002', stat: 'صالح', reg: 'الساحل', len: 10, zone: 'سوسة' },
-                { name: 'خافرة 3', num: 'K003', stat: 'معطب', reg: 'الوسط', len: 20, zone: 'صفاقس', break: 'عطل في المحرك' },
+                { name: 'خافرة 3', num: 'K003', stat: 'معطب', reg: 'الوسط', len: 20, zone: 'صفاق스', break: 'عطل في المحرك' },
                 { name: 'طوافة 4', num: 'T004', stat: 'صيانة', reg: 'الجنوب', len: 35, zone: 'جرجيس', break: 'أعطال كهربائية' },
                 { name: 'زورق سريع 5', num: 'Z005', stat: 'صالح', reg: 'الشمال', len: 15, zone: 'بنزرت' },
                 { name: 'البروق 6', num: 'B006', stat: 'صيانة', reg: 'الساحل', len: 11, zone: 'المنستير', break: 'نظام ملاحة' },
@@ -534,38 +571,7 @@ function loadVesselData() {
 }
 
 // ============================================================
-// 4. CHECK IF QUESTION IS ABOUT MARINE FLEET
-// ============================================================
-
-function isMarineRelated(text) {
-    const marineKeywords = [
-        'مركب', 'مراكب', 'أسطول', 'بحر', 'بحري', 'ميناء', 'سفينة', 'زورق',
-        'صيانة', 'عطب', 'معطب', 'جاهزية', 'البروق', 'صقر', 'خافرة', 'طوافة',
-        'وحدات الصيانة', 'تونس', 'بنزرت', 'سوسة', 'صفاقس', 'جرجيس', 'المنستير',
-        'الحرس البحري', 'الوسائل البحرية', 'قبيبة', 'مجمع أمني',
-        'الشمال', 'الساحل', 'الوسط', 'الجنوب',
-        'محرك', 'كهرباء', 'ملاحة', 'عطل', 'إصلاح', 'قطع غيار',
-        'نسبة النجاعة', 'إحصائيات الأسطول', 'تقرير الأسطول',
-        'B001', 'S002', 'K003', 'T004', 'Z005', 'B006', 'S007',
-        'REF001', 'REF002', 'REF003'
-    ];
-    
-    const lower = text.toLowerCase();
-    const hasMarine = marineKeywords.some(kw => lower.includes(kw));
-    
-    // إذا لم يجد أي كلمة بحرية، يتحقق من الكلمات الممنوعة
-    if (!hasMarine) {
-        const hasForbidden = FORBIDDEN_KEYWORDS.some(kw => lower.includes(kw));
-        if (hasForbidden) return false;
-        // إذا كانت الكلمات غير واضحة، يفترض أنها ليست بحرية
-        return false;
-    }
-    
-    return true;
-}
-
-// ============================================================
-// 5. GET MARINE CONTEXT DATA
+// 4. GET MARINE CONTEXT
 // ============================================================
 
 function getMarineContext() {
@@ -577,7 +583,6 @@ function getMarineContext() {
         const broken = vessels.filter(v => v.stat === 'معطب').length;
         const efficiency = total ? ((active / total) * 100).toFixed(1) : 0;
         
-        // إحصائيات حسب الأقاليم
         const regions = {};
         vessels.forEach(v => {
             if (!regions[v.reg]) regions[v.reg] = { total: 0, active: 0 };
@@ -591,7 +596,6 @@ function getMarineContext() {
             regionStats += `- ${name}: ${data.active}/${data.total} صالح (${eff}%)\n`;
         });
         
-        // المراكب المعطوبة
         const brokenList = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
         let brokenStats = '';
         brokenList.forEach(v => {
@@ -599,36 +603,99 @@ function getMarineContext() {
         });
         
         return {
-            total,
-            active,
-            maintenance,
-            broken,
-            efficiency,
-            regionStats,
-            brokenStats,
-            brokenCount: brokenList.length,
+            total, active, maintenance, broken, efficiency,
+            regionStats, brokenStats, brokenCount: brokenList.length,
             vessels
         };
+    } catch(e) { return null; }
+}
+
+// ============================================================
+// 5. API KEY MANAGEMENT
+// ============================================================
+
+function saveApiKey() {
+    const input = document.getElementById('apiKeyInput');
+    const key = input.value.trim();
+    
+    if (!key) {
+        updateKeyStatus('invalid', '⚠️ المفتاح مطلوب');
+        return;
+    }
+    
+    if (!key.startsWith('AIza')) {
+        updateKeyStatus('invalid', '⚠️ مفتاح غير صحيح (يبدأ بـ AIza)');
+        return;
+    }
+    
+    apiKey = key;
+    localStorage.setItem('gemini_api_key', key);
+    updateKeyStatus('valid', '✅ تم حفظ المفتاح');
+    showToast('✅ تم حفظ مفتاح Gemini بنجاح', 'success');
+    
+    // اختبار المفتاح
+    testApiKey(key);
+}
+
+function updateKeyStatus(type, text) {
+    const el = document.getElementById('keyStatus');
+    el.className = 'key-status ' + type;
+    el.textContent = text;
+}
+
+function loadSavedKey() {
+    if (apiKey) {
+        document.getElementById('apiKeyInput').value = apiKey;
+        updateKeyStatus('valid', '✅ مفتاح محفوظ');
+    } else {
+        updateKeyStatus('invalid', '⚠️ يرجى إدخال مفتاح');
+    }
+}
+
+async function testApiKey(key) {
+    updateKeyStatus('checking', '🔄 جاري التحقق...');
+    try {
+        const response = await fetch(GEMINI_CONFIG.API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + key
+            },
+            body: JSON.stringify({
+                model: GEMINI_CONFIG.MODEL,
+                messages: [{ role: 'user', content: 'Hello' }],
+                max_tokens: 10
+            })
+        });
+        
+        if (response.ok) {
+            updateKeyStatus('valid', '✅ مفتاح صالح');
+        } else if (response.status === 401) {
+            updateKeyStatus('invalid', '❌ مفتاح غير صالح');
+        } else if (response.status === 429) {
+            updateKeyStatus('invalid', '⚠️ تم تجاوز الحد اليومي');
+        } else {
+            updateKeyStatus('invalid', '⚠️ خطأ: ' + response.status);
+        }
     } catch(e) {
-        console.error('❌ خطأ في جلب السياق:', e);
-        return null;
+        updateKeyStatus('invalid', '❌ فشل الاتصال');
     }
 }
 
 // ============================================================
-// 6. SEND TO AI
+// 6. SEND TO GEMINI
 // ============================================================
 
-async function sendToAI(userMessage) {
-    const context = getMarineContext();
-    
-    // إذا لم يكن السؤال عن الأسطول، ارفض
-    if (!isMarineRelated(userMessage)) {
-        return "آسف، أنا مساعد متخصص فقط في شؤون الأسطول البحري. 🚫\n\nلا يمكنني الإجابة عن أسئلة خارج نطاق:\\n- المراكب البحرية\\n- الصيانة والأعطال\\n- نسب الجاهزية\\n- وحدات الصيانة\n\nهل لديك سؤال عن الأسطول البحري؟ ⚓";
+async function sendToGemini(userMessage) {
+    if (!apiKey) {
+        return '⚠️ يرجى إدخال مفتاح Gemini API أولاً في الحقل أعلاه. 🔑';
     }
     
-    // بناء السياق الكامل
-    const contextText = `
+    // الحصول على سياق الأسطول
+    const context = getMarineContext();
+    let contextText = '';
+    if (context) {
+        contextText = `
 📊 بيانات الأسطول الحالية:
 - إجمالي المراكب: ${context.total}
 - الصالح: ${context.active} (${context.efficiency}%)
@@ -644,46 +711,52 @@ ${context.brokenStats || 'لا توجد مراكب معطوبة'}
 📌 المراكب:
 ${context.vessels.map(v => `- ${v.name} (${v.num}) - ${v.stat} - ${v.reg} - ${v.zone}`).join('\n')}
 `;
+    }
     
     try {
-        const response = await fetch(AI_CONFIG.API_URL, {
+        const response = await fetch(GEMINI_CONFIG.API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + AI_CONFIG.API_KEY
+                'Authorization': 'Bearer ' + apiKey
             },
             body: JSON.stringify({
-                model: AI_CONFIG.MODEL,
+                model: GEMINI_CONFIG.MODEL,
                 messages: [
-                    { role: 'system', content: AI_CONFIG.SYSTEM_PROMPT },
-                    { role: 'system', content: `هذه هي بيانات الأسطول الحالية:\n${contextText}` },
-                    ...chatHistory.slice(-6),
+                    { role: 'system', content: GEMINI_CONFIG.SYSTEM_PROMPT },
+                    { role: 'system', content: `هذه هي بيانات الأسطول الحالية (استخدمها فقط إذا سأل المستخدم عن الأسطول):\n${contextText}` },
+                    ...chatHistory.slice(-8),
                     { role: 'user', content: userMessage }
                 ],
-                max_tokens: AI_CONFIG.MAX_TOKENS,
-                temperature: AI_CONFIG.TEMPERATURE,
-                stream: false
+                max_tokens: GEMINI_CONFIG.MAX_TOKENS,
+                temperature: GEMINI_CONFIG.TEMPERATURE
             })
         });
         
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('❌ API Error:', errorData);
-            throw new Error('فشل الاتصال بالذكاء الاصطناعي');
+            const errorData = await response.json();
+            console.error('❌ Gemini API Error:', errorData);
+            
+            if (response.status === 401) {
+                return '❌ مفتاح Gemini غير صالح. يرجى التحقق من المفتاح في الحقل أعلاه. 🔑';
+            } else if (response.status === 429) {
+                return '⚠️ تم تجاوز الحد اليومي للمفتاح. يرجى المحاولة غداً أو استخدام مفتاح آخر. 📅';
+            } else {
+                return `❌ خطأ في الاتصال: ${response.status}`;
+            }
         }
         
         const data = await response.json();
         const reply = data.choices?.[0]?.message?.content || 'عذراً، لم أستطع معالجة طلبك.';
         
-        // حفظ في المحادثة
         chatHistory.push({ role: 'user', content: userMessage });
         chatHistory.push({ role: 'assistant', content: reply });
         
         return reply;
         
     } catch(error) {
-        console.error('❌ AI Error:', error);
-        return 'عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي. يرجى المحاولة لاحقاً. 🔄';
+        console.error('❌ Gemini Error:', error);
+        return '❌ عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً. 🔄';
     }
 }
 
@@ -694,13 +767,11 @@ ${context.vessels.map(v => `- ${v.name} (${v.num}) - ${v.stat} - ${v.reg} - ${v.
 function addMessage(text, type = 'assistant', isHtml = false) {
     const container = document.getElementById('aiMessages');
     const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-    
-    const avatar = type === 'user' ? '👤' : '⚓';
+    const avatar = type === 'user' ? '👤' : '🧠';
     const bubbleClass = type === 'user' ? 'user' : 'assistant';
     
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${bubbleClass}`;
-    
     msgDiv.innerHTML = `
         <div class="avatar">${avatar}</div>
         <div class="bubble">
@@ -708,7 +779,6 @@ function addMessage(text, type = 'assistant', isHtml = false) {
             <span class="message-time">${time}</span>
         </div>
     `;
-    
     container.appendChild(msgDiv);
     container.scrollTop = container.scrollHeight;
 }
@@ -716,20 +786,16 @@ function addMessage(text, type = 'assistant', isHtml = false) {
 function addTypingIndicator() {
     const container = document.getElementById('aiMessages');
     const time = new Date().toLocaleTimeString('ar-TN', { hour: '2-digit', minute: '2-digit' });
-    
     const typingDiv = document.createElement('div');
     typingDiv.className = 'message assistant';
     typingDiv.id = 'typingIndicator';
     typingDiv.innerHTML = `
-        <div class="avatar">⚓</div>
+        <div class="avatar">🧠</div>
         <div class="bubble">
-            <div class="typing-indicator">
-                <span></span><span></span><span></span>
-            </div>
+            <div class="typing-indicator"><span></span><span></span><span></span></div>
             <span class="message-time">${time}</span>
         </div>
     `;
-    
     container.appendChild(typingDiv);
     container.scrollTop = container.scrollHeight;
 }
@@ -737,18 +803,6 @@ function addTypingIndicator() {
 function removeTypingIndicator() {
     const el = document.getElementById('typingIndicator');
     if (el) el.remove();
-}
-
-function updateAIStatus(online = true) {
-    const dot = document.getElementById('aiStatusDot');
-    const text = document.getElementById('aiStatusText');
-    if (online) {
-        dot.className = 'status-dot online';
-        text.textContent = 'متصل';
-    } else {
-        dot.className = 'status-dot offline';
-        text.textContent = 'غير متصل';
-    }
 }
 
 function autoResizeTextarea(el) {
@@ -766,14 +820,11 @@ async function sendAIMessage() {
     const sendBtn = document.getElementById('sendBtn');
     
     if (!text || isProcessing) return;
-    
-    // عداد الأحرف
     if (text.length > 2000) {
         showToast('⚠️ الرسالة طويلة جداً (حد أقصى 2000 حرف)', 'warning');
         return;
     }
     
-    // إضافة رسالة المستخدم
     addMessage(text, 'user');
     input.value = '';
     document.getElementById('charCounter').textContent = '0 / 2000';
@@ -782,11 +833,10 @@ async function sendAIMessage() {
     isProcessing = true;
     sendBtn.disabled = true;
     sendBtn.classList.add('loading');
-    
     addTypingIndicator();
     
     try {
-        const reply = await sendToAI(text);
+        const reply = await sendToGemini(text);
         removeTypingIndicator();
         addMessage(reply, 'assistant', true);
     } catch(error) {
@@ -815,23 +865,17 @@ function handleAIKey(event) {
 function clearChat() {
     if (!confirm('هل تريد مسح جميع الرسائل؟')) return;
     const container = document.getElementById('aiMessages');
-    // الاحتفاظ بالرسالة الترحيبية فقط
     container.innerHTML = `
         <div class="message assistant">
-            <div class="avatar">⚓</div>
+            <div class="avatar">🧠</div>
             <div class="bubble">
-                <div>مرحباً بك في المساعد البحري الذكي! 👋</div>
+                <div>مرحباً بك في المساعد الذكي! 👋</div>
                 <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                    أنا مساعد متخصص <strong>فقط</strong> في شؤون الأسطول البحري.
-                </div>
-                <div style="color:rgba(230,179,30,0.4); font-size:12px; margin-top:8px; border-top:1px solid rgba(255,255,255,0.04); padding-top:6px;">
-                    ⚠️ لا أجيب على أسئلة خارج الأسطول البحري
+                    أنا مدعوم من <strong>Google Gemini</strong>. يمكنني الإجابة عن أي سؤال.
                 </div>
                 <div class="suggestions">
                     <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
-                    <button class="suggestion-btn" onclick="sendQuickPrompt('المراكب المعطوبة')">⚠️ الأعطال</button>
-                    <button class="suggestion-btn" onclick="sendQuickPrompt('تقرير الصيانة')">🛠️ الصيانة</button>
-                    <button class="suggestion-btn" onclick="sendQuickPrompt('نسبة الجاهزية')">📈 الجاهزية</button>
+                    <button class="suggestion-btn" onclick="sendQuickPrompt('ما هي عاصمة تونس؟')">🌍 سؤال عام</button>
                 </div>
                 <span class="message-time">الآن</span>
             </div>
@@ -842,93 +886,13 @@ function clearChat() {
 }
 
 // ============================================================
-// 9. VOICE RECOGNITION
-// ============================================================
-
-function setupVoiceRecognition() {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        document.getElementById('voiceBtn').style.display = 'none';
-        return;
-    }
-    
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ar-TN';
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    
-    recognition.onresult = function(event) {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            if (event.results[i].isFinal) {
-                transcript += event.results[i][0].transcript;
-            }
-        }
-        if (transcript) {
-            document.getElementById('aiInput').value = transcript;
-            document.getElementById('charCounter').textContent = transcript.length + ' / 2000';
-            autoResizeTextarea(document.getElementById('aiInput'));
-            stopVoiceRecording();
-            setTimeout(sendAIMessage, 300);
-        }
-    };
-    
-    recognition.onerror = function(event) {
-        console.warn('Voice error:', event.error);
-        stopVoiceRecording();
-        if (event.error === 'not-allowed') {
-            showToast('⚠️ يرجى السماح بالوصول إلى الميكروفون', 'warning');
-        }
-    };
-    
-    recognition.onend = function() {
-        stopVoiceRecording();
-    };
-}
-
-function toggleVoiceInput() {
-    if (!recognition) {
-        showToast('⚠️ الإدخال الصوتي غير مدعوم في هذا المتصفح', 'warning');
-        return;
-    }
-    
-    if (isVoiceRecording) {
-        stopVoiceRecording();
-    } else {
-        startVoiceRecording();
-    }
-}
-
-function startVoiceRecording() {
-    try {
-        recognition.start();
-        isVoiceRecording = true;
-        document.getElementById('voiceBtn').classList.add('recording');
-        document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-stop"></i>';
-        showToast('🎤 سجل الآن...', 'info');
-    } catch(e) {
-        console.warn('Voice start error:', e);
-    }
-}
-
-function stopVoiceRecording() {
-    try {
-        recognition.stop();
-    } catch(e) {}
-    isVoiceRecording = false;
-    document.getElementById('voiceBtn').classList.remove('recording');
-    document.getElementById('voiceBtn').innerHTML = '<i class="fas fa-microphone"></i>';
-}
-
-// ============================================================
-// 10. INIT
+// 9. INIT
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🤖 AI Marine Assistant loaded');
+    console.log('🧠 Gemini AI Assistant loaded');
     loadVesselData();
-    setupVoiceRecognition();
-    updateAIStatus(true);
+    loadSavedKey();
     
     const input = document.getElementById('aiInput');
     if (input) {
@@ -938,25 +902,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // تحديث بيانات الأسطول من التطبيق الرئيسي
     if (window.loadAllData) {
         window.loadAllData();
     }
 });
 
 // ============================================================
-// 11. GLOBAL FUNCTIONS
+// 10. GLOBAL
 // ============================================================
 
 window.sendAIMessage = sendAIMessage;
 window.sendQuickPrompt = sendQuickPrompt;
 window.handleAIKey = handleAIKey;
 window.clearChat = clearChat;
-window.toggleVoiceInput = toggleVoiceInput;
+window.saveApiKey = saveApiKey;
 window.loadVesselData = loadVesselData;
-window.getMarineContext = getMarineContext;
-window.isMarineRelated = isMarineRelated;
 
-console.log('✅ AI Marine Assistant ready - Only answers marine fleet questions');
+console.log('✅ Gemini AI Assistant ready');
 </script>
 </div>
