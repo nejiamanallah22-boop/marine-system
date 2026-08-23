@@ -1,0 +1,117 @@
+{
+    "name": "منظومة الوسائل البحرية",
+    "short_name": "البحرية",
+    "description": "نظام متكامل لإدارة ومتابعة الأسطول البحري",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a1a",
+    "theme_color": "#0a0a1a",
+    "orientation": "portrait-primary",
+    "categories": ["business", "productivity", "utilities"],
+    "lang": "ar",
+    "dir": "rtl",
+    "icons": [
+        {
+            "src": "/assets/icons/icon-72.png",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-96.png",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-128.png",
+            "sizes": "128x128",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-144.png",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-152.png",
+            "sizes": "152x152",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-384.png",
+            "sizes": "384x384",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/assets/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/assets/screenshots/desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide"
+        },
+        {
+            "src": "/assets/screenshots/mobile.png",
+            "sizes": "375x812",
+            "type": "image/png",
+            "platform": "narrow"
+        }
+    ],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "shortcuts": [
+        {
+            "name": "لوحة التحكم",
+            "short_name": "لوحة التحكم",
+            "description": "عرض لوحة التحكم الرئيسية",
+            "url": "/?page=dashboard",
+            "icons": [
+                {
+                    "src": "/assets/icons/shortcut-dashboard.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "الأسطول",
+            "short_name": "الأسطول",
+            "description": "عرض وإدارة الأسطول البحري",
+            "url": "/?page=fleet",
+            "icons": [
+                {
+                    "src": "/assets/icons/shortcut-fleet.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "الصيانة",
+            "short_name": "الصيانة",
+            "description": "إدارة الصيانة والإصلاحات",
+            "url": "/?page=maintenance",
+            "icons": [
+                {
+                    "src": "/assets/icons/shortcut-maintenance.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}
