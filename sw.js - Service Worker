@@ -1,0 +1,315 @@
+/**
+ * ============================================================
+ * 🚢 منظومة الوسائل البحرية - Service Worker v7.0
+ * ============================================================
+ * دعم التطبيق كـ PWA مع وضع عدم الاتصال
+ * ============================================================
+ */
+
+const CACHE_NAME = 'marine-system-v7.0.0';
+const OFFLINE_URL = '/offline.html';
+
+// الملفات المطلوب تخزينها مؤقتاً
+const STATIC_ASSETS = [
+    '/',
+    '/index.html',
+    '/css/style.css',
+    '/css/theme.css',
+    '/css/responsive.css',
+    '/css/animations.css',
+    '/js/app.js',
+    '/js/core/Application.js',
+    '/js/core/Router.js',
+    '/js/core/Store.js',
+    '/js/core/EventBus.js',
+    '/js/managers/AuthManager.js',
+    '/js/managers/StorageManager.js',
+    '/js/managers/SecurityManager.js',
+    '/js/managers/APIManager.js',
+    '/js/managers/UIManager.js',
+    '/js/managers/AnalyticsManager.js',
+    '/js/managers/NotificationManager.js',
+    '/js/managers/CacheManager.js',
+    '/js/services/FleetService.js',
+    '/js/services/MaintenanceService.js',
+    '/js/services/UserService.js',
+    '/js/services/ReportService.js',
+    '/manifest.json',
+    '/favicon.ico',
+    '/assets/icons/icon-192.png',
+    '/assets/icons/icon-512.png'
+];
+
+// ============================================================
+// 📦 INSTALL EVENT
+// ============================================================
+
+self.addEventListener('install', (event) => {
+    console.log('📦 SW: Install event');
+    
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('📦 SW: Caching assets');
+                return cache.addAll(STATIC_ASSETS);
+            })
+            .then(() => {
+                console.log('📦 SW: Assets cached');
+                return self.skipWaiting();
+            })
+            .catch((error) => {
+                console.error('📦 SW: Cache error:', error);
+            })
+    );
+});
+
+// ============================================================
+// 🔄 ACTIVATE EVENT
+// ============================================================
+
+self.addEventListener('activate', (event) => {
+    console.log('🔄 SW: Activate event');
+    
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('🔄 SW: Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+        .then(() => {
+            console.log('🔄 SW: Claiming clients');
+            return self.clients.claim();
+        })
+    );
+});
+
+// ============================================================
+// 🌐 FETCH EVENT - استراتيجية التخزين المؤقت
+// ============================================================
+
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    
+    // تجاهل طلبات API
+    if (url.pathname.startsWith('/api/')) {
+        event.respondWith(
+            fetch(event.request)
+                .catch(() => {
+                    return new Response(
+                        JSON.stringify({ 
+                            success: false, 
+                            error: 'غير متصل بالإنترنت' 
+                        }),
+                        {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }
+                    );
+                })
+        );
+        return;
+    }
+    
+    // استراتيجية: Cache First ثم Network
+    event.respondWith(
+        caches.match(event.request)
+            .then((cachedResponse) => {
+                if (cachedResponse) {
+                    // تحديث في الخلفية
+                    fetch(event.request)
+                        .then((networkResponse) => {
+                            if (networkResponse.ok) {
+                                caches.open(CACHE_NAME)
+                                    .then((cache) => {
+                                        cache.put(event.request, networkResponse);
+                                    });
+                            }
+                        })
+                        .catch(() => {});
+                    
+                    return cachedResponse;
+                }
+                
+                return fetch(event.request)
+                    .then((response) => {
+                        // تخزين الاستجابة للاستخدام المستقبلي
+                        if (response.ok) {
+                            const clone = response.clone();
+                            caches.open(CACHE_NAME)
+                                .then((cache) => {
+                                    cache.put(event.request, clone);
+                                });
+                        }
+                        return response;
+                    })
+                    .catch(() => {
+                        // عرض صفحة عدم الاتصال
+                        if (event.request.mode === 'navigate') {
+                            return caches.match(OFFLINE_URL);
+                        }
+                        
+                        return new Response(
+                            'تم قطع الاتصال بالإنترنت',
+                            {
+                                status: 503,
+                                statusText: 'Service Unavailable'
+                            }
+                        );
+                    });
+            })
+    );
+});
+
+// ============================================================
+// 📨 PUSH NOTIFICATIONS
+// ============================================================
+
+self.addEventListener('push', (event) => {
+    console.log('📨 SW: Push notification received');
+    
+    let data = {
+        title: 'منظومة الوسائل البحرية',
+        body: 'لديك إشعار جديد',
+        icon: '/assets/icons/icon-192.png',
+        badge: '/assets/icons/badge-72.png',
+        tag: 'notification',
+        data: {}
+    };
+    
+    if (event.data) {
+        try {
+            const pushData = event.data.json();
+            data = { ...data, ...pushData };
+        } catch (error) {
+            console.error('📨 SW: Push data error:', error);
+        }
+    }
+    
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: data.icon,
+            badge: data.badge,
+            tag: data.tag,
+            data: data.data,
+            vibrate: [200, 100, 200],
+            actions: [
+                {
+                    action: 'open',
+                    title: 'فتح'
+                },
+                {
+                    action: 'dismiss',
+                    title: 'تجاهل'
+                }
+            ]
+        })
+    );
+});
+
+// ============================================================
+// 🖱️ NOTIFICATION CLICK
+// ============================================================
+
+self.addEventListener('notificationclick', (event) => {
+    console.log('🖱️ SW: Notification clicked');
+    
+    event.notification.close();
+    
+    if (event.action === 'dismiss') {
+        return;
+    }
+    
+    event.waitUntil(
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        })
+        .then((clientList) => {
+            // إذا كان هناك نافذة مفتوحة، ركز عليها
+            for (const client of clientList) {
+                if (client.url && client.url.includes('/') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // وإلا افتح نافذة جديدة
+            return clients.openWindow('/');
+        })
+    );
+});
+
+// ============================================================
+// 📱 BACKGROUND SYNC
+// ============================================================
+
+self.addEventListener('sync', (event) => {
+    console.log('📱 SW: Background sync:', event.tag);
+    
+    if (event.tag === 'sync-data') {
+        event.waitUntil(syncData());
+    }
+});
+
+async function syncData() {
+    try {
+        // مزامنة البيانات المعلقة
+        const pendingData = await getPendingData();
+        
+        if (pendingData.length === 0) return;
+        
+        for (const data of pendingData) {
+            try {
+                await fetch(data.url, {
+                    method: data.method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data.body)
+                });
+                
+                // إزالة بعد المزامنة
+                await removePendingData(data.id);
+            } catch (error) {
+                console.error('📱 SW: Sync error:', error);
+            }
+        }
+    } catch (error) {
+        console.error('📱 SW: Sync failed:', error);
+    }
+}
+
+// ============================================================
+// 🗂️ INDEXED DB HELPERS
+// ============================================================
+
+function getPendingData() {
+    return new Promise((resolve, reject) => {
+        // تنفيذ IndexedDB للحصول على البيانات المعلقة
+        resolve([]);
+    });
+}
+
+function removePendingData(id) {
+    return new Promise((resolve) => {
+        // تنفيذ IndexedDB لحذف البيانات
+        resolve();
+    });
+}
+
+// ============================================================
+// 📊 VERSION UPDATE
+// ============================================================
+
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
+
+console.log('🚢 Service Worker loaded');
