@@ -1,0 +1,646 @@
+/**
+ * ============================================================
+ * 🚢 منظومة الوسائل البحرية - ANIMATIONS.CSS v7.0
+ * ============================================================
+ * نظام الرسوم المتحركة المتقدم
+ * ============================================================
+ */
+
+/* ============================================================
+   📦 BASE ANIMATIONS - الرسوم الأساسية
+   ============================================================ */
+
+/* ===== Fade In ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===== Slide Animations ===== */
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ===== Scale Animations ===== */
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleInCenter {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes scaleOut {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   🔄 ROTATION ANIMATIONS - رسوم الدوران
+   ============================================================ */
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes spinReverse {
+    from {
+        transform: rotate(360deg);
+    }
+    to {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes pulseDot {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.3);
+        opacity: 0.5;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ============================================================
+   🌊 WAVE ANIMATIONS - رسوم الأمواج
+   ============================================================ */
+
+@keyframes wave {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-15px) rotate(2deg);
+    }
+    75% {
+        transform: translateY(15px) rotate(-2deg);
+    }
+}
+
+@keyframes waveFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes wavePulse {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1) rotate(5deg);
+        opacity: 1;
+    }
+}
+
+/* ============================================================
+   ⭐ GLOW ANIMATIONS - رسوم التوهج
+   ============================================================ */
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(230, 179, 30, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(230, 179, 30, 0.3);
+    }
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(230, 179, 30, 0.2);
+        opacity: 0.8;
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(230, 179, 30, 0.4);
+        opacity: 1;
+    }
+}
+
+@keyframes textGlow {
+    0%, 100% {
+        text-shadow: 0 0 10px rgba(230, 179, 30, 0.1);
+    }
+    50% {
+        text-shadow: 0 0 30px rgba(230, 179, 30, 0.3);
+    }
+}
+
+/* ============================================================
+   🎯 LOADING ANIMATIONS - رسوم التحميل
+   ============================================================ */
+
+@keyframes loadingBars {
+    0% {
+        transform: scaleY(0.1);
+    }
+    50% {
+        transform: scaleY(1);
+    }
+    100% {
+        transform: scaleY(0.1);
+    }
+}
+
+@keyframes loadingDots {
+    0% {
+        content: '.';
+    }
+    33% {
+        content: '..';
+    }
+    66% {
+        content: '...';
+    }
+    100% {
+        content: '';
+    }
+}
+
+@keyframes loadingSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================================
+   ✨ SPECIAL EFFECTS - تأثيرات خاصة
+   ============================================================ */
+
+/* ===== تأثيرات النجوم ===== */
+@keyframes starsFloat {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    100% {
+        transform: translateY(-200px) translateX(50px);
+    }
+}
+
+/* ===== تأثيرات الخلفية ===== */
+@keyframes backgroundPulse {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.08) rotate(3deg);
+        opacity: 1;
+    }
+}
+
+/* ===== تأثيرات النص ===== */
+@keyframes typing {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes blink {
+    0%, 100% {
+        border-color: transparent;
+    }
+    50% {
+        border-color: var(--color-gold);
+    }
+}
+
+/* ===== تأثيرات البطاقات ===== */
+@keyframes cardFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes cardGlow {
+    0%, 100% {
+        border-color: var(--color-border);
+    }
+    50% {
+        border-color: var(--color-gold);
+        box-shadow: var(--shadow-gold);
+    }
+}
+
+/* ============================================================
+   📱 ANIMATION UTILITY CLASSES - فئات مساعدة
+   ============================================================ */
+
+/* ===== تطبيقات عامة ===== */
+.animate-fade {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-fade-up {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.animate-fade-down {
+    animation: fadeInDown 0.5s ease forwards;
+}
+
+.animate-fade-left {
+    animation: fadeInLeft 0.5s ease forwards;
+}
+
+.animate-fade-right {
+    animation: fadeInRight 0.5s ease forwards;
+}
+
+.animate-fade-scale {
+    animation: fadeInScale 0.5s ease forwards;
+}
+
+.animate-slide-up {
+    animation: slideInUp 0.5s ease forwards;
+}
+
+.animate-slide-down {
+    animation: slideInDown 0.5s ease forwards;
+}
+
+.animate-slide-left {
+    animation: slideInLeft 0.5s ease forwards;
+}
+
+.animate-slide-right {
+    animation: slideInRight 0.5s ease forwards;
+}
+
+.animate-scale {
+    animation: scaleIn 0.5s ease forwards;
+}
+
+.animate-scale-center {
+    animation: scaleInCenter 0.5s ease forwards;
+}
+
+.animate-bounce {
+    animation: bounceIn 0.6s ease forwards;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+    animation: pulseDot 2s ease-in-out infinite;
+}
+
+.animate-glow {
+    animation: glow 3s ease-in-out infinite;
+}
+
+.animate-wave {
+    animation: wave 3s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: waveFloat 4s ease-in-out infinite;
+}
+
+/* ===== تأخيرات ===== */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+.delay-6 { animation-delay: 0.6s; }
+.delay-7 { animation-delay: 0.7s; }
+.delay-8 { animation-delay: 0.8s; }
+.delay-9 { animation-delay: 0.9s; }
+.delay-10 { animation-delay: 1s; }
+
+/* ===== مدة ===== */
+.duration-1 { animation-duration: 0.3s; }
+.duration-2 { animation-duration: 0.5s; }
+.duration-3 { animation-duration: 0.8s; }
+.duration-4 { animation-duration: 1s; }
+.duration-5 { animation-duration: 1.5s; }
+.duration-6 { animation-duration: 2s; }
+.duration-7 { animation-duration: 3s; }
+
+/* ===== مرات التكرار ===== */
+.infinite { animation-iteration-count: infinite; }
+.once { animation-iteration-count: 1; }
+.twice { animation-iteration-count: 2; }
+
+/* ===== حالة التشغيل ===== */
+.animation-running { animation-play-state: running; }
+.animation-paused { animation-play-state: paused; }
+
+/* ===== اتجاه ===== */
+.animation-normal { animation-direction: normal; }
+.animation-reverse { animation-direction: reverse; }
+.animation-alternate { animation-direction: alternate; }
+.animation-alternate-reverse { animation-direction: alternate-reverse; }
+
+/* ============================================================
+   🎬 PAGE TRANSITIONS - انتقالات الصفحات
+   ============================================================ */
+
+.page-enter {
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+.page-exit {
+    animation: fadeInDown 0.3s ease forwards reverse;
+}
+
+.page-enter-slide {
+    animation: slideInRight 0.4s ease forwards;
+}
+
+.page-exit-slide {
+    animation: slideInLeft 0.3s ease forwards reverse;
+}
+
+/* ============================================================
+   🎯 COMPONENT ANIMATIONS - رسوم المكونات
+   ============================================================ */
+
+/* ===== البطاقات ===== */
+.card-hover {
+    transition: var(--transition-base);
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-hover-glow:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-gold-lg);
+    border-color: var(--color-gold);
+}
+
+/* ===== الأزرار ===== */
+.btn-hover {
+    transition: var(--transition-base);
+}
+
+.btn-hover:hover {
+    transform: translateY(-2px);
+}
+
+.btn-hover:active {
+    transform: scale(0.96);
+}
+
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 60%);
+    opacity: 0;
+    transition: var(--transition-base);
+}
+
+.btn-ripple:hover::after {
+    opacity: 1;
+}
+
+/* ===== الروابط ===== */
+.link-hover {
+    position: relative;
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+.link-hover::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: 0;
+    width: 0;
+    height: 2px;
+    background: var(--color-gold);
+    transition: var(--transition-base);
+}
+
+.link-hover:hover::after {
+    width: 100%;
+}
+
+/* ============================================================
+   🔄 REDUCED MOTION - تقليل الحركة
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    .animate-fade,
+    .animate-fade-up,
+    .animate-fade-down,
+    .animate-fade-left,
+    .animate-fade-right,
+    .animate-fade-scale,
+    .animate-slide-up,
+    .animate-slide-down,
+    .animate-slide-left,
+    .animate-slide-right,
+    .animate-scale,
+    .animate-scale-center,
+    .animate-bounce {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* ============================================================
+   END OF ANIMATIONS.CSS
+   ============================================================ */
