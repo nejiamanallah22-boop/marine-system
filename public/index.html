@@ -1,612 +1,858 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الوسائل البحرية</title>
-    <link rel="stylesheet" href="/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نظام إدارة الوسائل البحرية</title>
+
+    <!-- ====== Font Awesome 6 ====== -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- ====== Google Font ====== -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+
+    <style>
+        /* ==========================
+               CSS Variables
+            ========================== */
+        :root {
+            --primary: #0f3b5c;
+            --primary-dark: #09263b;
+            --primary-light: #1a5f7a;
+            --primary-gradient: linear-gradient(145deg, #0f3b5c, #1a5f7a);
+            --secondary: #f5b042;
+            --secondary-light: #f7c66a;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8edf3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* خلفية مزخرفة */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 50%, rgba(15, 59, 92, 0.03) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(245, 176, 66, 0.04) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ==========================
+               حاوية تسجيل الدخول
+            ========================== */
+        .login-wrapper {
+            width: 100%;
+            max-width: 440px;
+            animation: fadeInUp 0.7s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius);
+            padding: 48px 40px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            height: 5px;
+            background: var(--primary-gradient);
+        }
+
+        /* ==========================
+               الشعار والعنوان
+            ========================== */
+        .login-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .login-header .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 30px rgba(15, 59, 92, 0.3);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .login-header .icon-wrapper:hover {
+            transform: scale(1.05) rotate(-5deg);
+        }
+
+        .login-header .icon-wrapper i {
+            font-size: 2.4rem;
+            color: #fff;
+        }
+
+        .login-header .icon-wrapper .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid rgba(15, 59, 92, 0.15);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .login-header h1 {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            letter-spacing: -0.5px;
+        }
+
+        .login-header h1 span {
+            color: var(--secondary);
+        }
+
+        .login-header p {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        /* ==========================
+               رسائل
+            ========================== */
+        .message-box {
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-box.show {
+            display: flex;
+        }
+
+        .message-box.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .message-box.success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .message-box i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        /* ==========================
+               حقول الإدخال
+            ========================== */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 6px;
+        }
+
+        .form-group .input-wrapper {
+            position: relative;
+        }
+
+        .form-group .input-wrapper .input-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 1rem;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px 45px 13px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: var(--font);
+            background: var(--gray-50);
+            transition: var(--transition);
+            color: var(--gray-800);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(15, 59, 92, 0.08);
+        }
+
+        .form-group input:focus~.input-icon {
+            color: var(--primary);
+        }
+
+        .form-group .input-wrapper:focus-within .input-icon {
+            color: var(--primary);
+        }
+
+        .form-group .toggle-password {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            padding: 4px;
+        }
+
+        .form-group .toggle-password:hover {
+            color: var(--gray-600);
+        }
+
+        /* ==========================
+               خيارات إضافية
+            ========================== */
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .form-options .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-600);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .form-options .remember-me input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .form-options .forgot-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .form-options .forgot-link:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        /* ==========================
+               زر تسجيل الدخول
+            ========================== */
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.05rem;
+            font-weight: 700;
+            font-family: var(--font);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .btn-login:hover::after {
+            opacity: 1;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(15, 59, 92, 0.35);
+        }
+
+        .btn-login:active {
+            transform: scale(0.97);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-login .spinner {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-login.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-login.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==========================
+               تذييل
+            ========================== */
+        .login-footer {
+            text-align: center;
+            margin-top: 28px;
+            color: var(--gray-400);
+            font-size: 0.8rem;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .login-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .login-footer a:hover {
+            color: var(--primary-light);
+            text-decoration: underline;
+        }
+
+        .login-footer .footer-icons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .login-footer .footer-icons a {
+            color: var(--gray-400);
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .login-footer .footer-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* ==========================
+               استجابة
+            ========================== */
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            .login-card {
+                padding: 28px 16px 24px;
+                border-radius: var(--radius-sm);
+            }
+
+            .login-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .login-header .icon-wrapper {
+                width: 64px;
+                height: 64px;
+            }
+
+            .login-header .icon-wrapper i {
+                font-size: 1.8rem;
+            }
+
+            .form-options {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            .form-group input {
+                padding: 12px 40px 12px 14px;
+                font-size: 0.9rem;
+            }
+
+            .btn-login {
+                font-size: 0.95rem;
+                padding: 12px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            body {
+                padding: 40px;
+            }
+        }
+
+        /* ==========================
+               دعم المتصفحات القديمة
+            ========================== */
+        @supports not (backdrop-filter: blur(20px)) {
+            .login-card {
+                background: #ffffff;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- شاشة تسجيل الدخول -->
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2 style="color:#2e7d32">⚓ منظومة الوسائل البحرية</h2>
-        <input type="text" id="username" placeholder="اسم المستخدم">
-        <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="doLogin()">دخول</button>
-        <div id="loginError" class="error-msg"></div>
-    </div>
-</div>
+    <div class="login-wrapper">
+        <div class="login-card">
 
-<!-- التطبيق الرئيسي -->
-<div id="mainApp" class="container" style="display: none;">
-    <header>
-        <h1>⚓ منظومة متابعة الوسائل البحرية</h1>
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0 20px; margin-top:10px; flex-wrap:wrap; gap:10px">
-            <div class="developer-info">💻 Développeur: أمان الله ناجي 🚀</div>
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
-                <span id="userRoleDisplay" class="role-badge"></span>
-                <button class="btn-sm btn-cyan" onclick="exportAllData()" id="exportBtn">📤 تصدير البيانات</button>
-                <label class="file-input-label" id="importLabelBtn">📥 استيراد بيانات <input type="file" id="fileInput" accept=".json" onchange="importAllData(this)"></label>
-                <button class="btn-sm btn-blue" onclick="refreshAllPages()">🔄 تحديث الكل</button>
-                <button class="btn-sm btn-red" onclick="logout()">خروج</button>
+            <!-- ====== رسائل ====== -->
+            <div id="messageBox" class="message-box">
+                <i id="messageIcon" class="fas fa-exclamation-circle"></i>
+                <span id="messageText">رسالة</span>
             </div>
-        </div>
-    </header>
 
-    <div class="nav">
-        <button class="btn btn-blue" onclick="loadPage('fleet')">⚓ الأسطول البحري</button>
-        <button class="btn btn-orange" onclick="loadPage('maintenance')">🛠️ سجل الصيانة</button>
-        <button class="btn btn-green" onclick="loadPage('efficiency')">📈 جاهزية الأسطول</button>
-        <button class="btn btn-cyan" onclick="loadPage('support')">📞 الدعم الفني</button>
-        <button id="trackBtn" class="btn btn-purple" onclick="loadPage('tracking')">📊 تتبع المستخدمين</button>
-        <button id="mapBtn" class="btn btn-purple" onclick="loadPage('map')">🗺️ خريطة التتبع</button>
-        <button id="admBtn" class="btn btn-red" onclick="loadPage('users')">👥 المستخدمين</button>
-        <button id="printBtn" class="btn btn-blue" onclick="window.print()">🖨️ طباعة</button>
-    </div>
-
-    <div id="pageContent">
-        <div style="text-align:center; padding:50px; color:#666;">
-            <h3>📂 اختر صفحة من القائمة أعلاه</h3>
-            <p>سيتم تحميل المحتوى هنا...</p>
-        </div>
-    </div>
-
-    <div id="inputArea" class="input-grid" style="display:none;">
-        <input type="text" id="iName" placeholder="اسم المركب">
-        <input type="text" id="iNum" placeholder="الرقم">
-        <input type="number" id="iLen" placeholder="الطول (م)">
-        <select id="iReg" onchange="updateZones()">
-            <option value="">الإقليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
-        <select id="iZone"><option value="">المنطقة</option></select>
-        <input type="text" id="iPort" placeholder="الميناء">
-        <input type="text" id="iSupp" placeholder="مكان التعزيز">
-        <select id="iStat"><option value="صالح">صالح</option><option value="معطب">معطب</option><option value="صيانة">صيانة</option></select>
-        <input type="text" id="iBreak" placeholder="نوع العطب">
-        <input type="date" id="iDate">
-        <input type="date" id="iEnd">
-        <input type="text" id="iRef" placeholder="المرجع">
-        <button class="btn btn-green" onclick="addItem()">✅ حفظ</button>
-    </div>
-</div>
-
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h3>🔐 تغيير كلمة المرور</h3>
-        <p id="modalUserName"></p>
-        <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-        <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
-        <button class="btn btn-green" onclick="saveNewPassword()">حفظ</button>
-        <button class="btn btn-red" onclick="closePasswordModal()">إلغاء</button>
-    </div>
-</div>
-
-<div class="scroll-buttons">
-    <button class="scroll-btn" onclick="scrollToTop()">⬆️</button>
-    <button class="scroll-btn" onclick="scrollToBottom()">⬇️</button>
-</div>
-
-<script>
-let currentUser = null;
-let selectedUserId = null;
-let currentPage = 'fleet';
-let socket = null;
-let trackingMap = null;
-let trackingMarkers = {};
-let trackingInterval = null;
-let fleetChart = null, categoriesChart = null, comparisonChart = null;
-let currentChartType = 'doughnut';
-
-const ZONES_DATA = {
-    "الشمال": ["تونس", "بنزرت", "طبرقة"],
-    "الساحل": ["سوسة", "المنستير", "نابل"],
-    "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-    "الجنوب": ["جرجيس", "جربة", "قابس"],
-    "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-    "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-    "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-    "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-    "المجمع الأمني بقبيبة": ["قبيبة"]
-};
-
-const CATS_LIST = ["البروق", "صقور", "خوافر", "زوارق مزدوجة", "طوافات"];
-const ALL_REGIONS = ["الشمال", "الساحل", "الوسط", "الجنوب", "وحدة الصيانة والإسناد البحري تونس", "وحدة الصيانة والإسناد البحري المنستير", "وحدة الصيانة والإسناد البحري صفاقس", "وحدة الصيانة والإسناد البحري جرجيس", "المجمع الأمني بقبيبة"];
-
-const REGION_DISPLAY_NAMES = {
-    "الشمال": "🗺️ الحرس البحري بالشمال",
-    "الساحل": "🗺️ الحرس البحري بالساحل",
-    "الوسط": "🗺️ الحرس البحري بالوسط",
-    "الجنوب": "🗺️ الحرس البحري بالجنوب",
-    "وحدة الصيانة والإسناد البحري تونس": "🛠️ وحدة الصيانة تونس",
-    "وحدة الصيانة والإسناد البحري المنستير": "🛠️ وحدة الصيانة المنستير",
-    "وحدة الصيانة والإسناد البحري صفاقس": "🛠️ وحدة الصيانة صفاقس",
-    "وحدة الصيانة والإسناد البحري جرجيس": "🛠️ وحدة الصيانة جرجيس",
-    "المجمع الأمني بقبيبة": "🏛️ المجمع الأمني بقبيبة"
-};
-
-function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
-function scrollToBottom() { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
-
-function showToast(message, isError = false) {
-    let toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.style.background = isError ? '#d9534f' : '#2e7d32';
-    toast.innerHTML = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-function formatDate(d) {
-    if (!d) return '-';
-    try {
-        let date = new Date(d);
-        if (isNaN(date.getTime())) return d;
-        return `${date.getDate().toString().padStart(2,'0')}/${(date.getMonth()+1).toString().padStart(2,'0')}/${date.getFullYear()}`;
-    } catch(e) { return d; }
-}
-
-function getCat(len) {
-    let n = parseFloat(len);
-    if (n === 11) return "البروق";
-    if (n >= 8 && n <= 12) return "صقور";
-    if (n > 12 && n <= 25) return "خوافر";
-    if (n >= 30) return "طوافات";
-    return "زوارق مزدوجة";
-}
-
-function canEdit() { return currentUser && (currentUser.role === "مسؤول" || currentUser.role === "محرر"); }
-function canDelete() { return currentUser && currentUser.role === "مسؤول"; }
-function canManageUsers() { return currentUser && currentUser.role === "مسؤول"; }
-
-function getCurrentDate() {
-    let now = new Date();
-    return `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()}`;
-}
-
-function getCurrentTime() {
-    let now = new Date();
-    return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-}
-
-async function apiCall(url, method = 'GET', body = null) {
-    let options = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) options.body = JSON.stringify(body);
-    let response = await fetch(url, options);
-    if (!response.ok) throw new Error(await response.text());
-    return response.json();
-}
-
-async function loadVessels() { return apiCall('/api/vessels'); }
-async function saveVessel(vessel) { return apiCall('/api/vessels', 'POST', vessel); }
-async function updateVessel(id, vessel) { return apiCall(`/api/vessels/${id}`, 'PUT', vessel); }
-async function deleteVessel(id) { return apiCall(`/api/vessels/${id}`, 'DELETE'); }
-async function loadUsers() { return apiCall('/api/users'); }
-async function saveUser(user) { return apiCall('/api/users', 'POST', user); }
-async function updateUser(id, user) { return apiCall(`/api/users/${id}`, 'PUT', user); }
-async function deleteUserAPI(id) { return apiCall(`/api/users/${id}`, 'DELETE'); }
-async function loadTickets() { return apiCall('/api/tickets'); }
-async function saveTicket(ticket) { return apiCall('/api/tickets', 'POST', ticket); }
-async function loadLogs() { return apiCall('/api/logs'); }
-async function saveLog(log) { return apiCall('/api/logs', 'POST', log); }
-async function loginAPI(name, pass) { return apiCall('/api/login', 'POST', { name, pass }); }
-async function exportAllDataAPI() { return apiCall('/api/export-all'); }
-async function importAllDataAPI(data) { return apiCall('/api/import-all', 'POST', data); }
-
-async function logActivity(action, details) {
-    if (!currentUser) return;
-    try {
-        await saveLog({ userName: currentUser.name, userRole: currentUser.role, action: action, details: details });
-    } catch(e) { console.error(e); }
-}
-
-async function loadPage(page) {
-    currentPage = page;
-    document.getElementById('inputArea').style.display = 'none';
-    
-    if ((page === 'tracking' || page === 'map' || page === 'users') && !canManageUsers()) {
-        showToast("غير مسموح - هذه الصفحة للمسؤول فقط", true);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/pages/${page}.html`);
-        if (!response.ok) throw new Error('Page not found');
-        const html = await response.text();
-        document.getElementById('pageContent').innerHTML = html;
-        
-        if (page === 'fleet') {
-            document.getElementById('inputArea').style.display = 'grid';
-            fillSelect('fCatMain', CATS_LIST);
-            fillSelect('fRegMain', ALL_REGIONS);
-            fillSelect('fRegMaint', ALL_REGIONS);
-        }
-        
-        await initPage(page);
-    } catch(error) {
-        document.getElementById('pageContent').innerHTML = `
-            <div style="text-align:center; padding:50px; color:#d9534f;">
-                <h3>❌ خطأ في تحميل الصفحة</h3>
-                <p>${error.message}</p>
+            <!-- ====== الهيدر ====== -->
+            <div class="login-header">
+                <div class="icon-wrapper">
+                    <span class="pulse-ring"></span>
+                    <i class="fas fa-anchor"></i>
+                </div>
+                <h1>منظومة <span>البحرية</span></h1>
+                <p>تسجيل الدخول إلى نظام الإدارة</p>
             </div>
-        `;
-    }
-}
 
-function fillSelect(id, list) {
-    let sel = document.getElementById(id);
-    if (sel) {
-        sel.innerHTML = '<option value="الكل">الكل</option>';
-        list.forEach(item => sel.innerHTML += `<option value="${item}">${item}</option>`);
-    }
-}
+            <!-- ====== نموذج تسجيل الدخول ====== -->
+            <form id="loginForm" autocomplete="off" novalidate>
 
-async function initPage(page) {
-    switch(page) {
-        case 'fleet': if (typeof renderMain === 'function') await renderMain(); break;
-        case 'maintenance': if (typeof renderMaint === 'function') await renderMaint(); break;
-        case 'efficiency': if (typeof renderEff === 'function') await renderEff(); break;
-        case 'support': if (typeof renderTickets === 'function') await renderTickets(); break;
-        case 'tracking': if (typeof renderTrack === 'function') await renderTrack(); break;
-        case 'map': 
-            setTimeout(() => {
-                if (trackingMap) trackingMap.invalidateSize();
-                if (typeof loadLocations === 'function') loadLocations();
-            }, 100);
-            break;
-        case 'users': if (typeof renderUsers === 'function') await renderUsers(); break;
-    }
-}
+                <!-- اسم المستخدم -->
+                <div class="form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="text"
+                            id="username"
+                            placeholder="أدخل اسم المستخدم"
+                            required
+                            autofocus
+                        />
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                    </div>
+                </div>
 
-async function doLogin() {
-    let username = document.getElementById('username').value.trim();
-    let password = document.getElementById('password').value.trim();
-    let errorDiv = document.getElementById('loginError');
-    
-    if (!username || !password) {
-        errorDiv.innerHTML = "يرجى إدخال اسم المستخدم وكلمة المرور";
-        errorDiv.style.display = "block";
-        return;
-    }
-    
-    try {
-        let user = await loginAPI(username, password);
-        if (user.error) {
-            errorDiv.innerHTML = user.error;
-            errorDiv.style.display = "block";
-            return;
-        }
-        
-        currentUser = user;
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('userRoleDisplay').innerHTML = `👤 ${currentUser.name} | 🔑 ${currentUser.role}`;
-        
-        initSocket();
-        initTrackingMap();
-        
-        let isAdmin = currentUser.role === "مسؤول";
-        document.getElementById('trackBtn').classList.toggle('hidden', !isAdmin);
-        document.getElementById('mapBtn').classList.toggle('hidden', !isAdmin);
-        document.getElementById('admBtn').classList.toggle('hidden', !isAdmin);
-        document.getElementById('printBtn').style.display = isAdmin ? "inline-block" : "none";
-        document.getElementById('exportBtn').style.display = isAdmin ? "inline-flex" : "none";
-        document.getElementById('importLabelBtn').style.display = isAdmin ? "inline-flex" : "none";
-        
-        await logActivity("تسجيل دخول", `قام بتسجيل الدخول`);
-        showToast(`مرحباً ${username}`);
-        loadPage('fleet');
-    } catch(error) {
-        errorDiv.innerHTML = "خطأ في الاتصال بالسيرفر!";
-        errorDiv.style.display = "block";
-    }
-}
+                <!-- كلمة المرور -->
+                <div class="form-group">
+                    <label for="password">كلمة المرور</label>
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="أدخل كلمة المرور"
+                            required
+                        />
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            id="togglePassword"
+                            aria-label="إظهار/إخفاء كلمة المرور"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
 
-async function logout() {
-    if (trackingInterval) stopTracking();
-    if (currentUser) await logActivity("تسجيل خروج", `قام بتسجيل الخروج`);
-    currentUser = null;
-    document.getElementById('loginOverlay').style.display = 'flex';
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('loginError').style.display = 'none';
-}
+                <!-- خيارات -->
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe" />
+                        <span>تذكرني</span>
+                    </label>
+                    <a href="#" class="forgot-link" id="forgotLink">نسيت كلمة المرور؟</a>
+                </div>
 
-function initSocket() {
-    if (socket) return;
-    socket = io();
-    socket.on('receive-location', (data) => {
-        if (currentUser && currentUser.role === 'مسؤول') {
-            if (data.userName !== currentUser.name) {
-                updateMapMarker(data.userName, data.lat, data.lng, data.time);
-                showToast(`📍 المستخدم ${data.userName} - موقع محدث`);
+                <!-- زر تسجيل الدخول -->
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="spinner"></span>
+                    <span class="btn-text">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                    </span>
+                </button>
+
+            </form>
+
+            <!-- ====== تذييل ====== -->
+            <div class="login-footer">
+                <div class="footer-icons">
+                    <a href="#" title="تويتر"><i class="fab fa-twitter"></i></a>
+                    <a href="#" title="لينكد إن"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" title="جيت هاب"><i class="fab fa-github"></i></a>
+                </div>
+                <span>© 2026 <a href="#">منظومة الوسائل البحرية</a> · جميع الحقوق محفوظة</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =============================================================== -->
+    <!-- جافا سكريبت -->
+    <!-- =============================================================== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ==========================
+            // عناصر DOM
+            // ==========================
+            const form = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const togglePassword = document.getElementById('togglePassword');
+            const rememberMe = document.getElementById('rememberMe');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const messageIcon = document.getElementById('messageIcon');
+            const forgotLink = document.getElementById('forgotLink');
+
+            // ==========================
+            // إظهار/إخفاء كلمة المرور
+            // ==========================
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+            });
+
+            // ==========================
+            // عرض الرسائل
+            // ==========================
+            function showMessage(text, type = 'error') {
+                messageBox.className = 'message-box show ' + type;
+                messageText.textContent = text;
+                messageIcon.className = type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+
+                clearTimeout(window.messageTimeout);
+                window.messageTimeout = setTimeout(() => {
+                    messageBox.classList.remove('show');
+                }, 5000);
             }
-        }
-    });
-}
 
-function initTrackingMap() {
-    if (trackingMap) return;
-    trackingMap = L.map('trackMap').setView([34.5, 9.5], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { 
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors' 
-    }).addTo(trackingMap);
-}
+            function hideMessage() {
+                messageBox.classList.remove('show');
+                clearTimeout(window.messageTimeout);
+            }
 
-function updateMapMarker(userName, lat, lng, time) {
-    if (!trackingMap) initTrackingMap();
-    let key = userName;
-    let popupContent = `<b>${userName}</b><br>📍 ${lat.toFixed(6)}, ${lng.toFixed(6)}<br>🕐 ${new Date(time).toLocaleString('ar-EG')}`;
-    if (trackingMarkers[key]) {
-        trackingMarkers[key].setLatLng([lat, lng]);
-        trackingMarkers[key].bindPopup(popupContent);
-    } else {
-        let marker = L.marker([lat, lng]).addTo(trackingMap);
-        marker.bindPopup(popupContent);
-        trackingMarkers[key] = marker;
-    }
-}
-
-function startTracking() {
-    if (!currentUser) { showToast("الرجاء تسجيل الدخول أولاً", true); return; }
-    if (!navigator.geolocation) { showToast("المتصفح لا يدعم تحديد الموقع", true); return; }
-    if (!socket) initSocket();
-    trackingInterval = setInterval(() => {
-        navigator.geolocation.getCurrentPosition((position) => {
-            if (socket && currentUser) {
-                socket.emit('send-location', {
-                    userName: currentUser.name,
-                    userRole: currentUser.role,
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
+            // ==========================
+            // روابط تواصل اجتماعي
+            // ==========================
+            document.querySelectorAll('.footer-icons a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showMessage('🔗 سيتم إضافة الروابط قريباً', 'success');
                 });
-                let statusEl = document.getElementById('mapStatus');
-                if (statusEl) statusEl.innerHTML = `📍 يتم مشاركة موقعك... ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+            });
+
+            // ==========================
+            // نسيت كلمة المرور
+            // ==========================
+            forgotLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showMessage('📧 سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني', 'success');
+            });
+
+            // ==========================
+            // معالجة تسجيل الدخول (اتصال بالسيرفر)
+            // ==========================
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                hideMessage();
+
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                // التحقق من الحقول
+                if (!username || !password) {
+                    showMessage('⚠️ يرجى تعبئة جميع الحقول', 'error');
+                    usernameInput.focus();
+                    return;
+                }
+
+                // التحقق من طول اسم المستخدم
+                if (username.length < 3) {
+                    showMessage('⚠️ اسم المستخدم يجب أن يكون 3 أحرف على الأقل', 'error');
+                    usernameInput.focus();
+                    return;
+                }
+
+                // التحقق من طول كلمة المرور
+                if (password.length < 4) {
+                    showMessage('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+                    passwordInput.focus();
+                    return;
+                }
+
+                // حالة التحميل
+                loginBtn.disabled = true;
+                loginBtn.classList.add('loading');
+
+                try {
+                    // ====== الاتصال بالسيرفر ======
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || 'بيانات الدخول غير صحيحة');
+                    }
+
+                    // حفظ بيانات المستخدم
+                    const userData = {
+                        username: data.username,
+                        name: data.name,
+                        role: data.role,
+                        loggedIn: true,
+                        loginTime: new Date().toISOString()
+                    };
+
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+                    localStorage.setItem('token', data.token);
+
+                    if (rememberMe.checked) {
+                        localStorage.setItem('rememberMe', 'true');
+                        localStorage.setItem('savedUsername', username);
+                    } else {
+                        localStorage.removeItem('rememberMe');
+                        localStorage.removeItem('savedUsername');
+                    }
+
+                    // رسالة نجاح
+                    showMessage('✅ مرحباً ' + data.name + '! جاري التحويل...', 'success');
+
+                    // الانتقال إلى الصفحة الرئيسية
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 800);
+
+                } catch (error) {
+                    console.error('Login error:', error);
+                    showMessage('❌ ' + error.message, 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            });
+
+            // ==========================
+            // استعادة بيانات تسجيل الدخول المحفوظة
+            // ==========================
+            function loadSavedCredentials() {
+                if (localStorage.getItem('rememberMe') === 'true') {
+                    const savedUsername = localStorage.getItem('savedUsername');
+                    if (savedUsername) {
+                        usernameInput.value = savedUsername;
+                        rememberMe.checked = true;
+                        setTimeout(() => passwordInput.focus(), 300);
+                    }
+                }
             }
-        }, (error) => {
-            console.error('GPS error:', error);
-            let statusEl = document.getElementById('mapStatus');
-            if (statusEl) statusEl.innerHTML = '❌ تعذر الحصول على الموقع';
-        }, { enableHighAccuracy: true, timeout: 5000 });
-    }, 5000);
-    let startBtn = document.getElementById('startTrackingBtn');
-    let stopBtn = document.getElementById('stopTrackingBtn');
-    if (startBtn) startBtn.style.display = 'none';
-    if (stopBtn) stopBtn.style.display = 'inline-block';
-    showToast("✅ بدأ مشاركة الموقع");
-}
 
-function stopTracking() {
-    if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
-    let startBtn = document.getElementById('startTrackingBtn');
-    let stopBtn = document.getElementById('stopTrackingBtn');
-    if (startBtn) startBtn.style.display = 'inline-block';
-    if (stopBtn) stopBtn.style.display = 'none';
-    let statusEl = document.getElementById('mapStatus');
-    if (statusEl) statusEl.innerHTML = '⏹️ توقفت مشاركة الموقع';
-    showToast("⏹️ تم إيقاف مشاركة الموقع");
-}
+            // ==========================
+            // التحقق من وجود جلسة نشطة
+            // ==========================
+            function checkActiveSession() {
+                try {
+                    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+                    const token = localStorage.getItem('token');
 
-async function loadLocations() {
-    if (!currentUser || currentUser.role !== 'مسؤول') {
-        showToast("غير مسموح - هذه الخاصية للمسؤول فقط", true);
-        return;
-    }
-    try {
-        let locations = await apiCall('/api/locations');
-        if (!trackingMap) initTrackingMap();
-        Object.values(trackingMarkers).forEach(marker => marker.remove());
-        trackingMarkers = {};
-        locations.forEach(loc => {
-            if (loc.userName !== currentUser.name) {
-                updateMapMarker(loc.userName, loc.lat, loc.lng, loc.timestamp);
+                    if (user && token && user.loggedIn) {
+                        window.location.href = 'dashboard.html';
+                    }
+                } catch (e) {
+                    // تجاهل
+                }
             }
-        });
-        showToast(`✅ تم تحميل مواقع ${locations.length} مستخدم`);
-    } catch(err) { 
-        console.error(err);
-        showToast("❌ خطأ في تحميل المواقع", true); 
-    }
-}
 
-function centerMapOnUser() {
-    if (!trackingMap) initTrackingMap();
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            trackingMap.setView([pos.coords.latitude, pos.coords.longitude], 13);
-            showToast("🎯 تم التمركز على موقعك");
-        }, () => showToast("لا يمكن الحصول على موقعك", true));
-    }
-}
+            // ==========================
+            // التنقل بين الحقول بالضغط على Enter
+            // ==========================
+            usernameInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    passwordInput.focus();
+                }
+            });
 
-async function refreshAllPages() {
-    await loadPage(currentPage);
-    showToast("✅ تم تحديث الصفحة");
-}
+            passwordInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    form.dispatchEvent(new Event('submit'));
+                }
+            });
 
-function updateZones() {
-    let reg = document.getElementById('iReg').value;
-    let zoneSel = document.getElementById('iZone');
-    if (zoneSel) {
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(z => zoneSel.innerHTML += `<option value="${z}">${z}</option>`);
-        }
-    }
-}
+            // ==========================
+            // إخفاء الرسالة عند بدء الكتابة
+            // ==========================
+            usernameInput.addEventListener('input', hideMessage);
+            passwordInput.addEventListener('input', hideMessage);
 
-async function addItem() {
-    if (!canEdit()) { showToast("ليس لديك صلاحية للإضافة!", true); return; }
-    let name = document.getElementById('iName').value.trim();
-    if (!name) return showToast("الاسم مطلوب", true);
-    let stat = document.getElementById('iStat').value;
-    let fDate = document.getElementById('iDate').value;
-    if ((stat === 'معطب' || stat === 'صيانة') && !fDate) {
-        showToast("تاريخ العطب إلزامي للمراكب المعطوبة أو التي تحت الصيانة!", true);
-        return;
-    }
-    let newItem = {
-        name: name, num: document.getElementById('iNum').value,
-        len: parseFloat(document.getElementById('iLen').value) || 0,
-        reg: document.getElementById('iReg').value,
-        zone: document.getElementById('iZone').value,
-        port: document.getElementById('iPort').value,
-        supp: document.getElementById('iSupp').value,
-        stat: stat,
-        break: document.getElementById('iBreak').value,
-        fDate: fDate,
-        eDate: document.getElementById('iEnd').value,
-        ref: document.getElementById('iRef').value,
-        cat: getCat(document.getElementById('iLen').value)
-    };
-    try {
-        await saveVessel(newItem);
-        await logActivity("إضافة مركب", `قام بإضافة مركب "${name}"`);
-        ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
-            let el = document.getElementById(id);
-            if (el) el.value = "";
-        });
-        document.getElementById('iReg').value = "";
-        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-        await loadPage('fleet');
-        showToast(`✅ تم حفظ المركب بنجاح`);
-    } catch(error) {
-        showToast("خطأ في حفظ المركب: " + error.message, true);
-    }
-}
+            // ==========================
+            // تهيئة الصفحة
+            // ==========================
+            document.addEventListener('DOMContentLoaded', function() {
+                checkActiveSession();
+                loadSavedCredentials();
+                console.log('🔐 نظام تسجيل الدخول جاهز');
+            });
 
-async function editItem(id, name) {
-    if (!canEdit()) { showToast("ليس لديك صلاحية للتعديل!", true); return; }
-    let data = await loadVessels();
-    let item = data.find(x => x.id === id);
-    if (item) {
-        document.getElementById('iName').value = item.name;
-        document.getElementById('iNum').value = item.num || '';
-        document.getElementById('iLen').value = item.len || '';
-        document.getElementById('iReg').value = item.reg || '';
-        updateZones();
-        setTimeout(() => { document.getElementById('iZone').value = item.zone; }, 50);
-        document.getElementById('iPort').value = item.port || '';
-        document.getElementById('iSupp').value = item.supp || '';
-        document.getElementById('iStat').value = item.stat;
-        document.getElementById('iBreak').value = item.break || '';
-        document.getElementById('iDate').value = item.fDate || '';
-        document.getElementById('iEnd').value = item.eDate || '';
-        document.getElementById('iRef').value = item.ref || '';
-        window.scrollTo(0, 0);
-        let oldName = item.name;
-        let saveBtn = document.querySelector('#inputArea .btn-green');
-        let originalClick = saveBtn.onclick;
-        saveBtn.onclick = async () => {
-            let updatedItem = {
-                name: document.getElementById('iName').value.trim(),
-                num: document.getElementById('iNum').value,
-                len: parseFloat(document.getElementById('iLen').value) || 0,
-                reg: document.getElementById('iReg').value,
-                zone: document.getElementById('iZone').value,
-                port: document.getElementById('iPort').value,
-                supp: document.getElementById('iSupp').value,
-                stat: document.getElementById('iStat').value,
-                break: document.getElementById('iBreak').value,
-                fDate: document.getElementById('iDate').value,
-                eDate: document.getElementById('iEnd').value,
-                ref: document.getElementById('iRef').value,
-                cat: getCat(document.getElementById('iLen').value)
-            };
-            try {
-                await updateVessel(id, updatedItem);
-                await logActivity("تعديل مركب", `قام بتعديل مركب "${oldName}" إلى "${updatedItem.name}"`);
-                await loadPage('fleet');
-                showToast("✅ تم تحديث المركب بنجاح");
-                saveBtn.onclick = originalClick;
-                ['iName','iNum','iLen','iPort','iSupp','iBreak','iDate','iEnd','iRef'].forEach(id => {
-                    let el = document.getElementById(id);
-                    if (el) el.value = "";
-                });
-                document.getElementById('iReg').value = "";
-                document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-            } catch(error) {
-                showToast("خطأ في التحديث: " + error.message, true);
-            }
-        };
-        showToast("✏️ قم بتعديل البيانات ثم اضغط حفظ");
-    }
-}
+        })();
+    </script>
 
-async function delItem(id, name) {
-    if (!canDelete()) { showToast("ليس لديك صلاحية للحذف!", true); return; }
-    if (confirm(`هل أنت متأكد من حذف المركب "${name}"؟`)) {
-        try {
-            await deleteVessel(id);
-            await logActivity("حذف مركب", `قام بحذف مركب "${name}"`);
-            await loadPage('fleet');
-            showToast("✅ تم حذف المركب بنجاح");
-        } catch(error) {
-            showToast("خطأ في الحذف: " + error.message, true);
-        }
-    }
-}
-
-window.doLogin = doLogin;
-window.logout = logout;
-window.loadPage = loadPage;
-window.updateZones = updateZones;
-window.addItem = addItem;
-window.editItem = editItem;
-window.delItem = delItem;
-window.startTracking = startTracking;
-window.stopTracking = stopTracking;
-window.loadLocations = loadLocations;
-window.centerMapOnUser = centerMapOnUser;
-window.refreshAllPages = refreshAllPages;
-window.exportAllData = exportAllData;
-window.importAllData = importAllData;
-window.showToast = showToast;
-window.formatDate = formatDate;
-window.getCat = getCat;
-window.canEdit = canEdit;
-window.canDelete = canDelete;
-window.canManageUsers = canManageUsers;
-window.loadVessels = loadVessels;
-window.saveVessel = saveVessel;
-window.updateVessel = updateVessel;
-window.deleteVessel = deleteVessel;
-window.loadUsers = loadUsers;
-window.saveUser = saveUser;
-window.updateUser = updateUser;
-window.deleteUserAPI = deleteUserAPI;
-window.loadTickets = loadTickets;
-window.saveTicket = saveTicket;
-window.loadLogs = loadLogs;
-window.saveLog = saveLog;
-window.logActivity = logActivity;
-window.scrollToTop = scrollToTop;
-window.scrollToBottom = scrollToBottom;
-window.closePasswordModal = closePasswordModal;
-window.saveNewPassword = saveNewPassword;
-window.openPasswordModal = openPasswordModal;
-window.toggleUser = toggleUser;
-window.deleteUser = deleteUser;
-window.addUser = addUser;
-window.switchChartType = switchChartType;
-window.sendTicket = sendTicket;
-window.replyToTicket = replyToTicket;
-window.closeTicket = closeTicket;
-</script>
 </body>
 </html>
