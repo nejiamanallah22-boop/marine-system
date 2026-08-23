@@ -1,12 +1,13 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.0 (ULTIMATE FIXED)
+ * 🚢 MARINE SYSTEM - SERVER v38.1 (AI INTEGRATED)
  * ============================================================
  * ✅ FIXED: Account lock timeout check
  * ✅ FIXED: Token version validation
  * ✅ FIXED: CORS configuration
  * ✅ FIXED: Admin unlock on restart
- * ✅ FIXED: All security issues
+ * ✅ ADDED: DeepSeek AI Integration
+ * ✅ ADDED: AI API endpoints
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -47,19 +48,27 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
     process.exit(1);
 }
 
+// ✅ AI Configuration
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
 const ADMIN_USERNAME = 'admin';
 const ADMIN_EMAIL = 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.0 - ULTIMATE FIXED');
+console.log('🚢 MARINE SYSTEM v38.1 - AI INTEGRATED');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
 console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -241,7 +250,7 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 📝 LOGGING MIDDLEWARE - تسجيل كل الطلبات في Render
+// 📝 LOGGING MIDDLEWARE
 // ============================================================
 
 app.use((req, res, next) => {
@@ -336,10 +345,12 @@ app.use(cookieParser());
 const publicPath = path.join(__dirname, 'public');
 const cssPath = path.join(publicPath, 'css');
 const pagesPath = path.join(publicPath, 'pages');
+const jsPath = path.join(publicPath, 'js');
 
 if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
 if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
 if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
+if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
 
 app.use(express.static(publicPath, {
     index: false,
@@ -501,7 +512,11 @@ app.get('/health', (req, res) => {
         status: dbState === 1 ? 'ok' : 'degraded',
         mongodb: dbState === 1 ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString(),
-        uptime: process.uptime()
+        uptime: process.uptime(),
+        ai: {
+            deepseek: !!DEEPSEEK_API_KEY,
+            gemini: !!GEMINI_API_KEY
+        }
     });
 });
 
@@ -877,7 +892,203 @@ app.post('/api/notes', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI
+// 🤖 AI - CONFIGURATION ENDPOINT
+// ============================================================
+
+app.get('/api/config', authenticate, (req, res) => {
+    console.log(`🔑 [CONFIG] User: ${req.user.username}`);
+    res.json({
+        success: true,
+        deepseek: {
+            apiKey: DEEPSEEK_API_KEY ? '***' : '',
+            model: DEEPSEEK_MODEL,
+            enabled: !!DEEPSEEK_API_KEY
+        },
+        gemini: {
+            apiKey: GEMINI_API_KEY ? '***' : '',
+            model: GEMINI_MODEL,
+            enabled: !!GEMINI_API_KEY
+        }
+    });
+});
+
+// ============================================================
+// 🤖 AI - DEEPSEEK CHAT
+// ============================================================
+
+app.post('/api/ai/deepseek', authenticate, async (req, res) => {
+    console.log(`🤖 [DEEPSEEK] User: ${req.user.username}`);
+    try {
+        const { message, context } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+        }
+
+        if (!DEEPSEEK_API_KEY) {
+            return res.status(503).json({ 
+                success: false, 
+                error: 'DeepSeek API غير متاح. يرجى إضافة مفتاح API في متغيرات البيئة.' 
+            });
+        }
+
+        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
+
+        // إعداد السياق للـ AI
+        let contextPrompt = '';
+        if (context) {
+            contextPrompt = `\n\nسياق الأسطول الحالي:\n${context}`;
+        }
+
+        const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: DEEPSEEK_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `أنت مساعد ذكي متخصص في الأسطول البحري. لديك معرفة عامة واسعة وتجيب على جميع الأسئلة.
+                        
+                        تعليمات:
+                        1. أنت خبير في الشؤون البحرية والمراكب والصيانة.
+                        2. لديك معرفة عامة في جميع المجالات.
+                        3. أجب باللغة العربية الفصحى.
+                        4. كن دقيقاً ومفصلاً في إجاباتك.
+                        5. إذا لم تعرف الإجابة، قل ذلك بصراحة.`
+                    },
+                    {
+                        role: 'user',
+                        content: message + contextPrompt
+                    }
+                ],
+                max_tokens: 2000,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ DeepSeek API Error:', errorData);
+            
+            if (response.status === 401) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'مفتاح DeepSeek غير صالح. يرجى التحقق من متغيرات البيئة.'
+                });
+            }
+            
+            return res.status(response.status).json({
+                success: false,
+                error: errorData.error?.message || 'خطأ في الاتصال بـ DeepSeek'
+            });
+        }
+
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || 'عذراً، لم أستطع معالجة طلبك.';
+
+        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
+
+        res.json({
+            success: true,
+            response: reply,
+            model: DEEPSEEK_MODEL
+        });
+
+    } catch (error) {
+        console.error('❌ [DEEPSEEK] Error:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'خطأ في الاتصال بـ DeepSeek: ' + error.message
+        });
+    }
+});
+
+// ============================================================
+// 🤖 AI - GEMINI CHAT
+// ============================================================
+
+app.post('/api/ai/gemini', authenticate, async (req, res) => {
+    console.log(`🤖 [GEMINI] User: ${req.user.username}`);
+    try {
+        const { message, context } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+        }
+
+        if (!GEMINI_API_KEY) {
+            return res.status(503).json({ 
+                success: false, 
+                error: 'Gemini API غير متاح. يرجى إضافة مفتاح API في متغيرات البيئة.' 
+            });
+        }
+
+        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
+
+        // Gemini uses a different endpoint format
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: message + (context ? `\n\nسياق الأسطول الحالي:\n${context}` : '')
+                    }]
+                }],
+                generationConfig: {
+                    maxOutputTokens: 2000,
+                    temperature: 0.7
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Gemini API Error:', errorData);
+            
+            if (response.status === 403) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'مفتاح Gemini غير صالح. يرجى التحقق من متغيرات البيئة.'
+                });
+            }
+            
+            return res.status(response.status).json({
+                success: false,
+                error: errorData.error?.message || 'خطأ في الاتصال بـ Gemini'
+            });
+        }
+
+        const data = await response.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أستطع معالجة طلبك.';
+
+        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
+
+        res.json({
+            success: true,
+            response: reply,
+            model: GEMINI_MODEL
+        });
+
+    } catch (error) {
+        console.error('❌ [GEMINI] Error:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'خطأ في الاتصال بـ Gemini: ' + error.message
+        });
+    }
+});
+
+// ============================================================
+// 🤖 AI - SMART ROUTER
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
@@ -889,35 +1100,134 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         }
         console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
-        let response = 'عذراً، لم أستطع فهم سؤالك.';
-        const msg = message.toLowerCase();
+        // جلب بيانات السياق
+        const vessels = await Vessel.find().lean();
+        const maintenance = await Maintenance.find().lean();
+        const totalVessels = vessels.length;
+        const validVessels = vessels.filter(v => v.stat === 'صالح').length;
+        const damagedVessels = vessels.filter(v => v.stat === 'معطب').length;
+        const maintenanceVessels = vessels.filter(v => v.stat === 'صيانة').length;
+        const efficiency = totalVessels ? Math.round((validVessels / totalVessels) * 100) : 0;
 
-        if (msg.includes('مرحبا') || msg.includes('السلام')) {
-            response = '👋 وعليكم السلام! كيف يمكنني مساعدتك؟';
-        } else if (msg.includes('الأسطول')) {
-            const total = await Vessel.countDocuments();
-            response = `🚢 عدد المراكب في الأسطول: ${total}`;
-        } else if (msg.includes('الجاهزية')) {
-            const total = await Vessel.countDocuments();
-            const ok = await Vessel.countDocuments({ stat: 'صالح' });
-            const efficiency = total ? Math.round((ok / total) * 100) : 0;
-            response = `📈 نسبة الجاهزية: ${efficiency}% (${ok} من ${total})`;
-        } else if (msg.includes('الصيانة')) {
-            const count = await Maintenance.countDocuments();
-            response = `🔧 عدد مهام الصيانة: ${count}`;
-        } else {
-            response = '📌 يمكنني مساعدتك في معلومات عن الأسطول البحري. اسأل عن: الأسطول، الجاهزية، الصيانة';
+        const context = `
+📊 بيانات الأسطول الحالية:
+- إجمالي المراكب: ${totalVessels}
+- الصالح: ${validVessels} (${efficiency}%)
+- تحت الصيانة: ${maintenanceVessels}
+- المعطوب: ${damagedVessels}
+
+🔧 مهام الصيانة: ${maintenance.length}
+
+📋 المراكب:
+${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${v.region || 'بدون إقليم'}`).join('\n')}
+`;
+
+        // اختيار أفضل نموذج بناءً على توفر المفاتيح
+        let reply = '';
+        let usedModel = '';
+
+        if (DEEPSEEK_API_KEY) {
+            // استخدم DeepSeek
+            const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: DEEPSEEK_MODEL,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي. لديك معرفة عامة واسعة وتجيب على جميع الأسئلة.
+                            
+                            معلومات النظام:
+                            - المنظومة: منظومة متابعة الوسائل البحرية
+                            - المطور: أمان الله ناجي
+                            - الإصدار: v38.0
+                            
+                            تعليمات:
+                            1. أنت خبير في الشؤون البحرية والمراكب والصيانة.
+                            2. لديك معرفة عامة في جميع المجالات.
+                            3. أجب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
+                            4. استخدم بيانات الأسطول في إجاباتك.
+                            5. كن دقيقاً ومفصلاً.`
+                        },
+                        {
+                            role: 'user',
+                            content: `${message}\n\n${context}`
+                        }
+                    ],
+                    max_tokens: 2000,
+                    temperature: 0.7
+                })
+            });
+
+            if (deepseekResponse.ok) {
+                const data = await deepseekResponse.json();
+                reply = data.choices?.[0]?.message?.content || '';
+                usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
+            }
         }
 
-        console.log(`   🤖 Response: ${response.substring(0, 40)}...`);
+        // إذا فشل DeepSeek أو لم يكن متاحاً، جرب Gemini
+        if (!reply && GEMINI_API_KEY) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+            const geminiResponse = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: `${message}\n\n${context}`
+                        }]
+                    }],
+                    generationConfig: {
+                        maxOutputTokens: 2000,
+                        temperature: 0.7
+                    }
+                })
+            });
+
+            if (geminiResponse.ok) {
+                const data = await geminiResponse.json();
+                reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                usedModel = `Gemini (${GEMINI_MODEL})`;
+            }
+        }
+
+        // إذا فشل كلا النموذجين، استخدم الرد المحلي
+        if (!reply) {
+            const msg = message.toLowerCase();
+            if (msg.includes('مرحبا') || msg.includes('السلام')) {
+                reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
+            } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
+                reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
+            } else if (msg.includes('معطب') || msg.includes('عطل')) {
+                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}\n${vessels.filter(v => v.stat === 'معطب').map(v => `- ${v.name}`).join('\n')}`;
+            } else if (msg.includes('صيانة')) {
+                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nعدد مهام الصيانة: ${maintenance.length}`;
+            } else {
+                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة\n- معلومات عامة`;
+            }
+            usedModel = 'Local (Offline)';
+        }
+
+        console.log(`   🤖 Used: ${usedModel}`);
+        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
+
         res.json({
             success: true,
-            response: response
+            response: reply,
+            model: usedModel
         });
 
     } catch (error) {
         console.error('❌ [AI] Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({
+            success: false,
+            error: 'خطأ في معالجة الطلب: ' + error.message
+        });
     }
 });
 
@@ -999,7 +1309,7 @@ async function startServer() {
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.0 - ULTIMATE FIXED');
+        console.log('🚢 MARINE SYSTEM v38.1 - AI INTEGRATED');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
@@ -1008,6 +1318,11 @@ async function startServer() {
         console.log('🔐 JWT: Enabled');
         console.log('🛡️ Security: Enabled');
         console.log('❤️ Health: /health');
+        console.log('🤖 AI Endpoints:');
+        console.log('   - GET  /api/config       (AI Configuration)');
+        console.log('   - POST /api/ai/ask       (Smart AI Router)');
+        console.log('   - POST /api/ai/deepseek  (DeepSeek API)');
+        console.log('   - POST /api/ai/gemini    (Gemini API)');
         console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log('   👤 Username: admin');
