@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="/css/theme.css">
     <link rel="stylesheet" href="/css/responsive.css">
     <link rel="stylesheet" href="/css/animations.css">
+    <link rel="stylesheet" href="/css/print.css" media="print">
 </head>
 <body>
 
@@ -124,14 +125,12 @@
                 </div>
 
                 <div class="header-right">
-                    <!-- البحث -->
                     <div class="search-wrapper">
                         <input type="text" id="quickSearch" placeholder="بحث سريع...">
                         <i class="fas fa-search search-icon"></i>
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
 
-                    <!-- الإشعارات -->
                     <div class="notification-wrapper">
                         <button class="notif-btn" id="notifBtn">
                             <i class="fas fa-bell"></i>
@@ -149,7 +148,6 @@
                         </div>
                     </div>
 
-                    <!-- المستخدم -->
                     <div class="user-wrapper">
                         <button class="user-btn" id="userBtn">
                             <div class="user-avatar" id="userAvatar">
@@ -188,89 +186,126 @@
             </div>
         </header>
 
-        <!-- ===== الشريط الجانبي ===== -->
+        <!-- ============================================================
+        🧭 الشريط الجانبي - PRO MAX
+        ============================================================ -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <span class="brand-icon">⚓</span>
-                    <span class="brand-text">الأسطول البحري</span>
+                    <div class="brand-info">
+                        <span class="brand-title">الأسطول البحري</span>
+                        <span class="brand-subtitle">نظام إدارة الوسائل البحرية</span>
+                    </div>
                 </div>
-                <button class="sidebar-close" id="sidebarClose">✕</button>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <div class="sidebar-nav" id="sidebarNav">
-                <div class="nav-section">
-                    <span class="nav-section-title">الرئيسية</span>
-                    <button class="nav-btn active" data-page="dashboard">
+            <!-- معلومات المستخدم -->
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <span id="sidebarUserInitial">م</span>
+                </div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarUserName">المستخدم</span>
+                    <span class="user-role" id="sidebarUserRole">مسؤول</span>
+                </div>
+            </div>
+
+            <!-- القائمة -->
+            <div class="sidebar-nav">
+                <!-- مجموعة الرئيسية -->
+                <div class="nav-group">
+                    <span class="nav-group-title">الرئيسية</span>
+                    <button class="nav-btn active" data-page="dashboard" onclick="loadPage('dashboard')">
                         <i class="fas fa-chart-pie"></i>
                         <span>لوحة التحكم</span>
                     </button>
-                </div>
-                <div class="nav-section">
-                    <span class="nav-section-title">إدارة الأسطول</span>
-                    <button class="nav-btn" data-page="fleet">
+                    <button class="nav-btn" data-page="fleet" onclick="loadPage('fleet')">
                         <i class="fas fa-ship"></i>
-                        <span>الأسطول</span>
+                        <span>السجل العام</span>
+                        <span class="nav-badge" id="fleetBadge">0</span>
                     </button>
-                    <button class="nav-btn" data-page="maintenance">
+                </div>
+
+                <!-- مجموعة إدارة الأسطول -->
+                <div class="nav-group">
+                    <span class="nav-group-title">إدارة الأسطول</span>
+                    <button class="nav-btn" data-page="maintenance" onclick="loadPage('maintenance')">
                         <i class="fas fa-wrench"></i>
                         <span>الصيانة</span>
-                        <span class="nav-badge warning">4</span>
+                        <span class="nav-badge warning" id="maintenanceBadge">0</span>
                     </button>
-                    <button class="nav-btn" data-page="efficiency">
+                    <button class="nav-btn" data-page="efficiency" onclick="loadPage('efficiency')">
                         <i class="fas fa-chart-line"></i>
                         <span>الجاهزية</span>
                     </button>
-                </div>
-                <div class="nav-section">
-                    <span class="nav-section-title">العمليات</span>
-                    <button class="nav-btn" data-page="support">
+                    <button class="nav-btn" data-page="support" onclick="loadPage('support')">
                         <i class="fas fa-headset"></i>
                         <span>الدعم</span>
                     </button>
-                    <button class="nav-btn" data-page="notes">
+                </div>
+
+                <!-- مجموعة العمليات -->
+                <div class="nav-group">
+                    <span class="nav-group-title">العمليات</span>
+                    <button class="nav-btn" data-page="notes" onclick="loadPage('notes')">
                         <i class="fas fa-sticky-note"></i>
                         <span>Note Verbale</span>
                     </button>
-                </div>
-                <div class="nav-section">
-                    <span class="nav-section-title">الإدارة</span>
-                    <button class="nav-btn" data-page="users">
-                        <i class="fas fa-users"></i>
-                        <span>المستخدمين</span>
-                    </button>
-                    <button class="nav-btn" data-page="sessions">
+                    <button class="nav-btn" data-page="sessions" onclick="loadPage('sessions')">
                         <i class="fas fa-users-cog"></i>
                         <span>المراقبة</span>
+                        <span class="nav-badge success" id="sessionsBadge">0</span>
                     </button>
                 </div>
-                <div class="nav-section">
-                    <span class="nav-section-title">متقدم</span>
-                    <button class="nav-btn" data-page="ai-assistant">
+
+                <!-- مجموعة الإدارة -->
+                <div class="nav-group">
+                    <span class="nav-group-title">الإدارة</span>
+                    <button class="nav-btn" data-page="users" onclick="loadPage('users')">
+                        <i class="fas fa-users"></i>
+                        <span>المستخدمين</span>
+                        <span class="nav-badge" id="usersBadge">0</span>
+                    </button>
+                    <button class="nav-btn" data-page="logs" onclick="loadPage('logs')">
+                        <i class="fas fa-history"></i>
+                        <span>السجلات</span>
+                        <span class="nav-badge" id="logsBadge">0</span>
+                    </button>
+                </div>
+
+                <!-- مجموعة متقدم -->
+                <div class="nav-group">
+                    <span class="nav-group-title">متقدم</span>
+                    <button class="nav-btn" data-page="ai-assistant" onclick="loadPage('ai-assistant')">
                         <i class="fas fa-robot"></i>
                         <span>المساعد الذكي</span>
                         <span class="nav-badge success">AI</span>
                     </button>
-                    <button class="nav-btn" data-page="settings">
+                    <button class="nav-btn" data-page="settings" onclick="loadPage('settings')">
                         <i class="fas fa-cog"></i>
                         <span>الإعدادات</span>
-                    </button>
-                    <button class="nav-btn" data-page="logs">
-                        <i class="fas fa-history"></i>
-                        <span>السجلات</span>
                     </button>
                 </div>
             </div>
 
+            <!-- تذييل الشريط -->
             <div class="sidebar-footer">
-                <div class="footer-info">
-                    <span class="footer-label">الوكيل</span>
-                    <span class="footer-name">أمان الله ناجي</span>
-                </div>
                 <div class="footer-status">
                     <span class="status-dot online"></span>
-                    <span>متصل</span>
+                    <span class="status-text">متصل</span>
                 </div>
+                <div class="footer-version">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>v7.0 · آمن</span>
+                </div>
+                <button class="footer-logout" onclick="doLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل الخروج</span>
+                </button>
             </div>
         </nav>
 
@@ -281,7 +316,6 @@
                     <div class="loader-spinner"></div>
                     <p>جاري التحميل...</p>
                 </div>
-                <!-- يتم تحميل الصفحات هنا -->
             </div>
         </main>
 
@@ -333,11 +367,11 @@
     </script>
 
     <!-- ============================================================
-    📦 التطبيق الرئيسي
+    📦 التطبيق الرئيسي - JavaScript
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - APP.JS v7.0 PRO MAX
+        // 🚢 MARINE SYSTEM - v7.0 PRO MAX
         // ============================================================
 
         console.log('🚢 Marine System v7.0 - Loading...');
@@ -352,11 +386,12 @@
             STORAGE_KEYS: {
                 TOKEN: 'marine_auth_token',
                 USER: 'marine_user',
-                THEME: 'marine_theme'
+                THEME: 'marine_theme',
+                PAGE: 'marine_page'
             },
             PAGES: {
                 'dashboard': 'لوحة التحكم',
-                'fleet': 'الأسطول',
+                'fleet': 'السجل العام',
                 'maintenance': 'الصيانة',
                 'efficiency': 'الجاهزية',
                 'support': 'الدعم',
@@ -377,8 +412,10 @@
         let currentUser = null;
         let authToken = null;
         let currentPage = 'dashboard';
-        let notifications = [];
-        let notifCount = 0;
+        let allVessels = [];
+        let allUsers = [];
+        let allLogs = [];
+        let sessionsData = [];
 
         // ============================================================
         // 🔧 HELPERS
@@ -393,8 +430,18 @@
             return CONFIG.PAGES[page] || page;
         }
 
-        function generateId() {
-            return Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getToken() {
+            return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
         }
 
         // ============================================================
@@ -444,7 +491,6 @@
             document.getElementById('modalConfirm').textContent = confirmText;
             document.getElementById('modalCancel').textContent = cancelText;
 
-            // إزالة المستمعين السابقين
             const confirmBtn = document.getElementById('modalConfirm');
             const cancelBtn = document.getElementById('modalCancel');
             const closeBtn = document.getElementById('modalClose');
@@ -467,7 +513,6 @@
 
             overlay.style.display = 'flex';
 
-            // إغلاق عند الضغط خارج المودال
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     hideModal();
@@ -528,18 +573,17 @@
                     throw new Error(data.error || 'بيانات الدخول غير صحيحة');
                 }
 
-                // تخزين البيانات
                 currentUser = data.user;
                 authToken = data.token;
 
                 localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, authToken);
                 localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(currentUser));
 
-                // إظهار التطبيق
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
 
                 updateUserDisplay();
+                updateSidebarUser();
                 loadPage('dashboard');
                 showToast(`✅ مرحباً ${currentUser.name || currentUser.username}`, 'success');
 
@@ -599,6 +643,22 @@
             if (dropdownInitial) dropdownInitial.textContent = initial;
         }
 
+        function updateSidebarUser() {
+            if (!currentUser) return;
+
+            const name = currentUser.name || currentUser.username || 'المستخدم';
+            const role = currentUser.role || 'مستخدم';
+            const initial = name.charAt(0);
+
+            const avatarEl = document.getElementById('sidebarUserInitial');
+            const nameEl = document.getElementById('sidebarUserName');
+            const roleEl = document.getElementById('sidebarUserRole');
+
+            if (avatarEl) avatarEl.textContent = initial;
+            if (nameEl) nameEl.textContent = name;
+            if (roleEl) roleEl.textContent = getRoleName(role);
+        }
+
         // ============================================================
         // 📄 PAGE LOADER
         // ============================================================
@@ -607,8 +667,8 @@
             console.log(`📄 [Page] تحميل الصفحة: ${pageName}`);
 
             currentPage = pageName;
+            localStorage.setItem(CONFIG.STORAGE_KEYS.PAGE, pageName);
 
-            // تحديث الأزرار النشطة
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.page === pageName) {
@@ -619,11 +679,9 @@
             const container = document.getElementById('pageContainer');
             const loader = document.getElementById('pageLoader');
 
-            // إظهار مؤشر التحميل
             if (loader) loader.style.display = 'flex';
             container.innerHTML = '';
 
-            // تحميل الصفحة
             fetch(`/pages/${pageName}.html`)
                 .then(response => {
                     if (!response.ok) throw new Error('الصفحة غير موجودة');
@@ -633,7 +691,6 @@
                     container.innerHTML = html;
                     if (loader) loader.style.display = 'none';
                     
-                    // تشغيل أي سكريبتات في الصفحة
                     const scripts = container.querySelectorAll('script');
                     scripts.forEach(script => {
                         const newScript = document.createElement('script');
@@ -644,6 +701,9 @@
 
                     document.title = `⚓ ${getPageTitle(pageName)}`;
                     console.log(`✅ [Page] تم تحميل ${pageName}`);
+                    
+                    // تحديث الشارات بعد تحميل الصفحة
+                    setTimeout(updateSidebarBadges, 500);
                 })
                 .catch(error => {
                     container.innerHTML = `
@@ -675,6 +735,59 @@
             toggle.classList.toggle('active');
         }
 
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('menuToggle');
+            
+            sidebar.classList.remove('open');
+            toggle.classList.remove('active');
+        }
+
+        // ============================================================
+        // 🏷️ SIDEBAR BADGES
+        // ============================================================
+
+        function updateSidebarBadges() {
+            // شارة الأسطول
+            const fleetBadge = document.getElementById('fleetBadge');
+            if (fleetBadge && allVessels) {
+                fleetBadge.textContent = allVessels.length || 0;
+                fleetBadge.style.display = allVessels.length > 0 ? 'inline' : 'none';
+            }
+
+            // شارة الصيانة
+            const maintenanceBadge = document.getElementById('maintenanceBadge');
+            if (maintenanceBadge && allVessels) {
+                const count = allVessels.filter(v => 
+                    v.status === 'صيانة' || v.stat === 'صيانة'
+                ).length;
+                maintenanceBadge.textContent = count;
+                maintenanceBadge.style.display = count > 0 ? 'inline' : 'none';
+            }
+
+            // شارة المراقبة
+            const sessionsBadge = document.getElementById('sessionsBadge');
+            if (sessionsBadge && sessionsData) {
+                const count = sessionsData.filter(s => s.status === 'active').length;
+                sessionsBadge.textContent = count;
+                sessionsBadge.style.display = count > 0 ? 'inline' : 'none';
+            }
+
+            // شارة المستخدمين
+            const usersBadge = document.getElementById('usersBadge');
+            if (usersBadge && allUsers) {
+                usersBadge.textContent = allUsers.length || 0;
+                usersBadge.style.display = allUsers.length > 0 ? 'inline' : 'none';
+            }
+
+            // شارة السجلات
+            const logsBadge = document.getElementById('logsBadge');
+            if (logsBadge && allLogs) {
+                logsBadge.textContent = allLogs.length || 0;
+                logsBadge.style.display = allLogs.length > 0 ? 'inline' : 'none';
+            }
+        }
+
         // ============================================================
         // 🔄 REFRESH
         // ============================================================
@@ -690,10 +803,11 @@
         // 🔔 NOTIFICATIONS
         // ============================================================
 
+        let notifications = [];
+
         function addNotification(title, text, type = 'info') {
-            const id = generateId();
             notifications.unshift({
-                id,
+                id: Date.now(),
                 title,
                 text,
                 type,
@@ -705,16 +819,16 @@
                 notifications.pop();
             }
 
-            notifCount = notifications.filter(n => !n.read).length;
             updateNotificationBadge();
             renderNotifications();
         }
 
         function updateNotificationBadge() {
             const badge = document.getElementById('notifBadge');
+            const count = notifications.filter(n => !n.read).length;
             if (badge) {
-                badge.textContent = notifCount;
-                badge.style.display = notifCount > 0 ? 'flex' : 'none';
+                badge.textContent = count;
+                badge.style.display = count > 0 ? 'flex' : 'none';
             }
         }
 
@@ -723,11 +837,11 @@
             if (!list) return;
 
             list.innerHTML = notifications.slice(0, 10).map(n => `
-                <div class="notif-item ${n.read ? '' : 'unread'}">
+                <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
                     <div class="notif-icon">${getNotificationIcon(n.type)}</div>
                     <div class="notif-content">
-                        <div class="notif-title">${n.title}</div>
-                        <div class="notif-text">${n.text}</div>
+                        <div class="notif-title">${escapeHTML(n.title)}</div>
+                        <div class="notif-text">${escapeHTML(n.text)}</div>
                         <div class="notif-time">${formatTime(n.time)}</div>
                     </div>
                 </div>
@@ -743,12 +857,7 @@
         }
 
         function getNotificationIcon(type) {
-            const icons = {
-                success: '✅',
-                error: '❌',
-                warning: '⚠️',
-                info: 'ℹ️'
-            };
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
             return icons[type] || '📢';
         }
 
@@ -763,12 +872,43 @@
             return date.toLocaleDateString('ar-SA');
         }
 
-        function markAllRead() {
+        function markNotificationRead(id) {
+            const notif = notifications.find(n => n.id == id);
+            if (notif) {
+                notif.read = true;
+                updateNotificationBadge();
+                renderNotifications();
+            }
+        }
+
+        function markAllNotificationsRead() {
             notifications.forEach(n => n.read = true);
-            notifCount = 0;
             updateNotificationBadge();
             renderNotifications();
             showToast('📬 تم تحديد جميع الإشعارات كمقروءة', 'success');
+        }
+
+        // ============================================================
+        // ⌨️ KEYBOARD SHORTCUTS
+        // ============================================================
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('quickSearch')?.focus();
+                }
+
+                if (e.key === 'Escape') {
+                    hideModal();
+                    closeSidebar();
+                }
+
+                if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+                    e.preventDefault();
+                    doLogout();
+                }
+            });
         }
 
         // ============================================================
@@ -786,35 +926,6 @@
             } else {
                 status.style.display = 'none';
             }
-        }
-
-        // ============================================================
-        // ⌨️ KEYBOARD SHORTCUTS
-        // ============================================================
-
-        function setupKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                // Ctrl+K → تركيز البحث
-                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                    e.preventDefault();
-                    document.getElementById('quickSearch')?.focus();
-                }
-
-                // Escape → إغلاق المودال والقائمة
-                if (e.key === 'Escape') {
-                    hideModal();
-                    const sidebar = document.getElementById('sidebar');
-                    if (sidebar.classList.contains('open')) {
-                        toggleSidebar();
-                    }
-                }
-
-                // Ctrl+Shift+L → تسجيل الخروج
-                if (e.ctrlKey && e.shiftKey && e.key === 'L') {
-                    e.preventDefault();
-                    doLogout();
-                }
-            });
         }
 
         // ============================================================
@@ -841,18 +952,17 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 [DOM] DOM جاهز');
 
-            // تحميل السمة
             loadTheme();
 
-            // ربط زر الدخول
+            // زر الدخول
             document.getElementById('loginButton').addEventListener('click', doLogin);
 
-            // ربط Enter في حقل كلمة المرور
+            // Enter في حقل كلمة المرور
             document.getElementById('password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') doLogin();
             });
 
-            // ربط إظهار/إخفاء كلمة المرور
+            // إظهار/إخفاء كلمة المرور
             document.getElementById('togglePassword').addEventListener('click', function() {
                 const input = document.getElementById('password');
                 const icon = this.querySelector('i');
@@ -865,34 +975,34 @@
                 }
             });
 
-            // ربط زر القائمة
+            // زر القائمة
             document.getElementById('menuToggle').addEventListener('click', toggleSidebar);
-            document.getElementById('sidebarClose').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
 
-            // ربط أزرار التنقل
+            // أزرار التنقل
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const page = btn.dataset.page;
                     if (page) loadPage(page);
-                    if (window.innerWidth <= 768) toggleSidebar();
+                    if (window.innerWidth <= 768) closeSidebar();
                 });
             });
 
-            // ربط الإشعارات
+            // الإشعارات
             document.getElementById('notifBtn').addEventListener('click', () => {
                 const dropdown = document.getElementById('notifDropdown');
                 dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                renderNotifications();
             });
 
-            document.getElementById('markAllRead').addEventListener('click', markAllRead);
+            document.getElementById('markAllRead').addEventListener('click', markAllNotificationsRead);
 
-            // ربط قائمة المستخدم
+            // قائمة المستخدم
             document.getElementById('userBtn').addEventListener('click', () => {
                 const dropdown = document.getElementById('userDropdown');
                 dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
             });
 
-            // ربط خيارات المستخدم
             document.querySelectorAll('.dropdown-item[data-action]').forEach(item => {
                 item.addEventListener('click', () => {
                     const action = item.dataset.action;
@@ -909,7 +1019,7 @@
                 });
             });
 
-            // ربط زر العودة للأعلى
+            // زر العودة للأعلى
             window.addEventListener('scroll', () => {
                 const btn = document.getElementById('backToTop');
                 if (window.scrollY > 300) {
@@ -923,7 +1033,7 @@
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
 
-            // ربط البحث
+            // البحث
             document.getElementById('quickSearch').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const query = e.target.value.trim();
@@ -940,16 +1050,16 @@
                 const userDropdown = document.getElementById('userDropdown');
                 const userBtn = document.getElementById('userBtn');
 
-                if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+                if (notifBtn && !notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
                     notifDropdown.style.display = 'none';
                 }
 
-                if (!userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                if (userBtn && !userBtn.contains(e.target) && !userDropdown.contains(e.target)) {
                     userDropdown.style.display = 'none';
                 }
             });
 
-            // مراقبة حالة الشبكة
+            // حالة الشبكة
             window.addEventListener('online', () => {
                 updateNetworkStatus();
                 showToast('🔄 تم استعادة الاتصال بالإنترنت', 'success');
@@ -972,17 +1082,24 @@
                 document.getElementById('mainApp').style.display = 'block';
 
                 updateUserDisplay();
-                loadPage('dashboard');
+                updateSidebarUser();
+                
+                const savedPage = localStorage.getItem(CONFIG.STORAGE_KEYS.PAGE) || 'dashboard';
+                loadPage(savedPage);
 
                 console.log('✅ [Session] تم استعادة الجلسة');
                 showToast('👋 مرحباً بعودتك', 'success');
             }
 
-            // إضافة بعض الإشعارات التجريبية
+            // إشعارات ترحيبية
             setTimeout(() => {
                 addNotification('مرحباً بك', 'نظام الوسائل البحرية جاهز للاستخدام', 'success');
                 addNotification('تحديث جديد', 'تم تحديث بيانات الأسطول', 'info');
             }, 2000);
+
+            // تحديث الشارات
+            setTimeout(updateSidebarBadges, 1000);
+            setInterval(updateSidebarBadges, 30000);
 
             console.log('✅ Marine System v7.0 ready');
         });
@@ -995,12 +1112,20 @@
         window.doLogout = doLogout;
         window.loadPage = loadPage;
         window.toggleSidebar = toggleSidebar;
+        window.closeSidebar = closeSidebar;
         window.refreshPage = refreshPage;
         window.showToast = showToast;
         window.showModal = showModal;
         window.hideModal = hideModal;
         window.addNotification = addNotification;
         window.toggleTheme = toggleTheme;
+        window.updateSidebarBadges = updateSidebarBadges;
+        window.updateSidebarUser = updateSidebarUser;
+        window.updateUserDisplay = updateUserDisplay;
+        window.allVessels = allVessels;
+        window.allUsers = allUsers;
+        window.allLogs = allLogs;
+        window.sessionsData = sessionsData;
 
         console.log('✅ Marine System v7.0 loaded successfully');
     </script>
