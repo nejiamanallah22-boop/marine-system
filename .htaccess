@@ -1,0 +1,152 @@
+# ============================================================
+# 🚢 منظومة الوسائل البحرية - .htaccess v7.0
+# ============================================================
+# تكوينات أمان وأداء للخادم Apache
+# ============================================================
+
+# ============================================================
+# 🔒 SECURITY HEADERS
+# ============================================================
+
+<IfModule mod_headers.c>
+    # حماية XSS
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # منع MIME sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # منع iframe
+    Header set X-Frame-Options "DENY"
+    
+    # HSTS (HTTP Strict Transport Security)
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # CSP (Content Security Policy)
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https:;"
+    
+    # Referrer Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Permissions Policy
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    
+    # Cache Control
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>
+
+# ============================================================
+# 🚫 FILE ACCESS RESTRICTION
+# ============================================================
+
+# منع الوصول إلى الملفات الحساسة
+<FilesMatch "^(\.env|\.git|\.log|config\.php|composer\.json|package\.json|yarn\.lock|package-lock\.json)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# منع الوصول إلى مجلدات محددة
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# ============================================================
+# 🔄 REWRITE RULES
+# ============================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # إعادة توجيه إلى HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+    
+    # إزالة www
+    RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+    RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+    
+    # SPA Routing
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [L]
+    
+    # إعادة توجيه الصفحات القديمة
+    RewriteRule ^pages/(.*)\.html$ /$1 [R=301,L]
+</IfModule>
+
+# ============================================================
+# 📦 COMPRESSION
+# ============================================================
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml text/javascript application/javascript application/json application/xml application/rss+xml image/svg+xml font/woff font/woff2
+</IfModule>
+
+# ============================================================
+# 📦 CACHING
+# ============================================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # HTML
+    ExpiresByType text/html "access plus 1 hour"
+    
+    # CSS, JavaScript
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/ico "access plus 1 year"
+    
+    # Fonts
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    
+    # Video
+    ExpiresByType video/mp4 "access plus 1 year"
+    ExpiresByType video/webm "access plus 1 year"
+</IfModule>
+
+# ============================================================
+# 🛡️ PREVENT HOTLINKING
+# ============================================================
+
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?(marine-system\.com|localhost) [NC]
+    RewriteRule \.(jpg|jpeg|png|gif|svg|webp|mp4|webm|pdf)$ - [F,L]
+</IfModule>
+
+# ============================================================
+# 🌐 CORS
+# ============================================================
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|svg)$">
+        Header set Access-Control-Allow-Origin "*"
+    </FilesMatch>
+</IfModule>
+
+# ============================================================
+# 📝 ERROR PAGES
+# ============================================================
+
+ErrorDocument 400 /error.html
+ErrorDocument 401 /error.html
+ErrorDocument 403 /error.html
+ErrorDocument 404 /error.html
+ErrorDocument 500 /error.html
+ErrorDocument 503 /error.html
+
+# ============================================================
+# END OF .HTACCESS
+# ============================================================
