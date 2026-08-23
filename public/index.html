@@ -2,326 +2,364 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- PWA / App Metadata -->
+    <meta name="theme-color" content="#0a1628" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="منظومة البحرية">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="منظومة الوسائل البحرية">
+    
+    <!-- SEO -->
+    <title>⚓ منظومة الوسائل البحرية - النظام المتكامل لإدارة الأسطول</title>
+    <meta name="description" content="منظومة متكاملة لإدارة ومتابعة الأسطول البحري، نظام متقدم للمراقبة والصيانة والدعم اللوجستي مع تقنيات الذكاء الاصطناعي">
+    <meta name="keywords" content="بحرية, أسطول, وسائل بحرية, نظام إدارة, مراقبة بحرية, ذكاء اصطناعي, أمان بحري">
+    <meta name="author" content="الوكيل أمان الله ناجي">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://marine-system.com/">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="⚓ منظومة الوسائل البحرية">
+    <meta property="og:description" content="نظام متكامل لإدارة الأسطول البحري بتقنيات متقدمة">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://marine-system.com/">
+    <meta property="og:image" content="https://marine-system.com/assets/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="⚓ منظومة الوسائل البحرية">
+    <meta name="twitter:description" content="نظام متكامل لإدارة الأسطول البحري">
+
+    <!-- Preconnect & DNS Prefetch -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    
+    <!-- CSS Critical (Inline) -->
+    <style>
+        /* Critical CSS لتسريع التحميل */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;overflow:hidden;height:100vh}
+        #loginOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);backdrop-filter:blur(20px)}
+        .login-container{width:100%;max-width:440px;padding:20px;animation:fadeInUp 0.6s ease}
+        .login-box{background:rgba(255,255,255,0.05);border-radius:24px;padding:40px 32px;backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 60px rgba(0,0,0,0.5)}
+        .login-logo{text-align:center;margin-bottom:8px}
+        .logo-icon{display:inline-block;font-size:56px;background:linear-gradient(135deg,#60a5fa,#3b82f6);border-radius:50%;width:80px;height:80px;line-height:80px;text-align:center;box-shadow:0 10px 30px rgba(59,130,246,0.3)}
+        .login-title{font-size:24px;font-weight:800;color:#fff;margin-top:12px}
+        .login-subtitle{color:#94a3b8;font-size:14px;text-align:center}
+        .developer-info{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 0;margin:16px 0;border-top:1px solid rgba(255,255,255,0.06);border-bottom:1px solid rgba(255,255,255,0.06)}
+        .dev-badge{background:rgba(59,130,246,0.2);color:#60a5fa;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+        .dev-name{color:#e2e8f0;font-weight:700;font-size:14px}
+        .dev-version{color:#64748b;font-size:12px;background:rgba(255,255,255,0.05);padding:2px 10px;border-radius:12px}
+        .login-form{margin-top:24px}
+        .form-group{margin-bottom:16px}
+        .input-wrapper{position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.06);border-radius:12px;border:1px solid rgba(255,255,255,0.08);transition:all 0.3s ease;overflow:hidden}
+        .input-wrapper:focus-within{border-color:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,0.15);background:rgba(255,255,255,0.08)}
+        .input-icon{position:absolute;right:16px;color:#64748b;font-size:16px}
+        .input-wrapper input{width:100%;padding:14px 48px 14px 16px;background:transparent;border:none;outline:none;color:#e2e8f0;font-size:15px;font-family:inherit}
+        .input-wrapper input::placeholder{color:#64748b}
+        .toggle-password{position:absolute;left:12px;background:transparent;border:none;color:#64748b;cursor:pointer;font-size:16px;padding:8px}
+        .toggle-password:hover{color:#e2e8f0}
+        .login-options{display:flex;justify-content:space-between;align-items:center;margin:16px 0 20px}
+        .checkbox-label{display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:14px;cursor:pointer}
+        .checkbox-label input[type="checkbox"]{display:none}
+        .checkmark{width:18px;height:18px;border:2px solid #475569;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+        .checkbox-label input:checked + .checkmark{background:#3b82f6;border-color:#3b82f6}
+        .checkbox-label input:checked + .checkmark::after{content:"✓";color:#fff;font-size:12px}
+        .forgot-link{color:#60a5fa;font-size:14px;text-decoration:none}
+        .forgot-link:hover{text-decoration:underline}
+        .login-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:all 0.3s ease;font-family:inherit}
+        .login-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(59,130,246,0.4)}
+        .login-btn:active{transform:scale(0.98)}
+        .login-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+        .login-btn .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top:2px solid #fff;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:10px}
+        .error-msg{color:#ef4444;font-size:14px;text-align:center;margin-top:12px;padding:10px;background:rgba(239,68,68,0.1);border-radius:8px;border:1px solid rgba(239,68,68,0.2)}
+        .security-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;color:#64748b;font-size:13px}
+        .security-badge i{color:#22c55e}
+        .login-footer{display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);color:#475569;font-size:12px}
+        .login-background{position:fixed;inset:0;z-index:-1;overflow:hidden}
+        .wave{position:absolute;bottom:0;width:200%;height:200px;background:rgba(59,130,246,0.05);border-radius:50% 50% 0 0;animation:wave 8s ease-in-out infinite}
+        .wave1{left:-50%;animation-delay:0s}
+        .wave2{left:-25%;animation-delay:2s;background:rgba(99,102,241,0.04)}
+        .wave3{left:0%;animation-delay:4s;background:rgba(139,92,246,0.03)}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        .pulse{animation:pulse 2s ease-in-out infinite}
+    </style>
+
+    <!-- CSS الرئيسي (غير حرج) -->
+    <link rel="stylesheet" href="/css/style.css" media="all" async>
+    <link rel="stylesheet" href="/css/theme.css" media="all" async>
+    <link rel="stylesheet" href="/css/responsive.css" media="all" async>
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <link rel="icon" href="/assets/icons/favicon.ico" type="image/x-icon">
+    
+    <!-- Preload Critical JS -->
+    <link rel="preload" as="script" href="/js/app.js">
+    <link rel="preload" as="script" href="/js/core/Application.js">
 </head>
 <body>
 
-    <!-- ===== شاشة الدخول ===== -->
-    <div id="loginOverlay">
-        <div class="login-box">
-            <div class="login-logo">
-                <span class="logo-icon">⚓</span>
-                <span class="logo-text">منظومة الوسائل البحرية</span>
+    <!-- ===== شاشة الدخول المتطورة ===== -->
+    <div id="loginOverlay" class="login-overlay" role="dialog" aria-label="تسجيل الدخول">
+        <div class="login-container">
+            <div class="login-box animated fadeInUp">
+                <div class="login-logo">
+                    <div class="logo-icon pulse">⚓</div>
+                    <h1 class="login-title">منظومة الوسائل البحرية</h1>
+                    <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>
+                </div>
+
+                <div class="developer-info">
+                    <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
+                    <span class="dev-name">أمان الله ناجي</span>
+                    <span class="dev-version">v7.0 Pro Max</span>
+                </div>
+
+                <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="username" placeholder="اسم المستخدم" 
+                                   autocomplete="username" required 
+                                   aria-label="اسم المستخدم">
+                            <div class="input-focus-border"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" placeholder="كلمة المرور" 
+                                   autocomplete="current-password" required
+                                   aria-label="كلمة المرور">
+                            <button type="button" class="toggle-password" id="togglePassword" 
+                                    aria-label="إظهار/إخفاء كلمة المرور">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="login-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            تذكرني
+                        </label>
+                        <a href="#" class="forgot-link" id="forgotPassword">نسيت كلمة المرور؟</a>
+                    </div>
+
+                    <button type="submit" class="login-btn" id="loginButton">
+                        <span class="btn-content">
+                            <span class="btn-text">🚀 دخول إلى النظام</span>
+                            <span class="spinner" style="display:none;"></span>
+                        </span>
+                    </button>
+
+                    <div id="loginError" class="error-msg" style="display:none;"></div>
+
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>اتصال آمن ومشفر • حماية متقدمة</span>
+                    </div>
+                </form>
+
+                <div class="login-footer">
+                    <span>نظام إدارة وإسناد الوحدات البحرية</span>
+                    <span class="footer-version">الإصدار الاحترافي v7.0</span>
+                </div>
             </div>
-            <p class="subtitle">نظام متابعة وإدارة الأسطول البحري</p>
-            <div class="developer">
-                <span class="dev-label">الوكيل</span>
-                <span class="dev-name">أمان الله ناجي</span>
-            </div>
-            <div class="input-group">
-                <i class="fas fa-user input-icon"></i>
-                <input type="text" id="username" placeholder="اسم المستخدم">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-lock input-icon"></i>
-                <input type="password" id="password" placeholder="كلمة المرور">
-            </div>
-            <button class="login-btn" id="loginButton">
-                <span class="spinner"></span>
-                <span class="btn-text">🚀 دخول</span>
-            </button>
-            <div id="loginError" class="error-msg"></div>
-            <div class="login-footer">
-                <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                <span class="version">v6.0</span>
-            </div>
+        </div>
+
+        <div class="login-background" aria-hidden="true">
+            <div class="wave wave1"></div>
+            <div class="wave wave2"></div>
+            <div class="wave wave3"></div>
         </div>
     </div>
 
     <!-- ===== التطبيق الرئيسي ===== -->
-    <div id="mainApp" style="display:none;">
-        <!-- الهيدر -->
-        <header>
-            <div class="header-left">
-                <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-                <h1>⚓ منظومة الوسائل البحرية <span class="developer-tag">الوكيل أمان الله ناجي</span></h1>
-            </div>
-            <div class="header-right">
-                <span class="role-badge" id="userRoleDisplay">👤</span>
-                <button class="btn-outline-white" onclick="refreshPage()"><i class="fas fa-sync-alt"></i></button>
-                <button class="btn-outline-white btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i></button>
+    <div id="mainApp" style="display:none;" role="application">
+        <!-- الهيدر المتطور -->
+        <header class="main-header" id="mainHeader" role="banner">
+            <div class="header-container">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle" aria-label="فتح/إغلاق القائمة" aria-expanded="false">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <div class="brand">
+                        <span class="brand-icon">⚓</span>
+                        <h1>منظومة الوسائل البحرية</h1>
+                        <span class="brand-tag">الوكيل أمان الله ناجي</span>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <!-- البحث السريع مع اختصارات -->
+                    <div class="search-wrapper" role="search">
+                        <input type="text" id="quickSearch" placeholder="بحث سريع... (⌘K)" 
+                               aria-label="بحث سريع">
+                        <i class="fas fa-search search-icon"></i>
+                        <kbd class="search-shortcut">⌘K</kbd>
+                    </div>
+
+                    <!-- الإشعارات -->
+                    <div class="notification-wrapper">
+                        <button class="notif-btn" id="notifBtn" aria-label="الإشعارات">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge">3</span>
+                        </button>
+                        <div class="notif-dropdown" id="notifDropdown" style="display:none;">
+                            <div class="notif-header">
+                                <span>الإشعارات</span>
+                                <button class="mark-all" id="markAllRead">تحديد الكل كمقروء</button>
+                            </div>
+                            <div class="notif-list" id="notifList"></div>
+                            <div class="notif-footer">
+                                <button id="viewAllNotifs">عرض الكل</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- المستخدم -->
+                    <div class="user-wrapper">
+                        <button class="user-btn" id="userBtn" aria-label="قائمة المستخدم">
+                            <div class="user-avatar" id="userAvatar">
+                                <span id="userInitial">م</span>
+                            </div>
+                            <span class="user-name" id="userDisplayName">المستخدم</span>
+                            <i class="fas fa-chevron-down user-arrow"></i>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown" style="display:none;" role="menu">
+                            <div class="dropdown-header">
+                                <div class="dropdown-avatar">
+                                    <span id="dropdownUserInitial">م</span>
+                                </div>
+                                <div class="dropdown-info">
+                                    <span id="dropdownUserName">المستخدم</span>
+                                    <span id="dropdownUserRole">مسؤول</span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" data-action="profile" role="menuitem">
+                                <i class="fas fa-user"></i> الملف الشخصي
+                            </button>
+                            <button class="dropdown-item" data-action="settings" role="menuitem">
+                                <i class="fas fa-cog"></i> الإعدادات
+                            </button>
+                            <button class="dropdown-item" data-action="sessions" role="menuitem">
+                                <i class="fas fa-users-cog"></i> الجلسات النشطة
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item danger" data-action="logout" role="menuitem">
+                                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <!-- الشريط الجانبي -->
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-brand">⚓ الأسطول البحري</div>
-            
-            <button class="nav-btn active" onclick="loadPage('dashboard')">
-                <i class="fas fa-chart-pie"></i> لوحة التحكم
-            </button>
-            <button class="nav-btn" onclick="loadPage('fleet')">
-                <i class="fas fa-ship"></i> الأسطول
-            </button>
-            <button class="nav-btn" onclick="loadPage('maintenance')">
-                <i class="fas fa-wrench"></i> الصيانة
-            </button>
-            <button class="nav-btn" onclick="loadPage('efficiency')">
-                <i class="fas fa-chart-line"></i> الجاهزية
-            </button>
-            <button class="nav-btn" onclick="loadPage('support')">
-                <i class="fas fa-headset"></i> الدعم
-            </button>
-            <button class="nav-btn" onclick="loadPage('users')">
-                <i class="fas fa-users"></i> المستخدمين
-            </button>
-            <button class="nav-btn" onclick="loadPage('notes')">
-                <i class="fas fa-sticky-note"></i> Note Verbale
-            </button>
-            <button class="nav-btn" onclick="loadPage('sessions')">
-                <i class="fas fa-users-cog"></i> المراقبة
-            </button>
-            <button class="nav-btn" onclick="loadPage('ai-assistant')">
-                <i class="fas fa-robot"></i> المساعد الذكي
-            </button>
-            <button class="nav-btn" onclick="loadPage('settings')">
-                <i class="fas fa-cog"></i> الإعدادات
-            </button>
-            <button class="nav-btn" onclick="loadPage('logs')">
-                <i class="fas fa-history"></i> السجلات
-            </button>
-            
-            <div class="sidebar-footer">الوكيل أمان الله ناجي</div>
+        <!-- الشريط الجانبي المحسن -->
+        <nav class="sidebar" id="sidebar" role="navigation" aria-label="القائمة الرئيسية">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="brand-icon">⚓</span>
+                    <span class="brand-text">الأسطول البحري</span>
+                </div>
+                <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق القائمة">✕</button>
+            </div>
+
+            <div class="sidebar-nav" role="menubar">
+                <!-- يتم توليد القائمة ديناميكياً عبر JavaScript -->
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="footer-info">
+                    <span class="footer-label">الوكيل</span>
+                    <span class="footer-name">أمان الله ناجي</span>
+                </div>
+                <div class="footer-status">
+                    <span class="status-dot online"></span>
+                    <span>متصل</span>
+                </div>
+            </div>
         </nav>
 
         <!-- المحتوى الرئيسي -->
-        <div class="main-content">
-            <div id="pageContainer">
-                <!-- يتم تحميل الصفحات هنا عبر JavaScript -->
-                <div class="page-content active" style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
-                    <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-                    <p>مرحباً بك في منظومة الوسائل البحرية</p>
-                    <p style="font-size:13px;margin-top:8px;">اختر صفحة من القائمة الجانبية</p>
+        <main class="main-content" id="mainContent" role="main">
+            <div class="page-container" id="pageContainer">
+                <div class="page-loader" id="pageLoader" style="display:none;">
+                    <div class="loader-spinner"></div>
+                    <p>جاري التحميل...</p>
                 </div>
+            </div>
+        </main>
+
+        <!-- زر العودة للأعلى -->
+        <button class="back-to-top" id="backToTop" style="display:none;" aria-label="العودة للأعلى">
+            <i class="fas fa-chevron-up"></i>
+        </button>
+
+        <!-- مؤشر حالة الاتصال -->
+        <div class="connection-status" id="connectionStatus" style="display:none;">
+            <i class="fas fa-wifi"></i>
+            <span id="connectionText">غير متصل</span>
+        </div>
+    </div>
+
+    <!-- ===== نظام الإشعارات ===== -->
+    <div class="toast-container" id="toastContainer" role="alert" aria-live="polite"></div>
+
+    <!-- ===== Modal System ===== -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;" role="dialog" aria-modal="true">
+        <div class="modal-box" id="modalBox">
+            <div class="modal-header">
+                <h3 id="modalTitle">عنوان</h3>
+                <button class="modal-close" id="modalClose" aria-label="إغلاق">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter">
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>
+                <button class="btn-primary" id="modalConfirm">تأكيد</button>
             </div>
         </div>
     </div>
 
-    <!-- ===== TOAST ===== -->
-    <div class="toast-container" id="toastContainer"></div>
-
+    <!-- ===== Service Worker Registration ===== -->
     <script>
-        // ============================================================
-        // 🚢 MARINE SYSTEM - التطبيق الرئيسي
-        // ============================================================
-
-        console.log('🚀 Marine System v6.0');
-
-        // ===== STATE (في الذاكرة فقط) =====
-        let currentUser = null;
-        let authToken = null;
-        let currentPage = 'dashboard';
-
-        // ===== HELPERS =====
-        function getRoleName(r) {
-            const roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
-            return roles[r] || r || 'مستخدم';
-        }
-
-        function showToast(msg, type = 'info') {
-            const c = document.getElementById('toastContainer');
-            if (!c) return;
-            const t = document.createElement('div');
-            t.className = `toast toast-${type}`;
-            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            t.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
-            c.appendChild(t);
-            setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4000);
-        }
-
-        // ===== LOGIN =====
-        async function doLogin() {
-            const username = document.getElementById('username');
-            const password = document.getElementById('password');
-            const errorEl = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginButton');
-
-            const user = username.value.trim();
-            const pass = password.value;
-
-            errorEl.className = 'error-msg';
-            errorEl.textContent = '';
-
-            if (!user || !pass) {
-                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
-                errorEl.classList.add('show');
-                return;
-            }
-
-            loginBtn.disabled = true;
-            loginBtn.classList.add('loading');
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
-                });
-
-                const data = await response.json();
-
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || 'بيانات غير صحيحة');
-                }
-
-                // تخزين في الذاكرة فقط
-                currentUser = data.user;
-                authToken = data.token;
-
-                // إظهار التطبيق
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-
-                updateUserDisplay();
-                loadPage('dashboard');
-                showToast(`✅ مرحباً ${data.user.name || data.user.username}`, 'success');
-
-            } catch (error) {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-                errorEl.textContent = `❌ ${error.message}`;
-                errorEl.classList.add('show');
-            }
-        }
-
-        // ===== LOGOUT =====
-        function doLogout() {
-            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
-
-            currentUser = null;
-            authToken = null;
-
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-
-            showToast('👋 تم تسجيل الخروج', 'info');
-        }
-
-        // ===== UPDATE USER DISPLAY =====
-        function updateUserDisplay() {
-            const d = document.getElementById('userRoleDisplay');
-            if (d && currentUser) {
-                d.textContent = `👤 ${currentUser.name || currentUser.username} | ${getRoleName(currentUser.role)}`;
-            }
-        }
-
-        // ===== تحميل الصفحة =====
-        function loadPage(pageName) {
-            currentPage = pageName;
-
-            // تحديث الأزرار
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                if (btn.textContent.includes(getPageTitle(pageName))) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // تحميل الصفحة من مجلد pages
-            const container = document.getElementById('pageContainer');
-
-            // إظهار مؤقت تحميل
-            container.innerHTML = `
-                <div class="page-content active" style="padding:60px 20px;text-align:center;color:rgba(255,255,255,0.3);">
-                    <div style="font-size:32px;margin-bottom:16px;">⏳</div>
-                    <p>جاري تحميل ${getPageTitle(pageName)}...</p>
-                </div>
-            `;
-
-            // تحميل الصفحة عبر iframe أو fetch
-            fetch(`/pages/${pageName}.html`)
-                .then(response => {
-                    if (!response.ok) throw new Error('الصفحة غير موجودة');
-                    return response.text();
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', {
+                    scope: '/'
                 })
-                .then(html => {
-                    container.innerHTML = html;
+                .then(registration => {
+                    console.log('✅ SW registered:', registration);
                 })
                 .catch(error => {
-                    container.innerHTML = `
-                        <div class="page-content active">
-                            <h2 style="color:#f87171;">❌ خطأ في تحميل الصفحة</h2>
-                            <p style="color:#94a3b8;">${error.message}</p>
-                            <button class="btn btn-primary" onclick="loadPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
-                        </div>
-                    `;
+                    console.warn('⚠️ SW registration failed:', error);
                 });
-
-            // تحديث العنوان
-            document.title = `⚓ ${getPageTitle(pageName)}`;
-        }
-
-        // ===== مساعد لعناوين الصفحات =====
-        function getPageTitle(page) {
-            const titles = {
-                'dashboard': 'لوحة التحكم',
-                'fleet': 'الأسطول',
-                'maintenance': 'الصيانة',
-                'efficiency': 'الجاهزية',
-                'support': 'الدعم',
-                'users': 'المستخدمين',
-                'notes': 'Note Verbale',
-                'sessions': 'المراقبة',
-                'ai-assistant': 'المساعد الذكي',
-                'settings': 'الإعدادات',
-                'logs': 'السجلات'
-            };
-            return titles[page] || page;
-        }
-
-        // ===== SIDEBAR =====
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-        }
-
-        // ===== REFRESH =====
-        function refreshPage() {
-            if (currentPage) {
-                loadPage(currentPage);
-            }
-            showToast('🔄 تم التحديث', 'success');
-        }
-
-        // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', function() {
-            // ربط زر الدخول
-            document.getElementById('loginButton').onclick = doLogin;
-
-            // Enter
-            document.getElementById('password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') doLogin();
             });
-
-            console.log('✅ Marine System v6.0 ready');
-        });
-
-        // ===== EXPOSE =====
-        window.doLogin = doLogin;
-        window.doLogout = doLogout;
-        window.loadPage = loadPage;
-        window.toggleSidebar = toggleSidebar;
-        window.refreshPage = refreshPage;
-        window.showToast = showToast;
+        }
     </script>
+
+    <!-- ===== التطبيق الرئيسي (ES Module) ===== -->
+    <script type="module" src="/js/app.js"></script>
 
 </body>
 </html>
