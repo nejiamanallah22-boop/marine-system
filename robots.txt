@@ -1,0 +1,28 @@
+# ============================================================
+# 🚢 منظومة الوسائل البحرية - ROBOTS.TXT v7.0
+# ============================================================
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /pages/
+Disallow: /assets/
+Disallow: /css/
+Disallow: /js/
+Disallow: /?*
+Disallow: /logout
+Disallow: /login
+
+# Sitemap
+Sitemap: https://marine-system.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10
+
+# Host
+Host: marine-system.com
+
+# ============================================================
+# END OF ROBOTS.TXT
+# ============================================================
