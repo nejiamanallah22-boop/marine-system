@@ -1,281 +1,847 @@
-<div id="page-users">
-    <h2 style="color:white; margin-bottom:15px;">👥 إدارة المستخدمين</h2>
+<!-- ============================================================
+👥 إدارة المستخدمين - Users v7.0 PRO MAX
+============================================================ -->
+<div id="page-users" class="page-content users-page">
     
-    <!-- ===== نموذج إضافة مستخدم ===== -->
-    <div class="stat-card" style="padding:15px; margin-bottom:15px; border-color:rgba(96,165,250,0.1);">
-        <h4 style="color:rgba(255,255,255,0.7); margin:0 0 10px 0;">➕ إضافة مستخدم جديد</h4>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
-            <div>
-                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">👤 اسم المستخدم</label>
-                <input type="text" id="uName" placeholder="الاسم الكامل" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
-            </div>
-            <div>
-                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">📧 البريد الإلكتروني</label>
-                <input type="email" id="uEmail" placeholder="example@domain.com" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
-            </div>
-            <div>
-                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🔑 كلمة المرور</label>
-                <input type="password" id="uPassword" placeholder="كلمة المرور" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
-            </div>
-            <div>
-                <label style="display:block; font-size:12px; color:rgba(255,255,255,0.4); margin-bottom:3px;">🔐 الصلاحية</label>
-                <select id="uRole" style="width:100%; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:white;">
-                    <option value="مسؤول">👑 مسؤول</option>
-                    <option value="مشرف">⭐ مشرف</option>
-                    <option value="محرر">✏️ محرر</option>
-                    <option value="مشاهد">👀 مشاهد</option>
-                </select>
-            </div>
+    <!-- ===== رأس الصفحة ===== -->
+    <div class="page-header">
+        <div>
+            <h2>👥 إدارة المستخدمين</h2>
+            <p class="page-subtitle">إدارة حسابات المستخدمين والصلاحيات والأدوار</p>
         </div>
-        <div style="margin-top:10px; display:flex; gap:10px;">
-            <button onclick="addUser()" class="btn-sm btn-success" style="padding:8px 20px; background:rgba(74,222,128,0.15); border:1px solid rgba(74,222,128,0.1); color:#4ade80; border-radius:8px; cursor:pointer;">💾 إضافة مستخدم</button>
-            <button onclick="clearUserInputs()" class="btn-sm" style="padding:8px 20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); color:rgba(255,255,255,0.4); border-radius:8px; cursor:pointer;">🗑️ إلغاء</button>
+        <div class="page-actions">
+            <button class="btn btn-gold btn-sm" onclick="openAddUserModal()">
+                <i class="fas fa-user-plus"></i> إضافة مستخدم
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="loadUsers()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="exportUsers()">
+                <i class="fas fa-file-export"></i> تصدير
+            </button>
         </div>
-        <div id="userFormMessage" style="margin-top:8px; font-size:13px;"></div>
     </div>
-    
-    <!-- ===== جدول المستخدمين ===== -->
-    <div class="stat-card" style="padding:15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة المستخدمين</h4>
-            <span style="color:rgba(255,255,255,0.3); font-size:12px;">عدد: <span id="usersCount">0</span></span>
+
+    <!-- ===== الإحصائيات ===== -->
+    <div class="stats-grid users-stats">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value" id="totalUsers">0</div>
+            <div class="stat-label">إجمالي المستخدمين</div>
         </div>
-        <div class="scrollable-table">
+        <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value" style="color: var(--color-success);" id="activeUsers">0</div>
+            <div class="stat-label">مستخدمين نشطين</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-value" style="color: var(--color-danger);" id="inactiveUsers">0</div>
+            <div class="stat-label">مستخدمين غير نشطين</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👑</div>
+            <div class="stat-value" style="color: var(--color-gold);" id="adminUsers">0</div>
+            <div class="stat-label">المسؤولين</div>
+        </div>
+    </div>
+
+    <!-- ===== فلتر البحث ===== -->
+    <div class="filter-bar">
+        <div class="filter-group">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchUsers" placeholder="بحث عن مستخدم..." onkeyup="filterUsers()">
+            </div>
+        </div>
+        <div class="filter-group">
+            <select class="filter-select" id="filterRole" onchange="filterUsers()">
+                <option value="">جميع الأدوار</option>
+                <option value="مسؤول">👑 مسؤول</option>
+                <option value="مشرف">⭐ مشرف</option>
+                <option value="محرر">✏️ محرر</option>
+                <option value="مشاهد">👀 مشاهد</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <select class="filter-select" id="filterStatus" onchange="filterUsers()">
+                <option value="">جميع الحالات</option>
+                <option value="active">🟢 نشط</option>
+                <option value="inactive">🔴 غير نشط</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ===== جدول المستخدمين ===== -->
+    <div class="users-table-container">
+        <div class="table-header">
+            <h4><i class="fas fa-list"></i> قائمة المستخدمين</h4>
+            <span class="table-count" id="usersCount">0 مستخدم</span>
+        </div>
+        <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>👤 الاسم</th>
-                        <th>📧 البريد</th>
+                        <th>#</th>
+                        <th>👤 المستخدم</th>
+                        <th>📧 البريد الإلكتروني</th>
                         <th>🔐 الصلاحية</th>
                         <th>📊 الحالة</th>
                         <th>📅 تاريخ الإنشاء</th>
-                        <th>⚙️ إجراءات</th>
+                        <th>⚡ الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersBody">
-                    <tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>
+                    <tr>
+                        <td colspan="7" class="loading-text">
+                            <div class="loader-spinner"></div>
+                            جاري تحميل المستخدمين...
+                        </td>
+                    </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="table-footer">
+            <span id="usersPagination"></span>
+        </div>
+    </div>
+
+</div>
+
+<!-- ============================================================
+📱 مودال إضافة/تعديل مستخدم
+============================================================ -->
+<div class="modal-overlay" id="userModal" style="display:none;">
+    <div class="modal-box user-modal">
+        <div class="modal-header">
+            <h3 id="userModalTitle">➕ إضافة مستخدم جديد</h3>
+            <button class="modal-close" onclick="closeUserModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="userForm" autocomplete="off">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>👤 الاسم الكامل <span class="required">*</span></label>
+                        <input type="text" id="uName" placeholder="أدخل الاسم الكامل" required>
+                    </div>
+                    <div class="form-group">
+                        <label>📧 البريد الإلكتروني <span class="required">*</span></label>
+                        <input type="email" id="uEmail" placeholder="example@domain.com" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🔑 كلمة المرور <span class="required" id="pwdRequired">*</span></label>
+                        <div class="password-wrapper">
+                            <input type="password" id="uPassword" placeholder="أدخل كلمة المرور">
+                            <button type="button" class="toggle-pwd" onclick="togglePassword()">
+                                <i class="fas fa-eye" id="pwdIcon"></i>
+                            </button>
+                        </div>
+                        <small class="hint" id="pwdHint">كلمة المرور يجب أن تكون 8 أحرف على الأقل</small>
+                    </div>
+                    <div class="form-group">
+                        <label>🔐 الصلاحية <span class="required">*</span></label>
+                        <select id="uRole">
+                            <option value="مسؤول">👑 مسؤول</option>
+                            <option value="مشرف">⭐ مشرف</option>
+                            <option value="محرر">✏️ محرر</option>
+                            <option value="مشاهد" selected>👀 مشاهد</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📊 الحالة</label>
+                        <select id="uStatus">
+                            <option value="active">🟢 نشط</option>
+                            <option value="inactive">🔴 غير نشط</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="userFormMessage" class="form-message"></div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeUserModal()">إلغاء</button>
+            <button class="btn-primary" id="userSubmitBtn" onclick="submitUser()">
+                <i class="fas fa-save"></i> حفظ
+            </button>
         </div>
     </div>
 </div>
 
+<!-- ============================================================
+📦 CSS الخاص بالصفحة
+============================================================ -->
 <style>
-    .stat-card {
-        background: rgba(255,255,255,0.02);
-        border-radius: 10px;
-        padding: 15px;
-        border: 1px solid rgba(255,255,255,0.04);
+/* ===== صفحة المستخدمين ===== */
+.users-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.users-page .page-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.users-page .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 13px;
+}
+
+.users-page .page-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ===== إحصائيات ===== */
+.users-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.users-stats .stat-card {
+    padding: 16px 20px;
+}
+
+.users-stats .stat-card .stat-value {
+    font-size: 28px;
+}
+
+/* ===== فلتر البحث ===== */
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-bar .filter-group {
+    flex: 1;
+    min-width: 160px;
+}
+
+.filter-bar .search-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    transition: var(--transition-base);
+}
+
+.filter-bar .search-wrapper:focus-within {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.1);
+}
+
+.filter-bar .search-wrapper .search-icon {
+    color: var(--color-text-dim);
+    font-size: 14px;
+}
+
+.filter-bar .search-wrapper input {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 10px 12px;
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    width: 100%;
+}
+
+.filter-bar .search-wrapper input::placeholder {
+    color: var(--color-text-dim);
+}
+
+.filter-bar .filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    transition: var(--transition-base);
+    cursor: pointer;
+}
+
+.filter-bar .filter-select:focus {
+    border-color: var(--color-gold);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.1);
+}
+
+.filter-bar .filter-select option {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+}
+
+/* ===== جدول المستخدمين ===== */
+.users-table-container {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.table-header h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.table-header h4 i {
+    color: var(--color-gold);
+    margin-left: 8px;
+}
+
+.table-count {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.users-table-container .table-wrapper {
+    border: none;
+    border-radius: 0;
+}
+
+.users-table-container .table-wrapper table {
+    font-size: 13px;
+}
+
+.users-table-container .table-wrapper table th {
+    background: var(--color-bg-glass);
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.users-table-container .table-wrapper table td {
+    padding: 9px 14px;
+}
+
+.users-table-container .table-wrapper table tr:hover td {
+    background: var(--color-bg-card-hover);
+}
+
+.table-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 12px;
+}
+
+/* ===== دور المستخدم ===== */
+.role-badge {
+    padding: 3px 14px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.role-admin {
+    background: rgba(230, 179, 30, 0.15);
+    color: var(--color-gold-light);
+    border: 1px solid rgba(230, 179, 30, 0.1);
+}
+
+.role-supervisor {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--color-info);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.role-editor {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-success);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.role-viewer {
+    background: rgba(148, 163, 184, 0.15);
+    color: var(--color-text-muted);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* ===== أزرار الإجراءات ===== */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.btn-icon {
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-base);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.btn-icon:hover {
+    transform: scale(1.1);
+}
+
+.btn-edit {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--color-info);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.btn-edit:hover {
+    background: rgba(59, 130, 246, 0.25);
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-toggle {
+    background: rgba(234, 179, 8, 0.15);
+    color: var(--color-warning);
+    border: 1px solid rgba(234, 179, 8, 0.1);
+}
+
+.btn-toggle:hover {
+    background: rgba(234, 179, 8, 0.25);
+}
+
+/* ===== مودال المستخدم ===== */
+.user-modal {
+    max-width: 560px;
+}
+
+.user-modal .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.user-modal .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-modal .form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.user-modal .form-group label .required {
+    color: var(--color-danger);
+}
+
+.user-modal .form-group input,
+.user-modal .form-group select {
+    padding: 10px 14px;
+    background: var(--color-bg-input);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-family: inherit;
+    font-size: 13px;
+    transition: var(--transition-base);
+}
+
+.user-modal .form-group input:focus,
+.user-modal .form-group select:focus {
+    border-color: var(--color-gold);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 179, 30, 0.1);
+}
+
+.user-modal .form-group input::placeholder {
+    color: var(--color-text-dim);
+}
+
+.user-modal .password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.user-modal .password-wrapper input {
+    flex: 1;
+    padding-left: 44px;
+}
+
+.user-modal .password-wrapper .toggle-pwd {
+    position: absolute;
+    left: 12px;
+    background: none;
+    border: none;
+    color: var(--color-text-dim);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-base);
+}
+
+.user-modal .password-wrapper .toggle-pwd:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-card);
+}
+
+.user-modal .hint {
+    font-size: 11px;
+    color: var(--color-text-dim);
+    margin-top: 2px;
+}
+
+.user-modal .form-message {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+    font-size: 13px;
+    display: none;
+}
+
+.user-modal .form-message.show {
+    display: block;
+}
+
+.user-modal .form-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--color-success);
+    border: 1px solid rgba(34, 197, 94, 0.15);
+}
+
+.user-modal .form-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+.user-modal .form-message.warning {
+    background: rgba(234, 179, 8, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(234, 179, 8, 0.15);
+}
+
+/* ============================================================
+📱 RESPONSIVE
+============================================================ */
+@media (max-width: 992px) {
+    .users-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
-    .btn-sm {
-        padding: 6px 14px;
-        font-size: 13px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-family: 'Cairo', sans-serif;
+    
+    .user-modal .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
-    .btn-sm:hover { opacity: 0.8; }
-    .btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-    .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-    .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-    .scrollable-table { overflow-x: auto; }
-    .scrollable-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .scrollable-table table th {
-        background: rgba(255,255,255,0.04);
-        padding: 10px;
-        border-bottom: 2px solid rgba(255,255,255,0.06);
-        text-align: center;
-        color: rgba(255,255,255,0.7);
+}
+
+@media (max-width: 768px) {
+    .users-page .page-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
-    .scrollable-table table td {
-        padding: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        text-align: center;
-        color: rgba(255,255,255,0.6);
+    
+    .users-page .page-actions {
+        width: 100%;
+        justify-content: flex-start;
     }
-    .scrollable-table table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .users-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .users-stats .stat-card .stat-value {
+        font-size: 22px;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+    }
+    
+    .filter-bar .filter-group {
+        min-width: 100%;
+    }
+    
+    .users-table-container .table-wrapper table {
+        font-size: 12px;
+        min-width: 600px;
+    }
+    
+    .user-modal {
+        max-width: 100%;
+        margin: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .users-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .users-stats .stat-card {
+        padding: 12px 14px;
+    }
+    
+    .users-stats .stat-card .stat-value {
+        font-size: 18px;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
 </style>
 
+<!-- ============================================================
+📦 JavaScript الخاص بالصفحة
+============================================================ -->
 <script>
 // ============================================================
-// 👥 دوال إدارة المستخدمين
+// 👥 USERS PAGE - v7.0 PRO MAX
 // ============================================================
 
-function clearUserInputs() {
+// ============================================================
+// 1. المتغيرات العامة
+// ============================================================
+
+let allUsers = [];
+let filteredUsers = [];
+let editingUserId = null;
+let currentPage = 1;
+let pageSize = 10;
+
+// ============================================================
+// 2. دوال مساعدة
+// ============================================================
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getToken() {
+    return localStorage.getItem('marine_auth_token') || localStorage.getItem('token');
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toastContainer') || document.body;
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(30px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '--';
+    try {
+        return new Date(dateStr).toLocaleDateString('ar-TN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch {
+        return '--';
+    }
+}
+
+function getRoleBadge(role) {
+    const roles = {
+        'مسؤول': 'role-admin',
+        'مشرف': 'role-supervisor',
+        'محرر': 'role-editor',
+        'مشاهد': 'role-viewer'
+    };
+    return roles[role] || 'role-viewer';
+}
+
+function getRoleEmoji(role) {
+    const emojis = {
+        'مسؤول': '👑',
+        'مشرف': '⭐',
+        'محرر': '✏️',
+        'مشاهد': '👀'
+    };
+    return emojis[role] || '👤';
+}
+
+// ============================================================
+// 3. فتح/إغلاق المودال
+// ============================================================
+
+function openAddUserModal() {
+    editingUserId = null;
+    document.getElementById('userModalTitle').textContent = '➕ إضافة مستخدم جديد';
+    document.getElementById('userSubmitBtn').innerHTML = '<i class="fas fa-save"></i> إضافة';
+    document.getElementById('userSubmitBtn').onclick = submitUser;
+    document.getElementById('pwdRequired').textContent = '*';
+    document.getElementById('pwdHint').textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+    document.getElementById('uPassword').required = true;
+    document.getElementById('uPassword').placeholder = 'أدخل كلمة المرور';
+    clearForm();
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('uName').focus();
+}
+
+function openEditUserModal(user) {
+    editingUserId = user.id;
+    document.getElementById('userModalTitle').textContent = '✏️ تعديل المستخدم: ' + user.name;
+    document.getElementById('userSubmitBtn').innerHTML = '<i class="fas fa-save"></i> تحديث';
+    document.getElementById('userSubmitBtn').onclick = submitUser;
+    document.getElementById('pwdRequired').textContent = '(اختياري)';
+    document.getElementById('pwdHint').textContent = 'اترك فارغاً للحفاظ على كلمة المرور الحالية';
+    document.getElementById('uPassword').required = false;
+    document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
+    
+    document.getElementById('uName').value = user.name || '';
+    document.getElementById('uEmail').value = user.email || '';
+    document.getElementById('uRole').value = user.role || 'مشاهد';
+    document.getElementById('uStatus').value = user.isActive ? 'active' : 'inactive';
+    document.getElementById('uPassword').value = '';
+    
+    document.getElementById('userModal').style.display = 'flex';
+    document.getElementById('uName').focus();
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').style.display = 'none';
+    clearForm();
+    document.getElementById('userFormMessage').className = 'form-message';
+    document.getElementById('userFormMessage').textContent = '';
+}
+
+function clearForm() {
     document.getElementById('uName').value = '';
     document.getElementById('uEmail').value = '';
     document.getElementById('uPassword').value = '';
     document.getElementById('uRole').value = 'مشاهد';
+    document.getElementById('uStatus').value = 'active';
+    document.getElementById('userFormMessage').className = 'form-message';
     document.getElementById('userFormMessage').textContent = '';
-    document.getElementById('userFormMessage').style.color = '';
 }
 
-function addUser() {
+function togglePassword() {
+    const input = document.getElementById('uPassword');
+    const icon = document.getElementById('pwdIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// ============================================================
+// 4. إرسال النموذج (إضافة/تحديث)
+// ============================================================
+
+function submitUser() {
     const token = getToken();
     if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        showFormMessage('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
         return;
     }
     
-    const name = document.getElementById('uName')?.value.trim();
-    const email = document.getElementById('uEmail')?.value.trim();
-    const password = document.getElementById('uPassword')?.value.trim();
-    const role = document.getElementById('uRole')?.value;
+    const name = document.getElementById('uName').value.trim();
+    const email = document.getElementById('uEmail').value.trim();
+    const password = document.getElementById('uPassword').value;
+    const role = document.getElementById('uRole').value;
+    const status = document.getElementById('uStatus').value;
+    const isActive = status === 'active';
     
     // التحقق من الحقول
     if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
+        showFormMessage('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
         document.getElementById('uName').focus();
         return;
     }
     if (!email) {
-        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
+        showFormMessage('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
         document.getElementById('uEmail').focus();
         return;
     }
-    if (!password || password.length < 4) {
-        showAlert('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'warning');
+    if (!editingUserId && (!password || password.length < 8)) {
+        showFormMessage('⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'warning');
         document.getElementById('uPassword').focus();
         return;
     }
     
-    // إظهار رسالة انتظار
-    const msgEl = document.getElementById('userFormMessage');
-    msgEl.textContent = '⏳ جاري إضافة المستخدم...';
-    msgEl.style.color = '#fbbf24';
-    
-    fetch('/api/users', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ name, email, password, role })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم إضافة المستخدم بنجاح', 'success');
-            msgEl.textContent = '✅ تم إضافة المستخدم: ' + data.user.name;
-            msgEl.style.color = '#4ade80';
-            clearUserInputs();
-            loadUsers(); // تحديث القائمة
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الإضافة'), 'danger');
-            msgEl.textContent = '❌ ' + (data.error || 'خطأ في الإضافة');
-            msgEl.style.color = '#f87171';
-        }
-    })
-    .catch(err => {
-        console.error('Add user error:', err);
-        showAlert('❌ خطأ في الاتصال بالخادم', 'danger');
-        msgEl.textContent = '❌ خطأ في الاتصال بالخادم';
-        msgEl.style.color = '#f87171';
-    });
-}
-
-function deleteUser(id) {
-    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/users/' + id, {
-        method: 'DELETE',
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم حذف المستخدم', 'success');
-            loadUsers();
-        } else {
-            showAlert('❌ ' + (data.error || 'خطأ في الحذف'), 'danger');
-        }
-    })
-    .catch(err => {
-        console.error('Delete user error:', err);
-        showAlert('❌ خطأ في حذف المستخدم', 'danger');
-    });
-}
-
-function editUser(id) {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    // جلب بيانات المستخدم
-    fetch('/api/users', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(users => {
-        const user = users.find(u => u.id === id);
-        if (!user) {
-            showAlert('⚠️ المستخدم غير موجود', 'warning');
-            return;
-        }
-        
-        // ملء النموذج
-        document.getElementById('uName').value = user.name || '';
-        document.getElementById('uEmail').value = user.email || '';
-        document.getElementById('uPassword').value = '';
-        document.getElementById('uPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور الحالية';
-        document.getElementById('uRole').value = user.role || 'مشاهد';
-        
-        // تغيير زر الإضافة إلى تحديث
-        const addBtn = document.querySelector('[onclick="addUser()"]');
-        if (addBtn) {
-            addBtn.textContent = '💾 تحديث المستخدم';
-            addBtn.onclick = function() { updateUser(id); };
-        }
-        
-        document.getElementById('userFormMessage').textContent = '✏️ جارٍ تعديل المستخدم: ' + user.name;
-        document.getElementById('userFormMessage').style.color = '#fbbf24';
-        
-        showAlert('✏️ جارٍ تعديل المستخدم: ' + user.name, 'info');
-    })
-    .catch(err => {
-        console.error('Edit user error:', err);
-        showAlert('❌ خطأ في تحميل بيانات المستخدم', 'danger');
-    });
-}
-
-function updateUser(id) {
-    const token = getToken();
-    if (!token) {
-        showAlert('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    const name = document.getElementById('uName')?.value.trim();
-    const email = document.getElementById('uEmail')?.value.trim();
-    const password = document.getElementById('uPassword')?.value.trim();
-    const role = document.getElementById('uRole')?.value;
-    
-    if (!name) {
-        showAlert('⚠️ الرجاء إدخال اسم المستخدم', 'warning');
-        return;
-    }
-    if (!email) {
-        showAlert('⚠️ الرجاء إدخال البريد الإلكتروني', 'warning');
-        return;
-    }
-    
-    const data = { name, email, role };
-    if (password && password.length >= 4) {
+    // تجهيز البيانات
+    const data = { name, email, role, isActive };
+    if (password && password.length >= 8) {
         data.password = password;
     }
     
-    fetch('/api/users/' + id, {
-        method: 'PUT',
+    showFormMessage('⏳ جاري المعالجة...', 'info');
+    
+    const url = editingUserId ? `/api/users/${editingUserId}` : '/api/users';
+    const method = editingUserId ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
@@ -283,99 +849,366 @@ function updateUser(id) {
         body: JSON.stringify(data)
     })
     .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('✅ تم تحديث المستخدم بنجاح', 'success');
-            clearUserInputs();
-            // إعادة زر الإضافة
-            const addBtn = document.querySelector('[onclick*="updateUser"]');
-            if (addBtn) {
-                addBtn.textContent = '💾 إضافة مستخدم';
-                addBtn.onclick = addUser;
-            }
-            document.getElementById('userFormMessage').textContent = '';
+    .then(result => {
+        if (result.success) {
+            const action = editingUserId ? 'تحديث' : 'إضافة';
+            showToast(`✅ تم ${action} المستخدم بنجاح`, 'success');
+            showFormMessage(`✅ تم ${action} المستخدم: ${result.user?.name || name}`, 'success');
+            closeUserModal();
             loadUsers();
         } else {
-            showAlert('❌ ' + (data.error || 'خطأ في التحديث'), 'danger');
+            showFormMessage('❌ ' + (result.error || 'حدث خطأ'), 'error');
         }
     })
     .catch(err => {
-        console.error('Update user error:', err);
-        showAlert('❌ خطأ في تحديث المستخدم', 'danger');
+        console.error('Submit user error:', err);
+        showFormMessage('❌ خطأ في الاتصال بالخادم', 'error');
     });
 }
 
+function showFormMessage(msg, type = 'info') {
+    const el = document.getElementById('userFormMessage');
+    el.textContent = msg;
+    el.className = 'form-message show ' + type;
+}
+
 // ============================================================
-// 🔄 تحميل المستخدمين
+// 5. تحميل المستخدمين
 // ============================================================
 
 function loadUsers() {
+    console.log('🔄 تحميل المستخدمين...');
+    
     const token = getToken();
     if (!token) {
-        console.log('⚠️ No token, skipping users load');
+        console.warn('⚠️ لا يوجد توكن');
         return;
     }
+    
+    document.getElementById('usersBody').innerHTML = `
+        <tr><td colspan="7" class="loading-text">
+            <div class="loader-spinner"></div>
+            جاري تحميل المستخدمين...
+        </td></tr>
+    `;
     
     fetch('/api/users', {
         headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('خطأ ' + res.status);
+        return res.json();
+    })
     .then(data => {
-        allUsers = data || [];
-        console.log('✅ Users loaded:', allUsers.length);
-        renderUsersTable();
+        allUsers = Array.isArray(data) ? data : [];
+        console.log('✅ تم تحميل المستخدمين:', allUsers.length);
+        filteredUsers = [...allUsers];
+        updateStats();
+        renderUsers();
+        showToast('🔄 تم تحديث قائمة المستخدمين', 'info');
     })
     .catch(err => {
-        console.error('Load users error:', err);
+        console.error('❌ خطأ في تحميل المستخدمين:', err);
+        document.getElementById('usersBody').innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-danger);">
+                ❌ ${escapeHTML(err.message)}
+            </td></tr>
+        `;
+        showToast('❌ فشل تحميل المستخدمين', 'error');
     });
 }
 
-function renderUsersTable() {
+// ============================================================
+// 6. عرض المستخدمين
+// ============================================================
+
+function renderUsers() {
     const tbody = document.getElementById('usersBody');
     if (!tbody) return;
     
-    const usersCount = document.getElementById('usersCount');
-    if (usersCount) usersCount.textContent = allUsers.length;
+    const count = filteredUsers.length;
+    document.getElementById('usersCount').textContent = count + ' مستخدم';
     
-    if (!allUsers || allUsers.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">🚫 لا توجد مستخدمين</td></tr>`;
+    if (count === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-text-dim);">
+                🚫 لا توجد مستخدمين مطابقين
+            </td></tr>
+        `;
         return;
     }
     
-    tbody.innerHTML = allUsers.map(u => `
-        <tr>
-            <td><strong>${u.name || '-'}</strong></td>
-            <td>${u.email || '-'}</td>
-            <td><span style="color:${u.role === 'مسؤول' ? '#fbbf24' : u.role === 'مشرف' ? '#60a5fa' : '#4ade80'}">${u.role || 'مشاهد'}</span></td>
-            <td>${u.isActive ? '✅ نشط' : '❌ معطل'}</td>
-            <td style="font-size:12px; color:rgba(255,255,255,0.3);">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-TN') : '-'}</td>
-            <td>
-                <button class="btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
-                <button class="btn-sm btn-danger" onclick="deleteUser('${u.id}')">🗑️</button>
-            </td>
-        </tr>
-    `).join('');
+    // ترقيم الصفحات
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, count);
+    const pageUsers = filteredUsers.slice(start, end);
+    
+    tbody.innerHTML = pageUsers.map((u, i) => {
+        const roleBadge = getRoleBadge(u.role);
+        const roleEmoji = getRoleEmoji(u.role);
+        const statusClass = u.isActive ? 'status-active' : 'status-inactive';
+        const statusText = u.isActive ? '🟢 نشط' : '🔴 غير نشط';
+        
+        return `
+            <tr>
+                <td>${start + i + 1}</td>
+                <td><strong>${escapeHTML(u.name || 'مجهول')}</strong></td>
+                <td>${escapeHTML(u.email || '-')}</td>
+                <td><span class="role-badge ${roleBadge}">${roleEmoji} ${escapeHTML(u.role || 'مشاهد')}</span></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td style="font-size:12px; color:var(--color-text-dim);">${formatDate(u.createdAt)}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn-icon btn-edit" onclick="openEditUserModal({id:'${u.id}', name:'${escapeHTML(u.name)}', email:'${escapeHTML(u.email)}', role:'${u.role}', isActive:${u.isActive}})" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon btn-toggle" onclick="toggleUserStatus('${u.id}')" title="${u.isActive ? 'تعطيل' : 'تفعيل'}">
+                            <i class="fas ${u.isActive ? 'fa-pause' : 'fa-play'}"></i>
+                        </button>
+                        <button class="btn-icon btn-delete" onclick="deleteUser('${u.id}')" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // ترقيم الصفحات
+    renderPagination(count);
+}
+
+function renderPagination(total) {
+    const totalPages = Math.ceil(total / pageSize);
+    const container = document.getElementById('usersPagination');
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.textContent = '';
+        return;
+    }
+    
+    let html = '<div style="display:flex; gap:6px; justify-content:center;">';
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    renderUsers();
 }
 
 // ============================================================
-// 🔄 تهيئة الصفحة
+// 7. تحديث الإحصائيات
+// ============================================================
+
+function updateStats() {
+    const total = allUsers.length;
+    const active = allUsers.filter(u => u.isActive).length;
+    const inactive = total - active;
+    const admins = allUsers.filter(u => u.role === 'مسؤول').length;
+    
+    document.getElementById('totalUsers').textContent = total;
+    document.getElementById('activeUsers').textContent = active;
+    document.getElementById('inactiveUsers').textContent = inactive;
+    document.getElementById('adminUsers').textContent = admins;
+}
+
+// ============================================================
+// 8. فلتر المستخدمين
+// ============================================================
+
+function filterUsers() {
+    const search = document.getElementById('searchUsers').value.toLowerCase().trim();
+    const roleFilter = document.getElementById('filterRole').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    
+    filteredUsers = allUsers.filter(u => {
+        // فلتر البحث
+        let match = true;
+        if (search) {
+            const name = (u.name || '').toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            match = name.includes(search) || email.includes(search);
+        }
+        
+        // فلتر الدور
+        if (match && roleFilter) {
+            match = u.role === roleFilter;
+        }
+        
+        // فلتر الحالة
+        if (match && statusFilter) {
+            const isActive = u.isActive;
+            match = (statusFilter === 'active' && isActive) || 
+                    (statusFilter === 'inactive' && !isActive);
+        }
+        
+        return match;
+    });
+    
+    currentPage = 1;
+    renderUsers();
+}
+
+// ============================================================
+// 9. حذف مستخدم
+// ============================================================
+
+function deleteUser(id) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟\nهذا الإجراء لا يمكن التراجع عنه.')) return;
+    
+    const token = getToken();
+    if (!token) {
+        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast('✅ تم حذف المستخدم بنجاح', 'success');
+            loadUsers();
+        } else {
+            showToast('❌ ' + (result.error || 'فشل الحذف'), 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Delete user error:', err);
+        showToast('❌ خطأ في حذف المستخدم', 'error');
+    });
+}
+
+// ============================================================
+// 10. تبديل حالة المستخدم
+// ============================================================
+
+function toggleUserStatus(id) {
+    const token = getToken();
+    if (!token) {
+        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        return;
+    }
+    
+    const user = allUsers.find(u => u.id === id);
+    if (!user) return;
+    
+    const newStatus = !user.isActive;
+    const action = newStatus ? 'تفعيل' : 'تعطيل';
+    
+    if (!confirm(`⚠️ هل أنت متأكد من ${action} هذا المستخدم؟`)) return;
+    
+    fetch(`/api/users/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ isActive: newStatus })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            showToast(`✅ تم ${action} المستخدم بنجاح`, 'success');
+            loadUsers();
+        } else {
+            showToast('❌ ' + (result.error || 'فشل التحديث'), 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Toggle user error:', err);
+        showToast('❌ خطأ في تحديث حالة المستخدم', 'error');
+    });
+}
+
+// ============================================================
+// 11. تصدير المستخدمين
+// ============================================================
+
+function exportUsers() {
+    if (!allUsers || allUsers.length === 0) {
+        showToast('⚠️ لا توجد مستخدمين للتصدير', 'warning');
+        return;
+    }
+    
+    // تحويل البيانات إلى CSV
+    const headers = ['الاسم', 'البريد الإلكتروني', 'الدور', 'الحالة', 'تاريخ الإنشاء'];
+    const rows = allUsers.map(u => [
+        u.name || '',
+        u.email || '',
+        u.role || 'مشاهد',
+        u.isActive ? 'نشط' : 'غير نشط',
+        formatDate(u.createdAt)
+    ]);
+    
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `users_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    showToast('📥 تم تصدير المستخدمين', 'success');
+}
+
+// ============================================================
+// 12. تهيئة الصفحة
+// ============================================================
+
+function initUsersPage() {
+    console.log('👥 تهيئة صفحة المستخدمين...');
+    
+    // التحقق من وجود الصفحة
+    if (!document.getElementById('page-users')) return;
+    
+    // تحميل المستخدمين
+    setTimeout(loadUsers, 300);
+    setTimeout(loadUsers, 1000);
+    
+    // مستمع للبحث (debounce)
+    const searchInput = document.getElementById('searchUsers');
+    if (searchInput) {
+        let timeout;
+        searchInput.addEventListener('keyup', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(filterUsers, 300);
+        });
+    }
+}
+
+// ============================================================
+// 13. تنشيط الصفحة
 // ============================================================
 
 if (document.getElementById('page-users')) {
-    console.log('📄 Users page loaded');
-    setTimeout(loadUsers, 300);
-    setTimeout(loadUsers, 1000);
+    console.log('📄 تم اكتشاف صفحة المستخدمين');
+    setTimeout(initUsersPage, 300);
 }
 
 // ============================================================
-// 🔄 تحديث من app.js (إذا كانت الدالة موجودة)
+// 14. دوال عالمية
 // ============================================================
 
-// التأكد من أن loadUsers متاحة عالمياً
 window.loadUsers = loadUsers;
-window.addUser = addUser;
+window.filterUsers = filterUsers;
+window.renderUsers = renderUsers;
+window.openAddUserModal = openAddUserModal;
+window.openEditUserModal = openEditUserModal;
+window.closeUserModal = closeUserModal;
+window.submitUser = submitUser;
 window.deleteUser = deleteUser;
-window.editUser = editUser;
-window.updateUser = updateUser;
-window.clearUserInputs = clearUserInputs;
+window.toggleUserStatus = toggleUserStatus;
+window.exportUsers = exportUsers;
+window.togglePassword = togglePassword;
+window.goToPage = goToPage;
+
+console.log('✅ صفحة المستخدمين v7.0 جاهزة');
 </script>
