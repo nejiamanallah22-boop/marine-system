@@ -1,53 +1,68 @@
-<!-- public/pages/sessions.html -->
-<div id="page-sessions">
-    <!-- HEADER -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
+<!-- ============================================================
+🔄 صفحة المراقبة - Sessions v7.0 PRO MAX
+============================================================ -->
+<div id="page-sessions" class="page-content sessions-page">
+    
+    <!-- ===== رأس الصفحة ===== -->
+    <div class="page-header">
         <div>
-            <h2 style="margin:0; color:white; font-size:22px;">🔄 المراقبة</h2>
-            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">مراقبة الجلسات النشطة والأجهزة المتصلة</p>
+            <h2>🔄 المراقبة</h2>
+            <p class="page-subtitle">مراقبة الجلسات النشطة والأجهزة المتصلة في الوقت الفعلي</p>
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <span style="background:rgba(74,222,128,0.15); color:#4ade80; padding:6px 16px; border-radius:20px; font-size:12px; border:1px solid rgba(74,222,128,0.1);">
-                🟢 <span id="sessionOnline">0</span> متصل
+        <div class="page-actions">
+            <span class="online-badge">
+                <span class="status-dot online"></span>
+                <span id="sessionOnline">0</span> متصل
             </span>
-            <button onclick="refreshSessions()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
-            <button onclick="centerSessionMap()" style="padding:6px 14px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:10px; color:#60a5fa; cursor:pointer;">🎯 مركز الخريطة</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshSessions()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="centerSessionMap()">
+                <i class="fas fa-crosshairs"></i> مركز الخريطة
+            </button>
         </div>
     </div>
 
-    <!-- إحصائيات -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin:15px 0;">
-        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
-            <div style="font-size:22px; font-weight:700; color:#60a5fa;" id="totalSessions">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">📊 إجمالي الجلسات</div>
+    <!-- ===== الإحصائيات ===== -->
+    <div class="stats-grid sessions-stats">
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-value" id="totalSessions">0</div>
+            <div class="stat-label">إجمالي الجلسات</div>
         </div>
-        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
-            <div style="font-size:22px; font-weight:700; color:#4ade80;" id="activeSessions">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🟢 نشطة</div>
+        <div class="stat-card">
+            <div class="stat-icon">🟢</div>
+            <div class="stat-value" style="color: var(--color-success);" id="activeSessions">0</div>
+            <div class="stat-label">جلسات نشطة</div>
         </div>
-        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
-            <div style="font-size:22px; font-weight:700; color:#f87171;" id="expiredSessions">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">🔴 منتهية</div>
+        <div class="stat-card">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-value" style="color: var(--color-danger);" id="expiredSessions">0</div>
+            <div class="stat-label">جلسات منتهية</div>
         </div>
-        <div class="stat-card" style="padding:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:10px; text-align:center;">
-            <div style="font-size:22px; font-weight:700; color:#fbbf24;" id="uniqueUsers">0</div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.3);">👤 مستخدمين</div>
+        <div class="stat-card">
+            <div class="stat-icon">👤</div>
+            <div class="stat-value" style="color: var(--color-gold);" id="uniqueUsers">0</div>
+            <div class="stat-label">مستخدمين فريدين</div>
         </div>
     </div>
 
-    <!-- الخريطة -->
-    <div style="background:rgba(255,255,255,0.02); border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,0.04); margin-bottom:15px;">
-        <div id="sessionMap" style="height:400px; width:100%; border-radius:8px; background:#0a0a1a;"></div>
-        <div id="mapStatus" style="text-align:center; padding:8px; color:rgba(255,255,255,0.3); font-size:12px;">📍 تحميل الخريطة...</div>
+    <!-- ===== الخريطة ===== -->
+    <div class="map-container">
+        <div class="map-header">
+            <span class="map-title"><i class="fas fa-map-marked-alt"></i> مواقع الجلسات</span>
+            <span class="map-status" id="mapStatus">📍 تحميل الخريطة...</span>
+        </div>
+        <div id="sessionMap" class="session-map"></div>
     </div>
 
-    <!-- قائمة الجلسات -->
-    <div class="stat-card" style="padding:15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="color:rgba(255,255,255,0.7); margin:0; font-size:14px;">📋 قائمة الجلسات</h4>
-            <span style="color:rgba(255,255,255,0.3); font-size:11px;" id="sessionCount">0 جلسة</span>
+    <!-- ===== قائمة الجلسات ===== -->
+    <div class="sessions-table-container">
+        <div class="table-header">
+            <h4><i class="fas fa-list"></i> قائمة الجلسات</h4>
+            <span class="session-count" id="sessionCount">0 جلسة</span>
         </div>
-        <div class="scrollable-table">
+        <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
@@ -57,127 +72,403 @@
                         <th>🌐 IP</th>
                         <th>🕐 بداية الجلسة</th>
                         <th>📊 الحالة</th>
-                        <th>إجراءات</th>
+                        <th>⚡ الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="sessionsBody">
-                    <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">⏳ جاري تحميل الجلسات...</td></tr>
+                    <tr>
+                        <td colspan="7" class="loading-text">
+                            <div class="loader-spinner"></div>
+                            جاري تحميل الجلسات...
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
 </div>
 
+<!-- ============================================================
+📦 CSS الخاص بالصفحة
+============================================================ -->
 <style>
-    #sessionMap {
-        height: 400px;
-        width: 100%;
-        border-radius: 8px;
-        background: #0a0a1a;
+/* ===== صفحة المراقبة ===== */
+.sessions-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sessions-page .page-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.sessions-page .page-subtitle {
+    color: var(--color-text-muted);
+    font-size: 13px;
+}
+
+.sessions-page .page-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.online-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.15);
+    border-radius: var(--radius-full);
+    color: var(--color-success);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.online-badge .status-dot {
+    width: 8px;
+    height: 8px;
+}
+
+/* ===== إحصائيات ===== */
+.sessions-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.sessions-stats .stat-card {
+    padding: 16px 20px;
+}
+
+.sessions-stats .stat-card .stat-value {
+    font-size: 28px;
+}
+
+/* ===== الخريطة ===== */
+.map-container {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.map-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.map-title i {
+    color: var(--color-gold);
+    margin-left: 8px;
+}
+
+.map-status {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.session-map {
+    height: 400px;
+    width: 100%;
+    background: var(--color-bg-primary);
+}
+
+/* ===== تخصيص Leaflet ===== */
+.session-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+}
+
+.session-marker .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    border: 2px solid white;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    transition: all 0.3s;
+}
+
+.session-marker .avatar.active {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    animation: pulse-marker 2s infinite;
+}
+
+.session-marker .avatar.inactive {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.session-marker .avatar.expired {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.session-marker .name {
+    font-size: 10px;
+    margin-top: 3px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 2px 10px;
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@keyframes pulse-marker {
+    0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+    50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.5); }
+}
+
+/* ===== جدول الجلسات ===== */
+.sessions-table-container {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.table-header h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.table-header h4 i {
+    color: var(--color-gold);
+    margin-left: 8px;
+}
+
+.session-count {
+    font-size: 12px;
+    color: var(--color-text-muted);
+}
+
+.sessions-table-container .table-wrapper {
+    border: none;
+    border-radius: 0;
+}
+
+.sessions-table-container .table-wrapper table {
+    font-size: 13px;
+}
+
+.sessions-table-container .table-wrapper table th {
+    background: var(--color-bg-glass);
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.sessions-table-container .table-wrapper table td {
+    padding: 9px 14px;
+}
+
+.sessions-table-container .table-wrapper table tr:hover td {
+    background: var(--color-bg-card-hover);
+}
+
+/* ===== الحالات ===== */
+.status-badge {
+    padding: 4px 14px;
+    border-radius: var(--radius-full);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-active {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-success);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.status-inactive {
+    background: rgba(108, 117, 125, 0.15);
+    color: #adb5bd;
+    border: 1px solid rgba(108, 117, 125, 0.1);
+}
+
+.status-expired {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+/* ===== أزرار الإجراءات ===== */
+.btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition-base);
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-sm:hover {
+    transform: scale(1.05);
+}
+
+.btn-danger-sm {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-danger);
+    border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.btn-danger-sm:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-warning-sm {
+    background: rgba(234, 179, 8, 0.15);
+    color: var(--color-warning);
+    border: 1px solid rgba(234, 179, 8, 0.1);
+}
+
+.btn-warning-sm:hover {
+    background: rgba(234, 179, 8, 0.25);
+}
+
+/* ===== نص التحميل ===== */
+.loading-text {
+    text-align: center;
+    padding: 40px 20px !important;
+    color: var(--color-text-dim);
+}
+
+.loading-text .loader-spinner {
+    margin: 0 auto 12px;
+    width: 32px;
+    height: 32px;
+}
+
+/* ============================================================
+📱 RESPONSIVE
+============================================================ */
+@media (max-width: 992px) {
+    .sessions-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
-    .session-marker {
-        display: flex;
+    
+    .session-map {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sessions-page .page-header {
         flex-direction: column;
-        align-items: center;
+        align-items: flex-start;
+    }
+    
+    .sessions-page .page-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .sessions-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .sessions-stats .stat-card .stat-value {
+        font-size: 22px;
+    }
+    
+    .session-map {
+        height: 250px;
+    }
+    
+    .sessions-table-container .table-wrapper table {
         font-size: 12px;
-        color: white;
-        font-weight: bold;
-        text-align: center;
+        min-width: 600px;
     }
-    .session-marker .avatar {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        border: 2px solid white;
-        box-shadow: 0 0 20px rgba(13,110,253,0.3);
-        transition: all 0.3s;
-    }
-    .session-marker .avatar.active { 
-        background: #4ade80; 
-        border-color: #4ade80; 
-        animation: pulse-marker 2s infinite;
-    }
-    .session-marker .avatar.inactive { 
-        background: #6c757d; 
-        border-color: #6c757d; 
-    }
-    .session-marker .avatar.expired { 
-        background: #f87171; 
-        border-color: #f87171; 
-    }
-    .session-marker .name { 
-        font-size: 10px; 
-        margin-top: 2px; 
-        background: rgba(0,0,0,0.8); 
-        padding: 2px 8px; 
-        border-radius: 10px; 
-        backdrop-filter: blur(4px);
-        max-width: 80px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    @keyframes pulse-marker { 
-        0%, 100% { box-shadow: 0 0 20px rgba(74,222,128,0.3); } 
-        50% { box-shadow: 0 0 40px rgba(74,222,128,0.6); } 
+}
+
+@media (max-width: 480px) {
+    .sessions-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
     
-    .scrollable-table { overflow-x: auto; margin: 10px 0; }
-    .scrollable-table table { width: 100%; border-collapse: collapse; font-family: 'Cairo', sans-serif; font-size: 13px; }
-    .scrollable-table table th { 
-        background: rgba(255,255,255,0.04); 
-        padding: 10px; 
-        border-bottom: 2px solid rgba(255,255,255,0.06); 
-        text-align: center; 
-        color: rgba(255,255,255,0.7);
-        font-weight: 600;
+    .sessions-stats .stat-card {
+        padding: 12px 14px;
     }
-    .scrollable-table table td { 
-        padding: 8px; 
-        border-bottom: 1px solid rgba(255,255,255,0.04); 
-        text-align: center; 
-        color: rgba(255,255,255,0.6); 
+    
+    .sessions-stats .stat-card .stat-value {
+        font-size: 18px;
     }
-    .scrollable-table table tr:hover { background: rgba(255,255,255,0.02); }
     
-    .status-badge { 
-        padding: 4px 12px; 
-        border-radius: 20px; 
-        font-size: 12px; 
-        font-weight: 600; 
-        display: inline-block; 
+    .online-badge {
+        font-size: 11px;
+        padding: 4px 12px;
     }
-    .status-active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-    .status-inactive { background: rgba(108,117,125,0.15); color: #adb5bd; border: 1px solid rgba(108,117,125,0.1); }
-    .status-expired { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
     
-    .btn-sm { padding: 4px 10px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; transition: all 0.3s; }
-    .btn-sm:hover { opacity: 0.8; transform: scale(1.02); }
-    .btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-    .btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-    
-    .stat-card { transition: all 0.3s; }
-    .stat-card:hover { background: rgba(255,255,255,0.04) !important; transform: translateY(-2px); }
-    
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 12px 24px; border-radius: 12px; font-family: inherit; font-size: 14px; z-index: 9999; max-width: 90%; text-align: center; background: rgba(10,14,23,0.95); backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); font-weight: 500; border: 1px solid; animation: fadeIn 0.3s ease; }
-    .toast.error { color: #f87171; border-color: rgba(248,113,113,0.2); }
-    .toast.success { color: #4ade80; border-color: rgba(74,222,128,0.2); }
-    .toast.info { color: #60a5fa; border-color: rgba(96,165,250,0.2); }
-    .toast.warning { color: #fbbf24; border-color: rgba(251,191,36,0.2); }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .map-header {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+    }
+}
 </style>
 
+<!-- ============================================================
+📦 JavaScript الخاص بالصفحة
+============================================================ -->
 <script>
 // ============================================================
-// 🔄 SESSIONS PAGE - النسخة النهائية المصححة 10/10
+// 🔄 SESSIONS PAGE - v7.0 PRO MAX
 // ============================================================
 
 // ============================================================
-// 1. متغيرات عامة
+// 1. المتغيرات العامة
 // ============================================================
 
 let sessionMap = null;
@@ -185,15 +476,15 @@ let sessionMarkers = {};
 let sessionsData = [];
 let mapInitialized = false;
 let sessionsRefreshTimer = null;
-let isSessionsPageActive = false;
+let isPageActive = false;
 
 // ============================================================
 // 2. دوال مساعدة
 // ============================================================
 
-function escapeHTML(value) {
-    if (value === null || value === undefined) return '';
-    return String(value)
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -202,30 +493,23 @@ function escapeHTML(value) {
 }
 
 function getToken() {
-    return localStorage.getItem('token');
+    return localStorage.getItem('marine_auth_token') || localStorage.getItem('token');
 }
 
-function showToast(msg, type = 'info') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    const toast = document.createElement('div');
-    toast.className = 'toast ' + type;
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function getTimeAgo(date) {
-    if (!date) return '--';
-    const diff = Date.now() - new Date(date).getTime();
-    if (diff < 60000) return 'الآن';
-    if (diff < 3600000) return Math.floor(diff / 60000) + ' دقائق';
-    if (diff < 86400000) return Math.floor(diff / 3600000) + ' ساعات';
-    return Math.floor(diff / 86400000) + ' أيام';
+function getTimeAgo(dateStr) {
+    if (!dateStr) return '--';
+    try {
+        const date = new Date(dateStr);
+        const now = Date.now();
+        const diff = now - date.getTime();
+        
+        if (diff < 60000) return 'الآن';
+        if (diff < 3600000) return Math.floor(diff / 60000) + ' دقيقة';
+        if (diff < 86400000) return Math.floor(diff / 3600000) + ' ساعة';
+        return Math.floor(diff / 86400000) + ' يوم';
+    } catch {
+        return '--';
+    }
 }
 
 function isValidCoordinate(lat, lng) {
@@ -235,39 +519,62 @@ function isValidCoordinate(lat, lng) {
            lng >= -180 && lng <= 180;
 }
 
+function showToast(msg, type = 'info') {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(30px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 // ============================================================
 // 3. تهيئة الخريطة
 // ============================================================
 
-function initUserMap() {
-    console.log('🗺️ initUserMap called');
+function initSessionMap() {
+    console.log('🗺️ تهيئة الخريطة...');
     
-    // ✅ التحقق من وجود Leaflet
+    // التحقق من وجود Leaflet
     if (typeof L === 'undefined') {
-        console.warn('⚠️ Leaflet not loaded, retrying...');
+        console.warn('⚠️ Leaflet غير محمّل، إعادة محاولة...');
         document.getElementById('mapStatus').textContent = '⏳ جاري تحميل الخريطة...';
-        setTimeout(initUserMap, 500);
+        setTimeout(initSessionMap, 500);
         return;
     }
     
     const mapContainer = document.getElementById('sessionMap');
     if (!mapContainer) return;
     
-    // ✅ إذا كانت الخريطة موجودة، فقط حدث الحجم
+    // إذا كانت الخريطة موجودة
     if (sessionMap) {
-        setTimeout(() => {
-            sessionMap.invalidateSize(true);
-        }, 300);
+        setTimeout(() => sessionMap.invalidateSize(true), 300);
         return;
     }
     
     try {
+        // إنشاء الخريطة
         sessionMap = L.map('sessionMap', {
-            center: [36.8065, 10.1815],
+            center: [36.8065, 10.1815], // تونس
             zoom: 12,
             zoomControl: true
         });
         
+        // إضافة طبقة الخريطة
         L.tileLayer(
             'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             {
@@ -278,26 +585,26 @@ function initUserMap() {
         
         mapInitialized = true;
         document.getElementById('mapStatus').textContent = '📍 الخريطة جاهزة';
-        console.log('✅ Session map initialized');
+        console.log('✅ تم تهيئة الخريطة');
         
-        // ✅ تأخير لضمان عرض الخريطة
+        // تحديث حجم الخريطة
         setTimeout(() => {
-            if (sessionMap) {
-                sessionMap.invalidateSize(true);
-            }
+            if (sessionMap) sessionMap.invalidateSize(true);
         }, 500);
         
-        // ✅ تحديث الماركرز
-        setTimeout(updateSessionMarkers, 300);
+        // تحديث الماركرز
+        setTimeout(updateMarkers, 300);
         
-    } catch(error) {
-        console.error('❌ Map error:', error);
+    } catch (error) {
+        console.error('❌ خطأ في الخريطة:', error);
         document.getElementById('sessionMap').innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#f87171; flex-direction:column; padding:20px; text-align:center;">
+            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:var(--color-danger); flex-direction:column; padding:20px; text-align:center;">
                 <div style="font-size:48px;">🗺️</div>
                 <div style="margin-top:10px;">❌ خطأ في تحميل الخريطة</div>
-                <div style="font-size:12px; color:rgba(255,255,255,0.3);">${escapeHTML(error.message)}</div>
-                <button onclick="initUserMap()" style="margin-top:10px; padding:8px 20px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:8px; color:#60a5fa; cursor:pointer;">🔄 إعادة المحاولة</button>
+                <div style="font-size:12px; color:var(--color-text-dim);">${escapeHTML(error.message)}</div>
+                <button onclick="initSessionMap()" style="margin-top:10px; padding:8px 20px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.1); border-radius:8px; color:var(--color-info); cursor:pointer; font-family:inherit;">
+                    🔄 إعادة المحاولة
+                </button>
             </div>
         `;
     }
@@ -313,14 +620,17 @@ function centerSessionMap() {
         return;
     }
     
-    // ✅ البحث عن موقع نشط
-    const activeSession = sessionsData.find(s => s.status === 'active' && isValidCoordinate(s.lat, s.lng));
+    // البحث عن جلسة نشطة
+    const activeSession = sessionsData.find(s => 
+        s.status === 'active' && isValidCoordinate(s.lat, s.lng)
+    );
+    
     if (activeSession) {
         sessionMap.setView([activeSession.lat, activeSession.lng], 13);
-        showToast('🎯 تم التوجيه إلى موقع نشط', 'info');
+        showToast('🎯 تم التوجيه إلى موقع نشط', 'success');
     } else {
         sessionMap.setView([36.8065, 10.1815], 12);
-        showToast('🎯 تم التوجيه إلى تونس', 'info');
+        showToast('🎯 تم التوجيه إلى المركز', 'info');
     }
 }
 
@@ -329,22 +639,23 @@ function centerSessionMap() {
 // ============================================================
 
 function loadSessions() {
-    console.log('🔄 Loading sessions...');
+    console.log('🔄 تحميل الجلسات...');
     
     const token = getToken();
     if (!token) {
         document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:#fbbf24;">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-warning);">
                 ⚠️ الرجاء تسجيل الدخول أولاً
             </td></tr>
         `;
         return;
     }
     
-    // ✅ تحديث حالة التحميل
+    // عرض حالة التحميل
     document.getElementById('sessionsBody').innerHTML = `
-        <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">
-            ⏳ جاري تحميل الجلسات...
+        <tr><td colspan="7" class="loading-text">
+            <div class="loader-spinner"></div>
+            جاري تحميل الجلسات...
         </td></tr>
     `;
     
@@ -356,43 +667,40 @@ function loadSessions() {
     })
     .then(res => {
         if (!res.ok) {
-            if (res.status === 401) {
-                throw new Error('401 Unauthorized - يرجى تسجيل الدخول من جديد');
-            }
-            if (res.status === 403) {
-                throw new Error('403 Forbidden - ليس لديك صلاحية');
-            }
+            if (res.status === 401) throw new Error('غير مصرح - يرجى تسجيل الدخول من جديد');
+            if (res.status === 403) throw new Error('ليس لديك صلاحية للوصول');
             throw new Error('خطأ ' + res.status + ': ' + res.statusText);
         }
         return res.json();
     })
     .then(data => {
-        // ✅ التحقق من صيغة الاستجابة
+        // التحقق من صيغة البيانات
         if (data.success !== undefined && !data.success) {
             throw new Error(data.error || 'فشل تحميل الجلسات');
         }
         
         sessionsData = Array.isArray(data.sessions) ? data.sessions : [];
-        console.log('✅ Sessions loaded:', sessionsData.length);
+        console.log('✅ تم تحميل الجلسات:', sessionsData.length);
         
         renderSessions(sessionsData);
-        updateSessionStats(sessionsData);
-        updateSessionMarkers();
+        updateStats(sessionsData);
+        updateMarkers();
         
-        // ✅ تحديث حالة الخريطة
+        // تحديث حالة الخريطة
         const hasLocations = sessionsData.some(s => isValidCoordinate(s.lat, s.lng));
         document.getElementById('mapStatus').textContent = hasLocations 
             ? '📍 ' + sessionsData.filter(s => isValidCoordinate(s.lat, s.lng)).length + ' موقع متاح'
-            : '📍 لا توجد مواقع GPS متاحة حاليًا';
+            : '📍 لا توجد مواقع متاحة حالياً';
     })
     .catch(err => {
-        console.error('❌ Load sessions error:', err);
+        console.error('❌ خطأ في تحميل الجلسات:', err);
         document.getElementById('sessionsBody').innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:#f87171;">
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-danger);">
                 ❌ ${escapeHTML(err.message)}
             </td></tr>
         `;
         document.getElementById('mapStatus').textContent = '❌ خطأ في تحميل البيانات';
+        showToast('❌ ' + err.message, 'error');
     });
 }
 
@@ -408,15 +716,14 @@ function renderSessions(sessions) {
     
     if (!sessions || sessions.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="7" style="text-align:center; padding:30px; color:rgba(255,255,255,0.2);">
-                🚫 لا توجد جلسات نشطة
+            <tr><td colspan="7" style="text-align:center; padding:30px; color:var(--color-text-dim);">
+                🚫 لا توجد جلسات حالياً
             </td></tr>
         `;
         return;
     }
     
     tbody.innerHTML = sessions.map((s, i) => {
-        // ✅ استخدام escapeHTML لمنع XSS
         const username = escapeHTML(s.username || s.userName || 'مجهول');
         const device = escapeHTML(s.device || s.userAgent || 'جهاز غير معروف');
         const ip = escapeHTML(s.ip || s.ipAddress || '--');
@@ -427,6 +734,7 @@ function renderSessions(sessions) {
                           s.status === 'expired' ? '🔴 منتهية' : '⚪ غير نشط';
         
         const createdAt = s.createdAt ? new Date(s.createdAt).toLocaleString('ar-TN') : '--';
+        const sessionId = s.sessionId || s.id || s._id || i;
         
         return `
             <tr>
@@ -437,7 +745,9 @@ function renderSessions(sessions) {
                 <td>${createdAt}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td>
-                    <button class="btn-sm btn-danger" onclick="terminateSession('${escapeHTML(s.sessionId || s.id || i)}')">⏹️ إنهاء</button>
+                    <button class="btn-sm btn-danger-sm" onclick="terminateSession('${escapeHTML(sessionId)}')">
+                        <i class="fas fa-power-off"></i> إنهاء
+                    </button>
                 </td>
             </tr>
         `;
@@ -448,7 +758,7 @@ function renderSessions(sessions) {
 // 7. تحديث الإحصائيات
 // ============================================================
 
-function updateSessionStats(sessions) {
+function updateStats(sessions) {
     const total = sessions.length;
     const active = sessions.filter(s => s.status === 'active').length;
     const expired = sessions.filter(s => s.status === 'expired').length;
@@ -458,7 +768,7 @@ function updateSessionStats(sessions) {
     document.getElementById('totalSessions').textContent = total;
     document.getElementById('activeSessions').textContent = active;
     document.getElementById('expiredSessions').textContent = expired + inactive;
-    document.getElementById('uniqueUsers').textContent = uniqueUsers;
+    document.getElementById('uniqueUsers').textContent = uniqueUsers || sessions.length;
     document.getElementById('sessionOnline').textContent = active;
 }
 
@@ -466,31 +776,34 @@ function updateSessionStats(sessions) {
 // 8. تحديث الماركرز
 // ============================================================
 
-function updateSessionMarkers() {
+function updateMarkers() {
     if (!mapInitialized || !sessionMap) {
-        console.warn('⚠️ Map not ready for markers');
+        console.warn('⚠️ الخريطة غير جاهزة للماركرز');
         return;
     }
     
-    // ✅ حذف الماركرز القديمة
+    // حذف الماركرز القديمة
     Object.values(sessionMarkers).forEach(marker => {
-        sessionMap.removeLayer(marker);
+        if (marker && sessionMap) {
+            sessionMap.removeLayer(marker);
+        }
     });
     sessionMarkers = {};
     
-    // ✅ إضافة ماركرز جديدة
+    // إضافة ماركرز جديدة
     let markerCount = 0;
+    
     sessionsData.forEach(s => {
-        // ✅ التحقق من صحة الإحداثيات
-        if (!isValidCoordinate(s.lat, s.lng)) {
-            return;
-        }
+        // التحقق من صحة الإحداثيات
+        if (!isValidCoordinate(s.lat, s.lng)) return;
         
         const isActive = s.status === 'active';
         const isExpired = s.status === 'expired';
         const avatarClass = isActive ? 'active' : isExpired ? 'expired' : 'inactive';
         const avatarIcon = s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤';
+        const username = escapeHTML(s.username || s.userName || '?');
         
+        // إنشاء أيقونة مخصصة
         const icon = L.divIcon({
             className: 'custom-div-icon',
             html: `
@@ -498,7 +811,7 @@ function updateSessionMarkers() {
                     <div class="avatar ${avatarClass}">
                         ${avatarIcon}
                     </div>
-                    <div class="name">${escapeHTML(s.username || s.userName || '?')}</div>
+                    <div class="name">${username}</div>
                 </div>
             `,
             iconSize: [50, 50],
@@ -506,18 +819,18 @@ function updateSessionMarkers() {
             popupAnchor: [0, -25]
         });
         
-        const marker = L.marker([s.lat, s.lng], { icon: icon }).addTo(sessionMap);
+        const marker = L.marker([s.lat, s.lng], { icon }).addTo(sessionMap);
         
-        // ✅ نافذة منبثقة
+        // نافذة منبثقة
         const statusText = isActive ? '🟢 نشط' : isExpired ? '🔴 منتهية' : '⚪ غير نشط';
         const updatedAt = s.updatedAt ? getTimeAgo(s.updatedAt) : '--';
         
         const popupContent = `
             <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px; direction:rtl;">
-                <div style="font-weight:bold; font-size:14px; color:#fff;">${escapeHTML(s.username || s.userName || 'مجهول')}</div>
+                <div style="font-weight:bold; font-size:14px; color:#fff;">${username}</div>
                 <div style="color:rgba(255,255,255,0.6); font-size:12px;">${escapeHTML(s.role || 'مشاهد')}</div>
                 <div style="margin:4px 0;">
-                    <span style="color:${isActive ? '#4ade80' : isExpired ? '#f87171' : '#adb5bd'}; font-size:11px;">${statusText}</span>
+                    <span style="color:${isActive ? '#4ade80' : isExpired ? '#ef4444' : '#adb5bd'}; font-size:11px;">${statusText}</span>
                 </div>
                 <div style="color:rgba(255,255,255,0.4); font-size:10px;">
                     📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}
@@ -529,20 +842,22 @@ function updateSessionMarkers() {
         `;
         marker.bindPopup(popupContent);
         
-        sessionMarkers[s.sessionId || s.id || s._id || markerCount] = marker;
+        const key = s.sessionId || s.id || s._id || markerCount;
+        sessionMarkers[key] = marker;
         markerCount++;
     });
     
-    // ✅ إذا كانت هناك ماركرات، نغير المركز إلى أول موقع
-    const keys = Object.keys(sessionMarkers);
-    if (keys.length > 0 && sessionsData.length > 0) {
-        const first = sessionsData.find(s => isValidCoordinate(s.lat, s.lng));
-        if (first) {
-            sessionMap.setView([first.lat, first.lng], 13);
+    // إذا كانت هناك ماركرات، نغير المركز إلى أول موقع نشط
+    if (markerCount > 0) {
+        const firstActive = sessionsData.find(s => 
+            s.status === 'active' && isValidCoordinate(s.lat, s.lng)
+        );
+        if (firstActive) {
+            sessionMap.setView([firstActive.lat, firstActive.lng], 13);
         }
     }
     
-    console.log('✅ Markers updated:', markerCount);
+    console.log('✅ تم تحديث الماركرز:', markerCount);
 }
 
 // ============================================================
@@ -579,31 +894,22 @@ function terminateSession(id) {
     .then(data => {
         if (data.success) {
             showToast('✅ تم إنهاء الجلسة بنجاح', 'success');
-            refreshSessions();
+            loadSessions();
         } else {
-            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسة'), 'danger');
+            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسة'), 'error');
         }
     })
     .catch(err => {
-        console.error('❌ Terminate session error:', err);
-        showToast('❌ ' + err.message, 'danger');
+        console.error('❌ خطأ في إنهاء الجلسة:', err);
+        showToast('❌ ' + err.message, 'error');
     });
 }
 
 // ============================================================
-// 10. تحديث الجلسات
+// 10. تحديث تلقائي
 // ============================================================
 
-function refreshSessions() {
-    loadSessions();
-    showToast('🔄 تم تحديث الجلسات', 'info');
-}
-
-// ============================================================
-// 11. تحديث تلقائي
-// ============================================================
-
-function startMapAutoRefresh() {
+function startAutoRefresh() {
     if (sessionsRefreshTimer) {
         clearInterval(sessionsRefreshTimer);
         sessionsRefreshTimer = null;
@@ -617,62 +923,40 @@ function startMapAutoRefresh() {
 }
 
 // ============================================================
-// 12. تنظيف الصفحة عند المغادرة
-// ============================================================
-
-function destroySessionsPage() {
-    console.log('🧹 Destroying sessions page...');
-    
-    if (sessionsRefreshTimer) {
-        clearInterval(sessionsRefreshTimer);
-        sessionsRefreshTimer = null;
-    }
-    
-    if (sessionMap) {
-        sessionMap.remove();
-        sessionMap = null;
-    }
-    
-    sessionMarkers = {};
-    mapInitialized = false;
-    isSessionsPageActive = false;
-}
-
-// ============================================================
-// 13. تهيئة الصفحة
+// 11. تهيئة الصفحة
 // ============================================================
 
 function initSessionsPage() {
-    console.log('🔄 Initializing sessions page...');
-    isSessionsPageActive = true;
+    console.log('🔄 تهيئة صفحة المراقبة...');
+    isPageActive = true;
     
     setTimeout(() => {
-        initUserMap();
+        initSessionMap();
         loadSessions();
-        startMapAutoRefresh();
+        startAutoRefresh();
     }, 300);
 }
 
 // ============================================================
-// 14. تحميل الصفحة تلقائياً
+// 12. تنشيط عند ظهور الصفحة
 // ============================================================
 
 if (document.getElementById('page-sessions')) {
-    console.log('📄 Sessions page detected');
+    console.log('📄 تم اكتشاف صفحة المراقبة');
     setTimeout(initSessionsPage, 300);
 }
 
 // ============================================================
-// 15. دوال عالمية
+// 13. دوال عالمية
 // ============================================================
 
 window.initSessionsPage = initSessionsPage;
-window.refreshSessions = refreshSessions;
+window.loadSessions = loadSessions;
+window.refreshSessions = loadSessions;
 window.terminateSession = terminateSession;
-window.initUserMap = initUserMap;
+window.initSessionMap = initSessionMap;
 window.centerSessionMap = centerSessionMap;
-window.startMapAutoRefresh = startMapAutoRefresh;
-window.destroySessionsPage = destroySessionsPage;
+window.startAutoRefresh = startAutoRefresh;
 
-console.log('✅ Sessions page v3.0 ready');
+console.log('✅ صفحة المراقبة v7.0 جاهزة');
 </script>
