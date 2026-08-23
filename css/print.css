@@ -1,0 +1,374 @@
+/**
+ * ============================================================
+ * 🚢 منظومة الوسائل البحرية - PRINT.CSS v7.0
+ * ============================================================
+ * تنسيقات الطباعة المحسنة
+ * ============================================================
+ */
+
+/* ============================================================
+   🖨️ PRINT STYLES
+   ============================================================ */
+
+@media print {
+    /* ===== عام ===== */
+    * {
+        background: transparent !important;
+        color: #000 !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        border-color: #ddd !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+        background: white !important;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* ===== إخفاء العناصر غير الضرورية ===== */
+    header,
+    .main-header,
+    .sidebar,
+    .nav,
+    .menu-toggle,
+    .back-to-top,
+    .toast-container,
+    .modal-overlay,
+    .connection-status,
+    .no-print,
+    .search-wrapper,
+    .notification-wrapper,
+    .user-wrapper,
+    .theme-switcher,
+    button:not(.print-button),
+    .btn:not(.print-button) {
+        display: none !important;
+    }
+    
+    /* ===== المحتوى الرئيسي ===== */
+    .main-content {
+        margin: 0 !important;
+        padding: 20pt !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .page-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .page-content {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    /* ===== البطاقات ===== */
+    .stat-card {
+        border: 1px solid #ddd !important;
+        background: #f9f9f9 !important;
+        box-shadow: none !important;
+        border-radius: 4pt !important;
+        padding: 12pt !important;
+        break-inside: avoid;
+    }
+    
+    .stat-card .stat-value {
+        color: #000 !important;
+        font-size: 18pt !important;
+    }
+    
+    .stat-card .stat-label {
+        color: #666 !important;
+        font-size: 10pt !important;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10pt;
+        margin-bottom: 16pt;
+    }
+    
+    /* ===== الجداول ===== */
+    .table-wrapper {
+        border: 1px solid #ddd !important;
+        background: white !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+        break-inside: avoid;
+    }
+    
+    .table-wrapper table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 10pt !important;
+    }
+    
+    .table-wrapper table thead {
+        background: #f0f0f0 !important;
+        border-bottom: 2px solid #ddd !important;
+    }
+    
+    .table-wrapper table th {
+        background: #f0f0f0 !important;
+        color: #000 !important;
+        padding: 8pt 10pt !important;
+        text-align: right !important;
+        font-weight: 700 !important;
+        border-bottom: 2px solid #ddd !important;
+    }
+    
+    .table-wrapper table td {
+        color: #000 !important;
+        padding: 6pt 10pt !important;
+        border-bottom: 1px solid #eee !important;
+    }
+    
+    .table-wrapper table tbody tr {
+        break-inside: avoid;
+    }
+    
+    .table-wrapper table tbody tr:hover td {
+        background: transparent !important;
+    }
+    
+    /* ===== الحالات ===== */
+    .status-badge {
+        border: 1px solid #ddd !important;
+        background: #f5f5f5 !important;
+        color: #000 !important;
+        padding: 2pt 10pt !important;
+        border-radius: 4pt !important;
+        font-size: 9pt !important;
+    }
+    
+    .status-badge .dot {
+        display: none !important;
+    }
+    
+    .status-ready {
+        border-color: #22c55e !important;
+        background: #f0fdf4 !important;
+    }
+    
+    .status-maintenance {
+        border-color: #eab308 !important;
+        background: #fefce8 !important;
+    }
+    
+    .status-broken {
+        border-color: #ef4444 !important;
+        background: #fef2f2 !important;
+    }
+    
+    .status-closed {
+        border-color: #94a3b8 !important;
+        background: #f8fafc !important;
+    }
+    
+    /* ===== الأزرار ===== */
+    .btn {
+        border: 1px solid #ddd !important;
+        background: #f5f5f5 !important;
+        color: #000 !important;
+        padding: 4pt 12pt !important;
+        border-radius: 4pt !important;
+        font-size: 10pt !important;
+        box-shadow: none !important;
+    }
+    
+    .btn-primary {
+        background: #f0f0f0 !important;
+        border-color: #999 !important;
+    }
+    
+    .btn-success {
+        background: #f0fdf4 !important;
+        border-color: #22c55e !important;
+    }
+    
+    .btn-danger {
+        background: #fef2f2 !important;
+        border-color: #ef4444 !important;
+    }
+    
+    /* ===== الروابط ===== */
+    a {
+        color: #000 !important;
+        text-decoration: underline !important;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 9pt;
+        color: #666 !important;
+    }
+    
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+    
+    /* ===== الصور ===== */
+    img {
+        max-width: 100% !important;
+        page-break-inside: avoid;
+    }
+    
+    /* ===== العناوين ===== */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        color: #000 !important;
+    }
+    
+    h1 { font-size: 18pt !important; }
+    h2 { font-size: 16pt !important; }
+    h3 { font-size: 14pt !important; }
+    h4 { font-size: 12pt !important; }
+    
+    /* ===== الفقرات ===== */
+    p {
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* ===== القوائم ===== */
+    ul, ol {
+        page-break-inside: avoid;
+    }
+    
+    /* ===== كسر الصفحات ===== */
+    .page-break {
+        page-break-after: always;
+    }
+    
+    .page-break-before {
+        page-break-before: always;
+    }
+    
+    .page-break-inside {
+        page-break-inside: avoid;
+    }
+    
+    /* ===== العناوين الجانبية ===== */
+    .sidebar-print {
+        display: block !important;
+        background: #f5f5f5 !important;
+        padding: 10pt !important;
+        border: 1px solid #ddd !important;
+        border-radius: 4pt !important;
+        margin-bottom: 12pt !important;
+    }
+    
+    /* ===== التذييل ===== */
+    .footer-print {
+        display: block !important;
+        text-align: center !important;
+        font-size: 9pt !important;
+        color: #666 !important;
+        border-top: 1px solid #ddd !important;
+        padding-top: 8pt !important;
+        margin-top: 16pt !important;
+    }
+    
+    /* ===== الشعار ===== */
+    .logo-print {
+        display: block !important;
+        text-align: center !important;
+        font-size: 18pt !important;
+        font-weight: 700 !important;
+        margin-bottom: 16pt !important;
+    }
+    
+    .logo-print .brand-icon {
+        font-size: 24pt !important;
+    }
+    
+    /* ===== التاريخ ===== */
+    .date-print {
+        display: block !important;
+        text-align: left !important;
+        font-size: 10pt !important;
+        color: #666 !important;
+        margin-bottom: 12pt !important;
+    }
+    
+    /* ===== المعلومات ===== */
+    .info-print {
+        display: block !important;
+        background: #f9f9f9 !important;
+        padding: 8pt !important;
+        border: 1px solid #eee !important;
+        border-radius: 4pt !important;
+        margin-bottom: 12pt !important;
+        font-size: 10pt !important;
+    }
+    
+    /* ===== الصفوف البديلة ===== */
+    .table-striped tbody tr:nth-child(odd) {
+        background: #f9f9f9 !important;
+    }
+    
+    /* ===== الحدود ===== */
+    .border-print {
+        border: 1px solid #ddd !important;
+        padding: 8pt !important;
+        border-radius: 4pt !important;
+    }
+}
+
+/* ============================================================
+   📄 PRINT PREVIEW - معاينة الطباعة
+   ============================================================ */
+
+@media print and (prefers-color-scheme: dark) {
+    /* إجبار الألوان الفاتحة للطباعة */
+    * {
+        color: #000 !important;
+        background: white !important;
+    }
+    
+    .stat-card,
+    .table-wrapper,
+    .info-print {
+        background: white !important;
+    }
+}
+
+/* ============================================================
+   📋 PRINT BUTTON - زر الطباعة
+   ============================================================ */
+
+.print-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--color-gold-gradient);
+    color: var(--color-text-inverse);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.print-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gold-lg);
+}
+
+.print-button i {
+    font-size: 16px;
+}
+
+/* ============================================================
+   END OF PRINT.CSS
+   ============================================================ */
