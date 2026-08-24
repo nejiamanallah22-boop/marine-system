@@ -2165,56 +2165,6 @@ router.get("/security", authenticate, requirePermission('AI_SECURITY_VIEW'), asy
 });
 
 // ============================================================
-// ✅ CHECK DEEPSEEK (للتحقق من صحة المفتاح)
-// ============================================================
-
-router.get("/check-deepseek", authenticate, async (req, res) => {
-    try {
-        const apiKey = process.env.DEEPSEEK_API_KEY;
-        if (!apiKey) {
-            return res.json({ 
-                success: false, 
-                error: "DEEPSEEK_API_KEY غير موجود في البيئة",
-                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
-            });
-        }
-        
-        const response = await fetch('https://api.deepseek.com/user/balance', {
-            method: 'GET',
-            headers: { 
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            res.json({
-                success: true,
-                balance: data,
-                status: response.status,
-                message: "✅ المفتاح صالح والرصيد متاح"
-            });
-        } else {
-            res.json({
-                success: false,
-                error: data.error || "خطأ في التحقق",
-                status: response.status,
-                message: data.error?.message || "المفتاح غير صالح أو الرصيد غير كافٍ"
-            });
-        }
-    } catch (error) {
-        logger.error('Check DeepSeek error:', error);
-        res.json({ 
-            success: false, 
-            error: error.message,
-            message: "فشل الاتصال بـ DeepSeek API"
-        });
-    }
-});
-
-// ============================================================
 // ✅ CHECK OPENAI (للتحقق من صحة المفتاح)
 // ============================================================
 
