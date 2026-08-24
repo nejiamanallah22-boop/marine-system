@@ -1,6 +1,6 @@
 // routes/ai.js
 // ============================================================
-// 🚀 AI COMMANDER - MARINE SYSTEM v24.0 (FIXED)
+// 🚀 AI COMMANDER - MARINE SYSTEM v25.0 (GEMINI PRIORITY)
 // ============================================================
 // Enterprise Platinum - Military Grade Security
 // ============================================================
@@ -87,10 +87,9 @@ const AIProviderState = require("../models/AIProviderState");
 const SecurityEvent = require("../models/SecurityEvent");
 
 // ============================================================
-// 🔐 ENCRYPTION - NO FALLBACK
+// 🔐 ENCRYPTION
 // ============================================================
 
-// ✅ FIX: توليد مفتاح تلقائي إذا لم يكن موجوداً (للاختبار فقط)
 let ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY) {
     console.warn('⚠️ WARNING: ENCRYPTION_KEY not set, using generated key (not secure for production)');
@@ -144,7 +143,6 @@ function decryptMessage(text) {
 // 🔐 SECURITY
 // ============================================================
 
-// ✅ FIX: توليد JWT_SECRET تلقائي إذا لم يكن موجوداً
 let JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
     console.warn('⚠️ WARNING: JWT_SECRET not set, using generated secret (not secure for production)');
@@ -153,10 +151,10 @@ if (!JWT_SECRET) {
 }
 
 // ============================================================
-// 🔑 MULTI AI PROVIDER - مع تخزين في قاعدة البيانات
+// 🔑 MULTI AI PROVIDER - GEMINI PRIORITY
 // ============================================================
 
-// ✅ FIX: تحسين التحقق من المفاتيح مع رسائل أوضح
+// ✅ التعديل: جعل Gemini هو المزود الأساسي
 const AI_PROVIDERS_CONFIG = {
     gemini_flash: {
         enabled: true,
@@ -173,7 +171,7 @@ const AI_PROVIDERS_CONFIG = {
         })(),
         model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
         priority: 1,
-        useFor: ['simple', 'chat', 'marine']
+        useFor: ['simple', 'chat', 'marine', 'general', 'coding', 'analysis']
     },
     gemini_pro: {
         enabled: !!process.env.GEMINI_PRO_API_KEY,
@@ -190,22 +188,22 @@ const AI_PROVIDERS_CONFIG = {
         useFor: ['general', 'writing', 'analysis']
     },
     deepseek: {
-        enabled: !!process.env.DEEPSEEK_API_KEY,
-        keys: [process.env.DEEPSEEK_API_KEY].filter(Boolean),
-        model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-        priority: 4,
-        useFor: ['coding', 'analysis']
+        enabled: false, // ✅ تعطيل DeepSeek نهائياً (لأنه ليس به رصيد)
+        keys: [],
+        model: "deepseek-chat",
+        priority: 99,
+        useFor: []
     }
 };
 
-// ✅ FIX: عرض حالة المزودين عند بدء التشغيل
+// ✅ عرض حالة المزودين عند بدء التشغيل
 console.log('📊 AI Providers Status:');
 Object.entries(AI_PROVIDERS_CONFIG).forEach(([name, config]) => {
     console.log(`   ${name}: ${config.enabled && config.keys.length > 0 ? '✅ Enabled' : '❌ Disabled'} (${config.keys.length} keys)`);
 });
 
 // ============================================================
-// 🔄 AI PROVIDER STATE - مع تخزين في MongoDB
+// 🔄 AI PROVIDER STATE
 // ============================================================
 
 let providerStateCache = {};
@@ -254,48 +252,51 @@ function getProviderState(provider) {
     return providerStateCache[provider];
 }
 
+// ✅ التعديل: إعطاء الأولوية القصوى لـ Gemini
 function getProviderForTask(taskType = 'general') {
-    let candidates = [];
-    if (taskType === 'simple' || taskType === 'chat') {
-        candidates = ['gemini_flash', 'openai'];
-    } else if (taskType === 'complex' || taskType === 'analysis') {
-        candidates = ['gemini_pro', 'deepseek'];
-    } else if (taskType === 'coding') {
-        candidates = ['deepseek', 'gemini_pro'];
-    } else if (taskType === 'marine') {
-        candidates = ['gemini_flash', 'deepseek'];
-    } else {
-        candidates = ['gemini_flash', 'openai', 'deepseek'];
-    }
-    
-    for (const name of candidates) {
-        const config = AI_PROVIDERS_CONFIG[name];
-        if (config && config.enabled && config.keys.length > 0) {
-            const state = getProviderState(name);
-            const failures = state.failureCount[state.currentIndex] || 0;
-            if (failures < 3) {
-                const key = config.keys[state.currentIndex];
-                if (key) {
-                    return { name, config, key, state };
-                }
-            }
-            state.currentIndex = (state.currentIndex + 1) % config.keys.length;
-            saveProviderState(name, state);
+    // ✅ 1. حاول استخدام Gemini Flash أولاً
+    const geminiConfig = AI_PROVIDERS_CONFIG.gemini_flash;
+    if (geminiConfig.enabled && geminiConfig.keys.length > 0) {
+        const key = geminiConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'gemini_flash', 
+                config: geminiConfig, 
+                key, 
+                state: getProviderState('gemini_flash') 
+            };
         }
     }
     
-    // ✅ FIX: Fallback - أول مزود متاح
-    for (const [name, config] of Object.entries(AI_PROVIDERS_CONFIG)) {
-        if (config.enabled && config.keys.length > 0) {
-            const key = config.keys[0];
-            if (key) {
-                const state = getProviderState(name);
-                return { name, config, key, state };
-            }
+    // ✅ 2. جرب Gemini Pro
+    const geminiProConfig = AI_PROVIDERS_CONFIG.gemini_pro;
+    if (geminiProConfig.enabled && geminiProConfig.keys.length > 0) {
+        const key = geminiProConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'gemini_pro', 
+                config: geminiProConfig, 
+                key, 
+                state: getProviderState('gemini_pro') 
+            };
         }
     }
     
-    // ✅ FIX: إذا لم يتوفر أي مزود، استخدام محاكي (mock)
+    // ✅ 3. جرب OpenAI
+    const openaiConfig = AI_PROVIDERS_CONFIG.openai;
+    if (openaiConfig.enabled && openaiConfig.keys.length > 0) {
+        const key = openaiConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'openai', 
+                config: openaiConfig, 
+                key, 
+                state: getProviderState('openai') 
+            };
+        }
+    }
+    
+    // ✅ 4. أخيراً، استخدم Mock Mode
     console.warn('⚠️ No AI providers available, using mock mode');
     return {
         name: 'mock',
@@ -814,7 +815,7 @@ function getGeminiModel(key, model, withTools = true) {
 }
 
 // ============================================================
-// 🌐 CALL AI WITH TOOLS (FIXED)
+// 🌐 CALL AI WITH TOOLS (GEMINI FIRST)
 // ============================================================
 
 async function callAIWithTools(message, history, user) {
@@ -840,10 +841,10 @@ async function callAIWithTools(message, history, user) {
         };
     }
     
-    // ✅ FIX: إذا كان المزود هو mock
+    // ✅ إذا كان المزود هو mock
     if (provider.name === 'mock') {
         return {
-            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nأو\nOPENAI_API_KEY=your_key_here\nأو\nDEEPSEEK_API_KEY=your_key_here',
+            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nأو\nOPENAI_API_KEY=your_key_here',
             provider: 'mock',
             toolCalls: []
         };
@@ -853,6 +854,7 @@ async function callAIWithTools(message, history, user) {
         let response;
         let toolCalls = [];
         
+        // ✅ Gemini هو المزود الأساسي
         if (provider.name.includes('gemini')) {
             const model = getGeminiModel(provider.key, provider.config.model, true);
             if (!model) {
@@ -913,7 +915,7 @@ async function callAIWithTools(message, history, user) {
         logger.error(`AI call failed for ${provider.name}:`, error);
         markProviderFailure(provider.name, provider.key);
         
-        // ✅ FIX: محاولة استخدام مزود آخر
+        // ✅ محاولة استخدام مزود آخر
         const fallbackProvider = getProviderForTask('general');
         if (fallbackProvider && fallbackProvider.name !== provider.name && fallbackProvider.name !== 'mock') {
             logger.info(`🔄 Trying fallback provider: ${fallbackProvider.name}`);
@@ -979,6 +981,7 @@ async function callAIProvider(message, history, user, taskType = 'general') {
                 break;
             }
             case 'deepseek': {
+                // ✅ DeepSeek معطل، لكن إذا كان مفعلاً
                 const messages = [
                     { role: "system", content: SYSTEM_PROMPT },
                     ...history.map(h => ({
@@ -1000,7 +1003,13 @@ async function callAIProvider(message, history, user, taskType = 'general') {
                         max_tokens: MAX_TOKENS
                     })
                 });
-                if (!result.ok) throw new Error(`DeepSeek error: ${result.status}`);
+                if (!result.ok) {
+                    const errorData = await result.json();
+                    if (errorData.error?.message?.includes('Insufficient Balance')) {
+                        throw new Error('⚠️ رصيد DeepSeek غير كافٍ. يرجى شحن الرصيد أو استخدام Gemini.');
+                    }
+                    throw new Error(`DeepSeek error: ${result.status}`);
+                }
                 const data = await result.json();
                 response = data.choices[0].message.content;
                 break;
@@ -1052,7 +1061,7 @@ const askLimiter = rateLimit({
 });
 
 // ============================================================
-// 🔐 AUTH MIDDLEWARE (FIXED)
+// 🔐 AUTH MIDDLEWARE
 // ============================================================
 
 const jwt = require("jsonwebtoken");
@@ -1060,7 +1069,6 @@ const jwt = require("jsonwebtoken");
 async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
     
-    // ✅ FIX: تحقق أفضل من رأس التوكن
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         logger.warn(`❌ No token provided: ${req.ip}`);
         return res.status(401).json({
@@ -1084,7 +1092,6 @@ async function authenticate(req, res, next) {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         
-        // ✅ FIX: التحقق من وجود المستخدم
         const freshUser = await User.findById(decoded.id).lean();
         if (!freshUser) {
             logger.warn(`❌ User not found: ${decoded.id}`);
@@ -1096,7 +1103,6 @@ async function authenticate(req, res, next) {
             });
         }
         
-        // ✅ FIX: التحقق من إصدار التوكن
         if (freshUser.tokenVersion !== undefined && decoded.tokenVersion !== undefined) {
             if (freshUser.tokenVersion !== decoded.tokenVersion) {
                 logger.warn(`❌ Token version mismatch for user ${decoded.id}`);
@@ -1109,7 +1115,6 @@ async function authenticate(req, res, next) {
             }
         }
         
-        // ✅ FIX: التحقق من انتهاء صلاحية التوكن (إضافي)
         if (decoded.exp && Date.now() >= decoded.exp * 1000) {
             return res.status(401).json({
                 success: false,
@@ -1119,7 +1124,6 @@ async function authenticate(req, res, next) {
             });
         }
         
-        // ✅ تسجيل نجاح المصادقة
         await logSecurityEvent({
             userId: decoded.id,
             type: 'AUTH_SUCCESS',
@@ -1130,7 +1134,6 @@ async function authenticate(req, res, next) {
             }
         });
         
-        // ✅ إعداد كائن المستخدم
         req.user = {
             id: decoded.id,
             username: freshUser.username || decoded.username,
@@ -1142,7 +1145,6 @@ async function authenticate(req, res, next) {
         logger.info(`✅ Auth success: ${req.user.username} (${req.user.role}) from ${req.ip}`);
         next();
     } catch (error) {
-        // ✅ FIX: رسائل خطأ أكثر وضوحاً
         let errorMessage = "❌ توكن غير صالح";
         let errorCode = "INVALID_TOKEN";
         
@@ -1564,7 +1566,7 @@ const validateAskRequest = [
 ];
 
 // ============================================================
-// 🚀 ASK AI - MAIN ENDPOINT (FIXED)
+// 🚀 ASK AI - MAIN ENDPOINT
 // ============================================================
 
 router.post("/ask", 
@@ -1637,7 +1639,7 @@ router.post("/ask",
                     cached: true,
                     requestId,
                     responseTime: Date.now() - startTime,
-                    version: "24.0.0"
+                    version: "25.0.0"
                 });
             }
         }
@@ -1653,12 +1655,13 @@ router.post("/ask",
         } catch (error) {
             logger.error(`❌ [${requestId}] AI error:`, error);
             
-            // ✅ FIX: رسالة خطأ مفيدة
             let errorMessage = "⚠️ عذراً، حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.";
             if (error.message && error.message.includes('API key')) {
                 errorMessage = "⚠️ خطأ في مفتاح API. يرجى التحقق من إعدادات المزود.";
             } else if (error.message && error.message.includes('quota')) {
                 errorMessage = "⚠️ تم استنفاذ الحصة اليومية للمزود. يرجى المحاولة لاحقاً.";
+            } else if (error.message && error.message.includes('Insufficient Balance')) {
+                errorMessage = "⚠️ رصيد المزود غير كافٍ. يرجى شحن الرصيد أو استخدام مزود آخر.";
             }
             
             return res.status(500).json({
@@ -1670,7 +1673,6 @@ router.post("/ask",
             });
         }
 
-        // ✅ FIX: التحقق من النتيجة قبل استخدامها
         if (!result || !result.text) {
             return res.status(500).json({
                 success: false,
@@ -1714,7 +1716,7 @@ router.post("/ask",
             requestId,
             responseTime,
             cached: false,
-            version: "24.0.0",
+            version: "25.0.0",
             provider: result.provider || 'gemini',
             toolsUsed: result.toolCalls ? result.toolCalls.length : 0
         });
@@ -1931,7 +1933,7 @@ router.get("/dashboard", authenticate, requirePermission('AI_DASHBOARD'), async 
                 securityEvents: securityEvents
             },
             timestamp: new Date().toISOString(),
-            version: "24.0.0"
+            version: "25.0.0"
         });
     } catch (error) {
         logger.error('Dashboard error:', error);
@@ -2146,6 +2148,56 @@ router.get("/security", authenticate, requirePermission('AI_SECURITY_VIEW'), asy
 });
 
 // ============================================================
+// ✅ ✅ ✅ نقطة نهاية للتحقق من صحة المفتاح (ميزة جديدة)
+// ============================================================
+
+router.get("/check-deepseek", authenticate, async (req, res) => {
+    try {
+        const apiKey = process.env.DEEPSEEK_API_KEY;
+        if (!apiKey) {
+            return res.json({ 
+                success: false, 
+                error: "DEEPSEEK_API_KEY غير موجود في البيئة",
+                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            });
+        }
+        
+        const response = await fetch('https://api.deepseek.com/user/balance', {
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            res.json({
+                success: true,
+                balance: data,
+                status: response.status,
+                message: "✅ المفتاح صالح والرصيد متاح"
+            });
+        } else {
+            res.json({
+                success: false,
+                error: data.error || "خطأ في التحقق",
+                status: response.status,
+                message: data.error?.message || "المفتاح غير صالح أو الرصيد غير كافٍ"
+            });
+        }
+    } catch (error) {
+        logger.error('Check DeepSeek error:', error);
+        res.json({ 
+            success: false, 
+            error: error.message,
+            message: "فشل الاتصال بـ DeepSeek API"
+        });
+    }
+});
+
+// ============================================================
 // 🧰 HELPER FUNCTIONS
 // ============================================================
 
@@ -2174,7 +2226,7 @@ router.get("/stats", authenticate, requirePermission('AI_STATS'), (req, res) => 
                 private: privateCache.keys().length
             },
             uptime: process.uptime(),
-            version: "24.0.0",
+            version: "25.0.0",
             providers: Object.keys(AI_PROVIDERS_CONFIG).filter(p => AI_PROVIDERS_CONFIG[p].enabled),
             functions: TOOL_DEFINITIONS.length,
             ragEnabled: true,
@@ -2195,7 +2247,7 @@ router.get("/health", authenticate, (req, res) => {
     res.json({
         success: true,
         status: "healthy",
-        version: "24.0.0",
+        version: "25.0.0",
         timestamp: new Date().toISOString(),
         cacheSize: {
             public: publicCache.keys().length,
@@ -2230,7 +2282,7 @@ router.delete("/cache", authenticate, requirePermission('AI_CACHE_CLEAR'), (req,
 });
 
 // ============================================================
-// ✅ FIX: إضافة نقطة نهاية لتجديد التوكن
+// ✅ REFRESH TOKEN
 // ============================================================
 
 router.post("/refresh-token", authenticate, async (req, res) => {
@@ -2243,7 +2295,6 @@ router.post("/refresh-token", authenticate, async (req, res) => {
             });
         }
         
-        // ✅ إنشاء توكن جديد
         const newToken = jwt.sign(
             {
                 id: user._id,
