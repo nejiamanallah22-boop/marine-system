@@ -12,9 +12,11 @@
     />
 
     <style>
-        /* ==========================
-               CSS Variables
-            ========================== */
+        /* ============================================================
+               🚢 MARINE SYSTEM - FLEET PAGE (PROFESSIONAL)
+               ============================================================ */
+
+        /* ===== CSS Variables ===== */
         :root {
             --primary: #0b3d5c;
             --primary-dark: #072a40;
@@ -24,55 +26,64 @@
             --success: #2a9d8f;
             --danger: #e76f51;
             --warning: #f4a261;
-            --gray-100: #f8f9fa;
-            --gray-200: #e9ecef;
-            --gray-300: #dee2e6;
-            --gray-600: #6c757d;
-            --gray-800: #343a40;
+            --info: #4a90d9;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
             --sidebar-width: 280px;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            --radius: 14px;
-            --transition: 0.3s ease;
-            --font: 'Segoe UI', 'Tahoma', system-ui, sans-serif;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
-        * {
+        /* ===== Reset ===== */
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
+        html,
         body {
+            height: 100%;
             font-family: var(--font);
-            background: #f0f4f8;
+            background: var(--gray-50);
             color: var(--gray-800);
-            min-height: 100vh;
-            overflow-x: hidden;
+            direction: rtl;
+            scroll-behavior: smooth;
         }
 
-        /* ==========================
-               زر فتح القائمة
-            ========================== */
+        /* ============================================================
+               SIDEBAR
+               ============================================================ */
+
         .menu-toggle-btn {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 18px;
+            right: 18px;
             z-index: 1000;
             background: var(--primary);
             color: #fff;
             border: none;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             cursor: pointer;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-lg);
             transition: all var(--transition);
             display: flex;
             align-items: center;
@@ -80,21 +91,18 @@
         }
 
         .menu-toggle-btn:hover {
-            transform: scale(1.05);
+            transform: scale(1.06);
             background: var(--primary-light);
-        }
-
-        .menu-toggle-btn i {
-            transition: transform var(--transition);
         }
 
         .menu-toggle-btn.open i {
             transform: rotate(90deg);
         }
 
-        /* ==========================
-               القائمة الجانبية (تظهر/تختفي)
-            ========================== */
+        .menu-toggle-btn i {
+            transition: transform var(--transition);
+        }
+
         .overlay {
             position: fixed;
             top: 0;
@@ -102,6 +110,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             z-index: 998;
             opacity: 0;
             visibility: hidden;
@@ -121,13 +130,24 @@
             height: 100vh;
             background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
             color: #fff;
-            padding: 30px 0;
+            padding: 28px 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 4px 0 40px rgba(0, 0, 0, 0.3);
             z-index: 999;
             transition: right var(--transition);
             overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
         }
 
         .sidebar.active {
@@ -135,13 +155,13 @@
         }
 
         .sidebar-brand {
-            padding: 0 25px 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
+            padding: 0 24px 28px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
         }
 
         .sidebar-brand h2 {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 700;
             display: flex;
             align-items: center;
@@ -153,9 +173,10 @@
         }
 
         .sidebar-brand p {
-            font-size: 0.75rem;
-            opacity: 0.7;
+            font-size: 0.7rem;
+            opacity: 0.5;
             margin-top: 4px;
+            letter-spacing: 0.5px;
         }
 
         .sidebar-menu {
@@ -164,62 +185,77 @@
         }
 
         .sidebar-menu .menu-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
-            opacity: 0.5;
-            padding: 10px 15px 6px;
-            letter-spacing: 1px;
+            opacity: 0.4;
+            padding: 12px 16px 6px;
+            letter-spacing: 1.2px;
+            font-weight: 600;
         }
 
         .sidebar-menu a {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 12px 18px;
-            margin: 4px 0;
-            border-radius: 12px;
-            color: rgba(255, 255, 255, 0.75);
+            padding: 10px 16px;
+            margin: 3px 0;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.65);
             text-decoration: none;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all var(--transition);
             cursor: pointer;
             border: none;
             background: none;
             width: 100%;
             text-align: right;
+            position: relative;
         }
 
         .sidebar-menu a:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: #fff;
         }
 
         .sidebar-menu a.active {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             color: #fff;
+        }
+
+        .sidebar-menu a.active::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 20%;
+            height: 60%;
+            width: 3px;
+            background: var(--secondary);
+            border-radius: 0 4px 4px 0;
         }
 
         .sidebar-menu a i {
             width: 22px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .sidebar-footer {
-            padding: 20px 25px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.8rem;
-            opacity: 0.6;
+            padding: 18px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.7rem;
+            opacity: 0.4;
+            display: flex;
+            justify-content: space-between;
         }
 
-        /* ==========================
-               المحتوى الرئيسي - كامل الشاشة ✅
-            ========================== */
+        /* ============================================================
+               MAIN CONTENT - FULL WIDTH
+               ============================================================ */
+
         .main-content {
-            padding: 20px 24px 24px;
+            padding: 20px 28px 28px;
             min-height: 100vh;
             width: 100%;
-            margin: 0;
             padding-top: 80px;
         }
 
@@ -230,36 +266,46 @@
             padding: 0;
         }
 
-        /* ==========================
-               محتوى الصفحة (السجل العام)
-            ========================== */
+        /* ============================================================
+               PAGE HEADER
+               ============================================================ */
+
         .page-header {
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--gray-200);
-            padding-bottom: 14px;
+            margin-bottom: 24px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: flex-end;
-            gap: 12px;
+            gap: 14px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--gray-200);
         }
 
-        .page-header h2 {
+        .page-header-left h2 {
             font-weight: 700;
-            font-size: 1.7rem;
+            font-size: 1.6rem;
             color: var(--primary);
             letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .page-header h2 i {
+        .page-header-left h2 i {
             color: var(--secondary);
-            margin-left: 10px;
         }
 
-        .page-header p {
-            color: var(--gray-600);
-            font-size: 0.95rem;
+        .page-header-left p {
+            color: var(--gray-500);
+            font-size: 0.9rem;
             margin-top: 4px;
+        }
+
+        .page-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .badge-role {
@@ -267,7 +313,7 @@
             color: #fff;
             padding: 6px 18px;
             border-radius: 40px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             display: inline-flex;
             align-items: center;
@@ -275,49 +321,101 @@
             white-space: nowrap;
         }
 
-        /* ==========================
-               شبكة الإدخال
-            ========================== */
+        .badge-role i {
+            opacity: 0.7;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .header-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .header-btn.primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .header-btn.primary:hover {
+            background: var(--primary-light);
+        }
+
+        .header-btn.success {
+            background: var(--success);
+            color: #fff;
+        }
+        .header-btn.success:hover {
+            background: #21867a;
+        }
+
+        /* ============================================================
+               INPUT GRID
+               ============================================================ */
+
         .input-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 12px 14px;
-            background: var(--gray-100);
+            background: #fff;
             padding: 18px 20px;
             border-radius: var(--radius);
             margin-bottom: 20px;
             border: 1px solid var(--gray-200);
-            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+        }
+
+        .input-grid:hover {
+            box-shadow: var(--shadow);
         }
 
         .input-grid input,
         .input-grid select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--gray-300);
-            border-radius: 10px;
-            font-size: 0.9rem;
-            background: #fff;
-            transition: var(--transition);
+            padding: 10px 14px;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: var(--gray-50);
+            transition: all var(--transition);
             font-family: var(--font);
+            color: var(--gray-800);
         }
 
         .input-grid input:focus,
         .input-grid select:focus {
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(11, 61, 92, 0.12);
+            box-shadow: 0 0 0 4px rgba(11, 61, 92, 0.08);
+            background: #fff;
         }
 
-        .input-grid .btn {
+        .input-grid input::placeholder {
+            color: var(--gray-400);
+        }
+
+        .input-grid .btn-save {
             grid-column: span 1;
             padding: 10px 10px;
             font-weight: 600;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.95rem;
-            transition: var(--transition);
+            font-size: 0.9rem;
+            transition: all var(--transition);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -326,53 +424,68 @@
             color: #fff;
         }
 
-        .input-grid .btn:hover {
+        .input-grid .btn-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(42, 157, 143, 0.3);
+            box-shadow: 0 8px 20px rgba(42, 157, 143, 0.3);
         }
 
-        /* ==========================
-               شريط الفلاتر
-            ========================== */
+        .input-grid .btn-save:active {
+            transform: translateY(0);
+        }
+
+        /* ============================================================
+               FILTER BAR
+               ============================================================ */
+
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px 14px;
+            gap: 10px 16px;
             background: #fff;
-            padding: 10px 16px;
-            border-radius: 30px;
+            padding: 10px 18px;
+            border-radius: 40px;
             margin-bottom: 20px;
             border: 1px solid var(--gray-200);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            box-shadow: var(--shadow-sm);
         }
 
         .filter-bar .search-input {
             flex: 2 1 200px;
-            min-width: 140px;
+            min-width: 150px;
+            position: relative;
         }
 
         .filter-bar .search-input input {
             width: 100%;
-            padding: 8px 14px;
-            border: 1px solid var(--gray-300);
+            padding: 8px 16px 8px 40px;
+            border: 1px solid var(--gray-200);
             border-radius: 30px;
-            font-size: 0.9rem;
-            background: var(--gray-100);
-            transition: var(--transition);
+            font-size: 0.85rem;
+            background: var(--gray-50);
+            transition: all var(--transition);
         }
 
         .filter-bar .search-input input:focus {
             background: #fff;
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(11, 61, 92, 0.08);
+            box-shadow: 0 0 0 4px rgba(11, 61, 92, 0.06);
+        }
+
+        .filter-bar .search-input .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 0.85rem;
         }
 
         .filter-bar label {
             font-weight: 600;
             color: var(--gray-600);
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
             gap: 4px;
@@ -381,14 +494,20 @@
         .filter-bar select {
             padding: 6px 12px;
             border-radius: 30px;
-            border: 1px solid var(--gray-300);
+            border: 1px solid var(--gray-200);
             background: #fff;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             min-width: 100px;
             cursor: pointer;
+            color: var(--gray-700);
         }
 
-        .filter-bar .btn {
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-bar .btn-filter {
             background: var(--primary);
             color: #fff;
             border: none;
@@ -396,40 +515,58 @@
             border-radius: 30px;
             font-weight: 500;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all var(--transition);
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
-        .filter-bar .btn:hover {
+        .filter-bar .btn-filter:hover {
             background: var(--primary-light);
             transform: scale(1.02);
         }
 
-        /* ==========================
-               الجدول - عرض كامل ✅
-            ========================== */
+        .filter-bar .btn-filter.outline {
+            background: transparent;
+            color: var(--gray-600);
+            border: 1px solid var(--gray-200);
+        }
+
+        .filter-bar .btn-filter.outline:hover {
+            background: var(--gray-100);
+            transform: none;
+        }
+
+        /* ============================================================
+               TABLE - PROFESSIONAL
+               ============================================================ */
+
         .table-wrapper {
             overflow-x: auto;
             border-radius: var(--radius);
             border: 1px solid var(--gray-200);
             background: #fff;
-            width: 100%;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-wrapper:hover {
+            box-shadow: var(--shadow);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             min-width: 100%;
-            table-layout: auto;
         }
 
         thead {
             background: var(--primary);
             color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         thead th {
@@ -437,20 +574,34 @@
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
-            font-size: 0.75rem;
-            letter-spacing: 0.3px;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        thead th i {
+            margin-left: 4px;
+            opacity: 0.6;
         }
 
         tbody td {
             padding: 10px 8px;
-            border-bottom: 1px solid var(--gray-200);
+            border-bottom: 1px solid var(--gray-100);
             vertical-align: middle;
+            color: var(--gray-700);
+        }
+
+        tbody tr {
+            transition: all var(--transition);
         }
 
         tbody tr:hover {
-            background-color: #f8faff;
-            transition: var(--transition);
+            background-color: var(--gray-50);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .status-صالح {
@@ -466,101 +617,162 @@
             font-weight: 600;
         }
 
-        .btn-sm {
-            padding: 4px 10px;
-            border: none;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--gray-200);
+        .vessel-name {
+            font-weight: 600;
             color: var(--gray-800);
         }
 
-        .btn-sm.btn-orange {
+        /* ============================================================
+               ACTION BUTTONS
+               ============================================================ */
+
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-sm i {
+            font-size: 0.6rem;
+        }
+
+        .btn-sm.btn-edit {
+            background: rgba(244, 162, 97, 0.15);
+            color: var(--warning);
+        }
+        .btn-sm.btn-edit:hover {
             background: var(--warning);
             color: #fff;
-        }
-        .btn-sm.btn-orange:hover {
-            background: #e08f3a;
-            transform: scale(1.04);
+            transform: scale(1.05);
         }
 
-        .btn-sm.btn-danger {
+        .btn-sm.btn-delete {
+            background: rgba(231, 111, 81, 0.15);
+            color: var(--danger);
+        }
+        .btn-sm.btn-delete:hover {
             background: var(--danger);
             color: #fff;
-        }
-        .btn-sm.btn-danger:hover {
-            background: #c95f45;
-            transform: scale(1.04);
+            transform: scale(1.05);
         }
 
-        .btn-sm.btn-success {
-            background: var(--success);
+        .btn-sm.btn-view {
+            background: rgba(74, 144, 217, 0.15);
+            color: var(--info);
+        }
+        .btn-sm.btn-view:hover {
+            background: var(--info);
             color: #fff;
-        }
-        .btn-sm.btn-success:hover {
-            background: #21867a;
-            transform: scale(1.04);
+            transform: scale(1.05);
         }
 
-        .btn-sm + .btn-sm {
-            margin-right: 4px;
-        }
+        /* ============================================================
+               EMPTY STATE
+               ============================================================ */
 
-        .empty-row td {
+        .empty-state {
             text-align: center;
-            padding: 40px 20px;
-            color: var(--gray-600);
-            font-size: 1rem;
+            padding: 60px 20px;
+            color: var(--gray-400);
         }
 
-        /* ==========================
-               إخفاء الصفحات
-            ========================== */
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--gray-300);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .empty-state h3 {
+            color: var(--gray-600);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* ============================================================
+               PAGE CONTENT
+               ============================================================ */
+
         .page-content {
             display: none;
         }
 
         .page-content.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
-        /* ==========================
-               استجابة
-            ========================== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+               RESPONSIVE
+               ============================================================ */
+
+        @media (max-width: 1024px) {
+            .input-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
             .main-content {
-                padding: 70px 12px 16px;
+                padding: 70px 14px 16px;
             }
             .input-grid {
                 grid-template-columns: 1fr 1fr;
-                padding: 12px;
+                padding: 14px;
                 gap: 10px;
             }
             .filter-bar {
-                border-radius: 16px;
-                padding: 10px 12px;
+                border-radius: 20px;
+                padding: 10px 14px;
                 gap: 8px;
             }
-            .page-header h2 {
-                font-size: 1.3rem;
+            .page-header-left h2 {
+                font-size: 1.2rem;
+            }
+            .page-header-actions {
+                width: 100%;
+                justify-content: flex-start;
             }
             .sidebar {
                 width: 260px;
             }
             table {
-                font-size: 0.78rem;
+                font-size: 0.75rem;
             }
             thead th,
             tbody td {
                 padding: 8px 6px;
             }
-            .input-grid .btn {
+            .input-grid .btn-save {
                 grid-column: span 2;
             }
         }
@@ -569,18 +781,20 @@
             .input-grid {
                 grid-template-columns: 1fr;
             }
-            .input-grid .btn {
+            .input-grid .btn-save {
                 grid-column: span 1;
             }
             .filter-bar {
                 flex-direction: column;
                 align-items: stretch;
+                border-radius: 16px;
+                padding: 12px;
             }
             .filter-bar .search-input {
                 flex: 1;
             }
             .filter-bar label {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
             .filter-bar select {
                 min-width: 100%;
@@ -589,11 +803,20 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+            .badge-role {
+                font-size: 0.7rem;
+                padding: 4px 14px;
+            }
+            .header-btn {
+                font-size: 0.7rem;
+                padding: 6px 12px;
+            }
         }
 
-        /* ==========================
-               طباعة
-            ========================== */
+        /* ============================================================
+               PRINT
+               ============================================================ */
+
         @media print {
             .menu-toggle-btn,
             .overlay,
@@ -609,20 +832,28 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+            .input-grid,
+            .filter-bar {
+                display: none !important;
+            }
+            .table-wrapper {
+                border: 1px solid #ddd !important;
+                box-shadow: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- ====== زر فتح القائمة ====== -->
+    <!-- ====== TOGGLE BUTTON ====== -->
     <button class="menu-toggle-btn" id="menuToggleBtn" title="فتح القائمة">
         <i class="fas fa-bars"></i>
     </button>
 
-    <!-- ====== الخلفية المعتمة ====== -->
+    <!-- ====== OVERLAY ====== -->
     <div class="overlay" id="overlay"></div>
 
-    <!-- ====== القائمة الجانبية ====== -->
+    <!-- ====== SIDEBAR ====== -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <h2><i class="fas fa-anchor"></i> منظومة البحرية</h2>
@@ -659,29 +890,39 @@
         </div>
 
         <div class="sidebar-footer">
-            <i class="fas fa-shield-alt"></i> v2.0 · نظام آمن
+            <span><i class="fas fa-shield-alt"></i> v2.0</span>
+            <span>نظام آمن</span>
         </div>
     </div>
 
-    <!-- ====== المحتوى الرئيسي - كامل الشاشة ✅ ====== -->
+    <!-- ====== MAIN CONTENT ====== -->
     <div class="main-content" id="mainContent">
         <div class="container">
 
-            <!-- ====== صفحة السجل العام ====== -->
+            <!-- ====== PAGE: VESSELS ====== -->
             <div class="page-content active" id="page-vessels">
-                <!-- عنوان الصفحة -->
+
+                <!-- ===== HEADER ===== -->
                 <div class="page-header">
-                    <div>
+                    <div class="page-header-left">
                         <h2><i class="fas fa-ship"></i> السجل العام للوسائل البحرية</h2>
                         <p><i class="fas fa-map-pin" style="color:var(--secondary);"></i> إدارة ومتابعة جميع المراكب والوسائل البحرية</p>
                     </div>
-                    <div class="badge-role">
-                        <i class="fas fa-user-shield"></i>
-                        <span id="userRoleDisplay">مسؤول</span>
+                    <div class="page-header-actions">
+                        <div class="badge-role">
+                            <i class="fas fa-user-shield"></i>
+                            <span id="userRoleDisplay">مسؤول</span>
+                        </div>
+                        <button class="header-btn success no-print" onclick="exportFleetData()">
+                            <i class="fas fa-file-export"></i> تصدير
+                        </button>
+                        <button class="header-btn primary no-print" onclick="refreshFleet()">
+                            <i class="fas fa-sync-alt"></i> تحديث
+                        </button>
                     </div>
                 </div>
 
-                <!-- نموذج الإدخال -->
+                <!-- ===== INPUT FORM ===== -->
                 <div id="inputArea" class="input-grid no-print">
                     <input type="text" id="iName" placeholder="اسم المركب" />
                     <input type="text" id="iNum" placeholder="الرقم" />
@@ -718,7 +959,7 @@
                     <input type="date" id="iEnd" />
                     <input type="text" id="iRef" placeholder="المرجع" />
 
-                    <!-- ✅ الوحدة المسؤولة عن الإصلاح -->
+                    <!-- ✅ Repair Unit -->
                     <select id="iRepairUnit">
                         <option value="">الوحدة المسؤولة عن الإصلاح</option>
                         <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
@@ -729,20 +970,21 @@
                         <option value="خارجي">🔧 خارجي</option>
                     </select>
 
-                    <button id="saveVesselBtn" class="btn" onclick="addItem()">
+                    <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
                         <i class="fas fa-save"></i> حفظ المركب
                     </button>
                 </div>
 
-                <!-- شريط الفلاتر -->
+                <!-- ===== FILTER BAR ===== -->
                 <div class="filter-bar no-print">
                     <div class="search-input">
                         <input
                             type="text"
                             id="searchMain"
-                            placeholder="🔍 بحث في السجل..."
+                            placeholder="بحث في السجل..."
                             onkeyup="renderMain()"
                         />
+                        <span class="search-icon"><i class="fas fa-search"></i></span>
                     </div>
 
                     <label for="fCatMain"><i class="fas fa-tag"></i> الفئة:</label>
@@ -755,36 +997,38 @@
                         <option value="الكل">الكل</option>
                     </select>
 
-                    <button class="btn" onclick="clearMainSearch()">
+                    <button class="btn-filter outline" onclick="clearMainSearch()">
                         <i class="fas fa-undo-alt"></i> مسح
                     </button>
                 </div>
 
-                <!-- الجدول - عرض كامل ✅ -->
+                <!-- ===== TABLE ===== -->
                 <div class="table-wrapper">
                     <table id="mainTable">
                         <thead>
                             <tr>
-                                <th>الاسم</th>
-                                <th>الرقم</th>
-                                <th>الطول</th>
-                                <th>الفئة</th>
-                                <th>الإقليم</th>
-                                <th>المنطقة</th>
-                                <th>الميناء</th>
-                                <th>التعزيز</th>
-                                <th>الحالة</th>
-                                <th>العطب</th>
-                                <th>التاريخ</th>
-                                <th>الانتهاء</th>
-                                <th>الوحدة المسؤولة عن الإصلاح</th>
-                                <th>إجراء</th>
+                                <th><i class="fas fa-ship"></i> الاسم</th>
+                                <th><i class="fas fa-hashtag"></i> الرقم</th>
+                                <th><i class="fas fa-ruler"></i> الطول</th>
+                                <th><i class="fas fa-tag"></i> الفئة</th>
+                                <th><i class="fas fa-map"></i> الإقليم</th>
+                                <th><i class="fas fa-location-dot"></i> المنطقة</th>
+                                <th><i class="fas fa-flag"></i> الميناء</th>
+                                <th><i class="fas fa-handshake"></i> التعزيز</th>
+                                <th><i class="fas fa-circle"></i> الحالة</th>
+                                <th><i class="fas fa-wrench"></i> العطب</th>
+                                <th><i class="fas fa-calendar"></i> التاريخ</th>
+                                <th><i class="fas fa-calendar-check"></i> الانتهاء</th>
+                                <th><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
+                                <th><i class="fas fa-cog"></i> إجراء</th>
                             </tr>
                         </thead>
                         <tbody id="mainBody">
-                            <tr class="empty-row">
-                                <td colspan="14">
-                                    <i class="fas fa-spinner fa-pulse"></i> جاري تحميل بيانات المراكب...
+                            <tr>
+                                <td colspan="14" class="empty-state">
+                                    <i class="fas fa-spinner fa-pulse"></i>
+                                    <h3>جاري التحميل...</h3>
+                                    <p>يرجى الانتظار أثناء تحميل بيانات المراكب</p>
                                 </td>
                             </tr>
                         </tbody>
@@ -792,64 +1036,74 @@
                 </div>
             </div>
 
-            <!-- ====== صفحات أخرى ====== -->
+            <!-- ====== OTHER PAGES (Placeholder) ====== -->
             <div class="page-content" id="page-dashboard">
                 <div class="page-header">
-                    <h2><i class="fas fa-chart-pie"></i> لوحة المعلومات</h2>
-                    <p>نظرة عامة على النظام</p>
+                    <div class="page-header-left">
+                        <h2><i class="fas fa-chart-pie"></i> لوحة المعلومات</h2>
+                        <p>نظرة عامة على النظام</p>
+                    </div>
                 </div>
-                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:#fff;padding:60px 40px;border-radius:var(--radius);text-align:center;border:1px solid var(--gray-200);">
                     <i class="fas fa-chart-line" style="font-size:4rem;color:var(--primary);margin-bottom:20px;"></i>
                     <h3>مرحباً بك في لوحة المعلومات</h3>
-                    <p style="color:var(--gray-600);">هذه صفحة تجريبية، يمكنك تخصيصها حسب احتياجاتك</p>
+                    <p style="color:var(--gray-500);">هذه صفحة تجريبية، يمكنك تخصيصها حسب احتياجاتك</p>
                 </div>
             </div>
 
             <div class="page-content" id="page-maintenance">
                 <div class="page-header">
-                    <h2><i class="fas fa-tools"></i> الصيانة</h2>
-                    <p>إدارة أعمال الصيانة</p>
+                    <div class="page-header-left">
+                        <h2><i class="fas fa-tools"></i> الصيانة</h2>
+                        <p>إدارة أعمال الصيانة</p>
+                    </div>
                 </div>
-                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:#fff;padding:60px 40px;border-radius:var(--radius);text-align:center;border:1px solid var(--gray-200);">
                     <i class="fas fa-tools" style="font-size:4rem;color:var(--warning);margin-bottom:20px;"></i>
                     <h3>قسم الصيانة</h3>
-                    <p style="color:var(--gray-600);">صفحة الصيانة قيد التطوير</p>
+                    <p style="color:var(--gray-500);">صفحة الصيانة قيد التطوير</p>
                 </div>
             </div>
 
             <div class="page-content" id="page-reports">
                 <div class="page-header">
-                    <h2><i class="fas fa-file-alt"></i> التقارير</h2>
-                    <p>عرض وإنشاء التقارير</p>
+                    <div class="page-header-left">
+                        <h2><i class="fas fa-file-alt"></i> التقارير</h2>
+                        <p>عرض وإنشاء التقارير</p>
+                    </div>
                 </div>
-                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:#fff;padding:60px 40px;border-radius:var(--radius);text-align:center;border:1px solid var(--gray-200);">
                     <i class="fas fa-file-alt" style="font-size:4rem;color:var(--success);margin-bottom:20px;"></i>
                     <h3>التقارير</h3>
-                    <p style="color:var(--gray-600);">صفحة التقارير قيد التطوير</p>
+                    <p style="color:var(--gray-500);">صفحة التقارير قيد التطوير</p>
                 </div>
             </div>
 
             <div class="page-content" id="page-settings">
                 <div class="page-header">
-                    <h2><i class="fas fa-cog"></i> الإعدادات</h2>
-                    <p>تخصيص النظام</p>
+                    <div class="page-header-left">
+                        <h2><i class="fas fa-cog"></i> الإعدادات</h2>
+                        <p>تخصيص النظام</p>
+                    </div>
                 </div>
-                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
-                    <i class="fas fa-cog" style="font-size:4rem;color:var(--gray-600);margin-bottom:20px;"></i>
+                <div style="background:#fff;padding:60px 40px;border-radius:var(--radius);text-align:center;border:1px solid var(--gray-200);">
+                    <i class="fas fa-cog" style="font-size:4rem;color:var(--gray-400);margin-bottom:20px;"></i>
                     <h3>الإعدادات</h3>
-                    <p style="color:var(--gray-600);">صفحة الإعدادات قيد التطوير</p>
+                    <p style="color:var(--gray-500);">صفحة الإعدادات قيد التطوير</p>
                 </div>
             </div>
 
             <div class="page-content" id="page-profile">
                 <div class="page-header">
-                    <h2><i class="fas fa-user"></i> الملف الشخصي</h2>
-                    <p>معلومات المستخدم</p>
+                    <div class="page-header-left">
+                        <h2><i class="fas fa-user"></i> الملف الشخصي</h2>
+                        <p>معلومات المستخدم</p>
+                    </div>
                 </div>
-                <div style="background:var(--gray-100);padding:60px 40px;border-radius:var(--radius);text-align:center;">
+                <div style="background:#fff;padding:60px 40px;border-radius:var(--radius);text-align:center;border:1px solid var(--gray-200);">
                     <i class="fas fa-user-circle" style="font-size:4rem;color:var(--primary);margin-bottom:20px;"></i>
                     <h3>الملف الشخصي</h3>
-                    <p style="color:var(--gray-600);">صفحة الملف الشخصي قيد التطوير</p>
+                    <p style="color:var(--gray-500);">صفحة الملف الشخصي قيد التطوير</p>
                 </div>
             </div>
 
@@ -857,31 +1111,25 @@
     </div>
 
     <!-- =============================================================== -->
-    <!-- جافا سكريبت -->
+    <!-- 📦 JAVASCRIPT - FLEET PAGE (PROFESSIONAL) -->
     <!-- =============================================================== -->
     <script>
         (function() {
             'use strict';
 
-            // ==========================
-            // الإعدادات العامة
-            // ==========================
+            // ============================================================
+            // 1. CONFIGURATION
+            // ============================================================
+
             const API_URL = window.location.origin;
             let token = localStorage.getItem('token') || null;
-            let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            let currentUser = null;
+            let isProcessing = false;
 
-            // ==========================
-            // عناصر DOM
-            // ==========================
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            const menuToggleBtn = document.getElementById('menuToggleBtn');
-            const menuLinks = document.querySelectorAll('.sidebar-menu a[data-page]');
-            const userRoleDisplay = document.getElementById('userRoleDisplay');
+            // ============================================================
+            // 2. DATA
+            // ============================================================
 
-            // ==========================
-            // بيانات المناطق
-            // ==========================
             const ZONES_DATA = {
                 "الشمال": ["تونس", "بنزرت", "طبرقة"],
                 "الساحل": ["سوسة", "المنستير", "نابل"],
@@ -896,9 +1144,20 @@
 
             const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 
-            // ==========================
-            // فتح/إغلاق القائمة
-            // ==========================
+            // ============================================================
+            // 3. DOM REFS
+            // ============================================================
+
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const menuToggleBtn = document.getElementById('menuToggleBtn');
+            const menuLinks = document.querySelectorAll('.sidebar-menu a[data-page]');
+            const userRoleDisplay = document.getElementById('userRoleDisplay');
+
+            // ============================================================
+            // 4. SIDEBAR
+            // ============================================================
+
             function openMenu() {
                 sidebar.classList.add('active');
                 overlay.classList.add('active');
@@ -914,28 +1173,26 @@
             }
 
             function toggleMenu() {
-                if (sidebar.classList.contains('active')) {
-                    closeMenu();
-                } else {
-                    openMenu();
-                }
+                sidebar.classList.contains('active') ? closeMenu() : openMenu();
             }
 
             menuToggleBtn.addEventListener('click', toggleMenu);
             overlay.addEventListener('click', closeMenu);
 
-            // ==========================
-            // التنقل بين الصفحات
-            // ==========================
-            function navigateTo(page) {
-                document.querySelectorAll('.page-content').forEach(el => {
-                    el.classList.remove('active');
-                });
-
-                const targetPage = document.getElementById(`page-${page}`);
-                if (targetPage) {
-                    targetPage.classList.add('active');
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                    closeMenu();
                 }
+            });
+
+            // ============================================================
+            // 5. NAVIGATION
+            // ============================================================
+
+            function navigateTo(page) {
+                document.querySelectorAll('.page-content').forEach(el => el.classList.remove('active'));
+                const target = document.getElementById(`page-${page}`);
+                if (target) target.classList.add('active');
 
                 menuLinks.forEach(link => {
                     link.classList.toggle('active', link.dataset.page === page);
@@ -943,46 +1200,85 @@
 
                 closeMenu();
                 localStorage.setItem('currentPage', page);
+
+                if (page === 'vessels') renderMain();
             }
 
             menuLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const page = this.dataset.page;
-                    if (page) {
-                        navigateTo(page);
-                        if (page === 'vessels') {
-                            renderMain();
-                        }
-                    }
+                    navigateTo(this.dataset.page);
                 });
             });
 
-            // ==========================
-            // تسجيل الخروج
-            // ==========================
+            // ============================================================
+            // 6. LOGOUT
+            // ============================================================
+
             document.getElementById('logoutBtn').addEventListener('click', function(e) {
                 e.preventDefault();
                 localStorage.removeItem('token');
-                localStorage.removeItem('currentUser');
                 localStorage.removeItem('currentPage');
-                window.location.href = '../index.html';
+                window.location.href = '/index.html';
             });
 
-            // ==========================
-            // تحديث عرض الدور
-            // ==========================
-            function updateRoleBadge() {
-                if (currentUser && currentUser.role) {
-                    userRoleDisplay.textContent = currentUser.role;
-                } else {
-                    userRoleDisplay.textContent = 'زائر';
+            // ============================================================
+            // 7. LOAD CURRENT USER FROM SERVER
+            // ============================================================
+
+            async function loadCurrentUser() {
+                try {
+                    if (!token) {
+                        console.warn('⚠️ No token found');
+                        window.location.href = '/index.html';
+                        return false;
+                    }
+
+                    const response = await fetch('/api/auth/me', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (!response.ok) {
+                        localStorage.removeItem('token');
+                        window.location.href = '/index.html';
+                        return false;
+                    }
+
+                    const data = await response.json();
+                    if (data.success && data.user) {
+                        currentUser = data.user;
+                        userRoleDisplay.textContent = currentUser.role;
+                        console.log('✅ User loaded:', currentUser);
+                        return true;
+                    } else {
+                        window.location.href = '/index.html';
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Error loading user:', error);
+                    window.location.href = '/index.html';
+                    return false;
                 }
             }
 
-            // ==========================
-            // دوال مساعدة
-            // ==========================
+            // ============================================================
+            // 8. PERMISSIONS
+            // ============================================================
+
+            function canEdit() {
+                if (!currentUser) return false;
+                return ['مسؤول', 'محرر', 'admin'].includes(currentUser.role);
+            }
+
+            function canDelete() {
+                if (!currentUser) return false;
+                return ['مسؤول', 'admin'].includes(currentUser.role);
+            }
+
+            // ============================================================
+            // 9. HELPERS
+            // ============================================================
+
             function escapeHtml(str) {
                 if (!str) return '';
                 const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -1011,17 +1307,10 @@
                 return 'زوارق مزدوجة';
             }
 
-            function canEdit() {
-                return currentUser && (currentUser.role === 'مسؤول' || currentUser.role === 'محرر');
-            }
+            // ============================================================
+            // 10. UPDATE ZONES
+            // ============================================================
 
-            function canDelete() {
-                return currentUser && currentUser.role === 'مسؤول';
-            }
-
-            // ==========================
-            // تحديث المناطق
-            // ==========================
             window.updateZones = function() {
                 const reg = document.getElementById('iReg').value;
                 const zoneSel = document.getElementById('iZone');
@@ -1033,9 +1322,10 @@
                 }
             };
 
-            // ==========================
-            // API Call
-            // ==========================
+            // ============================================================
+            // 11. API CALL
+            // ============================================================
+
             async function apiCall(endpoint, method = 'GET', body = null) {
                 const headers = {
                     'Content-Type': 'application/json',
@@ -1050,17 +1340,18 @@
 
                 if (!res.ok) {
                     if (res.status === 401 || res.status === 403) {
-                        alert('⚠️ انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى');
-                        window.location.href = '../index.html';
+                        localStorage.removeItem('token');
+                        window.location.href = '/index.html';
                     }
                     throw new Error(data.error || 'حدث خطأ في الاتصال بالخادم');
                 }
                 return data;
             }
 
-            // ==========================
-            // تعبئة الفلاتر
-            // ==========================
+            // ============================================================
+            // 12. INIT FILTERS
+            // ============================================================
+
             function initFilters() {
                 const fCatMain = document.getElementById('fCatMain');
                 const fRegMain = document.getElementById('fRegMain');
@@ -1076,14 +1367,15 @@
                 });
             }
 
-            // ==========================
-            // عرض السجل العام
-            // ==========================
+            // ============================================================
+            // 13. RENDER MAIN TABLE
+            // ============================================================
+
             async function renderMain() {
                 const mainBody = document.getElementById('mainBody');
                 try {
                     mainBody.innerHTML =
-                        `<tr class="empty-row"><td colspan="14"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>`;
+                        `<tr><td colspan="14" class="empty-state"><i class="fas fa-spinner fa-pulse"></i><h3>جاري التحميل...</h3><p>يرجى الانتظار</p></td></tr>`;
 
                     const vessels = await apiCall('/api/vessels');
 
@@ -1116,7 +1408,7 @@
 
                     if (filtered.length === 0) {
                         mainBody.innerHTML =
-                            `<tr class="empty-row"><td colspan="14"><i class="fas fa-inbox"></i> لا توجد مراكب مطابقة للبحث</td></tr>`;
+                            `<tr><td colspan="14" class="empty-state"><i class="fas fa-inbox"></i><h3>لا توجد مراكب</h3><p>لا توجد مراكب مطابقة لمعايير البحث</p></td></tr>`;
                         return;
                     }
 
@@ -1138,14 +1430,14 @@
                         const repairUnit = v.repairUnit || '-';
 
                         const editBtn = canEdit() ?
-                            `<button class="btn-sm btn-orange" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` :
+                            `<button class="btn-sm btn-edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` :
                             '';
                         const delBtn = canDelete() ?
-                            `<button class="btn-sm btn-danger" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` :
+                            `<button class="btn-sm btn-delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` :
                             '';
 
                         html += `<tr>
-                            <td><strong>${escapeHtml(name)}</strong></td>
+                            <td class="vessel-name">${escapeHtml(name)}</td>
                             <td>${escapeHtml(number)}</td>
                             <td>${escapeHtml(length)}</td>
                             <td>${escapeHtml(category)}</td>
@@ -1158,25 +1450,34 @@
                             <td>${formatDate(fDate)}</td>
                             <td>${formatDate(eDate)}</td>
                             <td>${escapeHtml(repairUnit)}</td>
-                            <td>${editBtn} ${delBtn}</td>
+                            <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
                         </tr>`;
                     }
                     mainBody.innerHTML = html;
 
                 } catch (err) {
-                    console.error('renderMain error:', err);
+                    console.error('❌ renderMain error:', err);
                     mainBody.innerHTML =
-                        `<tr class="empty-row"><td colspan="14"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> خطأ في تحميل البيانات</td></tr>`;
+                        `<tr><td colspan="14" class="empty-state"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i><h3>خطأ في التحميل</h3><p>${escapeHtml(err.message)}</p></td></tr>`;
                 }
             }
 
-            // ==========================
-            // إضافة مركب
-            // ==========================
+            // ============================================================
+            // 14. ADD ITEM
+            // ============================================================
+
             async function addItem() {
-                if (!canEdit()) { alert('⚠️ ليس لديك صلاحية لإضافة مركب'); return; }
+                if (!canEdit()) {
+                    alert('⚠️ ليس لديك صلاحية لإضافة مركب');
+                    return;
+                }
+                if (isProcessing) return;
+
                 const name = document.getElementById('iName').value.trim();
-                if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
+                if (!name) {
+                    alert('⚠️ يرجى إدخال اسم المركب');
+                    return;
+                }
 
                 const status = document.getElementById('iStat').value;
                 const faultDate = document.getElementById('iDate').value;
@@ -1185,35 +1486,45 @@
                     return;
                 }
 
-                const vessel = {
-                    name,
-                    num: document.getElementById('iNum').value.trim(),
-                    len: document.getElementById('iLen').value,
-                    reg: document.getElementById('iReg').value,
-                    zone: document.getElementById('iZone').value,
-                    port: document.getElementById('iPort').value.trim(),
-                    supp: document.getElementById('iSupp').value.trim(),
-                    stat: status,
-                    break: document.getElementById('iBreak').value.trim(),
-                    fDate: faultDate,
-                    eDate: document.getElementById('iEnd').value,
-                    ref: document.getElementById('iRef').value.trim(),
-                    repairUnit: document.getElementById('iRepairUnit').value
-                };
+                isProcessing = true;
+                const btn = document.getElementById('saveVesselBtn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الحفظ...';
+                btn.disabled = true;
 
                 try {
+                    const vessel = {
+                        name,
+                        num: document.getElementById('iNum').value.trim(),
+                        len: document.getElementById('iLen').value,
+                        reg: document.getElementById('iReg').value,
+                        zone: document.getElementById('iZone').value,
+                        port: document.getElementById('iPort').value.trim(),
+                        supp: document.getElementById('iSupp').value.trim(),
+                        stat: status,
+                        break: document.getElementById('iBreak').value.trim(),
+                        fDate: faultDate,
+                        eDate: document.getElementById('iEnd').value,
+                        ref: document.getElementById('iRef').value.trim(),
+                        repairUnit: document.getElementById('iRepairUnit').value
+                    };
+
                     await apiCall('/api/vessels', 'POST', vessel);
                     clearForm();
                     await renderMain();
                     alert('✅ تم حفظ المركب بنجاح');
                 } catch (err) {
                     alert('❌ ' + err.message);
+                } finally {
+                    isProcessing = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                    btn.disabled = false;
                 }
             }
 
-            // ==========================
-            // مسح النموذج
-            // ==========================
+            // ============================================================
+            // 15. CLEAR FORM
+            // ============================================================
+
             function clearForm() {
                 ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
                     document.getElementById(id).value = '';
@@ -1222,17 +1533,19 @@
                 document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
                 document.getElementById('iStat').value = 'صالح';
                 document.getElementById('iRepairUnit').value = '';
-                const saveBtn = document.getElementById('saveVesselBtn');
-                saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
-                saveBtn.onclick = addItem;
+                const btn = document.getElementById('saveVesselBtn');
+                btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                btn.onclick = addItem;
             }
 
-            // ==========================
-            // حذف مركب
-            // ==========================
+            // ============================================================
+            // 16. DELETE ITEM
+            // ============================================================
+
             window.deleteItem = async function(id, name) {
                 if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
                 if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
+
                 try {
                     await apiCall(`/api/vessels/${id}`, 'DELETE');
                     await renderMain();
@@ -1242,11 +1555,13 @@
                 }
             };
 
-            // ==========================
-            // تعديل مركب
-            // ==========================
+            // ============================================================
+            // 17. EDIT ITEM
+            // ============================================================
+
             window.editItem = async function(id) {
                 if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+
                 try {
                     const vessels = await apiCall('/api/vessels');
                     const v = vessels.find(item => String(item._id || item.id) === String(id));
@@ -1267,9 +1582,9 @@
                     document.getElementById('iRef').value = v.ref || '';
                     document.getElementById('iRepairUnit').value = v.repairUnit || '';
 
-                    const saveBtn = document.getElementById('saveVesselBtn');
-                    saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
-                    saveBtn.onclick = async function() {
+                    const btn = document.getElementById('saveVesselBtn');
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
+                    btn.onclick = async function() {
                         await updateItem(id);
                     };
 
@@ -1279,42 +1594,54 @@
                 }
             };
 
-            // ==========================
-            // تحديث مركب
-            // ==========================
+            // ============================================================
+            // 18. UPDATE ITEM
+            // ============================================================
+
             async function updateItem(id) {
                 const name = document.getElementById('iName').value.trim();
                 if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
 
-                const vessel = {
-                    name,
-                    num: document.getElementById('iNum').value.trim(),
-                    len: document.getElementById('iLen').value,
-                    reg: document.getElementById('iReg').value,
-                    zone: document.getElementById('iZone').value,
-                    port: document.getElementById('iPort').value.trim(),
-                    supp: document.getElementById('iSupp').value.trim(),
-                    stat: document.getElementById('iStat').value,
-                    break: document.getElementById('iBreak').value.trim(),
-                    fDate: document.getElementById('iDate').value,
-                    eDate: document.getElementById('iEnd').value,
-                    ref: document.getElementById('iRef').value.trim(),
-                    repairUnit: document.getElementById('iRepairUnit').value
-                };
+                isProcessing = true;
+                const btn = document.getElementById('saveVesselBtn');
+                btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري التحديث...';
+                btn.disabled = true;
 
                 try {
+                    const vessel = {
+                        name,
+                        num: document.getElementById('iNum').value.trim(),
+                        len: document.getElementById('iLen').value,
+                        reg: document.getElementById('iReg').value,
+                        zone: document.getElementById('iZone').value,
+                        port: document.getElementById('iPort').value.trim(),
+                        supp: document.getElementById('iSupp').value.trim(),
+                        stat: document.getElementById('iStat').value,
+                        break: document.getElementById('iBreak').value.trim(),
+                        fDate: document.getElementById('iDate').value,
+                        eDate: document.getElementById('iEnd').value,
+                        ref: document.getElementById('iRef').value.trim(),
+                        repairUnit: document.getElementById('iRepairUnit').value
+                    };
+
                     await apiCall(`/api/vessels/${id}`, 'PUT', vessel);
                     clearForm();
                     await renderMain();
                     alert('✅ تم تحديث المركب بنجاح');
                 } catch (err) {
                     alert('❌ ' + err.message);
+                } finally {
+                    isProcessing = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+                    btn.disabled = false;
+                    btn.onclick = addItem;
                 }
             }
 
-            // ==========================
-            // مسح البحث
-            // ==========================
+            // ============================================================
+            // 19. CLEAR SEARCH
+            // ============================================================
+
             window.clearMainSearch = function() {
                 document.getElementById('searchMain').value = '';
                 document.getElementById('fCatMain').value = 'الكل';
@@ -1322,33 +1649,43 @@
                 renderMain();
             };
 
-            // ==========================
-            // ربط الدوال العامة
-            // ==========================
+            // ============================================================
+            // 20. EXPORT / REFRESH
+            // ============================================================
+
+            window.exportFleetData = function() {
+                alert('📤 سيتم تصدير بيانات الأسطول قريباً');
+            };
+
+            window.refreshFleet = function() {
+                renderMain();
+                alert('🔄 تم تحديث البيانات');
+            };
+
+            // ============================================================
+            // 21. GLOBAL EXPOSURE
+            // ============================================================
+
             window.addItem = addItem;
             window.renderMain = renderMain;
             window.updateZones = updateZones;
 
-            // ==========================
-            // تهيئة الصفحة
-            // ==========================
+            // ============================================================
+            // 22. INIT
+            // ============================================================
+
             document.addEventListener('DOMContentLoaded', async function() {
+                const userLoaded = await loadCurrentUser();
+                if (!userLoaded) return;
+
                 initFilters();
-                updateRoleBadge();
+                updateZones();
 
                 const savedPage = localStorage.getItem('currentPage') || 'vessels';
                 navigateTo(savedPage);
 
                 if (savedPage === 'vessels') {
                     await renderMain();
-                }
-
-                updateZones();
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && sidebar.classList.contains('active')) {
-                    closeMenu();
                 }
             });
 
