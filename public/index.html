@@ -468,11 +468,11 @@
     </div>  
 
     <!-- ============================================================  
-    📦 JAVASCRIPT - الكود المُعدل (بدون تكرار)  
+    📦 JAVASCRIPT - بدون تخزين محلي للمستخدم  
     ============================================================ -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED - No Duplicate Declaration)  
+        // 🚢 MARINE SYSTEM - v7.0 (No Local Storage for User)  
         // ============================================================  
 
         console.log('🚢 Marine System v7.0 - Loading...');  
@@ -481,15 +481,11 @@
         // 📦 CONFIGURATION  
         // ============================================================  
 
-        const API_BASE = '/api';  
-
         const CONFIG = {  
-            API: API_BASE,  
+            API: '/api',  
             VERSION: '7.0.0',  
             KEYS: {  
                 TOKEN: 'marine_token',  
-                REFRESH_TOKEN: 'marine_refresh_token',  
-                USER: 'marine_user',  
                 PAGE: 'marine_page'  
             },  
             PAGES: {  
@@ -509,7 +505,7 @@
         };  
 
         // ============================================================  
-        // 📦 STATE - مُعلَن مرة واحدة فقط ✅  
+        // 📦 STATE  
         // ============================================================  
 
         let currentUser = null;  
@@ -525,8 +521,6 @@
         // ============================================================  
 
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
-
-        function getRefreshToken() { return localStorage.getItem(CONFIG.KEYS.REFRESH_TOKEN); }  
 
         function getRoleName(r) {  
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
@@ -648,13 +642,13 @@
                             throw new Error('الخادم لم يرسل رمز الدخول');  
                         }  
 
+                        // ✅ حفظ المستخدم في المتغير فقط (وليس localStorage)  
                         currentUser = data.user;  
 
                         localStorage.setItem(CONFIG.KEYS.TOKEN, token);  
-                        localStorage.setItem(CONFIG.KEYS.USER, JSON.stringify(currentUser));  
 
                         if (data.refreshToken) {  
-                            localStorage.setItem(CONFIG.KEYS.REFRESH_TOKEN, data.refreshToken);  
+                            localStorage.setItem('marine_refresh_token', data.refreshToken);  
                         }  
 
                         document.getElementById('loginOverlay').style.display = 'none';  
@@ -684,7 +678,7 @@
         }  
 
         // ============================================================  
-        // 🛡️ التحقق من التوكن  
+        // 🛡️ التحقق من التوكن - جلب المستخدم من السيرفر  
         // ============================================================  
 
         async function verifyToken(token) {  
@@ -702,16 +696,22 @@
 
                 if (response.ok) {  
                     const data = await response.json();  
-                    if (data.success && data.user) {  
+                    if (data.success && data.user && data.user.isActive !== false) {  
+                        // ✅ جلب المستخدم من السيرفر (وليس من localStorage)  
                         currentUser = data.user;  
                         console.log('✅ التوكن صالح، المستخدم:', currentUser.username);  
+                        console.log('👤 الدور:', currentUser.role);  
                         return true;  
                     }  
                 }  
-                console.warn('⚠️ التوكن غير صالح');  
+                  
+                // ❌ إذا فشل التحقق، حذف التوكن  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                console.warn('⚠️ التوكن غير صالح، تم حذفه');  
                 return false;  
             } catch (error) {  
                 console.warn('⚠️ فشل التحقق من التوكن:', error);  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
                 return false;  
             }  
         }  
@@ -878,8 +878,7 @@
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;  
             currentUser = null;  
             localStorage.removeItem(CONFIG.KEYS.TOKEN);  
-            localStorage.removeItem(CONFIG.KEYS.REFRESH_TOKEN);  
-            localStorage.removeItem(CONFIG.KEYS.USER);  
+            localStorage.removeItem('marine_refresh_token');  
             document.getElementById('loginOverlay').style.display = 'flex';  
             document.getElementById('mainApp').style.display = 'none';  
             document.getElementById('username').value = '';  
@@ -1042,17 +1041,15 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';  
             });  
 
-            // ✅ التحقق من صلاحية التوكن  
+            // ✅ التحقق من صلاحية التوكن - جلب المستخدم من السيرفر  
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
-            const user = JSON.parse(localStorage.getItem(CONFIG.KEYS.USER) || 'null');  
 
-            if (token && user) {  
+            if (token) {  
                 console.log('🛡️ التحقق من صلاحية التوكن...');  
                 const isValid = await verifyToken(token);  
 
                 if (isValid) {  
                     console.log('✅ التوكن صالح، استعادة الجلسة');  
-                    currentUser = user;  
                     document.getElementById('loginOverlay').style.display = 'none';  
                     document.getElementById('mainApp').style.display = 'block';  
                     updateUserDisplay();  
@@ -1064,10 +1061,8 @@
 
                     setTimeout(loadAllData, 500);  
                 } else {  
-                    console.warn('⚠️ التوكن غير صالح، تسجيل الخروج');  
+                    console.warn('⚠️ التوكن غير صالح، تم حذفه');  
                     localStorage.removeItem(CONFIG.KEYS.TOKEN);  
-                    localStorage.removeItem(CONFIG.KEYS.REFRESH_TOKEN);  
-                    localStorage.removeItem(CONFIG.KEYS.USER);  
                 }  
             } else {  
                 console.log('ℹ️ لا توجد جلسة، شاشة الدخول');  
