@@ -412,8 +412,8 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.92rem;
-            min-width: 1000px;
+            font-size: 0.88rem;
+            min-width: 1200px;
         }
 
         thead {
@@ -422,17 +422,17 @@
         }
 
         thead th {
-            padding: 16px 14px;
+            padding: 16px 12px;
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
         tbody td {
-            padding: 14px 12px;
+            padding: 14px 10px;
             border-bottom: 1px solid var(--gray-200);
             vertical-align: middle;
         }
@@ -456,16 +456,16 @@
         }
 
         .btn-sm {
-            padding: 6px 14px;
+            padding: 5px 12px;
             border: none;
             border-radius: 30px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             background: var(--gray-200);
             color: var(--gray-800);
         }
@@ -488,8 +488,17 @@
             transform: scale(1.04);
         }
 
+        .btn-sm.btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-sm.btn-success:hover {
+            background: #21867a;
+            transform: scale(1.04);
+        }
+
         .btn-sm + .btn-sm {
-            margin-right: 6px;
+            margin-right: 4px;
         }
 
         .empty-row td {
@@ -530,6 +539,14 @@
             }
             .sidebar {
                 width: 260px;
+            }
+            table {
+                font-size: 0.8rem;
+                min-width: 1000px;
+            }
+            thead th,
+            tbody td {
+                padding: 10px 8px;
             }
         }
 
@@ -573,11 +590,11 @@
 
         <div class="sidebar-menu">
             <div class="menu-label">الرئيسية</div>
-            <a href="#" class="active" data-page="dashboard">
-                <i class="fas fa-chart-pie"></i> لوحة المعلومات
-            </a>
-            <a href="#" data-page="vessels">
+            <a href="#" class="active" data-page="vessels">
                 <i class="fas fa-ship"></i> السجل العام
+            </a>
+            <a href="#" data-page="dashboard">
+                <i class="fas fa-chart-pie"></i> لوحة المعلومات
             </a>
 
             <div class="menu-label" style="margin-top:20px;">الإدارة</div>
@@ -629,43 +646,47 @@
                     <input type="text" id="iNum" placeholder="الرقم" />
                     <input type="number" id="iLen" placeholder="الطول (م)" step="0.1" />
 
-                    <select id="iReg">
+                    <select id="iReg" onchange="updateZones()">
                         <option value="">الإقليم</option>
-                        <option value="الشمال">الشمال</option>
-                        <option value="الساحل">الساحل</option>
-                        <option value="الوسط">الوسط</option>
-                        <option value="الجنوب">الجنوب</option>
+                        <option value="الشمال">🗺️ الشمال</option>
+                        <option value="الساحل">🗺️ الساحل</option>
+                        <option value="الوسط">🗺️ الوسط</option>
+                        <option value="الجنوب">🗺️ الجنوب</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
                     </select>
 
                     <select id="iZone">
                         <option value="">المنطقة</option>
-                        <option value="تونس">تونس</option>
-                        <option value="بنزرت">بنزرت</option>
-                        <option value="طبرقة">طبرقة</option>
-                        <option value="سوسة">سوسة</option>
-                        <option value="المنستير">المنستير</option>
-                        <option value="نابل">نابل</option>
-                        <option value="صفاقس">صفاقس</option>
-                        <option value="المهدية">المهدية</option>
-                        <option value="قرقنة">قرقنة</option>
-                        <option value="جرجيس">جرجيس</option>
-                        <option value="جربة">جربة</option>
-                        <option value="قابس">قابس</option>
                     </select>
 
                     <input type="text" id="iPort" placeholder="الميناء" />
                     <input type="text" id="iSupp" placeholder="مكان التعزيز" />
 
                     <select id="iStat">
-                        <option value="صالح">صالح</option>
-                        <option value="معطب">معطب</option>
-                        <option value="صيانة">صيانة</option>
+                        <option value="صالح">✅ صالح</option>
+                        <option value="معطب">❌ معطب</option>
+                        <option value="صيانة">🔧 صيانة</option>
                     </select>
 
                     <input type="text" id="iBreak" placeholder="نوع العطب" />
                     <input type="date" id="iDate" />
                     <input type="date" id="iEnd" />
                     <input type="text" id="iRef" placeholder="المرجع" />
+
+                    <!-- ✅ الحقل الجديد: الوحدة المسؤولة عن الإصلاح -->
+                    <select id="iRepairUnit">
+                        <option value="">الوحدة المسؤولة عن الإصلاح</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                        <option value="خارجي">🔧 خارجي</option>
+                    </select>
 
                     <button id="saveVesselBtn" class="btn" onclick="addItem()">
                         <i class="fas fa-save"></i> حفظ المركب
@@ -715,12 +736,13 @@
                                 <th>العطب</th>
                                 <th>التاريخ</th>
                                 <th>الانتهاء</th>
+                                <th>الوحدة المسؤولة عن الإصلاح</th> <!-- ✅ عمود جديد -->
                                 <th>إجراء</th>
                             </tr>
                         </thead>
                         <tbody id="mainBody">
                             <tr class="empty-row">
-                                <td colspan="13">
+                                <td colspan="14">
                                     <i class="fas fa-spinner fa-pulse"></i> جاري تحميل بيانات المراكب...
                                 </td>
                             </tr>
@@ -817,6 +839,23 @@
             const userRoleDisplay = document.getElementById('userRoleDisplay');
 
             // ==========================
+            // بيانات المناطق
+            // ==========================
+            const ZONES_DATA = {
+                "الشمال": ["تونس", "بنزرت", "طبرقة"],
+                "الساحل": ["سوسة", "المنستير", "نابل"],
+                "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+                "الجنوب": ["جرجيس", "جربة", "قابس"],
+                "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+                "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+                "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+                "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+                "المجمع الأمني بقبيبة": ["قبيبة"]
+            };
+
+            const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+
+            // ==========================
             // فتح/إغلاق القائمة
             // ==========================
             function openMenu() {
@@ -851,36 +890,32 @@
             // التنقل بين الصفحات
             // ==========================
             function navigateTo(page) {
-                // إخفاء جميع الصفحات
                 document.querySelectorAll('.page-content').forEach(el => {
                     el.classList.remove('active');
                 });
 
-                // إظهار الصفحة المطلوبة
                 const targetPage = document.getElementById(`page-${page}`);
                 if (targetPage) {
                     targetPage.classList.add('active');
                 }
 
-                // تحديث القائمة النشطة
                 menuLinks.forEach(link => {
                     link.classList.toggle('active', link.dataset.page === page);
                 });
 
-                // إغلاق القائمة بعد اختيار الصفحة
                 closeMenu();
-
-                // حفظ الصفحة الحالية
                 localStorage.setItem('currentPage', page);
             }
 
-            // ربط روابط القائمة
             menuLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const page = this.dataset.page;
                     if (page) {
                         navigateTo(page);
+                        if (page === 'vessels') {
+                            renderMain();
+                        }
                     }
                 });
             });
@@ -906,17 +941,6 @@
                     userRoleDisplay.textContent = 'زائر';
                 }
             }
-
-            // ==========================
-            // البيانات الثابتة للسجل العام
-            // ==========================
-            const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
-            const ZONES_DATA = {
-                'الشمال': ['تونس', 'بنزرت', 'طبرقة'],
-                'الساحل': ['سوسة', 'المنستير', 'نابل'],
-                'الوسط': ['صفاقس', 'المهدية', 'قرقنة'],
-                'الجنوب': ['جرجيس', 'جربة', 'قابس']
-            };
 
             // ==========================
             // دوال مساعدة
@@ -956,6 +980,20 @@
             function canDelete() {
                 return currentUser && currentUser.role === 'مسؤول';
             }
+
+            // ==========================
+            // تحديث المناطق
+            // ==========================
+            window.updateZones = function() {
+                const reg = document.getElementById('iReg').value;
+                const zoneSel = document.getElementById('iZone');
+                zoneSel.innerHTML = '<option value="">المنطقة</option>';
+                if (ZONES_DATA[reg]) {
+                    ZONES_DATA[reg].forEach(z => {
+                        zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
+                    });
+                }
+            };
 
             // ==========================
             // API Call
@@ -1007,7 +1045,7 @@
                 const mainBody = document.getElementById('mainBody');
                 try {
                     mainBody.innerHTML =
-                        `<tr class="empty-row"><td colspan="13"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>`;
+                        `<tr class="empty-row"><td colspan="14"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>`;
 
                     const vessels = await apiCall('/api/vessels');
 
@@ -1031,7 +1069,8 @@
                         filtered = filtered.filter(v => {
                             const text = [
                                 v.name, v.num, v.region || v.reg, v.zone,
-                                v.port, v.status || v.stat, v.category
+                                v.port, v.status || v.stat, v.category,
+                                v.repairUnit
                             ].filter(Boolean).join(' ').toLowerCase();
                             return text.includes(search);
                         });
@@ -1039,7 +1078,7 @@
 
                     if (filtered.length === 0) {
                         mainBody.innerHTML =
-                            `<tr class="empty-row"><td colspan="13"><i class="fas fa-inbox"></i> لا توجد مراكب مطابقة للبحث</td></tr>`;
+                            `<tr class="empty-row"><td colspan="14"><i class="fas fa-inbox"></i> لا توجد مراكب مطابقة للبحث</td></tr>`;
                         return;
                     }
 
@@ -1058,12 +1097,13 @@
                         const breakType = v.break_type || v.break || '-';
                         const fDate = v.fault_date || v.fDate;
                         const eDate = v.end_date || v.eDate;
+                        const repairUnit = v.repairUnit || '-';
 
                         const editBtn = canEdit() ?
-                            `<button class="btn-sm btn-orange" onclick="editItem('${id}')"><i class="fas fa-edit"></i> تعديل</button>` :
+                            `<button class="btn-sm btn-orange" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` :
                             '';
                         const delBtn = canDelete() ?
-                            `<button class="btn-sm btn-danger" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i> حذف</button>` :
+                            `<button class="btn-sm btn-danger" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` :
                             '';
 
                         html += `<tr>
@@ -1079,6 +1119,7 @@
                             <td>${escapeHtml(breakType)}</td>
                             <td>${formatDate(fDate)}</td>
                             <td>${formatDate(eDate)}</td>
+                            <td>${escapeHtml(repairUnit)}</td>
                             <td>${editBtn} ${delBtn}</td>
                         </tr>`;
                     }
@@ -1087,7 +1128,7 @@
                 } catch (err) {
                     console.error('renderMain error:', err);
                     mainBody.innerHTML =
-                        `<tr class="empty-row"><td colspan="13"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> خطأ في تحميل البيانات</td></tr>`;
+                        `<tr class="empty-row"><td colspan="14"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> خطأ في تحميل البيانات</td></tr>`;
                 }
             }
 
@@ -1118,7 +1159,8 @@
                     break: document.getElementById('iBreak').value.trim(),
                     fDate: faultDate,
                     eDate: document.getElementById('iEnd').value,
-                    ref: document.getElementById('iRef').value.trim()
+                    ref: document.getElementById('iRef').value.trim(),
+                    repairUnit: document.getElementById('iRepairUnit').value // ✅ حقل جديد
                 };
 
                 try {
@@ -1139,8 +1181,9 @@
                     document.getElementById(id).value = '';
                 });
                 document.getElementById('iReg').value = '';
-                document.getElementById('iZone').value = '';
+                document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
                 document.getElementById('iStat').value = 'صالح';
+                document.getElementById('iRepairUnit').value = '';
                 const saveBtn = document.getElementById('saveVesselBtn');
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
                 saveBtn.onclick = addItem;
@@ -1175,7 +1218,8 @@
                     document.getElementById('iNum').value = v.num || '';
                     document.getElementById('iLen').value = v.length || v.len || '';
                     document.getElementById('iReg').value = v.region || v.reg || '';
-                    document.getElementById('iZone').value = v.zone || '';
+                    updateZones();
+                    setTimeout(() => { document.getElementById('iZone').value = v.zone || ''; }, 50);
                     document.getElementById('iPort').value = v.port || '';
                     document.getElementById('iSupp').value = v.support_location || v.supp || '';
                     document.getElementById('iStat').value = v.status || v.stat || 'صالح';
@@ -1183,6 +1227,7 @@
                     document.getElementById('iDate').value = v.fault_date || v.fDate || '';
                     document.getElementById('iEnd').value = v.end_date || v.eDate || '';
                     document.getElementById('iRef').value = v.ref || '';
+                    document.getElementById('iRepairUnit').value = v.repairUnit || ''; // ✅
 
                     const saveBtn = document.getElementById('saveVesselBtn');
                     saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
@@ -1215,7 +1260,8 @@
                     break: document.getElementById('iBreak').value.trim(),
                     fDate: document.getElementById('iDate').value,
                     eDate: document.getElementById('iEnd').value,
-                    ref: document.getElementById('iRef').value.trim()
+                    ref: document.getElementById('iRef').value.trim(),
+                    repairUnit: document.getElementById('iRepairUnit').value // ✅
                 };
 
                 try {
@@ -1243,28 +1289,26 @@
             // ==========================
             window.addItem = addItem;
             window.renderMain = renderMain;
+            window.updateZones = updateZones;
 
             // ==========================
             // تهيئة الصفحة
             // ==========================
             document.addEventListener('DOMContentLoaded', async function() {
-                // تعبئة الفلاتر
                 initFilters();
-
-                // تحديث دور المستخدم
                 updateRoleBadge();
 
-                // التحقق من الصفحة المحفوظة
                 const savedPage = localStorage.getItem('currentPage') || 'vessels';
                 navigateTo(savedPage);
 
-                // تحميل بيانات السجل العام إذا كانت الصفحة المطلوبة هي السجل
                 if (savedPage === 'vessels') {
                     await renderMain();
                 }
+
+                // تهيئة المناطق
+                updateZones();
             });
 
-            // إغلاق القائمة عند الضغط على Esc
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && sidebar.classList.contains('active')) {
                     closeMenu();
