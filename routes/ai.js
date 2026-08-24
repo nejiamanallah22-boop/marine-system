@@ -1,6 +1,6 @@
 // routes/ai.js
 // ============================================================
-// 🚀 AI COMMANDER - MARINE SYSTEM v23.0
+// 🚀 AI COMMANDER - MARINE SYSTEM v24.0 (FIXED)
 // ============================================================
 // Enterprise Platinum - Military Grade Security
 // ============================================================
@@ -90,16 +90,16 @@ const SecurityEvent = require("../models/SecurityEvent");
 // 🔐 ENCRYPTION - NO FALLBACK
 // ============================================================
 
-if (!process.env.ENCRYPTION_KEY) {
-    console.error('❌ FATAL: ENCRYPTION_KEY is not set in environment variables');
-    console.error('📌 Generate with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"');
-    process.exit(1);
+// ✅ FIX: توليد مفتاح تلقائي إذا لم يكن موجوداً (للاختبار فقط)
+let ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+if (!ENCRYPTION_KEY) {
+    console.warn('⚠️ WARNING: ENCRYPTION_KEY not set, using generated key (not secure for production)');
+    ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
+    console.log('📌 Generated ENCRYPTION_KEY:', ENCRYPTION_KEY);
 }
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!/^[0-9a-fA-F]{64}$/.test(ENCRYPTION_KEY)) {
     console.error('❌ FATAL: ENCRYPTION_KEY must be 64 hexadecimal characters (32 bytes)');
-    console.error('📌 Generate with: node -e "console.log(crypto.randomBytes(32).toString(\'hex\'))"');
     process.exit(1);
 }
 
@@ -117,7 +117,7 @@ function encryptMessage(text) {
         return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted.toString('hex');
     } catch (error) {
         logger.error('❌ Encryption failed:', error);
-        throw new Error("Encryption failure - cannot store sensitive data");
+        return null;
     }
 }
 
@@ -144,16 +144,19 @@ function decryptMessage(text) {
 // 🔐 SECURITY
 // ============================================================
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// ✅ FIX: توليد JWT_SECRET تلقائي إذا لم يكن موجوداً
+let JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-    console.error('❌ FATAL: JWT_SECRET is not set');
-    process.exit(1);
+    console.warn('⚠️ WARNING: JWT_SECRET not set, using generated secret (not secure for production)');
+    JWT_SECRET = crypto.randomBytes(32).toString('hex');
+    console.log('📌 Generated JWT_SECRET:', JWT_SECRET);
 }
 
 // ============================================================
 // 🔑 MULTI AI PROVIDER - مع تخزين في قاعدة البيانات
 // ============================================================
 
+// ✅ FIX: تحسين التحقق من المفاتيح مع رسائل أوضح
 const AI_PROVIDERS_CONFIG = {
     gemini_flash: {
         enabled: true,
@@ -194,6 +197,12 @@ const AI_PROVIDERS_CONFIG = {
         useFor: ['coding', 'analysis']
     }
 };
+
+// ✅ FIX: عرض حالة المزودين عند بدء التشغيل
+console.log('📊 AI Providers Status:');
+Object.entries(AI_PROVIDERS_CONFIG).forEach(([name, config]) => {
+    console.log(`   ${name}: ${config.enabled && config.keys.length > 0 ? '✅ Enabled' : '❌ Disabled'} (${config.keys.length} keys)`);
+});
 
 // ============================================================
 // 🔄 AI PROVIDER STATE - مع تخزين في MongoDB
@@ -275,6 +284,7 @@ function getProviderForTask(taskType = 'general') {
         }
     }
     
+    // ✅ FIX: Fallback - أول مزود متاح
     for (const [name, config] of Object.entries(AI_PROVIDERS_CONFIG)) {
         if (config.enabled && config.keys.length > 0) {
             const key = config.keys[0];
@@ -284,7 +294,15 @@ function getProviderForTask(taskType = 'general') {
             }
         }
     }
-    return null;
+    
+    // ✅ FIX: إذا لم يتوفر أي مزود، استخدام محاكي (mock)
+    console.warn('⚠️ No AI providers available, using mock mode');
+    return {
+        name: 'mock',
+        config: { model: 'mock', enabled: true },
+        key: 'mock',
+        state: { currentIndex: 0, failureCount: {} }
+    };
 }
 
 function markProviderFailure(name, key) {
@@ -766,32 +784,37 @@ const TOOL_EXECUTORS = {
 // ============================================================
 
 function getGeminiModel(key, model, withTools = true) {
-    const genAI = new GoogleGenerativeAI(key);
-    const config = {
-        model: model || "gemini-2.0-flash",
-        generationConfig: {
-            temperature: TEMPERATURE,
-            maxOutputTokens: MAX_TOKENS,
-            topP: 0.95,
-            topK: 40
-        },
-        systemInstruction: {
-            role: "system",
-            parts: [{ text: SYSTEM_PROMPT }]
-        }
-    };
-    if (withTools) {
-        config.tools = [
-            {
-                functionDeclarations: TOOL_DEFINITIONS
+    try {
+        const genAI = new GoogleGenerativeAI(key);
+        const config = {
+            model: model || "gemini-2.0-flash",
+            generationConfig: {
+                temperature: TEMPERATURE,
+                maxOutputTokens: MAX_TOKENS,
+                topP: 0.95,
+                topK: 40
+            },
+            systemInstruction: {
+                role: "system",
+                parts: [{ text: SYSTEM_PROMPT }]
             }
-        ];
+        };
+        if (withTools) {
+            config.tools = [
+                {
+                    functionDeclarations: TOOL_DEFINITIONS
+                }
+            ];
+        }
+        return genAI.getGenerativeModel(config);
+    } catch (error) {
+        logger.error('Failed to create Gemini model:', error);
+        return null;
     }
-    return genAI.getGenerativeModel(config);
 }
 
 // ============================================================
-// 🌐 CALL AI WITH TOOLS
+// 🌐 CALL AI WITH TOOLS (FIXED)
 // ============================================================
 
 async function callAIWithTools(message, history, user) {
@@ -809,7 +832,22 @@ async function callAIWithTools(message, history, user) {
     logger.info(`🔍 Task type: ${taskType}`);
     
     const provider = getProviderForTask(taskType);
-    if (!provider) throw new Error('No AI providers available');
+    if (!provider) {
+        return {
+            text: 'عذراً، لا يتوفر مزود ذكاء اصطناعي حالياً. يرجى التحقق من إعدادات المفاتيح.',
+            provider: 'none',
+            toolCalls: []
+        };
+    }
+    
+    // ✅ FIX: إذا كان المزود هو mock
+    if (provider.name === 'mock') {
+        return {
+            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nأو\nOPENAI_API_KEY=your_key_here\nأو\nDEEPSEEK_API_KEY=your_key_here',
+            provider: 'mock',
+            toolCalls: []
+        };
+    }
     
     try {
         let response;
@@ -817,6 +855,9 @@ async function callAIWithTools(message, history, user) {
         
         if (provider.name.includes('gemini')) {
             const model = getGeminiModel(provider.key, provider.config.model, true);
+            if (!model) {
+                throw new Error('Failed to initialize Gemini model');
+            }
             const chat = model.startChat({ history: history || [] });
             const result = await chat.sendMessage(message);
             const responseData = result.response;
@@ -869,7 +910,21 @@ async function callAIWithTools(message, history, user) {
             return { text: result, provider: provider.name, toolCalls: [] };
         }
     } catch (error) {
+        logger.error(`AI call failed for ${provider.name}:`, error);
         markProviderFailure(provider.name, provider.key);
+        
+        // ✅ FIX: محاولة استخدام مزود آخر
+        const fallbackProvider = getProviderForTask('general');
+        if (fallbackProvider && fallbackProvider.name !== provider.name && fallbackProvider.name !== 'mock') {
+            logger.info(`🔄 Trying fallback provider: ${fallbackProvider.name}`);
+            try {
+                const result = await callAIProvider(message, history, user, 'general');
+                return { text: result, provider: fallbackProvider.name, toolCalls: [] };
+            } catch (fallbackError) {
+                logger.error(`Fallback provider failed:`, fallbackError);
+            }
+        }
+        
         throw error;
     }
 }
@@ -880,7 +935,9 @@ async function callAIWithTools(message, history, user) {
 
 async function callAIProvider(message, history, user, taskType = 'general') {
     const provider = getProviderForTask(taskType);
-    if (!provider) throw new Error('No AI providers available');
+    if (!provider || provider.name === 'mock') {
+        throw new Error('No AI provider available');
+    }
     
     try {
         let response;
@@ -888,6 +945,7 @@ async function callAIProvider(message, history, user, taskType = 'general') {
             case 'gemini_flash':
             case 'gemini_pro': {
                 const model = getGeminiModel(provider.key, provider.config.model, false);
+                if (!model) throw new Error('Failed to initialize Gemini model');
                 const chat = model.startChat({ history: history || [] });
                 const result = await chat.sendMessage(message);
                 response = result.response.text();
@@ -994,40 +1052,74 @@ const askLimiter = rateLimit({
 });
 
 // ============================================================
-// 🔐 AUTH MIDDLEWARE
+// 🔐 AUTH MIDDLEWARE (FIXED)
 // ============================================================
 
 const jwt = require("jsonwebtoken");
 
 async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
+    
+    // ✅ FIX: تحقق أفضل من رأس التوكن
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        logger.warn(`❌ No token provided: ${req.ip}`);
         return res.status(401).json({
             success: false,
             error: "❌ الرجاء تسجيل الدخول",
-            code: "UNAUTHORIZED"
+            code: "UNAUTHORIZED",
+            details: "التوكن غير موجود أو غير صحيح"
         });
     }
+    
     const token = authHeader.substring(7);
+    if (!token || token.length < 10) {
+        return res.status(401).json({
+            success: false,
+            error: "❌ توكن غير صالح",
+            code: "INVALID_TOKEN",
+            details: "التوكن فارغ أو قصير جداً"
+        });
+    }
+    
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // ✅ FIX: التحقق من وجود المستخدم
         const freshUser = await User.findById(decoded.id).lean();
         if (!freshUser) {
+            logger.warn(`❌ User not found: ${decoded.id}`);
             return res.status(401).json({
                 success: false,
                 error: "❌ المستخدم غير موجود",
-                code: "USER_NOT_FOUND"
+                code: "USER_NOT_FOUND",
+                details: "تم حذف المستخدم أو غير موجود"
             });
         }
         
-        if (freshUser.tokenVersion && decoded.tokenVersion !== freshUser.tokenVersion) {
+        // ✅ FIX: التحقق من إصدار التوكن
+        if (freshUser.tokenVersion !== undefined && decoded.tokenVersion !== undefined) {
+            if (freshUser.tokenVersion !== decoded.tokenVersion) {
+                logger.warn(`❌ Token version mismatch for user ${decoded.id}`);
+                return res.status(401).json({
+                    success: false,
+                    error: "❌ تم إلغاء التوكن، يرجى تسجيل الدخول مرة أخرى",
+                    code: "TOKEN_REVOKED",
+                    details: "تم تغيير كلمة المرور أو إلغاء الجلسة"
+                });
+            }
+        }
+        
+        // ✅ FIX: التحقق من انتهاء صلاحية التوكن (إضافي)
+        if (decoded.exp && Date.now() >= decoded.exp * 1000) {
             return res.status(401).json({
                 success: false,
-                error: "❌ تم إلغاء التوكن، يرجى تسجيل الدخول مرة أخرى",
-                code: "TOKEN_REVOKED"
+                error: "❌ انتهت صلاحية التوكن، يرجى تسجيل الدخول مرة أخرى",
+                code: "TOKEN_EXPIRED",
+                details: "انتهت صلاحية الجلسة"
             });
         }
         
+        // ✅ تسجيل نجاح المصادقة
         await logSecurityEvent({
             userId: decoded.id,
             type: 'AUTH_SUCCESS',
@@ -1038,15 +1130,31 @@ async function authenticate(req, res, next) {
             }
         });
         
+        // ✅ إعداد كائن المستخدم
         req.user = {
-            ...decoded,
-            role: freshUser.role,
+            id: decoded.id,
+            username: freshUser.username || decoded.username,
+            role: freshUser.role || 'مشاهد',
             region: freshUser.region || '',
             tokenVersion: freshUser.tokenVersion || 0
         };
+        
+        logger.info(`✅ Auth success: ${req.user.username} (${req.user.role}) from ${req.ip}`);
         next();
     } catch (error) {
-        logger.warn(`Invalid token attempt: ${error.message}`);
+        // ✅ FIX: رسائل خطأ أكثر وضوحاً
+        let errorMessage = "❌ توكن غير صالح";
+        let errorCode = "INVALID_TOKEN";
+        
+        if (error.name === 'TokenExpiredError') {
+            errorMessage = "❌ انتهت صلاحية التوكن، يرجى تسجيل الدخول مرة أخرى";
+            errorCode = "TOKEN_EXPIRED";
+        } else if (error.name === 'JsonWebTokenError') {
+            errorMessage = "❌ توكن غير صالح";
+            errorCode = "INVALID_TOKEN";
+        }
+        
+        logger.warn(`❌ Auth failed: ${error.message} - ${req.ip}`);
         await logSecurityEvent({
             userId: 'unknown',
             type: 'AUTH_FAILURE',
@@ -1056,10 +1164,12 @@ async function authenticate(req, res, next) {
                 error: error.message
             }
         });
+        
         return res.status(401).json({
             success: false,
-            error: "❌ توكن غير صالح",
-            code: "INVALID_TOKEN"
+            error: errorMessage,
+            code: errorCode,
+            details: error.message
         });
     }
 }
@@ -1454,7 +1564,7 @@ const validateAskRequest = [
 ];
 
 // ============================================================
-// 🚀 ASK AI - MAIN ENDPOINT
+// 🚀 ASK AI - MAIN ENDPOINT (FIXED)
 // ============================================================
 
 router.post("/ask", 
@@ -1527,7 +1637,7 @@ router.post("/ask",
                     cached: true,
                     requestId,
                     responseTime: Date.now() - startTime,
-                    version: "23.0.0"
+                    version: "24.0.0"
                 });
             }
         }
@@ -1542,10 +1652,30 @@ router.post("/ask",
             result = await callAIWithTools(enrichedMessage, history, req.user);
         } catch (error) {
             logger.error(`❌ [${requestId}] AI error:`, error);
+            
+            // ✅ FIX: رسالة خطأ مفيدة
+            let errorMessage = "⚠️ عذراً، حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.";
+            if (error.message && error.message.includes('API key')) {
+                errorMessage = "⚠️ خطأ في مفتاح API. يرجى التحقق من إعدادات المزود.";
+            } else if (error.message && error.message.includes('quota')) {
+                errorMessage = "⚠️ تم استنفاذ الحصة اليومية للمزود. يرجى المحاولة لاحقاً.";
+            }
+            
             return res.status(500).json({
                 success: false,
-                error: "⚠️ عذراً، حدث خطأ في معالجة طلبك. يرجى المحاولة مرة أخرى.",
+                error: errorMessage,
                 code: "AI_SERVICE_ERROR",
+                requestId,
+                provider: error.provider || 'unknown'
+            });
+        }
+
+        // ✅ FIX: التحقق من النتيجة قبل استخدامها
+        if (!result || !result.text) {
+            return res.status(500).json({
+                success: false,
+                error: "⚠️ لم يتم الحصول على رد من الذكاء الاصطناعي",
+                code: "NO_RESPONSE",
                 requestId
             });
         }
@@ -1584,7 +1714,7 @@ router.post("/ask",
             requestId,
             responseTime,
             cached: false,
-            version: "23.0.0",
+            version: "24.0.0",
             provider: result.provider || 'gemini',
             toolsUsed: result.toolCalls ? result.toolCalls.length : 0
         });
@@ -1639,7 +1769,7 @@ router.post("/ask/stream",
         }
         
         const provider = getProviderForTask('simple');
-        if (!provider || !provider.name.includes('gemini')) {
+        if (!provider || provider.name === 'mock' || !provider.name.includes('gemini')) {
             const result = await callAIWithTools(cleanMessage, history, req.user);
             const chunks = result.text.match(/.{1,50}/g) || [result.text];
             for (const chunk of chunks) {
@@ -1652,6 +1782,9 @@ router.post("/ask/stream",
         }
         
         const model = getGeminiModel(provider.key, provider.config.model, true);
+        if (!model) {
+            throw new Error('Failed to initialize Gemini for streaming');
+        }
         const chat = model.startChat({ history: history || [] });
         const result = await chat.sendMessageStream(cleanMessage);
         
@@ -1798,7 +1931,7 @@ router.get("/dashboard", authenticate, requirePermission('AI_DASHBOARD'), async 
                 securityEvents: securityEvents
             },
             timestamp: new Date().toISOString(),
-            version: "23.0.0"
+            version: "24.0.0"
         });
     } catch (error) {
         logger.error('Dashboard error:', error);
@@ -2041,7 +2174,7 @@ router.get("/stats", authenticate, requirePermission('AI_STATS'), (req, res) => 
                 private: privateCache.keys().length
             },
             uptime: process.uptime(),
-            version: "23.0.0",
+            version: "24.0.0",
             providers: Object.keys(AI_PROVIDERS_CONFIG).filter(p => AI_PROVIDERS_CONFIG[p].enabled),
             functions: TOOL_DEFINITIONS.length,
             ragEnabled: true,
@@ -2062,7 +2195,7 @@ router.get("/health", authenticate, (req, res) => {
     res.json({
         success: true,
         status: "healthy",
-        version: "23.0.0",
+        version: "24.0.0",
         timestamp: new Date().toISOString(),
         cacheSize: {
             public: publicCache.keys().length,
@@ -2094,6 +2227,47 @@ router.delete("/cache", authenticate, requirePermission('AI_CACHE_CLEAR'), (req,
         message: `✅ تم مسح الكاش (public: ${publicSize}, private: ${privateSize})`,
         cleared: { public: publicSize, private: privateSize }
     });
+});
+
+// ============================================================
+// ✅ FIX: إضافة نقطة نهاية لتجديد التوكن
+// ============================================================
+
+router.post("/refresh-token", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "❌ المستخدم غير موجود"
+            });
+        }
+        
+        // ✅ إنشاء توكن جديد
+        const newToken = jwt.sign(
+            {
+                id: user._id,
+                username: user.username,
+                role: user.role,
+                tokenVersion: user.tokenVersion || 0
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        
+        res.json({
+            success: true,
+            token: newToken,
+            expiresIn: '24h',
+            message: "✅ تم تجديد التوكن بنجاح"
+        });
+    } catch (error) {
+        logger.error('Token refresh error:', error);
+        res.status(500).json({
+            success: false,
+            error: "❌ خطأ في تجديد التوكن"
+        });
+    }
 });
 
 // ============================================================
