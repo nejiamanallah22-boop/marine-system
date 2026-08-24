@@ -18,12 +18,17 @@
             <input type="text" id="iName" placeholder="اسم المركب" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
             <input type="text" id="iNum" placeholder="الرقم" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
             <input type="number" id="iLen" placeholder="الطول (م)" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <select id="iReg" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
+            <select id="iReg" onchange="updateZones()" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
                 <option value="">الإقليم</option>
-                <option value="الشمال">الشمال</option>
-                <option value="الساحل">الساحل</option>
-                <option value="الوسط">الوسط</option>
-                <option value="الجنوب">الجنوب</option>
+                <option value="الشمال">🗺️ الشمال</option>
+                <option value="الساحل">🗺️ الساحل</option>
+                <option value="الوسط">🗺️ الوسط</option>
+                <option value="الجنوب">🗺️ الجنوب</option>
+                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
             </select>
             <select id="iZone" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
                 <option value="">المنطقة</option>
@@ -106,23 +111,38 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - FLEET PAGE (بدون إعلان مكرر) -->
+<!-- 📦 JAVASCRIPT - FLEET PAGE (المُعدل) -->
 <!-- ============================================================ -->
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - بدون إعلان مكرر لـ currentUser
+    // 🚢 FLEET PAGE - النسخة المُعدلة
     // ============================================================
 
-    // ❌ لا تعلن currentUser هنا لأنه موجود بالفعل في index.html
-    // let currentUser = null;  // تم حذف هذا السطر
+    // ✅ بيانات المناطق الكاملة
+    const ZONES_DATA = {
+        "الشمال": ["تونس", "بنزرت", "طبرقة"],
+        "الساحل": ["سوسة", "المنستير", "نابل"],
+        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+        "الجنوب": ["جرجيس", "جربة", "قابس"],
+        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+        "المجمع الأمني بقبيبة": ["قبيبة"]
+    };
 
-    // ✅ استخدم window.currentUser الموجود من index.html
+    const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+
+    // ============================================================
+    // 1. الحصول على المستخدم من window
+    // ============================================================
+
     function getUser() {
         return window.currentUser || null;
     }
 
     // ============================================================
-    // 1. التحقق من المستخدم
+    // 2. التحقق من المستخدم
     // ============================================================
 
     async function checkUser() {
@@ -163,37 +183,51 @@
     }
 
     // ============================================================
-    // 2. صلاحيات المستخدم
+    // 3. صلاحيات المستخدم (مُعدلة)
     // ============================================================
 
     function canEdit() {
         const user = getUser();
-        if (!user) return false;
+        if (!user) {
+            console.warn('⚠️ لا يوجد مستخدم');
+            return false;
+        }
         const role = user.role;
-        return role === 'مسؤول' || role === 'محرر' || role === 'admin';
+        console.log('👤 دور المستخدم في canEdit:', role);
+        
+        // ✅ قائمة الأدوار المسموح لها بالتعديل
+        const allowedRoles = ['مسؤول', 'محرر', 'admin', 'manager', 'مدير'];
+        const hasPermission = allowedRoles.includes(role);
+        console.log(`✅ ${hasPermission ? 'لديه' : 'ليس لديه'} صلاحية التعديل`);
+        return hasPermission;
     }
 
     function canDelete() {
         const user = getUser();
         if (!user) return false;
-        return user.role === 'مسؤول' || user.role === 'admin';
+        const role = user.role;
+        const allowedRoles = ['مسؤول', 'admin', 'مدير'];
+        return allowedRoles.includes(role);
     }
 
     // ============================================================
-    // 3. البيانات الثابتة
+    // 4. تحديث المناطق (مع بيانات كاملة)
     // ============================================================
 
-    const ZONES_DATA = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"]
-    };
-
-    const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+    function updateZones() {
+        const reg = document.getElementById('iReg').value;
+        const zoneSel = document.getElementById('iZone');
+        zoneSel.innerHTML = '<option value="">المنطقة</option>';
+        if (ZONES_DATA[reg]) {
+            ZONES_DATA[reg].forEach(z => {
+                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
+            });
+        }
+        console.log('✅ تم تحديث المناطق للإقليم:', reg, '→', ZONES_DATA[reg] || []);
+    }
 
     // ============================================================
-    // 4. دوال مساعدة
+    // 5. دوال مساعدة
     // ============================================================
 
     function escapeHtml(str) {
@@ -222,21 +256,6 @@
         if (n > 12 && n <= 25) return 'خوافر';
         if (n >= 30) return 'طوافات';
         return 'زوارق مزدوجة';
-    }
-
-    // ============================================================
-    // 5. تحديث المناطق
-    // ============================================================
-
-    function updateZones() {
-        const reg = document.getElementById('iReg').value;
-        const zoneSel = document.getElementById('iZone');
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(z => {
-                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
-            });
-        }
     }
 
     // ============================================================
@@ -654,6 +673,7 @@
         const addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) {
             addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
+            console.log('✅ زر الإضافة:', addBtn.style.display);
         }
 
         initFilters();
@@ -661,5 +681,7 @@
         await renderMain();
 
         console.log('✅ صفحة السجل العام جاهزة');
+        console.log('👤 المستخدم:', window.currentUser);
+        console.log('🔑 صلاحية التعديل:', canEdit());
     });
 </script>
