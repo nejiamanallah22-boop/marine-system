@@ -106,14 +106,20 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - FLEET PAGE (مع التحقق من الصلاحية) -->
+<!-- 📦 JAVASCRIPT - FLEET PAGE (بدون إعلان مكرر) -->
 <!-- ============================================================ -->
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - مع جلب المستخدم من API
+    // 🚢 FLEET PAGE - بدون إعلان مكرر لـ currentUser
     // ============================================================
 
-    let currentUser = null;
+    // ❌ لا تعلن currentUser هنا لأنه موجود بالفعل في index.html
+    // let currentUser = null;  // تم حذف هذا السطر
+
+    // ✅ استخدم window.currentUser الموجود من index.html
+    function getUser() {
+        return window.currentUser || null;
+    }
 
     // ============================================================
     // 1. التحقق من المستخدم
@@ -141,10 +147,9 @@
 
             const data = await response.json();
             if (data.success && data.user) {
-                currentUser = data.user;
                 window.currentUser = data.user;
-                console.log('✅ المستخدم الحالي:', currentUser);
-                console.log('👤 الدور:', currentUser.role);
+                console.log('✅ المستخدم الحالي:', window.currentUser);
+                console.log('👤 الدور:', window.currentUser.role);
                 return true;
             } else {
                 window.location.href = '/index.html';
@@ -162,14 +167,16 @@
     // ============================================================
 
     function canEdit() {
-        if (!currentUser) return false;
-        const role = currentUser.role;
+        const user = getUser();
+        if (!user) return false;
+        const role = user.role;
         return role === 'مسؤول' || role === 'محرر' || role === 'admin';
     }
 
     function canDelete() {
-        if (!currentUser) return false;
-        return currentUser.role === 'مسؤول' || currentUser.role === 'admin';
+        const user = getUser();
+        if (!user) return false;
+        return user.role === 'مسؤول' || user.role === 'admin';
     }
 
     // ============================================================
@@ -637,8 +644,13 @@
         const userChecked = await checkUser();
         if (!userChecked) return;
 
-        document.getElementById('userRoleDisplay').textContent = currentUser.role;
+        // ✅ تحديث عرض الدور
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay && window.currentUser) {
+            roleDisplay.textContent = window.currentUser.role;
+        }
 
+        // ✅ إظهار/إخفاء زر الإضافة
         const addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) {
             addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
