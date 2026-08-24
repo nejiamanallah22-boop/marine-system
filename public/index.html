@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <style>  
-        /* ===== RESET & BASE ===== */  
         *{margin:0;padding:0;box-sizing:border-box}  
         body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}  
         :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}  
@@ -16,7 +15,6 @@
         ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}  
         ::-webkit-scrollbar-thumb:hover{background:var(--gold)}  
           
-        /* ===== LOGIN ===== */  
         #loginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);overflow:hidden}  
         #loginOverlay::before{content:'';position:absolute;inset:-50%;background:radial-gradient(ellipse at 20% 50%,rgba(14,165,233,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(230,179,30,0.04) 0%,transparent 60%);animation:bgPulse 12s ease-in-out infinite}  
         @keyframes bgPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(3deg)}}  
@@ -76,7 +74,6 @@
         .login-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.15);font-size:11px}  
         .login-footer .footer-version{background:rgba(255,255,255,0.03);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.03)}  
           
-        /* ===== MAIN APP ===== */  
         #mainApp{display:none;min-height:100vh}  
         .main-header{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);height:64px;display:flex;align-items:center}  
         .header-container{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 20px;max-width:1440px;margin:0 auto}  
@@ -115,7 +112,6 @@
         .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}  
         .user-btn:hover .user-arrow{color:#fff}  
           
-        /* ===== SIDEBAR ===== */  
         .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}  
         .sidebar::-webkit-scrollbar{width:4px}  
         .sidebar::-webkit-scrollbar-track{background:transparent}  
@@ -160,7 +156,6 @@
         .footer-logout:hover{background:rgba(239,68,68,0.16)}  
         .footer-logout i{font-size:14px}  
           
-        /* ===== MAIN CONTENT ===== */  
         .main-content{margin-right:240px;min-height:calc(100vh - 64px);padding:20px 24px}  
         .page-container{max-width:1440px;margin:0 auto}  
         .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:200px}  
@@ -210,7 +205,6 @@
         .btn-secondary{background:rgba(255,255,255,0.04);color:#94a3b8;border:1px solid rgba(255,255,255,0.06)}  
         .btn-secondary:hover{background:rgba(255,255,255,0.06)}  
           
-        /* ===== RESPONSIVE ===== */  
         @media (max-width:992px){  
             .search-wrapper input{width:120px}  
             .search-wrapper input:focus{width:160px}  
@@ -471,7 +465,7 @@
     <!-- ===== JAVASCRIPT ===== -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)  
+        // 🚢 MARINE SYSTEM - v7.0 (FINAL FIXED)  
         // ============================================================  
 
         console.log('🚢 Marine System v7.0 - Loading...');  
@@ -559,6 +553,7 @@
                     if (!token) throw new Error('الخادم لم يرسل رمز الدخول');  
 
                     currentUser = data.user;  
+                    window.currentUser = data.user;  
                     localStorage.setItem(CONFIG.KEYS.TOKEN, token);  
 
                     document.getElementById('loginOverlay').style.display = 'none';  
@@ -584,6 +579,7 @@
         // ===== VERIFY TOKEN =====  
         async function verifyToken(token) {  
             try {  
+                console.log('🛡️ التحقق من التوكن...');  
                 const response = await fetch('/api/auth/me', {  
                     headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }  
                 });  
@@ -592,12 +588,16 @@
                     const data = await response.json();  
                     if (data.success && data.user) {  
                         currentUser = data.user;  
+                        window.currentUser = data.user;  
+                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);  
                         return true;  
                     }  
                 }  
+                console.warn('⚠️ التوكن غير صالح، يتم حذفه');  
                 localStorage.removeItem(CONFIG.KEYS.TOKEN);  
                 return false;  
             } catch (error) {  
+                console.warn('⚠️ خطأ في التحقق:', error.message);  
                 localStorage.removeItem(CONFIG.KEYS.TOKEN);  
                 return false;  
             }  
@@ -688,6 +688,7 @@
         function doLogout() {  
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;  
             currentUser = null;  
+            window.currentUser = null;  
             localStorage.removeItem(CONFIG.KEYS.TOKEN);  
             document.getElementById('loginOverlay').style.display = 'flex';  
             document.getElementById('mainApp').style.display = 'none';  
