@@ -11,6 +11,8 @@
  * ✅ ADDED: Sessions API
  * ✅ ADDED: Logs API
  * ✅ ADDED: Seed Data (Vessels with Repair Units)
+ * ✅ ADDED: /api/auth/me endpoint
+ * ✅ ADDED: /api/auth/verify endpoint
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -273,7 +275,11 @@ function generateToken(user) {
 }
 
 function verifyToken(token) {
-    return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
+    try {
+        return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
+    } catch (error) {
+        return null;
+    }
 }
 
 // ============================================================
@@ -573,62 +579,6 @@ async function seedVessels() {
                     cat: 'صقور',
                     port: 'جربة',
                     repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                },
-                // وحدات الصيانة
-                { 
-                    name: 'وحدة صيانة تونس', 
-                    num: 'M001', 
-                    len: 0, 
-                    region: 'وحدة الصيانة والإسناد البحري تونس', 
-                    zone: 'تونس',
-                    stat: 'صالح', 
-                    cat: 'وحدات صيانة',
-                    port: 'تونس',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
-                },
-                { 
-                    name: 'وحدة صيانة المنستير', 
-                    num: 'M002', 
-                    len: 0, 
-                    region: 'وحدة الصيانة والإسناد البحري المنستير', 
-                    zone: 'المنستير',
-                    stat: 'صالح', 
-                    cat: 'وحدات صيانة',
-                    port: 'المنستير',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
-                },
-                { 
-                    name: 'وحدة صيانة صفاقس', 
-                    num: 'M003', 
-                    len: 0, 
-                    region: 'وحدة الصيانة والإسناد البحري صفاقس', 
-                    zone: 'صفاقس',
-                    stat: 'صالح', 
-                    cat: 'وحدات صيانة',
-                    port: 'صفاقس',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
-                },
-                { 
-                    name: 'وحدة صيانة جرجيس', 
-                    num: 'M004', 
-                    len: 0, 
-                    region: 'وحدة الصيانة والإسناد البحري جرجيس', 
-                    zone: 'جرجيس',
-                    stat: 'صالح', 
-                    cat: 'وحدات صيانة',
-                    port: 'جرجيس',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                },
-                { 
-                    name: 'المجمع الأمني بقبيبة', 
-                    num: 'A001', 
-                    len: 0, 
-                    region: 'المجمع الأمني بقبيبة', 
-                    zone: 'قبيبة',
-                    stat: 'صالح', 
-                    cat: 'مراكز قيادة',
-                    port: 'قبيبة',
-                    repairUnit: 'المجمع الأمني بقبيبة'
                 }
             ];
             
@@ -658,6 +608,10 @@ async function authenticate(req, res, next) {
 
         const token = authHeader.substring(7).trim();
         const decoded = verifyToken(token);
+
+        if (!decoded) {
+            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
+        }
 
         const user = await User.findById(decoded.id);
         if (!user || !user.isActive) {
@@ -840,12 +794,28 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 👤 CURRENT USER
+// 👤 CURRENT USER - المسار المهم ✅
 // ============================================================
 
 app.get('/api/auth/me', authenticate, (req, res) => {
     console.log(`👤 [ME] User: ${req.user.username}`);
-    res.json({ success: true, user: cleanUser(req.user) });
+    res.json({ 
+        success: true, 
+        user: cleanUser(req.user) 
+    });
+});
+
+// ============================================================
+// ✅ VERIFY TOKEN - التحقق من صلاحية التوكن
+// ============================================================
+
+app.get('/api/auth/verify', authenticate, (req, res) => {
+    console.log(`✅ [VERIFY] Token valid for user: ${req.user.username}`);
+    res.json({ 
+        success: true, 
+        user: cleanUser(req.user),
+        message: 'التوكن صالح'
+    });
 });
 
 // ============================================================
@@ -1235,6 +1205,7 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         }
         console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
+        // جلب بيانات السياق
         const vessels = await Vessel.find().lean();
         const maintenance = await Maintenance.find().lean();
         const totalVessels = vessels.length;
@@ -1470,6 +1441,10 @@ async function startServer() {
         console.log('   - POST /api/vessels      (Create Vessel)');
         console.log('   - PUT  /api/vessels/:id  (Update Vessel)');
         console.log('   - DELETE /api/vessels/:id (Delete Vessel)');
+        console.log('🔐 Auth:');
+        console.log('   - POST /api/auth/login   (Login)');
+        console.log('   - GET  /api/auth/me      (Current User) ✅');
+        console.log('   - GET  /api/auth/verify  (Verify Token) ✅');
         console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log('   👤 Username: admin');
