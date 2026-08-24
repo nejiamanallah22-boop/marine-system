@@ -8,38 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
     <style>
-        /* ============================================================
-               🚢 MARINE SYSTEM PRO - FLEET PAGE (FULL SCREEN FIXED)
-               ============================================================ */
-
         /* ===== CSS VARIABLES ===== */
         :root {
             --primary: #0f3460;
             --primary-dark: #0a1f3b;
             --primary-light: #1a4f8a;
             --secondary: #e94560;
-            --secondary-light: #ff6b81;
             --accent: #f5c842;
             --success: #00b894;
             --danger: #e17055;
             --warning: #fdcb6e;
-            --info: #0984e3;
             --gradient-1: linear-gradient(135deg, #0f3460 0%, #1a4f8a 100%);
             --gradient-2: linear-gradient(135deg, #e94560 0%, #f5c842 100%);
             --gradient-3: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-            --glass-bg: rgba(255, 255, 255, 0.06);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --shadow-glow: 0 0 40px rgba(233, 69, 96, 0.12);
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.06);
+            --shadow-glow: 0 0 40px rgba(233, 69, 96, 0.08);
             --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.15);
-            --shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.25);
-            --radius: 14px;
-            --radius-sm: 10px;
-            --transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-            --sidebar-width: 280px;
         }
 
-        /* ===== RESET & FULL SCREEN ===== */
+        /* ===== RESET ===== */
         *,
         *::before,
         *::after {
@@ -56,14 +48,12 @@
             background: #0a0e1a;
             color: #e8edf5;
             direction: rtl;
-            scroll-behavior: smooth;
             overflow-x: hidden;
         }
 
-        /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.02);
@@ -73,7 +63,6 @@
             border-radius: 10px;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
         body::before {
             content: '';
             position: fixed;
@@ -82,7 +71,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(233, 69, 96, 0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(245, 200, 66, 0.03) 0%, transparent 60%);
+                radial-gradient(ellipse at 80% 50%, rgba(245, 200, 66, 0.02) 0%, transparent 60%);
             z-index: -1;
             animation: bgPulse 15s ease-in-out infinite;
         }
@@ -93,26 +82,25 @@
                 transform: scale(1) rotate(0deg);
             }
             50% {
-                transform: scale(1.05) rotate(2deg);
+                transform: scale(1.03) rotate(1deg);
             }
         }
 
         /* ============================================================
                SIDEBAR
                ============================================================ */
-
         .menu-toggle-btn {
             position: fixed;
-            top: 18px;
-            right: 18px;
+            top: 16px;
+            right: 16px;
             z-index: 1000;
             background: var(--gradient-2);
             color: #fff;
             border: none;
-            width: 50px;
-            height: 50px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
             box-shadow: var(--shadow-glow);
             transition: all var(--transition);
@@ -122,15 +110,14 @@
         }
 
         .menu-toggle-btn:hover {
-            transform: scale(1.08) rotate(90deg);
-            box-shadow: 0 0 60px rgba(233, 69, 96, 0.3);
-        }
-
-        .menu-toggle-btn i {
-            transition: transform var(--transition);
+            transform: scale(1.08);
+            box-shadow: 0 0 60px rgba(233, 69, 96, 0.2);
         }
         .menu-toggle-btn.open i {
             transform: rotate(90deg);
+        }
+        .menu-toggle-btn i {
+            transition: transform var(--transition);
         }
 
         .overlay {
@@ -139,14 +126,13 @@
             right: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
             z-index: 998;
             opacity: 0;
             visibility: hidden;
             transition: all var(--transition);
         }
-
         .overlay.active {
             opacity: 1;
             visibility: visible;
@@ -156,31 +142,30 @@
             position: fixed;
             top: 0;
             right: -100%;
-            width: var(--sidebar-width);
+            width: 260px;
             height: 100vh;
             background: linear-gradient(180deg, #0a1f3b 0%, #0f3460 50%, #1a4f8a 100%);
             color: #fff;
-            padding: 30px 0;
+            padding: 24px 0;
             display: flex;
             flex-direction: column;
-            box-shadow: 4px 0 50px rgba(0, 0, 0, 0.5);
+            box-shadow: 4px 0 40px rgba(0, 0, 0, 0.4);
             z-index: 999;
             transition: right var(--transition);
             overflow-y: auto;
         }
-
         .sidebar.active {
             right: 0;
         }
 
         .sidebar-brand {
-            padding: 0 24px 28px;
+            padding: 0 20px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .sidebar-brand h2 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -189,27 +174,25 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .sidebar-brand h2 i {
             -webkit-text-fill-color: var(--secondary);
         }
-
         .sidebar-brand p {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             opacity: 0.3;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .sidebar-menu {
             flex: 1;
-            padding: 0 12px;
+            padding: 0 10px;
         }
 
         .sidebar-menu .menu-label {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             text-transform: uppercase;
-            opacity: 0.25;
-            padding: 12px 16px 6px;
+            opacity: 0.2;
+            padding: 10px 14px 4px;
             letter-spacing: 1.5px;
             font-weight: 700;
         }
@@ -217,55 +200,52 @@
         .sidebar-menu a {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 10px 16px;
-            margin: 3px 0;
-            border-radius: 10px;
-            color: rgba(255, 255, 255, 0.5);
+            gap: 12px;
+            padding: 9px 14px;
+            margin: 2px 0;
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.4);
             text-decoration: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all var(--transition);
             cursor: pointer;
             border: none;
             background: none;
             width: 100%;
             text-align: right;
-            position: relative;
         }
 
         .sidebar-menu a:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.05);
             color: #fff;
-            transform: translateX(-4px);
         }
 
         .sidebar-menu a.active {
-            background: rgba(233, 69, 96, 0.12);
+            background: rgba(233, 69, 96, 0.1);
             color: #fff;
             border-right: 3px solid var(--secondary);
         }
 
         .sidebar-menu a i {
-            width: 20px;
+            width: 18px;
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .sidebar-footer {
-            padding: 16px 24px;
+            padding: 14px 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 0.65rem;
-            opacity: 0.3;
+            font-size: 0.6rem;
+            opacity: 0.25;
             display: flex;
             justify-content: space-between;
         }
 
         /* ============================================================
-               MAIN CONTENT - FULL SCREEN ✅
+               MAIN CONTENT - FULL SCREEN
                ============================================================ */
-
         .main-content {
-            padding: 80px 20px 20px;
+            padding: 72px 16px 16px;
             min-height: 100vh;
             width: 100%;
             max-width: 100%;
@@ -282,15 +262,14 @@
         /* ============================================================
                PAGE HEADER
                ============================================================ */
-
         .page-header {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
+            gap: 10px;
+            padding: 12px 16px;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
@@ -300,39 +279,37 @@
 
         .page-header-left h2 {
             font-weight: 800;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             background: var(--gradient-2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
-
         .page-header-left h2 i {
             -webkit-text-fill-color: var(--secondary);
-            font-size: 1.6rem;
+            font-size: 1.4rem;
         }
-
         .page-header-left p {
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 0.8rem;
-            margin-top: 2px;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            margin-top: 1px;
         }
 
         .page-header-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .badge-role {
             background: var(--gradient-2);
             color: #fff;
-            padding: 5px 16px;
+            padding: 4px 14px;
             border-radius: 40px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
@@ -341,84 +318,81 @@
         }
 
         .header-btn {
-            padding: 6px 14px;
+            padding: 5px 12px;
             border: none;
             border-radius: 30px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
         }
-
         .header-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
-            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.06);
             color: #fff;
         }
-
         .header-btn.success {
             background: var(--gradient-3);
             color: #fff;
             border: none;
         }
-
         .header-btn.success:hover {
-            box-shadow: 0 8px 30px rgba(0, 184, 148, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 184, 148, 0.2);
         }
-
         .header-btn.primary {
             background: var(--gradient-1);
             color: #fff;
             border: none;
         }
+        .header-btn.primary:hover {
+            box-shadow: 0 8px 30px rgba(15, 52, 96, 0.2);
+        }
 
         /* ============================================================
                INPUT GRID
                ============================================================ */
-
         .input-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-            gap: 10px 12px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px 10px;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
-            padding: 16px 18px;
+            padding: 14px 16px;
             border-radius: var(--radius);
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             box-shadow: var(--shadow-card);
         }
 
         .input-grid input,
         .input-grid select {
             width: 100%;
-            padding: 9px 12px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: var(--radius-sm);
-            font-size: 0.8rem;
-            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
             color: #e8edf5;
             transition: all var(--transition);
             font-family: var(--font);
         }
 
         .input-grid input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
         }
 
         .input-grid input:focus,
         .input-grid select:focus {
             border-color: var(--secondary);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.08);
-            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.06);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .input-grid select option {
@@ -428,12 +402,12 @@
 
         .input-grid .btn-save {
             grid-column: span 1;
-            padding: 9px 10px;
+            padding: 8px 10px;
             font-weight: 700;
             border: none;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: all var(--transition);
             display: inline-flex;
             align-items: center;
@@ -441,94 +415,90 @@
             gap: 6px;
             background: var(--gradient-3);
             color: #fff;
-            box-shadow: 0 4px 20px rgba(0, 184, 148, 0.15);
+            box-shadow: 0 4px 16px rgba(0, 184, 148, 0.1);
         }
 
         .input-grid .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 184, 148, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 184, 148, 0.2);
         }
 
         /* ============================================================
                FILTER BAR
                ============================================================ */
-
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px 14px;
+            gap: 6px 12px;
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
-            padding: 8px 16px;
+            padding: 6px 14px;
             border-radius: 40px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
             box-shadow: var(--shadow-card);
         }
 
         .filter-bar .search-input {
-            flex: 2 1 180px;
-            min-width: 140px;
+            flex: 2 1 160px;
+            min-width: 120px;
             position: relative;
         }
 
         .filter-bar .search-input input {
             width: 100%;
-            padding: 7px 14px 7px 36px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 6px 12px 6px 32px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 30px;
-            font-size: 0.8rem;
-            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
             color: #e8edf5;
-            transition: all var(--transition);
         }
 
         .filter-bar .search-input input:focus {
             border-color: var(--secondary);
             outline: none;
-            box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.05);
-            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.04);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .filter-bar .search-input input::placeholder {
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
         }
 
         .filter-bar .search-input .search-icon {
             position: absolute;
-            left: 12px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.15);
-            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 0.7rem;
         }
 
         .filter-bar label {
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 0.7rem;
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
         .filter-bar select {
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             color: #e8edf5;
-            font-size: 0.75rem;
-            min-width: 90px;
+            font-size: 0.7rem;
+            min-width: 80px;
             cursor: pointer;
         }
-
         .filter-bar select:focus {
             outline: none;
             border-color: var(--secondary);
         }
-
         .filter-bar select option {
             background: #0f3460;
             color: #fff;
@@ -538,38 +508,34 @@
             background: var(--gradient-2);
             color: #fff;
             border: none;
-            padding: 5px 14px;
+            padding: 4px 12px;
             border-radius: 30px;
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.75rem;
+            gap: 4px;
+            font-size: 0.7rem;
         }
-
         .filter-bar .btn-filter:hover {
             transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.25);
+            box-shadow: 0 4px 16px rgba(233, 69, 96, 0.2);
         }
-
         .filter-bar .btn-filter.outline {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.3);
         }
-
         .filter-bar .btn-filter.outline:hover {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             transform: none;
             box-shadow: none;
         }
 
         /* ============================================================
-               TABLE - FULL WIDTH
+               TABLE
                ============================================================ */
-
         .table-wrapper {
             overflow-x: auto;
             border-radius: var(--radius);
@@ -583,48 +549,42 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             min-width: 100%;
         }
 
         thead {
-            background: rgba(15, 52, 96, 0.5);
+            background: rgba(15, 52, 96, 0.4);
             backdrop-filter: blur(12px);
-            border-bottom: 2px solid rgba(233, 69, 96, 0.15);
+            border-bottom: 2px solid rgba(233, 69, 96, 0.08);
         }
 
         thead th {
-            padding: 11px 8px;
+            padding: 10px 6px;
             text-align: right;
             font-weight: 700;
             white-space: nowrap;
-            font-size: 0.65rem;
-            letter-spacing: 0.6px;
+            font-size: 0.6rem;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
         }
-
         thead th i {
-            margin-left: 5px;
+            margin-left: 4px;
             color: var(--secondary);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
         }
 
         tbody td {
-            padding: 9px 6px;
+            padding: 8px 5px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.02);
             vertical-align: middle;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        tbody tr {
-            transition: all var(--transition);
+            color: rgba(255, 255, 255, 0.6);
         }
 
         tbody tr:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
         }
-
         tbody tr:last-child td {
             border-bottom: none;
         }
@@ -647,33 +607,31 @@
             color: #fff;
         }
 
-        /* ===== ACTION BUTTONS ===== */
         .action-btns {
             display: flex;
-            gap: 4px;
+            gap: 3px;
             flex-wrap: wrap;
             justify-content: center;
         }
 
         .btn-sm {
-            padding: 3px 8px;
+            padding: 2px 7px;
             border: none;
             border-radius: 20px;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 600;
             cursor: pointer;
             transition: all var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
         }
-
         .btn-sm i {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
         }
 
         .btn-sm.btn-edit {
-            background: rgba(245, 200, 66, 0.12);
+            background: rgba(245, 200, 66, 0.1);
             color: var(--accent);
         }
         .btn-sm.btn-edit:hover {
@@ -683,7 +641,7 @@
         }
 
         .btn-sm.btn-delete {
-            background: rgba(225, 112, 85, 0.12);
+            background: rgba(225, 112, 85, 0.1);
             color: var(--danger);
         }
         .btn-sm.btn-delete:hover {
@@ -695,58 +653,67 @@
         /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
-            padding: 50px 20px;
+            padding: 40px 20px;
         }
-
-        .empty-state i {
-            font-size: 2.5rem;
-            color: rgba(255, 255, 255, 0.06);
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .empty-state h3 {
-            color: rgba(255, 255, 255, 0.3);
-            font-weight: 600;
-            margin-bottom: 4px;
-            font-size: 1rem;
-        }
-
-        .empty-state p {
-            color: rgba(255, 255, 255, 0.15);
-            font-size: 0.85rem;
-        }
-
         .empty-state .spinner {
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             border: 3px solid rgba(255, 255, 255, 0.04);
             border-top-color: var(--secondary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
+            margin: 0 auto 10px;
         }
-
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
+        }
+        .empty-state i {
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 10px;
+            display: block;
+        }
+        .empty-state h3 {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 0.9rem;
+        }
+        .empty-state p {
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+        }
+        .empty-state .retry-btn {
+            margin-top: 10px;
+            padding: 6px 20px;
+            background: var(--gradient-2);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.2);
         }
 
         /* ===== PAGE CONTENT ===== */
         .page-content {
             display: none;
         }
-
         .page-content.active {
             display: block;
             animation: fadeIn 0.3s ease;
         }
-
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(8px);
+                transform: translateY(6px);
             }
             to {
                 opacity: 1;
@@ -757,61 +724,52 @@
         /* ============================================================
                RESPONSIVE
                ============================================================ */
-
-        @media (max-width: 992px) {
-            .input-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 8px 10px;
-                padding: 14px;
-            }
-        }
-
         @media (max-width: 768px) {
             .main-content {
-                padding: 70px 12px 14px;
+                padding: 64px 10px 12px;
             }
             .input-grid {
                 grid-template-columns: 1fr 1fr;
-                padding: 12px;
-                gap: 8px;
+                padding: 10px 12px;
+                gap: 6px 8px;
             }
             .filter-bar {
-                border-radius: 20px;
-                padding: 8px 12px;
-                gap: 6px 10px;
+                border-radius: 16px;
+                padding: 6px 10px;
+                gap: 4px 8px;
             }
             .page-header {
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 12px 14px;
+                padding: 10px 12px;
             }
             .page-header-left h2 {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
             .page-header-actions {
                 width: 100%;
                 justify-content: flex-start;
             }
             .sidebar {
-                width: 250px;
+                width: 230px;
             }
             table {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
             thead th,
             tbody td {
-                padding: 6px 4px;
+                padding: 5px 3px;
             }
             .input-grid .btn-save {
                 grid-column: span 2;
             }
             .badge-role {
-                font-size: 0.65rem;
-                padding: 4px 12px;
+                font-size: 0.6rem;
+                padding: 3px 10px;
             }
             .header-btn {
-                font-size: 0.65rem;
-                padding: 5px 10px;
+                font-size: 0.6rem;
+                padding: 4px 10px;
             }
         }
 
@@ -825,87 +783,17 @@
             .filter-bar {
                 flex-direction: column;
                 align-items: stretch;
-                border-radius: 14px;
-                padding: 10px;
+                border-radius: 12px;
+                padding: 8px 10px;
             }
             .filter-bar .search-input {
                 flex: 1;
             }
             .filter-bar label {
-                font-size: 0.7rem;
+                font-size: 0.65rem;
             }
             .filter-bar select {
                 min-width: 100%;
-            }
-            .page-header-left h2 {
-                font-size: 1rem;
-            }
-            .page-header-left p {
-                font-size: 0.7rem;
-            }
-        }
-
-        /* ============================================================
-               PRINT
-               ============================================================ */
-
-        @media print {
-            .menu-toggle-btn,
-            .overlay,
-            .sidebar,
-            .no-print {
-                display: none !important;
-            }
-            .main-content {
-                padding: 10px !important;
-            }
-            body {
-                background: #fff !important;
-                color: #333 !important;
-            }
-            .page-header {
-                background: #f0f0f0 !important;
-                border: 1px solid #ddd !important;
-            }
-            .page-header-left h2 {
-                -webkit-text-fill-color: #0f3460 !important;
-            }
-            thead {
-                background: #0f3460 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            thead th {
-                color: #fff !important;
-            }
-            .input-grid,
-            .filter-bar {
-                display: none !important;
-            }
-            .table-wrapper {
-                border: 1px solid #ddd !important;
-                box-shadow: none !important;
-                background: #fff !important;
-            }
-            tbody td {
-                color: #333 !important;
-            }
-            .vessel-name {
-                color: #0f3460 !important;
-            }
-            .badge-role {
-                background: #0f3460 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .status-صالح {
-                color: #00b894 !important;
-            }
-            .status-معطب {
-                color: #e17055 !important;
-            }
-            .status-صيانة {
-                color: #fdcb6e !important;
             }
         }
     </style>
@@ -936,7 +824,7 @@
                 <i class="fas fa-chart-pie"></i> لوحة المعلومات
             </a>
 
-            <div class="menu-label" style="margin-top:16px;">الإدارة</div>
+            <div class="menu-label" style="margin-top:12px;">الإدارة</div>
             <a href="#" data-page="maintenance">
                 <i class="fas fa-tools"></i> الصيانة
             </a>
@@ -947,7 +835,7 @@
                 <i class="fas fa-cog"></i> الإعدادات
             </a>
 
-            <div class="menu-label" style="margin-top:16px;">الحساب</div>
+            <div class="menu-label" style="margin-top:12px;">الحساب</div>
             <a href="#" data-page="profile">
                 <i class="fas fa-user"></i> الملف الشخصي
             </a>
@@ -962,14 +850,14 @@
         </div>
     </div>
 
-    <!-- ====== MAIN CONTENT - FULL SCREEN ====== -->
+    <!-- ====== MAIN CONTENT ====== -->
     <div class="main-content" id="mainContent">
         <div class="container">
 
             <!-- ====== PAGE: VESSELS ====== -->
             <div class="page-content active" id="page-vessels">
 
-                <!-- ===== HEADER ===== -->
+                <!-- HEADER -->
                 <div class="page-header">
                     <div class="page-header-left">
                         <h2><i class="fas fa-ship"></i> السجل العام للوسائل البحرية</h2>
@@ -989,7 +877,7 @@
                     </div>
                 </div>
 
-                <!-- ===== INPUT FORM ===== -->
+                <!-- INPUT FORM -->
                 <div id="inputArea" class="input-grid no-print">
                     <input type="text" id="iName" placeholder="اسم المركب" />
                     <input type="text" id="iNum" placeholder="الرقم" />
@@ -1041,7 +929,7 @@
                     </button>
                 </div>
 
-                <!-- ===== FILTER BAR ===== -->
+                <!-- FILTER BAR -->
                 <div class="filter-bar no-print">
                     <div class="search-input">
                         <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()" />
@@ -1063,7 +951,7 @@
                     </button>
                 </div>
 
-                <!-- ===== TABLE ===== -->
+                <!-- TABLE -->
                 <div class="table-wrapper">
                     <table id="mainTable">
                         <thead>
@@ -1097,7 +985,7 @@
                 </div>
             </div>
 
-            <!-- ====== OTHER PAGES ====== -->
+            <!-- OTHER PAGES (Placeholder) -->
             <div class="page-content" id="page-dashboard">
                 <div class="page-header">
                     <div class="page-header-left">
@@ -1106,9 +994,9 @@
                     </div>
                 </div>
                 <div style="background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:60px 40px;text-align:center;">
-                    <i class="fas fa-chart-line" style="font-size:3.5rem;color:var(--secondary);margin-bottom:16px;"></i>
-                    <h3 style="color:rgba(255,255,255,0.5);font-weight:600;">مرحباً بك في لوحة المعلومات</h3>
-                    <p style="color:rgba(255,255,255,0.2);font-size:0.9rem;">هذه صفحة تجريبية</p>
+                    <i class="fas fa-chart-line" style="font-size:3rem;color:var(--secondary);margin-bottom:12px;"></i>
+                    <h3 style="color:rgba(255,255,255,0.4);font-weight:600;">مرحباً بك في لوحة المعلومات</h3>
+                    <p style="color:rgba(255,255,255,0.15);font-size:0.85rem;">هذه صفحة تجريبية</p>
                 </div>
             </div>
 
@@ -1120,9 +1008,9 @@
                     </div>
                 </div>
                 <div style="background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:60px 40px;text-align:center;">
-                    <i class="fas fa-tools" style="font-size:3.5rem;color:var(--warning);margin-bottom:16px;"></i>
-                    <h3 style="color:rgba(255,255,255,0.5);font-weight:600;">قسم الصيانة</h3>
-                    <p style="color:rgba(255,255,255,0.2);font-size:0.9rem;">صفحة الصيانة قيد التطوير</p>
+                    <i class="fas fa-tools" style="font-size:3rem;color:var(--warning);margin-bottom:12px;"></i>
+                    <h3 style="color:rgba(255,255,255,0.4);font-weight:600;">قسم الصيانة</h3>
+                    <p style="color:rgba(255,255,255,0.15);font-size:0.85rem;">صفحة الصيانة قيد التطوير</p>
                 </div>
             </div>
 
@@ -1134,9 +1022,9 @@
                     </div>
                 </div>
                 <div style="background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:60px 40px;text-align:center;">
-                    <i class="fas fa-file-alt" style="font-size:3.5rem;color:var(--success);margin-bottom:16px;"></i>
-                    <h3 style="color:rgba(255,255,255,0.5);font-weight:600;">التقارير</h3>
-                    <p style="color:rgba(255,255,255,0.2);font-size:0.9rem;">صفحة التقارير قيد التطوير</p>
+                    <i class="fas fa-file-alt" style="font-size:3rem;color:var(--success);margin-bottom:12px;"></i>
+                    <h3 style="color:rgba(255,255,255,0.4);font-weight:600;">التقارير</h3>
+                    <p style="color:rgba(255,255,255,0.15);font-size:0.85rem;">صفحة التقارير قيد التطوير</p>
                 </div>
             </div>
 
@@ -1148,9 +1036,9 @@
                     </div>
                 </div>
                 <div style="background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:60px 40px;text-align:center;">
-                    <i class="fas fa-cog" style="font-size:3.5rem;color:rgba(255,255,255,0.1);margin-bottom:16px;"></i>
-                    <h3 style="color:rgba(255,255,255,0.5);font-weight:600;">الإعدادات</h3>
-                    <p style="color:rgba(255,255,255,0.2);font-size:0.9rem;">صفحة الإعدادات قيد التطوير</p>
+                    <i class="fas fa-cog" style="font-size:3rem;color:rgba(255,255,255,0.05);margin-bottom:12px;"></i>
+                    <h3 style="color:rgba(255,255,255,0.4);font-weight:600;">الإعدادات</h3>
+                    <p style="color:rgba(255,255,255,0.15);font-size:0.85rem;">صفحة الإعدادات قيد التطوير</p>
                 </div>
             </div>
 
@@ -1162,9 +1050,9 @@
                     </div>
                 </div>
                 <div style="background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:var(--radius);padding:60px 40px;text-align:center;">
-                    <i class="fas fa-user-circle" style="font-size:3.5rem;color:var(--primary-light);margin-bottom:16px;"></i>
-                    <h3 style="color:rgba(255,255,255,0.5);font-weight:600;">الملف الشخصي</h3>
-                    <p style="color:rgba(255,255,255,0.2);font-size:0.9rem;">صفحة الملف الشخصي قيد التطوير</p>
+                    <i class="fas fa-user-circle" style="font-size:3rem;color:var(--primary-light);margin-bottom:12px;"></i>
+                    <h3 style="color:rgba(255,255,255,0.4);font-weight:600;">الملف الشخصي</h3>
+                    <p style="color:rgba(255,255,255,0.15);font-size:0.85rem;">صفحة الملف الشخصي قيد التطوير</p>
                 </div>
             </div>
 
@@ -1172,7 +1060,7 @@
     </div>
 
     <!-- =============================================================== -->
-    <!-- 📦 JAVASCRIPT - PRO VERSION (FULL SCREEN FIXED) -->
+    <!-- 📦 JAVASCRIPT - FINAL VERSION -->
     <!-- =============================================================== -->
     <script>
         (function() {
@@ -1216,7 +1104,7 @@
             const userRoleDisplay = document.getElementById('userRoleDisplay');
 
             // ============================================================
-            // 4. SIDEBAR
+            // 4. SIDEBAR FUNCTIONS
             // ============================================================
 
             function openMenu() {
@@ -1284,21 +1172,20 @@
             });
 
             // ============================================================
-            // 7. LOAD CURRENT USER (FIXED)
+            // 7. LOAD CURRENT USER
             // ============================================================
 
             async function loadCurrentUser() {
                 try {
-                    // ✅ جلب التوكن من localStorage
                     token = localStorage.getItem('token') || null;
 
                     if (!token) {
-                        console.warn('⚠️ No token found, redirecting to login');
+                        console.warn('⚠️ No token found');
                         window.location.href = '/index.html';
                         return false;
                     }
 
-                    console.log('🔑 Token found, fetching user...');
+                    console.log('🔑 Fetching user...');
 
                     const response = await fetch('/api/auth/me', {
                         headers: {
@@ -1308,7 +1195,7 @@
                     });
 
                     if (!response.ok) {
-                        console.warn('⚠️ Session invalid, redirecting to login');
+                        console.warn('⚠️ Session invalid, status:', response.status);
                         localStorage.removeItem('token');
                         window.location.href = '/index.html';
                         return false;
@@ -1319,10 +1206,10 @@
                     if (data.success && data.user) {
                         currentUser = data.user;
                         userRoleDisplay.textContent = currentUser.role;
-                        console.log('✅ User loaded successfully:', currentUser);
+                        console.log('✅ User loaded:', currentUser);
                         return true;
                     } else {
-                        console.warn('⚠️ No user data, redirecting to login');
+                        console.warn('⚠️ No user data');
                         window.location.href = '/index.html';
                         return false;
                     }
@@ -1395,11 +1282,10 @@
             };
 
             // ============================================================
-            // 11. API CALL (WITH BETTER ERROR HANDLING)
+            // 11. API CALL (WITH TOKEN REFRESH)
             // ============================================================
 
             async function apiCall(endpoint, method = 'GET', body = null) {
-                // ✅ التأكد من وجود التوكن
                 const currentToken = localStorage.getItem('token');
                 if (!currentToken) {
                     console.warn('⚠️ No token in apiCall');
@@ -1419,7 +1305,6 @@
 
                 const res = await fetch(`${API_URL}${endpoint}`, options);
 
-                // ✅ محاولة قراءة البيانات حتى لو كان هناك خطأ
                 let data = {};
                 const contentType = res.headers.get('content-type');
                 if (contentType && contentType.includes('application/json')) {
@@ -1438,7 +1323,6 @@
                     throw new Error(data.error || data.message || `خطأ ${res.status}`);
                 }
 
-                console.log(`✅ API Success: ${endpoint}`);
                 return data;
             }
 
@@ -1462,37 +1346,32 @@
             }
 
             // ============================================================
-            // 13. RENDER MAIN (FIXED)
+            // 13. RENDER MAIN
             // ============================================================
 
             async function renderMain() {
                 const mainBody = document.getElementById('mainBody');
 
-                // ✅ عرض مؤقت التحميل
                 mainBody.innerHTML = `
                     <tr>
                         <td colspan="14" class="empty-state">
                             <div class="spinner"></div>
                             <h3>جاري التحميل...</h3>
-                            <p>يرجى الانتظار أثناء تحميل بيانات المراكب</p>
+                            <p>يرجى الانتظار</p>
                         </td>
                     </tr>
                 `;
 
                 try {
-                    // ✅ التحقق من وجود التوكن أولاً
                     if (!localStorage.getItem('token')) {
-                        console.warn('⚠️ No token, redirecting to login');
                         window.location.href = '/index.html';
                         return;
                     }
 
-                    // ✅ جلب البيانات من API
-                    console.log('📡 Fetching vessels from /api/vessels...');
+                    console.log('📡 Fetching vessels...');
                     const vessels = await apiCall('/api/vessels');
 
                     if (!vessels || !Array.isArray(vessels) || vessels.length === 0) {
-                        console.log('📦 No vessels found or empty response');
                         mainBody.innerHTML = `
                             <tr>
                                 <td colspan="14" class="empty-state">
@@ -1507,7 +1386,6 @@
 
                     console.log(`📦 Found ${vessels.length} vessels`);
 
-                    // ✅ تطبيق الفلاتر
                     const fCatMain = document.getElementById('fCatMain');
                     const fRegMain = document.getElementById('fRegMain');
                     const searchMain = document.getElementById('searchMain');
@@ -1541,14 +1419,13 @@
                                 <td colspan="14" class="empty-state">
                                     <i class="fas fa-inbox"></i>
                                     <h3>لا توجد نتائج مطابقة</h3>
-                                    <p>حاول تغيير معايير البحث أو إضافة مراكب جديدة</p>
+                                    <p>حاول تغيير معايير البحث</p>
                                 </td>
                             </tr>
                         `;
                         return;
                     }
 
-                    // ✅ عرض البيانات
                     let html = '';
                     for (const v of filtered) {
                         const id = v._id || v.id;
@@ -1591,7 +1468,7 @@
                         </tr>`;
                     }
                     mainBody.innerHTML = html;
-                    console.log('✅ Table rendered successfully');
+                    console.log('✅ Table rendered');
 
                 } catch (err) {
                     console.error('❌ renderMain error:', err);
@@ -1600,8 +1477,8 @@
                             <td colspan="14" class="empty-state">
                                 <i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i>
                                 <h3 style="color:var(--danger);">خطأ في تحميل البيانات</h3>
-                                <p style="color:rgba(255,255,255,0.4);">${escapeHtml(err.message)}</p>
-                                <button onclick="renderMain()" style="margin-top:12px;padding:8px 24px;background:var(--gradient-2);border:none;border-radius:30px;color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s;">
+                                <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
+                                <button class="retry-btn" onclick="renderMain()">
                                     <i class="fas fa-sync-alt"></i> إعادة المحاولة
                                 </button>
                             </td>
@@ -1819,32 +1696,22 @@
             window.updateZones = updateZones;
 
             // ============================================================
-            // 22. INIT (FIXED: LOAD USER FIRST, THEN RENDER)
+            // 22. INIT
             // ============================================================
 
             document.addEventListener('DOMContentLoaded', async function() {
                 console.log('🚀 Fleet page loading...');
 
-                // ✅ الخطوة 1: تحميل المستخدم الحالي
                 const userLoaded = await loadCurrentUser();
-                if (!userLoaded) {
-                    console.warn('⚠️ User not loaded, redirecting...');
-                    return;
-                }
+                if (!userLoaded) return;
 
-                // ✅ الخطوة 2: تهيئة الفلاتر
                 initFilters();
-
-                // ✅ الخطوة 3: تحديث المناطق
                 updateZones();
 
-                // ✅ الخطوة 4: التحقق من الصفحة المحفوظة
                 const savedPage = localStorage.getItem('currentPage') || 'vessels';
                 navigateTo(savedPage);
 
-                // ✅ الخطوة 5: تحميل البيانات
                 if (savedPage === 'vessels') {
-                    console.log('📡 Loading vessels data...');
                     await renderMain();
                 }
 
