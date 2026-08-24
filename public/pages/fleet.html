@@ -1,687 +1,789 @@
-<!-- public/pages/fleet.html -->
-<div id="page-fleet">
-    <!-- ===== HEADER ===== -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div>
-            <h2 style="margin:0; color:white; font-size:22px;">🚢 السجل العام للأسطول</h2>
-            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">إدارة ومتابعة جميع المراكب البحرية</p>
-        </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <button onclick="refreshFleet()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
-            <button onclick="exportFleetData()" style="padding:6px 14px; background:rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.1); border-radius:10px; color:#4ade80; cursor:pointer;">📤 تصدير</button>
-        </div>
-    </div>
-
-    <!-- ===== نموذج الإضافة ===== -->
-    <div id="inputArea" style="background:rgba(255,255,255,0.02); border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
-            <input type="text" id="iName" placeholder="اسم المركب" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iNum" placeholder="الرقم" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="number" id="iLen" placeholder="الطول (م)" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <select id="iReg" onchange="updateZones()" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">الإقليم</option>
-                <option value="الشمال">🗺️ الشمال</option>
-                <option value="الساحل">🗺️ الساحل</option>
-                <option value="الوسط">🗺️ الوسط</option>
-                <option value="الجنوب">🗺️ الجنوب</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-            </select>
-            <select id="iZone" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">المنطقة</option>
-            </select>
-            <input type="text" id="iPort" placeholder="الميناء" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iSupp" placeholder="مكان التعزيز" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <select id="iStat" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="صالح">✅ صالح</option>
-                <option value="معطب">❌ معطب</option>
-                <option value="صيانة">🔧 صيانة</option>
-            </select>
-            <input type="text" id="iBreak" placeholder="نوع العطب" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="date" id="iDate" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="date" id="iEnd" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iRef" placeholder="المرجع" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <select id="iRepairUnit" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">الوحدة المسؤولة عن الإصلاح</option>
-                <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-                <option value="خارجي">🔧 خارجي</option>
-            </select>
-            <button id="saveVesselBtn" onclick="addItem()" style="padding:8px 16px; border:none; border-radius:8px; background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; font-weight:600; cursor:pointer;">
-                <i class="fas fa-save"></i> حفظ المركب
-            </button>
-        </div>
-    </div>
-
-    <!-- ===== شريط البحث ===== -->
-    <div style="display:flex; flex-wrap:wrap; gap:8px 14px; background:rgba(255,255,255,0.02); padding:8px 16px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
-        <div style="flex:2 1 180px; min-width:140px; position:relative;">
-            <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()" style="width:100%; padding:6px 14px 6px 36px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.15);"><i class="fas fa-search"></i></span>
-        </div>
-        <label style="font-weight:600; color:rgba(255,255,255,0.3); font-size:0.75rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-tag"></i> الفئة:</label>
-        <select id="fCatMain" onchange="renderMain()" style="padding:4px 10px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <option value="الكل">الكل</option>
-        </select>
-        <label style="font-weight:600; color:rgba(255,255,255,0.3); font-size:0.75rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-map"></i> الإقليم:</label>
-        <select id="fRegMain" onchange="renderMain()" style="padding:4px 10px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <option value="الكل">الكل</option>
-        </select>
-        <button onclick="clearMainSearch()" style="padding:4px 12px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:rgba(255,255,255,0.3); cursor:pointer; font-size:0.75rem;"><i class="fas fa-undo-alt"></i> مسح</button>
-    </div>
-
-    <!-- ===== الجدول ===== -->
-    <div style="overflow-x:auto; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06);">
-        <table style="width:100%; border-collapse:collapse; font-size:0.78rem; min-width:100%;">
-            <thead style="background:rgba(15,52,96,0.4); border-bottom:2px solid rgba(233,69,96,0.08);">
-                <tr>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-ship"></i> الاسم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-hashtag"></i> الرقم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-ruler"></i> الطول</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-tag"></i> الفئة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-map"></i> الإقليم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-location-dot"></i> المنطقة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-flag"></i> الميناء</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-handshake"></i> التعزيز</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-circle"></i> الحالة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-wrench"></i> العطب</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-calendar"></i> التاريخ</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-calendar-check"></i> الانتهاء</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-cog"></i> إجراء</th>
-                </tr>
-            </thead>
-            <tbody id="mainBody">
-                <tr>
-                    <td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.2);">
-                        <div style="width:30px; height:30px; border:3px solid rgba(255,255,255,0.04); border-top-color:#e94560; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
-                        <h3 style="color:rgba(255,255,255,0.2); font-weight:600; margin-bottom:3px; font-size:0.9rem;">جاري التحميل...</h3>
-                        <p style="color:rgba(255,255,255,0.1); font-size:0.75rem;">يرجى الانتظار</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - FLEET PAGE (المُعدل) -->
-<!-- ============================================================ -->
-<script>
-    // ============================================================
-    // 🚢 FLEET PAGE - النسخة المُعدلة
-    // ============================================================
-
-    // ✅ بيانات المناطق الكاملة
-    const ZONES_DATA = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-        "المجمع الأمني بقبيبة": ["قبيبة"]
-    };
-
-    const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
-
-    // ============================================================
-    // 1. الحصول على المستخدم من window
-    // ============================================================
-
-    function getUser() {
-        return window.currentUser || null;
-    }
-
-    // ============================================================
-    // 2. التحقق من المستخدم
-    // ============================================================
-
-    async function checkUser() {
-        try {
-            const token = localStorage.getItem('marine_token');
-            if (!token) {
-                console.warn('⚠️ لا يوجد توكن');
-                window.location.href = '/index.html';
-                return false;
-            }
-
-            const response = await fetch('/api/auth/me', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) {
-                console.warn('⚠️ جلسة غير صالحة');
-                localStorage.removeItem('marine_token');
-                window.location.href = '/index.html';
-                return false;
-            }
-
-            const data = await response.json();
-            if (data.success && data.user) {
-                window.currentUser = data.user;
-                console.log('✅ المستخدم الحالي:', window.currentUser);
-                console.log('👤 الدور:', window.currentUser.role);
-                return true;
-            } else {
-                window.location.href = '/index.html';
-                return false;
-            }
-        } catch (error) {
-            console.error('❌ خطأ:', error);
-            window.location.href = '/index.html';
-            return false;
-        }
-    }
-
-    // ============================================================
-    // 3. صلاحيات المستخدم (مُعدلة)
-    // ============================================================
-
-    function canEdit() {
-        const user = getUser();
-        if (!user) {
-            console.warn('⚠️ لا يوجد مستخدم');
-            return false;
-        }
-        const role = user.role;
-        console.log('👤 دور المستخدم في canEdit:', role);
-        
-        // ✅ قائمة الأدوار المسموح لها بالتعديل
-        const allowedRoles = ['مسؤول', 'محرر', 'admin', 'manager', 'مدير'];
-        const hasPermission = allowedRoles.includes(role);
-        console.log(`✅ ${hasPermission ? 'لديه' : 'ليس لديه'} صلاحية التعديل`);
-        return hasPermission;
-    }
-
-    function canDelete() {
-        const user = getUser();
-        if (!user) return false;
-        const role = user.role;
-        const allowedRoles = ['مسؤول', 'admin', 'مدير'];
-        return allowedRoles.includes(role);
-    }
-
-    // ============================================================
-    // 4. تحديث المناطق (مع بيانات كاملة)
-    // ============================================================
-
-    function updateZones() {
-        const reg = document.getElementById('iReg').value;
-        const zoneSel = document.getElementById('iZone');
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(z => {
-                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
-            });
-        }
-        console.log('✅ تم تحديث المناطق للإقليم:', reg, '→', ZONES_DATA[reg] || []);
-    }
-
-    // ============================================================
-    // 5. دوال مساعدة
-    // ============================================================
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return String(str).replace(/[&<>"']/g, (m) => map[m]);
-    }
-
-    function formatDate(val) {
-        if (!val) return '-';
-        try {
-            const d = new Date(val);
-            if (isNaN(d.getTime())) return escapeHtml(val);
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yyyy = d.getFullYear();
-            return `${dd}/${mm}/${yyyy}`;
-        } catch (_) { return escapeHtml(val); }
-    }
-
-    function getCategory(len) {
-        const n = parseFloat(len);
-        if (isNaN(n)) return 'زوارق مزدوجة';
-        if (n === 11) return 'البروق';
-        if (n >= 8 && n <= 12) return 'صقور';
-        if (n > 12 && n <= 25) return 'خوافر';
-        if (n >= 30) return 'طوافات';
-        return 'زوارق مزدوجة';
-    }
-
-    // ============================================================
-    // 6. عرض البيانات
-    // ============================================================
-
-    async function renderMain() {
-        const mainBody = document.getElementById('mainBody');
-
-        mainBody.innerHTML = `
-            <tr>
-                <td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.2);">
-                    <div style="width:30px; height:30px; border:3px solid rgba(255,255,255,0.04); border-top-color:#e94560; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
-                    <h3 style="color:rgba(255,255,255,0.2); font-weight:600; margin-bottom:3px; font-size:0.9rem;">جاري التحميل...</h3>
-                    <p style="color:rgba(255,255,255,0.1); font-size:0.75rem;">يرجى الانتظار</p>
-                </td>
-            </tr>
-        `;
-
-        try {
-            const token = localStorage.getItem('marine_token');
-            if (!token) {
-                window.location.href = '/index.html';
-                return;
-            }
-
-            const response = await fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    localStorage.removeItem('marine_token');
-                    window.location.href = '/index.html';
-                    return;
-                }
-                throw new Error('فشل تحميل البيانات');
-            }
-
-            const vessels = await response.json();
-
-            const fCatMain = document.getElementById('fCatMain');
-            const fRegMain = document.getElementById('fRegMain');
-            const searchMain = document.getElementById('searchMain');
-
-            const catFilter = fCatMain.value || 'الكل';
-            const regFilter = fRegMain.value || 'الكل';
-            const search = searchMain.value.trim().toLowerCase();
-
-            let filtered = vessels.filter(v => {
-                const vCat = v.cat || getCategory(v.len);
-                const vReg = v.region || v.reg || '';
-                const catMatch = (catFilter === 'الكل' || vCat === catFilter);
-                const regMatch = (regFilter === 'الكل' || vReg === regFilter);
-                return catMatch && regMatch;
-            });
-
-            if (search) {
-                filtered = filtered.filter(v => {
-                    const text = [
-                        v.name, v.num, v.region || v.reg, v.zone,
-                        v.port, v.status || v.stat, v.cat,
-                        v.repairUnit
-                    ].filter(Boolean).join(' ').toLowerCase();
-                    return text.includes(search);
-                });
-            }
-
-            if (filtered.length === 0) {
-                mainBody.innerHTML = `
-                    <tr>
-                        <td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.15);">
-                            <i class="fas fa-inbox" style="font-size:2rem; display:block; margin-bottom:10px; color:rgba(255,255,255,0.05);"></i>
-                            <h3 style="color:rgba(255,255,255,0.2); font-weight:600; font-size:0.9rem;">لا توجد مراكب</h3>
-                            <p style="color:rgba(255,255,255,0.1); font-size:0.75rem;">لم يتم العثور على أي مراكب مطابقة</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            let html = '';
-            for (const v of filtered) {
-                const id = v._id || v.id;
-                const name = v.name || '-';
-                const number = v.num || '-';
-                const length = v.len || '-';
-                const category = v.cat || getCategory(length);
-                const region = v.region || v.reg || '-';
-                const zone = v.zone || '-';
-                const port = v.port || '-';
-                const supp = v.supp || '-';
-                const status = v.status || v.stat || '-';
-                const breakType = v.break || '-';
-                const fDate = v.fDate;
-                const eDate = v.eDate;
-                const repairUnit = v.repairUnit || '-';
-
-                const editBtn = canEdit() ?
-                    `<button class="btn-sm btn-edit" onclick="editItem('${id}')" style="padding:2px 7px; border:none; border-radius:20px; font-size:0.55rem; font-weight:600; cursor:pointer; background:rgba(245,200,66,0.1); color:#f5c842; transition:all 0.3s;"><i class="fas fa-edit"></i></button>` :
-                    '';
-                const delBtn = canDelete() ?
-                    `<button class="btn-sm btn-delete" onclick="deleteItem('${id}','${escapeHtml(name)}')" style="padding:2px 7px; border:none; border-radius:20px; font-size:0.55rem; font-weight:600; cursor:pointer; background:rgba(225,112,85,0.1); color:#e17055; transition:all 0.3s;"><i class="fas fa-trash-alt"></i></button>` :
-                    '';
-
-                html += `<tr style="transition:all 0.3s;">
-                    <td style="font-weight:700; color:#fff; padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02);">${escapeHtml(name)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(number)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(length)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(category)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(region)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(zone)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(port)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(supp)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); font-weight:700; color:${status === 'صالح' ? '#00b894' : (status === 'معطب' ? '#e17055' : '#fdcb6e')};">${escapeHtml(status)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(breakType)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${formatDate(fDate)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${formatDate(eDate)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(repairUnit)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02);"><div style="display:flex; gap:3px; flex-wrap:wrap; justify-content:center;">${editBtn} ${delBtn}</div></td>
-                </tr>`;
-            }
-            mainBody.innerHTML = html;
-
-        } catch (err) {
-            console.error('❌ renderMain error:', err);
-            mainBody.innerHTML = `
-                <tr>
-                    <td colspan="14" style="text-align:center; padding:40px 20px; color:#f87171;">
-                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
-                        <h3 style="color:#f87171; font-weight:600; font-size:0.9rem;">خطأ في تحميل البيانات</h3>
-                        <p style="color:rgba(255,255,255,0.3); font-size:0.75rem;">${escapeHtml(err.message)}</p>
-                        <button onclick="renderMain()" style="margin-top:10px; padding:6px 20px; background:linear-gradient(135deg,#e94560,#f5c842); border:none; border-radius:30px; color:#fff; font-weight:600; cursor:pointer; transition:all 0.3s;">
-                            <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-
-    // ============================================================
-    // 7. إضافة مركب
-    // ============================================================
-
-    async function addItem() {
-        if (!canEdit()) {
-            alert('⚠️ ليس لديك صلاحية لإضافة مركب');
-            return;
-        }
-
-        const name = document.getElementById('iName').value.trim();
-        if (!name) {
-            alert('⚠️ يرجى إدخال اسم المركب');
-            return;
-        }
-
-        const status = document.getElementById('iStat').value;
-        const faultDate = document.getElementById('iDate').value;
-        if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
-            alert('⚠️ تاريخ العطب مطلوب للمركب المعطب أو الذي تحت الصيانة');
-            return;
-        }
-
-        const vessel = {
-            name: name,
-            num: document.getElementById('iNum').value.trim(),
-            len: document.getElementById('iLen').value,
-            region: document.getElementById('iReg').value,
-            zone: document.getElementById('iZone').value,
-            port: document.getElementById('iPort').value.trim(),
-            supp: document.getElementById('iSupp').value.trim(),
-            stat: status,
-            break: document.getElementById('iBreak').value.trim(),
-            fDate: faultDate,
-            eDate: document.getElementById('iEnd').value,
-            ref: document.getElementById('iRef').value.trim(),
-            repairUnit: document.getElementById('iRepairUnit').value
-        };
-
-        try {
-            const token = localStorage.getItem('marine_token');
-            const response = await fetch('/api/vessels', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify(vessel)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل حفظ المركب');
-            }
-
-            clearForm();
-            await renderMain();
-            alert('✅ تم حفظ المركب بنجاح');
-        } catch (err) {
-            alert('❌ ' + err.message);
-        }
-    }
-
-    // ============================================================
-    // 8. مسح النموذج
-    // ============================================================
-
-    function clearForm() {
-        ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
-            document.getElementById(id).value = '';
-        });
-        document.getElementById('iReg').value = '';
-        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
-        document.getElementById('iStat').value = 'صالح';
-        document.getElementById('iRepairUnit').value = '';
-    }
-
-    // ============================================================
-    // 9. حذف مركب
-    // ============================================================
-
-    window.deleteItem = async function(id, name) {
-        if (!canDelete()) {
-            alert('⚠️ ليس لديك صلاحية للحذف');
-            return;
-        }
-        if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
-
-        try {
-            const token = localStorage.getItem('marine_token');
-            const response = await fetch(`/api/vessels/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل حذف المركب');
-            }
-
-            await renderMain();
-            alert('✅ تم حذف المركب بنجاح');
-        } catch (err) {
-            alert('❌ ' + err.message);
-        }
-    };
-
-    // ============================================================
-    // 10. تعديل مركب
-    // ============================================================
-
-    window.editItem = async function(id) {
-        if (!canEdit()) {
-            alert('⚠️ ليس لديك صلاحية للتعديل');
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('marine_token');
-            const response = await fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) throw new Error('فشل تحميل البيانات');
-
-            const vessels = await response.json();
-            const v = vessels.find(item => String(item._id || item.id) === String(id));
-            if (!v) {
-                alert('❌ المركب غير موجود');
-                return;
-            }
-
-            document.getElementById('iName').value = v.name || '';
-            document.getElementById('iNum').value = v.num || '';
-            document.getElementById('iLen').value = v.len || '';
-            document.getElementById('iReg').value = v.region || v.reg || '';
-            updateZones();
-            setTimeout(() => { document.getElementById('iZone').value = v.zone || ''; }, 50);
-            document.getElementById('iPort').value = v.port || '';
-            document.getElementById('iSupp').value = v.supp || '';
-            document.getElementById('iStat').value = v.status || v.stat || 'صالح';
-            document.getElementById('iBreak').value = v.break || '';
-            document.getElementById('iDate').value = v.fDate || '';
-            document.getElementById('iEnd').value = v.eDate || '';
-            document.getElementById('iRef').value = v.ref || '';
-            document.getElementById('iRepairUnit').value = v.repairUnit || '';
-
-            const saveBtn = document.getElementById('saveVesselBtn');
-            saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
-            saveBtn.onclick = async function() {
-                await updateItem(id);
-            };
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (err) {
-            alert('❌ ' + err.message);
-        }
-    };
-
-    // ============================================================
-    // 11. تحديث مركب
-    // ============================================================
-
-    async function updateItem(id) {
-        const name = document.getElementById('iName').value.trim();
-        if (!name) {
-            alert('⚠️ اسم المركب مطلوب');
-            return;
-        }
-
-        const vessel = {
-            name: name,
-            num: document.getElementById('iNum').value.trim(),
-            len: document.getElementById('iLen').value,
-            region: document.getElementById('iReg').value,
-            zone: document.getElementById('iZone').value,
-            port: document.getElementById('iPort').value.trim(),
-            supp: document.getElementById('iSupp').value.trim(),
-            stat: document.getElementById('iStat').value,
-            break: document.getElementById('iBreak').value.trim(),
-            fDate: document.getElementById('iDate').value,
-            eDate: document.getElementById('iEnd').value,
-            ref: document.getElementById('iRef').value.trim(),
-            repairUnit: document.getElementById('iRepairUnit').value
-        };
-
-        try {
-            const token = localStorage.getItem('marine_token');
-            const response = await fetch(`/api/vessels/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify(vessel)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل تحديث المركب');
-            }
-
-            clearForm();
-            const saveBtn = document.getElementById('saveVesselBtn');
-            saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
-            saveBtn.onclick = addItem;
-            await renderMain();
-            alert('✅ تم تحديث المركب بنجاح');
-        } catch (err) {
-            alert('❌ ' + err.message);
-        }
-    }
-
-    // ============================================================
-    // 12. مسح البحث
-    // ============================================================
-
-    window.clearMainSearch = function() {
-        document.getElementById('searchMain').value = '';
-        document.getElementById('fCatMain').value = 'الكل';
-        document.getElementById('fRegMain').value = 'الكل';
-        renderMain();
-    };
-
-    // ============================================================
-    // 13. تهيئة الفلاتر
-    // ============================================================
-
-    function initFilters() {
-        const fCatMain = document.getElementById('fCatMain');
-        const fRegMain = document.getElementById('fRegMain');
-
-        fCatMain.innerHTML = '<option value="الكل">الكل</option>';
-        CATS_LIST.forEach(c => {
-            fCatMain.innerHTML += `<option value="${c}">${c}</option>`;
-        });
-
-        fRegMain.innerHTML = '<option value="الكل">الكل</option>';
-        Object.keys(ZONES_DATA).forEach(r => {
-            fRegMain.innerHTML += `<option value="${r}">${r}</option>`;
-        });
-    }
-
-    // ============================================================
-    // 14. تصدير / تحديث
-    // ============================================================
-
-    window.exportFleetData = function() {
-        alert('📤 سيتم تصدير بيانات الأسطول قريباً');
-    };
-
-    window.refreshFleet = function() {
-        renderMain();
-        alert('🔄 تم تحديث البيانات');
-    };
-
-    // ============================================================
-    // 15. التهيئة
-    // ============================================================
-
-    document.addEventListener('DOMContentLoaded', async function() {
-        console.log('🚀 تحميل صفحة السجل العام...');
-
-        const userChecked = await checkUser();
-        if (!userChecked) return;
-
-        // ✅ تحديث عرض الدور
-        const roleDisplay = document.getElementById('userRoleDisplay');
-        if (roleDisplay && window.currentUser) {
-            roleDisplay.textContent = window.currentUser.role;
-        }
-
-        // ✅ إظهار/إخفاء زر الإضافة
-        const addBtn = document.getElementById('saveVesselBtn');
-        if (addBtn) {
-            addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
-            console.log('✅ زر الإضافة:', addBtn.style.display);
-        }
-
-        initFilters();
-        updateZones();
-        await renderMain();
-
-        console.log('✅ صفحة السجل العام جاهزة');
-        console.log('👤 المستخدم:', window.currentUser);
-        console.log('🔑 صلاحية التعديل:', canEdit());
-    });
-</script>
+<!DOCTYPE html>  
+<html lang="ar" dir="rtl">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>⚓ منظومة الوسائل البحرية</title>  
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+    <style>  
+        /* ===== RESET & BASE ===== */  
+        *{margin:0;padding:0;box-sizing:border-box}  
+        body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}  
+        :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}  
+        ::-webkit-scrollbar{width:6px}  
+        ::-webkit-scrollbar-track{background:#0a1628}  
+        ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}  
+        ::-webkit-scrollbar-thumb:hover{background:var(--gold)}  
+          
+        /* ===== LOGIN ===== */  
+        #loginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);overflow:hidden}  
+        #loginOverlay::before{content:'';position:absolute;inset:-50%;background:radial-gradient(ellipse at 20% 50%,rgba(14,165,233,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(230,179,30,0.04) 0%,transparent 60%);animation:bgPulse 12s ease-in-out infinite}  
+        @keyframes bgPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(3deg)}}  
+          
+        .login-container{position:relative;z-index:10;width:100%;max-width:440px;padding:20px}  
+        .login-box{background:rgba(255,255,255,0.04);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:48px 40px 36px;text-align:center;animation:slideUp 0.7s cubic-bezier(0.16,1,0.3,1);box-shadow:0 30px 80px rgba(0,0,0,0.5)}  
+        @keyframes slideUp{from{opacity:0;transform:translateY(40px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}  
+          
+        .login-logo .logo-icon{display:inline-block;font-size:56px;animation:logoFloat 4s ease-in-out infinite}  
+        @keyframes logoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}  
+        .login-logo .logo-text{display:block;font-size:26px;font-weight:900;margin-top:6px;background:linear-gradient(135deg,#e6b31e,#f5d76e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}  
+        .login-subtitle{font-size:14px;color:rgba(255,255,255,0.3);margin-top:4px}  
+          
+        .developer-info{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 28px;padding:8px 0;position:relative}  
+        .developer-info::before,.developer-info::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,179,30,0.2),transparent)}  
+        .dev-badge{font-size:12px;color:rgba(255,255,255,0.3)}  
+        .dev-badge i{color:var(--gold-light)}  
+        .dev-name{font-size:16px;font-weight:700;color:var(--gold-light)}  
+        .dev-version{font-size:11px;color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.04)}  
+          
+        .login-form{margin-top:4px}  
+        .form-group{margin-bottom:14px}  
+        .input-wrapper{position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;transition:all 0.3s}  
+        .input-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06);box-shadow:0 0 0 4px rgba(230,179,30,0.06)}  
+        .input-wrapper .input-icon{position:absolute;right:16px;color:rgba(255,255,255,0.2);font-size:14px}  
+        .input-wrapper input{width:100%;padding:14px 46px 14px 16px;background:transparent;border:none;outline:none;color:#fff;font-size:15px;font-family:inherit}  
+        .input-wrapper input::placeholder{color:rgba(255,255,255,0.2)}  
+        .toggle-password{position:absolute;left:12px;background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}  
+        .toggle-password:hover{color:#fff;background:rgba(255,255,255,0.04)}  
+          
+        .login-options{display:flex;justify-content:space-between;align-items:center;margin:16px 0 20px}  
+        .checkbox-label{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer}  
+        .checkbox-label input[type="checkbox"]{display:none}  
+        .checkbox-label .checkmark{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.3s}  
+        .checkbox-label input:checked+.checkmark{background:var(--gold);border-color:var(--gold)}  
+        .checkbox-label input:checked+.checkmark::after{content:'✓';color:#0a1628;font-size:12px;font-weight:700}  
+        .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}  
+        .forgot-link:hover{color:var(--gold-light)}  
+          
+        .login-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 30px rgba(230,179,30,0.15)}  
+        .login-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}  
+        .login-btn:disabled{opacity:0.6;cursor:not-allowed}  
+        .login-btn .btn-content{display:flex;align-items:center;justify-content:center;gap:10px}  
+        .login-btn .spinner{display:none;width:22px;height:22px;border:3px solid rgba(0,0,0,0.15);border-top-color:#0a1628;border-radius:50%;animation:spin 0.8s linear infinite}  
+        .login-btn.loading .spinner{display:inline-block}  
+        .login-btn.loading .btn-text{display:none}  
+        @keyframes spin{to{transform:rotate(360deg)}}  
+          
+        .error-msg{color:var(--danger);font-size:14px;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.08);border-radius:8px;border-right:4px solid var(--danger);display:none;text-align:right}  
+        .error-msg.show{display:block;animation:shake 0.4s ease}  
+        .error-msg.success{color:var(--success);border-right-color:var(--success);background:rgba(34,197,94,0.08)}  
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}  
+          
+        .security-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;color:rgba(255,255,255,0.2);font-size:12px}  
+        .security-badge i{color:var(--success)}  
+          
+        .login-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.15);font-size:11px}  
+        .login-footer .footer-version{background:rgba(255,255,255,0.03);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.03)}  
+          
+        /* ===== MAIN APP ===== */  
+        #mainApp{display:none;min-height:100vh}  
+        .main-header{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);height:64px;display:flex;align-items:center}  
+        .header-container{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 20px;max-width:1440px;margin:0 auto}  
+        .header-left{display:flex;align-items:center;gap:16px}  
+        .menu-toggle{display:flex;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}  
+        .menu-toggle:hover{background:rgba(255,255,255,0.04)}  
+        .menu-toggle span{display:block;width:24px;height:2px;background:#e2e8f0;border-radius:2px;transition:all 0.3s}  
+        .menu-toggle.active span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}  
+        .menu-toggle.active span:nth-child(2){opacity:0}  
+        .menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}  
+          
+        .brand{display:flex;align-items:center;gap:10px}  
+        .brand .brand-icon{font-size:24px}  
+        .brand h1{font-size:17px;font-weight:700;color:#fff}  
+        .brand .brand-tag{font-size:11px;font-weight:400;color:var(--gold-light);background:rgba(230,179,30,0.1);padding:2px 14px;border-radius:20px;border:1px solid rgba(230,179,30,0.1)}  
+          
+        .header-right{display:flex;align-items:center;gap:12px}  
+        .search-wrapper{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:0 16px;transition:all 0.3s}  
+        .search-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06)}  
+        .search-wrapper input{background:transparent;border:none;outline:none;color:#e2e8f0;padding:8px 0;font-size:13px;font-family:inherit;width:160px}  
+        .search-wrapper input:focus{width:220px}  
+        .search-wrapper input::placeholder{color:rgba(255,255,255,0.2);font-size:12px}  
+        .search-wrapper .search-icon{color:rgba(255,255,255,0.2);font-size:13px;margin-left:10px}  
+        .search-wrapper .search-shortcut{font-size:10px;color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);margin-right:6px}  
+          
+        .notification-wrapper{position:relative}  
+        .notif-btn{position:relative;background:none;border:none;color:rgba(255,255,255,0.3);font-size:20px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.3s}  
+        .notif-btn:hover{color:#fff;background:rgba(255,255,255,0.04)}  
+        .notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50%;min-width:18px;text-align:center;border:2px solid #0a1628;display:none}  
+          
+        .user-wrapper{position:relative}  
+        .user-btn{display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:20px;transition:all 0.3s}  
+        .user-btn:hover{background:rgba(255,255,255,0.04)}  
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0a1628;flex-shrink:0}  
+        .user-name{font-size:13px;color:#e2e8f0;font-weight:500}  
+        .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}  
+        .user-btn:hover .user-arrow{color:#fff}  
+          
+        /* ===== SIDEBAR ===== */  
+        .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}  
+        .sidebar::-webkit-scrollbar{width:4px}  
+        .sidebar::-webkit-scrollbar-track{background:transparent}  
+        .sidebar::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}  
+          
+        .sidebar-header{display:none;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:16px}  
+        .sidebar-brand{display:flex;align-items:center;gap:10px}  
+        .sidebar-brand .brand-icon{font-size:24px;color:var(--gold)}  
+        .sidebar-brand .brand-title{font-size:16px;font-weight:700;color:#fff}  
+        .sidebar-brand .brand-subtitle{font-size:10px;color:rgba(255,255,255,0.2)}  
+        .sidebar-close{display:none;background:none;border:none;color:rgba(255,255,255,0.2);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all 0.3s}  
+        .sidebar-close:hover{background:rgba(255,255,255,0.04);color:#fff}  
+          
+        .sidebar-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.04);margin-bottom:16px}  
+        .sidebar-user .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0a1628;flex-shrink:0}  
+        .sidebar-user .user-info{display:flex;flex-direction:column;flex:1;min-width:0}  
+        .sidebar-user .user-name{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}  
+        .sidebar-user .user-role{font-size:11px;color:rgba(255,255,255,0.3)}  
+          
+        .sidebar-nav{flex:1;display:flex;flex-direction:column;gap:4px}  
+        .nav-group{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}  
+        .nav-group-title{font-size:10px;font-weight:700;color:rgba(255,255,255,0.15);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px}  
+        .nav-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all 0.3s;text-align:right;width:100%;position:relative}  
+        .nav-btn i{width:20px;text-align:center;font-size:15px;flex-shrink:0}  
+        .nav-btn:hover{background:rgba(255,255,255,0.04);color:#fff}  
+        .nav-btn.active{background:rgba(230,179,30,0.06);color:var(--gold-light)}  
+        .nav-btn.active::before{content:'';position:absolute;right:0;top:20%;height:60%;width:3px;background:var(--gold);border-radius:0 3px 3px 0}  
+        .nav-btn .nav-badge{margin-right:auto;font-size:9px;padding:2px 8px;border-radius:50%;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);min-width:18px;text-align:center;display:none}  
+        .nav-btn .nav-badge.warning{background:rgba(239,68,68,0.12);color:var(--danger)}  
+        .nav-btn .nav-badge.success{background:rgba(34,197,94,0.12);color:var(--success)}  
+        .nav-btn .nav-badge.info{background:rgba(59,130,246,0.12);color:var(--info)}  
+          
+        .sidebar-footer{border-top:1px solid rgba(255,255,255,0.04);padding-top:14px;margin-top:8px;display:flex;flex-direction:column;gap:8px}  
+        .footer-status{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.2)}  
+        .footer-status .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}  
+        .footer-status .status-dot.online{background:var(--success);animation:pulseDot 2s ease-in-out infinite}  
+        @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}  
+          
+        .footer-version{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.15)}  
+        .footer-version i{color:var(--gold)}  
+        .footer-logout{display:flex;align-items:center;gap:10px;padding:8px 14px;border:none;border-radius:8px;background:rgba(239,68,68,0.08);color:var(--danger);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;width:100%}  
+        .footer-logout:hover{background:rgba(239,68,68,0.16)}  
+        .footer-logout i{font-size:14px}  
+          
+        /* ===== MAIN CONTENT ===== */  
+        .main-content{margin-right:240px;min-height:calc(100vh - 64px);padding:20px 24px}  
+        .page-container{max-width:1440px;margin:0 auto}  
+        .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:200px}  
+        .loader-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.04);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}  
+        .page-loader p{margin-top:16px;color:rgba(255,255,255,0.2);font-size:14px}  
+        .page-content{animation:fadePage 0.4s ease-out}  
+        @keyframes fadePage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}  
+        #pageContainer{min-height:300px}  
+          
+        .back-to-top{position:fixed;bottom:30px;right:30px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);border:none;color:#0a1628;font-size:20px;cursor:pointer;box-shadow:0 4px 30px rgba(230,179,30,0.15);transition:all 0.3s;z-index:40;display:none;align-items:center;justify-content:center}  
+        .back-to-top:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}  
+          
+        .connection-status{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.9);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;z-index:999;backdrop-filter:blur(10px)}  
+        .toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:420px;width:90%;pointer-events:none}  
+        .toast{padding:12px 18px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;animation:toastSlide 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(10px);display:flex;align-items:center;gap:10px;box-shadow:0 8px 40px rgba(0,0,0,0.3);pointer-events:auto;border:1px solid rgba(255,255,255,0.08)}  
+        .toast-success{background:rgba(16,185,129,0.92)}  
+        .toast-error{background:rgba(239,68,68,0.92)}  
+        .toast-warning{background:rgba(245,158,11,0.92)}  
+        .toast-info{background:rgba(59,130,246,0.92)}  
+        @keyframes toastSlide{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}  
+          
+        .modal-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}  
+        .modal-box{background:#111e3a;border:1px solid rgba(255,255,255,0.06);border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalFade 0.3s cubic-bezier(0.16,1,0.3,1)}  
+        @keyframes modalFade{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}  
+        .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04)}  
+        .modal-header h3{font-size:18px;font-weight:700;color:#fff}  
+        .modal-close{background:none;border:none;color:rgba(255,255,255,0.2);font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:all 0.3s}  
+        .modal-close:hover{background:rgba(255,255,255,0.04);color:#fff}  
+        .modal-body{padding:20px;max-height:400px;overflow-y:auto;color:#e2e8f0}  
+        .modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.04)}  
+          
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;text-decoration:none}  
+        .btn:active{transform:scale(0.97)}  
+        .btn-sm{padding:4px 12px;font-size:12px}  
+        .btn-primary{background:var(--info);color:#fff}  
+        .btn-primary:hover{box-shadow:0 4px 20px rgba(59,130,246,0.3)}  
+        .btn-success{background:var(--success);color:#fff}  
+        .btn-success:hover{box-shadow:0 4px 20px rgba(34,197,94,0.3)}  
+        .btn-warning{background:var(--warning);color:#0a1628}  
+        .btn-warning:hover{box-shadow:0 4px 20px rgba(234,179,8,0.3)}  
+        .btn-danger{background:var(--danger);color:#fff}  
+        .btn-danger:hover{box-shadow:0 4px 20px rgba(239,68,68,0.3)}  
+        .btn-gold{background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}  
+        .btn-gold:hover{box-shadow:0 4px 30px rgba(230,179,30,0.25)}  
+        .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#e2e8f0}  
+        .btn-outline:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12)}  
+        .btn-secondary{background:rgba(255,255,255,0.04);color:#94a3b8;border:1px solid rgba(255,255,255,0.06)}  
+        .btn-secondary:hover{background:rgba(255,255,255,0.06)}  
+          
+        /* ===== RESPONSIVE ===== */  
+        @media (max-width:992px){  
+            .search-wrapper input{width:120px}  
+            .search-wrapper input:focus{width:160px}  
+            .brand .brand-tag{display:none}  
+            .main-content{margin-right:0;padding:14px 16px}  
+            .menu-toggle{display:flex}  
+            .sidebar{transform:translateX(calc(100% + 10px));width:280px;padding:12px}  
+            .sidebar.open{transform:translateX(0)}  
+            .sidebar-header{display:flex}  
+            .sidebar-close{display:block}  
+        }  
+        @media (max-width:768px){  
+            .login-box{padding:32px 24px 28px}  
+            .login-logo .logo-icon{font-size:42px}  
+            .login-logo .logo-text{font-size:20px}  
+            .brand h1{font-size:14px}  
+            .brand .brand-tag{display:none}  
+            .search-wrapper{display:none}  
+            .user-name{display:none}  
+            .main-content{padding:10px 12px}  
+        }  
+        @media (max-width:480px){  
+            .login-box{padding:24px 16px 20px}  
+            .login-logo .logo-icon{font-size:32px}  
+            .login-logo .logo-text{font-size:17px}  
+            .login-subtitle{font-size:12px}  
+            .developer-info{flex-wrap:wrap;gap:4px}  
+            .developer-info .dev-name{font-size:14px}  
+            .input-wrapper input{padding:12px 40px 12px 14px;font-size:14px}  
+            .login-btn{padding:14px;font-size:15px}  
+            .brand h1{font-size:12px}  
+            .brand .brand-icon{font-size:18px}  
+            .header-right{gap:6px}  
+            .notif-btn{font-size:17px;padding:6px}  
+            .user-avatar{width:28px;height:28px;font-size:12px}  
+            .sidebar{width:260px;padding:10px}  
+            .sidebar-user .user-avatar{width:34px;height:34px;font-size:14px}  
+            .nav-btn{padding:8px 12px;font-size:12px}  
+            .nav-btn i{font-size:13px;width:18px}  
+        }  
+        @media print{.main-header,.sidebar,.back-to-top,.toast-container,.modal-overlay,.no-print{display:none!important}.main-content{margin-right:0!important;padding:0!important}}  
+    </style>  
+</head>  
+<body>  
+
+    <!-- ===== LOGIN ===== -->  
+    <div id="loginOverlay">  
+        <div class="login-container">  
+            <div class="login-box">  
+                <div class="login-logo">  
+                    <span class="logo-icon">⚓</span>  
+                    <h1 class="logo-text">منظومة الوسائل البحرية</h1>  
+                    <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>  
+                </div>  
+                <div class="developer-info">  
+                    <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>  
+                    <span class="dev-name">أمان الله ناجي</span>  
+                    <span class="dev-version">v7.0</span>  
+                </div>  
+                <form id="loginForm" class="login-form" autocomplete="off" novalidate>  
+                    <div class="form-group">  
+                        <div class="input-wrapper">  
+                            <i class="fas fa-user input-icon"></i>  
+                            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>  
+                        </div>  
+                    </div>  
+                    <div class="form-group">  
+                        <div class="input-wrapper">  
+                            <i class="fas fa-lock input-icon"></i>  
+                            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>  
+                            <button type="button" class="toggle-password" id="togglePassword">  
+                                <i class="fas fa-eye"></i>  
+                            </button>  
+                        </div>  
+                    </div>  
+                    <div class="login-options">  
+                        <label class="checkbox-label">  
+                            <input type="checkbox" id="rememberMe">  
+                            <span class="checkmark"></span>  
+                            تذكرني  
+                        </label>  
+                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>  
+                    </div>  
+                    <button type="submit" class="login-btn" id="loginButton">  
+                        <span class="btn-content">  
+                            <span class="btn-text">🚀 دخول إلى النظام</span>  
+                            <span class="spinner"></span>  
+                        </span>  
+                    </button>  
+                    <div id="loginError" class="error-msg"></div>  
+                    <div class="security-badge">  
+                        <i class="fas fa-shield-alt"></i>  
+                        <span>اتصال آمن ومشفر</span>  
+                    </div>  
+                </form>  
+                <div class="login-footer">  
+                    <span>نظام إدارة وإسناد الوحدات البحرية</span>  
+                    <span class="footer-version">الإصدار الاحترافي v7.0</span>  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
+
+    <!-- ===== MAIN APP ===== -->  
+    <div id="mainApp" style="display:none;">  
+        <header class="main-header">  
+            <div class="header-container">  
+                <div class="header-left">  
+                    <button class="menu-toggle" id="menuToggle">  
+                        <span></span><span></span><span></span>  
+                    </button>  
+                    <div class="brand">  
+                        <span class="brand-icon">⚓</span>  
+                        <h1>منظومة الوسائل البحرية</h1>  
+                        <span class="brand-tag">الوكيل أمان الله ناجي</span>  
+                    </div>  
+                </div>  
+                <div class="header-right">  
+                    <div class="search-wrapper">  
+                        <input type="text" id="quickSearch" placeholder="بحث سريع...">  
+                        <i class="fas fa-search search-icon"></i>  
+                        <kbd class="search-shortcut">⌘K</kbd>  
+                    </div>  
+                    <div class="notification-wrapper">  
+                        <button class="notif-btn" id="notifBtn">  
+                            <i class="fas fa-bell"></i>  
+                            <span class="notif-badge" id="notifBadge">0</span>  
+                        </button>  
+                    </div>  
+                    <div class="user-wrapper">  
+                        <button class="user-btn" id="userBtn">  
+                            <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>  
+                            <span class="user-name" id="userDisplayName">المستخدم</span>  
+                            <i class="fas fa-chevron-down user-arrow"></i>  
+                        </button>  
+                    </div>  
+                </div>  
+            </div>  
+        </header>  
+
+        <nav class="sidebar" id="sidebar">  
+            <div class="sidebar-header">  
+                <div class="sidebar-brand">  
+                    <span class="brand-icon">⚓</span>  
+                    <div>  
+                        <div class="brand-title">الأسطول البحري</div>  
+                        <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>  
+                    </div>  
+                </div>  
+                <button class="sidebar-close" id="sidebarClose">✕</button>  
+            </div>  
+            <div class="sidebar-user">  
+                <div class="user-avatar" id="sidebarUserAvatar">م</div>  
+                <div class="user-info">  
+                    <span class="user-name" id="sidebarUserName">المستخدم</span>  
+                    <span class="user-role" id="sidebarUserRole">مسؤول</span>  
+                </div>  
+            </div>  
+            <div class="sidebar-nav">  
+                <div class="nav-group">  
+                    <span class="nav-group-title">الرئيسية</span>  
+                    <button class="nav-btn active" data-page="dashboard">  
+                        <i class="fas fa-chart-pie"></i> لوحة التحكم  
+                    </button>  
+                    <button class="nav-btn" data-page="fleet">  
+                        <i class="fas fa-ship"></i> السجل العام  
+                        <span class="nav-badge" id="fleetBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">إدارة الأسطول</span>  
+                    <button class="nav-btn" data-page="maintenance">  
+                        <i class="fas fa-wrench"></i> الصيانة  
+                        <span class="nav-badge warning" id="maintenanceBadge">0</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="efficiency">  
+                        <i class="fas fa-chart-line"></i> الجاهزية  
+                    </button>  
+                    <button class="nav-btn" data-page="support">  
+                        <i class="fas fa-headset"></i> الدعم  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">العمليات</span>  
+                    <button class="nav-btn" data-page="notes">  
+                        <i class="fas fa-sticky-note"></i> Note Verbale  
+                    </button>  
+                    <button class="nav-btn" data-page="sessions">  
+                        <i class="fas fa-users-cog"></i> المراقبة  
+                        <span class="nav-badge success" id="sessionsBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">الإدارة</span>  
+                    <button class="nav-btn" data-page="users">  
+                        <i class="fas fa-users"></i> المستخدمين  
+                        <span class="nav-badge" id="usersBadge">0</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="logs">  
+                        <i class="fas fa-history"></i> السجلات  
+                        <span class="nav-badge" id="logsBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">متقدم</span>  
+                    <button class="nav-btn" data-page="ai-assistant">  
+                        <i class="fas fa-robot"></i> المساعد الذكي  
+                        <span class="nav-badge success">AI</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="settings">  
+                        <i class="fas fa-cog"></i> الإعدادات  
+                    </button>  
+                </div>  
+            </div>  
+            <div class="sidebar-footer">  
+                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>  
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>  
+                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>  
+            </div>  
+        </nav>  
+
+        <main class="main-content">  
+            <div class="page-container">  
+                <div class="page-loader" id="pageLoader" style="display:none;">  
+                    <div class="loader-spinner"></div>  
+                    <p>جاري التحميل...</p>  
+                </div>  
+                <div id="pageContainer"></div>  
+            </div>  
+        </main>  
+
+        <button class="back-to-top" id="backToTop" style="display:none;">  
+            <i class="fas fa-chevron-up"></i>  
+        </button>  
+        <div class="connection-status" id="connectionStatus" style="display:none;">  
+            <i class="fas fa-wifi"></i><span>غير متصل</span>  
+        </div>  
+    </div>  
+
+    <!-- ===== TOAST ===== -->  
+    <div class="toast-container" id="toastContainer"></div>  
+
+    <!-- ===== MODAL ===== -->  
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">  
+        <div class="modal-box">  
+            <div class="modal-header">  
+                <h3 id="modalTitle">عنوان</h3>  
+                <button class="modal-close" id="modalClose">✕</button>  
+            </div>  
+            <div class="modal-body" id="modalBody"></div>  
+            <div class="modal-footer">  
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>  
+                <button class="btn-primary" id="modalConfirm">تأكيد</button>  
+            </div>  
+        </div>  
+    </div>  
+
+    <!-- ===== JAVASCRIPT ===== -->  
+    <script>  
+        // ============================================================  
+        // 🚢 MARINE SYSTEM - v7.0 (FIXED)  
+        // ============================================================  
+
+        console.log('🚢 Marine System v7.0 - Loading...');  
+
+        const CONFIG = {  
+            API: '/api',  
+            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },  
+            PAGES: {  
+                dashboard: 'لوحة التحكم', fleet: 'السجل العام',  
+                maintenance: 'الصيانة', efficiency: 'الجاهزية',  
+                support: 'الدعم', users: 'المستخدمين',  
+                notes: 'Note Verbale', sessions: 'المراقبة',  
+                'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',  
+                logs: 'السجلات', profile: 'الملف الشخصي'  
+            }  
+        };  
+
+        let currentUser = null;  
+        let currentPage = 'dashboard';  
+
+        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
+
+        function getRoleName(r) {  
+            const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
+            return R[r] || r || 'مستخدم';  
+        }  
+
+        function escapeHTML(s) {  
+            if (!s) return '';  
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m]));  
+        }  
+
+        // ===== TOAST =====  
+        function showToast(msg, type = 'info') {  
+            const c = document.getElementById('toastContainer');  
+            if (!c) return;  
+            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };  
+            const t = document.createElement('div');  
+            t.className = 'toast toast-' + type;  
+            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;  
+            c.appendChild(t);  
+            setTimeout(() => {  
+                t.style.opacity = '0';  
+                t.style.transform = 'translateX(30px)';  
+                setTimeout(() => t.remove(), 300);  
+            }, 3000);  
+        }  
+
+        // ===== LOGIN =====  
+        function doLogin() {  
+            console.log('🔐 محاولة تسجيل الدخول');  
+
+            const username = document.getElementById('username');  
+            const password = document.getElementById('password');  
+            const errorEl = document.getElementById('loginError');  
+            const loginBtn = document.getElementById('loginButton');  
+
+            const user = username.value.trim();  
+            const pass = password.value.trim();  
+
+            errorEl.className = 'error-msg';  
+            errorEl.textContent = '';  
+
+            if (!user || !pass) {  
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';  
+                errorEl.classList.add('show');  
+                return;  
+            }  
+
+            loginBtn.disabled = true;  
+            loginBtn.classList.add('loading');  
+
+            fetch(CONFIG.API + '/auth/login', {  
+                method: 'POST',  
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },  
+                body: JSON.stringify({ username: user, password: pass })  
+            })  
+            .then(response => response.json())  
+            .then(data => {  
+                loginBtn.disabled = false;  
+                loginBtn.classList.remove('loading');  
+
+                if (data.success && data.user) {  
+                    const token = data.token || data.accessToken;  
+                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');  
+
+                    currentUser = data.user;  
+                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);  
+
+                    document.getElementById('loginOverlay').style.display = 'none';  
+                    document.getElementById('mainApp').style.display = 'block';  
+
+                    updateUserDisplay();  
+                    loadPage('dashboard');  
+                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');  
+                    loadAllData();  
+                } else {  
+                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');  
+                    errorEl.classList.add('show');  
+                }  
+            })  
+            .catch(error => {  
+                loginBtn.disabled = false;  
+                loginBtn.classList.remove('loading');  
+                errorEl.textContent = '❌ ' + error.message;  
+                errorEl.classList.add('show');  
+            });  
+        }  
+
+        // ===== VERIFY TOKEN =====  
+        async function verifyToken(token) {  
+            try {  
+                const response = await fetch('/api/auth/me', {  
+                    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }  
+                });  
+
+                if (response.ok) {  
+                    const data = await response.json();  
+                    if (data.success && data.user) {  
+                        currentUser = data.user;  
+                        return true;  
+                    }  
+                }  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                return false;  
+            } catch (error) {  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                return false;  
+            }  
+        }  
+
+        // ===== LOAD DATA =====  
+        async function loadAllData() {  
+            const token = getToken();  
+            if (!token) return;  
+
+            const headers = { 'Authorization': 'Bearer ' + token };  
+
+            try {  
+                const [vesselsRes, usersRes] = await Promise.all([  
+                    fetch(CONFIG.API + '/vessels', { headers }),  
+                    fetch(CONFIG.API + '/users', { headers })  
+                ]);  
+
+                if (vesselsRes.ok) {  
+                    const data = await vesselsRes.json();  
+                    window.allVessels = Array.isArray(data) ? data : [];  
+                }  
+                if (usersRes.ok) {  
+                    const data = await usersRes.json();  
+                    window.allUsers = Array.isArray(data) ? data : [];  
+                }  
+            } catch (error) {  
+                console.error('❌ خطأ أثناء تحميل البيانات:', error);  
+            }  
+        }  
+
+        // ===== USER DISPLAY =====  
+        function updateUserDisplay() {  
+            if (!currentUser) return;  
+            const n = currentUser.name || currentUser.username;  
+            document.getElementById('userDisplayName').textContent = n;  
+            document.getElementById('userInitial').textContent = n.charAt(0);  
+            document.getElementById('sidebarUserName').textContent = n;  
+            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);  
+            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);  
+        }  
+
+        // ===== LOAD PAGE =====  
+        function loadPage(page) {  
+            currentPage = page;  
+            localStorage.setItem(CONFIG.KEYS.PAGE, page);  
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {  
+                btn.classList.toggle('active', btn.dataset.page === page);  
+            });  
+
+            const container = document.getElementById('pageContainer');  
+            const loader = document.getElementById('pageLoader');  
+
+            if (!container) return;  
+
+            loader.style.display = 'flex';  
+            container.innerHTML = '';  
+
+            fetch('/pages/' + page + '.html', { cache: 'no-store' })  
+                .then(response => {  
+                    if (!response.ok) throw new Error('فشل تحميل الصفحة (' + response.status + ')');  
+                    return response.text();  
+                })  
+                .then(html => {  
+                    container.innerHTML = html;  
+                    container.querySelectorAll('script').forEach(oldScript => {  
+                        const newScript = document.createElement('script');  
+                        newScript.textContent = oldScript.textContent;  
+                        document.body.appendChild(newScript);  
+                        oldScript.remove();  
+                    });  
+                    loader.style.display = 'none';  
+                    document.title = '⚓ ' + (CONFIG.PAGES[page] || page);  
+                })  
+                .catch(error => {  
+                    loader.style.display = 'none';  
+                    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#f87171;">  
+                        <div style="font-size:48px;">❌</div>  
+                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>  
+                        <p>${escapeHTML(error.message)}</p>  
+                        <button onclick="loadPage('dashboard')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>  
+                    </div>`;  
+                });  
+        }  
+
+        // ===== LOGOUT =====  
+        function doLogout() {  
+            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;  
+            currentUser = null;  
+            localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+            document.getElementById('loginOverlay').style.display = 'flex';  
+            document.getElementById('mainApp').style.display = 'none';  
+            document.getElementById('username').value = '';  
+            document.getElementById('password').value = '';  
+            document.getElementById('loginError').className = 'error-msg';  
+            showToast('👋 تم تسجيل الخروج', 'info');  
+        }  
+
+        // ===== SIDEBAR =====  
+        function toggleSidebar() {  
+            document.getElementById('sidebar').classList.toggle('open');  
+            document.getElementById('menuToggle').classList.toggle('active');  
+        }  
+
+        function closeSidebar() {  
+            document.getElementById('sidebar').classList.remove('open');  
+            document.getElementById('menuToggle').classList.remove('active');  
+        }  
+
+        // ===== INIT =====  
+        document.addEventListener('DOMContentLoaded', async function() {  
+            console.log('📄 DOM جاهز');  
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {  
+                e.preventDefault();  
+                const button = document.getElementById('loginButton');  
+                if (!button.disabled) doLogin();  
+            });  
+
+            document.getElementById('togglePassword').onclick = function() {  
+                const i = document.getElementById('password');  
+                const ic = this.querySelector('i');  
+                i.type = i.type === 'password' ? 'text' : 'password';  
+                ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';  
+            };  
+
+            document.getElementById('menuToggle').onclick = toggleSidebar;  
+            document.getElementById('sidebarClose').onclick = closeSidebar;  
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {  
+                btn.addEventListener('click', function() {  
+                    const page = this.dataset.page;  
+                    if (page) loadPage(page);  
+                    if (window.innerWidth <= 992) closeSidebar();  
+                });  
+            });  
+
+            document.getElementById('notifBtn').onclick = function() {  
+                showToast('📬 تم فتح الإشعارات', 'info');  
+            };  
+
+            document.getElementById('userBtn').onclick = function() {  
+                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();  
+            };  
+
+            document.getElementById('backToTop').onclick = function() {  
+                window.scrollTo({ top: 0, behavior: 'smooth' });  
+            };  
+            window.addEventListener('scroll', function() {  
+                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';  
+            });  
+
+            // ✅ التحقق من التوكن  
+            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
+            if (token) {  
+                const isValid = await verifyToken(token);  
+                if (isValid) {  
+                    document.getElementById('loginOverlay').style.display = 'none';  
+                    document.getElementById('mainApp').style.display = 'block';  
+                    updateUserDisplay();  
+                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';  
+                    loadPage(savedPage);  
+                    showToast('👋 مرحباً بعودتك', 'success');  
+                    setTimeout(loadAllData, 500);  
+                } else {  
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                }  
+            }  
+
+            console.log('✅ Marine System v7.0 ready');  
+        });  
+
+        // ===== GLOBAL =====  
+        window.doLogin = doLogin;  
+        window.doLogout = doLogout;  
+        window.loadPage = loadPage;  
+        window.toggleSidebar = toggleSidebar;  
+        window.closeSidebar = closeSidebar;  
+        window.showToast = showToast;  
+        window.verifyToken = verifyToken;  
+        window.loadAllData = loadAllData;  
+        window.currentUser = currentUser;  
+
+        console.log('✅ Marine System v7.0 loaded successfully');  
+    </script>  
+
+</body>  
+</html>
