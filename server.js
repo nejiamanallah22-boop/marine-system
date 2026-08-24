@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.1 (AI INTEGRATED)
+ * 🚢 MARINE SYSTEM - SERVER v38.2 (FULLY INTEGRATED)
  * ============================================================
  * ✅ FIXED: Account lock timeout check
  * ✅ FIXED: Token version validation
@@ -10,6 +10,7 @@
  * ✅ ADDED: AI API endpoints
  * ✅ ADDED: Sessions API
  * ✅ ADDED: Logs API
+ * ✅ ADDED: Seed Data (Vessels with Repair Units)
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -62,7 +63,7 @@ const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.1 - AI INTEGRATED');
+console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
@@ -142,10 +143,11 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL
+// 🚢 VESSEL MODEL (مع الوحدة المسؤولة عن الإصلاح)
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
+    len: { type: Number, default: 0 },
     stat: { 
         type: String, 
         enum: ['صالح', 'معطب', 'صيانة'],
@@ -153,12 +155,23 @@ const VesselSchema = new mongoose.Schema({
     },
     region: { 
         type: String, 
-        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب'],
+        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', 
+               'وحدة الصيانة والإسناد البحري تونس', 
+               'وحدة الصيانة والإسناد البحري المنستير',
+               'وحدة الصيانة والإسناد البحري صفاقس',
+               'وحدة الصيانة والإسناد البحري جرجيس',
+               'المجمع الأمني بقبيبة'],
         trim: true 
     },
+    zone: { type: String, trim: true },
     port: { type: String, trim: true },
+    supp: { type: String, trim: true },
+    break: { type: String, trim: true },
+    fDate: { type: Date },
+    eDate: { type: Date },
+    ref: { type: String, trim: true },
     cat: { type: String, trim: true },
-    len: { type: String, trim: true },
+    repairUnit: { type: String, trim: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
@@ -462,6 +475,177 @@ async function createAdmin() {
 }
 
 // ============================================================
+// 🌱 SEED DATA - إضافة بيانات أولية للمراكب
+// ============================================================
+
+async function seedVessels() {
+    try {
+        const count = await Vessel.countDocuments();
+        console.log(`📊 عدد المراكب الحالي: ${count}`);
+        
+        if (count === 0) {
+            console.log('🌱 جاري إضافة بيانات أولية للمراكب...');
+            
+            const sampleVessels = [
+                { 
+                    name: 'البروق 1', 
+                    num: 'B001', 
+                    len: 11, 
+                    region: 'الشمال', 
+                    zone: 'تونس',
+                    stat: 'صالح', 
+                    cat: 'البروق',
+                    port: 'تونس',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
+                },
+                { 
+                    name: 'صقر 2', 
+                    num: 'S002', 
+                    len: 10, 
+                    region: 'الساحل', 
+                    zone: 'سوسة',
+                    stat: 'صالح', 
+                    cat: 'صقور',
+                    port: 'سوسة',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
+                },
+                { 
+                    name: 'خافرة 3', 
+                    num: 'K003', 
+                    len: 20, 
+                    region: 'الوسط', 
+                    zone: 'صفاقس',
+                    stat: 'معطب', 
+                    cat: 'خوافر',
+                    port: 'صفاقس',
+                    break: 'عطل في المحرك الرئيسي',
+                    fDate: new Date('2024-01-15'),
+                    eDate: new Date('2024-03-15'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
+                },
+                { 
+                    name: 'طوافة 4', 
+                    num: 'T004', 
+                    len: 35, 
+                    region: 'الجنوب', 
+                    zone: 'جرجيس',
+                    stat: 'صيانة', 
+                    cat: 'طوافات',
+                    port: 'جرجيس',
+                    break: 'أعطال كهربائية',
+                    fDate: new Date('2024-02-01'),
+                    eDate: new Date('2024-03-01'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
+                },
+                { 
+                    name: 'زورق سريع 5', 
+                    num: 'Z005', 
+                    len: 15, 
+                    region: 'الشمال', 
+                    zone: 'بنزرت',
+                    stat: 'صالح', 
+                    cat: 'زوارق مزدوجة',
+                    port: 'بنزرت',
+                    supp: 'قاعدة بنزرت',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
+                },
+                { 
+                    name: 'البروق 6', 
+                    num: 'B006', 
+                    len: 11, 
+                    region: 'الساحل', 
+                    zone: 'المنستير',
+                    stat: 'صيانة', 
+                    cat: 'البروق',
+                    port: 'المنستير',
+                    break: 'عطل في نظام الملاحة',
+                    fDate: new Date('2024-02-10'),
+                    eDate: new Date('2024-02-25'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
+                },
+                { 
+                    name: 'صقر 7', 
+                    num: 'S007', 
+                    len: 9, 
+                    region: 'الجنوب', 
+                    zone: 'جربة',
+                    stat: 'صالح', 
+                    cat: 'صقور',
+                    port: 'جربة',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
+                },
+                // وحدات الصيانة
+                { 
+                    name: 'وحدة صيانة تونس', 
+                    num: 'M001', 
+                    len: 0, 
+                    region: 'وحدة الصيانة والإسناد البحري تونس', 
+                    zone: 'تونس',
+                    stat: 'صالح', 
+                    cat: 'وحدات صيانة',
+                    port: 'تونس',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
+                },
+                { 
+                    name: 'وحدة صيانة المنستير', 
+                    num: 'M002', 
+                    len: 0, 
+                    region: 'وحدة الصيانة والإسناد البحري المنستير', 
+                    zone: 'المنستير',
+                    stat: 'صالح', 
+                    cat: 'وحدات صيانة',
+                    port: 'المنستير',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
+                },
+                { 
+                    name: 'وحدة صيانة صفاقس', 
+                    num: 'M003', 
+                    len: 0, 
+                    region: 'وحدة الصيانة والإسناد البحري صفاقس', 
+                    zone: 'صفاقس',
+                    stat: 'صالح', 
+                    cat: 'وحدات صيانة',
+                    port: 'صفاقس',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
+                },
+                { 
+                    name: 'وحدة صيانة جرجيس', 
+                    num: 'M004', 
+                    len: 0, 
+                    region: 'وحدة الصيانة والإسناد البحري جرجيس', 
+                    zone: 'جرجيس',
+                    stat: 'صالح', 
+                    cat: 'وحدات صيانة',
+                    port: 'جرجيس',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
+                },
+                { 
+                    name: 'المجمع الأمني بقبيبة', 
+                    num: 'A001', 
+                    len: 0, 
+                    region: 'المجمع الأمني بقبيبة', 
+                    zone: 'قبيبة',
+                    stat: 'صالح', 
+                    cat: 'مراكز قيادة',
+                    port: 'قبيبة',
+                    repairUnit: 'المجمع الأمني بقبيبة'
+                }
+            ];
+            
+            await Vessel.insertMany(sampleVessels);
+            console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية بنجاح`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صالح').length} صالح`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'معطب').length} معطب`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صيانة').length} تحت الصيانة`);
+        } else {
+            console.log(`✅ توجد ${count} مراكب بالفعل في قاعدة البيانات`);
+        }
+    } catch (error) {
+        console.error('❌ خطأ في إضافة البيانات الأولية:', error.message);
+    }
+}
+
+// ============================================================
 // 🔐 AUTHENTICATION
 // ============================================================
 
@@ -761,10 +945,10 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const vessels = await Vessel.find().sort({ createdAt: -1 });
         console.log(`   📦 Found: ${vessels.length} vessels`);
-        res.json({ success: true, vessels });
+        res.json(vessels);
     } catch (error) {
         console.error('❌ [VESSELS] GET Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -774,10 +958,10 @@ app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req
         const vessel = new Vessel(req.body);
         await vessel.save();
         console.log(`   ✅ Created: ${vessel.name}`);
-        res.status(201).json({ success: true, vessel });
+        res.status(201).json(vessel);
     } catch (error) {
         console.error('❌ [VESSELS] POST Error:', error.message);
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -787,13 +971,13 @@ app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (
         const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!vessel) {
             console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
+            return res.status(404).json({ error: 'Vessel not found' });
         }
         console.log(`   ✅ Updated: ${vessel.name}`);
-        res.json({ success: true, vessel });
+        res.json(vessel);
     } catch (error) {
         console.error('❌ [VESSELS] PUT Error:', error.message);
-        res.status(400).json({ success: false, error: error.message });
+        res.status(400).json({ error: error.message });
     }
 });
 
@@ -803,13 +987,13 @@ app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res
         const vessel = await Vessel.findByIdAndDelete(req.params.id);
         if (!vessel) {
             console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ success: false, error: 'Vessel not found' });
+            return res.status(404).json({ error: 'Vessel not found' });
         }
         console.log(`   ✅ Deleted: ${vessel.name}`);
         res.json({ success: true, message: 'Vessel deleted' });
     } catch (error) {
         console.error('❌ [VESSELS] DELETE Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -932,16 +1116,13 @@ app.post('/api/notes', authenticate, async (req, res) => {
 app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
     console.log(`📊 [SESSIONS] GET - User: ${req.user.username}`);
     try {
-        // جلب جميع المستخدمين النشطين
         const users = await User.find().select('name username email role isActive lastLogin createdAt');
         
-        // جلب آخر 100 سجل نشاط
         const recentLogs = await Log.find()
             .sort({ createdAt: -1 })
             .limit(100)
             .lean();
 
-        // بناء بيانات الجلسات
         const sessions = users.map((user, index) => {
             const userLogs = recentLogs.filter(log => log.username === user.username);
             const lastActivity = userLogs.length > 0 ? userLogs[0].createdAt : user.lastLogin || user.createdAt;
@@ -962,7 +1143,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
             };
         });
 
-        // ترتيب الجلسات حسب النشاط (الأحدث أولاً)
         sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
 
         console.log(`   📦 Found: ${sessions.length} sessions`);
@@ -1055,7 +1235,6 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         }
         console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
-        // جلب بيانات السياق
         const vessels = await Vessel.find().lean();
         const maintenance = await Maintenance.find().lean();
         const totalVessels = vessels.length;
@@ -1264,11 +1443,14 @@ async function startServer() {
     }
 
     await createAdmin();
+    
+    // ✅ إضافة البيانات الأولية للمراكب
+    await seedVessels();
 
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.1 - AI INTEGRATED');
+        console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
@@ -1283,6 +1465,11 @@ async function startServer() {
         console.log('📊 Sessions & Logs:');
         console.log('   - GET  /api/sessions     (Active Sessions)');
         console.log('   - GET  /api/logs         (Activity Logs)');
+        console.log('🚢 Vessels:');
+        console.log('   - GET  /api/vessels      (All Vessels)');
+        console.log('   - POST /api/vessels      (Create Vessel)');
+        console.log('   - PUT  /api/vessels/:id  (Update Vessel)');
+        console.log('   - DELETE /api/vessels/:id (Delete Vessel)');
         console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log('   👤 Username: admin');
