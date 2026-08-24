@@ -468,11 +468,11 @@
     </div>  
 
     <!-- ============================================================  
-    📦 JAVASCRIPT - الكود المُعدل 10/10  
+    📦 JAVASCRIPT - الكود المُعدل (بدون تكرار)  
     ============================================================ -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)  
+        // 🚢 MARINE SYSTEM - v7.0 (FIXED - No Duplicate Declaration)  
         // ============================================================  
 
         console.log('🚢 Marine System v7.0 - Loading...');  
@@ -509,16 +509,16 @@
         };  
 
         // ============================================================  
-        // 📦 STATE  
+        // 📦 STATE - مُعلَن مرة واحدة فقط ✅  
         // ============================================================  
 
+        let currentUser = null;  
+        let currentPage = 'dashboard';  
+        let notifications = [];  
         let _allVessels = [];  
         let _allUsers = [];  
         let _allLogs = [];  
         let _sessionsData = [];  
-        let currentUser = null;  
-        let currentPage = 'dashboard';  
-        let notifications = [];  
 
         // ============================================================  
         // 🔧 HELPERS  
@@ -684,7 +684,7 @@
         }  
 
         // ============================================================  
-        // 🛡️ التحقق من التوكن - المُعدل ✅  
+        // 🛡️ التحقق من التوكن  
         // ============================================================  
 
         async function verifyToken(token) {  
@@ -1042,7 +1042,7 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';  
             });  
 
-            // ✅ التحقق من صلاحية التوكن - باستخدام /api/auth/me  
+            // ✅ التحقق من صلاحية التوكن  
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
             const user = JSON.parse(localStorage.getItem(CONFIG.KEYS.USER) || 'null');  
 
