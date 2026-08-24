@@ -465,10 +465,14 @@
     <!-- ===== JAVASCRIPT ===== -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - v7.0 (FINAL FIXED)  
+        // 🚢 MARINE SYSTEM - v7.0 (FINAL)  
         // ============================================================  
 
         console.log('🚢 Marine System v7.0 - Loading...');  
+
+        // ============================================================  
+        // 📦 CONFIGURATION  
+        // ============================================================  
 
         const CONFIG = {  
             API: '/api',  
@@ -483,8 +487,28 @@
             }  
         };  
 
-        let currentUser = null;  
-        let currentPage = 'dashboard';  
+        // ============================================================  
+        // 📦 STATE - استخدام var لتجنب التكرار  
+        // ============================================================  
+
+        var currentUser = null;  
+        var currentPage = 'dashboard';  
+        var notifications = [];  
+        var allVessels = [];  
+        var allUsers = [];  
+        var allLogs = [];  
+        var sessionsData = [];  
+
+        // ✅ ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
+        window.currentUser = currentUser;  
+        window.allVessels = allVessels;  
+        window.allUsers = allUsers;  
+        window.allLogs = allLogs;  
+        window.sessionsData = sessionsData;  
+
+        // ============================================================  
+        // 🔧 HELPERS  
+        // ============================================================  
 
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
 
@@ -498,7 +522,10 @@
             return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m]));  
         }  
 
-        // ===== TOAST =====  
+        // ============================================================  
+        // 🍞 TOAST  
+        // ============================================================  
+
         function showToast(msg, type = 'info') {  
             const c = document.getElementById('toastContainer');  
             if (!c) return;  
@@ -514,7 +541,10 @@
             }, 3000);  
         }  
 
-        // ===== LOGIN =====  
+        // ============================================================  
+        // 🔐 LOGIN  
+        // ============================================================  
+
         function doLogin() {  
             console.log('🔐 محاولة تسجيل الدخول');  
 
@@ -576,7 +606,10 @@
             });  
         }  
 
-        // ===== VERIFY TOKEN =====  
+        // ============================================================  
+        // 🛡️ VERIFY TOKEN  
+        // ============================================================  
+
         async function verifyToken(token) {  
             try {  
                 console.log('🛡️ التحقق من التوكن...');  
@@ -603,7 +636,10 @@
             }  
         }  
 
-        // ===== LOAD DATA =====  
+        // ============================================================  
+        // 📊 LOAD DATA  
+        // ============================================================  
+
         async function loadAllData() {  
             const token = getToken();  
             if (!token) return;  
@@ -618,18 +654,33 @@
 
                 if (vesselsRes.ok) {  
                     const data = await vesselsRes.json();  
-                    window.allVessels = Array.isArray(data) ? data : [];  
+                    allVessels = Array.isArray(data) ? data : [];  
+                    window.allVessels = allVessels;  
+                    updateBadge('fleetBadge', allVessels.length);  
                 }  
                 if (usersRes.ok) {  
                     const data = await usersRes.json();  
-                    window.allUsers = Array.isArray(data) ? data : [];  
+                    allUsers = Array.isArray(data) ? data : [];  
+                    window.allUsers = allUsers;  
+                    updateBadge('usersBadge', allUsers.length);  
                 }  
             } catch (error) {  
                 console.error('❌ خطأ أثناء تحميل البيانات:', error);  
             }  
         }  
 
-        // ===== USER DISPLAY =====  
+        function updateBadge(id, count) {  
+            const el = document.getElementById(id);  
+            if (el) {  
+                el.textContent = count;  
+                el.style.display = count > 0 ? 'inline' : 'none';  
+            }  
+        }  
+
+        // ============================================================  
+        // 👤 USER DISPLAY  
+        // ============================================================  
+
         function updateUserDisplay() {  
             if (!currentUser) return;  
             const n = currentUser.name || currentUser.username;  
@@ -640,7 +691,10 @@
             document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);  
         }  
 
-        // ===== LOAD PAGE =====  
+        // ============================================================  
+        // 📄 LOAD PAGE  
+        // ============================================================  
+
         function loadPage(page) {  
             currentPage = page;  
             localStorage.setItem(CONFIG.KEYS.PAGE, page);  
@@ -684,7 +738,10 @@
                 });  
         }  
 
-        // ===== LOGOUT =====  
+        // ============================================================  
+        // 🚪 LOGOUT  
+        // ============================================================  
+
         function doLogout() {  
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;  
             currentUser = null;  
@@ -698,7 +755,10 @@
             showToast('👋 تم تسجيل الخروج', 'info');  
         }  
 
-        // ===== SIDEBAR =====  
+        // ============================================================  
+        // 🧭 SIDEBAR  
+        // ============================================================  
+
         function toggleSidebar() {  
             document.getElementById('sidebar').classList.toggle('open');  
             document.getElementById('menuToggle').classList.toggle('active');  
@@ -709,7 +769,10 @@
             document.getElementById('menuToggle').classList.remove('active');  
         }  
 
-        // ===== INIT =====  
+        // ============================================================  
+        // 🚀 INIT  
+        // ============================================================  
+
         document.addEventListener('DOMContentLoaded', async function() {  
             console.log('📄 DOM جاهز');  
 
@@ -772,7 +835,10 @@
             console.log('✅ Marine System v7.0 ready');  
         });  
 
-        // ===== GLOBAL =====  
+        // ============================================================  
+        // 🌐 GLOBAL  
+        // ============================================================  
+
         window.doLogin = doLogin;  
         window.doLogout = doLogout;  
         window.loadPage = loadPage;  
