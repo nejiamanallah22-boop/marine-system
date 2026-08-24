@@ -118,23 +118,27 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - FINAL VERSION
+    // 🚢 FLEET PAGE - النسخة المُصلحة (بدون تكرار متغيرات)
     // ============================================================
 
-    // ✅ بيانات المناطق الكاملة
-    const ZONES_DATA = {
-        "الشمال": ["تونس", "بنزرت", "طبرقة"],
-        "الساحل": ["سوسة", "المنستير", "نابل"],
-        "الوسط": ["صفاقس", "المهدية", "قرقنة"],
-        "الجنوب": ["جرجيس", "جربة", "قابس"],
-        "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
-        "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
-        "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
-        "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
-        "المجمع الأمني بقبيبة": ["قبيبة"]
-    };
+    // ✅ التحقق من وجود المتغيرات قبل تعريفها
+    if (typeof ZONES_DATA === 'undefined') {
+        var ZONES_DATA = {
+            "الشمال": ["تونس", "بنزرت", "طبرقة"],
+            "الساحل": ["سوسة", "المنستير", "نابل"],
+            "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+            "الجنوب": ["جرجيس", "جربة", "قابس"],
+            "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+            "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+            "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+            "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+            "المجمع الأمني بقبيبة": ["قبيبة"]
+        };
+    }
 
-    const CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+    if (typeof CATS_LIST === 'undefined') {
+        var CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+    }
 
     // ===== الحصول على المستخدم =====
     function getUser() {
@@ -207,22 +211,29 @@
 
         try {
             const token = localStorage.getItem('marine_token');
-            if (!token) { window.location.href = '/index.html'; return; }
+            if (!token) { 
+                console.warn('⚠️ لا يوجد توكن');
+                window.location.href = '/index.html'; 
+                return; 
+            }
 
+            console.log('📡 جلب بيانات المراكب...');
             const response = await fetch('/api/vessels', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
 
             if (!response.ok) {
+                console.error('❌ خطأ في تحميل البيانات:', response.status);
                 if (response.status === 401) {
                     localStorage.removeItem('marine_token');
                     window.location.href = '/index.html';
                     return;
                 }
-                throw new Error('فشل تحميل البيانات');
+                throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
             }
 
             const vessels = await response.json();
+            console.log('✅ تم تحميل', vessels.length, 'مركب');
 
             const fCatMain = document.getElementById('fCatMain');
             const fRegMain = document.getElementById('fRegMain');
@@ -514,7 +525,11 @@
 
         // ✅ التحقق من المستخدم
         const token = localStorage.getItem('marine_token');
-        if (!token) { window.location.href = '/index.html'; return; }
+        if (!token) { 
+            console.warn('⚠️ لا يوجد توكن');
+            window.location.href = '/index.html'; 
+            return; 
+        }
 
         try {
             const response = await fetch('/api/auth/me', {
@@ -522,6 +537,7 @@
             });
 
             if (!response.ok) {
+                console.warn('⚠️ جلسة غير صالحة');
                 localStorage.removeItem('marine_token');
                 window.location.href = '/index.html';
                 return;
@@ -531,6 +547,7 @@
             if (data.success && data.user) {
                 window.currentUser = data.user;
                 console.log('✅ المستخدم الحالي:', window.currentUser);
+                console.log('👤 الدور:', window.currentUser.role);
             }
         } catch (error) {
             console.error('❌ خطأ:', error);
