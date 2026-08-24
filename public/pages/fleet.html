@@ -42,6 +42,12 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: var(--font);
             background: #f0f4f8;
@@ -207,27 +213,30 @@
         }
 
         /* ==========================
-               المحتوى الرئيسي
+               المحتوى الرئيسي - كامل الشاشة ✅
             ========================== */
         .main-content {
-            padding: 80px 30px 30px;
+            padding: 20px 24px 24px;
             min-height: 100vh;
             width: 100%;
+            margin: 0;
+            padding-top: 80px;
         }
 
         .main-content .container {
-            max-width: 1440px;
+            max-width: 100%;
             width: 100%;
-            margin: 0 auto;
+            margin: 0;
+            padding: 0;
         }
 
         /* ==========================
                محتوى الصفحة (السجل العام)
             ========================== */
         .page-header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid var(--gray-200);
-            padding-bottom: 18px;
+            padding-bottom: 14px;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
@@ -237,7 +246,7 @@
 
         .page-header h2 {
             font-weight: 700;
-            font-size: 1.9rem;
+            font-size: 1.7rem;
             color: var(--primary);
             letter-spacing: -0.3px;
         }
@@ -249,7 +258,7 @@
 
         .page-header p {
             color: var(--gray-600);
-            font-size: 1rem;
+            font-size: 0.95rem;
             margin-top: 4px;
         }
 
@@ -271,12 +280,12 @@
             ========================== */
         .input-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px 18px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px 14px;
             background: var(--gray-100);
-            padding: 24px 22px;
+            padding: 18px 20px;
             border-radius: var(--radius);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border: 1px solid var(--gray-200);
             transition: var(--transition);
         }
@@ -284,10 +293,10 @@
         .input-grid input,
         .input-grid select {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 12px;
             border: 1px solid var(--gray-300);
             border-radius: 10px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             background: #fff;
             transition: var(--transition);
             font-family: var(--font);
@@ -302,12 +311,12 @@
 
         .input-grid .btn {
             grid-column: span 1;
-            padding: 12px 10px;
+            padding: 10px 10px;
             font-weight: 600;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
@@ -329,26 +338,26 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 14px 18px;
+            gap: 10px 14px;
             background: #fff;
-            padding: 14px 20px;
-            border-radius: 40px;
-            margin-bottom: 30px;
+            padding: 10px 16px;
+            border-radius: 30px;
+            margin-bottom: 20px;
             border: 1px solid var(--gray-200);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
         .filter-bar .search-input {
-            flex: 2 1 240px;
-            min-width: 160px;
+            flex: 2 1 200px;
+            min-width: 140px;
         }
 
         .filter-bar .search-input input {
             width: 100%;
-            padding: 10px 16px;
+            padding: 8px 14px;
             border: 1px solid var(--gray-300);
-            border-radius: 40px;
-            font-size: 0.95rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
             background: var(--gray-100);
             transition: var(--transition);
         }
@@ -363,19 +372,19 @@
         .filter-bar label {
             font-weight: 600;
             color: var(--gray-600);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 4px;
         }
 
         .filter-bar select {
-            padding: 8px 14px;
+            padding: 6px 12px;
             border-radius: 30px;
             border: 1px solid var(--gray-300);
             background: #fff;
-            font-size: 0.9rem;
-            min-width: 110px;
+            font-size: 0.85rem;
+            min-width: 100px;
             cursor: pointer;
         }
 
@@ -383,15 +392,15 @@
             background: var(--primary);
             color: #fff;
             border: none;
-            padding: 8px 18px;
-            border-radius: 40px;
+            padding: 6px 16px;
+            border-radius: 30px;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .filter-bar .btn:hover {
@@ -400,20 +409,22 @@
         }
 
         /* ==========================
-               الجدول
+               الجدول - عرض كامل ✅
             ========================== */
         .table-wrapper {
             overflow-x: auto;
             border-radius: var(--radius);
             border: 1px solid var(--gray-200);
             background: #fff;
+            width: 100%;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.88rem;
-            min-width: 1200px;
+            font-size: 0.85rem;
+            min-width: 100%;
+            table-layout: auto;
         }
 
         thead {
@@ -422,17 +433,17 @@
         }
 
         thead th {
-            padding: 16px 12px;
+            padding: 12px 10px;
             text-align: right;
             font-weight: 600;
             white-space: nowrap;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             letter-spacing: 0.3px;
             text-transform: uppercase;
         }
 
         tbody td {
-            padding: 14px 10px;
+            padding: 10px 8px;
             border-bottom: 1px solid var(--gray-200);
             vertical-align: middle;
         }
@@ -456,16 +467,16 @@
         }
 
         .btn-sm {
-            padding: 5px 12px;
+            padding: 4px 10px;
             border: none;
             border-radius: 30px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             background: var(--gray-200);
             color: var(--gray-800);
         }
@@ -503,9 +514,9 @@
 
         .empty-row td {
             text-align: center;
-            padding: 48px 20px;
+            padding: 40px 20px;
             color: var(--gray-600);
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
 
         /* ==========================
@@ -524,29 +535,59 @@
             ========================== */
         @media (max-width: 768px) {
             .main-content {
-                padding: 75px 15px 20px;
+                padding: 70px 12px 16px;
             }
             .input-grid {
-                grid-template-columns: 1fr;
-                padding: 16px;
+                grid-template-columns: 1fr 1fr;
+                padding: 12px;
+                gap: 10px;
             }
             .filter-bar {
-                border-radius: 20px;
-                padding: 14px;
+                border-radius: 16px;
+                padding: 10px 12px;
+                gap: 8px;
             }
             .page-header h2 {
-                font-size: 1.4rem;
+                font-size: 1.3rem;
             }
             .sidebar {
                 width: 260px;
             }
             table {
-                font-size: 0.8rem;
-                min-width: 1000px;
+                font-size: 0.78rem;
             }
             thead th,
             tbody td {
-                padding: 10px 8px;
+                padding: 8px 6px;
+            }
+            .input-grid .btn {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            .input-grid .btn {
+                grid-column: span 1;
+            }
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-bar .search-input {
+                flex: 1;
+            }
+            .filter-bar label {
+                font-size: 0.8rem;
+            }
+            .filter-bar select {
+                min-width: 100%;
+            }
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
 
@@ -622,7 +663,7 @@
         </div>
     </div>
 
-    <!-- ====== المحتوى الرئيسي ====== -->
+    <!-- ====== المحتوى الرئيسي - كامل الشاشة ✅ ====== -->
     <div class="main-content" id="mainContent">
         <div class="container">
 
@@ -677,7 +718,7 @@
                     <input type="date" id="iEnd" />
                     <input type="text" id="iRef" placeholder="المرجع" />
 
-                    <!-- ✅ الحقل الجديد: الوحدة المسؤولة عن الإصلاح -->
+                    <!-- ✅ الوحدة المسؤولة عن الإصلاح -->
                     <select id="iRepairUnit">
                         <option value="">الوحدة المسؤولة عن الإصلاح</option>
                         <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
@@ -719,7 +760,7 @@
                     </button>
                 </div>
 
-                <!-- الجدول -->
+                <!-- الجدول - عرض كامل ✅ -->
                 <div class="table-wrapper">
                     <table id="mainTable">
                         <thead>
@@ -736,7 +777,7 @@
                                 <th>العطب</th>
                                 <th>التاريخ</th>
                                 <th>الانتهاء</th>
-                                <th>الوحدة المسؤولة عن الإصلاح</th> <!-- ✅ عمود جديد -->
+                                <th>الوحدة المسؤولة عن الإصلاح</th>
                                 <th>إجراء</th>
                             </tr>
                         </thead>
@@ -880,10 +921,7 @@
                 }
             }
 
-            // زر فتح القائمة
             menuToggleBtn.addEventListener('click', toggleMenu);
-
-            // الخلفية المعتمة
             overlay.addEventListener('click', closeMenu);
 
             // ==========================
@@ -1160,7 +1198,7 @@
                     fDate: faultDate,
                     eDate: document.getElementById('iEnd').value,
                     ref: document.getElementById('iRef').value.trim(),
-                    repairUnit: document.getElementById('iRepairUnit').value // ✅ حقل جديد
+                    repairUnit: document.getElementById('iRepairUnit').value
                 };
 
                 try {
@@ -1227,7 +1265,7 @@
                     document.getElementById('iDate').value = v.fault_date || v.fDate || '';
                     document.getElementById('iEnd').value = v.end_date || v.eDate || '';
                     document.getElementById('iRef').value = v.ref || '';
-                    document.getElementById('iRepairUnit').value = v.repairUnit || ''; // ✅
+                    document.getElementById('iRepairUnit').value = v.repairUnit || '';
 
                     const saveBtn = document.getElementById('saveVesselBtn');
                     saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
@@ -1261,7 +1299,7 @@
                     fDate: document.getElementById('iDate').value,
                     eDate: document.getElementById('iEnd').value,
                     ref: document.getElementById('iRef').value.trim(),
-                    repairUnit: document.getElementById('iRepairUnit').value // ✅
+                    repairUnit: document.getElementById('iRepairUnit').value
                 };
 
                 try {
@@ -1305,7 +1343,6 @@
                     await renderMain();
                 }
 
-                // تهيئة المناطق
                 updateZones();
             });
 
