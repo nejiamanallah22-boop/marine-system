@@ -1,6 +1,6 @@
 // routes/ai.js
 // ============================================================
-// 🚀 AI COMMANDER - MARINE SYSTEM v25.0 (GEMINI PRIORITY)
+// 🚀 AI COMMANDER - MARINE SYSTEM v26.0 (OPENAI PRIORITY)
 // ============================================================
 // Enterprise Platinum - Military Grade Security
 // ============================================================
@@ -151,11 +151,18 @@ if (!JWT_SECRET) {
 }
 
 // ============================================================
-// 🔑 MULTI AI PROVIDER - GEMINI PRIORITY
+// 🔑 MULTI AI PROVIDER - OPENAI PRIORITY
 // ============================================================
 
-// ✅ التعديل: جعل Gemini هو المزود الأساسي
+// ✅ التعديل: جعل OpenAI هو المزود الأساسي
 const AI_PROVIDERS_CONFIG = {
+    openai: {
+        enabled: !!process.env.OPENAI_API_KEY,
+        keys: [process.env.OPENAI_API_KEY].filter(Boolean),
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        priority: 1,
+        useFor: ['simple', 'chat', 'marine', 'general', 'coding', 'analysis']
+    },
     gemini_flash: {
         enabled: true,
         keys: (() => {
@@ -170,25 +177,18 @@ const AI_PROVIDERS_CONFIG = {
             return keys;
         })(),
         model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
-        priority: 1,
-        useFor: ['simple', 'chat', 'marine', 'general', 'coding', 'analysis']
+        priority: 2,
+        useFor: ['simple', 'chat', 'marine']
     },
     gemini_pro: {
         enabled: !!process.env.GEMINI_PRO_API_KEY,
         keys: [process.env.GEMINI_PRO_API_KEY].filter(Boolean),
         model: "gemini-2.0-pro",
-        priority: 2,
+        priority: 3,
         useFor: ['complex', 'analysis', 'coding']
     },
-    openai: {
-        enabled: !!process.env.OPENAI_API_KEY,
-        keys: [process.env.OPENAI_API_KEY].filter(Boolean),
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-        priority: 3,
-        useFor: ['general', 'writing', 'analysis']
-    },
     deepseek: {
-        enabled: false, // ✅ تعطيل DeepSeek نهائياً (لأنه ليس به رصيد)
+        enabled: false,  // ✅ تعطيل DeepSeek نهائياً
         keys: [],
         model: "deepseek-chat",
         priority: 99,
@@ -252,9 +252,23 @@ function getProviderState(provider) {
     return providerStateCache[provider];
 }
 
-// ✅ التعديل: إعطاء الأولوية القصوى لـ Gemini
+// ✅ التعديل: إعطاء الأولوية القصوى لـ OpenAI
 function getProviderForTask(taskType = 'general') {
-    // ✅ 1. حاول استخدام Gemini Flash أولاً
+    // ✅ 1. حاول استخدام OpenAI أولاً
+    const openaiConfig = AI_PROVIDERS_CONFIG.openai;
+    if (openaiConfig.enabled && openaiConfig.keys.length > 0) {
+        const key = openaiConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'openai', 
+                config: openaiConfig, 
+                key, 
+                state: getProviderState('openai') 
+            };
+        }
+    }
+    
+    // ✅ 2. جرب Gemini Flash
     const geminiConfig = AI_PROVIDERS_CONFIG.gemini_flash;
     if (geminiConfig.enabled && geminiConfig.keys.length > 0) {
         const key = geminiConfig.keys[0];
@@ -268,7 +282,7 @@ function getProviderForTask(taskType = 'general') {
         }
     }
     
-    // ✅ 2. جرب Gemini Pro
+    // ✅ 3. جرب Gemini Pro
     const geminiProConfig = AI_PROVIDERS_CONFIG.gemini_pro;
     if (geminiProConfig.enabled && geminiProConfig.keys.length > 0) {
         const key = geminiProConfig.keys[0];
@@ -278,20 +292,6 @@ function getProviderForTask(taskType = 'general') {
                 config: geminiProConfig, 
                 key, 
                 state: getProviderState('gemini_pro') 
-            };
-        }
-    }
-    
-    // ✅ 3. جرب OpenAI
-    const openaiConfig = AI_PROVIDERS_CONFIG.openai;
-    if (openaiConfig.enabled && openaiConfig.keys.length > 0) {
-        const key = openaiConfig.keys[0];
-        if (key) {
-            return { 
-                name: 'openai', 
-                config: openaiConfig, 
-                key, 
-                state: getProviderState('openai') 
             };
         }
     }
@@ -781,7 +781,7 @@ const TOOL_EXECUTORS = {
 };
 
 // ============================================================
-// 🤖 GEMINI SDK
+// 🤖 GEMINI SDK (للتوافق)
 // ============================================================
 
 function getGeminiModel(key, model, withTools = true) {
@@ -815,7 +815,112 @@ function getGeminiModel(key, model, withTools = true) {
 }
 
 // ============================================================
-// 🌐 CALL AI WITH TOOLS (GEMINI FIRST)
+// 🌐 CALL AI PROVIDER (OPENAI FIRST)
+// ============================================================
+
+async function callAIProvider(message, history, user, taskType = 'general') {
+    const provider = getProviderForTask(taskType);
+    if (!provider || provider.name === 'mock') {
+        throw new Error('No AI provider available');
+    }
+    
+    try {
+        let response;
+        switch (provider.name) {
+            case 'openai': {
+                const messages = [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    ...history.map(h => ({
+                        role: h.role === 'user' ? 'user' : 'assistant',
+                        content: h.parts[0].text
+                    })),
+                    { role: "user", content: message }
+                ];
+                const result = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${provider.key}`
+                    },
+                    body: JSON.stringify({
+                        model: provider.config.model,
+                        messages,
+                        temperature: TEMPERATURE,
+                        max_tokens: MAX_TOKENS
+                    })
+                });
+                if (!result.ok) {
+                    const errorData = await result.json();
+                    if (errorData.error?.message?.includes('Insufficient Balance') || 
+                        errorData.error?.message?.includes('insufficient_quota')) {
+                        throw new Error('⚠️ رصيد OpenAI غير كافٍ. يرجى شحن الرصيد.');
+                    }
+                    if (errorData.error?.message?.includes('API key') || 
+                        errorData.error?.message?.includes('invalid_api_key')) {
+                        throw new Error('⚠️ مفتاح OpenAI غير صالح. يرجى التحقق من المفتاح.');
+                    }
+                    throw new Error(`OpenAI error: ${result.status} - ${errorData.error?.message || 'Unknown error'}`);
+                }
+                const data = await result.json();
+                response = data.choices[0].message.content;
+                break;
+            }
+            case 'gemini_flash':
+            case 'gemini_pro': {
+                const model = getGeminiModel(provider.key, provider.config.model, false);
+                if (!model) throw new Error('Failed to initialize Gemini model');
+                const chat = model.startChat({ history: history || [] });
+                const result = await chat.sendMessage(message);
+                response = result.response.text();
+                break;
+            }
+            case 'deepseek': {
+                // DeepSeek معطل، لكن إذا كان مفعلاً
+                const messages = [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    ...history.map(h => ({
+                        role: h.role === 'user' ? 'user' : 'assistant',
+                        content: h.parts[0].text
+                    })),
+                    { role: "user", content: message }
+                ];
+                const result = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${provider.key}`
+                    },
+                    body: JSON.stringify({
+                        model: provider.config.model,
+                        messages,
+                        temperature: TEMPERATURE,
+                        max_tokens: MAX_TOKENS
+                    })
+                });
+                if (!result.ok) {
+                    const errorData = await result.json();
+                    if (errorData.error?.message?.includes('Insufficient Balance')) {
+                        throw new Error('⚠️ رصيد DeepSeek غير كافٍ. يرجى شحن الرصيد.');
+                    }
+                    throw new Error(`DeepSeek error: ${result.status}`);
+                }
+                const data = await result.json();
+                response = data.choices[0].message.content;
+                break;
+            }
+            default:
+                throw new Error(`Unknown provider: ${provider.name}`);
+        }
+        resetProviderFailure(provider.name);
+        return response;
+    } catch (error) {
+        markProviderFailure(provider.name, provider.key);
+        throw error;
+    }
+}
+
+// ============================================================
+// 🌐 CALL AI WITH TOOLS
 // ============================================================
 
 async function callAIWithTools(message, history, user) {
@@ -844,7 +949,7 @@ async function callAIWithTools(message, history, user) {
     // ✅ إذا كان المزود هو mock
     if (provider.name === 'mock') {
         return {
-            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nأو\nOPENAI_API_KEY=your_key_here',
+            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nOPENAI_API_KEY=your_key_here\nأو\nGEMINI_API_KEY=your_key_here',
             provider: 'mock',
             toolCalls: []
         };
@@ -854,7 +959,7 @@ async function callAIWithTools(message, history, user) {
         let response;
         let toolCalls = [];
         
-        // ✅ Gemini هو المزود الأساسي
+        // ✅ إذا كان المزود هو Gemini
         if (provider.name.includes('gemini')) {
             const model = getGeminiModel(provider.key, provider.config.model, true);
             if (!model) {
@@ -908,6 +1013,7 @@ async function callAIWithTools(message, history, user) {
             resetProviderFailure(provider.name);
             return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls };
         } else {
+            // ✅ OpenAI أو غيره
             const result = await callAIProvider(message, history, user, taskType);
             return { text: result, provider: provider.name, toolCalls: [] };
         }
@@ -927,100 +1033,6 @@ async function callAIWithTools(message, history, user) {
             }
         }
         
-        throw error;
-    }
-}
-
-// ============================================================
-// 🌐 CALL AI PROVIDER (FALLBACK)
-// ============================================================
-
-async function callAIProvider(message, history, user, taskType = 'general') {
-    const provider = getProviderForTask(taskType);
-    if (!provider || provider.name === 'mock') {
-        throw new Error('No AI provider available');
-    }
-    
-    try {
-        let response;
-        switch (provider.name) {
-            case 'gemini_flash':
-            case 'gemini_pro': {
-                const model = getGeminiModel(provider.key, provider.config.model, false);
-                if (!model) throw new Error('Failed to initialize Gemini model');
-                const chat = model.startChat({ history: history || [] });
-                const result = await chat.sendMessage(message);
-                response = result.response.text();
-                break;
-            }
-            case 'openai': {
-                const messages = [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    ...history.map(h => ({
-                        role: h.role === 'user' ? 'user' : 'assistant',
-                        content: h.parts[0].text
-                    })),
-                    { role: "user", content: message }
-                ];
-                const result = await fetch('https://api.openai.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${provider.key}`
-                    },
-                    body: JSON.stringify({
-                        model: provider.config.model,
-                        messages,
-                        temperature: TEMPERATURE,
-                        max_tokens: MAX_TOKENS
-                    })
-                });
-                if (!result.ok) throw new Error(`OpenAI error: ${result.status}`);
-                const data = await result.json();
-                response = data.choices[0].message.content;
-                break;
-            }
-            case 'deepseek': {
-                // ✅ DeepSeek معطل، لكن إذا كان مفعلاً
-                const messages = [
-                    { role: "system", content: SYSTEM_PROMPT },
-                    ...history.map(h => ({
-                        role: h.role === 'user' ? 'user' : 'assistant',
-                        content: h.parts[0].text
-                    })),
-                    { role: "user", content: message }
-                ];
-                const result = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${provider.key}`
-                    },
-                    body: JSON.stringify({
-                        model: provider.config.model,
-                        messages,
-                        temperature: TEMPERATURE,
-                        max_tokens: MAX_TOKENS
-                    })
-                });
-                if (!result.ok) {
-                    const errorData = await result.json();
-                    if (errorData.error?.message?.includes('Insufficient Balance')) {
-                        throw new Error('⚠️ رصيد DeepSeek غير كافٍ. يرجى شحن الرصيد أو استخدام Gemini.');
-                    }
-                    throw new Error(`DeepSeek error: ${result.status}`);
-                }
-                const data = await result.json();
-                response = data.choices[0].message.content;
-                break;
-            }
-            default:
-                throw new Error(`Unknown provider: ${provider.name}`);
-        }
-        resetProviderFailure(provider.name);
-        return response;
-    } catch (error) {
-        markProviderFailure(provider.name, provider.key);
         throw error;
     }
 }
@@ -1639,7 +1651,7 @@ router.post("/ask",
                     cached: true,
                     requestId,
                     responseTime: Date.now() - startTime,
-                    version: "25.0.0"
+                    version: "26.0.0"
                 });
             }
         }
@@ -1716,8 +1728,8 @@ router.post("/ask",
             requestId,
             responseTime,
             cached: false,
-            version: "25.0.0",
-            provider: result.provider || 'gemini',
+            version: "26.0.0",
+            provider: result.provider || 'openai',
             toolsUsed: result.toolCalls ? result.toolCalls.length : 0
         });
 
@@ -1771,7 +1783,39 @@ router.post("/ask/stream",
         }
         
         const provider = getProviderForTask('simple');
-        if (!provider || provider.name === 'mock' || !provider.name.includes('gemini')) {
+        if (!provider || provider.name === 'mock' || provider.name.includes('gemini')) {
+            // للـ Gemini، استخدم البث المباشر
+            if (provider.name.includes('gemini')) {
+                const model = getGeminiModel(provider.key, provider.config.model, true);
+                if (!model) {
+                    throw new Error('Failed to initialize Gemini for streaming');
+                }
+                const chat = model.startChat({ history: history || [] });
+                const result = await chat.sendMessageStream(cleanMessage);
+                
+                let fullResponse = '';
+                for await (const chunk of result.stream) {
+                    const chunkText = chunk.text();
+                    if (chunkText) {
+                        fullResponse += chunkText;
+                        res.write(`data: ${JSON.stringify({ chunk: chunkText })}\n\n`);
+                    }
+                }
+                
+                const filteredResponse = filterSensitiveData(fullResponse, req.user?.role);
+                const newConversationId = await saveConversation(
+                    conversationId,
+                    userId,
+                    cleanMessage,
+                    filteredResponse
+                );
+                
+                res.write(`data: ${JSON.stringify({ done: true, conversationId: newConversationId })}\n\n`);
+                res.end();
+                return;
+            }
+            
+            // للـ OpenAI، استخدم الوضع العادي
             const result = await callAIWithTools(cleanMessage, history, req.user);
             const chunks = result.text.match(/.{1,50}/g) || [result.text];
             for (const chunk of chunks) {
@@ -1782,33 +1826,6 @@ router.post("/ask/stream",
             res.end();
             return;
         }
-        
-        const model = getGeminiModel(provider.key, provider.config.model, true);
-        if (!model) {
-            throw new Error('Failed to initialize Gemini for streaming');
-        }
-        const chat = model.startChat({ history: history || [] });
-        const result = await chat.sendMessageStream(cleanMessage);
-        
-        let fullResponse = '';
-        for await (const chunk of result.stream) {
-            const chunkText = chunk.text();
-            if (chunkText) {
-                fullResponse += chunkText;
-                res.write(`data: ${JSON.stringify({ chunk: chunkText })}\n\n`);
-            }
-        }
-        
-        const filteredResponse = filterSensitiveData(fullResponse, req.user?.role);
-        const newConversationId = await saveConversation(
-            conversationId,
-            userId,
-            cleanMessage,
-            filteredResponse
-        );
-        
-        res.write(`data: ${JSON.stringify({ done: true, conversationId: newConversationId })}\n\n`);
-        res.end();
         
     } catch (error) {
         logger.error(`Stream error:`, error);
@@ -1933,7 +1950,7 @@ router.get("/dashboard", authenticate, requirePermission('AI_DASHBOARD'), async 
                 securityEvents: securityEvents
             },
             timestamp: new Date().toISOString(),
-            version: "25.0.0"
+            version: "26.0.0"
         });
     } catch (error) {
         logger.error('Dashboard error:', error);
@@ -2148,7 +2165,7 @@ router.get("/security", authenticate, requirePermission('AI_SECURITY_VIEW'), asy
 });
 
 // ============================================================
-// ✅ ✅ ✅ نقطة نهاية للتحقق من صحة المفتاح (ميزة جديدة)
+// ✅ CHECK DEEPSEEK (للتحقق من صحة المفتاح)
 // ============================================================
 
 router.get("/check-deepseek", authenticate, async (req, res) => {
@@ -2198,6 +2215,56 @@ router.get("/check-deepseek", authenticate, async (req, res) => {
 });
 
 // ============================================================
+// ✅ CHECK OPENAI (للتحقق من صحة المفتاح)
+// ============================================================
+
+router.get("/check-openai", authenticate, async (req, res) => {
+    try {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+            return res.json({ 
+                success: false, 
+                error: "OPENAI_API_KEY غير موجود في البيئة",
+                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            });
+        }
+        
+        const response = await fetch('https://api.openai.com/v1/models', {
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            res.json({
+                success: true,
+                models: data.data?.map(m => m.id) || [],
+                status: response.status,
+                message: "✅ مفتاح OpenAI صالح"
+            });
+        } else {
+            res.json({
+                success: false,
+                error: data.error?.message || "خطأ في التحقق",
+                status: response.status,
+                message: data.error?.message || "المفتاح غير صالح"
+            });
+        }
+    } catch (error) {
+        logger.error('Check OpenAI error:', error);
+        res.json({ 
+            success: false, 
+            error: error.message,
+            message: "فشل الاتصال بـ OpenAI API"
+        });
+    }
+});
+
+// ============================================================
 // 🧰 HELPER FUNCTIONS
 // ============================================================
 
@@ -2226,7 +2293,7 @@ router.get("/stats", authenticate, requirePermission('AI_STATS'), (req, res) => 
                 private: privateCache.keys().length
             },
             uptime: process.uptime(),
-            version: "25.0.0",
+            version: "26.0.0",
             providers: Object.keys(AI_PROVIDERS_CONFIG).filter(p => AI_PROVIDERS_CONFIG[p].enabled),
             functions: TOOL_DEFINITIONS.length,
             ragEnabled: true,
@@ -2247,7 +2314,7 @@ router.get("/health", authenticate, (req, res) => {
     res.json({
         success: true,
         status: "healthy",
-        version: "25.0.0",
+        version: "26.0.0",
         timestamp: new Date().toISOString(),
         cacheSize: {
             public: publicCache.keys().length,
