@@ -1,6 +1,6 @@
 // routes/ai.js
 // ============================================================
-// 🚀 AI COMMANDER - MARINE SYSTEM v38.2 (OPENAI SUPPORT)
+// 🚀 AI COMMANDER - MARINE SYSTEM v38.2 (GEMINI SUPPORT)
 // ============================================================
 // Enterprise Platinum - Military Grade Security
 // ============================================================
@@ -16,6 +16,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 // ============================================================
 // 📁 ENSURE LOGS DIRECTORY EXISTS
@@ -154,38 +155,31 @@ if (!JWT_SECRET) {
 // 🔑 MULTI AI PROVIDER - مع تخزين في قاعدة البيانات
 // ============================================================
 
-// ✅ إضافة OpenAI إلى قائمة المزودين مع أولوية قصوى
+// ✅ إضافة Gemini API مع دعم كامل
+const GEMINI_ENABLED = !!process.env.GEMINI_API_KEY;
+console.log(`📊 Gemini API: ${GEMINI_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
+
 const AI_PROVIDERS_CONFIG = {
-    openai: {
-        enabled: !!process.env.OPENAI_API_KEY,
-        keys: [process.env.OPENAI_API_KEY].filter(Boolean),
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    gemini_flash: {
+        enabled: GEMINI_ENABLED,
+        keys: [process.env.GEMINI_API_KEY].filter(Boolean),
+        model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
         priority: 1,
         useFor: ['simple', 'chat', 'marine', 'general', 'coding', 'analysis']
-    },
-    gemini_flash: {
-        enabled: true,
-        keys: (() => {
-            const keys = [];
-            for (let i = 1; i <= 5; i++) {
-                const key = process.env[`GEMINI_KEY_${i}`];
-                if (key) keys.push(key);
-            }
-            if (keys.length === 0 && process.env.GEMINI_API_KEY) {
-                keys.push(process.env.GEMINI_API_KEY);
-            }
-            return keys;
-        })(),
-        model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
-        priority: 2,
-        useFor: ['simple', 'chat', 'marine']
     },
     gemini_pro: {
         enabled: !!process.env.GEMINI_PRO_API_KEY,
         keys: [process.env.GEMINI_PRO_API_KEY].filter(Boolean),
         model: "gemini-2.0-pro",
-        priority: 3,
+        priority: 2,
         useFor: ['complex', 'analysis', 'coding']
+    },
+    openai: {
+        enabled: !!process.env.OPENAI_API_KEY,
+        keys: [process.env.OPENAI_API_KEY].filter(Boolean),
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        priority: 3,
+        useFor: ['general', 'writing', 'analysis']
     },
     deepseek: {
         enabled: !!process.env.DEEPSEEK_API_KEY,
@@ -252,21 +246,21 @@ function getProviderState(provider) {
     return providerStateCache[provider];
 }
 
-// ✅ تعديل دالة getProviderForTask لتعطي الأولوية لـ OpenAI
+// ✅ تعديل دالة getProviderForTask لتعطي الأولوية لـ Gemini
 function getProviderForTask(taskType = 'general') {
     let candidates = [];
     
-    // ✅ حسب نوع المهمة، مع إعطاء الأولوية لـ OpenAI
+    // ✅ حسب نوع المهمة، مع إعطاء الأولوية لـ Gemini
     if (taskType === 'simple' || taskType === 'chat') {
-        candidates = ['openai', 'gemini_flash'];
+        candidates = ['gemini_flash', 'openai'];
     } else if (taskType === 'complex' || taskType === 'analysis') {
-        candidates = ['openai', 'gemini_pro', 'deepseek'];
+        candidates = ['gemini_pro', 'openai', 'deepseek'];
     } else if (taskType === 'coding') {
-        candidates = ['openai', 'deepseek', 'gemini_pro'];
+        candidates = ['gemini_pro', 'openai', 'deepseek'];
     } else if (taskType === 'marine') {
-        candidates = ['openai', 'gemini_flash', 'deepseek'];
+        candidates = ['gemini_flash', 'openai', 'deepseek'];
     } else {
-        candidates = ['openai', 'gemini_flash', 'deepseek'];
+        candidates = ['gemini_flash', 'openai', 'deepseek'];
     }
     
     for (const name of candidates) {
@@ -843,7 +837,7 @@ async function callAIWithTools(message, history, user) {
     
     if (provider.name === 'mock') {
         return {
-            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nOPENAI_API_KEY=your_key_here\nGEMINI_API_KEY=your_key_here\nDEEPSEEK_API_KEY=your_key_here',
+            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nOPENAI_API_KEY=your_key_here\nDEEPSEEK_API_KEY=your_key_here',
             provider: 'mock',
             toolCalls: []
         };
@@ -852,42 +846,6 @@ async function callAIWithTools(message, history, user) {
     try {
         let response;
         let toolCalls = [];
-        
-        // ✅ معالجة OpenAI
-        if (provider.name === 'openai') {
-            const messages = [
-                { role: "system", content: SYSTEM_PROMPT },
-                ...history.map(h => ({
-                    role: h.role === 'user' ? 'user' : 'assistant',
-                    content: h.parts[0].text
-                })),
-                { role: "user", content: message }
-            ];
-            
-            const result = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${provider.key}`
-                },
-                body: JSON.stringify({
-                    model: provider.config.model,
-                    messages,
-                    temperature: TEMPERATURE,
-                    max_tokens: MAX_TOKENS
-                })
-            });
-            
-            if (!result.ok) {
-                const error = await result.json();
-                throw new Error(`OpenAI error: ${error.error?.message || result.status}`);
-            }
-            
-            const data = await result.json();
-            response = data.choices[0].message.content;
-            resetProviderFailure(provider.name);
-            return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls: [] };
-        }
         
         // ✅ معالجة Gemini
         if (provider.name.includes('gemini')) {
@@ -942,6 +900,42 @@ async function callAIWithTools(message, history, user) {
             
             resetProviderFailure(provider.name);
             return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls };
+        }
+        
+        // ✅ معالجة OpenAI
+        if (provider.name === 'openai') {
+            const messages = [
+                { role: "system", content: SYSTEM_PROMPT },
+                ...history.map(h => ({
+                    role: h.role === 'user' ? 'user' : 'assistant',
+                    content: h.parts[0].text
+                })),
+                { role: "user", content: message }
+            ];
+            
+            const result = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${provider.key}`
+                },
+                body: JSON.stringify({
+                    model: provider.config.model,
+                    messages,
+                    temperature: TEMPERATURE,
+                    max_tokens: MAX_TOKENS
+                })
+            });
+            
+            if (!result.ok) {
+                const error = await result.json();
+                throw new Error(`OpenAI error: ${error.error?.message || result.status}`);
+            }
+            
+            const data = await result.json();
+            response = data.choices[0].message.content;
+            resetProviderFailure(provider.name);
+            return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls: [] };
         }
         
         // ✅ معالجة DeepSeek
@@ -1039,8 +1033,6 @@ const askLimiter = rateLimit({
 // ============================================================
 // 🔐 AUTH MIDDLEWARE
 // ============================================================
-
-const jwt = require("jsonwebtoken");
 
 async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -2074,6 +2066,42 @@ router.get("/security", authenticate, requirePermission('AI_SECURITY_VIEW'), asy
         res.status(500).json({
             success: false,
             error: "❌ خطأ في جلب أحداث الأمان"
+        });
+    }
+});
+
+// ============================================================
+// ✅ CHECK GEMINI (للتحقق من صحة المفتاح)
+// ============================================================
+
+router.get("/check-gemini", authenticate, async (req, res) => {
+    try {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            return res.json({ 
+                success: false, 
+                error: "GEMINI_API_KEY غير موجود في البيئة",
+                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            });
+        }
+        
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent("مرحباً، اختبر الاتصال");
+        const response = await result.response;
+        
+        res.json({
+            success: true,
+            message: "✅ مفتاح Gemini صالح ويعمل",
+            response: response.text().substring(0, 100) + "...",
+            model: "gemini-2.0-flash"
+        });
+    } catch (error) {
+        logger.error('Check Gemini error:', error);
+        res.json({ 
+            success: false, 
+            error: error.message,
+            message: "❌ مفتاح Gemini غير صالح أو أن API لا يعمل"
         });
     }
 });
