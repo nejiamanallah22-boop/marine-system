@@ -1,6 +1,6 @@
 // routes/ai.js
 // ============================================================
-// 🚀 AI COMMANDER - MARINE SYSTEM v38.2 (GEMINI SUPPORT)
+// 🚀 AI COMMANDER - MARINE SYSTEM v39.0 (GEMINI FULL SUPPORT)
 // ============================================================
 // Enterprise Platinum - Military Grade Security
 // ============================================================
@@ -152,12 +152,45 @@ if (!JWT_SECRET) {
 }
 
 // ============================================================
-// 🔑 MULTI AI PROVIDER - مع تخزين في قاعدة البيانات
+// 🔑 GEMINI API - التهيئة
 // ============================================================
 
-// ✅ إضافة Gemini API مع دعم كامل
 const GEMINI_ENABLED = !!process.env.GEMINI_API_KEY;
 console.log(`📊 Gemini API: ${GEMINI_ENABLED ? '✅ Enabled' : '❌ Disabled'}`);
+
+// ✅ دالة استدعاء Gemini
+async function callGeminiAPI(message, history = []) {
+    if (!GEMINI_ENABLED) {
+        throw new Error('GEMINI_API_KEY not configured');
+    }
+
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+    const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+        }
+    });
+
+    // ✅ تحويل التاريخ إلى نص
+    let fullMessage = message;
+    if (history && history.length > 0) {
+        const historyText = history.map(h => 
+            `${h.role || 'user'}: ${h.content || h.parts?.[0]?.text || ''}`
+        ).join('\n');
+        fullMessage = historyText + '\n' + message;
+    }
+
+    const result = await model.generateContent(fullMessage);
+    const response = await result.response;
+    return response.text();
+}
+
+// ============================================================
+// 🔑 MULTI AI PROVIDER - مع تخزين في قاعدة البيانات
+// ============================================================
 
 const AI_PROVIDERS_CONFIG = {
     gemini_flash: {
@@ -182,11 +215,11 @@ const AI_PROVIDERS_CONFIG = {
         useFor: ['general', 'writing', 'analysis']
     },
     deepseek: {
-        enabled: !!process.env.DEEPSEEK_API_KEY,
-        keys: [process.env.DEEPSEEK_API_KEY].filter(Boolean),
-        model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
-        priority: 4,
-        useFor: ['coding', 'analysis']
+        enabled: false,  // ✅ تعطيل DeepSeek نهائياً
+        keys: [],
+        model: "deepseek-chat",
+        priority: 99,
+        useFor: []
     }
 };
 
@@ -248,49 +281,49 @@ function getProviderState(provider) {
 
 // ✅ تعديل دالة getProviderForTask لتعطي الأولوية لـ Gemini
 function getProviderForTask(taskType = 'general') {
-    let candidates = [];
-    
-    // ✅ حسب نوع المهمة، مع إعطاء الأولوية لـ Gemini
-    if (taskType === 'simple' || taskType === 'chat') {
-        candidates = ['gemini_flash', 'openai'];
-    } else if (taskType === 'complex' || taskType === 'analysis') {
-        candidates = ['gemini_pro', 'openai', 'deepseek'];
-    } else if (taskType === 'coding') {
-        candidates = ['gemini_pro', 'openai', 'deepseek'];
-    } else if (taskType === 'marine') {
-        candidates = ['gemini_flash', 'openai', 'deepseek'];
-    } else {
-        candidates = ['gemini_flash', 'openai', 'deepseek'];
-    }
-    
-    for (const name of candidates) {
-        const config = AI_PROVIDERS_CONFIG[name];
-        if (config && config.enabled && config.keys.length > 0) {
-            const state = getProviderState(name);
-            const failures = state.failureCount[state.currentIndex] || 0;
-            if (failures < 3) {
-                const key = config.keys[state.currentIndex];
-                if (key) {
-                    return { name, config, key, state };
-                }
-            }
-            state.currentIndex = (state.currentIndex + 1) % config.keys.length;
-            saveProviderState(name, state);
+    // ✅ 1. حاول استخدام Gemini Flash أولاً
+    const geminiConfig = AI_PROVIDERS_CONFIG.gemini_flash;
+    if (geminiConfig.enabled && geminiConfig.keys.length > 0) {
+        const key = geminiConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'gemini_flash', 
+                config: geminiConfig, 
+                key, 
+                state: getProviderState('gemini_flash') 
+            };
         }
     }
     
-    // ✅ Fallback - أول مزود متاح
-    for (const [name, config] of Object.entries(AI_PROVIDERS_CONFIG)) {
-        if (config.enabled && config.keys.length > 0) {
-            const key = config.keys[0];
-            if (key) {
-                const state = getProviderState(name);
-                return { name, config, key, state };
-            }
+    // ✅ 2. جرب Gemini Pro
+    const geminiProConfig = AI_PROVIDERS_CONFIG.gemini_pro;
+    if (geminiProConfig.enabled && geminiProConfig.keys.length > 0) {
+        const key = geminiProConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'gemini_pro', 
+                config: geminiProConfig, 
+                key, 
+                state: getProviderState('gemini_pro') 
+            };
         }
     }
     
-    // ✅ إذا لم يتوفر أي مزود، استخدام محاكي (mock)
+    // ✅ 3. جرب OpenAI
+    const openaiConfig = AI_PROVIDERS_CONFIG.openai;
+    if (openaiConfig.enabled && openaiConfig.keys.length > 0) {
+        const key = openaiConfig.keys[0];
+        if (key) {
+            return { 
+                name: 'openai', 
+                config: openaiConfig, 
+                key, 
+                state: getProviderState('openai') 
+            };
+        }
+    }
+    
+    // ✅ 4. أخيراً، استخدم Mock Mode
     console.warn('⚠️ No AI providers available, using mock mode');
     return {
         name: 'mock',
@@ -837,7 +870,7 @@ async function callAIWithTools(message, history, user) {
     
     if (provider.name === 'mock') {
         return {
-            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=your_key_here\nOPENAI_API_KEY=your_key_here\nDEEPSEEK_API_KEY=your_key_here',
+            text: '⚠️ النظام يعمل في وضع المحاكاة (Mock Mode). يرجى إعداد مفاتيح API الصحيحة في متغيرات البيئة.\n\nمثال:\nGEMINI_API_KEY=AIzaSy... (من Google AI Studio)\nOPENAI_API_KEY=sk-proj...',
             provider: 'mock',
             toolCalls: []
         };
@@ -938,40 +971,9 @@ async function callAIWithTools(message, history, user) {
             return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls: [] };
         }
         
-        // ✅ معالجة DeepSeek
+        // ✅ معالجة DeepSeek (معطل)
         if (provider.name === 'deepseek') {
-            const messages = [
-                { role: "system", content: SYSTEM_PROMPT },
-                ...history.map(h => ({
-                    role: h.role === 'user' ? 'user' : 'assistant',
-                    content: h.parts[0].text
-                })),
-                { role: "user", content: message }
-            ];
-            
-            const result = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${provider.key}`
-                },
-                body: JSON.stringify({
-                    model: provider.config.model,
-                    messages,
-                    temperature: TEMPERATURE,
-                    max_tokens: MAX_TOKENS
-                })
-            });
-            
-            if (!result.ok) {
-                const error = await result.json();
-                throw new Error(`DeepSeek error: ${error.error?.message || result.status}`);
-            }
-            
-            const data = await result.json();
-            response = data.choices[0].message.content;
-            resetProviderFailure(provider.name);
-            return { text: response || 'عذراً، لم أستطع معالجة طلبك.', provider: provider.name, toolCalls: [] };
+            throw new Error('DeepSeek is disabled. Please use Gemini or OpenAI.');
         }
         
         throw new Error(`Unknown provider: ${provider.name}`);
@@ -1562,7 +1564,7 @@ router.post("/ask",
                     cached: true,
                     requestId,
                     responseTime: Date.now() - startTime,
-                    version: "38.2"
+                    version: "39.0"
                 });
             }
         }
@@ -1585,6 +1587,8 @@ router.post("/ask",
                 errorMessage = "⚠️ تم استنفاذ الحصة اليومية للمزود. يرجى المحاولة لاحقاً.";
             } else if (error.message && error.message.includes('Insufficient Balance')) {
                 errorMessage = "⚠️ رصيد المزود غير كافٍ. يرجى شحن الرصيد أو استخدام مزود آخر.";
+            } else if (error.message && error.message.includes('DeepSeek is disabled')) {
+                errorMessage = "⚠️ خدمة DeepSeek معطلة حالياً. يرجى استخدام Gemini أو OpenAI.";
             }
             
             return res.status(500).json({
@@ -1639,7 +1643,7 @@ router.post("/ask",
             requestId,
             responseTime,
             cached: false,
-            version: "38.2",
+            version: "39.0",
             provider: result.provider || 'unknown',
             toolsUsed: result.toolCalls ? result.toolCalls.length : 0
         });
@@ -1856,7 +1860,7 @@ router.get("/dashboard", authenticate, requirePermission('AI_DASHBOARD'), async 
                 securityEvents: securityEvents
             },
             timestamp: new Date().toISOString(),
-            version: "38.2"
+            version: "39.0"
         });
     } catch (error) {
         logger.error('Dashboard error:', error);
@@ -2135,7 +2139,7 @@ router.get("/stats", authenticate, requirePermission('AI_STATS'), (req, res) => 
                 private: privateCache.keys().length
             },
             uptime: process.uptime(),
-            version: "38.2",
+            version: "39.0",
             providers: Object.keys(AI_PROVIDERS_CONFIG).filter(p => AI_PROVIDERS_CONFIG[p].enabled),
             functions: TOOL_DEFINITIONS.length,
             ragEnabled: true,
@@ -2156,7 +2160,7 @@ router.get("/health", authenticate, (req, res) => {
     res.json({
         success: true,
         status: "healthy",
-        version: "38.2",
+        version: "39.0",
         timestamp: new Date().toISOString(),
         cacheSize: {
             public: publicCache.keys().length,
