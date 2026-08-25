@@ -2,7 +2,7 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE STYLES - PRODUCTION PRO
+           🔧 MAINTENANCE PAGE - ULTRA PRO PRODUCTION
            ============================================================ */
         
         .maintenance-container {
@@ -707,6 +707,20 @@
         }
         .toast .toast-close:hover { color: #fff; }
         
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .maintenance-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
             .maintenance-header h2 { font-size: 20px; }
@@ -731,13 +745,14 @@
         }
     </style>
 
+    <!-- MAIN CONTAINER -->
     <div class="maintenance-container">
         
         <!-- HEADER -->
         <div class="maintenance-header">
             <h2>
                 🔧 إدارة الصيانة
-                <span class="badge">PRO v2.0</span>
+                <span class="badge">ULTRA PRO v3.0</span>
             </h2>
             <div class="header-actions">
                 <button class="btn btn-primary" onclick="toggleMaintenanceForm()">➕ إضافة صيانة</button>
@@ -795,7 +810,8 @@
         </div>
         <div id="generalMaintenanceContainer">
             <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
-                ⏳ جاري تحميل البيانات...
+                <div class="loading-spinner"></div>
+                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
             </div>
         </div>
 
@@ -969,7 +985,8 @@
         
         <div id="historyMaintenanceContainer">
             <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
-                ⏳ جاري تحميل البيانات...
+                <div class="loading-spinner"></div>
+                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
             </div>
         </div>
 
@@ -979,15 +996,14 @@
         </div>
         <div id="maintenanceUnitsContainer">
             <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
-                ⏳ جاري تحميل البيانات...
+                <div class="loading-spinner"></div>
+                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
             </div>
         </div>
         
     </div>
 
-    <!-- ============================================================
-    📜 HISTORY MODAL
-    ============================================================ -->
+    <!-- HISTORY MODAL -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -1042,17 +1058,21 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - FULL PRODUCTION
+    📦 JAVASCRIPT - ULTRA PRO PRODUCTION
     ============================================================ -->
     <script>
     // ============================================================
-    // 🔧 MAINTENANCE SCRIPT - FULL PRODUCTION
+    // 🔧 MAINTENANCE SCRIPT - ULTRA PRO PRODUCTION v3.0
     // ============================================================
 
-    // STATE
+    // ============================================================
+    // 1. STATE
+    // ============================================================
+
     let currentUser = null;
     let allVessels = [];
     let allMaintenance = [];
+    let isLoading = false;
 
     try {
         const userData = localStorage.getItem('user');
@@ -1062,7 +1082,10 @@
         }
     } catch(e) { console.warn('⚠️ Could not load user:', e); }
 
-    // HELPERS
+    // ============================================================
+    // 2. HELPERS
+    // ============================================================
+
     function getToken() {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -1094,7 +1117,7 @@
     }
 
     // ============================================================
-    // LOAD DATA
+    // 3. LOAD DATA
     // ============================================================
 
     async function loadVessels() {
@@ -1124,7 +1147,7 @@
     }
 
     // ============================================================
-    // RENDER FUNCTIONS
+    // 4. RENDER FUNCTIONS
     // ============================================================
 
     function renderStats() {
@@ -1387,29 +1410,74 @@
     }
 
     // ============================================================
-    // REFRESH
+    // 5. REFRESH - ULTRA PRO FIX
     // ============================================================
 
     async function refreshMaintenancePage() {
+        if (isLoading) {
+            console.log('⏳ Already loading...');
+            return;
+        }
+        
+        isLoading = true;
         console.log('🔄 Refreshing maintenance page...');
+        
         try {
-            await loadVessels();
-            await loadMaintenance();
+            // ✅ تحميل البيانات مباشرة من API
+            const token = getToken();
+            if (!token) {
+                document.getElementById('generalMaintenanceContainer').innerHTML = `
+                    <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.3);">
+                        ⚠️ يرجى تسجيل الدخول أولاً
+                    </div>
+                `;
+                isLoading = false;
+                return;
+            }
+
+            // ✅ تحميل المراكب
+            const vesselsRes = await fetch('/api/vessels', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (vesselsRes.ok) {
+                const data = await vesselsRes.json();
+                allVessels = data.vessels || data || [];
+                console.log('✅ Vessels loaded:', allVessels.length);
+            } else {
+                console.error('❌ Vessels API error:', vesselsRes.status);
+            }
+
+            // ✅ تحميل سجل الصيانة
+            const maintRes = await fetch('/api/maintenance', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            if (maintRes.ok) {
+                const data = await maintRes.json();
+                allMaintenance = data.maintenance || data || [];
+                console.log('✅ Maintenance loaded:', allMaintenance.length);
+            } else {
+                console.error('❌ Maintenance API error:', maintRes.status);
+            }
+
+            // ✅ تحديث الواجهة
             renderStats();
             renderBrokenVessels();
             renderHistory();
             renderUnits();
             updateVesselSelect();
             updateYearFilter();
-            console.log('✅ Page refreshed');
+            
+            console.log('✅ Page refreshed successfully');
         } catch (error) {
             console.error('❌ Refresh error:', error);
-            showToast('❌ خطأ في تحديث الصفحة', 'danger');
+            showToast('❌ خطأ في تحديث الصفحة: ' + error.message, 'danger');
+        } finally {
+            isLoading = false;
         }
     }
 
     // ============================================================
-    // FORM HELPERS
+    // 6. FORM HELPERS
     // ============================================================
 
     function toggleMaintenanceForm() {
@@ -1511,7 +1579,7 @@
     }
 
     // ============================================================
-    // SAVE MAINTENANCE
+    // 7. SAVE MAINTENANCE
     // ============================================================
 
     async function saveMaintenance() {
@@ -1568,7 +1636,7 @@
     }
 
     // ============================================================
-    // DELETE MAINTENANCE
+    // 8. DELETE MAINTENANCE
     // ============================================================
 
     async function deleteMaintenance(id) {
@@ -1584,7 +1652,7 @@
     }
 
     // ============================================================
-    // FIX VESSEL
+    // 9. FIX VESSEL
     // ============================================================
 
     async function fixVessel(vesselId) {
@@ -1648,7 +1716,7 @@
     }
 
     // ============================================================
-    // HISTORY MODAL
+    // 10. HISTORY MODAL
     // ============================================================
 
     function showHistory(vesselId, vesselName) {
@@ -1711,7 +1779,7 @@
     });
 
     // ============================================================
-    // FILTERS
+    // 11. FILTERS
     // ============================================================
 
     function applyHistoryFilters() { renderHistory(); showToast('✅ تم تطبيق الفلترة', 'success'); }
@@ -1725,7 +1793,7 @@
     }
 
     // ============================================================
-    // EXPORT
+    // 12. EXPORT
     // ============================================================
 
     function exportMaintenanceReport() {
@@ -1749,7 +1817,7 @@
     }
 
     // ============================================================
-    // TOAST
+    // 13. TOAST
     // ============================================================
 
     function showToast(message, type = 'info') {
@@ -1776,16 +1844,21 @@
     }
 
     // ============================================================
-    // INIT
+    // 14. INIT - ULTRA PRO
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Maintenance page loading...');
+        console.log('🔧 Maintenance page loading (Ultra Pro)...');
+        
+        // ✅ تحميل البيانات فوراً
         refreshMaintenancePage();
+        
+        // ✅ تحديث كل 30 ثانية للتحديث التلقائي
+        setInterval(refreshMaintenancePage, 30000);
     });
 
     // ============================================================
-    // EXPOSE GLOBALS
+    // 15. EXPOSE GLOBALS
     // ============================================================
 
     window.refreshMaintenancePage = refreshMaintenancePage;
@@ -1802,6 +1875,6 @@
     window.exportMaintenanceReport = exportMaintenanceReport;
     window.showToast = showToast;
 
-    console.log('✅ Maintenance page script loaded - Production Pro v2.0');
+    console.log('✅ Maintenance page script loaded - Ultra Pro Production v3.0');
     </script>
 </div>
