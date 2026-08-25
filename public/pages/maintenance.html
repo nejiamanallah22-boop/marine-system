@@ -2,7 +2,7 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE - ULTRA PRO PRODUCTION
+           🔧 MAINTENANCE PAGE - ULTRA PRO FIXED
            ============================================================ */
         
         .maintenance-container {
@@ -752,12 +752,12 @@
         <div class="maintenance-header">
             <h2>
                 🔧 إدارة الصيانة
-                <span class="badge">ULTRA PRO v3.0</span>
+                <span class="badge">FIXED PRO v4.0</span>
             </h2>
             <div class="header-actions">
-                <button class="btn btn-primary" onclick="toggleMaintenanceForm()">➕ إضافة صيانة</button>
-                <button class="btn btn-outline" onclick="refreshMaintenancePage()">🔄 تحديث</button>
-                <button class="btn btn-outline" onclick="exportMaintenanceReport()">📊 تصدير</button>
+                <button class="btn btn-primary" onclick="window.toggleMaintenanceForm()">➕ إضافة صيانة</button>
+                <button class="btn btn-outline" id="refreshBtn">🔄 تحديث</button>
+                <button class="btn btn-outline" onclick="window.exportMaintenanceReport()">📊 تصدير</button>
             </div>
         </div>
 
@@ -819,7 +819,7 @@
         <div class="maintenance-form" id="maintenanceForm">
             <div class="form-header">
                 <h3 id="formTitle">📝 تسجيل صيانة جديدة</h3>
-                <button class="btn-close" onclick="toggleMaintenanceForm()">✕</button>
+                <button class="btn-close" onclick="window.toggleMaintenanceForm()">✕</button>
             </div>
             
             <div class="form-grid">
@@ -906,15 +906,15 @@
                         <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
                         <input type="number" placeholder="الكمية" class="part-qty" style="width:70px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
                         <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
-                        <button onclick="removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
+                        <button onclick="window.removePart(this)" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
                     </div>
                 </div>
-                <button onclick="addPart()" style="padding:6px 16px; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.1); border-radius:6px; cursor:pointer; font-family:'Cairo',sans-serif; font-size:13px;">➕ إضافة قطعة</button>
+                <button onclick="window.addPart()" style="padding:6px 16px; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.1); border-radius:6px; cursor:pointer; font-family:'Cairo',sans-serif; font-size:13px;">➕ إضافة قطعة</button>
             </div>
             
             <div class="form-actions">
-                <button class="btn-save" onclick="saveMaintenance()">💾 حفظ</button>
-                <button class="btn-cancel" onclick="toggleMaintenanceForm()">❌ إلغاء</button>
+                <button class="btn-save" onclick="window.saveMaintenance()">💾 حفظ</button>
+                <button class="btn-cancel" onclick="window.toggleMaintenanceForm()">❌ إلغاء</button>
             </div>
         </div>
 
@@ -978,8 +978,8 @@
                 </div>
             </div>
             <div class="filters-actions">
-                <button class="btn-filter apply" onclick="applyHistoryFilters()">🔍 فلترة</button>
-                <button class="btn-filter reset" onclick="resetHistoryFilters()">🔄 إلغاء</button>
+                <button class="btn-filter apply" onclick="window.applyHistoryFilters()">🔍 فلترة</button>
+                <button class="btn-filter reset" onclick="window.resetHistoryFilters()">🔄 إلغاء</button>
             </div>
         </div>
         
@@ -1011,7 +1011,7 @@
                     📜 تاريخ الإصلاحات
                     <span id="historyVesselName" style="font-size:16px; color:rgba(255,255,255,0.4);"></span>
                 </h3>
-                <button class="close-btn" onclick="closeHistoryModal()">✕</button>
+                <button class="close-btn" onclick="window.closeHistoryModal()">✕</button>
             </div>
             
             <div class="modal-stats">
@@ -1058,11 +1058,11 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - ULTRA PRO PRODUCTION
+    📦 JAVASCRIPT - FIXED VERSION
     ============================================================ -->
     <script>
     // ============================================================
-    // 🔧 MAINTENANCE SCRIPT - ULTRA PRO PRODUCTION v3.0
+    // 🔧 MAINTENANCE SCRIPT - FIXED VERSION
     // ============================================================
 
     // ============================================================
@@ -1072,7 +1072,6 @@
     let currentUser = null;
     let allVessels = [];
     let allMaintenance = [];
-    let isLoading = false;
 
     try {
         const userData = localStorage.getItem('user');
@@ -1225,8 +1224,8 @@
                     </td>
                     <td>
                         <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                            <button class="btn-sm btn-success" onclick="fixVessel('${vesselId}')">✅ إصلاح</button>
-                            <button class="btn-sm btn-history" onclick="showHistory('${vesselId}', '${v.name}')">📜 التاريخ (${repairs.length})</button>
+                            <button class="btn-sm btn-success" onclick="window.fixVessel('${vesselId}')">✅ إصلاح</button>
+                            <button class="btn-sm btn-history" onclick="window.showHistory('${vesselId}', '${v.name}')">📜 التاريخ (${repairs.length})</button>
                         </div>
                     </td>
                 </tr>
@@ -1330,7 +1329,7 @@
                     <td style="color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
                     <td>${statusMap[r.status] || r.status || 'غير محدد'}</td>
                     <td>
-                        <button class="btn-sm btn-danger" onclick="deleteMaintenance('${r._id || r.id}')">🗑️</button>
+                        <button class="btn-sm btn-danger" onclick="window.deleteMaintenance('${r._id || r.id}')">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -1410,20 +1409,13 @@
     }
 
     // ============================================================
-    // 5. REFRESH - ULTRA PRO FIX
+    // 5. REFRESH - FIXED VERSION
     // ============================================================
 
     async function refreshMaintenancePage() {
-        if (isLoading) {
-            console.log('⏳ Already loading...');
-            return;
-        }
-        
-        isLoading = true;
         console.log('🔄 Refreshing maintenance page...');
         
         try {
-            // ✅ تحميل البيانات مباشرة من API
             const token = getToken();
             if (!token) {
                 document.getElementById('generalMaintenanceContainer').innerHTML = `
@@ -1431,7 +1423,6 @@
                         ⚠️ يرجى تسجيل الدخول أولاً
                     </div>
                 `;
-                isLoading = false;
                 return;
             }
 
@@ -1470,9 +1461,7 @@
             console.log('✅ Page refreshed successfully');
         } catch (error) {
             console.error('❌ Refresh error:', error);
-            showToast('❌ خطأ في تحديث الصفحة: ' + error.message, 'danger');
-        } finally {
-            isLoading = false;
+            showToast('❌ فشل تحديث الصفحة: ' + error.message, 'danger');
         }
     }
 
@@ -1769,15 +1758,6 @@
         document.body.style.overflow = '';
     }
 
-    document.addEventListener('click', function(e) {
-        const modal = document.getElementById('historyModal');
-        if (e.target === modal) closeHistoryModal();
-    });
-
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeHistoryModal();
-    });
-
     // ============================================================
     // 11. FILTERS
     // ============================================================
@@ -1844,21 +1824,30 @@
     }
 
     // ============================================================
-    // 14. INIT - ULTRA PRO
+    // 14. INIT
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Maintenance page loading (Ultra Pro)...');
+        console.log('🔧 Maintenance page loading (Fixed version)...');
         
-        // ✅ تحميل البيانات فوراً
-        refreshMaintenancePage();
+        // ✅ ربط زر التحديث
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) {
+            refreshBtn.onclick = function() {
+                refreshMaintenancePage();
+            };
+        }
         
-        // ✅ تحديث كل 30 ثانية للتحديث التلقائي
-        setInterval(refreshMaintenancePage, 30000);
+        // ✅ تحميل البيانات
+        setTimeout(refreshMaintenancePage, 300);
+        setTimeout(refreshMaintenancePage, 1000);
+        
+        // ✅ تحديث كل 60 ثانية
+        setInterval(refreshMaintenancePage, 60000);
     });
 
     // ============================================================
-    // 15. EXPOSE GLOBALS
+    // 15. EXPOSE GLOBALS - مهم جداً للـ onclick
     // ============================================================
 
     window.refreshMaintenancePage = refreshMaintenancePage;
@@ -1875,6 +1864,6 @@
     window.exportMaintenanceReport = exportMaintenanceReport;
     window.showToast = showToast;
 
-    console.log('✅ Maintenance page script loaded - Ultra Pro Production v3.0');
+    console.log('✅ Maintenance page script loaded - Fixed version v4.0');
     </script>
 </div>
