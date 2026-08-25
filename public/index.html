@@ -488,20 +488,22 @@
         };  
 
         // ============================================================  
-        // 📦 STATE - استخدام var لتجنب التكرار  
+        // 📦 STATE  
         // ============================================================  
 
         var currentUser = null;  
         var currentPage = 'dashboard';  
         var notifications = [];  
         var allVessels = [];  
+        var allMaintenance = [];  
         var allUsers = [];  
         var allLogs = [];  
         var sessionsData = [];  
 
-        // ✅ ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
+        // ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
         window.currentUser = currentUser;  
         window.allVessels = allVessels;  
+        window.allMaintenance = allMaintenance;  
         window.allUsers = allUsers;  
         window.allLogs = allLogs;  
         window.sessionsData = sessionsData;  
@@ -592,7 +594,7 @@
                     updateUserDisplay();  
                     loadPage('dashboard');  
                     showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');  
-                    loadAllData();  
+                    setTimeout(loadAllData, 300);  
                 } else {  
                     errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');  
                     errorEl.classList.add('show');  
@@ -637,37 +639,91 @@
         }  
 
         // ============================================================  
-        // 📊 LOAD DATA  
+        // 📊 LOAD ALL DATA - ULTRA FIX  
         // ============================================================  
 
         async function loadAllData() {  
             const token = getToken();  
-            if (!token) return;  
+            if (!token) {  
+                console.warn('⚠️ [LOAD] No token found');  
+                return;  
+            }  
 
             const headers = { 'Authorization': 'Bearer ' + token };  
 
             try {  
-                const [vesselsRes, usersRes] = await Promise.all([  
-                    fetch(CONFIG.API + '/vessels', { headers }),  
-                    fetch(CONFIG.API + '/users', { headers })  
-                ]);  
+                console.log('🔄 [LOAD] جاري تحميل جميع البيانات...');  
 
+                // ✅ تحميل المراكب  
+                const vesselsRes = await fetch(CONFIG.API + '/vessels', { headers });  
                 if (vesselsRes.ok) {  
                     const data = await vesselsRes.json();  
                     allVessels = Array.isArray(data) ? data : [];  
                     window.allVessels = allVessels;  
+                    console.log('✅ [LOAD] Vessels loaded:', allVessels.length);  
                     updateBadge('fleetBadge', allVessels.length);  
                 }  
+
+                // ✅ تحميل سجل الصيانة  
+                const maintRes = await fetch(CONFIG.API + '/maintenance', { headers });  
+                if (maintRes.ok) {  
+                    const data = await maintRes.json();  
+                    allMaintenance = data.maintenance || data || [];  
+                    window.allMaintenance = allMaintenance;  
+                    console.log('✅ [LOAD] Maintenance loaded:', allMaintenance.length);  
+                    const brokenCount = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length;  
+                    updateBadge('maintenanceBadge', brokenCount);  
+                }  
+
+                // ✅ تحميل المستخدمين  
+                const usersRes = await fetch(CONFIG.API + '/users', { headers });  
                 if (usersRes.ok) {  
                     const data = await usersRes.json();  
                     allUsers = Array.isArray(data) ? data : [];  
                     window.allUsers = allUsers;  
+                    console.log('✅ [LOAD] Users loaded:', allUsers.length);  
                     updateBadge('usersBadge', allUsers.length);  
                 }  
+
+                // ✅ تحديث الصفحات الفرعية  
+                updateSubPages();  
+
+                console.log('✅ [LOAD] جميع البيانات تم تحميلها بنجاح');  
             } catch (error) {  
-                console.error('❌ خطأ أثناء تحميل البيانات:', error);  
+                console.error('❌ [LOAD] خطأ:', error);  
             }  
         }  
+
+        // ============================================================  
+        // 🔄 UPDATE SUB PAGES  
+        // ============================================================  
+
+        function updateSubPages() {  
+            console.log('🔄 [UPDATE] تحديث الصفحات الفرعية...');  
+
+            // ✅ تحديث الصيانة  
+            if (typeof renderStats === 'function') renderStats();  
+            if (typeof renderBrokenVessels === 'function') renderBrokenVessels();  
+            if (typeof renderHistory === 'function') renderHistory();  
+            if (typeof renderUnits === 'function') renderUnits();  
+            if (typeof updateVesselSelect === 'function') updateVesselSelect();  
+            if (typeof updateYearFilter === 'function') updateYearFilter();  
+
+            // ✅ تحديث السجل العام  
+            if (typeof renderVessels === 'function') renderVessels();  
+
+            // ✅ تحديث الجاهزية  
+            if (typeof renderEfficiency === 'function') renderEfficiency();  
+
+            // ✅ تحديث لوحة التحكم  
+            if (typeof renderDashboard === 'function') renderDashboard();  
+
+            console.log('✅ [UPDATE] تم تحديث الصفحات الفرعية');  
+        }  
+
+        // ============================================================  
+        // 🔢 UPDATE BADGE  
+        // ============================================================  
 
         function updateBadge(id, count) {  
             const el = document.getElementById(id);  
@@ -726,6 +782,22 @@
                     });  
                     loader.style.display = 'none';  
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);  
+
+                    // ✅ بعد تحميل الصفحة، تحديث البيانات  
+                    setTimeout(() => {  
+                        loadAllData();  
+                        if (page === 'maintenance') {  
+                            // تحديث الصيانة يدوياً  
+                            if (typeof refreshMaintenancePage === 'function') {  
+                                refreshMaintenancePage();  
+                            }  
+                        }  
+                        if (page === 'fleet') {  
+                            if (typeof loadFleetData === 'function') {  
+                                loadFleetData();  
+                            }  
+                        }  
+                    }, 300);  
                 })  
                 .catch(error => {  
                     loader.style.display = 'none';  
@@ -847,6 +919,8 @@
         window.showToast = showToast;  
         window.verifyToken = verifyToken;  
         window.loadAllData = loadAllData;  
+        window.updateSubPages = updateSubPages;  
+        window.updateBadge = updateBadge;  
         window.currentUser = currentUser;  
 
         console.log('✅ Marine System v7.0 loaded successfully');  
