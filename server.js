@@ -6,7 +6,7 @@
  * ✅ FIXED: Token version validation
  * ✅ FIXED: CORS configuration
  * ✅ FIXED: Admin unlock on restart
- * ✅ ADDED: Gemini API Integration
+ * ✅ ADDED: Gemini API Integration (Primary)
  * ✅ ADDED: DeepSeek AI Integration (Fallback)
  * ✅ ADDED: AI API endpoints
  * ✅ ADDED: Sessions API
@@ -14,8 +14,9 @@
  * ✅ ADDED: Seed Data (Vessels with Repair Units)
  * ✅ ADDED: /api/auth/me endpoint
  * ✅ ADDED: /api/auth/verify endpoint
- * ✅ ADDED: /api/config endpoint for frontend
+ * ✅ ADDED: /api/config endpoint (Public - for frontend)
  * ✅ ADDED: /api/check-gemini endpoint
+ * ✅ ADDED: /ai-assistant page
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -1179,28 +1180,21 @@ app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CONFIGURATION ENDPOINT (للواجهة الأمامية)
+// 🤖 AI - CONFIGURATION ENDPOINT (PUBLIC - للواجهة الأمامية)
 // ============================================================
 
-app.get('/api/config', authenticate, (req, res) => {
-    console.log(`🔑 [CONFIG] User: ${req.user.username}`);
+app.get('/api/config', (req, res) => {
+    console.log(`🔑 [CONFIG] Request from IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
+    
+    // ✅ إرسال المفاتيح إلى الواجهة الأمامية (بدون مصادقة)
     res.json({
         success: true,
-        gemini: {
-            apiKey: GEMINI_API_KEY || '',
-            model: GEMINI_MODEL,
-            enabled: !!GEMINI_API_KEY
-        },
-        deepseek: {
-            apiKey: DEEPSEEK_API_KEY || '',
-            model: DEEPSEEK_MODEL,
-            enabled: !!DEEPSEEK_API_KEY
-        },
-        openai: {
-            apiKey: OPENAI_API_KEY || '',
-            model: OPENAI_MODEL,
-            enabled: !!OPENAI_API_KEY
-        }
+        GEMINI_API_KEY: GEMINI_API_KEY || '',
+        GEMINI_MODEL: GEMINI_MODEL || 'gemini-2.0-flash',
+        DEEPSEEK_API_KEY: DEEPSEEK_API_KEY || '',
+        DEEPSEEK_MODEL: DEEPSEEK_MODEL || 'deepseek-chat',
+        OPENAI_API_KEY: OPENAI_API_KEY || '',
+        OPENAI_MODEL: OPENAI_MODEL || 'gpt-4o-mini'
     });
 });
 
