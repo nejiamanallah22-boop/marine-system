@@ -462,13 +462,15 @@
         </div>  
     </div>  
 
-    <!-- ===== JAVASCRIPT ===== -->  
+    <!-- ============================================================  
+    📦 JAVASCRIPT - ULTRA PROFESSIONAL  
+    ============================================================ -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - v7.0 (FINAL)  
+        // 🚢 MARINE SYSTEM - ULTRA PRO v8.0  
         // ============================================================  
 
-        console.log('🚢 Marine System v7.0 - Loading...');  
+        console.log('🚢 Marine System Ultra Pro v8.0 - Loading...');  
 
         // ============================================================  
         // 📦 CONFIGURATION  
@@ -493,20 +495,13 @@
 
         var currentUser = null;  
         var currentPage = 'dashboard';  
-        var notifications = [];  
         var allVessels = [];  
         var allMaintenance = [];  
         var allUsers = [];  
-        var allLogs = [];  
-        var sessionsData = [];  
 
-        // ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
-        window.currentUser = currentUser;  
         window.allVessels = allVessels;  
         window.allMaintenance = allMaintenance;  
         window.allUsers = allUsers;  
-        window.allLogs = allLogs;  
-        window.sessionsData = sessionsData;  
 
         // ============================================================  
         // 🔧 HELPERS  
@@ -521,7 +516,7 @@
 
         function escapeHTML(s) {  
             if (!s) return '';  
-            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m]));  
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));  
         }  
 
         // ============================================================  
@@ -639,7 +634,7 @@
         }  
 
         // ============================================================  
-        // 📊 LOAD ALL DATA - ULTRA FIX  
+        // 📊 LOAD ALL DATA - ULTRA PRO  
         // ============================================================  
 
         async function loadAllData() {  
@@ -654,7 +649,7 @@
             try {  
                 console.log('🔄 [LOAD] جاري تحميل جميع البيانات...');  
 
-                // ✅ تحميل المراكب  
+                // تحميل المراكب  
                 const vesselsRes = await fetch(CONFIG.API + '/vessels', { headers });  
                 if (vesselsRes.ok) {  
                     const data = await vesselsRes.json();  
@@ -664,7 +659,7 @@
                     updateBadge('fleetBadge', allVessels.length);  
                 }  
 
-                // ✅ تحميل سجل الصيانة  
+                // تحميل سجل الصيانة  
                 const maintRes = await fetch(CONFIG.API + '/maintenance', { headers });  
                 if (maintRes.ok) {  
                     const data = await maintRes.json();  
@@ -675,7 +670,7 @@
                     updateBadge('maintenanceBadge', brokenCount);  
                 }  
 
-                // ✅ تحميل المستخدمين  
+                // تحميل المستخدمين  
                 const usersRes = await fetch(CONFIG.API + '/users', { headers });  
                 if (usersRes.ok) {  
                     const data = await usersRes.json();  
@@ -685,8 +680,8 @@
                     updateBadge('usersBadge', allUsers.length);  
                 }  
 
-                // ✅ تحديث الصفحات الفرعية  
-                updateSubPages();  
+                // تحديث الصفحات الفرعية  
+                updateAllPages();  
 
                 console.log('✅ [LOAD] جميع البيانات تم تحميلها بنجاح');  
             } catch (error) {  
@@ -695,30 +690,28 @@
         }  
 
         // ============================================================  
-        // 🔄 UPDATE SUB PAGES  
+        // 🔄 UPDATE ALL PAGES  
         // ============================================================  
 
-        function updateSubPages() {  
-            console.log('🔄 [UPDATE] تحديث الصفحات الفرعية...');  
+        function updateAllPages() {  
+            console.log('🔄 [UPDATE] تحديث جميع الصفحات...');  
 
-            // ✅ تحديث الصيانة  
-            if (typeof renderStats === 'function') renderStats();  
-            if (typeof renderBrokenVessels === 'function') renderBrokenVessels();  
-            if (typeof renderHistory === 'function') renderHistory();  
-            if (typeof renderUnits === 'function') renderUnits();  
-            if (typeof updateVesselSelect === 'function') updateVesselSelect();  
-            if (typeof updateYearFilter === 'function') updateYearFilter();  
+            // تحديث الصيانة  
+            if (typeof window.loadMaintenanceData === 'function') {  
+                window.loadMaintenanceData();  
+            }  
 
-            // ✅ تحديث السجل العام  
-            if (typeof renderVessels === 'function') renderVessels();  
+            // تحديث السجل العام  
+            if (typeof window.loadFleetData === 'function') {  
+                window.loadFleetData();  
+            }  
 
-            // ✅ تحديث الجاهزية  
-            if (typeof renderEfficiency === 'function') renderEfficiency();  
+            // تحديث لوحة التحكم  
+            if (typeof window.loadDashboardData === 'function') {  
+                window.loadDashboardData();  
+            }  
 
-            // ✅ تحديث لوحة التحكم  
-            if (typeof renderDashboard === 'function') renderDashboard();  
-
-            console.log('✅ [UPDATE] تم تحديث الصفحات الفرعية');  
+            console.log('✅ [UPDATE] تم تحديث جميع الصفحات');  
         }  
 
         // ============================================================  
@@ -748,7 +741,7 @@
         }  
 
         // ============================================================  
-        // 📄 LOAD PAGE  
+        // 📄 LOAD PAGE - ULTRA PRO  
         // ============================================================  
 
         function loadPage(page) {  
@@ -783,20 +776,9 @@
                     loader.style.display = 'none';  
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);  
 
-                    // ✅ بعد تحميل الصفحة، تحديث البيانات  
+                    // بعد تحميل الصفحة، تحديث البيانات  
                     setTimeout(() => {  
                         loadAllData();  
-                        if (page === 'maintenance') {  
-                            // تحديث الصيانة يدوياً  
-                            if (typeof refreshMaintenancePage === 'function') {  
-                                refreshMaintenancePage();  
-                            }  
-                        }  
-                        if (page === 'fleet') {  
-                            if (typeof loadFleetData === 'function') {  
-                                loadFleetData();  
-                            }  
-                        }  
                     }, 300);  
                 })  
                 .catch(error => {  
@@ -840,6 +822,30 @@
             document.getElementById('sidebar').classList.remove('open');  
             document.getElementById('menuToggle').classList.remove('active');  
         }  
+
+        // ============================================================  
+        // 🌐 GLOBAL REFRESH - ULTRA PRO  
+        // ============================================================  
+
+        window.globalRefresh = async function() {  
+            console.log('🔄 [GLOBAL] تحديث شامل...');  
+            await loadAllData();  
+            showToast('✅ تم تحديث جميع البيانات', 'success');  
+        };  
+
+        // ربط زر التحديث العام  
+        document.addEventListener('DOMContentLoaded', function() {  
+            // إضافة زر تحديث في الرأس  
+            const headerActions = document.querySelector('.header-right');  
+            if (headerActions) {  
+                const refreshBtn = document.createElement('button');  
+                refreshBtn.className = 'btn btn-outline';  
+                refreshBtn.style.cssText = 'padding:6px 14px;font-size:13px;border-radius:8px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.06);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;';  
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';  
+                refreshBtn.onclick = window.globalRefresh;  
+                headerActions.appendChild(refreshBtn);  
+            }  
+        });  
 
         // ============================================================  
         // 🚀 INIT  
@@ -887,7 +893,7 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';  
             });  
 
-            // ✅ التحقق من التوكن  
+            // التحقق من التوكن  
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
             if (token) {  
                 const isValid = await verifyToken(token);  
@@ -904,7 +910,7 @@
                 }  
             }  
 
-            console.log('✅ Marine System v7.0 ready');  
+            console.log('✅ Marine System Ultra Pro v8.0 ready');  
         });  
 
         // ============================================================  
@@ -919,11 +925,12 @@
         window.showToast = showToast;  
         window.verifyToken = verifyToken;  
         window.loadAllData = loadAllData;  
-        window.updateSubPages = updateSubPages;  
+        window.updateAllPages = updateAllPages;  
         window.updateBadge = updateBadge;  
+        window.globalRefresh = globalRefresh;  
         window.currentUser = currentUser;  
 
-        console.log('✅ Marine System v7.0 loaded successfully');  
+        console.log('✅ Marine System Ultra Pro v8.0 loaded successfully');  
     </script>  
 
 </body>  
