@@ -2,7 +2,7 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE - FIXED BUTTON
+           🔧 MAINTENANCE PAGE - FINAL FIXED VERSION
            ============================================================ */
         
         .maintenance-container {
@@ -721,6 +721,18 @@
             to { transform: rotate(360deg); }
         }
         
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+        .empty-state h3 { color: rgba(255,255,255,0.4); margin: 0; }
+        .empty-state p { color: rgba(255,255,255,0.2); margin-top: 5px; }
+        
         @media (max-width: 768px) {
             .maintenance-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
             .maintenance-header h2 { font-size: 20px; }
@@ -752,12 +764,12 @@
         <div class="maintenance-header">
             <h2>
                 🔧 إدارة الصيانة
-                <span class="badge">FIXED v5.0</span>
+                <span class="badge">FIXED v6.0</span>
             </h2>
             <div class="header-actions">
-                <button class="btn btn-primary" id="addBtn">➕ إضافة صيانة</button>
-                <button class="btn btn-outline" id="refreshBtn">🔄 تحديث</button>
-                <button class="btn btn-outline" id="exportBtn">📊 تصدير</button>
+                <button class="btn btn-primary" id="addMaintenanceBtn">➕ إضافة صيانة</button>
+                <button class="btn btn-outline" id="refreshMaintenanceBtn">🔄 تحديث</button>
+                <button class="btn btn-outline" id="exportMaintenanceBtn">📊 تصدير</button>
             </div>
         </div>
 
@@ -809,9 +821,9 @@
             <h3>🟥 المراكب المعطبة <span class="count-badge" id="brokenCount">0</span></h3>
         </div>
         <div id="generalMaintenanceContainer">
-            <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
+            <div class="empty-state">
                 <div class="loading-spinner"></div>
-                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
+                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
             </div>
         </div>
 
@@ -913,8 +925,8 @@
             </div>
             
             <div class="form-actions">
-                <button class="btn-save" id="saveBtn">💾 حفظ</button>
-                <button class="btn-cancel" id="cancelBtn">❌ إلغاء</button>
+                <button class="btn-save" id="saveMaintenanceBtn">💾 حفظ</button>
+                <button class="btn-cancel" id="cancelMaintenanceBtn">❌ إلغاء</button>
             </div>
         </div>
 
@@ -984,9 +996,9 @@
         </div>
         
         <div id="historyMaintenanceContainer">
-            <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
+            <div class="empty-state">
                 <div class="loading-spinner"></div>
-                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
+                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
             </div>
         </div>
 
@@ -995,9 +1007,9 @@
             <h3>🏭 وحدات الصيانة</h3>
         </div>
         <div id="maintenanceUnitsContainer">
-            <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);">
+            <div class="empty-state">
                 <div class="loading-spinner"></div>
-                <div style="margin-top:10px;">جاري تحميل البيانات...</div>
+                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
             </div>
         </div>
         
@@ -1058,11 +1070,11 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - FIXED BUTTONS VERSION
+    📦 JAVASCRIPT - FINAL FIXED VERSION
     ============================================================ -->
     <script>
     // ============================================================
-    // 🔧 MAINTENANCE SCRIPT - FIXED BUTTONS VERSION
+    // 🔧 MAINTENANCE SCRIPT - FINAL FIXED VERSION
     // ============================================================
 
     // ============================================================
@@ -1070,8 +1082,6 @@
     // ============================================================
 
     let currentUser = null;
-    let allVessels = [];
-    let allMaintenance = [];
 
     try {
         const userData = localStorage.getItem('user');
@@ -1094,60 +1104,79 @@
         return token;
     }
 
+    function showToast(message, type = 'info') {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
+            <span class="toast-icon">${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'danger' ? '❌' : 'ℹ️'}</span>
+            <span>${message}</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            if (toast.parentElement) toast.remove();
+        }, 5000);
+    }
+
     // ============================================================
-    // 3. CORE FUNCTIONS
+    // 3. CORE DATA FUNCTIONS
     // ============================================================
 
-    async function refreshMaintenancePage() {
-        console.log('🔄 Refreshing maintenance page...');
+    async function loadMaintenanceData() {
+        console.log('🔄 [MAINT] Loading maintenance data...');
         
         try {
             const token = getToken();
             if (!token) {
                 document.getElementById('generalMaintenanceContainer').innerHTML = `
-                    <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.3);">
-                        ⚠️ يرجى تسجيل الدخول أولاً
+                    <div class="empty-state">
+                        <div class="icon">⚠️</div>
+                        <h3>يرجى تسجيل الدخول أولاً</h3>
                     </div>
                 `;
                 return;
             }
 
-            // تحميل المراكب
+            // ✅ تحميل المراكب
             const vesselsRes = await fetch('/api/vessels', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (vesselsRes.ok) {
                 const data = await vesselsRes.json();
-                allVessels = data.vessels || data || [];
-                console.log('✅ Vessels loaded:', allVessels.length);
+                window.allVessels = data.vessels || data || [];
+                console.log('✅ [MAINT] Vessels loaded:', window.allVessels.length);
             } else {
-                console.error('❌ Vessels API error:', vesselsRes.status);
+                console.error('❌ [MAINT] Vessels API error:', vesselsRes.status);
             }
 
-            // تحميل سجل الصيانة
+            // ✅ تحميل سجل الصيانة
             const maintRes = await fetch('/api/maintenance', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             if (maintRes.ok) {
                 const data = await maintRes.json();
-                allMaintenance = data.maintenance || data || [];
-                console.log('✅ Maintenance loaded:', allMaintenance.length);
+                window.allMaintenance = data.maintenance || data || [];
+                console.log('✅ [MAINT] Maintenance loaded:', window.allMaintenance.length);
             } else {
-                console.error('❌ Maintenance API error:', maintRes.status);
+                console.error('❌ [MAINT] Maintenance API error:', maintRes.status);
             }
 
-            // تحديث الواجهة
-            renderStats();
-            renderBrokenVessels();
-            renderHistory();
-            renderUnits();
-            updateVesselSelect();
-            updateYearFilter();
+            // ✅ تحديث الواجهة
+            renderAll();
             
-            console.log('✅ Page refreshed successfully');
+            console.log('✅ [MAINT] Data loaded successfully');
         } catch (error) {
-            console.error('❌ Refresh error:', error);
-            showToast('❌ فشل تحديث الصفحة: ' + error.message, 'danger');
+            console.error('❌ [MAINT] Load error:', error);
+            showToast('❌ فشل تحميل البيانات: ' + error.message, 'danger');
         }
     }
 
@@ -1155,12 +1184,23 @@
     // 4. RENDER FUNCTIONS
     // ============================================================
 
+    function renderAll() {
+        renderStats();
+        renderBrokenVessels();
+        renderHistory();
+        renderUnits();
+        updateVesselSelect();
+        updateYearFilter();
+        updateBrokenBadge();
+    }
+
     function renderStats() {
-        const total = allMaintenance.length;
-        const inProgress = allMaintenance.filter(r => r.status === 'قيد الإنجاز' || r.status === 'معلقة').length;
-        const completed = allMaintenance.filter(r => r.status === 'مكتملة').length;
-        const cancelled = allMaintenance.filter(r => r.status === 'ملغية' || r.status === 'ملغاة').length;
-        const totalCost = allMaintenance.reduce((sum, r) => sum + (r.cost || 0), 0);
+        const records = window.allMaintenance || [];
+        const total = records.length;
+        const inProgress = records.filter(r => r.status === 'قيد الإنجاز' || r.status === 'معلقة').length;
+        const completed = records.filter(r => r.status === 'مكتملة').length;
+        const cancelled = records.filter(r => r.status === 'ملغية' || r.status === 'ملغاة').length;
+        const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
 
         document.getElementById('totalCount').textContent = total;
         document.getElementById('inProgressCount').textContent = inProgress;
@@ -1181,15 +1221,17 @@
         const container = document.getElementById('generalMaintenanceContainer');
         if (!container) return;
 
-        const broken = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
+        const vessels = window.allVessels || [];
+        const broken = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
+
         document.getElementById('brokenCount').textContent = broken.length;
 
         if (broken.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center; padding:40px; background:rgba(255,255,255,0.02); border-radius:12px; border:1px solid rgba(74,222,128,0.1);">
-                    <div style="font-size:48px; margin-bottom:10px;">✅</div>
-                    <h3 style="color:#4ade80; margin:0;">لا توجد مراكب معطبة حالياً</h3>
-                    <p style="color:rgba(255,255,255,0.3); margin-top:5px;">جميع المراكب في حالة جاهزة</p>
+                <div class="empty-state" style="border-color: rgba(74,222,128,0.1);">
+                    <div class="icon" style="font-size:48px;">✅</div>
+                    <h3 style="color:#4ade80;">لا توجد مراكب معطبة حالياً</h3>
+                    <p style="color:rgba(255,255,255,0.3);">جميع المراكب في حالة جاهزة</p>
                 </div>
             `;
             return;
@@ -1213,7 +1255,8 @@
 
         broken.forEach(v => {
             const vesselId = v._id || v.id;
-            const repairs = allMaintenance.filter(r => r.vesselId == vesselId);
+            const records = window.allMaintenance || [];
+            const repairs = records.filter(r => r.vesselId == vesselId);
             const completedRepairs = repairs.filter(r => r.status === 'مكتملة');
             const totalCost = repairs.reduce((sum, r) => sum + (r.cost || 0), 0);
 
@@ -1253,7 +1296,9 @@
         const container = document.getElementById('historyMaintenanceContainer');
         if (!container) return;
 
-        let records = [...allMaintenance];
+        let records = [...(window.allMaintenance || [])];
+        
+        // تطبيق الفلترة
         const vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
         const yearFilter = document.getElementById('filterYear')?.value || '';
         const typeFilter = document.getElementById('filterType')?.value || '';
@@ -1261,11 +1306,21 @@
         const faultFilter = document.getElementById('filterFaultType')?.value || '';
         const costFilter = document.getElementById('filterCost')?.value || '';
 
-        if (vesselFilter) records = records.filter(r => (r.vesselName || '').toLowerCase().includes(vesselFilter));
-        if (yearFilter) records = records.filter(r => r.date && r.date.startsWith(yearFilter));
-        if (typeFilter) records = records.filter(r => r.type === typeFilter);
-        if (unitFilter) records = records.filter(r => r.unit === unitFilter);
-        if (faultFilter) records = records.filter(r => r.faultType === faultFilter || (r.description || '').includes(faultFilter));
+        if (vesselFilter) {
+            records = records.filter(r => (r.vesselName || '').toLowerCase().includes(vesselFilter));
+        }
+        if (yearFilter) {
+            records = records.filter(r => r.date && r.date.startsWith(yearFilter));
+        }
+        if (typeFilter) {
+            records = records.filter(r => r.type === typeFilter);
+        }
+        if (unitFilter) {
+            records = records.filter(r => r.unit === unitFilter);
+        }
+        if (faultFilter) {
+            records = records.filter(r => r.faultType === faultFilter || (r.description || '').includes(faultFilter));
+        }
         if (costFilter) {
             records = records.filter(r => {
                 const cost = r.cost || 0;
@@ -1283,8 +1338,10 @@
 
         if (records.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.02); border-radius:12px;">
-                    🚫 لا توجد سجلات صيانة مطابقة للفلترة
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <h3>لا توجد سجلات صيانة</h3>
+                    <p>لا توجد سجلات مطابقة للفلترة</p>
                 </div>
             `;
             return;
@@ -1350,6 +1407,7 @@
         const container = document.getElementById('maintenanceUnitsContainer');
         if (!container) return;
 
+        const records = window.allMaintenance || [];
         const units = [
             'وحدة الصيانة والإسناد البحري تونس',
             'وحدة الصيانة والإسناد البحري صفاقس',
@@ -1360,7 +1418,7 @@
 
         let html = '';
         units.forEach(unit => {
-            const unitRecords = allMaintenance.filter(r => r.unit === unit);
+            const unitRecords = records.filter(r => r.unit === unit);
             const total = unitRecords.length;
             const completed = unitRecords.filter(r => r.status === 'مكتملة').length;
             const inProgress = unitRecords.filter(r => r.status === 'قيد الإنجاز').length;
@@ -1415,6 +1473,17 @@
         container.innerHTML = html;
     }
 
+    function updateBrokenBadge() {
+        const vessels = window.allVessels || [];
+        const brokenCount = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length;
+        const badge = document.getElementById('maintenanceBadge');
+        if (badge) {
+            badge.textContent = brokenCount;
+            badge.style.display = brokenCount > 0 ? 'inline' : 'none';
+        }
+        document.getElementById('brokenCount').textContent = brokenCount;
+    }
+
     // ============================================================
     // 5. FORM HELPERS
     // ============================================================
@@ -1448,9 +1517,10 @@
     function updateVesselSelect() {
         const select = document.getElementById('mVesselId');
         if (!select) return;
+        const vessels = window.allVessels || [];
         const currentValue = select.value;
         select.innerHTML = '<option value="">-- اختر المركب --</option>';
-        allVessels.forEach(v => {
+        vessels.forEach(v => {
             const option = document.createElement('option');
             option.value = v._id || v.id;
             option.textContent = `${v.name} (${v.num || 'بدون رقم'}) - ${v.cat || 'بدون فئة'}`;
@@ -1462,8 +1532,9 @@
     function updateYearFilter() {
         const select = document.getElementById('filterYear');
         if (!select) return;
+        const records = window.allMaintenance || [];
         const years = new Set();
-        allMaintenance.forEach(r => {
+        records.forEach(r => {
             if (r.date) {
                 const year = r.date.split('-')[0];
                 if (year && year.length === 4) years.add(year);
@@ -1542,7 +1613,8 @@
         if (!description) { showToast('⚠️ الرجاء إدخال وصف العطل', 'warning'); return; }
         if (!technician) { showToast('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning'); return; }
 
-        const vessel = allVessels.find(v => (v._id || v.id) == vesselId);
+        const vessels = window.allVessels || [];
+        const vessel = vessels.find(v => (v._id || v.id) == vesselId);
         const vesselName = vessel ? vessel.name : 'مركب غير معروف';
 
         const data = {
@@ -1575,7 +1647,7 @@
             
             showToast(`✅ ${recordId ? 'تم تحديث' : 'تم إضافة'} سجل الصيانة بنجاح`, 'success');
             toggleMaintenanceForm();
-            await refreshMaintenancePage();
+            await loadMaintenanceData();
         } catch (error) {
             console.error('❌ Save error:', error);
             showToast('❌ ' + error.message, 'danger');
@@ -1596,7 +1668,7 @@
             if (!response.ok) throw new Error('فشل الحذف');
             
             showToast('✅ تم حذف السجل', 'success');
-            await refreshMaintenancePage();
+            await loadMaintenanceData();
         } catch (error) {
             console.error('❌ Delete error:', error);
             showToast('❌ ' + error.message, 'danger');
@@ -1604,7 +1676,8 @@
     }
 
     async function fixVessel(vesselId) {
-        const openRecords = allMaintenance.filter(r => 
+        const records = window.allMaintenance || [];
+        const openRecords = records.filter(r => 
             r.vesselId == vesselId && 
             (r.status === 'قيد الإنجاز' || r.status === 'معلقة')
         );
@@ -1622,6 +1695,9 @@
             if (!token) return;
 
             // تحديث حالة المركب
+            const vessels = window.allVessels || [];
+            const vessel = vessels.find(v => (v._id || v.id) == vesselId);
+            
             await fetch(`/api/vessels/${vesselId}`, {
                 method: 'PUT',
                 headers: {
@@ -1651,7 +1727,6 @@
             }
 
             // تسجيل في التاريخ
-            const vessel = allVessels.find(v => (v._id || v.id) == vesselId);
             await fetch('/api/maintenance', {
                 method: 'POST',
                 headers: {
@@ -1674,7 +1749,7 @@
             });
 
             showToast(`✅ تم إصلاح المركب وعودته للخدمة`, 'success');
-            await refreshMaintenancePage();
+            await loadMaintenanceData();
         } catch (error) {
             console.error('❌ Fix vessel error:', error);
             showToast('❌ ' + error.message, 'danger');
@@ -1686,10 +1761,11 @@
     // ============================================================
 
     function showHistory(vesselId, vesselName) {
-        const records = allMaintenance.filter(r => r.vesselId == vesselId);
-        const total = records.length;
-        const completed = records.filter(r => r.status === 'مكتملة').length;
-        const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
+        const records = window.allMaintenance || [];
+        const vesselRecords = records.filter(r => r.vesselId == vesselId);
+        const total = vesselRecords.length;
+        const completed = vesselRecords.filter(r => r.status === 'مكتملة').length;
+        const totalCost = vesselRecords.reduce((sum, r) => sum + (r.cost || 0), 0);
         const avgCost = total > 0 ? (totalCost / total).toFixed(0) : 0;
 
         document.getElementById('historyVesselName').textContent = `- ${vesselName}`;
@@ -1699,7 +1775,7 @@
         document.getElementById('historyAvg').textContent = avgCost.toLocaleString();
 
         const tbody = document.getElementById('historyTableBody');
-        if (records.length === 0) {
+        if (vesselRecords.length === 0) {
             tbody.innerHTML = `
                 <tr><td colspan="5" class="no-history">
                     <div class="icon">🚫</div>
@@ -1707,7 +1783,7 @@
                 </td></tr>
             `;
         } else {
-            tbody.innerHTML = records.map(r => {
+            tbody.innerHTML = vesselRecords.map(r => {
                 const statusMap = {
                     'مكتملة': '<span class="status-badge status-completed">✅ مكتملة</span>',
                     'قيد الإنجاز': '<span class="status-badge status-in-progress">🔄 قيد الإنجاز</span>',
@@ -1754,13 +1830,14 @@
     // ============================================================
 
     function exportMaintenanceReport() {
-        if (allMaintenance.length === 0) {
+        const records = window.allMaintenance || [];
+        if (records.length === 0) {
             showToast('⚠️ لا توجد بيانات للتصدير', 'warning');
             return;
         }
 
         let csv = 'التاريخ,المركب,نوع الصيانة,الفني,التكلفة,الحالة,الوحدة\n';
-        allMaintenance.forEach(r => {
+        records.forEach(r => {
             csv += `${r.date || ''},${r.vesselName || ''},${r.type || ''},${r.technician || ''},${r.cost || 0},${r.status || ''},${r.unit || ''}\n`;
         });
 
@@ -1774,52 +1851,25 @@
     }
 
     // ============================================================
-    // 10. TOAST
-    // ============================================================
-
-    function showToast(message, type = 'info') {
-        let container = document.getElementById('toastContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <span class="toast-icon">${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'danger' ? '❌' : 'ℹ️'}</span>
-            <span>${message}</span>
-            <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-        `;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            if (toast.parentElement) toast.remove();
-        }, 5000);
-    }
-
-    // ============================================================
-    // 11. INIT - ربط الأزرار
+    // 10. INIT - ربط الأزرار
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Maintenance page loading (Fixed Buttons version)...');
+        console.log('🔧 Maintenance page loading (Final Fixed version)...');
 
         // ✅ ربط زر التحديث
-        document.getElementById('refreshBtn').onclick = refreshMaintenancePage;
+        document.getElementById('refreshMaintenanceBtn').onclick = loadMaintenanceData;
 
         // ✅ ربط زر الإضافة
-        document.getElementById('addBtn').onclick = toggleMaintenanceForm;
+        document.getElementById('addMaintenanceBtn').onclick = toggleMaintenanceForm;
 
         // ✅ ربط زر التصدير
-        document.getElementById('exportBtn').onclick = exportMaintenanceReport;
+        document.getElementById('exportMaintenanceBtn').onclick = exportMaintenanceReport;
 
         // ✅ ربط أزرار النموذج
         document.getElementById('formCloseBtn').onclick = toggleMaintenanceForm;
-        document.getElementById('cancelBtn').onclick = toggleMaintenanceForm;
-        document.getElementById('saveBtn').onclick = saveMaintenance;
+        document.getElementById('cancelMaintenanceBtn').onclick = toggleMaintenanceForm;
+        document.getElementById('saveMaintenanceBtn').onclick = saveMaintenance;
         document.getElementById('addPartBtn').onclick = addPart;
 
         // ✅ ربط أزرار الفلترة
@@ -1834,14 +1884,39 @@
             if (e.target === this) closeHistoryModal();
         };
 
-        // ✅ تحميل البيانات
-        setTimeout(refreshMaintenancePage, 300);
-        setTimeout(refreshMaintenancePage, 1000);
+        // ✅ تحميل البيانات فوراً
+        setTimeout(loadMaintenanceData, 200);
+        setTimeout(loadMaintenanceData, 800);
         
-        // ✅ تحديث كل 60 ثانية
-        setInterval(refreshMaintenancePage, 60000);
+        // ✅ تحديث كل 30 ثانية
+        setInterval(loadMaintenanceData, 30000);
     });
 
-    console.log('✅ Maintenance page script loaded - Fixed Buttons version');
+    // ============================================================
+    // 11. EXPOSE GLOBALS
+    // ============================================================
+
+    window.loadMaintenanceData = loadMaintenanceData;
+    window.toggleMaintenanceForm = toggleMaintenanceForm;
+    window.saveMaintenance = saveMaintenance;
+    window.deleteMaintenance = deleteMaintenance;
+    window.fixVessel = fixVessel;
+    window.showHistory = showHistory;
+    window.closeHistoryModal = closeHistoryModal;
+    window.addPart = addPart;
+    window.removePart = removePart;
+    window.applyHistoryFilters = applyHistoryFilters;
+    window.resetHistoryFilters = resetHistoryFilters;
+    window.exportMaintenanceReport = exportMaintenanceReport;
+    window.renderAll = renderAll;
+    window.renderStats = renderStats;
+    window.renderBrokenVessels = renderBrokenVessels;
+    window.renderHistory = renderHistory;
+    window.renderUnits = renderUnits;
+    window.updateVesselSelect = updateVesselSelect;
+    window.updateYearFilter = updateYearFilter;
+    window.updateBrokenBadge = updateBrokenBadge;
+
+    console.log('✅ Maintenance page script loaded - Final Fixed v6.0');
     </script>
 </div>
