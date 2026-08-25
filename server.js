@@ -6,13 +6,16 @@
  * ✅ FIXED: Token version validation
  * ✅ FIXED: CORS configuration
  * ✅ FIXED: Admin unlock on restart
- * ✅ ADDED: DeepSeek AI Integration
+ * ✅ ADDED: Gemini API Integration
+ * ✅ ADDED: DeepSeek AI Integration (Fallback)
  * ✅ ADDED: AI API endpoints
  * ✅ ADDED: Sessions API
  * ✅ ADDED: Logs API
  * ✅ ADDED: Seed Data (Vessels with Repair Units)
  * ✅ ADDED: /api/auth/me endpoint
  * ✅ ADDED: /api/auth/verify endpoint
+ * ✅ ADDED: /api/config endpoint for frontend
+ * ✅ ADDED: /api/check-gemini endpoint
  * ✅ PRODUCTION READY 100%
  * ============================================================
  */
@@ -53,11 +56,13 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
     process.exit(1);
 }
 
-// ✅ AI Configuration
+// ✅ AI Configuration - Gemini Priority
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_EMAIL = 'admin@marine-system.com';
@@ -72,8 +77,9 @@ console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
 console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -666,8 +672,9 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         ai: {
+            gemini: !!GEMINI_API_KEY,
             deepseek: !!DEEPSEEK_API_KEY,
-            gemini: !!GEMINI_API_KEY
+            openai: !!OPENAI_API_KEY
         }
     });
 });
@@ -1172,28 +1179,70 @@ app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CONFIGURATION ENDPOINT
+// 🤖 AI - CONFIGURATION ENDPOINT (للواجهة الأمامية)
 // ============================================================
 
 app.get('/api/config', authenticate, (req, res) => {
     console.log(`🔑 [CONFIG] User: ${req.user.username}`);
     res.json({
         success: true,
+        gemini: {
+            apiKey: GEMINI_API_KEY || '',
+            model: GEMINI_MODEL,
+            enabled: !!GEMINI_API_KEY
+        },
         deepseek: {
-            apiKey: DEEPSEEK_API_KEY ? '***' : '',
+            apiKey: DEEPSEEK_API_KEY || '',
             model: DEEPSEEK_MODEL,
             enabled: !!DEEPSEEK_API_KEY
         },
-        gemini: {
-            apiKey: GEMINI_API_KEY ? '***' : '',
-            model: GEMINI_MODEL,
-            enabled: !!GEMINI_API_KEY
+        openai: {
+            apiKey: OPENAI_API_KEY || '',
+            model: OPENAI_MODEL,
+            enabled: !!OPENAI_API_KEY
         }
     });
 });
 
 // ============================================================
-// 🤖 AI - SMART ROUTER
+// 🤖 AI - CHECK GEMINI KEY
+// ============================================================
+
+app.get('/api/check-gemini', authenticate, async (req, res) => {
+    console.log(`🔍 [CHECK-GEMINI] User: ${req.user.username}`);
+    try {
+        if (!GEMINI_API_KEY) {
+            return res.json({ 
+                success: false, 
+                error: "GEMINI_API_KEY غير موجود في البيئة",
+                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            });
+        }
+        
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent("مرحباً، اختبر الاتصال");
+        const response = await result.response;
+        
+        res.json({
+            success: true,
+            message: "✅ مفتاح Gemini صالح ويعمل",
+            response: response.text().substring(0, 100) + "...",
+            model: "gemini-2.0-flash"
+        });
+    } catch (error) {
+        console.error('❌ Check Gemini error:', error);
+        res.json({ 
+            success: false, 
+            error: error.message,
+            message: "❌ مفتاح Gemini غير صالح أو أن API لا يعمل"
+        });
+    }
+});
+
+// ============================================================
+// 🤖 AI - SMART ROUTER (Gemini First, DeepSeek Fallback)
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
@@ -1230,7 +1279,32 @@ ${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${
         let reply = '';
         let usedModel = '';
 
-        if (DEEPSEEK_API_KEY) {
+        // ✅ 1. حاول استخدام Gemini API أولاً
+        if (GEMINI_API_KEY) {
+            try {
+                const { GoogleGenerativeAI } = require('@google/generative-ai');
+                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+                const model = genAI.getGenerativeModel({ 
+                    model: GEMINI_MODEL,
+                    generationConfig: {
+                        maxOutputTokens: 2000,
+                        temperature: 0.7
+                    }
+                });
+                
+                const prompt = `${message}\n\n${context}`;
+                const result = await model.generateContent(prompt);
+                reply = result.response.text();
+                usedModel = `Gemini (${GEMINI_MODEL})`;
+                console.log(`   🤖 Using Gemini API`);
+            } catch (error) {
+                console.warn(`⚠️ Gemini failed: ${error.message}, trying DeepSeek...`);
+                reply = '';
+            }
+        }
+
+        // ✅ 2. إذا فشل Gemini، حاول DeepSeek
+        if (!reply && DEEPSEEK_API_KEY) {
             try {
                 const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
                     method: 'POST',
@@ -1271,41 +1345,14 @@ ${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${
                     const data = await deepseekResponse.json();
                     reply = data.choices?.[0]?.message?.content || '';
                     usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
+                    console.log(`   🤖 Using DeepSeek API`);
                 }
             } catch (e) {
-                console.warn('⚠️ DeepSeek failed, trying Gemini...');
+                console.warn('⚠️ DeepSeek failed...');
             }
         }
 
-        if (!reply && GEMINI_API_KEY) {
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-                const geminiResponse = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `${message}\n\n${context}`
-                            }]
-                        }],
-                        generationConfig: {
-                            maxOutputTokens: 2000,
-                            temperature: 0.7
-                        }
-                    })
-                });
-
-                if (geminiResponse.ok) {
-                    const data = await geminiResponse.json();
-                    reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    usedModel = `Gemini (${GEMINI_MODEL})`;
-                }
-            } catch (e) {
-                console.warn('⚠️ Gemini failed, using local...');
-            }
-        }
-
+        // ✅ 3. إذا فشل كل شيء، استخدم الرد المحلي
         if (!reply) {
             const msg = message.toLowerCase();
             if (msg.includes('مرحبا') || msg.includes('السلام')) {
@@ -1322,7 +1369,7 @@ ${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${
             usedModel = 'Local (Offline)';
         }
 
-        console.log(`   🤖 Used: ${usedModel}`);
+        console.log(`   ✅ Used: ${usedModel}`);
         console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
 
         res.json({
@@ -1374,6 +1421,15 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
 app.get('/', (req, res) => {
     console.log(`🏠 [HOME] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
     res.sendFile(path.join(publicPath, 'index.html'));
+});
+
+// ============================================================
+// 🤖 AI ASSISTANT PAGE
+// ============================================================
+
+app.get('/ai-assistant', (req, res) => {
+    console.log(`🤖 [AI ASSISTANT] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
+    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
 });
 
 // ============================================================
@@ -1433,6 +1489,8 @@ async function startServer() {
         console.log('🤖 AI Endpoints:');
         console.log('   - GET  /api/config       (AI Configuration)');
         console.log('   - POST /api/ai/ask       (Smart AI Router)');
+        console.log('   - GET  /api/check-gemini (Check Gemini Key)');
+        console.log('   - GET  /ai-assistant     (AI Assistant Page)');
         console.log('📊 Sessions & Logs:');
         console.log('   - GET  /api/sessions     (Active Sessions)');
         console.log('   - GET  /api/logs         (Activity Logs)');
