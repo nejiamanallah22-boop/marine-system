@@ -36,18 +36,18 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            background: linear-gradient(135deg, #4285f4, #34a853);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            color: #0a1628;
+            color: #fff;
             animation: pulseGlow 2s ease-in-out infinite;
         }
         
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
+            0%, 100% { box-shadow: 0 0 20px rgba(66,133,244,0.1); }
+            50% { box-shadow: 0 0 40px rgba(66,133,244,0.25); }
         }
         
         .ai-header .ai-brand .ai-title {
@@ -146,7 +146,7 @@
         
         .ai-messages::-webkit-scrollbar { width: 4px; }
         .ai-messages::-webkit-scrollbar-track { background: transparent; }
-        .ai-messages::-webkit-scrollbar-thumb { background: rgba(230,179,30,0.3); border-radius: 10px; }
+        .ai-messages::-webkit-scrollbar-thumb { background: rgba(66,133,244,0.3); border-radius: 10px; }
         
         .message {
             display: flex;
@@ -175,7 +175,7 @@
         }
         
         .message.user .avatar { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #fff; }
-        .message.assistant .avatar { background: linear-gradient(135deg, #e6b31e, #f5d76e); color: #0a1628; }
+        .message.assistant .avatar { background: linear-gradient(135deg, #4285f4, #34a853); color: #fff; }
         
         .message .bubble {
             padding: 12px 16px;
@@ -239,9 +239,9 @@
         .message .bubble .suggestions .suggestion-btn {
             padding: 4px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(230,179,30,0.2);
-            background: rgba(230,179,30,0.06);
-            color: #f5d76e;
+            border: 1px solid rgba(66,133,244,0.2);
+            background: rgba(66,133,244,0.06);
+            color: #60a5fa;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s;
@@ -249,8 +249,8 @@
         }
         
         .message .bubble .suggestions .suggestion-btn:hover {
-            background: rgba(230,179,30,0.12);
-            border-color: #e6b31e;
+            background: rgba(66,133,244,0.12);
+            border-color: #4285f4;
         }
         
         /* ===== AI INPUT ===== */
@@ -289,9 +289,9 @@
         
         .ai-input-wrapper textarea:focus {
             outline: none;
-            border-color: #e6b31e;
+            border-color: #4285f4;
             background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
         }
         
         .ai-input-wrapper textarea::placeholder {
@@ -308,8 +308,8 @@
             padding: 12px 20px;
             border: none;
             border-radius: 12px;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: #fff;
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
@@ -324,7 +324,7 @@
         
         .ai-input-wrapper .send-btn:hover:not(:disabled) {
             transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(230,179,30,0.25);
+            box-shadow: 0 4px 30px rgba(66,133,244,0.25);
         }
         
         .ai-input-wrapper .send-btn:disabled {
@@ -336,8 +336,8 @@
             display: none;
             width: 18px;
             height: 18px;
-            border: 2px solid rgba(0,0,0,0.15);
-            border-top-color: #0a1628;
+            border: 2px solid rgba(255,255,255,0.15);
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -377,7 +377,7 @@
         .ai-quick-actions .quick-btn:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
-            border-color: rgba(230,179,30,0.2);
+            border-color: rgba(66,133,244,0.2);
         }
         
         /* ===== RESPONSIVE ===== */
@@ -413,14 +413,14 @@
                 <div class="ai-icon">🧠</div>
                 <div>
                     <div class="ai-title">المساعد الذكي</div>
-                    <div class="ai-subtitle">بواسطة DeepSeek AI</div>
+                    <div class="ai-subtitle" id="aiSubtitle">بواسطة Google Gemini AI</div>
                 </div>
             </div>
             <div class="ai-status">
                 <span class="status-dot online" id="aiStatusDot"></span>
                 <span id="aiStatusText">متصل</span>
                 <span style="margin:0 8px;color:rgba(255,255,255,0.1);">|</span>
-                <span id="aiModel">DeepSeek</span>
+                <span id="aiModel">Gemini</span>
             </div>
         </div>
 
@@ -450,7 +450,7 @@
                 <div class="bubble">
                     <div>مرحباً بك في المساعد الذكي! 👋</div>
                     <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                        أنا مدعوم من <strong>DeepSeek AI</strong>. يمكنني الإجابة عن أي سؤال:
+                        أنا مدعوم من <strong>Google Gemini AI</strong>. يمكنني الإجابة عن أي سؤال:
                         <ul style="margin:6px 0 0 20px; color:rgba(255,255,255,0.4);">
                             <li>⚓ شؤون الأسطول البحري</li>
                             <li>🌍 معلومات عامة</li>
@@ -487,21 +487,21 @@
 </div>
 
 <!-- ============================================================ -->
-<!-- 📦 JAVASCRIPT - DEEPSEEK AI ASSISTANT -->
+<!-- 📦 JAVASCRIPT - GEMINI AI ASSISTANT -->
 <!-- ============================================================ -->
 <script>
 // ============================================================
-// 🤖 DEEPSEEK AI ASSISTANT - الكود الكامل
+// 🤖 GEMINI AI ASSISTANT - الكود الكامل
 // ============================================================
 
 // ============================================================
 // 1. CONFIGURATION
 // ============================================================
 
-const DEEPSEEK_CONFIG = {
-    API_URL: 'https://api.deepseek.com/v1/chat/completions',
-    MODEL: 'deepseek-chat',
-    MAX_TOKENS: 2000,
+const AI_CONFIG = {
+    API_URL: 'https://generativelanguage.googleapis.com/v1beta/models/',
+    MODEL: 'gemini-2.0-flash',
+    MAX_TOKENS: 2048,
     TEMPERATURE: 0.7,
     SYSTEM_PROMPT: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي، ولديك معرفة عامة واسعة.
     
@@ -523,9 +523,8 @@ const DEEPSEEK_CONFIG = {
 
 let chatHistory = [];
 let isProcessing = false;
-let DEEPSEEK_API_KEY = '';
+let GEMINI_API_KEY = '';
 let vesselData = [];
-let isApiKeyLoaded = false;
 
 // ============================================================
 // 3. LOAD DATA
@@ -607,26 +606,25 @@ async function loadApiKeys() {
         if (!response.ok) throw new Error('فشل تحميل المفاتيح');
         const config = await response.json();
         
-        DEEPSEEK_API_KEY = config.DEEPSEEK_API_KEY || '';
-        const modelName = config.DEEPSEEK_MODEL || 'deepseek-chat';
+        GEMINI_API_KEY = config.GEMINI_API_KEY || '';
+        const modelName = config.GEMINI_MODEL || 'gemini-2.0-flash';
         
-        console.log('🔑 DeepSeek API Key:', DEEPSEEK_API_KEY ? '✅ موجود' : '❌ غير موجود');
+        console.log('🔑 Gemini API Key:', GEMINI_API_KEY ? '✅ موجود' : '❌ غير موجود');
         console.log('📦 Model:', modelName);
         
+        document.getElementById('aiModel').textContent = 'Gemini ' + modelName;
         document.getElementById('apiModelName').textContent = modelName;
+        document.getElementById('aiSubtitle').textContent = 'بواسطة Google Gemini AI';
         
-        if (DEEPSEEK_API_KEY) {
+        if (GEMINI_API_KEY) {
             updateApiStatus('valid', '✅ مفتاح صالح');
-            isApiKeyLoaded = true;
-            await testApiKey();
+            await testGeminiKey();
         } else {
             updateApiStatus('invalid', '⚠️ لم يتم إعداد المفتاح');
-            isApiKeyLoaded = false;
         }
     } catch(error) {
         console.error('❌ فشل تحميل المفاتيح:', error);
         updateApiStatus('invalid', '❌ خطأ في الاتصال بالخادم');
-        isApiKeyLoaded = false;
     }
 }
 
@@ -637,28 +635,24 @@ function updateApiStatus(type, text) {
     textEl.textContent = text;
 }
 
-async function testApiKey() {
-    if (!DEEPSEEK_API_KEY) return;
+async function testGeminiKey() {
+    if (!GEMINI_API_KEY) return;
     
     updateApiStatus('checking', '🔄 جاري التحقق...');
     
     try {
-        const response = await fetch(DEEPSEEK_CONFIG.API_URL, {
+        const response = await fetch(`${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: DEEPSEEK_CONFIG.MODEL,
-                messages: [{ role: 'user', content: 'Hello' }],
-                max_tokens: 5
+                contents: [{ parts: [{ text: 'Hello' }] }],
+                generationConfig: { maxOutputTokens: 5 }
             })
         });
         
         if (response.ok) {
             updateApiStatus('valid', '✅ مفتاح صالح');
-        } else if (response.status === 401) {
+        } else if (response.status === 403) {
             updateApiStatus('invalid', '❌ مفتاح غير صالح');
         } else if (response.status === 429) {
             updateApiStatus('invalid', '⚠️ تم تجاوز الحد اليومي');
@@ -671,12 +665,12 @@ async function testApiKey() {
 }
 
 // ============================================================
-// 6. SEND TO DEEPSEEK
+// 6. SEND TO GEMINI API
 // ============================================================
 
-async function sendToDeepSeek(userMessage) {
-    if (!DEEPSEEK_API_KEY) {
-        return '⚠️ مفتاح DeepSeek غير موجود. يرجى إعداده في متغيرات البيئة على الخادم. 🔑';
+async function sendToGemini(userMessage) {
+    if (!GEMINI_API_KEY) {
+        return '⚠️ مفتاح Gemini غير موجود. يرجى إعداده في متغيرات البيئة على الخادم. 🔑';
     }
     
     const context = getMarineContext();
@@ -701,48 +695,60 @@ ${context.vessels.map(v => `- ${v.name} (${v.num}) - ${v.stat} - ${v.reg} - ${v.
     }
     
     try {
-        const response = await fetch(DEEPSEEK_CONFIG.API_URL, {
+        // ✅ بناء الرسالة كاملة
+        let fullPrompt = AI_CONFIG.SYSTEM_PROMPT + '\n\n';
+        fullPrompt += `هذه هي بيانات الأسطول الحالية (استخدمها فقط إذا سأل المستخدم عن الأسطول):\n${contextText}\n\n`;
+        if (chatHistory.length > 0) {
+            fullPrompt += `المحادثة السابقة:\n`;
+            chatHistory.slice(-8).forEach(msg => {
+                fullPrompt += `${msg.role}: ${msg.content}\n`;
+            });
+            fullPrompt += `\n`;
+        }
+        fullPrompt += `المستخدم: ${userMessage}`;
+        
+        // ✅ إرسال إلى Gemini API
+        const response = await fetch(`${AI_CONFIG.API_URL}${AI_CONFIG.MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: DEEPSEEK_CONFIG.MODEL,
-                messages: [
-                    { role: 'system', content: DEEPSEEK_CONFIG.SYSTEM_PROMPT },
-                    { role: 'system', content: `هذه هي بيانات الأسطول الحالية (استخدمها فقط إذا سأل المستخدم عن الأسطول):\n${contextText}` },
-                    ...chatHistory.slice(-8),
-                    { role: 'user', content: userMessage }
-                ],
-                max_tokens: DEEPSEEK_CONFIG.MAX_TOKENS,
-                temperature: DEEPSEEK_CONFIG.TEMPERATURE
+                contents: [{
+                    parts: [{ text: fullPrompt }]
+                }],
+                generationConfig: {
+                    temperature: AI_CONFIG.TEMPERATURE,
+                    maxOutputTokens: AI_CONFIG.MAX_TOKENS,
+                    topP: 0.95,
+                    topK: 40
+                }
             })
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('❌ DeepSeek API Error:', errorData);
+            console.error('❌ Gemini API Error:', errorData);
             
-            if (response.status === 401) {
-                return '❌ مفتاح DeepSeek غير صالح. يرجى التحقق من إعدادات الخادم. 🔑';
+            if (response.status === 403) {
+                return '❌ مفتاح Gemini غير صالح أو منتهي الصلاحية. يرجى التحقق من الإعدادات. 🔑';
             } else if (response.status === 429) {
-                return '⚠️ تم تجاوز الحد اليومي للمفتاح. يرجى المحاولة غداً. 📅';
+                return '⚠️ تم تجاوز الحد اليومي لمفتاح Gemini. يرجى المحاولة غداً. 📅';
             } else {
                 return `❌ خطأ في الاتصال: ${response.status}`;
             }
         }
         
         const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || 'عذراً، لم أستطع معالجة طلبك.';
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'عذراً، لم أستطع معالجة طلبك.';
         
-        chatHistory.push({ role: 'user', content: userMessage });
-        chatHistory.push({ role: 'assistant', content: reply });
+        chatHistory.push({ role: 'المستخدم', content: userMessage });
+        chatHistory.push({ role: 'المساعد', content: reply });
         
         return reply;
         
     } catch(error) {
-        console.error('❌ DeepSeek Error:', error);
+        console.error('❌ Gemini Error:', error);
         return '❌ عذراً، حدث خطأ في الاتصال. يرجى المحاولة لاحقاً. 🔄';
     }
 }
@@ -823,7 +829,7 @@ async function sendAIMessage() {
     addTypingIndicator();
     
     try {
-        const reply = await sendToDeepSeek(text);
+        const reply = await sendToGemini(text);
         removeTypingIndicator();
         addMessage(reply, 'assistant', true);
     } catch(error) {
@@ -858,7 +864,7 @@ function clearChat() {
             <div class="bubble">
                 <div>مرحباً بك في المساعد الذكي! 👋</div>
                 <div style="color:rgba(255,255,255,0.5); font-size:13px; margin-top:6px;">
-                    أنا مدعوم من <strong>DeepSeek AI</strong>. يمكنني الإجابة عن أي سؤال.
+                    أنا مدعوم من <strong>Google Gemini AI</strong>. يمكنني الإجابة عن أي سؤال.
                 </div>
                 <div class="suggestions">
                     <button class="suggestion-btn" onclick="sendQuickPrompt('عرض إحصائيات الأسطول')">📊 الإحصائيات</button>
@@ -873,11 +879,43 @@ function clearChat() {
 }
 
 // ============================================================
-// 9. INIT
+// 9. TOAST NOTIFICATION
+// ============================================================
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    const colors = {
+        info: 'rgba(66,133,244,0.9)',
+        warning: 'rgba(251,191,36,0.9)',
+        error: 'rgba(248,113,113,0.9)',
+        success: 'rgba(74,222,128,0.9)'
+    };
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        border-radius: 8px;
+        background: ${colors[type] || colors.info};
+        color: #fff;
+        font-size: 14px;
+        z-index: 9999;
+        animation: messageSlide 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        font-family: 'Cairo', sans-serif;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
+// ============================================================
+// 10. INIT
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🧠 DeepSeek AI Assistant loading...');
+    console.log('🧠 Gemini AI Assistant loading...');
     
     // تحميل بيانات الأسطول
     loadVesselData();
@@ -899,11 +937,11 @@ document.addEventListener('DOMContentLoaded', function() {
         window.loadAllData();
     }
     
-    console.log('✅ DeepSeek AI Assistant ready');
+    console.log('✅ Gemini AI Assistant ready');
 });
 
 // ============================================================
-// 10. GLOBAL FUNCTIONS
+// 11. GLOBAL FUNCTIONS
 // ============================================================
 
 window.sendAIMessage = sendAIMessage;
@@ -912,7 +950,8 @@ window.handleAIKey = handleAIKey;
 window.clearChat = clearChat;
 window.loadVesselData = loadVesselData;
 window.loadApiKeys = loadApiKeys;
-window.testApiKey = testApiKey;
+window.testGeminiKey = testGeminiKey;
+window.showToast = showToast;
 
 console.log('✅ AI Assistant loaded successfully');
 </script>
