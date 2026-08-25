@@ -463,11 +463,11 @@
     </div>  
 
     <!-- ============================================================  
-    📦 JAVASCRIPT - ULTRA PROFESSIONAL  
+    📦 JAVASCRIPT - ULTRA PROFESSIONAL (FIXED)  
     ============================================================ -->  
     <script>  
         // ============================================================  
-        // 🚢 MARINE SYSTEM - ULTRA PRO v8.0  
+        // 🚢 MARINE SYSTEM - ULTRA PRO v8.0 (FIXED)  
         // ============================================================  
 
         console.log('🚢 Marine System Ultra Pro v8.0 - Loading...');  
@@ -824,7 +824,7 @@
         }  
 
         // ============================================================  
-        // 🌐 GLOBAL REFRESH - ULTRA PRO  
+        // 🌐 GLOBAL REFRESH - FIXED (بدون زر في الهيدر)  
         // ============================================================  
 
         window.globalRefresh = async function() {  
@@ -833,19 +833,22 @@
             showToast('✅ تم تحديث جميع البيانات', 'success');  
         };  
 
-        // ربط زر التحديث العام  
-        document.addEventListener('DOMContentLoaded', function() {  
-            // إضافة زر تحديث في الرأس  
-            const headerActions = document.querySelector('.header-right');  
-            if (headerActions) {  
-                const refreshBtn = document.createElement('button');  
-                refreshBtn.className = 'btn btn-outline';  
-                refreshBtn.style.cssText = 'padding:6px 14px;font-size:13px;border-radius:8px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.06);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;';  
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';  
-                refreshBtn.onclick = window.globalRefresh;  
-                headerActions.appendChild(refreshBtn);  
+        // ✅ دالة لتحديث الصفحة الحالية فقط (تستخدمها الصفحات الفرعية)  
+        window.refreshCurrentPage = async function() {  
+            console.log('🔄 [GLOBAL] تحديث الصفحة الحالية...');  
+            const page = currentPage || 'dashboard';  
+            
+            if (page === 'maintenance' && typeof window.loadMaintenanceData === 'function') {  
+                await window.loadMaintenanceData();  
+            } else if (page === 'fleet' && typeof window.loadFleetData === 'function') {  
+                await window.loadFleetData();  
+            } else {  
+                await loadAllData();  
             }  
-        });  
+            showToast('✅ تم تحديث الصفحة', 'success');  
+        };  
+
+        // ❌ لا نضيف زر تحديث في الهيدر - كل صفحة لها زرها الخاص  
 
         // ============================================================  
         // 🚀 INIT  
@@ -928,6 +931,7 @@
         window.updateAllPages = updateAllPages;  
         window.updateBadge = updateBadge;  
         window.globalRefresh = globalRefresh;  
+        window.refreshCurrentPage = refreshCurrentPage;  
         window.currentUser = currentUser;  
 
         console.log('✅ Marine System Ultra Pro v8.0 loaded successfully');  
