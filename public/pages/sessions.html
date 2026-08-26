@@ -1,8 +1,8 @@
-<!-- public/pages/settings.html -->
-<div id="page-settings">
+<!-- public/pages/sessions.html -->
+<div id="page-sessions">
     <style>
         /* ============================================================
-           ⚙️ SETTINGS PAGE - PROFESSIONAL v2.0
+           🔄 SESSIONS PAGE - PROFESSIONAL v3.0
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -30,7 +30,7 @@
         }
 
         /* ===== FULL SCREEN RESET ===== */
-        #page-settings {
+        #page-sessions {
             width: 100%;
             max-width: 100%;
             padding: 0;
@@ -44,7 +44,7 @@
         }
 
         /* ===== BACKGROUND EFFECT ===== */
-        #page-settings::before {
+        #page-sessions::before {
             content: '';
             position: fixed;
             top: -50%;
@@ -72,7 +72,7 @@
         /* ============================================================
            HEADER
            ============================================================ */
-        .settings-header {
+        .sessions-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -89,13 +89,13 @@
             width: 100%;
         }
 
-        .settings-header-left {
+        .sessions-header-left {
             display: flex;
             align-items: center;
             gap: 14px;
         }
 
-        .settings-header-left .header-icon {
+        .sessions-header-left .header-icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -114,7 +114,7 @@
             50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
         }
 
-        .settings-header-left h2 {
+        .sessions-header-left h2 {
             font-size: 22px;
             font-weight: 800;
             background: linear-gradient(135deg, var(--gold-light), #fff);
@@ -123,19 +123,31 @@
             margin: 0;
         }
 
-        .settings-header-left p {
+        .sessions-header-left p {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin: 0;
         }
 
-        .settings-header-actions {
+        .sessions-header-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .settings-header-actions .btn-action {
+        .sessions-header-actions .online-badge {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid rgba(74,222,128,0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sessions-header-actions .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
@@ -149,172 +161,160 @@
             font-family: var(--font);
         }
 
-        .settings-header-actions .btn-action.primary {
+        .sessions-header-actions .btn-action.primary {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
             color: #0a1628;
             box-shadow: var(--shadow-gold);
         }
 
-        .settings-header-actions .btn-action.primary:hover {
+        .sessions-header-actions .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .settings-header-actions .btn-action.danger {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .settings-header-actions .btn-action.danger:hover {
-            background: rgba(239,68,68,0.25);
-            transform: translateY(-2px);
-        }
-
-        .settings-header-actions .btn-action.secondary {
+        .sessions-header-actions .btn-action.secondary {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.5);
         }
 
-        .settings-header-actions .btn-action.secondary:hover {
+        .sessions-header-actions .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
             transform: translateY(-2px);
         }
 
         /* ============================================================
-           SETTINGS CONTENT
+           STATS CARDS
            ============================================================ */
-        .settings-content {
-            padding: 20px 24px;
+        .stats-grid {
             display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 24px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+            margin: 0;
+            width: 100%;
         }
 
-        /* ===== SIDEBAR ===== */
-        .settings-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--success));
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.blue { color: #60a5fa; }
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.red { color: var(--danger); }
+        .stat-card .number.yellow { color: var(--warning); }
+        .stat-card .number.pink { color: #f472b6; }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           MAP
+           ============================================================ */
+        .map-container {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
             padding: 12px;
-            height: fit-content;
-            position: sticky;
-            top: 100px;
-        }
-
-        .settings-sidebar .sidebar-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: rgba(255,255,255,0.2);
-            padding: 8px 12px 4px;
-            font-weight: 700;
-        }
-
-        .settings-sidebar .sidebar-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
+            margin: 0 24px 16px;
             transition: all var(--transition);
-            color: rgba(255,255,255,0.4);
-            font-size: 13px;
-            font-weight: 500;
-            border: none;
-            background: none;
+        }
+
+        .map-container:hover {
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        #sessionMap {
+            height: 400px;
             width: 100%;
-            text-align: right;
-            font-family: var(--font);
+            border-radius: var(--radius-sm);
+            background: #0a0a1a;
         }
 
-        .settings-sidebar .sidebar-item:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        .settings-sidebar .sidebar-item.active {
-            background: rgba(230,179,30,0.08);
-            color: var(--gold-light);
-            border-right: 3px solid var(--gold);
-        }
-
-        .settings-sidebar .sidebar-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .settings-sidebar .sidebar-item .badge {
-            margin-right: auto;
-            font-size: 9px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-            font-weight: 700;
-        }
-
-        /* ===== MAIN CONTENT ===== */
-        .settings-main {
+        .map-status {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 4px 0;
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+            flex-wrap: wrap;
+            gap: 4px;
         }
 
-        .settings-panel {
-            display: none;
-            animation: fadePanel 0.3s ease;
+        .map-status .online-count {
+            color: #4ade80;
         }
 
-        .settings-panel.active {
-            display: block;
-        }
-
-        @keyframes fadePanel {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .settings-panel .panel-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 4px;
-        }
-
-        .settings-panel .panel-subtitle {
-            font-size: 13px;
-            color: rgba(255,255,255,0.3);
-            margin-bottom: 20px;
-        }
-
-        /* ===== SETTINGS CARDS ===== */
-        .settings-card {
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        .table-card {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 20px 24px;
-            margin-bottom: 16px;
+            padding: 16px 20px;
+            margin: 0 24px 24px;
             transition: all var(--transition);
         }
 
-        .settings-card:hover {
-            border-color: rgba(230,179,30,0.08);
+        .table-card:hover {
+            border-color: rgba(230,179,30,0.1);
             box-shadow: var(--shadow-hover);
         }
 
-        .settings-card .card-header {
+        .table-card .table-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -323,819 +323,404 @@
             gap: 8px;
         }
 
-        .settings-card .card-header h4 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
+        .table-card .table-header h4 {
+            color: rgba(255,255,255,0.7);
             margin: 0;
+            font-size: 14px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .settings-card .card-header h4 i {
+        .table-card .table-header h4 i {
             color: var(--gold);
         }
 
-        .settings-card .card-header .card-badge {
-            font-size: 10px;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .settings-card .card-header .card-badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .settings-card .card-header .card-badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .settings-card .card-header .card-badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .settings-card .card-body {
-            color: rgba(255,255,255,0.5);
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .settings-card .card-body .form-group {
-            margin-bottom: 12px;
-        }
-
-        .settings-card .card-body .form-group label {
-            display: block;
+        .table-card .table-header .count {
+            color: rgba(255,255,255,0.3);
             font-size: 12px;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 4px;
-            font-weight: 600;
         }
 
-        .settings-card .card-body .form-group input,
-        .settings-card .card-body .form-group select {
+        .scrollable-table {
+            overflow-x: auto;
+        }
+
+        .scrollable-table table {
             width: 100%;
-            padding: 8px 14px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
+            border-collapse: collapse;
             font-family: var(--font);
             font-size: 13px;
-            transition: all var(--transition);
+            min-width: 700px;
         }
 
-        .settings-card .card-body .form-group input:focus,
-        .settings-card .card-body .form-group select:focus {
-            border-color: var(--gold);
-            outline: none;
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
-        }
-
-        .settings-card .card-body .form-group input::placeholder {
-            color: rgba(255,255,255,0.15);
-        }
-
-        .settings-card .card-body .form-group .help-text {
+        .scrollable-table table th {
+            background: rgba(255,255,255,0.04);
+            padding: 10px 12px;
+            border-bottom: 2px solid rgba(255,255,255,0.06);
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
             font-size: 11px;
-            color: rgba(255,255,255,0.15);
-            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== TOGGLE SWITCH ===== */
-        .toggle-switch {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+        .scrollable-table table th i {
+            margin-left: 4px;
+            color: var(--gold);
         }
 
-        .toggle-switch:last-child {
+        .scrollable-table table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .scrollable-table table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .scrollable-table table tr:last-child td {
             border-bottom: none;
         }
 
-        .toggle-switch .toggle-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .toggle-switch .toggle-info .toggle-label {
-            font-size: 14px;
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .toggle-switch .toggle-info .toggle-desc {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-        }
-
-        .toggle-switch .toggle {
-            width: 48px;
-            height: 26px;
-            background: rgba(255,255,255,0.06);
+        /* ===== BADGES ===== */
+        .status-badge {
+            padding: 4px 12px;
             border-radius: 20px;
-            cursor: pointer;
-            transition: all var(--transition);
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .toggle-switch .toggle.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-        }
-
-        .toggle-switch .toggle .toggle-dot {
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            transition: all var(--transition);
-        }
-
-        .toggle-switch .toggle.active .toggle-dot {
-            right: 25px;
-            background: #0a1628;
-        }
-
-        /* ===== BUTTONS ===== */
-        .btn-settings {
-            padding: 8px 20px;
-            border: none;
-            border-radius: var(--radius-sm);
+            font-size: 11px;
             font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-settings.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-        }
-
-        .btn-settings.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
-        }
-
-        .btn-settings.danger {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .btn-settings.danger:hover {
-            background: rgba(239,68,68,0.25);
-        }
-
-        .btn-settings.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.4);
-        }
-
-        .btn-settings.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-        }
-
-        .btn-settings.success {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
-        }
-
-        .btn-settings.success:hover {
-            background: rgba(34,197,94,0.25);
-        }
-
-        .btn-settings .spinner {
-            display: none;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(0,0,0,0.15);
-            border-top-color: #0a1628;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .btn-settings.loading .spinner {
             display: inline-block;
         }
 
-        .btn-settings.loading .btn-text {
-            display: none;
+        .status-badge.active {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74,222,128,0.1);
+        }
+
+        .status-badge.inactive {
+            background: rgba(108,117,125,0.15);
+            color: #6c757d;
+            border: 1px solid rgba(108,117,125,0.1);
+        }
+
+        .status-badge.expired {
+            background: rgba(248,113,113,0.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,0.1);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.3s;
+            font-family: var(--font);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-sm:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.warning {
+            background: rgba(251,191,36,0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251,191,36,0.1);
+        }
+
+        .btn-sm.danger {
+            background: rgba(248,113,113,0.15);
+            color: #f87171;
+            border: 1px solid rgba(248,113,113,0.1);
+        }
+
+        /* ===== SESSION MARKER ===== */
+        .session-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .session-marker .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            border: 2px solid white;
+            box-shadow: 0 0 20px rgba(13,110,253,0.3);
+        }
+
+        .session-marker .avatar.active {
+            background: #4ade80;
+            border-color: #4ade80;
+        }
+
+        .session-marker .avatar.inactive {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .session-marker .name {
+            font-size: 10px;
+            margin-top: 2px;
+            background: rgba(0,0,0,0.8);
+            padding: 2px 8px;
+            border-radius: 10px;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ============================================================
+           EMPTY STATE
+           ============================================================ */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .empty-state .icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.05);
+        }
+
+        .empty-state .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
+        .empty-state .retry-btn {
+            margin-top: 8px;
+            padding: 6px 20px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: var(--font);
+            transition: all 0.3s;
+        }
+
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
+        }
+
         /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 992px) {
-            .settings-content {
-                grid-template-columns: 1fr;
-                padding: 16px;
-            }
-
-            .settings-sidebar {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 4px;
-                position: static;
-                padding: 8px;
-            }
-
-            .settings-sidebar .sidebar-title {
-                display: none;
-            }
-
-            .settings-sidebar .sidebar-item {
-                padding: 8px 12px;
-                font-size: 12px;
-                justify-content: center;
-                border-radius: var(--radius-sm);
-            }
-
-            .settings-sidebar .sidebar-item.active {
-                border-right: none;
-                border-bottom: 3px solid var(--gold);
-            }
-
-            .settings-sidebar .sidebar-item .badge {
-                display: none;
-            }
+            .sessions-header { padding: 12px 16px; top: 60px; }
+            .sessions-header-left h2 { font-size: 18px; }
+            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .map-container { margin: 0 16px 12px; }
+            #sessionMap { height: 320px; }
+            .table-card { margin: 0 16px 16px; padding: 14px 16px; }
         }
 
         @media (max-width: 768px) {
-            .settings-header {
+            .sessions-header {
+                flex-direction: column;
+                align-items: flex-start;
                 padding: 12px 16px;
                 top: 56px;
-                flex-direction: column;
-                align-items: flex-start;
             }
-
-            .settings-header-left {
-                width: 100%;
+            .sessions-header-left { width: 100%; }
+            .sessions-header-left h2 { font-size: 16px; }
+            .sessions-header-actions { width: 100%; justify-content: flex-start; }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 10px 16px;
             }
-
-            .settings-header-left h2 {
-                font-size: 16px;
-            }
-
-            .settings-header-actions {
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .settings-content {
-                padding: 12px;
-                gap: 16px;
-            }
-
-            .settings-card {
-                padding: 14px 16px;
-            }
-
-            .settings-card .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .settings-sidebar {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            }
-
-            .settings-sidebar .sidebar-item {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-
-            .settings-sidebar .sidebar-item i {
-                font-size: 12px;
-                width: 16px;
-            }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .number { font-size: 20px; }
+            .map-container { margin: 0 12px 10px; padding: 8px; }
+            #sessionMap { height: 250px; }
+            .table-card { margin: 0 12px 12px; padding: 12px 14px; }
+            .table-card .table-header { flex-direction: column; align-items: flex-start; }
+            .scrollable-table table { font-size: 11px; min-width: 600px; }
+            .scrollable-table table th, .scrollable-table table td { padding: 6px 8px; }
+            .sessions-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
+            .sessions-header-actions .online-badge { font-size: 11px; padding: 4px 12px; }
         }
 
         @media (max-width: 480px) {
-            .settings-header-left .header-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
             }
-
-            .settings-header-left h2 {
-                font-size: 14px;
-            }
-
-            .settings-header-left p {
-                font-size: 10px;
-            }
-
-            .settings-card {
-                padding: 12px 14px;
-            }
-
-            .settings-card .card-header h4 {
-                font-size: 13px;
-            }
-
-            .toggle-switch .toggle {
-                width: 40px;
-                height: 22px;
-            }
-
-            .toggle-switch .toggle .toggle-dot {
-                width: 16px;
-                height: 16px;
-                top: 3px;
-                right: 3px;
-            }
-
-            .toggle-switch .toggle.active .toggle-dot {
-                right: 21px;
-            }
-
-            .settings-sidebar {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .sessions-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
+            .sessions-header-left h2 { font-size: 14px; }
+            .sessions-header-left p { font-size: 10px; }
+            #sessionMap { height: 200px; }
+            .btn-sm { font-size: 10px; padding: 3px 8px; }
+            .map-status { font-size: 10px; }
         }
     </style>
 
     <!-- ============================================================
     HEADER
     ============================================================ -->
-    <div class="settings-header">
-        <div class="settings-header-left">
+    <div class="sessions-header">
+        <div class="sessions-header-left">
             <div class="header-icon">
-                <i class="fas fa-cog"></i>
+                <i class="fas fa-users-cog"></i>
             </div>
             <div>
-                <h2>الإعدادات</h2>
-                <p>تخصيص النظام وإدارة التفضيلات</p>
+                <h2>المراقبة</h2>
+                <p>مراقبة الجلسات النشطة والأجهزة المتصلة</p>
             </div>
         </div>
-        <div class="settings-header-actions">
-            <button class="btn-action primary" onclick="saveSettings()">
-                <i class="fas fa-save"></i> حفظ الإعدادات
-            </button>
-            <button class="btn-action secondary" onclick="resetSettings()">
-                <i class="fas fa-undo-alt"></i> إعادة ضبط
+        <div class="sessions-header-actions">
+            <span class="online-badge">
+                🟢 <span id="sessionOnline">0</span> متصل
+            </span>
+            <button class="btn-action primary" onclick="refreshSessions()">
+                <i class="fas fa-sync-alt"></i> تحديث
             </button>
         </div>
     </div>
 
     <!-- ============================================================
-    CONTENT
+    STATS CARDS
     ============================================================ -->
-    <div class="settings-content">
-
-        <!-- ===== SIDEBAR ===== -->
-        <div class="settings-sidebar">
-            <div class="sidebar-title">الأقسام</div>
-            <button class="sidebar-item active" data-panel="general">
-                <i class="fas fa-sliders-h"></i> عام
-            </button>
-            <button class="sidebar-item" data-panel="profile">
-                <i class="fas fa-user"></i> الملف الشخصي
-            </button>
-            <button class="sidebar-item" data-panel="security">
-                <i class="fas fa-shield-alt"></i> الأمان
-                <span class="badge">مهم</span>
-            </button>
-            <button class="sidebar-item" data-panel="notifications">
-                <i class="fas fa-bell"></i> الإشعارات
-            </button>
-            <button class="sidebar-item" data-panel="appearance">
-                <i class="fas fa-palette"></i> المظهر
-            </button>
-            <button class="sidebar-item" data-panel="backup">
-                <i class="fas fa-database"></i> النسخ الاحتياطي
-            </button>
-            <button class="sidebar-item" data-panel="about" style="color:var(--gold-light);">
-                <i class="fas fa-info-circle"></i> حول النظام
-            </button>
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="number blue" id="totalSessions">0</div>
+            <div class="label">📊 إجمالي الجلسات</div>
+            <span class="icon-bg"><i class="fas fa-database"></i></span>
         </div>
+        <div class="stat-card">
+            <div class="number green" id="activeSessions">0</div>
+            <div class="label">🟢 جلسات نشطة</div>
+            <span class="icon-bg"><i class="fas fa-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number red" id="expiredSessions">0</div>
+            <div class="label">🔴 منتهية</div>
+            <span class="icon-bg"><i class="fas fa-times-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number yellow" id="uniqueUsers">0</div>
+            <div class="label">👤 مستخدمين فريدين</div>
+            <span class="icon-bg"><i class="fas fa-users"></i></span>
+        </div>
+    </div>
 
-        <!-- ===== MAIN ===== -->
-        <div class="settings-main">
+    <!-- ============================================================
+    MAP
+    ============================================================ -->
+    <div class="map-container">
+        <div id="sessionMap"></div>
+        <div class="map-status">
+            <span><span class="online-count" id="mapOnlineCount">0</span> مستخدمين نشطين</span>
+            <span>🔄 تحديث تلقائي كل 30 ثانية</span>
+        </div>
+    </div>
 
-            <!-- ===== PANEL: GENERAL ===== -->
-            <div class="settings-panel active" id="panel-general">
-                <div class="panel-title">⚙️ الإعدادات العامة</div>
-                <div class="panel-subtitle">تخصيص الإعدادات الأساسية للنظام</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-globe"></i> اللغة</h4>
-                        <span class="card-badge success">✓ نشط</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>اختر اللغة</label>
-                            <select id="settingsLanguage">
-                                <option value="ar">العربية</option>
-                                <option value="fr">Français</option>
-                                <option value="en">English</option>
-                            </select>
-                            <div class="help-text">تغيير لغة واجهة المستخدم</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-clock"></i> المنطقة الزمنية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>المنطقة الزمنية</label>
-                            <select id="settingsTimezone">
-                                <option value="Africa/Tunis">تونس (GMT+1)</option>
-                                <option value="Africa/Cairo">القاهرة (GMT+2)</option>
-                                <option value="UTC">UTC</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-robot"></i> الذكاء الاصطناعي</h4>
-                        <span class="card-badge warning">⚠️ تجريبي</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل المساعد الذكي</span>
-                                <span class="toggle-desc">تمكين المساعد الذكي في جميع الصفحات</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">الإكمال التلقائي</span>
-                                <span class="toggle-desc">اقتراح إكمال تلقائي للنصوص</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: PROFILE ===== -->
-            <div class="settings-panel" id="panel-profile">
-                <div class="panel-title">👤 الملف الشخصي</div>
-                <div class="panel-subtitle">تحديث معلوماتك الشخصية</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-user"></i> المعلومات الأساسية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>الاسم الكامل</label>
-                            <input type="text" id="profileName" placeholder="أدخل اسمك الكامل" value="أمان الله ناجي">
-                        </div>
-                        <div class="form-group">
-                            <label>البريد الإلكتروني</label>
-                            <input type="email" id="profileEmail" placeholder="example@domain.com" value="admin@marine-system.com">
-                        </div>
-                        <div class="form-group">
-                            <label>الدور</label>
-                            <input type="text" id="profileRole" value="مسؤول" disabled style="opacity:0.5;cursor:not-allowed;">
-                            <div class="help-text">لا يمكن تغيير الدور من هنا</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-image"></i> الصورة الشخصية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                            <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;font-size:32px;color:#0a1628;font-weight:700;flex-shrink:0;">
-                                أ
-                            </div>
-                            <div>
-                                <button class="btn-settings primary" onclick="alert('📤 سيتم فتح نافذة اختيار الصورة')">
-                                    <i class="fas fa-upload"></i> تحميل صورة
-                                </button>
-                                <button class="btn-settings danger" onclick="alert('🗑️ تم حذف الصورة')">
-                                    <i class="fas fa-trash-alt"></i> حذف
-                                </button>
-                                <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">JPG, PNG • الحد الأقصى 2MB</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: SECURITY ===== -->
-            <div class="settings-panel" id="panel-security">
-                <div class="panel-title">🔐 الأمان</div>
-                <div class="panel-subtitle">إعدادات الأمان وحماية الحساب</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-key"></i> تغيير كلمة المرور</h4>
-                        <span class="card-badge danger">🔒 مطلوب</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>كلمة المرور الحالية</label>
-                            <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
-                        </div>
-                        <div class="form-group">
-                            <label>كلمة المرور الجديدة</label>
-                            <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
-                            <div class="help-text">يجب أن تكون 8 أحرف على الأقل</div>
-                        </div>
-                        <div class="form-group">
-                            <label>تأكيد كلمة المرور</label>
-                            <input type="password" id="confirmPassword" placeholder="أعد إدخال كلمة المرور الجديدة">
-                        </div>
-                        <button class="btn-settings primary" onclick="changePassword()">
-                            <i class="fas fa-sync-alt"></i> تغيير كلمة المرور
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-shield-alt"></i> المصادقة الثنائية</h4>
-                        <span class="card-badge warning">⚠️ غير مفعل</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل المصادقة الثنائية (2FA)</span>
-                                <span class="toggle-desc">طبقة إضافية من الأمان لحسابك</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px;">
-                            <button class="btn-settings secondary" onclick="alert('📱 سيتم إرسال رمز التأكيد إلى هاتفك')">
-                                <i class="fas fa-qrcode"></i> إعداد 2FA
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-history"></i> جلسات الدخول</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تسجيل الدخول التلقائي</span>
-                                <span class="toggle-desc">تذكرني عند تسجيل الدخول</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px;">
-                            <button class="btn-settings danger" onclick="terminateAllSessions()">
-                                <i class="fas fa-sign-out-alt"></i> إنهاء جميع الجلسات
-                            </button>
-                            <span style="font-size:11px;color:rgba(255,255,255,0.2);margin-right:10px;">سيتم تسجيل الخروج من جميع الأجهزة</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: NOTIFICATIONS ===== -->
-            <div class="settings-panel" id="panel-notifications">
-                <div class="panel-title">🔔 الإشعارات</div>
-                <div class="panel-subtitle">تخصيص إعدادات الإشعارات</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-bell"></i> أنواع الإشعارات</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات النظام</span>
-                                <span class="toggle-desc">إشعارات التحديثات والصيانة</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات المراكب</span>
-                                <span class="toggle-desc">تغييرات حالة المراكب والأعطال</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات الصيانة</span>
-                                <span class="toggle-desc">تذكيرات الصيانة الدورية</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات البريد الإلكتروني</span>
-                                <span class="toggle-desc">استلام الإشعارات عبر البريد</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: APPEARANCE ===== -->
-            <div class="settings-panel" id="panel-appearance">
-                <div class="panel-title">🎨 المظهر</div>
-                <div class="panel-subtitle">تخصيص شكل واجهة المستخدم</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-moon"></i> الوضع الليلي</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل الوضع الليلي</span>
-                                <span class="toggle-desc">وضع مريح للعين في الإضاءة المنخفضة</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-palette"></i> ألوان الواجهة</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="gold"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e94560,#ff6b81);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="red"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#00b894,#55efc4);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="green"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0984e3,#74b9ff);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="blue"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6c5ce7,#a29bfe);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="purple"></div>
-                        </div>
-                        <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.2);">اختر اللون الرئيسي للواجهة</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: BACKUP ===== -->
-            <div class="settings-panel" id="panel-backup">
-                <div class="panel-title">💾 النسخ الاحتياطي</div>
-                <div class="panel-subtitle">إدارة نسخ احتياطية للبيانات</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-download"></i> تصدير البيانات</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.4);margin-bottom:12px;">قم بتصدير جميع بيانات النظام إلى ملف JSON</p>
-                        <button class="btn-settings primary" onclick="exportAllData()">
-                            <i class="fas fa-file-export"></i> تصدير البيانات
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-upload"></i> استيراد البيانات</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.4);margin-bottom:12px;">استيراد بيانات من ملف JSON احتياطي</p>
-                        <label style="display:inline-block;">
-                            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-                            <span class="btn-settings secondary" style="cursor:pointer;">
-                                <i class="fas fa-file-import"></i> اختيار ملف
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-clock"></i> النسخ الاحتياطي التلقائي</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل النسخ التلقائي</span>
-                                <span class="toggle-desc">إنشاء نسخة احتياطية يومية تلقائياً</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:8px;">
-                            <button class="btn-settings success" onclick="alert('✅ تم إنشاء نسخة احتياطية')">
-                                <i class="fas fa-database"></i> إنشاء نسخة الآن
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: ABOUT ===== -->
-            <div class="settings-panel" id="panel-about">
-                <div class="panel-title">ℹ️ حول النظام</div>
-                <div class="panel-subtitle">معلومات عن منظومة الوسائل البحرية</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-ship"></i> منظومة الوسائل البحرية</h4>
-                        <span class="card-badge success">✓ مستقر</span>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
-                            <div><strong style="color:#fff;">الإصدار:</strong> <span style="color:rgba(255,255,255,0.5);">v7.0.0</span></div>
-                            <div><strong style="color:#fff;">المطور:</strong> <span style="color:var(--gold-light);">أمان الله ناجي</span></div>
-                            <div><strong style="color:#fff;">التاريخ:</strong> <span style="color:rgba(255,255,255,0.5);">2025</span></div>
-                            <div><strong style="color:#fff;">الحالة:</strong> <span style="color:#4ade80;">🟢 نشط</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-code"></i> التقنيات المستخدمة</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Node.js</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Express</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">MongoDB</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Socket.io</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Chart.js</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Leaflet</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card" style="border-color:rgba(239,68,68,0.1);">
-                    <div class="card-header">
-                        <h4 style="color:#f87171;"><i class="fas fa-exclamation-triangle"></i> منطقة خطرة</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.3);font-size:13px;">حذف جميع البيانات نهائياً. هذا الإجراء لا يمكن التراجع عنه.</p>
-                        <button class="btn-settings danger" onclick="deleteAllData()" style="margin-top:8px;">
-                            <i class="fas fa-trash-alt"></i> حذف جميع البيانات
-                        </button>
-                    </div>
-                </div>
-            </div>
-
+    <!-- ============================================================
+    TABLE
+    ============================================================ -->
+    <div class="table-card">
+        <div class="table-header">
+            <h4><i class="fas fa-list"></i> قائمة الجلسات</h4>
+            <span class="count" id="sessionCount">0 جلسة</span>
+        </div>
+        <div class="scrollable-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-user"></i> المستخدم</th>
+                        <th><i class="fas fa-laptop"></i> الجهاز</th>
+                        <th><i class="fas fa-network-wired"></i> IP</th>
+                        <th><i class="fas fa-clock"></i> بداية الجلسة</th>
+                        <th><i class="fas fa-hourglass-half"></i> المدة</th>
+                        <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-cog"></i> إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionsBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <div class="spinner"></div>
+                            <span>جاري تحميل البيانات...</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <!-- ============================================================
-📦 JAVASCRIPT - SETTINGS PAGE
+Leaflet CSS & JS
+============================================================ -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- ============================================================
+📦 JAVASCRIPT - SESSIONS PAGE (FIXED)
 ============================================================ -->
 <script>
 // ============================================================
-// ⚙️ SETTINGS PAGE - v2.0
+// 🔄 SESSIONS PAGE - v3.0 (FIXED)
 // ============================================================
 
+// ✅ تجنب إعادة تعريف المتغيرات
+if (typeof window._sessionsLoaded === 'undefined') {
+    window._sessionsLoaded = false;
+}
+
+// ✅ استخدم var لتجنب التكرار
+if (typeof sessionMap === 'undefined') {
+    var sessionMap = null;
+}
+if (typeof sessionMarkers === 'undefined') {
+    var sessionMarkers = {};
+}
+if (typeof sessionsData === 'undefined') {
+    var sessionsData = [];
+}
+var mapInitialized = false;
+var mapRefreshInterval = null;
+
 // ============================================================
-// 1. TOKEN FUNCTIONS
+// 1. TOKEN FUNCTIONS (موحدة)
 // ============================================================
 
 function getToken() {
@@ -1172,234 +757,312 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleString('ar-TN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch { return dateStr; }
+}
+
+function getDuration(startDate) {
+    const now = new Date();
+    const diff = now - new Date(startDate);
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return days + ' يوم';
+    if (hours > 0) return hours + ' ساعة';
+    if (minutes > 0) return minutes + ' دقيقة';
+    return 'الآن';
+}
+
 // ============================================================
-// 2. SIDEBAR NAVIGATION
+// 2. تهيئة الخريطة
 // ============================================================
 
-document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', function() {
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
+function initSessionMap() {
+    if (sessionMap) {
+        sessionMap.invalidateSize();
+        return;
+    }
+    
+    console.log('🗺️ تهيئة خريطة الجلسات...');
+    
+    const mapContainer = document.getElementById('sessionMap');
+    if (!mapContainer) {
+        console.warn('⚠️ عنصر الخريطة غير موجود');
+        return;
+    }
+    
+    try {
+        sessionMap = L.map('sessionMap', {
+            center: [36.8, 10.18],
+            zoom: 7,
+            zoomControl: true
+        });
         
-        const panel = this.dataset.panel;
-        document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + panel).classList.add('active');
-    });
-});
-
-// ============================================================
-// 3. TOGGLE SWITCH
-// ============================================================
-
-function toggleSwitch(el) {
-    el.classList.toggle('active');
-    const label = el.closest('.toggle-switch').querySelector('.toggle-label');
-    const isActive = el.classList.contains('active');
-    showToast(`${label.textContent}: ${isActive ? '✅ تم التفعيل' : '❌ تم الإيقاف'}`, isActive ? 'success' : 'warning');
-}
-
-// ============================================================
-// 4. COLOR SELECTOR
-// ============================================================
-
-function selectColor(el) {
-    document.querySelectorAll('[data-color]').forEach(c => {
-        c.style.borderColor = 'transparent';
-        c.style.transform = 'scale(1)';
-    });
-    el.style.borderColor = '#fff';
-    el.style.transform = 'scale(1.1)';
-    showToast('🎨 تم تغيير لون الواجهة', 'success');
-}
-
-// ============================================================
-// 5. SAVE SETTINGS
-// ============================================================
-
-function saveSettings() {
-    const btn = document.querySelector('.settings-header-actions .btn-action.primary');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span><span class="btn-text">جاري الحفظ...</span>';
-    
-    setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<i class="fas fa-save"></i> حفظ الإعدادات';
-        showToast('✅ تم حفظ الإعدادات بنجاح', 'success');
-    }, 1500);
-}
-
-// ============================================================
-// 6. RESET SETTINGS
-// ============================================================
-
-function resetSettings() {
-    if (!confirm('⚠️ هل أنت متأكد من إعادة ضبط جميع الإعدادات؟')) return;
-    
-    document.querySelectorAll('.toggle').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('[data-color]').forEach(c => {
-        c.style.borderColor = 'transparent';
-        c.style.transform = 'scale(1)';
-    });
-    
-    showToast('🔄 تم إعادة ضبط الإعدادات', 'warning');
-}
-
-// ============================================================
-// 7. CHANGE PASSWORD
-// ============================================================
-
-function changePassword() {
-    const current = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    
-    if (!current || !newPass || !confirm) {
-        showToast('⚠️ يرجى ملء جميع الحقول', 'warning');
-        return;
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(sessionMap);
+        
+        mapInitialized = true;
+        console.log('✅ تم تهيئة الخريطة');
+        
+        setTimeout(updateSessionMarkers, 500);
+        
+    } catch(error) {
+        console.error('❌ خطأ في الخريطة:', error);
+        mapContainer.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:center; height:100%; color:#f87171; flex-direction:column; padding:20px; text-align:center;">
+                <div style="font-size:48px; margin-bottom:10px;">🗺️</div>
+                <div style="font-weight:600; margin-bottom:4px;">خطأ في تحميل الخريطة</div>
+                <div style="font-size:12px; color:rgba(255,255,255,0.3);">${escapeHtml(error.message || 'يرجى المحاولة مرة أخرى')}</div>
+                <button onclick="initSessionMap()" style="margin-top:10px; padding:8px 20px; background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.1); border-radius:8px; color:#60a5fa; cursor:pointer;">
+                    <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                </button>
+            </div>
+        `;
     }
-    
-    if (newPass.length < 8) {
-        showToast('⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل', 'warning');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showToast('⚠️ كلمة المرور غير متطابقة', 'warning');
-        return;
-    }
-    
-    const btn = document.querySelector('#panel-security .btn-settings.primary');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span><span class="btn-text">جاري التغيير...</span>';
-    
-    setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> تغيير كلمة المرور';
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        showToast('✅ تم تغيير كلمة المرور بنجاح', 'success');
-    }, 1500);
 }
 
 // ============================================================
-// 8. TERMINATE ALL SESSIONS
+// 3. تحميل الجلسات
 // ============================================================
 
-function terminateAllSessions() {
-    if (!confirm('⚠️ سيتم تسجيل الخروج من جميع الأجهزة. هل أنت متأكد؟')) return;
+function loadSessions() {
+    console.log('🔄 تحميل الجلسات...');
     
     const token = getToken();
     if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+        console.warn('⚠️ لا يوجد توكن');
+        document.getElementById('sessionsBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    ⚠️ الرجاء تسجيل الدخول أولاً
+                </td>
+            </tr>
+        `;
         return;
     }
     
-    fetch('/api/sessions/terminate-all', {
-        method: 'DELETE',
+    fetch('/api/sessions', {
         headers: getAuthHeaders()
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast('✅ تم إنهاء جميع الجلسات', 'success');
-            localStorage.removeItem('marine_token');
-            localStorage.removeItem('token');
-            setTimeout(() => {
+    .then(res => {
+        if (!res.ok) {
+            if (res.status === 401) {
+                localStorage.removeItem('marine_token');
+                localStorage.removeItem('token');
                 window.location.href = '/index.html';
-            }, 1000);
-        } else {
-            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسات'), 'error');
-        }
-    })
-    .catch(err => {
-        showToast('❌ خطأ: ' + err.message, 'error');
-    });
-}
-
-// ============================================================
-// 9. EXPORT DATA
-// ============================================================
-
-function exportAllData() {
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    showToast('⏳ جاري تصدير البيانات...', 'info');
-    
-    fetch('/api/export-all', {
-        headers: getAuthHeaders()
-    })
-    .then(res => res.json())
-    .then(data => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `marine_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير البيانات بنجاح', 'success');
-    })
-    .catch(err => {
-        showToast('❌ خطأ في التصدير: ' + err.message, 'error');
-    });
-}
-
-// ============================================================
-// 10. IMPORT DATA
-// ============================================================
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            const token = getToken();
-            if (!token) {
-                showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                return;
             }
-            
-            showToast('⏳ جاري استيراد البيانات...', 'info');
-            
-            fetch('/api/import-all', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    showToast('✅ تم استيراد البيانات بنجاح', 'success');
-                } else {
-                    showToast('❌ فشل استيراد البيانات', 'error');
-                }
-            })
-            .catch(err => {
-                showToast('❌ خطأ في الاستيراد: ' + err.message, 'error');
-            });
-        } catch (err) {
-            showToast('❌ ملف غير صالح: ' + err.message, 'error');
+            throw new Error('فشل تحميل الجلسات');
         }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
+        return res.json();
+    })
+    .then(data => {
+        sessionsData = data.sessions || data || [];
+        console.log('✅ تم تحميل الجلسات:', sessionsData.length);
+        renderSessions(sessionsData);
+        updateSessionStats(sessionsData);
+        updateSessionMarkers();
+        updateMapOnlineCount(sessionsData);
+    })
+    .catch(err => {
+        console.error('❌ خطأ في تحميل الجلسات:', err);
+        document.getElementById('sessionsBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state" style="color:#f87171;">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    ❌ ${escapeHtml(err.message)}
+                    <br>
+                    <button class="retry-btn" onclick="loadSessions()">
+                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
 }
 
 // ============================================================
-// 11. DELETE ALL DATA
+// 4. عرض الجلسات
 // ============================================================
 
-function deleteAllData() {
-    if (!confirm('🚨 تحذير: هذا الإجراء سيحذف جميع البيانات نهائياً. هل أنت متأكد؟')) return;
-    if (!confirm('تأكيد نهائي: هل أنت متأكد من حذف جميع البيانات؟')) return;
+function renderSessions(sessions) {
+    const tbody = document.getElementById('sessionsBody');
+    if (!tbody) return;
+    
+    document.getElementById('sessionCount').textContent = sessions.length + ' جلسة';
+    
+    if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <span class="icon"><i class="fas fa-inbox"></i></span>
+                    🚫 لا توجد جلسات نشطة
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    sessions.forEach((s, i) => {
+        const statusMap = {
+            'active': 'active',
+            'inactive': 'inactive',
+            'expired': 'expired'
+        };
+        const statusClass = statusMap[s.status] || 'inactive';
+        const statusText = s.status === 'active' ? '🟢 نشط' : (s.status === 'expired' ? '🔴 منتهية' : '⚫ غير نشط');
+        const deviceName = s.device || s.userAgent || 'جهاز غير معروف';
+        const duration = s.createdAt ? getDuration(s.createdAt) : '--';
+        const sessionId = s.sessionId || s.id || i;
+        
+        html += `
+            <tr>
+                <td><strong style="color:#fff;">${escapeHtml(s.username || s.userName || 'مجهول')}</strong></td>
+                <td style="font-size:11px;color:rgba(255,255,255,0.4);">${escapeHtml(deviceName.substring(0, 30))}</td>
+                <td style="font-size:12px;color:rgba(255,255,255,0.3);">${escapeHtml(s.ip || s.ipAddress || '--')}</td>
+                <td>${formatDate(s.createdAt)}</td>
+                <td>${duration}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn-sm warning" onclick="terminateSession('${sessionId}')">
+                        <i class="fas fa-stop-circle"></i> إنهاء
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+// ============================================================
+// 5. تحديث الإحصائيات
+// ============================================================
+
+function updateSessionStats(sessions) {
+    const total = sessions.length;
+    const active = sessions.filter(s => s.status === 'active').length;
+    const expired = sessions.filter(s => s.status === 'expired' || s.status === 'inactive').length;
+    const uniqueUsers = new Set(sessions.map(s => s.userName || s.username)).size;
+    
+    document.getElementById('totalSessions').textContent = total;
+    document.getElementById('activeSessions').textContent = active;
+    document.getElementById('expiredSessions').textContent = expired;
+    document.getElementById('uniqueUsers').textContent = uniqueUsers;
+    document.getElementById('sessionOnline').textContent = active;
+}
+
+function updateMapOnlineCount(sessions) {
+    const active = sessions.filter(s => s.status === 'active').length;
+    document.getElementById('mapOnlineCount').textContent = active;
+}
+
+// ============================================================
+// 6. تحديث الماركرز على الخريطة
+// ============================================================
+
+function updateSessionMarkers() {
+    if (!mapInitialized || !sessionMap) {
+        console.warn('⚠️ الخريطة غير مهيأة');
+        return;
+    }
+    
+    // حذف الماركرز القديمة
+    Object.values(sessionMarkers).forEach(marker => {
+        if (sessionMap) sessionMap.removeLayer(marker);
+    });
+    sessionMarkers = {};
+    
+    // ✅ تصفية الجلسات النشطة فقط للماركرز
+    const activeSessions = sessionsData.filter(s => s.status === 'active' && s.lat && s.lng);
+    
+    if (activeSessions.length === 0) {
+        console.log('ℹ️ لا توجد جلسات نشطة مع مواقع');
+        return;
+    }
+    
+    console.log(`📍 تحديث ${activeSessions.length} ماركر على الخريطة`);
+    
+    activeSessions.forEach(s => {
+        const isActive = s.status === 'active';
+        const icon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `
+                <div class="session-marker">
+                    <div class="avatar ${isActive ? 'active' : 'inactive'}">
+                        ${s.role === 'admin' || s.role === 'مسؤول' ? '👑' : '👤'}
+                    </div>
+                    <div class="name">${escapeHtml(s.username || s.userName || 'مجهول')}</div>
+                </div>
+            `,
+            iconSize: [50, 50],
+            iconAnchor: [25, 25],
+            popupAnchor: [0, -25]
+        });
+        
+        const marker = L.marker([s.lat, s.lng], { icon: icon }).addTo(sessionMap);
+        
+        const popupContent = `
+            <div style="text-align:right; font-family:Cairo, sans-serif; min-width:150px; direction:rtl;">
+                <div style="font-weight:bold; font-size:14px; color:white;">${escapeHtml(s.username || s.userName || 'مجهول')}</div>
+                <div style="color:rgba(255,255,255,0.6); font-size:12px;">${escapeHtml(s.role || 'مشاهد')}</div>
+                <div style="margin:4px 0;">
+                    <span style="color:${isActive ? '#4ade80' : '#6c757d'}; font-size:11px;">${isActive ? '🟢 نشط' : '🔴 غير نشط'}</span>
+                </div>
+                <div style="color:rgba(255,255,255,0.4); font-size:10px;">
+                    📍 ${s.lat.toFixed(6)}, ${s.lng.toFixed(6)}
+                </div>
+                <div style="color:rgba(255,255,255,0.2); font-size:9px; margin-top:2px;">
+                    ${s.updatedAt ? '🕐 ' + new Date(s.updatedAt).toLocaleString('ar-TN') : ''}
+                </div>
+                <div style="color:rgba(255,255,255,0.2); font-size:9px; margin-top:4px;">
+                    📱 ${escapeHtml((s.device || s.userAgent || 'جهاز غير معروف').substring(0, 30))}
+                </div>
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+        
+        sessionMarkers[s.sessionId || s.id] = marker;
+    });
+    
+    // ✅ تكبير الخريطة لتشمل جميع الماركرز
+    if (Object.keys(sessionMarkers).length > 0) {
+        const group = L.featureGroup(Object.values(sessionMarkers));
+        sessionMap.fitBounds(group.getBounds(), { padding: [50, 50] });
+    }
+}
+
+// ============================================================
+// 7. إنهاء الجلسة
+// ============================================================
+
+function terminateSession(id) {
+    if (!confirm('⚠️ هل أنت متأكد من إنهاء هذه الجلسة؟')) return;
     
     const token = getToken();
     if (!token) {
@@ -1407,29 +1070,84 @@ function deleteAllData() {
         return;
     }
     
-    showToast('⏳ جاري حذف البيانات...', 'warning');
-    
-    fetch('/api/delete-all', {
+    fetch(`/api/sessions/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
     })
     .then(res => res.json())
     .then(data => {
         if (data.success) {
-            showToast('🗑️ تم حذف جميع البيانات', 'warning');
+            showToast('✅ تم إنهاء الجلسة بنجاح', 'success');
+            loadSessions();
         } else {
-            showToast('❌ فشل حذف البيانات', 'error');
+            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسة'), 'error');
         }
     })
     .catch(err => {
-        showToast('❌ خطأ: ' + err.message, 'error');
+        console.error('❌ خطأ في إنهاء الجلسة:', err);
+        showToast('❌ خطأ في إنهاء الجلسة', 'error');
     });
 }
 
 // ============================================================
-// 12. INIT
+// 8. تحديث الجلسات
 // ============================================================
 
-console.log('⚙️ صفحة الإعدادات جاهزة');
+function refreshSessions() {
+    loadSessions();
+    showToast('🔄 تم تحديث الجلسات', 'info');
+}
+
+// ============================================================
+// 9. بدء التحديث التلقائي
+// ============================================================
+
+function startAutoRefresh() {
+    if (mapRefreshInterval) {
+        clearInterval(mapRefreshInterval);
+    }
+    mapRefreshInterval = setInterval(() => {
+        if (document.getElementById('page-sessions')) {
+            loadSessions();
+        }
+    }, 30000);
+}
+
+// ============================================================
+// 10. التهيئة
+// ============================================================
+
+function initSessionsPage() {
+    console.log('🔄 تهيئة صفحة المراقبة...');
+    
+    if (window._sessionsLoaded) {
+        console.log('⚠️ تم تهيئة الصفحة مسبقاً');
+        return;
+    }
+    window._sessionsLoaded = true;
+    
+    setTimeout(() => {
+        initSessionMap();
+        loadSessions();
+        startAutoRefresh();
+    }, 300);
+}
+
+// ============================================================
+// 11. ربط الدوال
+// ============================================================
+
+if (document.getElementById('page-sessions')) {
+    console.log('📄 تم اكتشاف صفحة المراقبة');
+    setTimeout(initSessionsPage, 300);
+}
+
+window.refreshSessions = refreshSessions;
+window.terminateSession = terminateSession;
+window.initSessionMap = initSessionMap;
+window.loadSessions = loadSessions;
+window.startAutoRefresh = startAutoRefresh;
+
+console.log('✅ صفحة المراقبة v3.0 جاهزة');
 </script>
 </div>
