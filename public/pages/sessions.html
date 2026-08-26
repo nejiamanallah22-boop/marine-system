@@ -570,10 +570,10 @@
             </div>
         </div>
         <div class="ses-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
+            <button class="btn-action primary" onclick="refreshSessions()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action danger" id="terminateAllBtn">
+            <button class="btn-action danger" onclick="terminateAllSessions()">
                 <i class="fas fa-power-off"></i> إنهاء الكل
             </button>
             <button class="btn-action secondary" onclick="window.print()">
@@ -605,10 +605,10 @@
     <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchSession" placeholder="اسم المستخدم، البريد الإلكتروني..." />
+        <input type="text" id="searchSession" placeholder="اسم المستخدم، البريد الإلكتروني..." onkeyup="renderSessions()" />
 
         <label><i class="fas fa-user"></i> المستخدم</label>
-        <select id="fUserSession">
+        <select id="fUserSession" onchange="renderSessions()">
             <option value="الكل">👤 جميع المستخدمين</option>
             <option value="أحمد محمد">أحمد محمد</option>
             <option value="سارة علي">سارة علي</option>
@@ -618,7 +618,7 @@
         </select>
 
         <label><i class="fas fa-circle"></i> الحالة</label>
-        <select id="fStatusSession">
+        <select id="fStatusSession" onchange="renderSessions()">
             <option value="الكل">📊 جميع الحالات</option>
             <option value="نشطة">🟢 نشطة</option>
             <option value="منتهية">🟡 منتهية</option>
@@ -626,14 +626,14 @@
         </select>
 
         <label><i class="fas fa-calendar-alt"></i> من</label>
-        <input type="date" id="fDateFrom" />
+        <input type="date" id="fDateFrom" onchange="renderSessions()" />
         <label><i class="fas fa-calendar-alt"></i> إلى</label>
-        <input type="date" id="fDateTo" />
+        <input type="date" id="fDateTo" onchange="renderSessions()" />
 
-        <button class="btn-filter primary" id="filterBtn">
+        <button class="btn-filter primary" onclick="renderSessions()">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" id="resetBtn">
+        <button class="btn-filter outline" onclick="resetFilters()">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
@@ -671,11 +671,11 @@
         <div class="pagination">
             <span class="info" id="paginationInfo">عرض 1-5 من 0 جلسة</span>
             <div class="pages">
-                <button class="page-btn" id="prevPage">‹</button>
-                <button class="page-btn active" id="page1">1</button>
-                <button class="page-btn" id="page2">2</button>
-                <button class="page-btn" id="page3">3</button>
-                <button class="page-btn" id="nextPage">›</button>
+                <button class="page-btn" id="prevPage" onclick="changePage(-1)">‹</button>
+                <button class="page-btn active" id="page1" onclick="goToPage(1)">1</button>
+                <button class="page-btn" id="page2" onclick="goToPage(2)">2</button>
+                <button class="page-btn" id="page3" onclick="goToPage(3)">3</button>
+                <button class="page-btn" id="nextPage" onclick="changePage(1)">›</button>
             </div>
         </div>
     </div>
@@ -749,11 +749,11 @@
             // ============================================================
             // RENDER
             // ============================================================
-            function renderSessions() {
+            window.renderSessions = function() {
                 renderStats();
                 renderTable();
                 renderPagination();
-            }
+            };
 
             function renderStats() {
                 var total = sessionData.length;
@@ -861,25 +861,25 @@
             // ============================================================
             // ACTIONS
             // ============================================================
-            function changePage(delta) {
+            window.changePage = function(delta) {
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
                 var newPage = currentPage + delta;
                 if (newPage >= 1 && newPage <= totalPages) {
                     currentPage = newPage;
                     renderSessions();
                 }
-            }
+            };
 
-            function goToPage(page) {
+            window.goToPage = function(page) {
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
                 if (page >= 1 && page <= totalPages) {
                     currentPage = page;
                     renderSessions();
                 }
-            }
+            };
 
-            function refreshSessions() {
-                var btn = $('refreshBtn');
+            window.refreshSessions = function() {
+                var btn = document.querySelector('.btn-action.primary');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
@@ -890,9 +890,9 @@
                     btn.disabled = false;
                     showNotification('✅ تم تحديث الجلسات بنجاح', 'success');
                 }, 600);
-            }
+            };
 
-            function resetFilters() {
+            window.resetFilters = function() {
                 $('searchSession').value = '';
                 $('fUserSession').value = 'الكل';
                 $('fStatusSession').value = 'الكل';
@@ -901,9 +901,9 @@
                 currentPage = 1;
                 renderSessions();
                 showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
-            }
+            };
 
-            function terminateAllSessions() {
+            window.terminateAllSessions = function() {
                 if (confirm('⚠️ هل أنت متأكد من إنهاء جميع الجلسات النشطة؟')) {
                     var activeSessions = sessionData.filter(function(s) { return s.status === 'نشطة'; });
                     if (activeSessions.length === 0) {
@@ -914,7 +914,7 @@
                     renderSessions();
                     showNotification('✅ تم إنهاء ' + activeSessions.length + ' جلسات بنجاح', 'success');
                 }
-            }
+            };
 
             // ============================================================
             // GLOBAL FUNCTIONS
@@ -995,23 +995,9 @@
             document.head.appendChild(styleNotif);
 
             // ============================================================
-            // EVENT BINDING
+            // INIT
             // ============================================================
             document.addEventListener('DOMContentLoaded', function() {
-                $('refreshBtn').addEventListener('click', refreshSessions);
-                $('terminateAllBtn').addEventListener('click', terminateAllSessions);
-                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderSessions(); });
-                $('resetBtn').addEventListener('click', resetFilters);
-
-                $('searchSession').addEventListener('keyup', function() { currentPage = 1; renderSessions(); });
-                $('fUserSession').addEventListener('change', function() { currentPage = 1; renderSessions(); });
-                $('fStatusSession').addEventListener('change', function() { currentPage = 1; renderSessions(); });
-                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderSessions(); });
-                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderSessions(); });
-
-                $('prevPage').addEventListener('click', function() { changePage(-1); });
-                $('nextPage').addEventListener('click', function() { changePage(1); });
-
                 renderSessions();
                 console.log('✅ Session Page loaded successfully!');
                 console.log('🟣 ' + sessionData.length + ' sessions loaded.');
