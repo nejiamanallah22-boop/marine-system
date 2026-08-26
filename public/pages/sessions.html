@@ -1,40 +1,13 @@
-<!-- public/pages/efficiency.html -->
-<div id="page-efficiency">
+<!-- public/pages/session.html -->
+<div id="page-session">
     <style>
-        /* ============================================================
-           📊 EFFICIENCY PAGE - FULL VERSION
-           ============================================================ */
-
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --primary-dark: #0a1628;
-            --primary: #0f3460;
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
-            --success: #00b894;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --info: #0984e3;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        }
-
-        /* ===== FULL SCREEN RESET ===== */
-        #page-efficiency {
+        /* ===== RESET & BASE ===== */
+        #page-session {
             width: 100%;
             max-width: 100%;
-            padding: 0;
+            padding: 20px;
             margin: 0;
-            font-family: var(--font);
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: #0a0e1a;
             color: #e8edf5;
             min-height: 100vh;
@@ -42,156 +15,118 @@
             z-index: 1;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
-        #page-efficiency::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.03) 0%, transparent 60%);
-            z-index: -1;
-            pointer-events: none;
-            animation: bgPulse 15s ease-in-out infinite;
-        }
-
-        @keyframes bgPulse {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
-        }
-
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
-
-        /* ============================================================
-           HEADER
-           ============================================================ */
-        .eff-header {
+        /* ===== HEADER ===== */
+        .ses-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 12px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 64px;
-            z-index: 10;
-            margin: 0;
-            width: 100%;
         }
 
-        .eff-header-left {
+        .ses-header-left {
             display: flex;
             align-items: center;
             gap: 14px;
         }
 
-        .eff-header-left .header-icon {
+        .ses-header-left .icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--success));
+            background: linear-gradient(135deg, #a78bfa, #e6b31e);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
-            animation: pulseGold 2s ease-in-out infinite;
         }
 
-        @keyframes pulseGold {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
-        }
-
-        .eff-header-left h2 {
+        .ses-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
+            background: linear-gradient(135deg, #a78bfa, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
         }
 
-        .eff-header-left p {
+        .ses-header-left p {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin: 0;
         }
 
-        .eff-header-actions {
+        .ses-header-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .eff-header-actions .btn-action {
+        .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
             font-weight: 600;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-family: var(--font);
+            font-family: 'Cairo', sans-serif;
         }
 
-        .eff-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        .btn-action.primary {
+            background: linear-gradient(135deg, #a78bfa, #c4b5fd);
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
         }
 
-        .eff-header-actions .btn-action.primary:hover {
+        .btn-action.primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+            box-shadow: 0 8px 30px rgba(167,139,250,0.3);
         }
 
-        .eff-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
 
-        .eff-header-actions .btn-action.secondary:hover {
+        .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
-            transform: translateY(-2px);
         }
 
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
-        .stats-grid {
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
+        /* ===== STATS ===== */
+        .ses-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
-            padding: 16px 24px;
-            margin: 0;
-            width: 100%;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
             text-align: center;
-            transition: all var(--transition);
-            cursor: default;
             position: relative;
             overflow: hidden;
         }
@@ -203,60 +138,39 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--success));
+            background: linear-gradient(90deg, #a78bfa, #e6b31e);
             opacity: 0.6;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
         }
 
         .stat-card .number {
             font-size: 26px;
             font-weight: 800;
-            color: #fff;
+            color: #a78bfa;
             line-height: 1.2;
         }
 
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
+        .stat-card .number.gold { color: #f5d76e; }
+        .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.red { color: #f87171; }
+        .stat-card .number.purple { color: #a78bfa; }
 
         .stat-card .label {
             font-size: 11px;
             color: rgba(255,255,255,0.3);
             margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
         }
 
-        .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
+        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 8px 14px;
-            padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-            margin: 0;
-            width: 100%;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
         }
 
         .filter-bar label {
@@ -268,21 +182,23 @@
             gap: 4px;
         }
 
-        .filter-bar select {
+        .filter-bar select,
+        .filter-bar input {
             padding: 6px 12px;
             border-radius: 20px;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
             font-size: 0.75rem;
             min-width: 120px;
             cursor: pointer;
-            font-family: var(--font);
+            font-family: 'Cairo', sans-serif;
         }
 
-        .filter-bar select:focus {
+        .filter-bar select:focus,
+        .filter-bar input:focus {
             outline: none;
-            border-color: var(--gold);
+            border-color: #a78bfa;
         }
 
         .filter-bar select option {
@@ -290,63 +206,71 @@
             color: #e2e8f0;
         }
 
-        .filter-bar .btn-filter {
+        .filter-bar input[type="date"] {
+            min-width: 140px;
+            color-scheme: dark;
+        }
+
+        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6);
+            cursor: pointer;
+        }
+
+        .btn-filter {
             padding: 6px 16px;
             border: none;
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.75rem;
             cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
 
-        .filter-bar .btn-filter.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        .btn-filter.primary {
+            background: linear-gradient(135deg, #a78bfa, #c4b5fd);
             color: #0a1628;
         }
 
-        .filter-bar .btn-filter.primary:hover {
+        .btn-filter.primary:hover {
             transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
         }
 
-        .filter-bar .btn-filter.outline {
+        .btn-filter.outline {
             background: transparent;
-            border: 1px solid var(--glass-border);
+            border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.3);
         }
 
-        .filter-bar .btn-filter.outline:hover {
+        .btn-filter.outline:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
         }
 
-        /* ============================================================
-           GENERAL EFFICIENCY TABLE
-           ============================================================ */
-        .eff-section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin: 0 24px 16px;
+        /* ===== SECTION ===== */
+        .ses-section {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
             overflow: hidden;
+            margin-bottom: 16px;
         }
 
-        .eff-section .section-header {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .eff-section .section-header h3 {
+        .section-header h3 {
             font-size: 15px;
             font-weight: 700;
             color: #fff;
@@ -356,15 +280,25 @@
             gap: 8px;
         }
 
-        .eff-section .section-header h3 i {
-            color: var(--gold);
+        .section-header h3 i {
+            color: #a78bfa;
         }
 
-        .eff-section .section-header .badge {
+        .badge {
             font-size: 11px;
             padding: 4px 16px;
             border-radius: 20px;
             font-weight: 600;
+        }
+
+        .badge.purple {
+            background: rgba(167,139,250,0.12);
+            color: #a78bfa;
+        }
+
+        .badge.gold {
+            background: rgba(230,179,30,0.12);
+            color: #f5d76e;
         }
 
         .badge.success {
@@ -372,41 +306,27 @@
             color: #4ade80;
         }
 
-        .badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
         .badge.danger {
             background: rgba(239,68,68,0.12);
             color: #f87171;
         }
 
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-        }
-
-        .section-content {
+        /* ===== TABLE ===== */
+        .table-wrapper {
+            overflow-x: auto;
             padding: 16px 20px;
         }
 
-        /* ===== TABLES ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
-
-        .table-wrapper table {
+        table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 600px;
+            min-width: 700px;
         }
 
         thead {
-            background: rgba(15,52,96,0.3);
-            border-bottom: 2px solid rgba(230,179,30,0.08);
+            background: rgba(167,139,250,0.08);
+            border-bottom: 2px solid rgba(167,139,250,0.08);
         }
 
         thead th {
@@ -422,8 +342,7 @@
 
         thead th i {
             margin-left: 4px;
-            color: var(--gold);
-            font-size: 0.7rem;
+            color: #a78bfa;
         }
 
         tbody td {
@@ -435,43 +354,8 @@
             text-align: center;
         }
 
-        tbody tr {
-            transition: all var(--transition);
-        }
-
         tbody tr:hover {
             background: rgba(255,255,255,0.03);
-        }
-
-        /* ===== ROW CLASSES ===== */
-        .row-high {
-            background: rgba(34, 197, 94, 0.05) !important;
-            border-right: 3px solid #4ade80;
-        }
-
-        .row-high .eff-cell {
-            color: #4ade80 !important;
-            font-weight: 700;
-        }
-
-        .row-mid {
-            background: rgba(234, 179, 8, 0.05) !important;
-            border-right: 3px solid #fbbf24;
-        }
-
-        .row-mid .eff-cell {
-            color: #fbbf24 !important;
-            font-weight: 700;
-        }
-
-        .row-low {
-            background: rgba(239, 68, 68, 0.05) !important;
-            border-right: 3px solid #f87171;
-        }
-
-        .row-low .eff-cell {
-            color: #f87171 !important;
-            font-weight: 700;
         }
 
         /* ===== STATUS BADGES ===== */
@@ -484,360 +368,180 @@
             white-space: nowrap;
         }
 
-        .status-badge.excellent {
+        .status-badge.active {
             background: rgba(34,197,94,0.12);
             color: #4ade80;
         }
 
-        .status-badge.good {
-            background: rgba(74,222,128,0.08);
-            color: #4ade80;
-        }
-
-        .status-badge.medium {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.low {
+        .status-badge.inactive {
             background: rgba(239,68,68,0.12);
             color: #f87171;
         }
 
-        .status-badge.critical {
-            background: rgba(239,68,68,0.2);
+        .status-badge.expired {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.terminated {
+            background: rgba(107,114,128,0.12);
+            color: #9ca3af;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn.view {
+            background: rgba(167,139,250,0.1);
+            color: #a78bfa;
+        }
+
+        .action-btn.view:hover {
+            background: rgba(167,139,250,0.2);
+        }
+
+        .action-btn.terminate {
+            background: rgba(239,68,68,0.1);
             color: #f87171;
-            animation: pulseDanger 1.5s ease-in-out infinite;
         }
 
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        .action-btn.terminate:hover {
+            background: rgba(239,68,68,0.2);
         }
 
-        /* ===== PROGRESS BAR ===== */
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            min-width: 80px;
-        }
-
-        .progress-bar .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-        }
-
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-        }
-
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #eab308, #fbbf24);
-        }
-
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #ef4444, #f87171);
-        }
-
-        /* ============================================================
-           REGION TABLES
-           ============================================================ */
-        .region-card {
-            padding: 0;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .region-card:last-child {
-            border-bottom: none;
-        }
-
-        .region-card .region-header {
+        /* ===== PAGINATION ===== */
+        .pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 20px;
-            background: rgba(255,255,255,0.02);
+            border-top: 1px solid rgba(255,255,255,0.06);
             flex-wrap: wrap;
             gap: 8px;
-            cursor: pointer;
-            transition: all var(--transition);
         }
 
-        .region-card .region-header:hover {
-            background: rgba(255,255,255,0.04);
+        .pagination .info {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.25);
         }
 
-        .region-card .region-header .region-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
+        .pagination .pages {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 4px;
         }
 
-        .region-card .region-header .region-name i {
-            color: var(--gold);
-        }
-
-        .region-card .region-header .region-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 16px;
-            border-radius: 20px;
-        }
-
-        .region-badge.excellent {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
-        }
-
-        .region-badge.good {
-            background: rgba(74,222,128,0.1);
-            color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.05);
-        }
-
-        .region-badge.medium {
-            background: rgba(234,179,8,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(234,179,8,0.1);
-        }
-
-        .region-badge.low {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .region-badge.critical {
-            background: rgba(239,68,68,0.25);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.2);
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-
-        .region-card .region-body {
-            padding: 0 20px 16px;
-        }
-
-        /* ============================================================
-           CHARTS
-           ============================================================ */
-        .chart-section {
-            margin: 0 24px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--glass-bg);
-        }
-
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.02);
-        }
-
-        .chart-btn {
-            padding: 6px 18px;
-            border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
+        .page-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px;
             background: transparent;
             color: rgba(255,255,255,0.3);
             cursor: pointer;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
             transition: all 0.3s;
         }
 
-        .chart-btn:hover {
+        .page-btn:hover {
             background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
             color: #fff;
         }
 
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
+        .page-btn.active {
+            background: linear-gradient(135deg, #a78bfa, #c4b5fd);
+            border-color: #a78bfa;
             color: #0a1628;
         }
 
-        .chart-btn i {
-            margin-left: 6px;
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
 
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .chart-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .chart-box.full {
-            grid-column: 1 / -1;
-        }
-
-        .chart-box h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .chart-box canvas {
-            width: 100% !important;
-            max-height: 280px;
-        }
-
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
+        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             color: rgba(255,255,255,0.15);
         }
 
         .empty-state .empty-icon {
-            font-size: 3rem;
+            font-size: 4rem;
             color: rgba(255,255,255,0.04);
             display: block;
-            margin-bottom: 12px;
-        }
-
-        .empty-state .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            margin-bottom: 16px;
         }
 
         .empty-state h3 {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 600;
             color: rgba(255,255,255,0.2);
             margin-bottom: 4px;
         }
 
         .empty-state p {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: rgba(255,255,255,0.1);
         }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 992px) {
-            .eff-header { padding: 12px 16px; top: 60px; }
-            .eff-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .eff-section { margin: 0 16px 12px; }
-            .chart-section { margin: 0 16px 16px; }
-            .charts-container { grid-template-columns: 1fr; padding: 12px; }
-            .chart-box.full { grid-column: 1; }
-            .region-card .region-body { padding: 0 12px 12px; }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .eff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
-            .eff-header-left { width: 100%; }
-            .eff-header-left h2 { font-size: 16px; }
-            .eff-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
-            .stat-card { padding: 12px 14px; }
+            #page-session { padding: 12px; }
+            .ses-header { flex-direction: column; align-items: flex-start; }
+            .ses-header-left { width: 100%; }
+            .ses-header-left h2 { font-size: 16px; }
+            .ses-header-actions { width: 100%; }
+            .ses-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
-            .filter-bar label { font-size: 0.65rem; }
-            .filter-bar select { min-width: 100%; }
-            .eff-section { margin: 0 12px 10px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
-            .section-content { padding: 12px 14px; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .table-wrapper { padding: 12px; }
+            table { font-size: 0.7rem; min-width: 600px; }
             thead th, tbody td { padding: 6px 8px; }
-            .chart-section { margin: 0 12px 12px; }
-            .charts-container { padding: 10px; gap: 12px; }
-            .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 200px; }
-            .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
-            .chart-switch { padding: 10px 12px; justify-content: center; }
-            .chart-btn { font-size: 11px; padding: 4px 12px; }
-            .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
-            .region-card .region-body { padding: 0 10px 10px; }
+            .pagination { flex-direction: column; align-items: center; }
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
+            .ses-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
-            .eff-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .eff-header-left h2 { font-size: 14px; }
-            .eff-header-left p { font-size: 10px; }
+            .ses-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .ses-header-left h2 { font-size: 14px; }
             .section-header h3 { font-size: 13px; }
-            .section-content { padding: 10px 12px; }
-            thead th, tbody td { padding: 4px 6px; font-size: 0.65rem; }
+            thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
+            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
-    <div class="eff-header">
-        <div class="eff-header-left">
-            <div class="header-icon">
-                <i class="fas fa-chart-line"></i>
+    <!-- ===== HEADER ===== -->
+    <div class="ses-header">
+        <div class="ses-header-left">
+            <div class="icon">
+                <i class="fas fa-user-circle"></i>
             </div>
             <div>
-                <h2>جاهزية الأسطول</h2>
-                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
+                <h2>جلسات المستخدمين</h2>
+                <p>مراقبة وإدارة جلسات المستخدمين النشطة</p>
             </div>
         </div>
-        <div class="eff-header-actions">
-            <button class="btn-action primary" onclick="refreshEfficiency()">
+        <div class="ses-header-actions">
+            <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn-action danger" id="terminateAllBtn">
+                <i class="fas fa-power-off"></i> إنهاء الكل
             </button>
             <button class="btn-action secondary" onclick="window.print()">
                 <i class="fas fa-print"></i> طباعة
@@ -845,1077 +549,422 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
-    <div class="stats-grid" id="statsCards">
+    <!-- ===== STATS ===== -->
+    <div class="ses-stats" id="sessionStats">
         <div class="stat-card">
-            <div class="number gold" id="totalVessels">0</div>
-            <div class="label">🚢 إجمالي المراكب</div>
-            <span class="icon-bg"><i class="fas fa-ship"></i></span>
+            <div class="number" id="totalSessions">0</div>
+            <div class="label">🟣 إجمالي الجلسات</div>
         </div>
         <div class="stat-card">
-            <div class="number green" id="activeVessels">0</div>
-            <div class="label">✅ صالح للخدمة</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+            <div class="number green" id="activeSessions">0</div>
+            <div class="label">🟢 نشطة</div>
         </div>
         <div class="stat-card">
-            <div class="number yellow" id="maintenanceVessels">0</div>
-            <div class="label">🔧 تحت الصيانة</div>
-            <span class="icon-bg"><i class="fas fa-tools"></i></span>
+            <div class="number gold" id="expiredSessions">0</div>
+            <div class="label">🟡 منتهية الصلاحية</div>
         </div>
         <div class="stat-card">
-            <div class="number red" id="damagedVessels">0</div>
-            <div class="label">🟥 معطوبة</div>
-            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number" id="efficiencyPercent" style="color:var(--gold-light);">0%</div>
-            <div class="label">📈 نسبة النجاعة</div>
-            <span class="icon-bg"><i class="fas fa-chart-pie"></i></span>
+            <div class="number red" id="terminatedSessions">0</div>
+            <div class="label">🔴 ملغاة</div>
         </div>
     </div>
 
-    <!-- ============================================================
-    FILTER BAR
-    ============================================================ -->
+    <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
-        <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
-        <select id="fRegEff" onchange="renderEfficiency()">
-            <option value="الكل">🌍 جميع الأقاليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+        <label><i class="fas fa-search"></i> بحث</label>
+        <input type="text" id="searchSession" placeholder="اسم المستخدم، البريد الإلكتروني..." />
+
+        <label><i class="fas fa-user"></i> المستخدم</label>
+        <select id="fUserSession">
+            <option value="الكل">👤 جميع المستخدمين</option>
+            <option value="أحمد">أحمد</option>
+            <option value="محمد">محمد</option>
+            <option value="سارة">سارة</option>
+            <option value="فاطمة">فاطمة</option>
+            <option value="علي">علي</option>
         </select>
 
-        <label><i class="fas fa-filter"></i> الفئة</label>
-        <select id="fCatEff" onchange="renderEfficiency()">
-            <option value="الكل">📦 جميع الفئات</option>
-            <option value="البروق">البروق</option>
-            <option value="صقور">صقور</option>
-            <option value="خوافر">خوافر</option>
-            <option value="زوارق مزدوجة">زوارق مزدوجة</option>
-            <option value="طوافات">طوافات</option>
-        </select>
-
-        <label><i class="fas fa-chart-bar"></i> الحالة</label>
-        <select id="fStatusEff" onchange="renderEfficiency()">
+        <label><i class="fas fa-circle"></i> الحالة</label>
+        <select id="fStatusSession">
             <option value="الكل">📊 جميع الحالات</option>
-            <option value="صالح">✅ صالح</option>
-            <option value="صيانة">🔧 تحت الصيانة</option>
-            <option value="معطب">⚠️ معطب</option>
+            <option value="نشطة">🟢 نشطة</option>
+            <option value="منتهية">🟡 منتهية</option>
+            <option value="ملغاة">🔴 ملغاة</option>
         </select>
 
-        <button class="btn-filter primary" onclick="renderEfficiency()">
+        <label><i class="fas fa-calendar-alt"></i> من</label>
+        <input type="date" id="fDateFrom" />
+        <label><i class="fas fa-calendar-alt"></i> إلى</label>
+        <input type="date" id="fDateTo" />
+
+        <button class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" onclick="resetEfficiencyFilters()">
+        <button class="btn-filter outline" id="resetBtn">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
 
-    <!-- ============================================================
-    GENERAL EFFICIENCY TABLE
-    ============================================================ -->
-    <div class="eff-section">
+    <!-- ===== TABLE ===== -->
+    <div class="ses-section">
         <div class="section-header">
-            <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
-            <span class="badge gold" id="generalBadge">📊 جاري التحميل...</span>
+            <h3><i class="fas fa-list-ul"></i> قائمة الجلسات النشطة والسابقة</h3>
+            <span class="badge purple" id="sessionBadge">📊 جاري التحميل...</span>
         </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="generalBody">
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل البيانات...</h3>
-                                <p>يرجى الانتظار</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> المعرف</th>
+                        <th style="text-align:right;"><i class="fas fa-user"></i> المستخدم</th>
+                        <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
+                        <th><i class="fas fa-calendar-plus"></i> تاريخ البدء</th>
+                        <th><i class="fas fa-clock"></i> المدة</th>
+                        <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="sessionBody">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
+                            <h3>جاري تحميل الجلسات...</h3>
+                            <p>يرجى الانتظار</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
-
-    <!-- ============================================================
-    REGIONS TABLES - FULL VERSION
-    ============================================================ -->
-    <div class="eff-section">
-        <div class="section-header">
-            <h3><i class="fas fa-map-marked-alt"></i> تفاصيل الأقاليم ووحدات الصيانة</h3>
-            <span class="badge gold">📊 تحليل متقدم</span>
-        </div>
-        <div id="regionTables">
-            <!-- ===== REGION 1: الشمال ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالشمال
-                    </div>
-                    <span class="region-badge good">78% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 01</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 02</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>20/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 03</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/04/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 07</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>15/03/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 2: الساحل ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالساحل
-                    </div>
-                    <span class="region-badge excellent">92% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 05</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 08</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>22/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 12</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>01/06/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 3: الوسط ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالوسط
-                    </div>
-                    <span class="region-badge medium">65% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 09</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>18/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 11</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>25/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 14</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>10/04/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 06</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>30/05/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 4: الجنوب ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالجنوب
-                    </div>
-                    <span class="region-badge critical">45% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 15</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>15/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 18</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>05/03/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 20</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge critical">⚠️ معطب</span></td>
-                                    <td>01/02/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 22</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>20/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 25</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>12/04/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 5: وحدة الصيانة تونس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس
-                    </div>
-                    <span class="region-badge good">85% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 30</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>08/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 32</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>14/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 35</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>22/06/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 6: وحدة الصيانة المنستير ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير
-                    </div>
-                    <span class="region-badge excellent">95% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 40</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>01/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 42</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 44</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 46</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/06/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 7: وحدة الصيانة صفاقس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس
-                    </div>
-                    <span class="region-badge medium">70% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 50</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>18/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 52</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>25/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 55</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>10/04/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 8: وحدة الصيانة جرجيس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس
-                    </div>
-                    <span class="region-badge good">88% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 60</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>20/05/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 62</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>15/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 65</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>28/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 68</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 9: المجمع الأمني بقبيبة ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-building"></i> المجمع الأمني بقبيبة
-                    </div>
-                    <span class="region-badge excellent">90% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 70</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 72</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 75</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>08/06/2026</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        <div class="pagination">
+            <span class="info" id="paginationInfo">عرض 1-5 من 0 جلسة</span>
+            <div class="pages">
+                <button class="page-btn" id="prevPage">‹</button>
+                <button class="page-btn active" id="page1">1</button>
+                <button class="page-btn" id="page2">2</button>
+                <button class="page-btn" id="page3">3</button>
+                <button class="page-btn" id="nextPage">›</button>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    CHARTS SECTION
-    ============================================================ -->
-    <div class="chart-section">
-        <div class="chart-switch">
-            <button class="chart-btn active" onclick="switchChart('pie')">
-                <i class="fas fa-chart-pie"></i> دائري
-            </button>
-            <button class="chart-btn" onclick="switchChart('bar')">
-                <i class="fas fa-chart-bar"></i> أعمدة
-            </button>
-            <button class="chart-btn" onclick="switchChart('line')">
-                <i class="fas fa-chart-line"></i> خطي
-            </button>
-        </div>
-        <div class="charts-container">
-            <div class="chart-box full">
-                <h4>📊 توزيع الجاهزية حسب الإقليم</h4>
-                <canvas id="efficiencyChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    JAVASCRIPT
-    ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script>
-        // ============================================================
-        // DATA
-        // ============================================================
-        const efficiencyData = {
-            general: [
-                { category: 'البروق', active: 18, damaged: 4, efficiency: 81.8 },
-                { category: 'صقور', active: 12, damaged: 3, efficiency: 80.0 },
-                { category: 'خوافر', active: 8, damaged: 5, efficiency: 61.5 },
-                { category: 'زوارق مزدوجة', active: 6, damaged: 1, efficiency: 85.7 },
-                { category: 'طوافات', active: 4, damaged: 2, efficiency: 66.7 }
-            ],
-            regions: {
-                'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
-                'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
-                'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
-                'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
-                'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
-                'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
-                'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
-                'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
-                'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
+        (function() {
+            'use strict';
+
+            // ===== DATA =====
+            var sessionData = [
+                { id: 'S-2026-001', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-06-10 08:30', duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-002', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-06-09 14:20', duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-003', user: 'سارة', email: 'sara@example.com', startDate: '2026-06-08 09:00', duration: '5 ساعات', status: 'منتهية' },
+                { id: 'S-2026-004', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-06-07 16:45', duration: '1 ساعة 50 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-005', user: 'علي', email: 'ali@example.com', startDate: '2026-06-06 10:15', duration: '4 ساعات 20 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-006', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-06-05 13:30', duration: '2 ساعات 45 دقيقة', status: 'منتهية' },
+                { id: 'S-2026-007', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-06-04 11:00', duration: '3 ساعات 10 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-008', user: 'سارة', email: 'sara@example.com', startDate: '2026-06-03 08:45', duration: '6 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-009', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-06-02 15:20', duration: '2 ساعات 15 دقيقة', status: 'منتهية' },
+                { id: 'S-2026-010', user: 'علي', email: 'ali@example.com', startDate: '2026-06-01 09:30', duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-011', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-05-31 14:00', duration: '4 ساعات', status: 'منتهية' },
+                { id: 'S-2026-012', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-05-30 10:10', duration: '2 ساعات 20 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-013', user: 'سارة', email: 'sara@example.com', startDate: '2026-05-29 16:30', duration: '5 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-014', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-05-28 08:00', duration: '3 ساعات', status: 'منتهية' },
+                { id: 'S-2026-015', user: 'علي', email: 'ali@example.com', startDate: '2026-05-27 13:45', duration: '2 ساعات 30 دقيقة', status: 'نشطة' }
+            ];
+
+            // ===== STATE =====
+            var filteredData = sessionData.slice();
+            var currentPage = 1;
+            var itemsPerPage = 5;
+
+            // ===== DOM REFS =====
+            var $ = function(id) { return document.getElementById(id); };
+
+            // ===== HELPERS =====
+            function getStatusClass(status) {
+                var map = {
+                    'نشطة': 'active',
+                    'منتهية': 'expired',
+                    'ملغاة': 'terminated'
+                };
+                return map[status] || '';
             }
-        };
 
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
-        function renderEfficiency() {
-            renderStats();
-            renderGeneralTable();
-            // renderRegionTables() is not needed as HTML is static
-            updateBadge();
-        }
+            function getStatusLabel(status) {
+                var map = {
+                    'نشطة': '🟢 نشطة',
+                    'منتهية': '🟡 منتهية',
+                    'ملغاة': '🔴 ملغاة'
+                };
+                return map[status] || status;
+            }
 
-        function renderStats() {
-            const regionFilter = document.getElementById('fRegEff').value;
-            let total = 0, active = 0, maintenance = 0, damaged = 0;
+            function getStatusBadge(status) {
+                var map = {
+                    'نشطة': 'active',
+                    'منتهية': 'expired',
+                    'ملغاة': 'terminated'
+                };
+                return map[status] || '';
+            }
 
-            Object.entries(efficiencyData.regions).forEach(([name, data]) => {
-                if (regionFilter === 'الكل' || name === regionFilter) {
-                    total += data.vessels;
-                    active += data.active;
-                    maintenance += data.maintenance;
-                    damaged += data.damaged;
+            // ===== RENDER =====
+            function renderSessions() {
+                renderStats();
+                renderTable();
+                renderPagination();
+            }
+
+            function renderStats() {
+                var total = sessionData.length;
+                var active = sessionData.filter(function(s) { return s.status === 'نشطة'; }).length;
+                var expired = sessionData.filter(function(s) { return s.status === 'منتهية'; }).length;
+                var terminated = sessionData.filter(function(s) { return s.status === 'ملغاة'; }).length;
+
+                $('totalSessions').textContent = total;
+                $('activeSessions').textContent = active;
+                $('expiredSessions').textContent = expired;
+                $('terminatedSessions').textContent = terminated;
+
+                var badge = $('sessionBadge');
+                if (active > 0) {
+                    badge.textContent = '🟢 ' + active + ' جلسات نشطة';
+                    badge.className = 'badge success';
+                } else if (expired > 0) {
+                    badge.textContent = '🟡 ' + expired + ' جلسات منتهية';
+                    badge.className = 'badge gold';
+                } else {
+                    badge.textContent = '📊 ' + total + ' جلسة';
+                    badge.className = 'badge purple';
                 }
-            });
-
-            const efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
-        }
-
-        function renderGeneralTable() {
-            const tbody = document.getElementById('generalBody');
-            const categoryFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
-
-            let filtered = efficiencyData.general;
-
-            if (categoryFilter !== 'الكل') {
-                filtered = filtered.filter(item => item.category === categoryFilter);
             }
 
-            if (statusFilter !== 'الكل') {
-                filtered = filtered.filter(item => {
-                    if (statusFilter === 'صالح') return item.efficiency >= 70;
-                    if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
-                    if (statusFilter === 'معطب') return item.efficiency < 50;
+            function renderTable() {
+                var search = $('searchSession').value.toLowerCase();
+                var userFilter = $('fUserSession').value;
+                var statusFilter = $('fStatusSession').value;
+                var dateFrom = $('fDateFrom').value;
+                var dateTo = $('fDateTo').value;
+
+                filteredData = sessionData.filter(function(s) {
+                    if (search && !s.user.includes(search) && !s.email.includes(search)) return false;
+                    if (userFilter !== 'الكل' && s.user !== userFilter) return false;
+                    if (statusFilter !== 'الكل' && s.status !== statusFilter) return false;
+                    if (dateFrom && s.startDate < dateFrom) return false;
+                    if (dateTo && s.startDate > dateTo) return false;
                     return true;
                 });
-            }
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد بيانات</h3>
-                            <p>حاول تغيير معايير الفلترة</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+                var tbody = $('sessionBody');
 
-            tbody.innerHTML = filtered.map(item => {
-                const efficiency = item.efficiency;
-                let rowClass = 'row-mid';
-                let statusClass = 'medium';
-                let statusText = 'متوسطة';
-
-                if (efficiency >= 80) {
-                    rowClass = 'row-high';
-                    statusClass = 'excellent';
-                    statusText = 'ممتازة';
-                } else if (efficiency >= 70) {
-                    rowClass = 'row-high';
-                    statusClass = 'good';
-                    statusText = 'جيدة';
-                } else if (efficiency >= 50) {
-                    rowClass = 'row-mid';
-                    statusClass = 'medium';
-                    statusText = 'متوسطة';
-                } else if (efficiency >= 30) {
-                    rowClass = 'row-low';
-                    statusClass = 'low';
-                    statusText = 'منخفضة';
-                } else {
-                    rowClass = 'row-low';
-                    statusClass = 'critical';
-                    statusText = 'حرجة';
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-search"></i></span>
+                                <h3>لا توجد جلسات مطابقة</h3>
+                                <p>حاول تغيير معايير البحث أو الفلترة</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
                 }
 
-                const progressClass = efficiency >= 70 ? 'high' : (efficiency >= 50 ? 'mid' : 'low');
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+                var pageData = filteredData.slice(start, end);
 
-                return `
-                    <tr class="${rowClass}">
-                        <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                        <td>${item.active}</td>
-                        <td>${item.damaged}</td>
-                        <td class="eff-cell">${efficiency.toFixed(1)}%</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${progressClass}" style="width:${Math.min(efficiency, 100)}%;"></div>
-                            </div>
-                        </td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
-            }).join('');
-        }
+                var html = '';
+                for (var i = 0; i < pageData.length; i++) {
+                    var s = pageData[i];
+                    var statusClass = getStatusClass(s.status);
+                    var statusLabel = getStatusLabel(s.status);
 
-        function updateBadge() {
-            const badge = document.getElementById('generalBadge');
-            const filtered = efficiencyData.general;
-            const avgEfficiency = filtered.reduce((sum, item) => sum + item.efficiency, 0) / filtered.length;
-
-            if (avgEfficiency >= 80) {
-                badge.textContent = '✅ أداء ممتاز';
-                badge.className = 'badge success';
-            } else if (avgEfficiency >= 70) {
-                badge.textContent = '📈 أداء جيد';
-                badge.className = 'badge gold';
-            } else if (avgEfficiency >= 50) {
-                badge.textContent = '⚠️ أداء متوسط';
-                badge.className = 'badge warning';
-            } else {
-                badge.textContent = '🚨 أداء منخفض';
-                badge.className = 'badge danger';
-            }
-        }
-
-        // ============================================================
-        // FILTER FUNCTIONS
-        // ============================================================
-        function resetEfficiencyFilters() {
-            document.getElementById('fRegEff').value = 'الكل';
-            document.getElementById('fCatEff').value = 'الكل';
-            document.getElementById('fStatusEff').value = 'الكل';
-            renderEfficiency();
-        }
-
-        function refreshEfficiency() {
-            const btn = document.querySelector('.btn-action.primary');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-
-            setTimeout(() => {
-                renderEfficiency();
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
-                btn.disabled = false;
-                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
-            }, 800);
-        }
-
-        // ============================================================
-        // CHART FUNCTIONS (Using Canvas API)
-        // ============================================================
-        let currentChart = 'pie';
-
-        function switchChart(type) {
-            currentChart = type;
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`).classList.add('active');
-            drawChart(type);
-        }
-
-        function drawChart(type) {
-            const canvas = document.getElementById('efficiencyChart');
-            const ctx = canvas.getContext('2d');
-            const width = canvas.parentElement.clientWidth - 32;
-            const height = 250;
-
-            canvas.width = width * 2; // HiDPI
-            canvas.height = height * 2;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-            ctx.scale(2, 2);
-
-            ctx.clearRect(0, 0, width, height);
-
-            const data = Object.entries(efficiencyData.regions).map(([name, data]) => ({
-                label: name,
-                value: data.vessels > 0 ? ((data.active / data.vessels) * 100) : 0,
-                color: getColor(name)
-            }));
-
-            if (type === 'pie') {
-                drawPieChart(ctx, data, width, height);
-            } else if (type === 'bar') {
-                drawBarChart(ctx, data, width, height);
-            } else if (type === 'line') {
-                drawLineChart(ctx, data, width, height);
-            }
-        }
-
-        function getColor(name) {
-            const colors = [
-                '#e6b31e', '#4ade80', '#fbbf24', '#f87171', '#60a5fa',
-                '#a78bfa', '#f472b6', '#34d399', '#fb923c', '#818cf8'
-            ];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            return colors[Math.abs(hash) % colors.length];
-        }
-
-        function drawPieChart(ctx, data, width, height) {
-            const cx = width / 2;
-            const cy = height / 2;
-            const radius = Math.min(width, height) / 2 - 40;
-
-            let startAngle = -Math.PI / 2;
-            const total = data.reduce((sum, d) => sum + d.value, 0);
-
-            if (total === 0) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('لا توجد بيانات', cx, cy);
-                return;
-            }
-
-            data.forEach((item, i) => {
-                const sliceAngle = (item.value / total) * 2 * Math.PI;
-                const endAngle = startAngle + sliceAngle;
-
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.closePath();
-
-                ctx.fillStyle = item.color;
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(10,14,26,0.8)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                // Label
-                const midAngle = startAngle + sliceAngle / 2;
-                const labelRadius = radius * 0.65;
-                const lx = cx + Math.cos(midAngle) * labelRadius;
-                const ly = cy + Math.sin(midAngle) * labelRadius;
-
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 10px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                if (sliceAngle > 0.3) {
-                    ctx.fillText(`${item.value.toFixed(0)}%`, lx, ly);
+                    html += `
+                        <tr>
+                            <td style="text-align:right;font-weight:600;color:#a78bfa;">${s.id}</td>
+                            <td style="text-align:right;font-weight:600;color:#fff;">${s.user}</td>
+                            <td>${s.email}</td>
+                            <td>${s.startDate}</td>
+                            <td>${s.duration}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                            <td>
+                                <button class="action-btn view" onclick="viewSession('${s.id}')"><i class="fas fa-eye"></i></button>
+                                ${s.status === 'نشطة' ? `<button class="action-btn terminate" onclick="terminateSession('${s.id}')"><i class="fas fa-power-off"></i></button>` : ''}
+                            </td>
+                        </tr>
+                    `;
                 }
 
-                startAngle = endAngle;
-            });
-
-            // Legend
-            let legendY = 10;
-            const legendX = width - 120;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            data.slice(0, 6).forEach((item, i) => {
-                const y = legendY + i * 18;
-                ctx.fillStyle = item.color;
-                ctx.fillRect(legendX, y, 12, 12);
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '9px Cairo, sans-serif';
-                const label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
-                ctx.fillText(label, legendX + 16, y);
-            });
-        }
-
-        function drawBarChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
-
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const barWidth = Math.min(chartWidth / data.length * 0.7, 50);
-            const gap = chartWidth / data.length;
-
-            // Grid lines
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                tbody.innerHTML = html;
+                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' جلسة';
             }
 
-            data.forEach((item, i) => {
-                const x = padding.left + i * gap + (gap - barWidth) / 2;
-                const barHeight = (item.value / maxVal) * chartHeight;
-                const y = padding.top + chartHeight - barHeight;
+            function renderPagination() {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                $('prevPage').disabled = currentPage <= 1;
+                $('nextPage').disabled = currentPage >= totalPages;
 
-                // Bar
-                const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
-                gradient.addColorStop(0, item.color);
-                gradient.addColorStop(1, item.color + '33');
-                ctx.fillStyle = gradient;
-                ctx.shadowColor = item.color + '44';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(x, y, barWidth, barHeight);
-                ctx.shadowBlur = 0;
-
-                // Border
-                ctx.strokeStyle = item.color;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, barWidth, barHeight);
-
-                // Label
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                const label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
-                ctx.fillText(label, x + barWidth / 2, padding.top + chartHeight + 5);
-            });
-        }
-
-        function drawLineChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
-
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const points = data.map((d, i) => ({
-                x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
-                y: padding.top + chartHeight - (d.value / maxVal) * chartHeight,
-                value: d.value,
-                label: d.label
-            }));
-
-            // Grid lines
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                for (var i = 1; i <= 3; i++) {
+                    var btn = $('page' + i);
+                    if (i <= totalPages) {
+                        btn.style.display = 'inline-block';
+                        btn.textContent = i;
+                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
+                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
             }
 
-            // Line
-            ctx.strokeStyle = '#e6b31e';
-            ctx.lineWidth = 2;
-            ctx.shadowColor = '#e6b31e44';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            points.forEach((p, i) => {
-                if (i === 0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+            // ===== ACTIONS =====
+            function changePage(delta) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                var newPage = currentPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    renderSessions();
+                }
+            }
 
-            // Area
-            const lastPoint = points[points.length - 1];
-            ctx.lineTo(lastPoint.x, padding.top + chartHeight);
-            ctx.lineTo(points[0].x, padding.top + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(230,179,30,0.08)';
-            ctx.fill();
+            function goToPage(page) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderSessions();
+                }
+            }
 
-            // Points
-            points.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
-                ctx.fillStyle = '#e6b31e';
-                ctx.fill();
-                ctx.strokeStyle = '#0a0e1a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+            function refreshSessions() {
+                var btn = $('refreshBtn');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
 
-                // Value label
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = 'bold 9px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 6);
-            });
+                setTimeout(function() {
+                    renderSessions();
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showNotification('✅ تم تحديث الجلسات بنجاح', 'success');
+                }, 600);
+            }
 
-            // X labels
-            points.forEach(p => {
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                const label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
-                ctx.fillText(label, p.x, padding.top + chartHeight + 5);
-            });
-        }
+            function resetFilters() {
+                $('searchSession').value = '';
+                $('fUserSession').value = 'الكل';
+                $('fStatusSession').value = 'الكل';
+                $('fDateFrom').value = '';
+                $('fDateTo').value = '';
+                currentPage = 1;
+                renderSessions();
+                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
+            }
 
-        // ============================================================
-        // NOTIFICATION
-        // ============================================================
-        function showNotification(message, type) {
-            const old = document.querySelector('.eff-notification');
-            if (old) old.remove();
+            function terminateAllSessions() {
+                if (confirm('⚠️ هل أنت متأكد من إنهاء جميع الجلسات النشطة؟')) {
+                    var activeIds = sessionData.filter(function(s) { return s.status === 'نشطة'; });
+                    if (activeIds.length === 0) {
+                        showNotification('ℹ️ لا توجد جلسات نشطة لإنهائها', 'info');
+                        return;
+                    }
+                    activeIds.forEach(function(s) { s.status = 'ملغاة'; });
+                    renderSessions();
+                    showNotification('✅ تم إنهاء ' + activeIds.length + ' جلسات بنجاح', 'success');
+                }
+            }
 
-            const notif = document.createElement('div');
-            notif.className = 'eff-notification';
-            notif.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background: ${type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};
-                backdrop-filter: blur(12px);
-                border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
-                padding: 12px 20px;
-                border-radius: 12px;
-                color: #fff;
-                font-family: Cairo, sans-serif;
-                font-size: 14px;
-                z-index: 9999;
-                animation: slideUp 0.4s ease-out;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            // ===== GLOBAL FUNCTIONS =====
+            window.viewSession = function(id) {
+                showNotification('📋 عرض تفاصيل الجلسة ' + id, 'info');
+            };
+
+            window.terminateSession = function(id) {
+                if (confirm('⚠️ هل أنت متأكد من إنهاء الجلسة ' + id + '؟')) {
+                    var session = sessionData.find(function(s) { return s.id === id; });
+                    if (session) {
+                        session.status = 'ملغاة';
+                        renderSessions();
+                        showNotification('✅ تم إنهاء الجلسة ' + id + ' بنجاح', 'success');
+                    }
+                }
+            };
+
+            // ===== NOTIFICATION =====
+            function showNotification(message, type) {
+                var old = document.querySelector('.ses-notification');
+                if (old) old.remove();
+
+                var colors = {
+                    success: 'rgba(34,197,94,0.15)',
+                    info: 'rgba(167,139,250,0.15)',
+                    error: 'rgba(239,68,68,0.15)'
+                };
+
+                var notif = document.createElement('div');
+                notif.className = 'ses-notification';
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: ${colors[type] || colors.info};
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    padding: 14px 24px;
+                    border-radius: 12px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    z-index: 9999;
+                    animation: slideUp 0.4s ease-out;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                `;
+                notif.textContent = message;
+
+                document.body.appendChild(notif);
+
+                setTimeout(function() {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(function() { notif.remove(); }, 400);
+                }, 3000);
+            }
+
+            // ===== ADD STYLES =====
+            var styleNotif = document.createElement('style');
+            styleNotif.textContent = `
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .ses-notification {
+                    direction: rtl;
+                }
             `;
-            notif.textContent = message;
+            document.head.appendChild(styleNotif);
 
-            document.body.appendChild(notif);
+            // ===== EVENT BINDING =====
+            document.addEventListener('DOMContentLoaded', function() {
+                $('refreshBtn').addEventListener('click', refreshSessions);
+                $('terminateAllBtn').addEventListener('click', terminateAllSessions);
+                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderSessions(); });
+                $('resetBtn').addEventListener('click', resetFilters);
 
-            setTimeout(() => {
-                notif.style.opacity = '0';
-                notif.style.transform = 'translateY(20px)';
-                notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(() => notif.remove(), 400);
-            }, 3000);
-        }
+                $('searchSession').addEventListener('keyup', function() { currentPage = 1; renderSessions(); });
+                $('fUserSession').addEventListener('change', function() { currentPage = 1; renderSessions(); });
+                $('fStatusSession').addEventListener('change', function() { currentPage = 1; renderSessions(); });
+                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderSessions(); });
+                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderSessions(); });
 
-        // ============================================================
-        // INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            renderEfficiency();
-            setTimeout(() => drawChart('pie'), 100);
-        });
+                $('prevPage').addEventListener('click', function() { changePage(-1); });
+                $('nextPage').addEventListener('click', function() { changePage(1); });
 
-        // ============================================================
-        // ADDITIONAL STYLES FOR NOTIFICATION
-        // ============================================================
-        const styleNotif = document.createElement('style');
-        styleNotif.textContent = `
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(styleNotif);
+                renderSessions();
+                console.log('✅ Session Page loaded successfully!');
+                console.log('🟣 ' + sessionData.length + ' sessions loaded.');
+            });
 
-        console.log('📊 Efficiency Page loaded successfully!');
-        console.log('ℹ️ Use renderEfficiency() to refresh data.');
+        })();
     </script>
 </div>
