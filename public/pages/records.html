@@ -1,17 +1,25 @@
 <!-- public/pages/records.html -->
-<div id="page-records">
-    <style>
-        /* ============================================================
-           📋 RECORDS PAGE - PRODUCTION PRO VERSION
-           ============================================================ */
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>سجل الصيانة</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+    <div id="page-records" style="width:100%;max-width:100%;padding:0;margin:0;font-family:'Cairo','Segoe UI',system-ui,sans-serif;background:#0a0e1a;color:#e8edf5;min-height:100vh;position:relative;z-index:1;">
 
+    <style>
         /* ===== CSS VARIABLES ===== */
         :root {
             --primary-dark: #0a1628;
             --primary: #0f3460;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
             --success: #00b894;
             --success-light: #55efc4;
             --danger: #e17055;
@@ -19,16 +27,15 @@
             --info: #0984e3;
             --glass-bg: rgba(255,255,255,0.04);
             --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
             --radius: 14px;
             --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+            --transition: 0.3s ease;
             --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* ===== FULL SCREEN RESET ===== */
+        /* ===== RESET ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         #page-records {
             width: 100%;
             max-width: 100%;
@@ -38,39 +45,14 @@
             background: #0a0e1a;
             color: #e8edf5;
             min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ===== BACKGROUND EFFECT ===== */
-        #page-records::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 70% 30%, rgba(9,132,227,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 30% 70%, rgba(230,179,30,0.03) 0%, transparent 60%);
-            z-index: -1;
-            pointer-events: none;
-            animation: bgPulse 18s ease-in-out infinite;
-        }
-
-        @keyframes bgPulse {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(-2deg); }
         }
 
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* ===== HEADER ===== */
         .rec-header {
             display: flex;
             justify-content: space-between;
@@ -82,10 +64,8 @@
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--glass-border);
             position: sticky;
-            top: 64px;
+            top: 0;
             z-index: 10;
-            margin: 0;
-            width: 100%;
         }
 
         .rec-header-left {
@@ -104,13 +84,6 @@
             justify-content: center;
             font-size: 20px;
             color: #0a1628;
-            box-shadow: 0 0 40px rgba(9,132,227,0.15);
-            animation: pulseBlue 2.5s ease-in-out infinite;
-        }
-
-        @keyframes pulseBlue {
-            0%, 100% { box-shadow: 0 0 20px rgba(9,132,227,0.1); }
-            50% { box-shadow: 0 0 40px rgba(9,132,227,0.25); }
         }
 
         .rec-header-left h2 {
@@ -134,7 +107,7 @@
             flex-wrap: wrap;
         }
 
-        .rec-header-actions .btn-action {
+        .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
@@ -148,49 +121,34 @@
             font-family: var(--font);
         }
 
-        .rec-header-actions .btn-action.primary {
+        .btn-action.primary {
             background: linear-gradient(135deg, var(--info), #60a5fa);
             color: #fff;
-            box-shadow: 0 0 30px rgba(9,132,227,0.2);
         }
 
-        .rec-header-actions .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(9,132,227,0.35);
-        }
+        .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(9,132,227,0.35); }
 
-        .rec-header-actions .btn-action.secondary {
+        .btn-action.secondary {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.5);
         }
 
-        .rec-header-actions .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-            transform: translateY(-2px);
-        }
+        .btn-action.secondary:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
-        .rec-header-actions .btn-action.export {
+        .btn-action.export {
             background: linear-gradient(135deg, var(--success), var(--success-light));
             color: #0a1628;
         }
 
-        .rec-header-actions .btn-action.export:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0,184,148,0.3);
-        }
+        .btn-action.export:hover { transform: translateY(-2px); }
 
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
+        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 12px;
             padding: 16px 24px;
-            margin: 0;
-            width: 100%;
         }
 
         .stat-card {
@@ -201,7 +159,6 @@
             padding: 16px 18px;
             text-align: center;
             transition: all var(--transition);
-            cursor: default;
             position: relative;
             overflow: hidden;
         }
@@ -217,11 +174,7 @@
             opacity: 0.6;
         }
 
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(9,132,227,0.15);
-            box-shadow: var(--shadow-hover);
-        }
+        .stat-card:hover { transform: translateY(-3px); border-color: rgba(9,132,227,0.15); }
 
         .stat-card .number {
             font-size: 26px;
@@ -241,7 +194,6 @@
             color: rgba(255,255,255,0.3);
             margin-top: 4px;
             font-weight: 500;
-            letter-spacing: 0.3px;
         }
 
         .stat-card .icon-bg {
@@ -253,9 +205,7 @@
             pointer-events: none;
         }
 
-        /* ============================================================
-           FILTER BAR - ENHANCED
-           ============================================================ */
+        /* ===== FILTER BAR ===== */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
@@ -266,8 +216,6 @@
             backdrop-filter: blur(12px);
             border-top: 1px solid var(--glass-border);
             border-bottom: 1px solid var(--glass-border);
-            margin: 0;
-            width: 100%;
         }
 
         .filter-bar label {
@@ -313,7 +261,7 @@
             cursor: pointer;
         }
 
-        .filter-bar .btn-filter {
+        .btn-filter {
             padding: 6px 16px;
             border: none;
             border-radius: 20px;
@@ -327,31 +275,22 @@
             gap: 6px;
         }
 
-        .filter-bar .btn-filter.primary {
+        .btn-filter.primary {
             background: linear-gradient(135deg, var(--info), #60a5fa);
             color: #fff;
-            box-shadow: 0 0 20px rgba(9,132,227,0.15);
         }
 
-        .filter-bar .btn-filter.primary:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(9,132,227,0.25);
-        }
+        .btn-filter.primary:hover { transform: scale(1.04); }
 
-        .filter-bar .btn-filter.outline {
+        .btn-filter.outline {
             background: transparent;
             border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.3);
         }
 
-        .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
+        .btn-filter.outline:hover { background: rgba(255,255,255,0.04); color: #fff; }
 
-        /* ============================================================
-           MAIN TABLE
-           ============================================================ */
+        /* ===== SECTION ===== */
         .rec-section {
             background: var(--glass-bg);
             backdrop-filter: blur(12px);
@@ -361,7 +300,7 @@
             overflow: hidden;
         }
 
-        .rec-section .section-header {
+        .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -372,7 +311,7 @@
             gap: 8px;
         }
 
-        .rec-section .section-header h3 {
+        .section-header h3 {
             font-size: 15px;
             font-weight: 700;
             color: #fff;
@@ -382,46 +321,24 @@
             gap: 8px;
         }
 
-        .rec-section .section-header h3 i {
-            color: var(--info);
-        }
+        .section-header h3 i { color: var(--info); }
 
-        .rec-section .section-header .badge {
+        .badge {
             font-size: 11px;
             padding: 4px 16px;
             border-radius: 20px;
             font-weight: 600;
         }
 
-        .badge.blue {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
-        }
+        .badge.blue { background: rgba(9,132,227,0.12); color: #60a5fa; }
+        .badge.gold { background: rgba(230,179,30,0.12); color: var(--gold-light); }
+        .badge.success { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.danger { background: rgba(239,68,68,0.12); color: #f87171; }
 
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-        }
-
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .section-content {
-            padding: 16px 20px;
-        }
+        .section-content { padding: 16px 20px; }
 
         /* ===== TABLE ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
+        .table-wrapper { overflow-x: auto; border-radius: var(--radius-sm); }
 
         .table-wrapper table {
             width: 100%;
@@ -446,11 +363,7 @@
             white-space: nowrap;
         }
 
-        thead th i {
-            margin-left: 4px;
-            color: var(--info);
-            font-size: 0.7rem;
-        }
+        thead th i { margin-left: 4px; color: var(--info); }
 
         tbody td {
             padding: 9px 10px;
@@ -461,19 +374,8 @@
             text-align: center;
         }
 
-        tbody tr {
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        tbody tr .vessel-name {
-            font-weight: 600;
-            color: #fff;
-            text-align: right;
-        }
+        tbody tr { transition: all var(--transition); }
+        tbody tr:hover { background: rgba(255,255,255,0.03); }
 
         /* ===== STATUS BADGES ===== */
         .status-badge {
@@ -485,66 +387,21 @@
             white-space: nowrap;
         }
 
-        .status-badge.completed {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.in-progress {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-            animation: pulseProgress 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseProgress {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .status-badge.pending {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
-        }
-
-        .status-badge.cancelled {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.overdue {
-            background: rgba(239,68,68,0.2);
-            color: #f87171;
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
+        .status-badge.completed { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .status-badge.in-progress { background: rgba(234,179,8,0.12); color: #fbbf24; }
+        .status-badge.pending { background: rgba(9,132,227,0.12); color: #60a5fa; }
+        .status-badge.cancelled { background: rgba(239,68,68,0.12); color: #f87171; }
+        .status-badge.overdue { background: rgba(239,68,68,0.2); color: #f87171; animation: pulseDanger 1.5s infinite; }
 
         @keyframes pulseDanger {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
 
-        .status-badge.urgent {
-            background: rgba(239,68,68,0.25);
-            color: #f87171;
-            animation: pulseUrgent 1s ease-in-out infinite;
-        }
-
-        @keyframes pulseUrgent {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-        }
-
-        /* ===== PRIORITY INDICATORS ===== */
-        .priority-high {
-            border-left: 3px solid #ef4444;
-        }
-
-        .priority-medium {
-            border-left: 3px solid #fbbf24;
-        }
-
-        .priority-low {
-            border-left: 3px solid #4ade80;
-        }
+        /* ===== PRIORITY ===== */
+        .priority-high { border-right: 3px solid #ef4444; }
+        .priority-medium { border-right: 3px solid #fbbf24; }
+        .priority-low { border-right: 3px solid #4ade80; }
 
         /* ===== ACTION BUTTONS ===== */
         .action-btn {
@@ -560,36 +417,14 @@
             gap: 4px;
         }
 
-        .action-btn.view {
-            background: rgba(9,132,227,0.1);
-            color: #60a5fa;
-        }
+        .action-btn.view { background: rgba(9,132,227,0.1); color: #60a5fa; }
+        .action-btn.view:hover { background: rgba(9,132,227,0.2); }
+        .action-btn.edit { background: rgba(230,179,30,0.1); color: var(--gold-light); }
+        .action-btn.edit:hover { background: rgba(230,179,30,0.2); }
+        .action-btn.delete { background: rgba(239,68,68,0.1); color: #f87171; }
+        .action-btn.delete:hover { background: rgba(239,68,68,0.2); }
 
-        .action-btn.view:hover {
-            background: rgba(9,132,227,0.2);
-        }
-
-        .action-btn.edit {
-            background: rgba(230,179,30,0.1);
-            color: var(--gold-light);
-        }
-
-        .action-btn.edit:hover {
-            background: rgba(230,179,30,0.2);
-        }
-
-        .action-btn.delete {
-            background: rgba(239,68,68,0.1);
-            color: #f87171;
-        }
-
-        .action-btn.delete:hover {
-            background: rgba(239,68,68,0.2);
-        }
-
-        /* ============================================================
-           PAGINATION
-           ============================================================ */
+        /* ===== PAGINATION ===== */
         .pagination {
             display: flex;
             justify-content: space-between;
@@ -600,17 +435,11 @@
             gap: 8px;
         }
 
-        .pagination .info {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.25);
-        }
+        .pagination .info { font-size: 0.75rem; color: rgba(255,255,255,0.25); }
 
-        .pagination .pages {
-            display: flex;
-            gap: 4px;
-        }
+        .pagination .pages { display: flex; gap: 4px; }
 
-        .pagination .page-btn {
+        .page-btn {
             padding: 4px 12px;
             border: 1px solid var(--glass-border);
             border-radius: 6px;
@@ -622,38 +451,18 @@
             transition: all var(--transition);
         }
 
-        .pagination .page-btn:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
+        .page-btn:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .page-btn.active { background: linear-gradient(135deg, var(--info), #60a5fa); border-color: var(--info); color: #fff; }
+        .page-btn.disabled { opacity: 0.3; cursor: not-allowed; }
 
-        .pagination .page-btn.active {
-            background: linear-gradient(135deg, var(--info), #60a5fa);
-            border-color: var(--info);
-            color: #fff;
-        }
-
-        .pagination .page-btn.disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
+        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: rgba(255,255,255,0.15);
         }
 
-        .empty-state .empty-icon {
-            font-size: 4rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 16px;
-        }
-
+        .empty-state .empty-icon { font-size: 4rem; color: rgba(255,255,255,0.04); display: block; margin-bottom: 16px; }
         .empty-state .spinner {
             width: 32px;
             height: 32px;
@@ -664,60 +473,23 @@
             margin: 0 auto 12px;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .empty-state h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
-        }
+        .empty-state h3 { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.2); margin-bottom: 4px; }
+        .empty-state p { font-size: 0.8rem; color: rgba(255,255,255,0.1); }
 
-        .empty-state p {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 992px) {
-            .rec-header { padding: 12px 16px; top: 60px; }
-            .rec-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .rec-section { margin: 0 16px 12px; }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .rec-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
+            .rec-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
             .rec-header-left { width: 100%; }
             .rec-header-left h2 { font-size: 16px; }
             .rec-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
-            .stat-card { padding: 12px 14px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
             .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
-            .filter-bar label { font-size: 0.65rem; }
+            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 16px; }
             .filter-bar select, .filter-bar input { min-width: 100%; }
             .rec-section { margin: 0 12px 10px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .section-header { flex-direction: column; align-items: flex-start; }
             .section-content { padding: 12px 14px; }
             .table-wrapper table { font-size: 0.7rem; min-width: 700px; }
             thead th, tbody td { padding: 6px 8px; }
@@ -725,86 +497,70 @@
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
             .rec-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
             .rec-header-left h2 { font-size: 14px; }
-            .rec-header-left p { font-size: 10px; }
             .section-header h3 { font-size: 13px; }
-            .section-content { padding: 10px 12px; }
             thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
-            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
+        }
+
+        /* ===== NOTIFICATION ===== */
+        .rec-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: rgba(9,132,227,0.15);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(9,132,227,0.2);
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: Cairo, sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 400px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
+    <!-- ===== HEADER ===== -->
     <div class="rec-header">
         <div class="rec-header-left">
-            <div class="header-icon">
-                <i class="fas fa-history"></i>
-            </div>
+            <div class="header-icon"><i class="fas fa-history"></i></div>
             <div>
                 <h2>سجل الصيانة والتاريخي</h2>
                 <p>أرشيف كامل لعمليات الصيانة والتدخلات الفنية</p>
             </div>
         </div>
         <div class="rec-header-actions">
-            <button class="btn-action primary" onclick="refreshRecords()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn-action export" onclick="exportRecords()">
-                <i class="fas fa-file-excel"></i> تصدير
-            </button>
-            <button class="btn-action secondary" onclick="window.print()">
-                <i class="fas fa-print"></i> طباعة
-            </button>
+            <button class="btn-action primary" onclick="refreshRecords()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action export" onclick="exportRecords()"><i class="fas fa-file-excel"></i> تصدير</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
+    <!-- ===== STATS ===== -->
     <div class="stats-grid" id="recordsStats">
-        <div class="stat-card">
-            <div class="number blue" id="totalRecords">0</div>
-            <div class="label">📋 إجمالي السجلات</div>
-            <span class="icon-bg"><i class="fas fa-file-alt"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number gold" id="pendingRecords">0</div>
-            <div class="label">⏳ قيد الانتظار</div>
-            <span class="icon-bg"><i class="fas fa-clock"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number green" id="completedRecords">0</div>
-            <div class="label">✅ مكتملة</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number red" id="overdueRecords">0</div>
-            <div class="label">🚨 متأخرة</div>
-            <span class="icon-bg"><i class="fas fa-exclamation-circle"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number purple" id="inProgressRecords">0</div>
-            <div class="label">⚡ قيد التنفيذ</div>
-            <span class="icon-bg"><i class="fas fa-spinner"></i></span>
-        </div>
+        <div class="stat-card"><div class="number blue" id="totalRecords">0</div><div class="label">📋 إجمالي السجلات</div><span class="icon-bg"><i class="fas fa-file-alt"></i></span></div>
+        <div class="stat-card"><div class="number gold" id="pendingRecords">0</div><div class="label">⏳ قيد الانتظار</div><span class="icon-bg"><i class="fas fa-clock"></i></span></div>
+        <div class="stat-card"><div class="number green" id="completedRecords">0</div><div class="label">✅ مكتملة</div><span class="icon-bg"><i class="fas fa-check-circle"></i></span></div>
+        <div class="stat-card"><div class="number red" id="overdueRecords">0</div><div class="label">🚨 متأخرة</div><span class="icon-bg"><i class="fas fa-exclamation-circle"></i></span></div>
+        <div class="stat-card"><div class="number purple" id="inProgressRecords">0</div><div class="label">⚡ قيد التنفيذ</div><span class="icon-bg"><i class="fas fa-spinner"></i></span></div>
     </div>
 
-    <!-- ============================================================
-    FILTER BAR - ENHANCED
-    ============================================================ -->
+    <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchRecords" placeholder="رقم المركب، الفئة، ..." onkeyup="filterRecords()">
+        <input type="text" id="searchRecords" placeholder="رقم المركب، الفئة..." onkeyup="filterRecords()" />
 
         <label><i class="fas fa-ship"></i> المركب</label>
         <select id="fVesselRec" onchange="filterRecords()">
@@ -816,8 +572,6 @@
             <option value="صقر 08">صقر 08</option>
             <option value="خافرة 07">خافرة 07</option>
             <option value="خافرة 11">خافرة 11</option>
-            <option value="زورق مزدوج 12">زورق مزدوج 12</option>
-            <option value="طوافة 14">طوافة 14</option>
         </select>
 
         <label><i class="fas fa-tag"></i> الفئة</label>
@@ -841,21 +595,15 @@
         </select>
 
         <label><i class="fas fa-calendar-alt"></i> من</label>
-        <input type="date" id="fDateFrom" onchange="filterRecords()">
+        <input type="date" id="fDateFrom" onchange="filterRecords()" />
         <label><i class="fas fa-calendar-alt"></i> إلى</label>
-        <input type="date" id="fDateTo" onchange="filterRecords()">
+        <input type="date" id="fDateTo" onchange="filterRecords()" />
 
-        <button class="btn-filter primary" onclick="filterRecords()">
-            <i class="fas fa-filter"></i> فلترة
-        </button>
-        <button class="btn-filter outline" onclick="resetFilters()">
-            <i class="fas fa-undo-alt"></i> إلغاء
-        </button>
+        <button class="btn-filter primary" onclick="filterRecords()"><i class="fas fa-filter"></i> فلترة</button>
+        <button class="btn-filter outline" onclick="resetFilters()"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
-    <!-- ============================================================
-    MAIN TABLE
-    ============================================================ -->
+    <!-- ===== TABLE ===== -->
     <div class="rec-section">
         <div class="section-header">
             <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة والتدخلات</h3>
@@ -878,13 +626,7 @@
                         </tr>
                     </thead>
                     <tbody id="recordsBody">
-                        <tr>
-                            <td colspan="9" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل السجلات...</h3>
-                                <p>يرجى الانتظار</p>
-                            </td>
-                        </tr>
+                        <tr><td colspan="9" class="empty-state"><div class="spinner"></div><h3>جاري تحميل السجلات...</h3><p>يرجى الانتظار</p></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -903,604 +645,301 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    JAVASCRIPT - PRODUCTION PRO
-    ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
     <script>
-        // ============================================================
-        // DATA - PRODUCTION READY
-        // ============================================================
-        const recordsData = [
-            { 
-                id: 'R-2026-001',
-                vessel: 'البروق 01',
-                category: 'البروق',
-                type: 'صيانة دورية',
-                startDate: '2026-05-10',
-                endDate: '2026-05-12',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '2 أيام',
-                cost: '2,500 د.ت'
-            },
-            { 
-                id: 'R-2026-002',
-                vessel: 'البروق 02',
-                category: 'البروق',
-                type: 'إصلاح محرك',
-                startDate: '2026-06-15',
-                endDate: '2026-06-20',
-                status: 'قيد التنفيذ',
-                priority: 'عالية',
-                duration: '5 أيام',
-                cost: '8,000 د.ت'
-            },
-            { 
-                id: 'R-2026-003',
-                vessel: 'صقر 03',
-                category: 'صقور',
-                type: 'فحص تقني',
-                startDate: '2026-04-05',
-                endDate: '2026-04-05',
-                status: 'مكتملة',
-                priority: 'متوسطة',
-                duration: '1 يوم',
-                cost: '1,200 د.ت'
-            },
-            { 
-                id: 'R-2026-004',
-                vessel: 'خافرة 07',
-                category: 'خوافر',
-                type: 'إصلاح عاجل',
-                startDate: '2026-03-15',
-                endDate: '2026-03-25',
-                status: 'متأخرة',
-                priority: 'عالية',
-                duration: '10 أيام',
-                cost: '12,000 د.ت'
-            },
-            { 
-                id: 'R-2026-005',
-                vessel: 'البروق 05',
-                category: 'البروق',
-                type: 'صيانة دورية',
-                startDate: '2026-06-01',
-                endDate: '2026-06-03',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '2 أيام',
-                cost: '2,800 د.ت'
-            },
-            { 
-                id: 'R-2026-006',
-                vessel: 'صقر 08',
-                category: 'صقور',
-                type: 'استبدال قطع',
-                startDate: '2026-05-20',
-                endDate: '2026-05-28',
-                status: 'قيد الانتظار',
-                priority: 'متوسطة',
-                duration: '8 أيام',
-                cost: '5,500 د.ت'
-            },
-            { 
-                id: 'R-2026-007',
-                vessel: 'زورق مزدوج 12',
-                category: 'زوارق مزدوجة',
-                type: 'صيانة دورية',
-                startDate: '2026-06-01',
-                endDate: '2026-06-02',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '1 يوم',
-                cost: '1,800 د.ت'
-            },
-            { 
-                id: 'R-2026-008',
-                vessel: 'خافرة 11',
-                category: 'خوافر',
-                type: 'إصلاح هيكل',
-                startDate: '2026-06-10',
-                endDate: '2026-06-25',
-                status: 'قيد التنفيذ',
-                priority: 'عالية',
-                duration: '15 أيام',
-                cost: '15,000 د.ت'
-            },
-            { 
-                id: 'R-2026-009',
-                vessel: 'طوافة 14',
-                category: 'طوافات',
-                type: 'فحص تقني',
-                startDate: '2026-04-10',
-                endDate: '2026-04-12',
-                status: 'ملغاة',
-                priority: 'منخفضة',
-                duration: '2 أيام',
-                cost: '0 د.ت'
-            },
-            { 
-                id: 'R-2026-010',
-                vessel: 'البروق 09',
-                category: 'البروق',
-                type: 'إصلاح محرك',
-                startDate: '2026-05-18',
-                endDate: '2026-05-22',
-                status: 'مكتملة',
-                priority: 'متوسطة',
-                duration: '4 أيام',
-                cost: '6,500 د.ت'
-            },
-            { 
-                id: 'R-2026-011',
-                vessel: 'صقر 06',
-                category: 'صقور',
-                type: 'صيانة دورية',
-                startDate: '2026-05-25',
-                endDate: '2026-05-30',
-                status: 'قيد الانتظار',
-                priority: 'منخفضة',
-                duration: '5 أيام',
-                cost: '3,200 د.ت'
-            },
-            { 
-                id: 'R-2026-012',
-                vessel: 'زورق مزدوج 22',
-                category: 'زوارق مزدوجة',
-                type: 'إصلاح عاجل',
-                startDate: '2026-06-20',
-                endDate: '2026-06-30',
-                status: 'قيد التنفيذ',
-                priority: 'عالية',
-                duration: '10 أيام',
-                cost: '9,000 د.ت'
-            },
-            { 
-                id: 'R-2026-013',
-                vessel: 'خافرة 18',
-                category: 'خوافر',
-                type: 'استبدال قطع',
-                startDate: '2026-03-05',
-                endDate: '2026-03-15',
-                status: 'متأخرة',
-                priority: 'عالية',
-                duration: '10 أيام',
-                cost: '7,500 د.ت'
-            },
-            { 
-                id: 'R-2026-014',
-                vessel: 'طوافة 25',
-                category: 'طوافات',
-                type: 'صيانة دورية',
-                startDate: '2026-04-12',
-                endDate: '2026-04-14',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '2 أيام',
-                cost: '2,100 د.ت'
-            },
-            { 
-                id: 'R-2026-015',
-                vessel: 'صقر 20',
-                category: 'صقور',
-                type: 'إصلاح محرك',
-                startDate: '2026-02-01',
-                endDate: '2026-02-15',
-                status: 'متأخرة',
-                priority: 'عالية',
-                duration: '14 أيام',
-                cost: '18,000 د.ت'
-            },
-            { 
-                id: 'R-2026-016',
-                vessel: 'البروق 15',
-                category: 'البروق',
-                type: 'فحص تقني',
-                startDate: '2026-05-15',
-                endDate: '2026-05-15',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '1 يوم',
-                cost: '800 د.ت'
-            },
-            { 
-                id: 'R-2026-017',
-                vessel: 'خافرة 52',
-                category: 'خوافر',
-                type: 'صيانة دورية',
-                startDate: '2026-06-05',
-                endDate: '2026-06-08',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '3 أيام',
-                cost: '2,200 د.ت'
-            },
-            { 
-                id: 'R-2026-018',
-                vessel: 'زورق مزدوج 44',
-                category: 'زوارق مزدوجة',
-                type: 'إصلاح هيكل',
-                startDate: '2026-06-02',
-                endDate: '2026-06-10',
-                status: 'قيد التنفيذ',
-                priority: 'متوسطة',
-                duration: '8 أيام',
-                cost: '11,000 د.ت'
-            },
-            { 
-                id: 'R-2026-019',
-                vessel: 'صقر 32',
-                category: 'صقور',
-                type: 'صيانة دورية',
-                startDate: '2026-06-14',
-                endDate: '2026-06-16',
-                status: 'مكتملة',
-                priority: 'منخفضة',
-                duration: '2 أيام',
-                cost: '1,500 د.ت'
-            },
-            { 
-                id: 'R-2026-020',
-                vessel: 'البروق 30',
-                category: 'البروق',
-                type: 'استبدال قطع',
-                startDate: '2026-06-08',
-                endDate: '2026-06-12',
-                status: 'مكتملة',
-                priority: 'متوسطة',
-                duration: '4 أيام',
-                cost: '4,800 د.ت'
+        (function() {
+            'use strict';
+
+            // ===== DATA =====
+            const recordsData = [
+                { id: 'R-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10', endDate: '2026-05-12', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام', cost: '2,500 د.ت' },
+                { id: 'R-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15', endDate: '2026-06-20', status: 'قيد التنفيذ', priority: 'عالية', duration: '5 أيام', cost: '8,000 د.ت' },
+                { id: 'R-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05', endDate: '2026-04-05', status: 'مكتملة', priority: 'متوسطة', duration: '1 يوم', cost: '1,200 د.ت' },
+                { id: 'R-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15', endDate: '2026-03-25', status: 'متأخرة', priority: 'عالية', duration: '10 أيام', cost: '12,000 د.ت' },
+                { id: 'R-2026-005', vessel: 'البروق 05', category: 'البروق', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-03', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام', cost: '2,800 د.ت' },
+                { id: 'R-2026-006', vessel: 'صقر 08', category: 'صقور', type: 'استبدال قطع', startDate: '2026-05-20', endDate: '2026-05-28', status: 'قيد الانتظار', priority: 'متوسطة', duration: '8 أيام', cost: '5,500 د.ت' },
+                { id: 'R-2026-007', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-02', status: 'مكتملة', priority: 'منخفضة', duration: '1 يوم', cost: '1,800 د.ت' },
+                { id: 'R-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10', endDate: '2026-06-25', status: 'قيد التنفيذ', priority: 'عالية', duration: '15 أيام', cost: '15,000 د.ت' },
+                { id: 'R-2026-009', vessel: 'طوافة 14', category: 'طوافات', type: 'فحص تقني', startDate: '2026-04-10', endDate: '2026-04-12', status: 'ملغاة', priority: 'منخفضة', duration: '2 أيام', cost: '0 د.ت' },
+                { id: 'R-2026-010', vessel: 'البروق 09', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-05-18', endDate: '2026-05-22', status: 'مكتملة', priority: 'متوسطة', duration: '4 أيام', cost: '6,500 د.ت' },
+                { id: 'R-2026-011', vessel: 'صقر 06', category: 'صقور', type: 'صيانة دورية', startDate: '2026-05-25', endDate: '2026-05-30', status: 'قيد الانتظار', priority: 'منخفضة', duration: '5 أيام', cost: '3,200 د.ت' },
+                { id: 'R-2026-012', vessel: 'زورق مزدوج 22', category: 'زوارق مزدوجة', type: 'إصلاح عاجل', startDate: '2026-06-20', endDate: '2026-06-30', status: 'قيد التنفيذ', priority: 'عالية', duration: '10 أيام', cost: '9,000 د.ت' },
+                { id: 'R-2026-013', vessel: 'خافرة 18', category: 'خوافر', type: 'استبدال قطع', startDate: '2026-03-05', endDate: '2026-03-15', status: 'متأخرة', priority: 'عالية', duration: '10 أيام', cost: '7,500 د.ت' },
+                { id: 'R-2026-014', vessel: 'طوافة 25', category: 'طوافات', type: 'صيانة دورية', startDate: '2026-04-12', endDate: '2026-04-14', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام', cost: '2,100 د.ت' },
+                { id: 'R-2026-015', vessel: 'صقر 20', category: 'صقور', type: 'إصلاح محرك', startDate: '2026-02-01', endDate: '2026-02-15', status: 'متأخرة', priority: 'عالية', duration: '14 أيام', cost: '18,000 د.ت' }
+            ];
+
+            // ===== STATE =====
+            let filteredData = [...recordsData];
+            let currentPage = 1;
+            const itemsPerPage = 10;
+
+            // ===== DOM REFS =====
+            const $ = id => document.getElementById(id);
+
+            // ===== RENDER =====
+            function renderRecords() {
+                renderStats();
+                renderTable();
+                renderPagination();
             }
-        ];
 
-        // ============================================================
-        // STATE
-        // ============================================================
-        let filteredData = [...recordsData];
-        let currentPage = 1;
-        const itemsPerPage = 10;
+            function renderStats() {
+                const total = recordsData.length;
+                const pending = recordsData.filter(r => r.status === 'قيد الانتظار').length;
+                const completed = recordsData.filter(r => r.status === 'مكتملة').length;
+                const overdue = recordsData.filter(r => r.status === 'متأخرة').length;
+                const inProgress = recordsData.filter(r => r.status === 'قيد التنفيذ').length;
 
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
-        function renderRecords() {
-            renderStats();
-            renderTable();
-            renderPagination();
-        }
+                $('totalRecords').textContent = total;
+                $('pendingRecords').textContent = pending;
+                $('completedRecords').textContent = completed;
+                $('overdueRecords').textContent = overdue;
+                $('inProgressRecords').textContent = inProgress;
 
-        function renderStats() {
-            const total = recordsData.length;
-            const pending = recordsData.filter(r => r.status === 'قيد الانتظار').length;
-            const completed = recordsData.filter(r => r.status === 'مكتملة').length;
-            const overdue = recordsData.filter(r => r.status === 'متأخرة').length;
-            const inProgress = recordsData.filter(r => r.status === 'قيد التنفيذ').length;
-
-            document.getElementById('totalRecords').textContent = total;
-            document.getElementById('pendingRecords').textContent = pending;
-            document.getElementById('completedRecords').textContent = completed;
-            document.getElementById('overdueRecords').textContent = overdue;
-            document.getElementById('inProgressRecords').textContent = inProgress;
-
-            // Update badge
-            const badge = document.getElementById('recordsBadge');
-            if (overdue > 0) {
-                badge.textContent = `🚨 ${overdue} سجل متأخر`;
-                badge.className = 'badge danger';
-            } else if (pending > 0) {
-                badge.textContent = `⏳ ${pending} سجل قيد الانتظار`;
-                badge.className = 'badge gold';
-            } else {
-                badge.textContent = `✅ ${completed} سجل مكتمل`;
-                badge.className = 'badge success';
+                const badge = $('recordsBadge');
+                if (overdue > 0) {
+                    badge.textContent = `🚨 ${overdue} سجل متأخر`;
+                    badge.className = 'badge danger';
+                } else if (pending > 0) {
+                    badge.textContent = `⏳ ${pending} سجل قيد الانتظار`;
+                    badge.className = 'badge gold';
+                } else {
+                    badge.textContent = `✅ ${completed} سجل مكتمل`;
+                    badge.className = 'badge success';
+                }
             }
-        }
 
-        function renderTable() {
-            const tbody = document.getElementById('recordsBody');
-            const search = document.getElementById('searchRecords').value.toLowerCase();
-            const vesselFilter = document.getElementById('fVesselRec').value;
-            const categoryFilter = document.getElementById('fCatRec').value;
-            const statusFilter = document.getElementById('fStatusRec').value;
-            const dateFrom = document.getElementById('fDateFrom').value;
-            const dateTo = document.getElementById('fDateTo').value;
+            function renderTable() {
+                const tbody = $('recordsBody');
+                const search = ($('searchRecords').value || '').toLowerCase();
+                const vesselFilter = $('fVesselRec').value;
+                const categoryFilter = $('fCatRec').value;
+                const statusFilter = $('fStatusRec').value;
+                const dateFrom = $('fDateFrom').value;
+                const dateTo = $('fDateTo').value;
 
-            // Apply filters
-            filteredData = recordsData.filter(record => {
-                // Search
-                if (search && !record.id.toLowerCase().includes(search) && 
-                    !record.vessel.includes(search) && 
-                    !record.type.includes(search)) {
-                    return false;
+                filteredData = recordsData.filter(r => {
+                    if (search && !r.id.toLowerCase().includes(search) && !r.vessel.includes(search) && !r.type.includes(search)) return false;
+                    if (vesselFilter !== 'الكل' && r.vessel !== vesselFilter) return false;
+                    if (categoryFilter !== 'الكل' && r.category !== categoryFilter) return false;
+                    if (statusFilter !== 'الكل' && r.status !== statusFilter) return false;
+                    if (dateFrom && r.startDate < dateFrom) return false;
+                    if (dateTo && r.startDate > dateTo) return false;
+                    return true;
+                });
+
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><span class="empty-icon"><i class="fas fa-search"></i></span><h3>لا توجد سجلات مطابقة</h3><p>حاول تغيير معايير البحث أو الفلترة</p></td></tr>`;
+                    return;
                 }
 
-                // Vessel
-                if (vesselFilter !== 'الكل' && record.vessel !== vesselFilter) {
-                    return false;
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageData = filteredData.slice(start, end);
+
+                const statusMap = {
+                    'مكتملة': 'completed',
+                    'قيد التنفيذ': 'in-progress',
+                    'قيد الانتظار': 'pending',
+                    'متأخرة': 'overdue',
+                    'ملغاة': 'cancelled'
+                };
+
+                const statusLabel = {
+                    'مكتملة': '✅ مكتملة',
+                    'قيد التنفيذ': '⚡ قيد التنفيذ',
+                    'قيد الانتظار': '⏳ قيد الانتظار',
+                    'متأخرة': '🚨 متأخرة',
+                    'ملغاة': '❌ ملغاة'
+                };
+
+                const priorityMap = {
+                    'عالية': 'priority-high',
+                    'متوسطة': 'priority-medium',
+                    'منخفضة': 'priority-low'
+                };
+
+                function formatDate(d) {
+                    const parts = d.split('-');
+                    return `${parts[2]}/${parts[1]}/${parts[0]}`;
                 }
 
-                // Category
-                if (categoryFilter !== 'الكل' && record.category !== categoryFilter) {
-                    return false;
-                }
+                tbody.innerHTML = pageData.map(r => `
+                    <tr class="${priorityMap[r.priority] || ''}">
+                        <td style="text-align:right;font-weight:600;color:var(--gold-light);">${r.id}</td>
+                        <td style="text-align:right;font-weight:600;color:#fff;">${r.vessel}</td>
+                        <td>${r.category}</td>
+                        <td>${r.type}</td>
+                        <td>${formatDate(r.startDate)}</td>
+                        <td>${formatDate(r.endDate)}</td>
+                        <td>${r.duration}</td>
+                        <td><span class="status-badge ${statusMap[r.status] || ''}">${statusLabel[r.status] || r.status}</span></td>
+                        <td>
+                            <button class="action-btn view" onclick="viewRecord('${r.id}')"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete" onclick="deleteRecord('${r.id}')"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
 
-                // Status
-                if (statusFilter !== 'الكل' && record.status !== statusFilter) {
-                    return false;
-                }
+                $('paginationInfo').textContent = `عرض ${start + 1}-${Math.min(end, filteredData.length)} من ${filteredData.length} سجل`;
+            }
 
-                // Date from
-                if (dateFrom && record.startDate < dateFrom) {
-                    return false;
-                }
+            function renderPagination() {
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                const prev = $('prevPage');
+                const next = $('nextPage');
 
-                // Date to
-                if (dateTo && record.startDate > dateTo) {
-                    return false;
-                }
+                prev.disabled = currentPage <= 1;
+                prev.classList.toggle('disabled', currentPage <= 1);
 
-                return true;
+                next.disabled = currentPage >= totalPages;
+                next.classList.toggle('disabled', currentPage >= totalPages);
+
+                for (let i = 1; i <= 3; i++) {
+                    const btn = $(`page${i}`);
+                    if (i <= totalPages) {
+                        btn.style.display = 'inline-block';
+                        btn.textContent = i;
+                        btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                        btn.onclick = () => goToPage(i);
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+            }
+
+            // ===== ACTIONS =====
+            window.filterRecords = function() {
+                currentPage = 1;
+                renderRecords();
+            };
+
+            window.resetFilters = function() {
+                $('searchRecords').value = '';
+                $('fVesselRec').value = 'الكل';
+                $('fCatRec').value = 'الكل';
+                $('fStatusRec').value = 'الكل';
+                $('fDateFrom').value = '';
+                $('fDateTo').value = '';
+                currentPage = 1;
+                renderRecords();
+                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
+            };
+
+            window.changePage = function(delta) {
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                const newPage = currentPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    renderRecords();
+                }
+            };
+
+            window.goToPage = function(page) {
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderRecords();
+                }
+            };
+
+            window.refreshRecords = function() {
+                const btn = document.querySelector('.btn-action.primary');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    renderRecords();
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
+                    btn.disabled = false;
+                    showNotification('✅ تم تحديث السجلات بنجاح', 'success');
+                }, 800);
+            };
+
+            window.viewRecord = function(id) {
+                showNotification(`📋 عرض تفاصيل السجل ${id}`, 'info');
+            };
+
+            window.editRecord = function(id) {
+                showNotification(`✏️ تعديل السجل ${id}`, 'info');
+            };
+
+            window.deleteRecord = function(id) {
+                if (confirm(`هل أنت متأكد من حذف السجل ${id}؟`)) {
+                    const idx = recordsData.findIndex(r => r.id === id);
+                    if (idx !== -1) {
+                        recordsData.splice(idx, 1);
+                        renderRecords();
+                        showNotification(`🗑️ تم حذف السجل ${id} بنجاح`, 'success');
+                    }
+                }
+            };
+
+            window.exportRecords = function() {
+                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
+                setTimeout(() => showNotification('✅ تم تصدير البيانات بنجاح', 'success'), 1500);
+            };
+
+            // ===== NOTIFICATION =====
+            function showNotification(message, type) {
+                const old = document.querySelector('.rec-notification');
+                if (old) old.remove();
+
+                const colors = {
+                    success: 'rgba(34,197,94,0.15)',
+                    info: 'rgba(9,132,227,0.15)',
+                    error: 'rgba(239,68,68,0.15)'
+                };
+
+                const borders = {
+                    success: 'rgba(34,197,94,0.2)',
+                    info: 'rgba(9,132,227,0.2)',
+                    error: 'rgba(239,68,68,0.2)'
+                };
+
+                const notif = document.createElement('div');
+                notif.className = 'rec-notification';
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: ${colors[type] || colors.info};
+                    backdrop-filter: blur(12px);
+                    border: 1px solid ${borders[type] || borders.info};
+                    padding: 14px 24px;
+                    border-radius: 12px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    z-index: 9999;
+                    animation: slideUp 0.4s ease-out;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                `;
+                notif.textContent = message;
+
+                document.body.appendChild(notif);
+
+                setTimeout(() => {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(() => notif.remove(), 400);
+                }, 3500);
+            }
+
+            // ===== INIT =====
+            document.addEventListener('DOMContentLoaded', function() {
+                renderRecords();
+                console.log('📋 Records Page loaded successfully!');
+                console.log(`📊 ${recordsData.length} records loaded.`);
             });
 
-            if (filteredData.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد سجلات مطابقة</h3>
-                            <p>حاول تغيير معايير البحث أو الفلترة</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Pagination
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageData = filteredData.slice(start, end);
-
-            tbody.innerHTML = pageData.map(record => {
-                const statusClass = getStatusClass(record.status);
-                const priorityClass = getPriorityClass(record.priority);
-
-                return `
-                    <tr class="${priorityClass}">
-                        <td style="text-align:right;font-weight:600;color:var(--gold-light);">${record.id}</td>
-                        <td style="text-align:right;font-weight:600;color:#fff;">${record.vessel}</td>
-                        <td>${record.category}</td>
-                        <td>${record.type}</td>
-                        <td>${formatDate(record.startDate)}</td>
-                        <td>${formatDate(record.endDate)}</td>
-                        <td>${record.duration}</td>
-                        <td><span class="status-badge ${statusClass}">${getStatusLabel(record.status)}</span></td>
-                        <td>
-                            <button class="action-btn view" onclick="viewRecord('${record.id}')" title="عرض التفاصيل">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn edit" onclick="editRecord('${record.id}')" title="تعديل">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete" onclick="deleteRecord('${record.id}')" title="حذف">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Update pagination info
-            document.getElementById('paginationInfo').textContent = 
-                `عرض ${start + 1}-${Math.min(end, filteredData.length)} من ${filteredData.length} سجل`;
-        }
-
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            
-            document.getElementById('prevPage').disabled = currentPage <= 1;
-            document.getElementById('prevPage').classList.toggle('disabled', currentPage <= 1);
-            
-            document.getElementById('nextPage').disabled = currentPage >= totalPages;
-            document.getElementById('nextPage').classList.toggle('disabled', currentPage >= totalPages);
-
-            // Show/hide page buttons
-            for (let i = 1; i <= 3; i++) {
-                const btn = document.getElementById(`page${i}`);
-                if (i <= totalPages) {
-                    btn.style.display = 'inline-block';
-                    btn.textContent = i;
-                    btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                    btn.onclick = () => goToPage(i);
-                } else {
-                    btn.style.display = 'none';
-                }
-            }
-        }
-
-        // ============================================================
-        // HELPER FUNCTIONS
-        // ============================================================
-        function getStatusClass(status) {
-            switch(status) {
-                case 'مكتملة': return 'completed';
-                case 'قيد التنفيذ': return 'in-progress';
-                case 'قيد الانتظار': return 'pending';
-                case 'متأخرة': return 'overdue';
-                case 'ملغاة': return 'cancelled';
-                default: return '';
-            }
-        }
-
-        function getStatusLabel(status) {
-            switch(status) {
-                case 'مكتملة': return '✅ مكتملة';
-                case 'قيد التنفيذ': return '⚡ قيد التنفيذ';
-                case 'قيد الانتظار': return '⏳ قيد الانتظار';
-                case 'متأخرة': return '🚨 متأخرة';
-                case 'ملغاة': return '❌ ملغاة';
-                default: return status;
-            }
-        }
-
-        function getPriorityClass(priority) {
-            switch(priority) {
-                case 'عالية': return 'priority-high';
-                case 'متوسطة': return 'priority-medium';
-                case 'منخفضة': return 'priority-low';
-                default: return '';
-            }
-        }
-
-        function formatDate(dateStr) {
-            const parts = dateStr.split('-');
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-
-        // ============================================================
-        // ACTION FUNCTIONS
-        // ============================================================
-        function filterRecords() {
-            currentPage = 1;
-            renderRecords();
-        }
-
-        function resetFilters() {
-            document.getElementById('searchRecords').value = '';
-            document.getElementById('fVesselRec').value = 'الكل';
-            document.getElementById('fCatRec').value = 'الكل';
-            document.getElementById('fStatusRec').value = 'الكل';
-            document.getElementById('fDateFrom').value = '';
-            document.getElementById('fDateTo').value = '';
-            currentPage = 1;
-            renderRecords();
-            showNotification('تم إلغاء جميع الفلاتر ✅', 'success');
-        }
-
-        function changePage(delta) {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            const newPage = currentPage + delta;
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentPage = newPage;
-                renderRecords();
-            }
-        }
-
-        function goToPage(page) {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            if (page >= 1 && page <= totalPages) {
-                currentPage = page;
-                renderRecords();
-            }
-        }
-
-        function refreshRecords() {
-            const btn = document.querySelector('.btn-action.primary');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-
-            setTimeout(() => {
-                renderRecords();
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
-                btn.disabled = false;
-                showNotification('تم تحديث السجلات بنجاح ✅', 'success');
-            }, 800);
-        }
-
-        function viewRecord(id) {
-            showNotification(`📋 عرض تفاصيل السجل ${id}`, 'info');
-        }
-
-        function editRecord(id) {
-            showNotification(`✏️ تعديل السجل ${id}`, 'info');
-        }
-
-        function deleteRecord(id) {
-            if (confirm(`هل أنت متأكد من حذف السجل ${id}؟`)) {
-                const index = recordsData.findIndex(r => r.id === id);
-                if (index !== -1) {
-                    recordsData.splice(index, 1);
-                    renderRecords();
-                    showNotification(`🗑️ تم حذف السجل ${id} بنجاح`, 'success');
-                }
-            }
-        }
-
-        function exportRecords() {
-            showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
-            setTimeout(() => {
-                showNotification('✅ تم تصدير البيانات بنجاح', 'success');
-            }, 1500);
-        }
-
-        // ============================================================
-        // NOTIFICATION SYSTEM
-        // ============================================================
-        function showNotification(message, type) {
-            const old = document.querySelector('.rec-notification');
-            if (old) old.remove();
-
-            const colors = {
-                success: 'rgba(34,197,94,0.15)',
-                info: 'rgba(9,132,227,0.15)',
-                error: 'rgba(239,68,68,0.15)'
-            };
-
-            const borders = {
-                success: 'rgba(34,197,94,0.2)',
-                info: 'rgba(9,132,227,0.2)',
-                error: 'rgba(239,68,68,0.2)'
-            };
-
-            const notif = document.createElement('div');
-            notif.className = 'rec-notification';
-            notif.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background: ${colors[type] || colors.info};
-                backdrop-filter: blur(12px);
-                border: 1px solid ${borders[type] || borders.info};
-                padding: 14px 24px;
-                border-radius: 12px;
-                color: #fff;
-                font-family: Cairo, sans-serif;
-                font-size: 14px;
-                z-index: 9999;
-                animation: slideUp 0.4s ease-out;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                max-width: 400px;
-            `;
-            notif.textContent = message;
-
-            document.body.appendChild(notif);
-
-            setTimeout(() => {
-                notif.style.opacity = '0';
-                notif.style.transform = 'translateY(20px)';
-                notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(() => notif.remove(), 400);
-            }, 3500);
-        }
-
-        // ============================================================
-        // ADDITIONAL STYLES FOR NOTIFICATION
-        // ============================================================
-        const styleNotif = document.createElement('style');
-        styleNotif.textContent = `
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(styleNotif);
-
-        // ============================================================
-        // INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            renderRecords();
-            console.log('📋 Records Page loaded successfully!');
-            console.log(`📊 ${recordsData.length} records loaded.`);
-        });
+        })();
     </script>
-</div>
+
+    </div>
+</body>
+</html>
