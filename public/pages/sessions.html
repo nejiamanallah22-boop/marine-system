@@ -2,7 +2,7 @@
 <div id="page-sessions">
     <style>
         /* ============================================================
-           🔄 SESSIONS PAGE - PROFESSIONAL v3.1 (FIXED MAP)
+           🔄 SESSIONS PAGE - PROFESSIONAL v3.2 (MULTI LAYER MAP)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -244,7 +244,7 @@
         }
 
         /* ============================================================
-           MAP
+           MAP WITH LAYER CONTROL
            ============================================================ */
         .map-container {
             background: var(--glass-bg);
@@ -268,18 +268,56 @@
             background: #0a0a1a;
         }
 
-        .map-status {
+        /* ===== MAP CONTROLS ===== */
+        .map-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 4px 0;
-            font-size: 12px;
-            color: rgba(255,255,255,0.2);
+            padding: 10px 4px 0;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: 8px;
         }
 
-        .map-status .online-count {
+        .map-controls .layer-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .map-controls .layer-btn {
+            padding: 4px 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: var(--font);
+            font-weight: 500;
+        }
+
+        .map-controls .layer-btn:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        .map-controls .layer-btn.active {
+            background: rgba(230,179,30,0.15);
+            color: var(--gold-light);
+            border-color: rgba(230,179,30,0.2);
+        }
+
+        .map-controls .layer-btn i {
+            margin-left: 4px;
+        }
+
+        .map-controls .map-status {
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .map-controls .map-status .online-count {
             color: #4ade80;
         }
 
@@ -507,6 +545,8 @@
             .stat-card .number { font-size: 20px; }
             .map-container { margin: 0 12px 10px; padding: 8px; }
             #sessionMap { height: 250px; }
+            .map-controls { flex-direction: column; align-items: stretch; }
+            .map-controls .layer-buttons { justify-content: center; }
             .table-card { margin: 0 12px 12px; padding: 12px 14px; }
             .table-card .table-header { flex-direction: column; align-items: flex-start; }
             .scrollable-table table { font-size: 11px; min-width: 600px; }
@@ -527,6 +567,7 @@
             .sessions-header-left h2 { font-size: 14px; }
             #sessionMap { height: 200px; }
             .btn-sm { font-size: 10px; padding: 3px 8px; }
+            .map-controls .layer-btn { font-size: 10px; padding: 3px 10px; }
         }
     </style>
 
@@ -580,13 +621,29 @@
     </div>
 
     <!-- ============================================================
-    MAP
+    MAP WITH LAYER CONTROLS
     ============================================================ -->
     <div class="map-container">
         <div id="sessionMap"></div>
-        <div class="map-status">
-            <span><span class="online-count" id="mapOnlineCount">0</span> مستخدمين نشطين</span>
-            <span>🔄 تحديث تلقائي كل 30 ثانية</span>
+        <div class="map-controls">
+            <div class="layer-buttons">
+                <button class="layer-btn active" data-layer="street" onclick="changeMapLayer('street', this)">
+                    <i class="fas fa-map"></i> عادي
+                </button>
+                <button class="layer-btn" data-layer="satellite" onclick="changeMapLayer('satellite', this)">
+                    <i class="fas fa-satellite"></i> فضائي
+                </button>
+                <button class="layer-btn" data-layer="dark" onclick="changeMapLayer('dark', this)">
+                    <i class="fas fa-moon"></i> ليلي
+                </button>
+                <button class="layer-btn" data-layer="topo" onclick="changeMapLayer('topo', this)">
+                    <i class="fas fa-mountain"></i> طبوغرافي
+                </button>
+            </div>
+            <div class="map-status">
+                <span><span class="online-count" id="mapOnlineCount">0</span> مستخدمين نشطين</span>
+                <span style="margin-right:12px;">🔄 تحديث تلقائي</span>
+            </div>
         </div>
     </div>
 
@@ -625,11 +682,11 @@
 </div>
 
 <!-- ============================================================
-📦 JAVASCRIPT - SESSIONS PAGE (FIXED MAP)
+📦 JAVASCRIPT - SESSIONS PAGE (MULTI LAYER MAP)
 ============================================================ -->
 <script>
 // ============================================================
-// 🔄 SESSIONS PAGE - v3.1 (FIXED)
+// 🔄 SESSIONS PAGE - v3.2 (MULTI LAYER MAP)
 // ============================================================
 
 // ✅ تجنب إعادة تعريف المتغيرات
@@ -647,8 +704,12 @@ if (typeof sessionMarkers === 'undefined') {
 if (typeof sessionsData === 'undefined') {
     var sessionsData = [];
 }
+if (typeof currentLayer === 'undefined') {
+    var currentLayer = 'street';
+}
 var mapInitialized = false;
 var mapRefreshInterval = null;
+var tileLayer = null;
 
 // ============================================================
 // 1. TOKEN FUNCTIONS (موحدة)
@@ -728,14 +789,13 @@ function getDuration(startDate) {
 }
 
 // ============================================================
-// 2. تهيئة الخريطة (مع تحميل Leaflet)
+// 2. تهيئة الخريطة
 // ============================================================
 
 function initSessionMap() {
     // ✅ التحقق من وجود مكتبة Leaflet
     if (typeof L === 'undefined') {
         console.warn('⚠️ مكتبة Leaflet غير محملة، جاري التحميل...');
-        // محاولة تحميل Leaflet
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
@@ -771,7 +831,8 @@ function initSessionMap() {
             zoomControl: true
         });
         
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // ✅ الطبقة الافتراضية
+        tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap',
             maxZoom: 19
         }).addTo(sessionMap);
@@ -797,7 +858,60 @@ function initSessionMap() {
 }
 
 // ============================================================
-// 3. تحميل الجلسات
+// 3. تغيير طبقة الخريطة
+// ============================================================
+
+function changeMapLayer(layer, btn) {
+    if (!sessionMap || !mapInitialized) {
+        showToast('⚠️ الخريطة غير مهيأة', 'warning');
+        return;
+    }
+    
+    currentLayer = layer;
+    
+    // ✅ تحديث الأزرار
+    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    
+    // ✅ حذف الطبقة الحالية
+    if (tileLayer) {
+        sessionMap.removeLayer(tileLayer);
+    }
+    
+    // ✅ إضافة الطبقة الجديدة
+    const layers = {
+        'street': {
+            url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attribution: '© OpenStreetMap'
+        },
+        'satellite': {
+            url: 'https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+            attribution: '© Google',
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+        },
+        'dark': {
+            url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            attribution: '© CartoDB'
+        },
+        'topo': {
+            url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+            attribution: '© OpenTopoMap'
+        }
+    };
+    
+    const config = layers[layer] || layers['street'];
+    
+    tileLayer = L.tileLayer(config.url, {
+        attribution: config.attribution,
+        maxZoom: 19,
+        subdomains: config.subdomains || 'abc'
+    }).addTo(sessionMap);
+    
+    showToast(`🗺️ تم التبديل إلى ${layer === 'street' ? 'الخريطة العادية' : layer === 'satellite' ? 'الفضائية' : layer === 'dark' ? 'الوضع الليلي' : 'الطبوغرافية'}`, 'info');
+}
+
+// ============================================================
+// 4. تحميل الجلسات
 // ============================================================
 
 function loadSessions() {
@@ -857,7 +971,7 @@ function loadSessions() {
 }
 
 // ============================================================
-// 4. عرض الجلسات
+// 5. عرض الجلسات
 // ============================================================
 
 function renderSessions(sessions) {
@@ -911,7 +1025,7 @@ function renderSessions(sessions) {
 }
 
 // ============================================================
-// 5. تحديث الإحصائيات
+// 6. تحديث الإحصائيات
 // ============================================================
 
 function updateSessionStats(sessions) {
@@ -933,7 +1047,7 @@ function updateMapOnlineCount(sessions) {
 }
 
 // ============================================================
-// 6. تحديث الماركرز على الخريطة
+// 7. تحديث الماركرز على الخريطة
 // ============================================================
 
 function updateSessionMarkers() {
@@ -1008,7 +1122,7 @@ function updateSessionMarkers() {
 }
 
 // ============================================================
-// 7. إنهاء الجلسة
+// 8. إنهاء الجلسة
 // ============================================================
 
 function terminateSession(id) {
@@ -1040,7 +1154,7 @@ function terminateSession(id) {
 }
 
 // ============================================================
-// 8. تحديث الجلسات
+// 9. تحديث الجلسات
 // ============================================================
 
 function refreshSessions() {
@@ -1049,7 +1163,7 @@ function refreshSessions() {
 }
 
 // ============================================================
-// 9. بدء التحديث التلقائي
+// 10. بدء التحديث التلقائي
 // ============================================================
 
 function startAutoRefresh() {
@@ -1064,7 +1178,7 @@ function startAutoRefresh() {
 }
 
 // ============================================================
-// 10. التهيئة
+// 11. التهيئة
 // ============================================================
 
 function initSessionsPage() {
@@ -1077,7 +1191,6 @@ function initSessionsPage() {
     window._sessionsLoaded = true;
     
     setTimeout(() => {
-        // ✅ تهيئة الخريطة مع تحميل Leaflet
         initSessionMap();
         loadSessions();
         startAutoRefresh();
@@ -1085,7 +1198,7 @@ function initSessionsPage() {
 }
 
 // ============================================================
-// 11. ربط الدوال
+// 12. ربط الدوال
 // ============================================================
 
 if (document.getElementById('page-sessions')) {
@@ -1098,7 +1211,8 @@ window.terminateSession = terminateSession;
 window.initSessionMap = initSessionMap;
 window.loadSessions = loadSessions;
 window.startAutoRefresh = startAutoRefresh;
+window.changeMapLayer = changeMapLayer;
 
-console.log('✅ صفحة المراقبة v3.1 جاهزة');
+console.log('✅ صفحة المراقبة v3.2 جاهزة (مع طبقات متعددة للخريطة)');
 </script>
 </div>
