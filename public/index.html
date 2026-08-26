@@ -393,8 +393,8 @@
                     <button class="nav-btn" data-page="notes">  
                         <i class="fas fa-sticky-note"></i> Note Verbale  
                     </button>  
-                    <button class="nav-btn" data-page="sessions">  
-                        <i class="fas fa-users-cog"></i> المراقبة  
+                    <button class="nav-btn" data-page="monitoring">  
+                        <i class="fas fa-map-marked-alt"></i> المراقبة الشاملة  
                         <span class="nav-badge success" id="sessionsBadge">0</span>  
                     </button>  
                 </div>  
@@ -482,7 +482,7 @@
                 dashboard: 'لوحة التحكم', fleet: 'السجل العام',  
                 maintenance: 'الصيانة', efficiency: 'الجاهزية',  
                 support: 'الدعم', users: 'المستخدمين',  
-                notes: 'Note Verbale', sessions: 'المراقبة',  
+                notes: 'Note Verbale', monitoring: 'المراقبة الشاملة',  
                 'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',  
                 logs: 'السجلات', profile: 'الملف الشخصي'  
             }  
@@ -569,6 +569,7 @@
             loginBtn.disabled = true;  
             loginBtn.classList.add('loading');  
 
+            // ✅ استخدام fetch مع التوكن  
             fetch(CONFIG.API + '/auth/login', {  
                 method: 'POST',  
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },  
