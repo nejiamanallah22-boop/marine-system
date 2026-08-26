@@ -1,8 +1,8 @@
- <!-- public/pages/efficiency.html -->
+<!-- public/pages/efficiency.html -->
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           📊 EFFICIENCY PAGE - FULL VERSION
+           📊 EFFICIENCY PAGE - FIXED VERSION
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -344,6 +344,8 @@
             padding: 12px 20px;
             border-bottom: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .eff-section .section-header h3 {
@@ -628,128 +630,6 @@
         }
 
         /* ============================================================
-           CHARTS
-           ============================================================ */
-        .chart-section {
-            margin: 0 24px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--glass-bg);
-        }
-
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.02);
-        }
-
-        .chart-btn {
-            padding: 6px 18px;
-            border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .chart-btn:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
-            color: #0a1628;
-        }
-
-        .chart-btn i {
-            margin-left: 6px;
-        }
-
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .chart-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .chart-box.full {
-            grid-column: 1 / -1;
-        }
-
-        .chart-box h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .chart-box canvas {
-            width: 100% !important;
-            max-height: 280px;
-        }
-
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.15);
-        }
-
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .empty-state .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
-        }
-
-        .empty-state p {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 992px) {
@@ -758,9 +638,6 @@
             .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
             .filter-bar { padding: 8px 16px; gap: 6px 10px; }
             .eff-section { margin: 0 16px 12px; }
-            .chart-section { margin: 0 16px 16px; }
-            .charts-container { grid-template-columns: 1fr; padding: 12px; }
-            .chart-box.full { grid-column: 1; }
             .region-card .region-body { padding: 0 12px 12px; }
         }
 
@@ -794,13 +671,7 @@
             .section-content { padding: 12px 14px; }
             .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
             thead th, tbody td { padding: 6px 8px; }
-            .chart-section { margin: 0 12px 12px; }
-            .charts-container { padding: 10px; gap: 12px; }
-            .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 200px; }
             .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
-            .chart-switch { padding: 10px 12px; justify-content: center; }
-            .chart-btn { font-size: 11px; padding: 4px 12px; }
             .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
             .region-card .region-body { padding: 0 10px 10px; }
         }
@@ -836,7 +707,7 @@
             </div>
         </div>
         <div class="eff-header-actions">
-            <button class="btn-action primary" onclick="refreshEfficiency()">
+            <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
             <button class="btn-action secondary" onclick="window.print()">
@@ -881,7 +752,7 @@
     ============================================================ -->
     <div class="filter-bar">
         <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
-        <select id="fRegEff" onchange="renderEfficiency()">
+        <select id="fRegEff">
             <option value="الكل">🌍 جميع الأقاليم</option>
             <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
@@ -895,7 +766,7 @@
         </select>
 
         <label><i class="fas fa-filter"></i> الفئة</label>
-        <select id="fCatEff" onchange="renderEfficiency()">
+        <select id="fCatEff">
             <option value="الكل">📦 جميع الفئات</option>
             <option value="البروق">البروق</option>
             <option value="صقور">صقور</option>
@@ -905,17 +776,17 @@
         </select>
 
         <label><i class="fas fa-chart-bar"></i> الحالة</label>
-        <select id="fStatusEff" onchange="renderEfficiency()">
+        <select id="fStatusEff">
             <option value="الكل">📊 جميع الحالات</option>
             <option value="صالح">✅ صالح</option>
             <option value="صيانة">🔧 تحت الصيانة</option>
             <option value="معطب">⚠️ معطب</option>
         </select>
 
-        <button class="btn-filter primary" onclick="renderEfficiency()">
+        <button class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" onclick="resetEfficiencyFilters()">
+        <button class="btn-filter outline" id="resetBtn">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
@@ -943,10 +814,10 @@
                     </thead>
                     <tbody id="generalBody">
                         <tr>
-                            <td colspan="6" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل البيانات...</h3>
-                                <p>يرجى الانتظار</p>
+                            <td colspan="6" class="empty-state" style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.15);">
+                                <div class="spinner" style="width:32px;height:32px;border:3px solid rgba(255,255,255,0.04);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px;"></div>
+                                <h3 style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.2);margin-bottom:4px;">جاري تحميل البيانات...</h3>
+                                <p style="font-size:0.75rem;color:rgba(255,255,255,0.1);">يرجى الانتظار</p>
                             </td>
                         </tr>
                     </tbody>
@@ -964,6 +835,454 @@
             <span class="badge gold">📊 تحليل متقدم</span>
         </div>
         <div id="regionTables">
-            <div class="section-content">
-                <div class="empty-state">
-                    <div
+            <!-- سيتم إنشاء الجداول عبر JavaScript -->
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - FIXED VERSION
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            // DATA
+            // ============================================================
+            var efficiencyData = {
+                general: [
+                    { category: 'البروق', active: 18, damaged: 4, efficiency: 81.8 },
+                    { category: 'صقور', active: 12, damaged: 3, efficiency: 80.0 },
+                    { category: 'خوافر', active: 8, damaged: 5, efficiency: 61.5 },
+                    { category: 'زوارق مزدوجة', active: 6, damaged: 1, efficiency: 85.7 },
+                    { category: 'طوافات', active: 4, damaged: 2, efficiency: 66.7 }
+                ],
+                regions: {
+                    'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
+                    'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
+                    'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
+                    'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
+                    'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
+                    'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
+                    'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
+                }
+            };
+
+            // ============================================================
+            // DOM REFS
+            // ============================================================
+            var $ = function(id) { return document.getElementById(id); };
+
+            var totalVessels = $('totalVessels');
+            var activeVessels = $('activeVessels');
+            var maintenanceVessels = $('maintenanceVessels');
+            var damagedVessels = $('damagedVessels');
+            var efficiencyPercent = $('efficiencyPercent');
+            var generalBody = $('generalBody');
+            var generalBadge = $('generalBadge');
+            var regionTables = $('regionTables');
+            var fRegEff = $('fRegEff');
+            var fCatEff = $('fCatEff');
+            var fStatusEff = $('fStatusEff');
+
+            // ============================================================
+            // HELPER FUNCTIONS
+            // ============================================================
+            function getStatusClass(efficiency) {
+                if (efficiency >= 80) return 'excellent';
+                if (efficiency >= 70) return 'good';
+                if (efficiency >= 50) return 'medium';
+                if (efficiency >= 30) return 'low';
+                return 'critical';
+            }
+
+            function getStatusText(efficiency) {
+                if (efficiency >= 80) return 'ممتازة';
+                if (efficiency >= 70) return 'جيدة';
+                if (efficiency >= 50) return 'متوسطة';
+                if (efficiency >= 30) return 'منخفضة';
+                return 'حرجة';
+            }
+
+            function getRowClass(efficiency) {
+                if (efficiency >= 70) return 'row-high';
+                if (efficiency >= 50) return 'row-mid';
+                return 'row-low';
+            }
+
+            function getProgressClass(efficiency) {
+                if (efficiency >= 70) return 'high';
+                if (efficiency >= 50) return 'mid';
+                return 'low';
+            }
+
+            function getRegionBadgeClass(efficiency) {
+                if (efficiency >= 80) return 'excellent';
+                if (efficiency >= 70) return 'good';
+                if (efficiency >= 50) return 'medium';
+                if (efficiency >= 30) return 'low';
+                return 'critical';
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                var parts = dateStr.split('-');
+                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            }
+
+            // ============================================================
+            // RENDER FUNCTIONS
+            // ============================================================
+            function renderStats() {
+                var regionFilter = fRegEff.value;
+                var total = 0, active = 0, maintenance = 0, damaged = 0;
+
+                Object.keys(efficiencyData.regions).forEach(function(name) {
+                    var data = efficiencyData.regions[name];
+                    if (regionFilter === 'الكل' || name === regionFilter) {
+                        total += data.vessels;
+                        active += data.active;
+                        maintenance += data.maintenance;
+                        damaged += data.damaged;
+                    }
+                });
+
+                var efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+
+                totalVessels.textContent = total;
+                activeVessels.textContent = active;
+                maintenanceVessels.textContent = maintenance;
+                damagedVessels.textContent = damaged;
+                efficiencyPercent.textContent = efficiency + '%';
+            }
+
+            function renderGeneralTable() {
+                var categoryFilter = fCatEff.value;
+                var statusFilter = fStatusEff.value;
+
+                var filtered = efficiencyData.general;
+
+                if (categoryFilter !== 'الكل') {
+                    filtered = filtered.filter(function(item) {
+                        return item.category === categoryFilter;
+                    });
+                }
+
+                if (statusFilter !== 'الكل') {
+                    filtered = filtered.filter(function(item) {
+                        if (statusFilter === 'صالح') return item.efficiency >= 70;
+                        if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
+                        if (statusFilter === 'معطب') return item.efficiency < 50;
+                        return true;
+                    });
+                }
+
+                if (filtered.length === 0) {
+                    generalBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.15);">
+                                <span style="font-size:3rem;color:rgba(255,255,255,0.04);display:block;margin-bottom:12px;">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <h3 style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.2);margin-bottom:4px;">لا توجد بيانات</h3>
+                                <p style="font-size:0.75rem;color:rgba(255,255,255,0.1);">حاول تغيير معايير الفلترة</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var html = '';
+                filtered.forEach(function(item) {
+                    var eff = item.efficiency;
+                    var rowClass = getRowClass(eff);
+                    var statusClass = getStatusClass(eff);
+                    var statusText = getStatusText(eff);
+                    var progressClass = getProgressClass(eff);
+
+                    html += `
+                        <tr class="${rowClass}">
+                            <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
+                            <td>${item.active}</td>
+                            <td>${item.damaged}</td>
+                            <td class="eff-cell">${eff.toFixed(1)}%</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill ${progressClass}" style="width:${Math.min(eff, 100)}%;"></div>
+                                </div>
+                            </td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        </tr>
+                    `;
+                });
+
+                generalBody.innerHTML = html;
+
+                // Update badge
+                var avgEfficiency = filtered.reduce(function(sum, item) { return sum + item.efficiency; }, 0) / filtered.length;
+
+                if (avgEfficiency >= 80) {
+                    generalBadge.textContent = '✅ أداء ممتاز';
+                    generalBadge.className = 'badge success';
+                } else if (avgEfficiency >= 70) {
+                    generalBadge.textContent = '📈 أداء جيد';
+                    generalBadge.className = 'badge gold';
+                } else if (avgEfficiency >= 50) {
+                    generalBadge.textContent = '⚠️ أداء متوسط';
+                    generalBadge.className = 'badge warning';
+                } else {
+                    generalBadge.textContent = '🚨 أداء منخفض';
+                    generalBadge.className = 'badge danger';
+                }
+            }
+
+            function renderRegionTables() {
+                var regionFilter = fRegEff.value;
+                var html = '';
+
+                var filteredRegions = Object.keys(efficiencyData.regions);
+
+                if (regionFilter !== 'الكل') {
+                    filteredRegions = filteredRegions.filter(function(name) {
+                        return name === regionFilter;
+                    });
+                }
+
+                if (filteredRegions.length === 0) {
+                    regionTables.innerHTML = `
+                        <div class="section-content">
+                            <div style="text-align:center;padding:40px 20px;color:rgba(255,255,255,0.15);">
+                                <span style="font-size:3rem;color:rgba(255,255,255,0.04);display:block;margin-bottom:12px;">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </span>
+                                <h3 style="font-size:0.9rem;font-weight:600;color:rgba(255,255,255,0.2);margin-bottom:4px;">لا توجد أقاليم</h3>
+                                <p style="font-size:0.75rem;color:rgba(255,255,255,0.1);">حاول تغيير فلترة الإقليم</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filteredRegions.forEach(function(name) {
+                    var data = efficiencyData.regions[name];
+                    var efficiency = data.vessels > 0 ? ((data.active / data.vessels) * 100).toFixed(1) : 0;
+                    var badgeClass = getRegionBadgeClass(efficiency);
+
+                    // Generate vessel rows (mock data for each region)
+                    var vesselRows = '';
+                    var vessels = [
+                        { name: 'البروق 01', category: 'البروق', status: 'صالح', date: '2026-05-12' },
+                        { name: 'البروق 02', category: 'البروق', status: data.maintenance > 0 ? 'صيانة' : 'صالح', date: '2026-06-20' },
+                        { name: 'صقر 03', category: 'صقور', status: 'صالح', date: '2026-04-05' },
+                        { name: 'خافرة 07', category: 'خوافر', status: data.damaged > 0 ? 'معطب' : 'صالح', date: '2026-03-25' }
+                    ];
+
+                    // Add extra vessels based on data
+                    if (data.vessels > 4) {
+                        vessels.push({ name: 'البروق 05', category: 'البروق', status: 'صالح', date: '2026-06-03' });
+                    }
+                    if (data.vessels > 6) {
+                        vessels.push({ name: 'صقر 08', category: 'صقور', status: data.maintenance > 1 ? 'صيانة' : 'صالح', date: '2026-05-28' });
+                    }
+                    if (data.vessels > 8) {
+                        vessels.push({ name: 'زورق مزدوج 12', category: 'زوارق مزدوجة', status: 'صالح', date: '2026-06-02' });
+                    }
+
+                    var statusMap = {
+                        'صالح': 'excellent',
+                        'صيانة': 'medium',
+                        'معطب': 'low'
+                    };
+
+                    var statusLabel = {
+                        'صالح': '✅ صالح',
+                        'صيانة': '🔧 صيانة',
+                        'معطب': '⚠️ معطب'
+                    };
+
+                    vesselRows = vessels.slice(0, data.vessels).map(function(v) {
+                        var cls = statusMap[v.status] || 'excellent';
+                        var label = statusLabel[v.status] || v.status;
+                        return `
+                            <tr>
+                                <td style="text-align:right;font-weight:600;color:#fff;">${v.name}</td>
+                                <td>${v.category}</td>
+                                <td><span class="status-badge ${cls}">${label}</span></td>
+                                <td>${formatDate(v.date)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    html += `
+                        <div class="region-card">
+                            <div class="region-header">
+                                <div class="region-name">
+                                    <i class="fas fa-map-pin"></i> ${name}
+                                </div>
+                                <span class="region-badge ${badgeClass}">${efficiency}% جاهزية</span>
+                            </div>
+                            <div class="region-body">
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:right;">المركب</th>
+                                                <th>الفئة</th>
+                                                <th>الحالة</th>
+                                                <th>آخر صيانة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${vesselRows || `
+                                                <tr>
+                                                    <td colspan="4" style="text-align:center;padding:20px;color:rgba(255,255,255,0.1);">
+                                                        لا توجد مراكب مسجلة
+                                                    </td>
+                                                </tr>
+                                            `}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                regionTables.innerHTML = html;
+            }
+
+            function renderEfficiency() {
+                renderStats();
+                renderGeneralTable();
+                renderRegionTables();
+            }
+
+            // ============================================================
+            // ACTION FUNCTIONS
+            // ============================================================
+            function refreshEfficiency() {
+                var btn = document.querySelector('.eff-header-actions .btn-action.primary');
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    renderEfficiency();
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    showNotification('تم تحديث البيانات بنجاح ✅', 'success');
+                }, 800);
+            }
+
+            function resetEfficiencyFilters() {
+                fRegEff.value = 'الكل';
+                fCatEff.value = 'الكل';
+                fStatusEff.value = 'الكل';
+                renderEfficiency();
+                showNotification('تم إلغاء جميع الفلاتر ✅', 'success');
+            }
+
+            // ============================================================
+            // NOTIFICATION SYSTEM
+            // ============================================================
+            function showNotification(message, type) {
+                var old = document.querySelector('.eff-notification');
+                if (old) old.remove();
+
+                var colors = {
+                    success: 'rgba(34,197,94,0.15)',
+                    info: 'rgba(9,132,227,0.15)',
+                    error: 'rgba(239,68,68,0.15)'
+                };
+
+                var borders = {
+                    success: 'rgba(34,197,94,0.2)',
+                    info: 'rgba(9,132,227,0.2)',
+                    error: 'rgba(239,68,68,0.2)'
+                };
+
+                var notif = document.createElement('div');
+                notif.className = 'eff-notification';
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: ${colors[type] || colors.info};
+                    backdrop-filter: blur(12px);
+                    border: 1px solid ${borders[type] || borders.info};
+                    padding: 14px 24px;
+                    border-radius: 12px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    z-index: 9999;
+                    animation: slideUp 0.4s ease-out;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                `;
+                notif.textContent = message;
+
+                document.body.appendChild(notif);
+
+                setTimeout(function() {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(function() { notif.remove(); }, 400);
+                }, 3500);
+            }
+
+            // ============================================================
+            // ADDITIONAL STYLES
+            // ============================================================
+            var styleNotif = document.createElement('style');
+            styleNotif.textContent = `
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                .empty-state .spinner {
+                    width: 32px;
+                    height: 32px;
+                    border: 3px solid rgba(255,255,255,0.04);
+                    border-top-color: var(--gold);
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                    margin: 0 auto 12px;
+                }
+            `;
+            document.head.appendChild(styleNotif);
+
+            // ============================================================
+            // EVENT BINDING
+            // ============================================================
+            document.addEventListener('DOMContentLoaded', function() {
+                // Bind buttons
+                document.getElementById('refreshBtn').addEventListener('click', refreshEfficiency);
+                document.getElementById('filterBtn').addEventListener('click', renderEfficiency);
+                document.getElementById('resetBtn').addEventListener('click', resetEfficiencyFilters);
+
+                // Bind selects
+                fRegEff.addEventListener('change', renderEfficiency);
+                fCatEff.addEventListener('change', renderEfficiency);
+                fStatusEff.addEventListener('change', renderEfficiency);
+
+                // Initial render
+                renderEfficiency();
+
+                console.log('📊 Efficiency Page loaded successfully!');
+            });
+
+            // Expose functions globally for debugging
+            window.renderEfficiency = renderEfficiency;
+            window.refreshEfficiency = refreshEfficiency;
+            window.resetEfficiencyFilters = resetEfficiencyFilters;
+
+        })();
+    </script>
+</div>
