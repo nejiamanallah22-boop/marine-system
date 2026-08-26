@@ -2,7 +2,7 @@
 <div id="page-sessions">
     <style>
         /* ============================================================
-           🔄 SESSIONS PAGE - PROFESSIONAL v3.0
+           🔄 SESSIONS PAGE - PROFESSIONAL v3.1 (FIXED MAP)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -172,18 +172,6 @@
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .sessions-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.5);
-        }
-
-        .sessions-header-actions .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-            transform: translateY(-2px);
-        }
-
         /* ============================================================
            STATS CARDS
            ============================================================ */
@@ -237,7 +225,6 @@
         .stat-card .number.green { color: var(--success-light); }
         .stat-card .number.red { color: var(--danger); }
         .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.pink { color: #f472b6; }
 
         .stat-card .label {
             font-size: 11px;
@@ -440,54 +427,6 @@
             border: 1px solid rgba(251,191,36,0.1);
         }
 
-        .btn-sm.danger {
-            background: rgba(248,113,113,0.15);
-            color: #f87171;
-            border: 1px solid rgba(248,113,113,0.1);
-        }
-
-        /* ===== SESSION MARKER ===== */
-        .session-marker {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-size: 12px;
-            color: white;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .session-marker .avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            border: 2px solid white;
-            box-shadow: 0 0 20px rgba(13,110,253,0.3);
-        }
-
-        .session-marker .avatar.active {
-            background: #4ade80;
-            border-color: #4ade80;
-        }
-
-        .session-marker .avatar.inactive {
-            background: #6c757d;
-            border-color: #6c757d;
-        }
-
-        .session-marker .name {
-            font-size: 10px;
-            margin-top: 2px;
-            background: rgba(0,0,0,0.8);
-            padding: 2px 8px;
-            border-radius: 10px;
-            backdrop-filter: blur(4px);
-        }
-
         /* ============================================================
            EMPTY STATE
            ============================================================ */
@@ -586,10 +525,8 @@
             .stat-card .label { font-size: 9px; }
             .sessions-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
             .sessions-header-left h2 { font-size: 14px; }
-            .sessions-header-left p { font-size: 10px; }
             #sessionMap { height: 200px; }
             .btn-sm { font-size: 10px; padding: 3px 8px; }
-            .map-status { font-size: 10px; }
         }
     </style>
 
@@ -688,17 +625,11 @@
 </div>
 
 <!-- ============================================================
-Leaflet CSS & JS
-============================================================ -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- ============================================================
-📦 JAVASCRIPT - SESSIONS PAGE (FIXED)
+📦 JAVASCRIPT - SESSIONS PAGE (FIXED MAP)
 ============================================================ -->
 <script>
 // ============================================================
-// 🔄 SESSIONS PAGE - v3.0 (FIXED)
+// 🔄 SESSIONS PAGE - v3.1 (FIXED)
 // ============================================================
 
 // ✅ تجنب إعادة تعريف المتغيرات
@@ -797,10 +728,29 @@ function getDuration(startDate) {
 }
 
 // ============================================================
-// 2. تهيئة الخريطة
+// 2. تهيئة الخريطة (مع تحميل Leaflet)
 // ============================================================
 
 function initSessionMap() {
+    // ✅ التحقق من وجود مكتبة Leaflet
+    if (typeof L === 'undefined') {
+        console.warn('⚠️ مكتبة Leaflet غير محملة، جاري التحميل...');
+        // محاولة تحميل Leaflet
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+        
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.onload = function() {
+            console.log('✅ تم تحميل Leaflet');
+            initSessionMap();
+        };
+        document.head.appendChild(script);
+        return;
+    }
+    
     if (sessionMap) {
         sessionMap.invalidateSize();
         return;
@@ -1127,6 +1077,7 @@ function initSessionsPage() {
     window._sessionsLoaded = true;
     
     setTimeout(() => {
+        // ✅ تهيئة الخريطة مع تحميل Leaflet
         initSessionMap();
         loadSessions();
         startAutoRefresh();
@@ -1148,6 +1099,6 @@ window.initSessionMap = initSessionMap;
 window.loadSessions = loadSessions;
 window.startAutoRefresh = startAutoRefresh;
 
-console.log('✅ صفحة المراقبة v3.0 جاهزة');
+console.log('✅ صفحة المراقبة v3.1 جاهزة');
 </script>
 </div>
