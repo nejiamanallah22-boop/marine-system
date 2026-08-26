@@ -2,7 +2,7 @@
 <div id="page-maintenance">
     <style>
         /* ============================================================
-           🔧 MAINTENANCE PAGE - FINAL FIXED VERSION
+           🔧 MAINTENANCE PAGE - FIXED VERSION
            ============================================================ */
         
         .maintenance-container {
@@ -764,7 +764,7 @@
         <div class="maintenance-header">
             <h2>
                 🔧 إدارة الصيانة
-                <span class="badge">FIXED v6.0</span>
+                <span class="badge">FIXED v7.0</span>
             </h2>
             <div class="header-actions">
                 <button class="btn btn-primary" id="addMaintenanceBtn">➕ إضافة صيانة</button>
@@ -1070,29 +1070,35 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - FINAL FIXED VERSION
+    📦 JAVASCRIPT - FIXED VERSION (بدون currentUser مكرر)
     ============================================================ -->
     <script>
     // ============================================================
-    // 🔧 MAINTENANCE SCRIPT - FINAL FIXED VERSION
+    // 🛡️ FIX: منع إعادة تعريف المتغيرات
     // ============================================================
 
-    // ============================================================
-    // 1. STATE
-    // ============================================================
+    // ✅ استخدام المتغيرات العامة من index.html
+    const currentUser = window.currentUser || null;
+    
+    // ✅ التأكد من وجود المتغيرات العامة
+    if (typeof window.allVessels === 'undefined') {
+        window.allVessels = [];
+    }
+    if (typeof window.allMaintenance === 'undefined') {
+        window.allMaintenance = [];
+    }
 
-    let currentUser = null;
+    // ✅ مرجع سريع للمتغيرات
+    const allVessels = window.allVessels;
+    const allMaintenance = window.allMaintenance;
 
-    try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            currentUser = JSON.parse(userData);
-            console.log('👤 Current user:', currentUser?.name || 'Unknown');
-        }
-    } catch(e) { console.warn('⚠️ Could not load user:', e); }
+    console.log('🔧 Maintenance page loaded (fixed)');
+    console.log('👤 Current user:', currentUser?.name || 'Unknown');
+    console.log('🚢 Vessels:', allVessels.length);
+    console.log('🔧 Maintenance:', allMaintenance.length);
 
     // ============================================================
-    // 2. HELPERS
+    // 1. HELPERS
     // ============================================================
 
     function getToken() {
@@ -1128,7 +1134,7 @@
     }
 
     // ============================================================
-    // 3. CORE DATA FUNCTIONS
+    // 2. LOAD DATA
     // ============================================================
 
     async function loadMaintenanceData() {
@@ -1146,7 +1152,7 @@
                 return;
             }
 
-            // ✅ تحميل المراكب
+            // تحميل المراكب
             const vesselsRes = await fetch('/api/vessels', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1158,7 +1164,7 @@
                 console.error('❌ [MAINT] Vessels API error:', vesselsRes.status);
             }
 
-            // ✅ تحميل سجل الصيانة
+            // تحميل سجل الصيانة
             const maintRes = await fetch('/api/maintenance', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
@@ -1170,7 +1176,7 @@
                 console.error('❌ [MAINT] Maintenance API error:', maintRes.status);
             }
 
-            // ✅ تحديث الواجهة
+            // تحديث الواجهة
             renderAll();
             
             console.log('✅ [MAINT] Data loaded successfully');
@@ -1181,7 +1187,7 @@
     }
 
     // ============================================================
-    // 4. RENDER FUNCTIONS
+    // 3. RENDER FUNCTIONS
     // ============================================================
 
     function renderAll() {
@@ -1485,7 +1491,7 @@
     }
 
     // ============================================================
-    // 5. FORM HELPERS
+    // 4. FORM HELPERS
     // ============================================================
 
     function toggleMaintenanceForm() {
@@ -1591,7 +1597,7 @@
     }
 
     // ============================================================
-    // 6. CRUD OPERATIONS
+    // 5. CRUD OPERATIONS
     // ============================================================
 
     async function saveMaintenance() {
@@ -1757,7 +1763,7 @@
     }
 
     // ============================================================
-    // 7. HISTORY MODAL
+    // 6. HISTORY MODAL
     // ============================================================
 
     function showHistory(vesselId, vesselName) {
@@ -1812,7 +1818,7 @@
     }
 
     // ============================================================
-    // 8. FILTERS
+    // 7. FILTERS
     // ============================================================
 
     function applyHistoryFilters() { renderHistory(); showToast('✅ تم تطبيق الفلترة', 'success'); }
@@ -1826,7 +1832,7 @@
     }
 
     // ============================================================
-    // 9. EXPORT
+    // 8. EXPORT
     // ============================================================
 
     function exportMaintenanceReport() {
@@ -1851,11 +1857,11 @@
     }
 
     // ============================================================
-    // 10. INIT - ربط الأزرار
+    // 9. INIT - ربط الأزرار
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Maintenance page loading (Final Fixed version)...');
+        console.log('🔧 Maintenance page loading (Fixed version)...');
 
         // ✅ ربط زر التحديث
         document.getElementById('refreshMaintenanceBtn').onclick = loadMaintenanceData;
@@ -1893,7 +1899,7 @@
     });
 
     // ============================================================
-    // 11. EXPOSE GLOBALS
+    // 10. EXPOSE GLOBALS
     // ============================================================
 
     window.loadMaintenanceData = loadMaintenanceData;
@@ -1917,6 +1923,6 @@
     window.updateYearFilter = updateYearFilter;
     window.updateBrokenBadge = updateBrokenBadge;
 
-    console.log('✅ Maintenance page script loaded - Final Fixed v6.0');
+    console.log('✅ Maintenance page script loaded - Fixed version v7.0');
     </script>
 </div>
