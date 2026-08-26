@@ -114,6 +114,16 @@
             box-shadow: 0 8px 30px rgba(96,165,250,0.3);
         }
 
+        .btn-action.success {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            color: #0a1628;
+        }
+
+        .btn-action.success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(34,197,94,0.3);
+        }
+
         .btn-action.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
@@ -123,16 +133,6 @@
         .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
-        }
-
-        .btn-action.success {
-            background: linear-gradient(135deg, #22c55e, #4ade80);
-            color: #0a1628;
-        }
-
-        .btn-action.success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(34,197,94,0.3);
         }
 
         /* ===== STATS ===== */
@@ -851,7 +851,9 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ============================================================
+    JAVASCRIPT - FIXED
+    ============================================================ -->
     <script>
         (function() {
             'use strict';
@@ -1163,6 +1165,7 @@
             // INIT
             // ============================================================
             function init() {
+                console.log('🚀 Initializing Users page...');
                 updateStats();
                 renderTable();
 
