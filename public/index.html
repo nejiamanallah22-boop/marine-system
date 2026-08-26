@@ -490,18 +490,25 @@
         };  
 
         // ============================================================  
-        // 📦 STATE  
+        // 📦 STATE - استخدام var لتجنب التكرار  
         // ============================================================  
 
         var currentUser = null;  
         var currentPage = 'dashboard';  
+        var notifications = [];  
         var allVessels = [];  
         var allMaintenance = [];  
         var allUsers = [];  
+        var allLogs = [];  
+        var sessionsData = [];  
 
+        // ✅ ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
+        window.currentUser = currentUser;  
         window.allVessels = allVessels;  
         window.allMaintenance = allMaintenance;  
         window.allUsers = allUsers;  
+        window.allLogs = allLogs;  
+        window.sessionsData = sessionsData;  
 
         // ============================================================  
         // 🔧 HELPERS  
