@@ -1,823 +1,1162 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
-        /* ===== STYLES ===== */
+        #page-users {
+            width: 100%;
+            max-width: 100%;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== HEADER ===== */
         .users-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            gap: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 12px;
         }
-        .users-header h2 { margin: 0; color: white; font-size: 22px; }
-        .users-header p { margin: 0; color: rgba(255,255,255,0.4); font-size: 13px; }
-        
+
+        .users-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .users-header-left .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+        }
+
+        .users-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .users-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .users-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(96,165,250,0.3);
+        }
+
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        /* ===== STATS ===== */
         .users-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
+            gap: 12px;
+            margin-bottom: 20px;
         }
+
         .stat-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 12px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .stat-card .number { font-size: 22px; font-weight: 700; color: #60a5fa; }
-        .stat-card .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            opacity: 0.6;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #60a5fa;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #4ade80; }
         .stat-card .number.red { color: #f87171; }
-        .stat-card .number.gold { color: #f5d76e; }
-        
-        .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 10px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 16px;
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
         }
-        .input-grid input, .input-grid select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.06);
+
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            padding: 10px 20px;
             background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
             color: #e2e8f0;
-            font-size: 0.85rem;
-            font-family: inherit;
-            width: 100%;
+            font-size: 0.75rem;
+            min-width: 120px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
         }
-        .input-grid input:focus, .input-grid select:focus {
-            border-color: #e6b31e;
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(230,179,30,0.06);
+            border-color: #60a5fa;
         }
-        .input-grid input::placeholder {
-            color: rgba(255,255,255,0.15);
-        }
-        .input-grid select option {
+
+        .filter-bar select option {
             background: #0a1628;
             color: #e2e8f0;
         }
-        
-        .btn-save {
-            padding: 8px 16px;
+
+        .btn-filter {
+            padding: 6px 16px;
             border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.85rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: inherit;
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
+            font-family: 'Cairo', sans-serif;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 6px;
         }
-        .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+
+        .btn-filter.primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
         }
-        
+
+        .btn-filter.primary:hover {
+            transform: scale(1.04);
+        }
+
+        .btn-filter.outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ===== TABLE ===== */
+        .users-section {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header h3 i {
+            color: #60a5fa;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge.blue {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .badge.gold {
+            background: rgba(230,179,30,0.12);
+            color: #f5d76e;
+        }
+
+        .badge.green {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .badge.red {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
         .table-wrapper {
             overflow-x: auto;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            margin-top: 10px;
+            padding: 16px 20px;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 800px;
+        }
+
         thead {
-            background: rgba(15,52,96,0.3);
-            border-bottom: 2px solid rgba(230,179,30,0.08);
+            background: rgba(96,165,250,0.08);
+            border-bottom: 2px solid rgba(96,165,250,0.08);
         }
+
         thead th {
-            padding: 10px 8px;
-            text-align: right;
-            font-weight: 600;
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 700;
             font-size: 0.6rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.35);
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
-        thead th i { margin-left: 4px; color: #e6b31e; }
-        tbody td {
-            padding: 8px 6px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.6);
+
+        thead th i {
+            margin-left: 4px;
+            color: #60a5fa;
         }
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
-        
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tbody .user-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
         .status-badge {
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 20px;
             font-size: 0.65rem;
             font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
-        .status-badge.active { background: rgba(74,222,128,0.15); color: #4ade80; }
-        .status-badge.inactive { background: rgba(248,113,113,0.15); color: #f87171; }
-        
-        .btn-sm {
-            padding: 3px 10px;
+
+        .status-badge.active {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.inactive {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.admin {
+            background: rgba(167,139,250,0.12);
+            color: #a78bfa;
+        }
+
+        .status-badge.user {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btn {
+            padding: 4px 10px;
             border: none;
-            border-radius: 20px;
-            font-size: 0.6rem;
-            font-weight: 600;
+            border-radius: 6px;
+            font-size: 0.65rem;
             cursor: pointer;
             transition: all 0.3s;
-            font-family: inherit;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin: 2px;
         }
-        .btn-sm.edit { background: rgba(245,200,66,0.12); color: #f5c842; }
-        .btn-sm.edit:hover { background: #f5c842; color: #0a1628; }
-        .btn-sm.delete { background: rgba(225,112,85,0.12); color: #e17055; }
-        .btn-sm.delete:hover { background: #e17055; color: #fff; }
-        .btn-sm.toggle { background: rgba(59,130,246,0.12); color: #60a5fa; }
-        .btn-sm.toggle:hover { background: #60a5fa; color: #0a1628; }
-        .btn-sm + .btn-sm { margin-right: 4px; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.15);
+
+        .action-btn.edit {
+            background: rgba(230,179,30,0.1);
+            color: #f5d76e;
         }
-        .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 10px; color: rgba(255,255,255,0.05); }
-        .empty-state h3 { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.2); }
-        .empty-state p { font-size: 0.75rem; }
-        
+
+        .action-btn.edit:hover {
+            background: rgba(230,179,30,0.2);
+        }
+
+        .action-btn.delete {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .action-btn.password {
+            background: rgba(96,165,250,0.1);
+            color: #60a5fa;
+        }
+
+        .action-btn.password:hover {
+            background: rgba(96,165,250,0.2);
+        }
+
+        /* ===== MODAL ===== */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            z-index: 9999;
             background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
+            z-index: 9999;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        .modal-overlay.active { display: flex; }
-        .modal-overlay .modal-content {
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal-box {
             background: #111e3a;
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 16px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
-            padding: 24px;
-            animation: modalFade 0.3s ease;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            animation: modalFade 0.3s ease-out;
         }
+
         @keyframes modalFade {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .modal-overlay .modal-header {
+
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
+            padding: 16px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        .modal-overlay .modal-header h3 { color: #fff; font-size: 18px; font-weight: 700; margin: 0; }
-        .modal-overlay .modal-close {
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .modal-close {
             background: none;
             border: none;
             color: rgba(255,255,255,0.2);
             font-size: 24px;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 4px;
             border-radius: 8px;
             transition: all 0.3s;
         }
-        .modal-overlay .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
-        .modal-overlay .form-group { margin-bottom: 12px; }
-        .modal-overlay .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-        .modal-overlay .form-group input, .modal-overlay .form-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.06);
+
+        .modal-close:hover {
             background: rgba(255,255,255,0.04);
-            color: #e2e8f0;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        .modal-overlay .form-group input:focus, .modal-overlay .form-group select:focus {
-            border-color: #e6b31e;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(230,179,30,0.06);
-        }
-        .modal-overlay .modal-footer {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
-        }
-        .modal-overlay .modal-footer .btn-submit {
-            flex: 1;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-        .modal-overlay .modal-footer .btn-submit.primary {
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: #0a1628;
-        }
-        .modal-overlay .modal-footer .btn-submit.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
-        }
-        .modal-overlay .modal-footer .btn-submit.secondary {
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        .modal-overlay .modal-footer .btn-submit.secondary:hover {
-            background: rgba(255,255,255,0.08);
             color: #fff;
         }
-        
-        @media (max-width: 768px) {
-            .users-header { flex-direction: column; align-items: flex-start; }
-            .users-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .input-grid { grid-template-columns: 1fr 1fr; padding: 12px 14px; gap: 8px; }
-            .input-grid .btn-save { grid-column: span 2; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 600px; }
-            thead th, tbody td { padding: 6px 4px; }
+
+        .modal-body {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
         }
+
+        .modal-body .form-group {
+            margin-bottom: 14px;
+        }
+
+        .modal-body .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 4px;
+        }
+
+        .modal-body .form-group input,
+        .modal-body .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .modal-body .form-group input:focus,
+        .modal-body .form-group select:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .modal-body .form-group select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(96,165,250,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 20px rgba(239,68,68,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .toast-info {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #page-users { padding: 12px; }
+            .users-header { flex-direction: column; align-items: flex-start; }
+            .users-header-left { width: 100%; }
+            .users-header-left h2 { font-size: 16px; }
+            .users-header-actions { width: 100%; }
+            .users-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card .number { font-size: 20px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .table-wrapper { padding: 12px; }
+            table { font-size: 0.7rem; min-width: 700px; }
+            thead th, tbody td { padding: 6px 8px; }
+            .modal-box { max-width: 95%; }
+        }
+
         @media (max-width: 480px) {
             .users-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
-            .input-grid { grid-template-columns: 1fr; }
-            .input-grid .btn-save { grid-column: span 1; }
-            .modal-overlay .modal-content { padding: 16px; margin: 10px; }
+            .stat-card .label { font-size: 9px; }
+            .users-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .users-header-left h2 { font-size: 14px; }
+            .section-header h3 { font-size: 13px; }
+            thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
+            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
         }
     </style>
 
-    <!-- HEADER -->
+    <!-- ===== HEADER ===== -->
     <div class="users-header">
-        <div>
-            <h2>👥 إدارة المستخدمين</h2>
-            <p>إدارة حسابات المستخدمين والصلاحيات</p>
+        <div class="users-header-left">
+            <div class="icon"><i class="fas fa-users"></i></div>
+            <div>
+                <h2>إدارة المستخدمين</h2>
+                <p>إدارة حسابات المستخدمين والأقاليم والوحدات</p>
+            </div>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button onclick="refreshUsers()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:0.8rem;">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
+        <div class="users-header-actions">
+            <button class="btn-action primary" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
-    <!-- STATS -->
+    <!-- ===== STATS ===== -->
     <div class="users-stats" id="usersStats">
-        <div class="stat-card">
-            <div class="number" id="totalUsers">0</div>
-            <div class="label">📊 إجمالي المستخدمين</div>
-        </div>
-        <div class="stat-card">
-            <div class="number green" id="activeUsers">0</div>
-            <div class="label">🟢 نشط</div>
-        </div>
-        <div class="stat-card">
-            <div class="number red" id="inactiveUsers">0</div>
-            <div class="label">🔴 غير نشط</div>
-        </div>
-        <div class="stat-card">
-            <div class="number gold" id="adminUsers">0</div>
-            <div class="label">👑 مسؤولين</div>
-        </div>
+        <div class="stat-card"><div class="number" id="totalUsers">0</div><div class="label">👥 إجمالي المستخدمين</div></div>
+        <div class="stat-card"><div class="number green" id="activeUsers">0</div><div class="label">🟢 نشط</div></div>
+        <div class="stat-card"><div class="number red" id="inactiveUsers">0</div><div class="label">🔴 غير نشط</div></div>
+        <div class="stat-card"><div class="number gold" id="adminUsers">0</div><div class="label">🛡️ مدراء</div></div>
     </div>
 
-    <!-- INPUT FORM -->
-    <div class="input-grid">
-        <input type="text" id="iName" placeholder="اسم المستخدم">
-        <input type="text" id="iUsername" placeholder="اسم الدخول">
-        <input type="email" id="iEmail" placeholder="البريد الإلكتروني">
-        <input type="password" id="iPassword" placeholder="كلمة المرور">
-        <select id="iRole">
-            <option value="viewer">👀 مشاهد</option>
-            <option value="operator">🔧 مشغل</option>
-            <option value="manager">📋 مدير</option>
-            <option value="admin">👑 مسؤول</option>
+    <!-- ===== FILTER BAR ===== -->
+    <div class="filter-bar">
+        <label><i class="fas fa-search"></i> بحث</label>
+        <input type="text" id="searchUser" placeholder="اسم المستخدم، البريد..." />
+
+        <label><i class="fas fa-filter"></i> الوحدة</label>
+        <select id="fUnitUser">
+            <option value="الكل">🌍 جميع الوحدات</option>
+            <option value="الحرس البحري بالشمال">🗺️ الحرس البحري بالشمال</option>
+            <option value="الحرس البحري بالساحل">🗺️ الحرس البحري بالساحل</option>
+            <option value="الحرس البحري بالوسط">🗺️ الحرس البحري بالوسط</option>
+            <option value="الحرس البحري بالجنوب">🗺️ الحرس البحري بالجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
-        <button class="btn-save" onclick="addUser()">
-            <i class="fas fa-user-plus"></i> إضافة مستخدم
-        </button>
+
+        <label><i class="fas fa-circle"></i> الحالة</label>
+        <select id="fStatusUser">
+            <option value="الكل">📊 جميع الحالات</option>
+            <option value="نشط">🟢 نشط</option>
+            <option value="غير نشط">🔴 غير نشط</option>
+        </select>
+
+        <label><i class="fas fa-user-tag"></i> الدور</label>
+        <select id="fRoleUser">
+            <option value="الكل">👤 جميع الأدوار</option>
+            <option value="admin">🛡️ مدير</option>
+            <option value="user">👤 مستخدم</option>
+            <option value="operator">🔧 مشغل</option>
+            <option value="viewer">📡 مشاهد</option>
+        </select>
+
+        <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
+        <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
-    <!-- TABLE -->
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th><i class="fas fa-user"></i> الاسم</th>
-                    <th><i class="fas fa-user-tag"></i> اسم الدخول</th>
-                    <th><i class="fas fa-envelope"></i> البريد</th>
-                    <th><i class="fas fa-key"></i> الصلاحية</th>
-                    <th><i class="fas fa-circle"></i> الحالة</th>
-                    <th><i class="fas fa-cog"></i> إجراءات</th>
-                </tr>
-            </thead>
-            <tbody id="usersBody">
-                <tr>
-                    <td colspan="6" class="empty-state">
-                        <i class="fas fa-spinner fa-pulse"></i>
-                        <h3>جاري تحميل المستخدمين...</h3>
-                        <p>يرجى الانتظار</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- MODAL -->
-<div class="modal-overlay" id="userModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">✏️ تعديل المستخدم</h3>
-            <button class="modal-close" onclick="closeUserModal()">✕</button>
+    <!-- ===== TABLE ===== -->
+    <div class="users-section">
+        <div class="section-header">
+            <h3><i class="fas fa-list-ul"></i> قائمة المستخدمين</h3>
+            <span class="badge blue" id="usersBadge">📊 جاري التحميل...</span>
         </div>
-        <div id="modalBody">
-            <div class="form-group">
-                <label>الاسم</label>
-                <input type="text" id="mName" placeholder="الاسم الكامل">
-            </div>
-            <div class="form-group">
-                <label>اسم الدخول</label>
-                <input type="text" id="mUsername" placeholder="اسم المستخدم">
-            </div>
-            <div class="form-group">
-                <label>البريد الإلكتروني</label>
-                <input type="email" id="mEmail" placeholder="example@domain.com">
-            </div>
-            <div class="form-group">
-                <label>الصلاحية</label>
-                <select id="mRole">
-                    <option value="viewer">👀 مشاهد</option>
-                    <option value="operator">🔧 مشغل</option>
-                    <option value="manager">📋 مدير</option>
-                    <option value="admin">👑 مسؤول</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>كلمة المرور الجديدة (اختياري)</label>
-                <input type="password" id="mPassword" placeholder="اترك فارغاً للإبقاء على نفس الكلمة">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-submit primary" onclick="updateUser()">💾 حفظ التغييرات</button>
-            <button class="btn-submit secondary" onclick="closeUserModal()">إلغاء</button>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
+                        <th style="text-align:right;"><i class="fas fa-user"></i> الاسم</th>
+                        <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
+                        <th><i class="fas fa-building"></i> الوحدة</th>
+                        <th><i class="fas fa-user-tag"></i> الدور</th>
+                        <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="usersBody">
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <div style="font-size:2rem;margin-bottom:10px;">👥</div>
+                            جاري تحميل المستخدمين...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
 
-<script>
-// ============================================================
-// 👥 USERS PAGE - FIXED (No duplicate variables)
-// ============================================================
+    <!-- ===== MODAL: إضافة / تعديل مستخدم ===== -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">إضافة مستخدم جديد</h3>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label>👤 الاسم الكامل</label>
+                    <input type="text" id="userName" placeholder="أحمد محمد">
+                </div>
+                <div class="form-group">
+                    <label>📧 البريد الإلكتروني</label>
+                    <input type="email" id="userEmail" placeholder="ahmed@marine.tn">
+                </div>
+                <div class="form-group">
+                    <label>🔑 كلمة المرور</label>
+                    <input type="password" id="userPassword" placeholder="********">
+                </div>
+                <div class="form-group">
+                    <label>🏛️ الوحدة</label>
+                    <select id="userUnit">
+                        <option value="">-- اختر الوحدة --</option>
+                        <option value="الحرس البحري بالشمال">🗺️ الحرس البحري بالشمال</option>
+                        <option value="الحرس البحري بالساحل">🗺️ الحرس البحري بالساحل</option>
+                        <option value="الحرس البحري بالوسط">🗺️ الحرس البحري بالوسط</option>
+                        <option value="الحرس البحري بالجنوب">🗺️ الحرس البحري بالجنوب</option>
+                        <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+                        <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+                        <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+                        <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+                        <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🛡️ الدور</label>
+                    <select id="userRole">
+                        <option value="user">👤 مستخدم</option>
+                        <option value="admin">🛡️ مدير</option>
+                        <option value="operator">🔧 مشغل</option>
+                        <option value="viewer">📡 مشاهد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🟢 الحالة</label>
+                    <select id="userStatus">
+                        <option value="نشط">🟢 نشط</option>
+                        <option value="غير نشط">🔴 غير نشط</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>
+                <button class="btn-primary" id="modalSave">💾 حفظ</button>
+            </div>
+        </div>
+    </div>
 
-// ============================================================
-// 1. TOKEN FUNCTIONS (موحدة)
-// ============================================================
+    <!-- ===== MODAL: تغيير كلمة المرور ===== -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🔑 تغيير كلمة المرور</h3>
+                <button class="modal-close" id="passwordModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="passwordUserId">
+                <div class="form-group">
+                    <label>👤 المستخدم</label>
+                    <input type="text" id="passwordUserName" disabled style="opacity:0.6;">
+                </div>
+                <div class="form-group">
+                    <label>🔑 كلمة المرور الجديدة</label>
+                    <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+                </div>
+                <div class="form-group">
+                    <label>🔑 تأكيد كلمة المرور</label>
+                    <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="passwordModalCancel">إلغاء</button>
+                <button class="btn-primary" id="passwordModalSave">💾 تغيير كلمة المرور</button>
+            </div>
+        </div>
+    </div>
 
-function getToken() {
-    return localStorage.getItem('marine_token') ||
-           localStorage.getItem('token') ||
-           localStorage.getItem('authToken') ||
-           localStorage.getItem('accessToken') ||
-           null;
-}
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        (function() {
+            'use strict';
 
-function getAuthHeaders() {
-    const token = getToken();
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
-    };
-}
+            console.log('👥 Users Page - loading...');
 
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer') || document.body;
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(30px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
+            // ============================================================
+            // DATA
+            // ============================================================
+            var usersData = [
+                { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.tn', unit: 'الحرس البحري بالشمال', role: 'admin',
+                    status: 'نشط' },
+                { id: 2, name: 'سارة علي', email: 'sara@marine.tn', unit: 'الحرس البحري بالساحل', role: 'admin',
+                    status: 'نشط' },
+                { id: 3, name: 'محمد خالد', email: 'mohamed@marine.tn', unit: 'وحدة الصيانة والإسناد البحري تونس',
+                    role: 'user', status: 'نشط' },
+                { id: 4, name: 'فاطمة نور', email: 'fatma@marine.tn', unit: 'الحرس البحري بالوسط', role: 'operator',
+                    status: 'نشط' },
+                { id: 5, name: 'علي حسن', email: 'ali@marine.tn', unit: 'الحرس البحري بالجنوب', role: 'viewer',
+                    status: 'غير نشط' },
+                { id: 6, name: 'نورا سليم', email: 'nora@marine.tn', unit: 'وحدة الصيانة والإسناد البحري المنستير',
+                    role: 'user', status: 'نشط' },
+                { id: 7, name: 'ياسين عمر', email: 'yassin@marine.tn', unit: 'وحدة الصيانة والإسناد البحري جرجيس',
+                    role: 'operator', status: 'غير نشط' },
+                { id: 8, name: 'ليلى منير', email: 'layla@marine.tn', unit: 'المجمع الأمني بقبيبة', role: 'admin',
+                    status: 'نشط' },
+                { id: 9, name: 'كريم سامي', email: 'karim@marine.tn', unit: 'الحرس البحري بالشمال', role: 'user',
+                    status: 'نشط' },
+                { id: 10, name: 'منى طارق', email: 'mona@marine.tn', unit: 'وحدة الصيانة والإسناد البحري صفاقس',
+                    role: 'viewer', status: 'نشط' }
+            ];
 
-// ============================================================
-// 2. متغيرات - استخدم var لتجنب التكرار
-// ============================================================
+            var nextId = 11;
+            var filteredData = usersData.slice();
+            var currentEditId = null;
 
-if (typeof window._usersLoaded === 'undefined') {
-    window._usersLoaded = false;
-}
+            // ============================================================
+            // DOM REFS
+            // ============================================================
+            var $ = function(id) { return document.getElementById(id); };
 
-var usersData = [];
-var currentEditId = null;
-
-// ============================================================
-// 3. تحميل المستخدمين
-// ============================================================
-
-async function loadUsers() {
-    console.log('👥 تحميل المستخدمين...');
-    
-    const token = getToken();
-    if (!token) {
-        console.warn('⚠️ لا يوجد توكن');
-        return [];
-    }
-    
-    try {
-        const response = await fetch('/api/users', {
-            headers: getAuthHeaders()
-        });
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                window.location.href = '/index.html';
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            function getRoleLabel(role) {
+                var map = { admin: '🛡️ مدير', user: '👤 مستخدم', operator: '🔧 مشغل', viewer: '📡 مشاهد' };
+                return map[role] || role;
             }
-            throw new Error('فشل تحميل المستخدمين');
-        }
-        
-        const data = await response.json();
-        usersData = data.users || data || [];
-        console.log('✅ تم تحميل المستخدمين:', usersData.length);
-        return usersData;
-    } catch (error) {
-        console.error('❌ خطأ في تحميل المستخدمين:', error);
-        return [];
-    }
-}
 
-// ============================================================
-// 4. عرض المستخدمين
-// ============================================================
+            function getRoleClass(role) {
+                var map = { admin: 'admin', user: 'user', operator: 'user', viewer: 'user' };
+                return map[role] || 'user';
+            }
 
-async function renderUsers() {
-    const tbody = document.getElementById('usersBody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="6" class="empty-state">
-                <i class="fas fa-spinner fa-pulse"></i>
-                <h3>جاري تحميل المستخدمين...</h3>
-                <p>يرجى الانتظار</p>
-            </td>
-        </tr>
-    `;
-    
-    try {
-        const users = await loadUsers();
-        
-        // ✅ تحديث الإحصائيات
-        const total = users.length;
-        const active = users.filter(u => u.isActive !== false).length;
-        const inactive = users.filter(u => u.isActive === false).length;
-        const admins = users.filter(u => u.role === 'admin').length;
-        
-        document.getElementById('totalUsers').textContent = total;
-        document.getElementById('activeUsers').textContent = active;
-        document.getElementById('inactiveUsers').textContent = inactive;
-        document.getElementById('adminUsers').textContent = admins;
-        
-        if (users.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>لا يوجد مستخدمين</h3>
-                        <p>قم بإضافة مستخدم جديد</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        let html = '';
-        users.forEach(u => {
-            const isActive = u.isActive !== false;
-            const statusClass = isActive ? 'active' : 'inactive';
-            const statusText = isActive ? '🟢 نشط' : '🔴 غير نشط';
-            const roleLabels = {
-                'admin': '👑 مسؤول',
-                'manager': '📋 مدير',
-                'operator': '🔧 مشغل',
-                'viewer': '👀 مشاهد'
+            function getStatusClass(status) {
+                return status === 'نشط' ? 'active' : 'inactive';
+            }
+
+            function getStatusBadge(status) {
+                return status === 'نشط' ? '🟢 نشط' : '🔴 غير نشط';
+            }
+
+            // ============================================================
+            // TOAST
+            // ============================================================
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
+            }
+
+            // ============================================================
+            // STATS
+            // ============================================================
+            function updateStats() {
+                var total = usersData.length;
+                var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
+                var inactive = usersData.filter(function(u) { return u.status === 'غير نشط'; }).length;
+                var admins = usersData.filter(function(u) { return u.role === 'admin'; }).length;
+
+                $('totalUsers').textContent = total;
+                $('activeUsers').textContent = active;
+                $('inactiveUsers').textContent = inactive;
+                $('adminUsers').textContent = admins;
+
+                var badge = $('usersBadge');
+                badge.textContent = '👥 ' + total + ' مستخدم';
+                badge.className = 'badge blue';
+            }
+
+            // ============================================================
+            // RENDER TABLE
+            // ============================================================
+            function renderTable() {
+                var search = $('searchUser').value.toLowerCase();
+                var unitFilter = $('fUnitUser').value;
+                var statusFilter = $('fStatusUser').value;
+                var roleFilter = $('fRoleUser').value;
+
+                filteredData = usersData.filter(function(u) {
+                    if (search && !u.name.includes(search) && !u.email.includes(search)) return false;
+                    if (unitFilter !== 'الكل' && u.unit !== unitFilter) return false;
+                    if (statusFilter !== 'الكل' && u.status !== statusFilter) return false;
+                    if (roleFilter !== 'الكل' && u.role !== roleFilter) return false;
+                    return true;
+                });
+
+                var tbody = $('usersBody');
+
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                                <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
+                                لا توجد نتائج مطابقة
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var html = '';
+                filteredData.forEach(function(u, index) {
+                    html += `
+                        <tr>
+                            <td style="font-weight:600;color:#60a5fa;">${index + 1}</td>
+                            <td class="user-name" style="text-align:right;">${u.name}</td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.7rem;">${u.email}</td>
+                            <td style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${u.unit}</td>
+                            <td><span class="status-badge ${getRoleClass(u.role)}">${getRoleLabel(u.role)}</span></td>
+                            <td><span class="status-badge ${getStatusClass(u.status)}">${getStatusBadge(u.status)}</span></td>
+                            <td>
+                                <button class="action-btn edit" onclick="editUser(${u.id})"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn password" onclick="changePassword(${u.id})"><i class="fas fa-key"></i></button>
+                                <button class="action-btn delete" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            // ============================================================
+            // CRUD OPERATIONS
+            // ============================================================
+
+            // --- Open Add Modal ---
+            function openAddModal() {
+                currentEditId = null;
+                $('modalTitle').textContent = '➕ إضافة مستخدم جديد';
+                $('userName').value = '';
+                $('userEmail').value = '';
+                $('userPassword').value = '';
+                $('userUnit').value = '';
+                $('userRole').value = 'user';
+                $('userStatus').value = 'نشط';
+                $('userModal').classList.add('visible');
+            }
+
+            // --- Open Edit Modal ---
+            window.editUser = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
+
+                currentEditId = id;
+                $('modalTitle').textContent = '✏️ تعديل المستخدم: ' + user.name;
+                $('userName').value = user.name;
+                $('userEmail').value = user.email;
+                $('userPassword').value = '';
+                $('userPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور الحالية';
+                $('userUnit').value = user.unit;
+                $('userRole').value = user.role;
+                $('userStatus').value = user.status;
+                $('userModal').classList.add('visible');
             };
-            
-            html += `
-                <tr>
-                    <td><strong style="color:#fff;">${u.name || u.username || 'مجهول'}</strong></td>
-                    <td>${u.username || '-'}</td>
-                    <td>${u.email || '-'}</td>
-                    <td>${roleLabels[u.role] || u.role || 'مشاهد'}</td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <button class="btn-sm edit" onclick="openEditModal('${u.id || u._id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-sm toggle" onclick="toggleUser('${u.id || u._id}', ${!isActive})">
-                            <i class="fas ${isActive ? 'fa-pause' : 'fa-play'}"></i>
-                        </button>
-                        <button class="btn-sm delete" onclick="deleteUser('${u.id || u._id}')">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-        
-    } catch (error) {
-        console.error('❌ خطأ في renderUsers:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="empty-state" style="color:#f87171;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                    <p>${error.message}</p>
-                    <button onclick="renderUsers()" style="margin-top:8px;padding:4px 16px;background:rgba(248,113,113,0.15);border:1px solid rgba(248,113,113,0.1);border-radius:4px;color:#f87171;cursor:pointer;">
-                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                    </button>
-                </td>
-            </tr>
-        `;
-    }
-}
 
-// ============================================================
-// 5. إضافة مستخدم
-// ============================================================
+            // --- Save User ---
+            function saveUser() {
+                var name = $('userName').value.trim();
+                var email = $('userEmail').value.trim();
+                var password = $('userPassword').value;
+                var unit = $('userUnit').value;
+                var role = $('userRole').value;
+                var status = $('userStatus').value;
 
-async function addUser() {
-    const name = document.getElementById('iName').value.trim();
-    const username = document.getElementById('iUsername').value.trim();
-    const email = document.getElementById('iEmail').value.trim();
-    const password = document.getElementById('iPassword').value.trim();
-    const role = document.getElementById('iRole').value;
-    
-    if (!name || !username || !email || !password) {
-        showToast('⚠️ يرجى ملء جميع الحقول', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/users', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ name, username, email, password, role })
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'فشل إضافة المستخدم');
-        }
-        
-        document.getElementById('iName').value = '';
-        document.getElementById('iUsername').value = '';
-        document.getElementById('iEmail').value = '';
-        document.getElementById('iPassword').value = '';
-        
-        await renderUsers();
-        showToast('✅ تم إضافة المستخدم بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
-}
+                if (!name) { showToast('⚠️ يرجى إدخال اسم المستخدم', 'error'); return; }
+                if (!email) { showToast('⚠️ يرجى إدخال البريد الإلكتروني', 'error'); return; }
+                if (!unit) { showToast('⚠️ يرجى اختيار الوحدة', 'error'); return; }
 
-// ============================================================
-// 6. فتح مودال التعديل
-// ============================================================
+                if (currentEditId === null) {
+                    // --- Add New ---
+                    if (!password) { showToast('⚠️ يرجى إدخال كلمة المرور', 'error'); return; }
+                    var newUser = {
+                        id: nextId++,
+                        name: name,
+                        email: email,
+                        unit: unit,
+                        role: role,
+                        status: status
+                    };
+                    usersData.push(newUser);
+                    showToast('✅ تم إضافة المستخدم ' + name + ' بنجاح', 'success');
+                } else {
+                    // --- Edit Existing ---
+                    var user = usersData.find(function(u) { return u.id === currentEditId; });
+                    if (user) {
+                        user.name = name;
+                        user.email = email;
+                        user.unit = unit;
+                        user.role = role;
+                        user.status = status;
+                        showToast('✅ تم تحديث بيانات ' + name + ' بنجاح', 'success');
+                    }
+                }
 
-function openEditModal(id) {
-    const user = usersData.find(u => (u.id || u._id) === id);
-    if (!user) {
-        showToast('❌ المستخدم غير موجود', 'error');
-        return;
-    }
-    
-    currentEditId = id;
-    document.getElementById('modalTitle').textContent = '✏️ تعديل المستخدم';
-    document.getElementById('mName').value = user.name || '';
-    document.getElementById('mUsername').value = user.username || '';
-    document.getElementById('mEmail').value = user.email || '';
-    document.getElementById('mRole').value = user.role || 'viewer';
-    document.getElementById('mPassword').value = '';
-    
-    document.getElementById('userModal').classList.add('active');
-}
+                $('userModal').classList.remove('visible');
+                updateStats();
+                renderTable();
+            }
 
-function closeUserModal() {
-    document.getElementById('userModal').classList.remove('active');
-    currentEditId = null;
-}
+            // --- Delete User ---
+            window.deleteUser = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
 
-// ============================================================
-// 7. تحديث مستخدم
-// ============================================================
+                if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم ' + user.name + '؟')) return;
 
-async function updateUser() {
-    const name = document.getElementById('mName').value.trim();
-    const username = document.getElementById('mUsername').value.trim();
-    const email = document.getElementById('mEmail').value.trim();
-    const role = document.getElementById('mRole').value;
-    const password = document.getElementById('mPassword').value.trim();
-    
-    if (!name || !username || !email) {
-        showToast('⚠️ يرجى ملء جميع الحقول', 'warning');
-        return;
-    }
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    const data = { name, username, email, role };
-    if (password) data.password = password;
-    
-    try {
-        const response = await fetch(`/api/users/${currentEditId}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'فشل تحديث المستخدم');
-        }
-        
-        closeUserModal();
-        await renderUsers();
-        showToast('✅ تم تحديث المستخدم بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
-}
+                usersData = usersData.filter(function(u) { return u.id !== id; });
+                updateStats();
+                renderTable();
+                showToast('🗑️ تم حذف المستخدم ' + user.name + ' بنجاح', 'success');
+            };
 
-// ============================================================
-// 8. تبديل حالة المستخدم
-// ============================================================
+            // --- Change Password ---
+            window.changePassword = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
 
-async function toggleUser(id, enable) {
-    const user = usersData.find(u => (u.id || u._id) === id);
-    if (!user) {
-        showToast('❌ المستخدم غير موجود', 'error');
-        return;
-    }
-    
-    const action = enable ? 'تفعيل' : 'تعطيل';
-    if (!confirm(`⚠️ هل أنت متأكد من ${action} المستخدم "${user.name || user.username}"؟`)) return;
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/users/${id}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ ...user, isActive: enable })
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || `فشل ${action} المستخدم`);
-        }
-        
-        await renderUsers();
-        showToast(`✅ تم ${action} المستخدم بنجاح`, 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
-}
+                $('passwordUserId').value = id;
+                $('passwordUserName').value = user.name;
+                $('newPassword').value = '';
+                $('confirmPassword').value = '';
+                $('passwordModal').classList.add('visible');
+            };
 
-// ============================================================
-// 9. حذف مستخدم
-// ============================================================
+            function savePassword() {
+                var id = parseInt($('passwordUserId').value);
+                var newPass = $('newPassword').value;
+                var confirmPass = $('confirmPassword').value;
 
-async function deleteUser(id) {
-    const user = usersData.find(u => (u.id || u._id) === id);
-    if (!user) {
-        showToast('❌ المستخدم غير موجود', 'error');
-        return;
-    }
-    
-    if (user.role === 'admin' && user.username === 'admin') {
-        showToast('⚠️ لا يمكن حذف المستخدم admin الرئيسي', 'warning');
-        return;
-    }
-    
-    if (!confirm(`⚠️ هل أنت متأكد من حذف المستخدم "${user.name || user.username}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) return;
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/users/${id}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'فشل حذف المستخدم');
-        }
-        
-        await renderUsers();
-        showToast('✅ تم حذف المستخدم بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ ' + error.message, 'error');
-    }
-}
+                if (!newPass || newPass.length < 4) {
+                    showToast('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    showToast('⚠️ كلمة المرور غير متطابقة', 'error');
+                    return;
+                }
 
-// ============================================================
-// 10. تحديث الصفحة
-// ============================================================
+                showToast('✅ تم تغيير كلمة المرور بنجاح', 'success');
+                $('passwordModal').classList.remove('visible');
+            }
 
-function refreshUsers() {
-    renderUsers();
-    showToast('🔄 تم تحديث قائمة المستخدمين', 'info');
-}
+            // ============================================================
+            // FILTERS
+            // ============================================================
+            function applyFilters() {
+                renderTable();
+            }
 
-// ============================================================
-// 11. إغلاق المودال بالنقر خارجها
-// ============================================================
+            function resetFilters() {
+                $('searchUser').value = '';
+                $('fUnitUser').value = 'الكل';
+                $('fStatusUser').value = 'الكل';
+                $('fRoleUser').value = 'الكل';
+                renderTable();
+                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
+            }
 
-document.getElementById('userModal').addEventListener('click', function(e) {
-    if (e.target === this) closeUserModal();
-});
+            // ============================================================
+            // INIT
+            // ============================================================
+            function init() {
+                updateStats();
+                renderTable();
 
-// ============================================================
-// 12. التهيئة
-// ============================================================
+                // --- Events ---
+                $('addUserBtn').addEventListener('click', openAddModal);
+                $('modalClose').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
+                $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
+                $('modalSave').addEventListener('click', saveUser);
 
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('👥 تحميل صفحة المستخدمين...');
-    await renderUsers();
-    console.log('✅ صفحة المستخدمين جاهزة');
-});
+                $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
+                $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
+                $('passwordModalSave').addEventListener('click', savePassword);
 
-// ============================================================
-// 13. ربط الدوال العالمية
-// ============================================================
+                $('filterBtn').addEventListener('click', applyFilters);
+                $('resetBtn').addEventListener('click', resetFilters);
 
-window.renderUsers = renderUsers;
-window.refreshUsers = refreshUsers;
-window.addUser = addUser;
-window.openEditModal = openEditModal;
-window.closeUserModal = closeUserModal;
-window.updateUser = updateUser;
-window.toggleUser = toggleUser;
-window.deleteUser = deleteUser;
-window.getToken = getToken;
-window.getAuthHeaders = getAuthHeaders;
+                $('searchUser').addEventListener('keyup', renderTable);
+                $('fUnitUser').addEventListener('change', renderTable);
+                $('fStatusUser').addEventListener('change', renderTable);
+                $('fRoleUser').addEventListener('change', renderTable);
 
-console.log('✅ صفحة المستخدمين v2.0 جاهزة');
-</script>
+                // Close modal on overlay click
+                document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                    m.addEventListener('click', function(e) {
+                        if (e.target === this) {
+                            this.classList.remove('visible');
+                        }
+                    });
+                });
+
+                console.log('✅ Users Page loaded successfully');
+                console.log('👥 ' + usersData.length + ' users loaded');
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+
+            // ============================================================
+            // EXPOSE GLOBALS
+            // ============================================================
+            window.editUser = editUser;
+            window.deleteUser = deleteUser;
+            window.changePassword = changePassword;
+            window.showToast = showToast;
+
+        })();
+    </script>
 </div>
