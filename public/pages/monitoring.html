@@ -978,15 +978,12 @@
             // INIT MAP - REAL MAP WITH LEAFLET
             // ============================================================
             function initMap() {
-                if (mapInitialized) {
-                    // Update markers instead of recreating
-                    updateMarkers();
-                    return;
-                }
+                console.log('🗺️ Initializing map...');
 
                 var container = document.getElementById('realMap');
                 if (!container) {
-                    console.warn('⚠️ Map container not found');
+                    console.warn('⚠️ Map container not found, retrying...');
+                    setTimeout(initMap, 500);
                     return;
                 }
 
@@ -1128,13 +1125,7 @@
                     b.classList.toggle('active', b.dataset.type === type);
                 });
 
-                // Update map type label on map
                 var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
-                var legend = document.querySelector('.leaflet-control-zoom');
-                if (legend) {
-                    // Optional: add map type indicator
-                }
-
                 showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
             }
 
@@ -1199,12 +1190,12 @@
             }
 
             // ============================================================
-            // ACTIONS
+            // REFRESH
             // ============================================================
             function refreshAll() {
                 var btn = document.getElementById('refreshBtn');
                 var orig = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
                 setTimeout(function() {
@@ -1217,6 +1208,9 @@
                 }, 500);
             }
 
+            // ============================================================
+            // TERMINATE ALL
+            // ============================================================
             function terminateAll() {
                 if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
                 var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
@@ -1245,13 +1239,14 @@
             // INIT
             // ============================================================
             function init() {
+                console.log('🚀 Initializing monitoring page...');
                 updateStats();
                 renderSessions();
 
                 // Wait for DOM to render map container
                 setTimeout(function() {
                     initMap();
-                }, 300);
+                }, 500);
 
                 // Event listeners
                 document.getElementById('refreshBtn').addEventListener('click', refreshAll);
