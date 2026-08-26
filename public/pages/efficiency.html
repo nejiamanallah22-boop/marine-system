@@ -2,7 +2,7 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           📊 EFFICIENCY PAGE - FULL VERSION
+           📊 EFFICIENCY PAGE - ENTERPRISE PRO VERSION
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -326,7 +326,7 @@
         }
 
         /* ============================================================
-           GENERAL EFFICIENCY TABLE
+           TABLE STYLES
            ============================================================ */
         .eff-section {
             background: var(--glass-bg);
@@ -401,7 +401,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 600px;
+            min-width: 650px;
         }
 
         thead {
@@ -921,7 +921,7 @@
     </div>
 
     <!-- ============================================================
-    GENERAL EFFICIENCY TABLE
+    GENERAL EFFICIENCY TABLE - WITH PERCENTAGES
     ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
@@ -934,8 +934,8 @@
                     <thead>
                         <tr>
                             <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح</th>
-                            <th><i class="fas fa-times-circle"></i> معطب</th>
+                            <th><i class="fas fa-check-circle"></i> صالح %</th>
+                            <th><i class="fas fa-times-circle"></i> معطب %</th>
                             <th><i class="fas fa-percent"></i> النجاعة</th>
                             <th><i class="fas fa-chart-bar"></i> التقدم</th>
                             <th><i class="fas fa-circle"></i> الحالة</th>
@@ -956,7 +956,7 @@
     </div>
 
     <!-- ============================================================
-    REGIONS TABLES - FULL VERSION
+    REGIONS TABLES - WITH PERCENTAGES
     ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
@@ -964,12 +964,11 @@
             <span class="badge gold">📊 تحليل متقدم</span>
         </div>
         <div id="regionTables">
+
             <!-- ===== REGION 1: الشمال ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالشمال
-                    </div>
+                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</div>
                     <span class="region-badge good">78% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -977,36 +976,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 01</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>88.9%</td>
+                                    <td>11.1%</td>
+                                    <td class="eff-cell">88.9%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:89%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 02</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>20/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 03</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/04/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>66.7%</td>
+                                    <td>33.3%</td>
+                                    <td class="eff-cell">66.7%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 07</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>15/03/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1017,9 +1026,7 @@
             <!-- ===== REGION 2: الساحل ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالساحل
-                    </div>
+                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</div>
                     <span class="region-badge excellent">92% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1027,30 +1034,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 05</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 08</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>22/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 12</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>01/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
+                                </tr>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1061,9 +1084,7 @@
             <!-- ===== REGION 3: الوسط ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالوسط
-                    </div>
+                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</div>
                     <span class="region-badge medium">65% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1071,36 +1092,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 09</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>18/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>80.0%</td>
+                                    <td>20.0%</td>
+                                    <td class="eff-cell">80.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:80%;"></div></div></td>
+                                    <td><span class="status-badge good">جيدة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 11</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>25/06/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>66.7%</td>
+                                    <td>33.3%</td>
+                                    <td class="eff-cell">66.7%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 14</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>10/04/2026</td>
+                                <tr class="row-low">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>33.3%</td>
+                                    <td>66.7%</td>
+                                    <td class="eff-cell">33.3%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
+                                    <td><span class="status-badge low">منخفضة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 06</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>30/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1111,9 +1142,7 @@
             <!-- ===== REGION 4: الجنوب ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-map-pin"></i> الحرس البحري بالجنوب
-                    </div>
+                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</div>
                     <span class="region-badge critical">45% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1121,42 +1150,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 15</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>15/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>75.0%</td>
+                                    <td>25.0%</td>
+                                    <td class="eff-cell">75.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:75%;"></div></div></td>
+                                    <td><span class="status-badge good">جيدة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 18</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>05/03/2026</td>
+                                <tr class="row-low">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>33.3%</td>
+                                    <td>66.7%</td>
+                                    <td class="eff-cell">33.3%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
+                                    <td><span class="status-badge low">منخفضة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 20</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge critical">⚠️ معطب</span></td>
-                                    <td>01/02/2026</td>
+                                <tr class="row-low">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>0%</td>
+                                    <td>100%</td>
+                                    <td class="eff-cell">0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
+                                    <td><span class="status-badge critical">حرجة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 22</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>20/06/2026</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 25</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>12/04/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
+                                    <td>50.0%</td>
+                                    <td>50.0%</td>
+                                    <td class="eff-cell">50.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1167,9 +1200,7 @@
             <!-- ===== REGION 5: وحدة الصيانة تونس ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس
-                    </div>
+                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</div>
                     <span class="region-badge good">85% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1177,30 +1208,38 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 30</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>08/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 32</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>14/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 35</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>22/06/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>50.0%</td>
+                                    <td>50.0%</td>
+                                    <td class="eff-cell">50.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1211,9 +1250,7 @@
             <!-- ===== REGION 6: وحدة الصيانة المنستير ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير
-                    </div>
+                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</div>
                     <span class="region-badge excellent">95% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1221,36 +1258,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 40</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>01/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 42</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 44</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 46</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1261,9 +1308,7 @@
             <!-- ===== REGION 7: وحدة الصيانة صفاقس ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس
-                    </div>
+                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</div>
                     <span class="region-badge medium">70% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1271,30 +1316,38 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 50</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>18/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 52</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>25/06/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>50.0%</td>
+                                    <td>50.0%</td>
+                                    <td class="eff-cell">50.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 55</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge low">⚠️ معطب</span></td>
-                                    <td>10/04/2026</td>
+                                <tr class="row-low">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>0%</td>
+                                    <td>100%</td>
+                                    <td class="eff-cell">0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
+                                    <td><span class="status-badge critical">حرجة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1305,9 +1358,7 @@
             <!-- ===== REGION 8: وحدة الصيانة جرجيس ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس
-                    </div>
+                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</div>
                     <span class="region-badge good">88% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1315,36 +1366,46 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 60</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>20/05/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 62</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>15/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زورق مزدوج 65</td>
-                                    <td>زوارق مزدوجة</td>
-                                    <td><span class="status-badge medium">🔧 صيانة</span></td>
-                                    <td>28/06/2026</td>
+                                <tr class="row-mid">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
+                                    <td>50.0%</td>
+                                    <td>50.0%</td>
+                                    <td class="eff-cell">50.0%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
+                                    <td><span class="status-badge medium">متوسطة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافة 68</td>
-                                    <td>طوافات</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>10/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1355,9 +1416,7 @@
             <!-- ===== REGION 9: المجمع الأمني بقبيبة ===== -->
             <div class="region-card">
                 <div class="region-header">
-                    <div class="region-name">
-                        <i class="fas fa-building"></i> المجمع الأمني بقبيبة
-                    </div>
+                    <div class="region-name"><i class="fas fa-building"></i> المجمع الأمني بقبيبة</div>
                     <span class="region-badge excellent">90% جاهزية</span>
                 </div>
                 <div class="region-body">
@@ -1365,36 +1424,45 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="text-align:right;">المركب</th>
-                                    <th>الفئة</th>
-                                    <th>الحالة</th>
-                                    <th>آخر صيانة</th>
+                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
+                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
+                                    <th><i class="fas fa-percent"></i> النجاعة</th>
+                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
+                                    <th><i class="fas fa-circle"></i> الحالة</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق 70</td>
-                                    <td>البروق</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>05/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقر 72</td>
-                                    <td>صقور</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>12/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
-                                <tr>
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خافرة 75</td>
-                                    <td>خوافر</td>
-                                    <td><span class="status-badge excellent">✅ صالح</span></td>
-                                    <td>08/06/2026</td>
+                                <tr class="row-high">
+                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
+                                    <td>100%</td>
+                                    <td>0%</td>
+                                    <td class="eff-cell">100%</td>
+                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
+                                    <td><span class="status-badge excellent">ممتازة</span></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -1430,11 +1498,11 @@
         // ============================================================
         const efficiencyData = {
             general: [
-                { category: 'البروق', active: 18, damaged: 4, efficiency: 81.8 },
-                { category: 'صقور', active: 12, damaged: 3, efficiency: 80.0 },
-                { category: 'خوافر', active: 8, damaged: 5, efficiency: 61.5 },
-                { category: 'زوارق مزدوجة', active: 6, damaged: 1, efficiency: 85.7 },
-                { category: 'طوافات', active: 4, damaged: 2, efficiency: 66.7 }
+                { category: 'البروق', active: 18, damaged: 4, total: 22, efficiency: 81.8 },
+                { category: 'صقور', active: 12, damaged: 3, total: 15, efficiency: 80.0 },
+                { category: 'خوافر', active: 8, damaged: 5, total: 13, efficiency: 61.5 },
+                { category: 'زوارق مزدوجة', active: 6, damaged: 1, total: 7, efficiency: 85.7 },
+                { category: 'طوافات', active: 4, damaged: 2, total: 6, efficiency: 66.7 }
             ],
             regions: {
                 'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
@@ -1455,13 +1523,15 @@
         function renderEfficiency() {
             renderStats();
             renderGeneralTable();
-            // renderRegionTables() is not needed as HTML is static
             updateBadge();
         }
 
         function renderStats() {
             const regionFilter = document.getElementById('fRegEff').value;
-            let total = 0, active = 0, maintenance = 0, damaged = 0;
+            let total = 0,
+                active = 0,
+                maintenance = 0,
+                damaged = 0;
 
             Object.entries(efficiencyData.regions).forEach(([name, data]) => {
                 if (regionFilter === 'الكل' || name === regionFilter) {
@@ -1516,6 +1586,10 @@
 
             tbody.innerHTML = filtered.map(item => {
                 const efficiency = item.efficiency;
+                const total = item.total || (item.active + item.damaged);
+                const activePercent = total > 0 ? ((item.active / total) * 100).toFixed(1) : 0;
+                const damagedPercent = total > 0 ? ((item.damaged / total) * 100).toFixed(1) : 0;
+
                 let rowClass = 'row-mid';
                 let statusClass = 'medium';
                 let statusText = 'متوسطة';
@@ -1547,8 +1621,8 @@
                 return `
                     <tr class="${rowClass}">
                         <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                        <td>${item.active}</td>
-                        <td>${item.damaged}</td>
+                        <td>${activePercent}%</td>
+                        <td>${damagedPercent}%</td>
                         <td class="eff-cell">${efficiency.toFixed(1)}%</td>
                         <td>
                             <div class="progress-bar">
@@ -1605,7 +1679,7 @@
         }
 
         // ============================================================
-        // CHART FUNCTIONS (Using Canvas API)
+        // CHART FUNCTIONS
         // ============================================================
         let currentChart = 'pie';
 
@@ -1622,7 +1696,7 @@
             const width = canvas.parentElement.clientWidth - 32;
             const height = 250;
 
-            canvas.width = width * 2; // HiDPI
+            canvas.width = width * 2;
             canvas.height = height * 2;
             canvas.style.width = width + 'px';
             canvas.style.height = height + 'px';
@@ -1688,7 +1762,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Label
                 const midAngle = startAngle + sliceAngle / 2;
                 const labelRadius = radius * 0.65;
                 const lx = cx + Math.cos(midAngle) * labelRadius;
@@ -1705,7 +1778,6 @@
                 startAngle = endAngle;
             });
 
-            // Legend
             let legendY = 10;
             const legendX = width - 120;
             ctx.textAlign = 'left';
@@ -1731,7 +1803,6 @@
             const barWidth = Math.min(chartWidth / data.length * 0.7, 50);
             const gap = chartWidth / data.length;
 
-            // Grid lines
             for (let i = 0; i <= 4; i++) {
                 const y = padding.top + chartHeight - (i / 4) * chartHeight;
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)';
@@ -1753,7 +1824,6 @@
                 const barHeight = (item.value / maxVal) * chartHeight;
                 const y = padding.top + chartHeight - barHeight;
 
-                // Bar
                 const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
                 gradient.addColorStop(0, item.color);
                 gradient.addColorStop(1, item.color + '33');
@@ -1763,12 +1833,10 @@
                 ctx.fillRect(x, y, barWidth, barHeight);
                 ctx.shadowBlur = 0;
 
-                // Border
                 ctx.strokeStyle = item.color;
                 ctx.lineWidth = 1;
                 ctx.strokeRect(x, y, barWidth, barHeight);
 
-                // Label
                 ctx.fillStyle = 'rgba(255,255,255,0.5)';
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
@@ -1791,7 +1859,6 @@
                 label: d.label
             }));
 
-            // Grid lines
             for (let i = 0; i <= 4; i++) {
                 const y = padding.top + chartHeight - (i / 4) * chartHeight;
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)';
@@ -1808,7 +1875,6 @@
                 ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
             }
 
-            // Line
             ctx.strokeStyle = '#e6b31e';
             ctx.lineWidth = 2;
             ctx.shadowColor = '#e6b31e44';
@@ -1821,7 +1887,6 @@
             ctx.stroke();
             ctx.shadowBlur = 0;
 
-            // Area
             const lastPoint = points[points.length - 1];
             ctx.lineTo(lastPoint.x, padding.top + chartHeight);
             ctx.lineTo(points[0].x, padding.top + chartHeight);
@@ -1829,7 +1894,6 @@
             ctx.fillStyle = 'rgba(230,179,30,0.08)';
             ctx.fill();
 
-            // Points
             points.forEach(p => {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
@@ -1839,7 +1903,6 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Value label
                 ctx.fillStyle = 'rgba(255,255,255,0.6)';
                 ctx.font = 'bold 9px Cairo, sans-serif';
                 ctx.textAlign = 'center';
@@ -1847,7 +1910,6 @@
                 ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 6);
             });
 
-            // X labels
             points.forEach(p => {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '8px Cairo, sans-serif';
