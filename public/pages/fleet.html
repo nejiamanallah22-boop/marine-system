@@ -1,114 +1,862 @@
 <!-- public/pages/fleet.html -->
 <div id="page-fleet">
-    <!-- HEADER -->
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05);">
-        <div>
-            <h2 style="margin:0; color:white; font-size:22px;">🚢 السجل العام للأسطول</h2>
-            <p style="margin:0; color:rgba(255,255,255,0.4); font-size:13px;">إدارة ومتابعة جميع المراكب البحرية</p>
-        </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <button onclick="refreshFleet()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; color:rgba(255,255,255,0.5); cursor:pointer;">🔄 تحديث</button>
-        </div>
-    </div>
+    <style>
+        /* ============================================================
+           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION
+           ============================================================ */
 
-    <!-- نموذج الإضافة -->
-    <div id="inputArea" style="background:rgba(255,255,255,0.02); border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
-            <input type="text" id="iName" placeholder="اسم المركب" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iNum" placeholder="الرقم" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="number" id="iLen" placeholder="الطول (م)" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            
-            <select id="iReg" onchange="updateZones()" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">الإقليم</option>
-                <option value="الشمال">🗺️ الشمال</option>
-                <option value="الساحل">🗺️ الساحل</option>
-                <option value="الوسط">🗺️ الوسط</option>
-                <option value="الجنوب">🗺️ الجنوب</option>
-                <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-            </select>
-            
-            <select id="iZone" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">المنطقة</option>
-            </select>
-            
-            <input type="text" id="iPort" placeholder="الميناء" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iSupp" placeholder="مكان التعزيز" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            
-            <select id="iStat" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="صالح">✅ صالح</option>
-                <option value="معطب">❌ معطب</option>
-                <option value="صيانة">🔧 صيانة</option>
-            </select>
-            
-            <input type="text" id="iBreak" placeholder="نوع العطب" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="date" id="iDate" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="date" id="iEnd" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            <input type="text" id="iRef" placeholder="المرجع" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-            
-            <select id="iRepairUnit" style="padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.04); color:#e2e8f0;">
-                <option value="">الوحدة المسؤولة عن الإصلاح</option>
-                <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
-                <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
-                <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-                <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-                <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-                <option value="خارجي">🔧 خارجي</option>
-            </select>
-            
-            <button id="saveVesselBtn" onclick="addItem()" style="padding:8px 16px; border:none; border-radius:8px; background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; font-weight:600; cursor:pointer;">
-                <i class="fas fa-save"></i> حفظ المركب
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary-dark: #0a1628;
+            --primary: #0f3460;
+            --primary-light: #1a4f8a;
+            --secondary: #e94560;
+            --secondary-light: #ff6b81;
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --gold-dark: #c99a0e;
+            --success: #00b894;
+            --success-light: #55efc4;
+            --danger: #e17055;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.06);
+            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
+            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* ===== FULL SCREEN RESET ===== */
+        #page-fleet {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: var(--font);
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== BACKGROUND EFFECT ===== */
+        #page-fleet::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(233,69,96,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .fleet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            margin: 0;
+            width: 100%;
+        }
+
+        .fleet-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .fleet-header-left .header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+            animation: pulseGold 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGold {
+            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
+            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
+        }
+
+        .fleet-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold-light), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .fleet-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+            -webkit-text-fill-color: rgba(255,255,255,0.3);
+        }
+
+        .fleet-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .fleet-header-actions .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font);
+        }
+
+        .fleet-header-actions .btn-action.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+        }
+
+        .fleet-header-actions .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .fleet-header-actions .btn-action.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .fleet-header-actions .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+           STATS CARDS - GOLD THEME
+           ============================================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+            margin: 0;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.yellow { color: var(--warning); }
+        .stat-card .number.red { color: var(--danger); }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           INPUT FORM - GOLD THEME
+           ============================================================ */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin: 0 24px 16px;
+            transition: all var(--transition);
+        }
+
+        .input-grid:hover {
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .input-grid input,
+        .input-grid select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .input-grid input:focus,
+        .input-grid select:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .input-grid input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .input-grid select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .input-grid .btn-save {
+            grid-column: span 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: var(--font);
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+        }
+
+        .input-grid .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        /* ============================================================
+           FILTER BAR - GOLD THEME
+           ============================================================ */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            padding: 10px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            margin: 0;
+            width: 100%;
+        }
+
+        .filter-bar .search-input {
+            flex: 2 1 200px;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .filter-bar .search-input input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .filter-bar .search-input input:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .filter-bar .search-input input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .filter-bar .search-input .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-bar select {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            min-width: 100px;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar .btn-filter {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-bar .btn-filter.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+        }
+
+        .filter-bar .btn-filter.primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
+        }
+
+        .filter-bar .btn-filter.outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .filter-bar .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ============================================================
+           TABLE - GOLD THEME
+           ============================================================ */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 24px 24px;
+            width: 100%;
+        }
+
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 900px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        thead {
+            background: rgba(15,52,96,0.4);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid rgba(230,179,30,0.15);
+        }
+
+        thead th {
+            padding: 12px 10px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        thead th i {
+            margin-left: 6px;
+            color: var(--gold);
+            font-size: 0.7rem;
+        }
+
+        tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
+        }
+
+        tbody tr {
+            transition: all var(--transition);
+            border-radius: 4px;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tbody tr.damaged {
+            border-right: 3px solid var(--danger);
+            background: rgba(225,112,85,0.04);
+        }
+
+        tbody tr.damaged:hover {
+            background: rgba(225,112,85,0.08);
+        }
+
+        .vessel-name {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-badge.active {
+            background: rgba(74,222,128,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.pending {
+            background: rgba(251,191,36,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.completed {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.cancelled {
+            background: rgba(248,113,113,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.damaged {
+            background: rgba(225,112,85,0.12);
+            color: #e17055;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: var(--font);
+        }
+
+        .btn-sm i {
+            font-size: 0.55rem;
+        }
+
+        .btn-sm.edit {
+            background: rgba(230,179,30,0.12);
+            color: var(--gold);
+        }
+
+        .btn-sm.edit:hover {
+            background: var(--gold);
+            color: #0a1628;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.delete {
+            background: rgba(225,112,85,0.12);
+            color: var(--danger);
+        }
+
+        .btn-sm.delete:hover {
+            background: var(--danger);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.04);
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.1);
+        }
+
+        .empty-state .retry-btn {
+            margin-top: 12px;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 24px rgba(230,179,30,0.2);
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 992px) {
+            .fleet-header { padding: 12px 16px; top: 60px; }
+            .fleet-header-left h2 { font-size: 18px; }
+            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .input-grid { padding: 12px 16px; margin: 0 16px 12px; }
+            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
+            .table-wrapper { padding: 0 16px 16px; }
+        }
+
+        @media (max-width: 768px) {
+            .fleet-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; top: 56px; }
+            .fleet-header-left { width: 100%; }
+            .fleet-header-left h2 { font-size: 16px; }
+            .fleet-header-actions { width: 100%; justify-content: flex-start; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .number { font-size: 20px; }
+            .input-grid { grid-template-columns: 1fr 1fr; padding: 10px 12px; margin: 0 12px 10px; gap: 8px; }
+            .input-grid .btn-save { grid-column: span 2; }
+            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 16px; gap: 6px; }
+            .filter-bar .search-input { flex: 1; }
+            .filter-bar label { font-size: 0.65rem; }
+            .filter-bar select { min-width: 100%; }
+            .table-wrapper { padding: 0 12px 12px; }
+            .table-wrapper table { font-size: 0.7rem; min-width: 700px; }
+            thead th, tbody td { padding: 6px 4px; }
+            .fleet-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .fleet-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
+            .fleet-header-left h2 { font-size: 14px; }
+            .fleet-header-left p { font-size: 10px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .input-grid .btn-save { grid-column: span 1; }
+        }
+    </style>
+
+    <!-- ============================================================
+    HEADER - GOLD THEME
+    ============================================================ -->
+    <div class="fleet-header">
+        <div class="fleet-header-left">
+            <div class="header-icon">
+                <i class="fas fa-ship"></i>
+            </div>
+            <div>
+                <h2>السجل العام للأسطول</h2>
+                <p>إدارة ومتابعة جميع المراكب البحرية</p>
+            </div>
+        </div>
+        <div class="fleet-header-actions">
+            <button class="btn-action primary" onclick="refreshFleet()">
+                <i class="fas fa-sync-alt"></i> تحديث
             </button>
         </div>
     </div>
 
-    <!-- شريط البحث -->
-    <div style="display:flex; flex-wrap:wrap; gap:8px 14px; background:rgba(255,255,255,0.02); padding:8px 16px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
-        <div style="flex:2 1 180px; min-width:140px; position:relative;">
-            <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()" style="width:100%; padding:6px 14px 6px 36px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <span style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.15);"><i class="fas fa-search"></i></span>
+    <!-- ============================================================
+    STATS CARDS - GOLD THEME
+    ============================================================ -->
+    <div class="stats-grid" id="fleetStats">
+        <div class="stat-card">
+            <div class="number gold" id="totalVessels">0</div>
+            <div class="label">🚢 إجمالي المراكب</div>
+            <span class="icon-bg"><i class="fas fa-ship"></i></span>
         </div>
-        <label style="font-weight:600; color:rgba(255,255,255,0.3); font-size:0.75rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-tag"></i> الفئة:</label>
-        <select id="fCatMain" onchange="renderMain()" style="padding:4px 10px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <option value="الكل">الكل</option>
-        </select>
-        <label style="font-weight:600; color:rgba(255,255,255,0.3); font-size:0.75rem; display:flex; align-items:center; gap:4px;"><i class="fas fa-map"></i> الإقليم:</label>
-        <select id="fRegMain" onchange="renderMain()" style="padding:4px 10px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.03); color:#e2e8f0;">
-            <option value="الكل">الكل</option>
-        </select>
-        <button onclick="clearMainSearch()" style="padding:4px 12px; border-radius:30px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:rgba(255,255,255,0.3); cursor:pointer; font-size:0.75rem;"><i class="fas fa-undo-alt"></i> مسح</button>
+        <div class="stat-card">
+            <div class="number green" id="activeVessels">0</div>
+            <div class="label">✅ الصالح</div>
+            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number yellow" id="maintenanceVessels">0</div>
+            <div class="label">🔧 تحت الصيانة</div>
+            <span class="icon-bg"><i class="fas fa-tools"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number red" id="damagedVessels">0</div>
+            <div class="label">🟥 المعطوبة</div>
+            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
+        </div>
     </div>
 
-    <!-- الجدول -->
-    <div style="overflow-x:auto; border-radius:12px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06);">
-        <table style="width:100%; border-collapse:collapse; font-size:0.78rem; min-width:100%;">
-            <thead style="background:rgba(15,52,96,0.4); border-bottom:2px solid rgba(233,69,96,0.08);">
+    <!-- ============================================================
+    INPUT FORM - GOLD THEME
+    ============================================================ -->
+    <div id="inputArea" class="input-grid">
+        <input type="text" id="iName" placeholder="اسم المركب">
+        <input type="text" id="iNum" placeholder="الرقم">
+        <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
+        
+        <select id="iReg" onchange="updateZones()">
+            <option value="">الإقليم</option>
+            <option value="الشمال">🗺️ الشمال</option>
+            <option value="الساحل">🗺️ الساحل</option>
+            <option value="الوسط">🗺️ الوسط</option>
+            <option value="الجنوب">🗺️ الجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+        </select>
+        
+        <select id="iZone">
+            <option value="">المنطقة</option>
+        </select>
+        
+        <input type="text" id="iPort" placeholder="الميناء">
+        <input type="text" id="iSupp" placeholder="مكان التعزيز">
+        
+        <select id="iStat">
+            <option value="صالح">✅ صالح</option>
+            <option value="معطب">❌ معطب</option>
+            <option value="صيانة">🔧 صيانة</option>
+        </select>
+        
+        <input type="text" id="iBreak" placeholder="نوع العطب">
+        <input type="date" id="iDate">
+        <input type="date" id="iEnd">
+        <input type="text" id="iRef" placeholder="المرجع">
+        
+        <select id="iRepairUnit">
+            <option value="">الوحدة المسؤولة عن الإصلاح</option>
+            <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+            <option value="خارجي">🔧 خارجي</option>
+        </select>
+        
+        <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
+            <i class="fas fa-save"></i> حفظ المركب
+        </button>
+    </div>
+
+    <!-- ============================================================
+    FILTER BAR - GOLD THEME
+    ============================================================ -->
+    <div class="filter-bar">
+        <div class="search-input">
+            <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+        </div>
+
+        <label><i class="fas fa-tag"></i> الفئة:</label>
+        <select id="fCatMain" onchange="renderMain()">
+            <option value="الكل">الكل</option>
+        </select>
+
+        <label><i class="fas fa-map"></i> الإقليم:</label>
+        <select id="fRegMain" onchange="renderMain()">
+            <option value="الكل">الكل</option>
+        </select>
+
+        <button class="btn-filter primary" onclick="renderMain()">
+            <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-filter outline" onclick="clearMainSearch()">
+            <i class="fas fa-undo-alt"></i> مسح
+        </button>
+    </div>
+
+    <!-- ============================================================
+    TABLE - GOLD THEME
+    ============================================================ -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
                 <tr>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-ship"></i> الاسم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-hashtag"></i> الرقم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-ruler"></i> الطول</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-tag"></i> الفئة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-map"></i> الإقليم</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-location-dot"></i> المنطقة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-flag"></i> الميناء</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-handshake"></i> التعزيز</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-circle"></i> الحالة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-wrench"></i> العطب</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-calendar"></i> التاريخ</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-calendar-check"></i> الانتهاء</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
-                    <th style="padding:10px 6px; text-align:right; font-weight:700; white-space:nowrap; font-size:0.6rem; letter-spacing:0.5px; text-transform:uppercase; color:rgba(255,255,255,0.4);"><i class="fas fa-cog"></i> إجراء</th>
+                    <th><i class="fas fa-ship"></i> الاسم</th>
+                    <th><i class="fas fa-hashtag"></i> الرقم</th>
+                    <th><i class="fas fa-ruler"></i> الطول</th>
+                    <th><i class="fas fa-tag"></i> الفئة</th>
+                    <th><i class="fas fa-map"></i> الإقليم</th>
+                    <th><i class="fas fa-location-dot"></i> المنطقة</th>
+                    <th><i class="fas fa-flag"></i> الميناء</th>
+                    <th><i class="fas fa-handshake"></i> التعزيز</th>
+                    <th><i class="fas fa-circle"></i> الحالة</th>
+                    <th><i class="fas fa-wrench"></i> العطب</th>
+                    <th><i class="fas fa-calendar"></i> التاريخ</th>
+                    <th><i class="fas fa-calendar-check"></i> الانتهاء</th>
+                    <th><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
+                    <th><i class="fas fa-cog"></i> إجراء</th>
                 </tr>
             </thead>
             <tbody id="mainBody">
                 <tr>
-                    <td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.2);">
-                        <div style="width:30px; height:30px; border:3px solid rgba(255,255,255,0.04); border-top-color:#e94560; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
-                        <h3 style="color:rgba(255,255,255,0.2); font-weight:600; margin-bottom:3px; font-size:0.9rem;">جاري التحميل...</h3>
-                        <p style="color:rgba(255,255,255,0.1); font-size:0.75rem;">يرجى الانتظار</p>
+                    <td colspan="14" class="empty-state">
+                        <div class="spinner"></div>
+                        <h3>جاري التحميل...</h3>
+                        <p>يرجى الانتظار</p>
                     </td>
                 </tr>
             </tbody>
@@ -118,10 +866,13 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - النسخة المُصلحة (بدون تكرار متغيرات)
+    // 🚢 FLEET PAGE - GOLD EDITION
     // ============================================================
 
-    // ✅ التحقق من وجود المتغيرات قبل تعريفها
+    // ============================================================
+    // 1. DATA
+    // ============================================================
+
     if (typeof ZONES_DATA === 'undefined') {
         var ZONES_DATA = {
             "الشمال": ["تونس", "بنزرت", "طبرقة"],
@@ -140,43 +891,54 @@
         var CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
     }
 
-    // ===== الحصول على المستخدم =====
+    // ============================================================
+    // 2. TOKEN FUNCTIONS
+    // ============================================================
+
+    function getToken() {
+        return localStorage.getItem('marine_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('authToken') ||
+               localStorage.getItem('accessToken') ||
+               null;
+    }
+
+    function getAuthHeaders() {
+        const token = getToken();
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': token ? 'Bearer ' + token : ''
+        };
+    }
+
+    // ============================================================
+    // 3. PERMISSIONS
+    // ============================================================
+
     function getUser() {
         return window.currentUser || null;
     }
 
-    // ===== صلاحيات =====
     function canEdit() {
         const user = getUser();
         if (!user) return false;
         const role = user.role;
-        console.log('👤 دور المستخدم:', role);
         return role === 'مسؤول' || role === 'محرر' || role === 'admin' || role === 'مدير';
     }
 
     function canDelete() {
         const user = getUser();
         if (!user) return false;
-        const role = user.role;
-        return role === 'مسؤول' || role === 'admin' || role === 'مدير';
+        return user.role === 'مسؤول' || user.role === 'admin' || user.role === 'مدير';
     }
 
-    // ===== تحديث المناطق =====
-    function updateZones() {
-        const reg = document.getElementById('iReg').value;
-        const zoneSel = document.getElementById('iZone');
-        zoneSel.innerHTML = '<option value="">المنطقة</option>';
-        if (ZONES_DATA[reg]) {
-            ZONES_DATA[reg].forEach(z => {
-                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
-            });
-        }
-    }
+    // ============================================================
+    // 4. HELPERS
+    // ============================================================
 
-    // ===== دوال مساعدة =====
     function escapeHtml(str) {
         if (!str) return '';
-        return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m]));
+        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
     }
 
     function formatDate(val) {
@@ -198,32 +960,50 @@
         return 'زوارق مزدوجة';
     }
 
-    // ===== عرض البيانات =====
+    // ============================================================
+    // 5. UPDATE ZONES
+    // ============================================================
+
+    function updateZones() {
+        const reg = document.getElementById('iReg').value;
+        const zoneSel = document.getElementById('iZone');
+        zoneSel.innerHTML = '<option value="">المنطقة</option>';
+        if (ZONES_DATA[reg]) {
+            ZONES_DATA[reg].forEach(z => {
+                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
+            });
+        }
+    }
+
+    // ============================================================
+    // 6. RENDER MAIN
+    // ============================================================
+
     async function renderMain() {
         const mainBody = document.getElementById('mainBody');
 
         mainBody.innerHTML = `
-            <tr><td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.2);">
-                <div style="width:30px; height:30px; border:3px solid rgba(255,255,255,0.04); border-top-color:#e94560; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px;"></div>
-                <h3 style="color:rgba(255,255,255,0.2); font-size:0.9rem;">جاري التحميل...</h3>
+            <tr><td colspan="14" class="empty-state">
+                <div class="spinner"></div>
+                <h3>جاري التحميل...</h3>
+                <p>يرجى الانتظار</p>
             </td></tr>
         `;
 
         try {
-            const token = localStorage.getItem('marine_token');
-            if (!token) { 
+            const token = getToken();
+            if (!token) {
                 console.warn('⚠️ لا يوجد توكن');
-                window.location.href = '/index.html'; 
-                return; 
+                window.location.href = '/index.html';
+                return;
             }
 
             console.log('📡 جلب بيانات المراكب...');
             const response = await fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: getAuthHeaders()
             });
 
             if (!response.ok) {
-                console.error('❌ خطأ في تحميل البيانات:', response.status);
                 if (response.status === 401) {
                     localStorage.removeItem('marine_token');
                     window.location.href = '/index.html';
@@ -235,6 +1015,18 @@
             const vessels = await response.json();
             console.log('✅ تم تحميل', vessels.length, 'مركب');
 
+            // ✅ تحديث الإحصائيات
+            const total = vessels.length;
+            const active = vessels.filter(v => v.stat === 'صالح' || v.status === 'صالح').length;
+            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.status === 'صيانة').length;
+            const damaged = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+
+            document.getElementById('totalVessels').textContent = total;
+            document.getElementById('activeVessels').textContent = active;
+            document.getElementById('maintenanceVessels').textContent = maintenance;
+            document.getElementById('damagedVessels').textContent = damaged;
+
+            // ✅ تطبيق الفلاتر
             const fCatMain = document.getElementById('fCatMain');
             const fRegMain = document.getElementById('fRegMain');
             const searchMain = document.getElementById('searchMain');
@@ -261,9 +1053,10 @@
 
             if (filtered.length === 0) {
                 mainBody.innerHTML = `
-                    <tr><td colspan="14" style="text-align:center; padding:40px 20px; color:rgba(255,255,255,0.15);">
-                        <i class="fas fa-inbox" style="font-size:2rem; display:block; margin-bottom:10px; color:rgba(255,255,255,0.05);"></i>
-                        <h3 style="color:rgba(255,255,255,0.2); font-size:0.9rem;">لا توجد مراكب</h3>
+                    <tr><td colspan="14" class="empty-state">
+                        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                        <h3>لا توجد مراكب</h3>
+                        <p>لم يتم العثور على أي مراكب مطابقة</p>
                     </td></tr>
                 `;
                 return;
@@ -286,30 +1079,29 @@
                 const eDate = v.eDate;
                 const repairUnit = v.repairUnit || '-';
 
+                const statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
+                const isDamaged = status === 'معطب';
+
                 const editBtn = canEdit() ?
-                    `<button onclick="editItem('${id}')" style="padding:2px 7px; border:none; border-radius:20px; background:rgba(245,200,66,0.1); color:#f5c842; cursor:pointer; transition:all 0.3s;"><i class="fas fa-edit"></i></button>` :
-                    '';
+                    `<button class="btn-sm edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` : '';
                 const delBtn = canDelete() ?
-                    `<button onclick="deleteItem('${id}','${escapeHtml(name)}')" style="padding:2px 7px; border:none; border-radius:20px; background:rgba(225,112,85,0.1); color:#e17055; cursor:pointer; transition:all 0.3s;"><i class="fas fa-trash-alt"></i></button>` :
-                    '';
+                    `<button class="btn-sm delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` : '';
 
-                const statusColor = status === 'صالح' ? '#00b894' : (status === 'معطب' ? '#e17055' : '#fdcb6e');
-
-                html += `<tr>
-                    <td style="font-weight:700; color:#fff; padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02);">${escapeHtml(name)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(number)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(length)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(category)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(region)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(zone)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(port)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(supp)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); font-weight:700; color:${statusColor};">${escapeHtml(status)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(breakType)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${formatDate(fDate)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${formatDate(eDate)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02); color:rgba(255,255,255,0.6);">${escapeHtml(repairUnit)}</td>
-                    <td style="padding:8px 5px; border-bottom:1px solid rgba(255,255,255,0.02);"><div style="display:flex; gap:3px; flex-wrap:wrap; justify-content:center;">${editBtn} ${delBtn}</div></td>
+                html += `<tr class="${isDamaged ? 'damaged' : ''}">
+                    <td class="vessel-name">${escapeHtml(name)}</td>
+                    <td>${escapeHtml(number)}</td>
+                    <td>${escapeHtml(length)}</td>
+                    <td>${escapeHtml(category)}</td>
+                    <td>${escapeHtml(region)}</td>
+                    <td>${escapeHtml(zone)}</td>
+                    <td>${escapeHtml(port)}</td>
+                    <td>${escapeHtml(supp)}</td>
+                    <td style="color:${statusColor}; font-weight:700;">${escapeHtml(status)}</td>
+                    <td>${escapeHtml(breakType)}</td>
+                    <td>${formatDate(fDate)}</td>
+                    <td>${formatDate(eDate)}</td>
+                    <td>${escapeHtml(repairUnit)}</td>
+                    <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
                 </tr>`;
             }
             mainBody.innerHTML = html;
@@ -317,11 +1109,11 @@
         } catch (err) {
             console.error('❌ renderMain error:', err);
             mainBody.innerHTML = `
-                <tr><td colspan="14" style="text-align:center; padding:40px 20px; color:#f87171;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
-                    <h3 style="color:#f87171; font-size:0.9rem;">خطأ في تحميل البيانات</h3>
+                <tr><td colspan="14" class="empty-state">
+                    <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
                     <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
-                    <button onclick="renderMain()" style="margin-top:10px; padding:6px 20px; background:linear-gradient(135deg,#e94560,#f5c842); border:none; border-radius:30px; color:#fff; font-weight:600; cursor:pointer;">
+                    <button class="retry-btn" onclick="renderMain()">
                         <i class="fas fa-sync-alt"></i> إعادة المحاولة
                     </button>
                 </td></tr>
@@ -329,7 +1121,10 @@
         }
     }
 
-    // ===== إضافة مركب =====
+    // ============================================================
+    // 7. ADD ITEM
+    // ============================================================
+
     async function addItem() {
         if (!canEdit()) {
             alert('⚠️ ليس لديك صلاحية لإضافة مركب');
@@ -363,10 +1158,10 @@
         };
 
         try {
-            const token = localStorage.getItem('marine_token');
+            const token = getToken();
             const response = await fetch('/api/vessels', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(vessel)
             });
 
@@ -383,7 +1178,10 @@
         }
     }
 
-    // ===== مسح النموذج =====
+    // ============================================================
+    // 8. CLEAR FORM
+    // ============================================================
+
     function clearForm() {
         ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
             document.getElementById(id).value = '';
@@ -394,16 +1192,19 @@
         document.getElementById('iRepairUnit').value = '';
     }
 
-    // ===== حذف مركب =====
+    // ============================================================
+    // 9. DELETE ITEM
+    // ============================================================
+
     window.deleteItem = async function(id, name) {
         if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
         if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
 
         try {
-            const token = localStorage.getItem('marine_token');
+            const token = getToken();
             const response = await fetch(`/api/vessels/${id}`, {
                 method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: getAuthHeaders()
             });
 
             if (!response.ok) {
@@ -416,13 +1217,16 @@
         } catch (err) { alert('❌ ' + err.message); }
     };
 
-    // ===== تعديل مركب =====
+    // ============================================================
+    // 10. EDIT ITEM
+    // ============================================================
+
     window.editItem = async function(id) {
         if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
 
         try {
-            const token = localStorage.getItem('marine_token');
-            const response = await fetch('/api/vessels', { headers: { 'Authorization': 'Bearer ' + token } });
+            const token = getToken();
+            const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
             if (!response.ok) throw new Error('فشل تحميل البيانات');
 
             const vessels = await response.json();
@@ -452,7 +1256,10 @@
         } catch (err) { alert('❌ ' + err.message); }
     };
 
-    // ===== تحديث مركب =====
+    // ============================================================
+    // 11. UPDATE ITEM
+    // ============================================================
+
     async function updateItem(id) {
         const name = document.getElementById('iName').value.trim();
         if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
@@ -474,10 +1281,10 @@
         };
 
         try {
-            const token = localStorage.getItem('marine_token');
+            const token = getToken();
             const response = await fetch(`/api/vessels/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(vessel)
             });
 
@@ -495,7 +1302,10 @@
         } catch (err) { alert('❌ ' + err.message); }
     }
 
-    // ===== مسح البحث =====
+    // ============================================================
+    // 12. CLEAR SEARCH
+    // ============================================================
+
     window.clearMainSearch = function() {
         document.getElementById('searchMain').value = '';
         document.getElementById('fCatMain').value = 'الكل';
@@ -503,7 +1313,10 @@
         renderMain();
     };
 
-    // ===== تهيئة الفلاتر =====
+    // ============================================================
+    // 13. INIT FILTERS
+    // ============================================================
+
     function initFilters() {
         const fCatMain = document.getElementById('fCatMain');
         const fRegMain = document.getElementById('fRegMain');
@@ -515,25 +1328,31 @@
         Object.keys(ZONES_DATA).forEach(r => { fRegMain.innerHTML += `<option value="${r}">${r}</option>`; });
     }
 
-    // ===== تصدير / تحديث =====
-    window.exportFleetData = function() { alert('📤 سيتم تصدير بيانات الأسطول قريباً'); };
-    window.refreshFleet = function() { renderMain(); alert('🔄 تم تحديث البيانات'); };
+    // ============================================================
+    // 14. REFRESH
+    // ============================================================
 
-    // ===== التهيئة =====
+    window.refreshFleet = function() {
+        renderMain();
+    };
+
+    // ============================================================
+    // 15. INIT
+    // ============================================================
+
     document.addEventListener('DOMContentLoaded', async function() {
-        console.log('🚀 تحميل صفحة السجل العام...');
+        console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
 
-        // ✅ التحقق من المستخدم
-        const token = localStorage.getItem('marine_token');
-        if (!token) { 
+        const token = getToken();
+        if (!token) {
             console.warn('⚠️ لا يوجد توكن');
-            window.location.href = '/index.html'; 
-            return; 
+            window.location.href = '/index.html';
+            return;
         }
 
         try {
             const response = await fetch('/api/auth/me', {
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: getAuthHeaders()
             });
 
             if (!response.ok) {
@@ -555,7 +1374,6 @@
             return;
         }
 
-        // ✅ إظهار/إخفاء زر الإضافة
         const addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) {
             addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
@@ -565,6 +1383,22 @@
         updateZones();
         await renderMain();
 
-        console.log('✅ صفحة السجل العام جاهزة');
+        console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
     });
+
+    // ============================================================
+    // 16. GLOBAL EXPOSURE
+    // ============================================================
+
+    window.renderMain = renderMain;
+    window.addItem = addItem;
+    window.editItem = editItem;
+    window.updateItem = updateItem;
+    window.deleteItem = deleteItem;
+    window.clearMainSearch = clearMainSearch;
+    window.updateZones = updateZones;
+    window.refreshFleet = refreshFleet;
+    window.getToken = getToken;
+    window.getAuthHeaders = getAuthHeaders;
 </script>
+</div>
