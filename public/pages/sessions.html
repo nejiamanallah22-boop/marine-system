@@ -92,6 +92,16 @@
             box-shadow: 0 8px 30px rgba(167,139,250,0.3);
         }
 
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
         .btn-action.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
@@ -101,16 +111,6 @@
         .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
-        }
-
-        .btn-action.danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
-            color: #fff;
-        }
-
-        .btn-action.danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
         }
 
         /* ===== STATS ===== */
@@ -321,7 +321,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 700px;
+            min-width: 800px;
         }
 
         thead {
@@ -373,19 +373,14 @@
             color: #4ade80;
         }
 
-        .status-badge.inactive {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
         .status-badge.expired {
             background: rgba(234,179,8,0.12);
             color: #fbbf24;
         }
 
         .status-badge.terminated {
-            background: rgba(107,114,128,0.12);
-            color: #9ca3af;
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
         }
 
         /* ===== ACTION BUTTONS ===== */
@@ -495,6 +490,44 @@
             color: rgba(255,255,255,0.1);
         }
 
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 400px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-info {
+            background: rgba(167,139,250,0.15);
+            border: 1px solid rgba(167,139,250,0.2);
+        }
+
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             #page-session { padding: 12px; }
@@ -577,11 +610,11 @@
         <label><i class="fas fa-user"></i> المستخدم</label>
         <select id="fUserSession">
             <option value="الكل">👤 جميع المستخدمين</option>
-            <option value="أحمد">أحمد</option>
-            <option value="محمد">محمد</option>
-            <option value="سارة">سارة</option>
-            <option value="فاطمة">فاطمة</option>
-            <option value="علي">علي</option>
+            <option value="أحمد محمد">أحمد محمد</option>
+            <option value="سارة علي">سارة علي</option>
+            <option value="محمد خالد">محمد خالد</option>
+            <option value="فاطمة نور">فاطمة نور</option>
+            <option value="علي حسن">علي حسن</option>
         </select>
 
         <label><i class="fas fa-circle"></i> الحالة</label>
@@ -652,34 +685,42 @@
         (function() {
             'use strict';
 
-            // ===== DATA =====
+            // ============================================================
+            // DATA - SESSIONS
+            // ============================================================
             var sessionData = [
-                { id: 'S-2026-001', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-06-10 08:30', duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-002', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-06-09 14:20', duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-003', user: 'سارة', email: 'sara@example.com', startDate: '2026-06-08 09:00', duration: '5 ساعات', status: 'منتهية' },
-                { id: 'S-2026-004', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-06-07 16:45', duration: '1 ساعة 50 دقيقة', status: 'ملغاة' },
-                { id: 'S-2026-005', user: 'علي', email: 'ali@example.com', startDate: '2026-06-06 10:15', duration: '4 ساعات 20 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-006', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-06-05 13:30', duration: '2 ساعات 45 دقيقة', status: 'منتهية' },
-                { id: 'S-2026-007', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-06-04 11:00', duration: '3 ساعات 10 دقيقة', status: 'ملغاة' },
-                { id: 'S-2026-008', user: 'سارة', email: 'sara@example.com', startDate: '2026-06-03 08:45', duration: '6 ساعات 30 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-009', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-06-02 15:20', duration: '2 ساعات 15 دقيقة', status: 'منتهية' },
-                { id: 'S-2026-010', user: 'علي', email: 'ali@example.com', startDate: '2026-06-01 09:30', duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-011', user: 'أحمد', email: 'ahmed@example.com', startDate: '2026-05-31 14:00', duration: '4 ساعات', status: 'منتهية' },
-                { id: 'S-2026-012', user: 'محمد', email: 'mohamed@example.com', startDate: '2026-05-30 10:10', duration: '2 ساعات 20 دقيقة', status: 'ملغاة' },
-                { id: 'S-2026-013', user: 'سارة', email: 'sara@example.com', startDate: '2026-05-29 16:30', duration: '5 ساعات 15 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-014', user: 'فاطمة', email: 'fatma@example.com', startDate: '2026-05-28 08:00', duration: '3 ساعات', status: 'منتهية' },
-                { id: 'S-2026-015', user: 'علي', email: 'ali@example.com', startDate: '2026-05-27 13:45', duration: '2 ساعات 30 دقيقة', status: 'نشطة' }
+                { id: 'S-2026-001', user: 'أحمد محمد', email: 'ahmed@example.com', startDate: '2026-08-26 08:30', duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-002', user: 'سارة علي', email: 'sara@example.com', startDate: '2026-08-26 09:45', duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-003', user: 'محمد خالد', email: 'mohamed@example.com', startDate: '2026-08-25 14:20', duration: '5 ساعات', status: 'منتهية' },
+                { id: 'S-2026-004', user: 'فاطمة نور', email: 'fatma@example.com', startDate: '2026-08-25 10:15', duration: '1 ساعة 50 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-005', user: 'علي حسن', email: 'ali@example.com', startDate: '2026-08-24 16:45', duration: '4 ساعات 20 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-006', user: 'نورا سليم', email: 'nora@example.com', startDate: '2026-08-24 11:30', duration: '2 ساعات 45 دقيقة', status: 'منتهية' },
+                { id: 'S-2026-007', user: 'ياسين عمر', email: 'yassin@example.com', startDate: '2026-08-23 13:00', duration: '3 ساعات 10 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-008', user: 'ليلى منير', email: 'layla@example.com', startDate: '2026-08-23 08:45', duration: '6 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-009', user: 'كريم سامي', email: 'karim@example.com', startDate: '2026-08-22 15:20', duration: '2 ساعات 15 دقيقة', status: 'منتهية' },
+                { id: 'S-2026-010', user: 'منى طارق', email: 'mona@example.com', startDate: '2026-08-22 09:30', duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-011', user: 'سامي رضا', email: 'sami@example.com', startDate: '2026-08-21 14:00', duration: '4 ساعات', status: 'منتهية' },
+                { id: 'S-2026-012', user: 'هالة نادر', email: 'hala@example.com', startDate: '2026-08-21 10:10', duration: '2 ساعات 20 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-013', user: 'أحمد محمد', email: 'ahmed@example.com', startDate: '2026-08-20 16:30', duration: '5 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-014', user: 'سارة علي', email: 'sara@example.com', startDate: '2026-08-20 08:00', duration: '3 ساعات', status: 'منتهية' },
+                { id: 'S-2026-015', user: 'محمد خالد', email: 'mohamed@example.com', startDate: '2026-08-19 13:45', duration: '2 ساعات 30 دقيقة', status: 'نشطة' }
             ];
 
-            // ===== STATE =====
+            // ============================================================
+            // STATE
+            // ============================================================
             var filteredData = sessionData.slice();
             var currentPage = 1;
             var itemsPerPage = 5;
 
-            // ===== DOM REFS =====
+            // ============================================================
+            // DOM REFS
+            // ============================================================
             var $ = function(id) { return document.getElementById(id); };
 
-            // ===== HELPERS =====
+            // ============================================================
+            // HELPERS
+            // ============================================================
             function getStatusClass(status) {
                 var map = {
                     'نشطة': 'active',
@@ -698,16 +739,16 @@
                 return map[status] || status;
             }
 
-            function getStatusBadge(status) {
-                var map = {
-                    'نشطة': 'active',
-                    'منتهية': 'expired',
-                    'ملغاة': 'terminated'
-                };
-                return map[status] || '';
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                var parts = dateStr.split(' ');
+                var dateParts = parts[0].split('-');
+                return dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0] + ' ' + (parts[1] || '');
             }
 
-            // ===== RENDER =====
+            // ============================================================
+            // RENDER
+            // ============================================================
             function renderSessions() {
                 renderStats();
                 renderTable();
@@ -784,7 +825,7 @@
                             <td style="text-align:right;font-weight:600;color:#a78bfa;">${s.id}</td>
                             <td style="text-align:right;font-weight:600;color:#fff;">${s.user}</td>
                             <td>${s.email}</td>
-                            <td>${s.startDate}</td>
+                            <td>${formatDate(s.startDate)}</td>
                             <td>${s.duration}</td>
                             <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
                             <td>
@@ -817,7 +858,9 @@
                 }
             }
 
-            // ===== ACTIONS =====
+            // ============================================================
+            // ACTIONS
+            // ============================================================
             function changePage(delta) {
                 var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
                 var newPage = currentPage + delta;
@@ -862,20 +905,25 @@
 
             function terminateAllSessions() {
                 if (confirm('⚠️ هل أنت متأكد من إنهاء جميع الجلسات النشطة؟')) {
-                    var activeIds = sessionData.filter(function(s) { return s.status === 'نشطة'; });
-                    if (activeIds.length === 0) {
+                    var activeSessions = sessionData.filter(function(s) { return s.status === 'نشطة'; });
+                    if (activeSessions.length === 0) {
                         showNotification('ℹ️ لا توجد جلسات نشطة لإنهائها', 'info');
                         return;
                     }
-                    activeIds.forEach(function(s) { s.status = 'ملغاة'; });
+                    activeSessions.forEach(function(s) { s.status = 'ملغاة'; });
                     renderSessions();
-                    showNotification('✅ تم إنهاء ' + activeIds.length + ' جلسات بنجاح', 'success');
+                    showNotification('✅ تم إنهاء ' + activeSessions.length + ' جلسات بنجاح', 'success');
                 }
             }
 
-            // ===== GLOBAL FUNCTIONS =====
+            // ============================================================
+            // GLOBAL FUNCTIONS
+            // ============================================================
             window.viewSession = function(id) {
-                showNotification('📋 عرض تفاصيل الجلسة ' + id, 'info');
+                var session = sessionData.find(function(s) { return s.id === id; });
+                if (session) {
+                    showNotification('📋 عرض تفاصيل الجلسة: ' + session.user + ' (' + session.email + ')', 'info');
+                }
             };
 
             window.terminateSession = function(id) {
@@ -889,9 +937,11 @@
                 }
             };
 
-            // ===== NOTIFICATION =====
+            // ============================================================
+            // NOTIFICATION
+            // ============================================================
             function showNotification(message, type) {
-                var old = document.querySelector('.ses-notification');
+                var old = document.querySelector('.toast');
                 if (old) old.remove();
 
                 var colors = {
@@ -901,7 +951,7 @@
                 };
 
                 var notif = document.createElement('div');
-                notif.className = 'ses-notification';
+                notif.className = 'toast toast-' + type;
                 notif.style.cssText = `
                     position: fixed;
                     bottom: 24px;
@@ -918,6 +968,7 @@
                     animation: slideUp 0.4s ease-out;
                     box-shadow: 0 8px 32px rgba(0,0,0,0.3);
                     max-width: 400px;
+                    direction: rtl;
                 `;
                 notif.textContent = message;
 
@@ -931,20 +982,21 @@
                 }, 3000);
             }
 
-            // ===== ADD STYLES =====
+            // ============================================================
+            // ADD STYLES
+            // ============================================================
             var styleNotif = document.createElement('style');
             styleNotif.textContent = `
                 @keyframes slideUp {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .ses-notification {
-                    direction: rtl;
-                }
             `;
             document.head.appendChild(styleNotif);
 
-            // ===== EVENT BINDING =====
+            // ============================================================
+            // EVENT BINDING
+            // ============================================================
             document.addEventListener('DOMContentLoaded', function() {
                 $('refreshBtn').addEventListener('click', refreshSessions);
                 $('terminateAllBtn').addEventListener('click', terminateAllSessions);
