@@ -1,0 +1,822 @@
+<!-- public/pages/logs.html -->
+<div id="page-logs">
+    <style>
+        #page-logs {
+            width: 100%;
+            max-width: 100%;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        #page-logs::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(239,68,68,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
+
+        /* ===== HEADER ===== */
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logs-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logs-header-left .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #f87171);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+        }
+
+        .logs-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5d76e, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .logs-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .logs-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        .btn-action.export {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            color: #0a1628;
+        }
+
+        .btn-action.export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(34,197,94,0.3);
+        }
+
+        /* ===== STATS ===== */
+        .logs-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e6b31e, #f87171);
+            opacity: 0.6;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #f5d76e;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.red { color: #f87171; }
+        .stat-card .number.blue { color: #60a5fa; }
+        .stat-card .number.purple { color: #a78bfa; }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            min-width: 120px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            outline: none;
+            border-color: #e6b31e;
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar input[type="date"] {
+            min-width: 140px;
+            color-scheme: dark;
+        }
+
+        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6);
+            cursor: pointer;
+        }
+
+        .btn-filter {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-filter.primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+
+        .btn-filter.primary:hover {
+            transform: scale(1.04);
+        }
+
+        .btn-filter.outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ===== TABLE ===== */
+        .logs-section {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header h3 i {
+            color: #e6b31e;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge.gold {
+            background: rgba(230,179,30,0.12);
+            color: #f5d76e;
+        }
+
+        .badge.green {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .badge.red {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .badge.blue {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 16px 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 800px;
+        }
+
+        thead {
+            background: rgba(230,179,30,0.08);
+            border-bottom: 2px solid rgba(230,179,30,0.08);
+        }
+
+        thead th {
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        thead th i {
+            margin-left: 4px;
+            color: #e6b31e;
+        }
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tbody .vessel-name {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-badge.completed {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+            animation: pulseProgress 2s infinite;
+        }
+
+        @keyframes pulseProgress {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-badge.pending {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.overdue {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+            animation: pulseDanger 1.5s infinite;
+        }
+
+        @keyframes pulseDanger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-info {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #page-logs { padding: 12px; }
+            .logs-header { flex-direction: column; align-items: flex-start; }
+            .logs-header-left { width: 100%; }
+            .logs-header-left h2 { font-size: 16px; }
+            .logs-header-actions { width: 100%; }
+            .logs-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card .number { font-size: 20px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .table-wrapper { padding: 12px; }
+            table { font-size: 0.7rem; min-width: 700px; }
+            thead th, tbody td { padding: 6px 8px; }
+        }
+
+        @media (max-width: 480px) {
+            .logs-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .logs-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .logs-header-left h2 { font-size: 14px; }
+            .section-header h3 { font-size: 13px; }
+            thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
+        }
+    </style>
+
+    <!-- ===== HEADER ===== -->
+    <div class="logs-header">
+        <div class="logs-header-left">
+            <div class="icon"><i class="fas fa-history"></i></div>
+            <div>
+                <h2>سجلات الصيانة</h2>
+                <p>سجل كامل لعمليات الصيانة والتدخلات الفنية</p>
+            </div>
+        </div>
+        <div class="logs-header-actions">
+            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action export" id="exportBtn"><i class="fas fa-file-excel"></i> تصدير</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="logs-stats" id="logsStats">
+        <div class="stat-card"><div class="number" id="totalLogs">0</div><div class="label">📋 إجمالي السجلات</div></div>
+        <div class="stat-card"><div class="number green" id="completedLogs">0</div><div class="label">✅ مكتملة</div></div>
+        <div class="stat-card"><div class="number blue" id="pendingLogs">0</div><div class="label">⏳ قيد الانتظار</div></div>
+        <div class="stat-card"><div class="number red" id="overdueLogs">0</div><div class="label">🚨 متأخرة</div></div>
+        <div class="stat-card"><div class="number purple" id="inProgressLogs">0</div><div class="label">⚡ قيد التنفيذ</div></div>
+    </div>
+
+    <!-- ===== FILTER BAR ===== -->
+    <div class="filter-bar">
+        <label><i class="fas fa-search"></i> بحث</label>
+        <input type="text" id="searchLog" placeholder="المركب، نوع التدخل..." />
+
+        <label><i class="fas fa-ship"></i> المركب</label>
+        <select id="fVesselLog">
+            <option value="الكل">🚢 جميع المراكب</option>
+            <option value="البروق 01">البروق 01</option>
+            <option value="البروق 02">البروق 02</option>
+            <option value="صقر 03">صقر 03</option>
+            <option value="خافرة 07">خافرة 07</option>
+            <option value="زورق مزدوج 12">زورق مزدوج 12</option>
+        </select>
+
+        <label><i class="fas fa-circle"></i> الحالة</label>
+        <select id="fStatusLog">
+            <option value="الكل">📊 جميع الحالات</option>
+            <option value="مكتملة">✅ مكتملة</option>
+            <option value="قيد التنفيذ">⚡ قيد التنفيذ</option>
+            <option value="قيد الانتظار">⏳ قيد الانتظار</option>
+            <option value="متأخرة">🚨 متأخرة</option>
+        </select>
+
+        <label><i class="fas fa-calendar-alt"></i> من</label>
+        <input type="date" id="fDateFrom" />
+        <label><i class="fas fa-calendar-alt"></i> إلى</label>
+        <input type="date" id="fDateTo" />
+
+        <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
+        <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
+    </div>
+
+    <!-- ===== TABLE ===== -->
+    <div class="logs-section">
+        <div class="section-header">
+            <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة</h3>
+            <span class="badge gold" id="logsBadge">📊 جاري التحميل...</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> الرقم</th>
+                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
+                        <th><i class="fas fa-tag"></i> الفئة</th>
+                        <th><i class="fas fa-wrench"></i> نوع التدخل</th>
+                        <th><i class="fas fa-calendar-alt"></i> تاريخ البدء</th>
+                        <th><i class="fas fa-calendar-check"></i> تاريخ الانتهاء</th>
+                        <th><i class="fas fa-clock"></i> المدة</th>
+                        <th><i class="fas fa-circle"></i> الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody">
+                    <tr>
+                        <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <div style="font-size:2rem;margin-bottom:10px;">📋</div>
+                            جاري تحميل السجلات...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - SAFE VERSION
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            console.log('📋 Logs Page - loading...');
+
+            // ============================================================
+            // DATA
+            // ============================================================
+            var logsData = [
+                { id: 'L-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10',
+                    endDate: '2026-05-12', duration: '2 أيام', status: 'مكتملة' },
+                { id: 'L-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15',
+                    endDate: '2026-06-20', duration: '5 أيام', status: 'قيد التنفيذ' },
+                { id: 'L-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05',
+                    endDate: '2026-04-05', duration: '1 يوم', status: 'مكتملة' },
+                { id: 'L-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15',
+                    endDate: '2026-03-25', duration: '10 أيام', status: 'متأخرة' },
+                { id: 'L-2026-005', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01',
+                    endDate: '2026-06-02', duration: '1 يوم', status: 'مكتملة' },
+                { id: 'L-2026-006', vessel: 'البروق 05', category: 'البروق', type: 'استبدال قطع', startDate: '2026-05-20',
+                    endDate: '2026-05-28', duration: '8 أيام', status: 'قيد الانتظار' },
+                { id: 'L-2026-007', vessel: 'صقر 08', category: 'صقور', type: 'صيانة دورية', startDate: '2026-05-25',
+                    endDate: '2026-05-30', duration: '5 أيام', status: 'مكتملة' },
+                { id: 'L-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10',
+                    endDate: '2026-06-25', duration: '15 أيام', status: 'قيد التنفيذ' },
+                { id: 'L-2026-009', vessel: 'طوافة 14', category: 'طوافات', type: 'فحص تقني', startDate: '2026-04-10',
+                    endDate: '2026-04-12', duration: '2 أيام', status: 'متأخرة' },
+                { id: 'L-2026-010', vessel: 'البروق 09', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-05-18',
+                    endDate: '2026-05-22', duration: '4 أيام', status: 'مكتملة' }
+            ];
+
+            // ============================================================
+            // DOM REFS
+            // ============================================================
+            var $ = function(id) { return document.getElementById(id); };
+
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            function getStatusClass(status) {
+                var map = {
+                    'مكتملة': 'completed',
+                    'قيد التنفيذ': 'in-progress',
+                    'قيد الانتظار': 'pending',
+                    'متأخرة': 'overdue'
+                };
+                return map[status] || '';
+            }
+
+            function getStatusLabel(status) {
+                var map = {
+                    'مكتملة': '✅ مكتملة',
+                    'قيد التنفيذ': '⚡ قيد التنفيذ',
+                    'قيد الانتظار': '⏳ قيد الانتظار',
+                    'متأخرة': '🚨 متأخرة'
+                };
+                return map[status] || status;
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                var parts = dateStr.split('-');
+                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            }
+
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
+            }
+
+            // ============================================================
+            // STATS
+            // ============================================================
+            function updateStats() {
+                var total = logsData.length;
+                var completed = logsData.filter(function(l) { return l.status === 'مكتملة'; }).length;
+                var pending = logsData.filter(function(l) { return l.status === 'قيد الانتظار'; }).length;
+                var overdue = logsData.filter(function(l) { return l.status === 'متأخرة'; }).length;
+                var inProgress = logsData.filter(function(l) { return l.status === 'قيد التنفيذ'; }).length;
+
+                $('totalLogs').textContent = total;
+                $('completedLogs').textContent = completed;
+                $('pendingLogs').textContent = pending;
+                $('overdueLogs').textContent = overdue;
+                $('inProgressLogs').textContent = inProgress;
+
+                var badge = $('logsBadge');
+                if (overdue > 0) {
+                    badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
+                    badge.className = 'badge red';
+                } else if (pending > 0) {
+                    badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
+                    badge.className = 'badge blue';
+                } else {
+                    badge.textContent = '✅ ' + completed + ' سجل مكتمل';
+                    badge.className = 'badge green';
+                }
+            }
+
+            // ============================================================
+            // RENDER TABLE
+            // ============================================================
+            function renderTable() {
+                var search = $('searchLog').value.toLowerCase();
+                var vesselFilter = $('fVesselLog').value;
+                var statusFilter = $('fStatusLog').value;
+                var dateFrom = $('fDateFrom').value;
+                var dateTo = $('fDateTo').value;
+
+                var filtered = logsData.filter(function(l) {
+                    if (search && !l.vessel.includes(search) && !l.type.includes(search)) return false;
+                    if (vesselFilter !== 'الكل' && l.vessel !== vesselFilter) return false;
+                    if (statusFilter !== 'الكل' && l.status !== statusFilter) return false;
+                    if (dateFrom && l.startDate < dateFrom) return false;
+                    if (dateTo && l.startDate > dateTo) return false;
+                    return true;
+                });
+
+                var tbody = $('logsBody');
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                                <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
+                                لا توجد سجلات مطابقة
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var html = '';
+                filtered.forEach(function(l, index) {
+                    var statusClass = getStatusClass(l.status);
+                    var statusLabel = getStatusLabel(l.status);
+
+                    html += `
+                        <tr>
+                            <td style="font-weight:600;color:#f5d76e;">${l.id}</td>
+                            <td class="vessel-name">${l.vessel}</td>
+                            <td>${l.category}</td>
+                            <td>${l.type}</td>
+                            <td>${formatDate(l.startDate)}</td>
+                            <td>${formatDate(l.endDate)}</td>
+                            <td>${l.duration}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+            }
+
+            // ============================================================
+            // ACTIONS
+            // ============================================================
+            function refreshLogs() {
+                var btn = $('refreshBtn');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    updateStats();
+                    renderTable();
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showToast('✅ تم تحديث السجلات', 'success');
+                }, 600);
+            }
+
+            function exportLogs() {
+                showToast('📊 جاري تصدير البيانات...', 'info');
+                setTimeout(function() {
+                    showToast('✅ تم التصدير بنجاح', 'success');
+                }, 1500);
+            }
+
+            function applyFilters() {
+                renderTable();
+                showToast('✅ تم تطبيق الفلاتر', 'success');
+            }
+
+            function resetFilters() {
+                $('searchLog').value = '';
+                $('fVesselLog').value = 'الكل';
+                $('fStatusLog').value = 'الكل';
+                $('fDateFrom').value = '';
+                $('fDateTo').value = '';
+                renderTable();
+                showToast('✅ تم إلغاء جميع الفلاتر', 'success');
+            }
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            function init() {
+                console.log('🚀 Initializing Logs page...');
+                updateStats();
+                renderTable();
+
+                // Events
+                $('refreshBtn').addEventListener('click', refreshLogs);
+                $('exportBtn').addEventListener('click', exportLogs);
+                $('filterBtn').addEventListener('click', applyFilters);
+                $('resetBtn').addEventListener('click', resetFilters);
+
+                $('searchLog').addEventListener('keyup', renderTable);
+                $('fVesselLog').addEventListener('change', renderTable);
+                $('fStatusLog').addEventListener('change', renderTable);
+                $('fDateFrom').addEventListener('change', renderTable);
+                $('fDateTo').addEventListener('change', renderTable);
+
+                console.log('✅ Logs Page loaded successfully');
+                console.log('📋 ' + logsData.length + ' logs loaded');
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+
+            // ============================================================
+            // EXPOSE GLOBALS
+            // ============================================================
+            window.refreshLogs = refreshLogs;
+            window.exportLogs = exportLogs;
+
+        })();
+    </script>
+</div>
