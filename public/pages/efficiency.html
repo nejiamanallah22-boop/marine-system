@@ -1,5 +1,5 @@
 <!-- ============================================================
-📊 الجاهزية - Efficiency v7.0 PRO MAX
+📊 الجاهزية - Efficiency v7.0 PRO MAX (FIXED)
 ============================================================ -->
 <div id="page-efficiency" class="page-content efficiency-page">
     
@@ -558,22 +558,47 @@
 </style>
 
 <!-- ============================================================
-📦 JavaScript الخاص بالصفحة
+📦 JavaScript الخاص بالصفحة (المُصلح)
 ============================================================ -->
 <script>
 // ============================================================
-// 📊 EFFICIENCY PAGE - v7.0 PRO MAX
+// 📊 EFFICIENCY PAGE - v7.0 PRO MAX (FIXED)
 // ============================================================
 
+// ✅ تجنب إعادة تعريف المتغيرات - استخدام var بدلاً من let
+// ✅ استخدام window للوصول العام
+
 // ============================================================
-// 1. المتغيرات العامة
+// 1. المتغيرات العامة - تم إصلاح التكرار
 // ============================================================
 
-let allVessels = [];
-let fleetChart = null;
-let categoriesChart = null;
-let comparisonChart = null;
-let currentChartType = 'doughnut';
+// ✅ استخدام var لتجنب خطأ التكرار
+if (typeof window._efficiencyInited === 'undefined') {
+    window._efficiencyInited = false;
+}
+
+if (typeof window._allVesselsEff === 'undefined') {
+    window._allVesselsEff = [];
+}
+
+if (typeof window._fleetChart === 'undefined') {
+    window._fleetChart = null;
+}
+if (typeof window._categoriesChart === 'undefined') {
+    window._categoriesChart = null;
+}
+if (typeof window._comparisonChart === 'undefined') {
+    window._comparisonChart = null;
+}
+if (typeof window._currentChartType === 'undefined') {
+    window._currentChartType = 'doughnut';
+}
+
+var allVessels = window._allVesselsEff || [];
+var fleetChart = window._fleetChart || null;
+var categoriesChart = window._categoriesChart || null;
+var comparisonChart = window._comparisonChart || null;
+var currentChartType = window._currentChartType || 'doughnut';
 
 const CATEGORIES = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
 const REGIONS = ['الشمال', 'الساحل', 'الوسط', 'الجنوب'];
@@ -585,7 +610,7 @@ const REGION_NAMES = {
 };
 
 // ============================================================
-// 2. دوال مساعدة
+// 2. دوال مساعدة - تم إصلاح دالة getToken
 // ============================================================
 
 function escapeHTML(str) {
@@ -598,8 +623,21 @@ function escapeHTML(str) {
         .replace(/'/g, '&#039;');
 }
 
+// ✅ دالة getToken موحدة مع باقي الصفحات
 function getToken() {
-    return localStorage.getItem('marine_auth_token') || localStorage.getItem('token');
+    return localStorage.getItem('marine_token') ||
+           localStorage.getItem('token') ||
+           localStorage.getItem('authToken') ||
+           localStorage.getItem('accessToken') ||
+           null;
+}
+
+function getAuthHeaders() {
+    const token = getToken();
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? 'Bearer ' + token : ''
+    };
 }
 
 function showToast(message, type = 'info') {
@@ -654,12 +692,29 @@ function getRowClass(percent) {
 }
 
 // ============================================================
-// 3. تحميل البيانات
+// 3. تحميل البيانات - تم الإصلاح
 // ============================================================
 
 async function loadVessels() {
     console.log('🔄 تحميل بيانات الأسطول...');
     
+    // ✅ أولاً: محاولة القراءة من window.allVessels (من index.html)
+    if (window.allVessels && window.allVessels.length > 0) {
+        console.log('✅ تم تحميل المراكب من window.allVessels:', window.allVessels.length);
+        allVessels = window.allVessels;
+        window._allVesselsEff = allVessels;
+        return allVessels;
+    }
+    
+    // ✅ ثانياً: محاولة القراءة من window.vesselsData
+    if (window.vesselsData && window.vesselsData.length > 0) {
+        console.log('✅ تم تحميل المراكب من window.vesselsData:', window.vesselsData.length);
+        allVessels = window.vesselsData;
+        window._allVesselsEff = allVessels;
+        return allVessels;
+    }
+    
+    // ✅ ثالثاً: جلب من API
     const token = getToken();
     if (!token) {
         console.warn('⚠️ لا يوجد توكن');
@@ -668,10 +723,7 @@ async function loadVessels() {
     
     try {
         const response = await fetch('/api/vessels', {
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            }
+            headers: getAuthHeaders()
         });
         
         if (!response.ok) throw new Error('فشل تحميل البيانات');
@@ -679,7 +731,9 @@ async function loadVessels() {
         const data = await response.json();
         const vessels = data.vessels || data || [];
         allVessels = vessels;
-        console.log('✅ تم تحميل المراكب:', vessels.length);
+        window._allVesselsEff = vessels;
+        window.allVessels = vessels;
+        console.log('✅ تم تحميل المراكب من API:', vessels.length);
         return vessels;
         
     } catch (error) {
@@ -747,7 +801,6 @@ function renderGeneralEfficiency(vessels) {
     const generalEff = totalAll ? ((totalOk / totalAll) * 100).toFixed(1) : 0;
     const badge = getEfficiencyBadge(generalEff);
     
-    // تحديث الشارة
     const badgeEl = document.getElementById('generalEffBadge');
     if (badgeEl) {
         badgeEl.className = `section-badge ${badge.class}`;
@@ -826,12 +879,10 @@ function renderRegions(vessels) {
     for (let region of regions) {
         let regData = data.filter(x => x.reg === region);
         
-        // تطبيق فلتر الفئة
         if (selectedCategory !== 'الكل') {
             regData = regData.filter(x => x.cat === selectedCategory);
         }
         
-        // تطبيق فلتر الحالة
         if (selectedStatus !== 'الكل') {
             regData = regData.filter(x => x.stat === selectedStatus);
         }
@@ -912,7 +963,7 @@ function renderRegions(vessels) {
 }
 
 // ============================================================
-// 7. الرسوم البيانية
+// 7. الرسوم البيانية - تم الإصلاح
 // ============================================================
 
 function renderCharts(vessels) {
@@ -1083,6 +1134,11 @@ function renderCharts(vessels) {
             }
         });
     }
+    
+    // حفظ المراجع
+    window._fleetChart = fleetChart;
+    window._categoriesChart = categoriesChart;
+    window._comparisonChart = comparisonChart;
 }
 
 // ============================================================
@@ -1091,6 +1147,7 @@ function renderCharts(vessels) {
 
 function switchChartType(type, btn) {
     currentChartType = type;
+    window._currentChartType = type;
     document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     renderCharts(allVessels);
@@ -1106,6 +1163,7 @@ async function renderEfficiency() {
     try {
         const vessels = await loadVessels();
         allVessels = vessels;
+        window._allVesselsEff = vessels;
         
         renderStats(vessels);
         renderGeneralEfficiency(vessels);
@@ -1135,7 +1193,6 @@ function exportEfficiencyReport() {
         return;
     }
     
-    // إنشاء CSV
     const headers = ['المركب', 'الفئة', 'الإقليم', 'الحالة', 'تاريخ آخر صيانة'];
     const rows = allVessels.map(v => [
         v.name || v.vesselName || '-',
@@ -1164,7 +1221,12 @@ function initEfficiencyPage() {
     console.log('📊 تهيئة صفحة الجاهزية...');
     
     if (!document.getElementById('page-efficiency')) return;
+    if (window._efficiencyInited) {
+        console.log('⚠️ تم تهيئة الصفحة مسبقاً');
+        return;
+    }
     
+    window._efficiencyInited = true;
     setTimeout(renderEfficiency, 300);
 }
 
@@ -1183,7 +1245,9 @@ window.refreshEfficiency = refreshEfficiency;
 window.switchChartType = switchChartType;
 window.exportEfficiencyReport = exportEfficiencyReport;
 window.loadVessels = loadVessels;
-window.allVessels = allVessels;
+
+// ✅ تصدير allVessels للاستخدام العالمي
+window.allVesselsEff = allVessels;
 
 console.log('✅ صفحة الجاهزية v7.0 جاهزة');
 </script>
