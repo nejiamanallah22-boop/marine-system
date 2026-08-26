@@ -1,195 +1,694 @@
 <!-- public/pages/maintenance.html -->
 <div id="page-maintenance">
     <style>
-        /* ===== STYLES ===== */
+        /* ============================================================
+           🚢 MAINTENANCE PAGE - PROFESSIONAL v14.0
+           ============================================================ */
+
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary-dark: #0a1628;
+            --primary: #0f3460;
+            --primary-light: #1a4f8a;
+            --secondary: #e94560;
+            --secondary-light: #ff6b81;
+            --accent: #f5c842;
+            --accent-light: #ffd966;
+            --success: #00b894;
+            --success-light: #55efc4;
+            --danger: #e17055;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.06);
+            --shadow-glow: 0 0 40px rgba(233,69,96,0.08);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
+            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* ===== FULL SCREEN RESET ===== */
+        #page-maintenance {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: var(--font);
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== BACKGROUND EFFECT ===== */
+        #page-maintenance::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(233,69,96,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(245,200,66,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--secondary-light); }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
         .maint-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
+            padding: 16px 24px;
             flex-wrap: wrap;
-            gap: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            margin: 0;
+            width: 100%;
         }
-        .maint-header h2 { margin: 0; color: white; font-size: 22px; }
-        .maint-header p { margin: 0; color: rgba(255,255,255,0.4); font-size: 13px; }
-        
+
+        .maint-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .maint-header-left .header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+            box-shadow: var(--shadow-glow);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(233,69,96,0.1); }
+            50% { box-shadow: 0 0 40px rgba(233,69,96,0.2); }
+        }
+
+        .maint-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .maint-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+            -webkit-text-fill-color: rgba(255,255,255,0.3);
+        }
+
+        .maint-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .maint-header-actions .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font);
+        }
+
+        .maint-header-actions .btn-action.primary {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: #0a1628;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .maint-header-actions .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(233,69,96,0.3);
+        }
+
+        .maint-header-actions .btn-action.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .maint-header-actions .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+           STATS CARDS
+           ============================================================ */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+            margin: 0;
+            width: 100%;
         }
+
         .stat-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 12px 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
             text-align: center;
+            transition: all var(--transition);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
         }
-        .stat-card .number { font-size: 22px; font-weight: 700; color: #60a5fa; }
-        .stat-card .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
-        .stat-card .number.green { color: #4ade80; }
-        .stat-card .number.yellow { color: #fbbf24; }
-        .stat-card .number.red { color: #f87171; }
-        .stat-card .number.gold { color: #f5d76e; }
-        
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(233,69,96,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.yellow { color: var(--warning); }
+        .stat-card .number.red { color: var(--danger); }
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.pink { color: var(--secondary-light); }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           FILTER BAR
+           ============================================================ */
         .filter-bar {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px 12px;
-            background: rgba(255,255,255,0.02);
-            padding: 10px 16px;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.06);
-            margin: 12px 0 16px;
             align-items: center;
+            gap: 8px 14px;
+            padding: 10px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            margin: 0;
+            width: 100%;
         }
-        .filter-bar input, .filter-bar select {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.06);
+
+        .filter-bar .search-input {
+            flex: 2 1 200px;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .filter-bar .search-input input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
             font-size: 0.8rem;
-            min-width: 100px;
+            transition: all var(--transition);
+            font-family: var(--font);
         }
-        .filter-bar label { font-size: 0.75rem; color: rgba(255,255,255,0.3); font-weight: 600; }
-        .filter-bar .btn {
-            padding: 4px 14px;
-            border-radius: 20px;
-            border: none;
-            background: rgba(233,69,96,0.15);
-            color: #e94560;
-            cursor: pointer;
-            font-size: 0.75rem;
+
+        .filter-bar .search-input input:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(233,69,96,0.06);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .filter-bar .search-input input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .filter-bar .search-input .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
             font-weight: 600;
-            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
-        .filter-bar .btn:hover { background: rgba(233,69,96,0.25); }
-        .filter-bar .btn.primary { background: rgba(96,165,250,0.15); color: #60a5fa; }
-        .filter-bar .btn.primary:hover { background: rgba(96,165,250,0.25); }
-        .filter-bar .btn.success { background: rgba(74,222,128,0.15); color: #4ade80; }
-        .filter-bar .btn.success:hover { background: rgba(74,222,128,0.25); }
-        
+
+        .filter-bar select {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            min-width: 100px;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar .btn-filter {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-bar .btn-filter.primary {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: #0a1628;
+        }
+
+        .filter-bar .btn-filter.primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px rgba(233,69,96,0.2);
+        }
+
+        .filter-bar .btn-filter.outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .filter-bar .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ============================================================
+           TABLE - FULL WIDTH
+           ============================================================ */
         .table-wrapper {
             overflow-x: auto;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            margin-top: 10px;
+            padding: 0 24px 24px;
+            width: 100%;
         }
-        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 900px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
         thead {
-            background: rgba(15,52,96,0.3);
+            background: rgba(15,52,96,0.4);
+            backdrop-filter: blur(12px);
             border-bottom: 2px solid rgba(233,69,96,0.08);
         }
+
         thead th {
-            padding: 10px 8px;
+            padding: 12px 10px;
             text-align: right;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 0.6rem;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.4);
-            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.8px;
             white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
-        thead th i { margin-left: 4px; color: #e94560; }
+
+        thead th i {
+            margin-left: 6px;
+            color: var(--secondary);
+            font-size: 0.7rem;
+        }
+
         tbody td {
-            padding: 8px 6px;
+            padding: 10px 8px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
             color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
         }
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
-        tbody tr.damaged { border-right: 3px solid #e17055; }
-        
+
+        tbody tr {
+            transition: all var(--transition);
+            border-radius: 4px;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tbody tr.damaged {
+            border-right: 3px solid var(--danger);
+            background: rgba(225,112,85,0.04);
+        }
+
+        tbody tr.damaged:hover {
+            background: rgba(225,112,85,0.08);
+        }
+
+        .vessel-name {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
         .status-badge {
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 20px;
             font-size: 0.65rem;
             font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
-        .status-badge.active { background: rgba(74,222,128,0.15); color: #4ade80; }
-        .status-badge.pending { background: rgba(251,191,36,0.15); color: #fbbf24; }
-        .status-badge.completed { background: rgba(96,165,250,0.15); color: #60a5fa; }
-        .status-badge.cancelled { background: rgba(248,113,113,0.15); color: #f87171; }
-        .status-badge.damaged { background: rgba(225,112,85,0.15); color: #e17055; }
-        
-        .empty-state {
-            text-align: center;
-            padding: 50px 20px;
-            color: rgba(255,255,255,0.15);
+
+        .status-badge.active {
+            background: rgba(74,222,128,0.12);
+            color: #4ade80;
         }
-        .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 10px; color: rgba(255,255,255,0.05); }
-        .empty-state h3 { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.2); }
-        .empty-state p { font-size: 0.75rem; }
-        
+
+        .status-badge.pending {
+            background: rgba(251,191,36,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.completed {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.cancelled {
+            background: rgba(248,113,113,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.damaged {
+            background: rgba(225,112,85,0.12);
+            color: #e17055;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .btn-sm {
-            padding: 3px 10px;
+            padding: 4px 10px;
             border: none;
             border-radius: 20px;
             font-size: 0.6rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: var(--font);
         }
-        .btn-sm.edit { background: rgba(245,200,66,0.12); color: #f5c842; }
-        .btn-sm.edit:hover { background: #f5c842; color: #0a1628; }
-        .btn-sm.delete { background: rgba(225,112,85,0.12); color: #e17055; }
-        .btn-sm.delete:hover { background: #e17055; color: #fff; }
-        .btn-sm.complete { background: rgba(74,222,128,0.12); color: #4ade80; }
-        .btn-sm.complete:hover { background: #4ade80; color: #0a1628; }
-        .btn-sm.history { background: rgba(96,165,250,0.12); color: #60a5fa; }
-        .btn-sm.history:hover { background: #60a5fa; color: #0a1628; }
-        .btn-sm + .btn-sm { margin-right: 4px; }
-        
-        /* ===== MODAL ===== */
+
+        .btn-sm i {
+            font-size: 0.55rem;
+        }
+
+        .btn-sm.edit {
+            background: rgba(245,200,66,0.12);
+            color: var(--accent);
+        }
+
+        .btn-sm.edit:hover {
+            background: var(--accent);
+            color: #0a1628;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.complete {
+            background: rgba(74,222,128,0.12);
+            color: #4ade80;
+        }
+
+        .btn-sm.complete:hover {
+            background: #4ade80;
+            color: #0a1628;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.history {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .btn-sm.history:hover {
+            background: #60a5fa;
+            color: #0a1628;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.delete {
+            background: rgba(225,112,85,0.12);
+            color: var(--danger);
+        }
+
+        .btn-sm.delete:hover {
+            background: var(--danger);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.04);
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.1);
+        }
+
+        .empty-state .retry-btn {
+            margin-top: 12px;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 24px rgba(233,69,96,0.2);
+        }
+
+        /* ============================================================
+           MODAL - PROFESSIONAL
+           ============================================================ */
         .maint-modal {
             display: none;
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(12px);
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        .maint-modal.active { display: flex; }
+
+        .maint-modal.active {
+            display: flex;
+            animation: modalFade 0.3s ease;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
         .maint-modal .modal-content {
             background: #111e3a;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            max-width: 700px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            max-width: 680px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
-            padding: 24px;
-            animation: modalFade 0.3s ease;
+            padding: 28px 32px;
+            box-shadow: var(--shadow-hover);
         }
-        @keyframes modalFade { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        .maint-modal .modal-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .maint-modal .modal-content::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 10px;
+        }
+
         .maint-modal .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--glass-border);
         }
-        .maint-modal .modal-header h3 { color: #fff; font-size: 18px; font-weight: 700; }
+
+        .maint-modal .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
         .maint-modal .modal-close {
             background: none;
             border: none;
             color: rgba(255,255,255,0.2);
             font-size: 24px;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 8px;
-            transition: all 0.3s;
+            transition: all var(--transition);
         }
-        .maint-modal .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
-        .maint-modal .form-group { margin-bottom: 12px; }
+
+        .maint-modal .modal-close:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        .maint-modal .form-group {
+            margin-bottom: 14px;
+        }
+
         .maint-modal .form-group label {
             display: block;
             font-size: 0.75rem;
@@ -197,153 +696,401 @@
             margin-bottom: 4px;
             font-weight: 600;
         }
+
+        .maint-modal .form-group label .required {
+            color: var(--danger);
+            margin-right: 2px;
+        }
+
         .maint-modal .form-group input,
         .maint-modal .form-group select,
         .maint-modal .form-group textarea {
             width: 100%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.04);
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
             color: #e2e8f0;
-            font-family: inherit;
+            font-family: var(--font);
             font-size: 0.9rem;
-            transition: all 0.3s;
+            transition: all var(--transition);
         }
+
         .maint-modal .form-group input:focus,
         .maint-modal .form-group select:focus,
         .maint-modal .form-group textarea:focus {
-            border-color: #e94560;
+            border-color: var(--secondary);
             outline: none;
             box-shadow: 0 0 0 4px rgba(233,69,96,0.06);
+            background: rgba(255,255,255,0.06);
         }
-        .maint-modal .form-group textarea { min-height: 60px; resize: vertical; }
+
+        .maint-modal .form-group input::placeholder,
+        .maint-modal .form-group textarea::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .maint-modal .form-group textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
         .maint-modal .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 14px;
         }
-        .maint-modal .btn-submit {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #e94560, #f5c842);
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-        }
-        .maint-modal .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(233,69,96,0.3); }
-        .maint-modal .btn-submit.secondary {
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.4);
-        }
-        .maint-modal .btn-submit.secondary:hover { background: rgba(255,255,255,0.08); transform: none; box-shadow: none; }
+
         .maint-modal .modal-footer {
             display: flex;
-            gap: 10px;
-            margin-top: 16px;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--glass-border);
         }
-        .maint-modal .modal-footer .btn-submit { flex: 1; }
-        
-        .parts-list {
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 8px 0;
-        }
-        .parts-list .part-item {
-            display: flex;
-            justify-content: space-between;
+
+        .maint-modal .modal-footer .btn-submit {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
             align-items: center;
-            padding: 6px 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            font-size: 0.8rem;
+            justify-content: center;
+            gap: 8px;
         }
-        .parts-list .part-item:last-child { border-bottom: none; }
-        .parts-list .part-item .part-name { color: #fff; }
-        .parts-list .part-item .part-qty { color: rgba(255,255,255,0.4); }
-        .parts-list .part-item .part-cost { color: #f5d76e; }
-        
+
+        .maint-modal .modal-footer .btn-submit.primary {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: #0a1628;
+        }
+
+        .maint-modal .modal-footer .btn-submit.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(233,69,96,0.3);
+        }
+
+        .maint-modal .modal-footer .btn-submit.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.4);
+        }
+
+        .maint-modal .modal-footer .btn-submit.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        /* ===== HISTORY & PARTS ===== */
         .history-list {
             max-height: 200px;
             overflow-y: auto;
         }
+
         .history-item {
             padding: 8px 12px;
             border-bottom: 1px solid rgba(255,255,255,0.03);
             font-size: 0.8rem;
         }
-        .history-item .h-date { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
-        .history-item .h-action { color: #60a5fa; }
-        .history-item .h-details { color: rgba(255,255,255,0.5); }
-        
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .filter-bar { border-radius: 16px; padding: 8px 12px; }
-            .filter-bar input, .filter-bar select { min-width: 80px; font-size: 0.7rem; }
-            table { font-size: 0.7rem; }
-            thead th, tbody td { padding: 6px 4px; }
-            .maint-modal .form-row { grid-template-columns: 1fr; }
-            .maint-modal .modal-content { padding: 16px; }
+
+        .history-item:last-child {
+            border-bottom: none;
         }
+
+        .history-item .h-action {
+            color: var(--accent-light);
+            font-weight: 600;
+        }
+
+        .history-item .h-date {
+            color: rgba(255,255,255,0.2);
+            font-size: 0.65rem;
+        }
+
+        .history-item .h-details {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+        }
+
+        .parts-list {
+            background: rgba(255,255,255,0.02);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            margin: 6px 0;
+        }
+
+        .parts-list .part-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.8rem;
+        }
+
+        .parts-list .part-item:last-child {
+            border-bottom: none;
+        }
+
+        .parts-list .part-item .part-name {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .parts-list .part-item .part-qty {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+        }
+
+        .parts-list .part-item .part-cost {
+            color: var(--gold-light);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 992px) {
+            .maint-header {
+                padding: 12px 16px;
+                top: 60px;
+            }
+
+            .maint-header-left h2 {
+                font-size: 18px;
+            }
+
+            .stats-grid {
+                padding: 12px 16px;
+                gap: 10px;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            }
+
+            .filter-bar {
+                padding: 8px 16px;
+                gap: 6px 10px;
+            }
+
+            .table-wrapper {
+                padding: 0 16px 16px;
+            }
+
+            .maint-modal .modal-content {
+                padding: 20px;
+                margin: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .maint-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 16px;
+                top: 56px;
+            }
+
+            .maint-header-left {
+                width: 100%;
+            }
+
+            .maint-header-left h2 {
+                font-size: 16px;
+            }
+
+            .maint-header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                padding: 10px 16px;
+            }
+
+            .stat-card {
+                padding: 12px 14px;
+            }
+
+            .stat-card .number {
+                font-size: 20px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 10px 16px;
+                gap: 6px;
+            }
+
+            .filter-bar .search-input {
+                flex: 1;
+            }
+
+            .filter-bar label {
+                font-size: 0.65rem;
+            }
+
+            .filter-bar select {
+                min-width: 100%;
+            }
+
+            .table-wrapper {
+                padding: 0 12px 12px;
+            }
+
+            .table-wrapper table {
+                font-size: 0.7rem;
+                min-width: 700px;
+            }
+
+            thead th, tbody td {
+                padding: 6px 4px;
+            }
+
+            .maint-modal .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .maint-modal .modal-footer {
+                flex-direction: column;
+            }
+
+            .maint-modal .modal-content {
+                padding: 16px;
+            }
+
+            .action-btns {
+                gap: 2px;
+            }
+
+            .btn-sm {
+                padding: 3px 7px;
+                font-size: 0.55rem;
+            }
+
+            .maint-header-actions .btn-action {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+        }
+
         @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .stat-card { padding: 10px 12px; }
-            .stat-card .number { font-size: 18px; }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px;
+            }
+
+            .stat-card {
+                padding: 10px 12px;
+            }
+
+            .stat-card .number {
+                font-size: 18px;
+            }
+
+            .stat-card .label {
+                font-size: 9px;
+            }
+
+            .maint-header-left .header-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .maint-header-left h2 {
+                font-size: 14px;
+            }
+
+            .maint-header-left p {
+                font-size: 10px;
+            }
+
+            .maint-modal .modal-content {
+                padding: 14px;
+            }
+
+            .maint-modal .modal-header h3 {
+                font-size: 15px;
+            }
         }
     </style>
 
-    <!-- ===== HEADER ===== -->
+    <!-- ============================================================
+    HEADER
+    ============================================================ -->
     <div class="maint-header">
-        <div>
-            <h2>🔧 إدارة الصيانة</h2>
-            <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
+        <div class="maint-header-left">
+            <div class="header-icon">
+                <i class="fas fa-tools"></i>
+            </div>
+            <div>
+                <h2>إدارة الصيانة</h2>
+                <p>متابعة وإدارة مهام الصيانة للمراكب البحرية</p>
+            </div>
         </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button onclick="openAddMaintenance()" style="padding:6px 14px; border:none; border-radius:8px; background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; font-weight:600; cursor:pointer; font-size:0.8rem;">
+        <div class="maint-header-actions">
+            <button class="btn-action primary" onclick="openAddMaintenance()">
                 <i class="fas fa-plus"></i> إضافة صيانة
             </button>
-            <button onclick="refreshMaintenance()" style="padding:6px 14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:8px; color:rgba(255,255,255,0.5); cursor:pointer; font-size:0.8rem;">
+            <button class="btn-action secondary" onclick="refreshMaintenance()">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
         </div>
     </div>
 
-    <!-- ===== STATS ===== -->
+    <!-- ============================================================
+    STATS CARDS
+    ============================================================ -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
-            <div class="number" id="totalTasks">0</div>
+            <div class="number pink" id="totalTasks">0</div>
             <div class="label">📊 إجمالي المهام</div>
+            <span class="icon-bg"><i class="fas fa-tasks"></i></span>
         </div>
         <div class="stat-card">
             <div class="number green" id="activeTasks">0</div>
             <div class="label">🔄 قيد الإنجاز</div>
+            <span class="icon-bg"><i class="fas fa-spinner"></i></span>
         </div>
         <div class="stat-card">
             <div class="number gold" id="completedTasks">0</div>
             <div class="label">✅ مكتملة</div>
+            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
         </div>
         <div class="stat-card">
             <div class="number red" id="damagedCount">0</div>
             <div class="label">🟥 مراكب معطبة</div>
+            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
         </div>
         <div class="stat-card">
             <div class="number yellow" id="totalCost">0</div>
-            <div class="label">💰 إجمالي التكلفة (د.ت)</div>
+            <div class="label">💰 التكلفة الإجمالية</div>
+            <span class="icon-bg"><i class="fas fa-coins"></i></span>
         </div>
     </div>
 
-    <!-- ===== FILTERS ===== -->
+    <!-- ============================================================
+    FILTER BAR
+    ============================================================ -->
     <div class="filter-bar">
-        <input type="text" id="searchMaint" placeholder="🔍 بحث..." onkeyup="renderMaintenance()" style="flex:1; min-width:120px;">
+        <div class="search-input">
+            <input type="text" id="searchMaint" placeholder="بحث في الصيانة..." onkeyup="renderMaintenance()">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+        </div>
+
         <label><i class="fas fa-calendar"></i> السنة:</label>
         <select id="yearFilter" onchange="renderMaintenance()">
             <option value="الكل">-- جميع السنوات --</option>
         </select>
-        <label><i class="fas fa-tools"></i> الحالة:</label>
+
+        <label><i class="fas fa-circle"></i> الحالة:</label>
         <select id="statusFilter" onchange="renderMaintenance()">
             <option value="الكل">الكل</option>
             <option value="قيد الإنجاز">🔄 قيد الإنجاز</option>
@@ -351,11 +1098,18 @@
             <option value="ملغية">❌ ملغية</option>
             <option value="معطب">🟥 معطب</option>
         </select>
-        <button class="btn primary" onclick="renderMaintenance()"><i class="fas fa-filter"></i> فلترة</button>
-        <button class="btn" onclick="resetFilters()"><i class="fas fa-undo-alt"></i> إلغاء</button>
+
+        <button class="btn-filter primary" onclick="renderMaintenance()">
+            <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-filter outline" onclick="resetFilters()">
+            <i class="fas fa-undo-alt"></i> إلغاء
+        </button>
     </div>
 
-    <!-- ===== TABLE ===== -->
+    <!-- ============================================================
+    TABLE
+    ============================================================ -->
     <div class="table-wrapper">
         <table>
             <thead>
@@ -363,8 +1117,8 @@
                     <th><i class="fas fa-hashtag"></i> #</th>
                     <th><i class="fas fa-ship"></i> المركب</th>
                     <th><i class="fas fa-tools"></i> العطب</th>
-                    <th><i class="fas fa-user"></i> الفني المسؤول</th>
-                    <th><i class="fas fa-calendar"></i> تاريخ العطب</th>
+                    <th><i class="fas fa-user"></i> الفني</th>
+                    <th><i class="fas fa-calendar"></i> التاريخ</th>
                     <th><i class="fas fa-circle"></i> الحالة</th>
                     <th><i class="fas fa-coins"></i> التكلفة</th>
                     <th><i class="fas fa-cog"></i> إجراء</th>
@@ -373,7 +1127,7 @@
             <tbody id="maintenanceBody">
                 <tr>
                     <td colspan="8" class="empty-state">
-                        <i class="fas fa-spinner fa-pulse"></i>
+                        <div class="spinner"></div>
                         <h3>جاري تحميل البيانات...</h3>
                         <p>يرجى الانتظار</p>
                     </td>
@@ -383,7 +1137,9 @@
     </div>
 </div>
 
-<!-- ===== MODAL ===== -->
+<!-- ============================================================
+MODAL
+============================================================ -->
 <div class="maint-modal" id="maintenanceModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -396,623 +1152,796 @@
     </div>
 </div>
 
+<!-- ============================================================
+JAVASCRIPT - FULL PROFESSIONAL
+============================================================ -->
 <script>
-    // ============================================================
-    // 🔧 MAINTENANCE PAGE - FULL SYSTEM
-    // ============================================================
+    (function() {
+        'use strict';
 
-    // ============================================================
-    // 1. المتغيرات
-    // ============================================================
+        // ============================================================
+        // 1. VARIABLES
+        // ============================================================
 
-    if (typeof maintenanceData === 'undefined') {
-        var maintenanceData = [];
-    }
-    var currentEditId = null;
-
-    // ============================================================
-    // 2. دوال التوكن
-    // ============================================================
-
-    function getToken() {
-        return localStorage.getItem('marine_token') ||
-               localStorage.getItem('token') ||
-               localStorage.getItem('authToken') ||
-               localStorage.getItem('accessToken') ||
-               null;
-    }
-
-    function getAuthHeaders() {
-        const token = getToken();
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': token ? 'Bearer ' + token : ''
-        };
-    }
-
-    // ============================================================
-    // 3. جلب المراكب
-    // ============================================================
-
-    async function loadVessels() {
-        if (window.allVessels && window.allVessels.length > 0) {
-            return window.allVessels;
+        if (typeof maintenanceData === 'undefined') {
+            var maintenanceData = [];
         }
-        try {
+
+        var currentEditId = null;
+        var isLoading = false;
+
+        // ============================================================
+        // 2. TOKEN FUNCTIONS (Fixed)
+        // ============================================================
+
+        function getToken() {
+            return localStorage.getItem('marine_token') ||
+                   localStorage.getItem('token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('accessToken') ||
+                   null;
+        }
+
+        function getAuthHeaders() {
             const token = getToken();
-            if (!token) return [];
-            const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
-            if (!response.ok) return [];
-            const data = await response.json();
-            window.allVessels = Array.isArray(data) ? data : [];
-            return window.allVessels;
-        } catch (error) {
-            console.error('❌ خطأ في تحميل المراكب:', error);
-            return [];
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? 'Bearer ' + token : ''
+            };
         }
-    }
 
-    // ============================================================
-    // 4. جلب الصيانة من API
-    // ============================================================
+        // ============================================================
+        // 3. LOAD VESSELS
+        // ============================================================
 
-    async function loadMaintenance() {
-        try {
-            const token = getToken();
-            if (!token) return [];
+        async function loadVessels() {
+            try {
+                // ✅ First: Try from window.allVessels
+                if (window.allVessels && window.allVessels.length > 0) {
+                    console.log('✅ المراكب من window.allVessels:', window.allVessels.length);
+                    return window.allVessels;
+                }
 
-            const response = await fetch('/api/maintenance', { headers: getAuthHeaders() });
-            if (!response.ok) return [];
+                // ✅ Second: Try from window.vesselsData
+                if (window.vesselsData && window.vesselsData.length > 0) {
+                    console.log('✅ المراكب من window.vesselsData:', window.vesselsData.length);
+                    return window.vesselsData;
+                }
 
-            const data = await response.json();
-            const records = data.maintenance || data || [];
-            
-            maintenanceData = records.map(r => ({
-                id: r._id || r.id || Date.now(),
-                vesselId: r.vesselId || r.vessel_id || '',
-                vesselName: r.vesselName || r.vessel_name || 'مركب غير معروف',
-                damage: r.damage || r.break || r.damage_type || 'عطل غير محدد',
-                technician: r.technician || r.assignedTo || 'غير محدد',
-                date: r.date || r.fDate || r.createdAt || new Date().toISOString(),
-                status: r.status || r.maintenance_status || 'قيد الإنجاز',
-                cost: parseFloat(r.cost || r.totalCost || 0),
-                parts: r.parts || r.spareParts || [],
-                history: r.history || [],
-                description: r.description || r.notes || '',
-                createdAt: r.createdAt || r.date || new Date().toISOString()
-            }));
+                // ✅ Third: Fetch from API
+                const token = getToken();
+                if (!token) {
+                    console.warn('⚠️ لا يوجد توكن');
+                    return [];
+                }
 
-            return maintenanceData;
-        } catch (error) {
-            console.error('❌ خطأ في تحميل الصيانة:', error);
-            return [];
+                console.log('📡 جلب المراكب من API...');
+                const response = await fetch('/api/vessels', {
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    console.error('❌ فشل جلب المراكب:', response.status);
+                    return [];
+                }
+
+                const data = await response.json();
+                const vessels = Array.isArray(data) ? data : [];
+
+                // ✅ Save to window for reuse
+                window.allVessels = vessels;
+                window.vesselsData = vessels;
+
+                console.log('✅ تم جلب المراكب من API:', vessels.length);
+                return vessels;
+            } catch (error) {
+                console.error('❌ خطأ في جلب المراكب:', error);
+                return [];
+            }
         }
-    }
 
-    // ============================================================
-    // 5. عرض البيانات
-    // ============================================================
+        // ============================================================
+        // 4. LOAD MAINTENANCE
+        // ============================================================
 
-    async function renderMaintenance() {
-        const tbody = document.getElementById('maintenanceBody');
-        tbody.innerHTML = `
-            <tr><td colspan="8" class="empty-state">
-                <i class="fas fa-spinner fa-pulse"></i>
-                <h3>جاري تحميل البيانات...</h3>
-                <p>يرجى الانتظار</p>
-            </td></tr>
-        `;
+        async function loadMaintenance() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    console.warn('⚠️ لا يوجد توكن');
+                    return [];
+                }
 
-        try {
-            const vessels = await loadVessels();
-            await loadMaintenance();
+                console.log('📡 جلب بيانات الصيانة...');
+                const response = await fetch('/api/maintenance', {
+                    headers: getAuthHeaders()
+                });
 
-            // ✅ إضافة المراكب المعطوبة التي ليست في جدول الصيانة
-            const damagedVessels = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب');
-            const existingIds = new Set(maintenanceData.map(m => m.vesselId));
-            
-            damagedVessels.forEach(v => {
-                const vid = v._id || v.id;
-                if (!existingIds.has(vid)) {
-                    maintenanceData.push({
-                        id: 'damaged_' + Date.now() + '_' + Math.random(),
-                        vesselId: vid,
-                        vesselName: v.name || 'مركب غير معروف',
-                        damage: v.break || v.break_type || 'عطل غير محدد',
-                        technician: 'غير محدد',
-                        date: v.fDate || v.fault_date || new Date().toISOString(),
-                        status: 'معطب',
-                        cost: 0,
-                        parts: [],
-                        history: [{ action: 'تم إضافة المركب تلقائياً من السجل العام', date: new Date().toISOString() }],
-                        description: v.break || v.break_type || '',
-                        createdAt: new Date().toISOString()
-                    });
+                if (!response.ok) {
+                    console.error('❌ فشل جلب الصيانة:', response.status);
+                    return [];
+                }
+
+                const data = await response.json();
+                const records = data.maintenance || data || [];
+
+                maintenanceData = records.map(r => ({
+                    id: r._id || r.id || Date.now(),
+                    vesselId: r.vesselId || r.vessel_id || '',
+                    vesselName: r.vesselName || r.vessel_name || 'مركب غير معروف',
+                    damage: r.damage || r.break || r.damage_type || 'عطل غير محدد',
+                    technician: r.technician || r.assignedTo || 'غير محدد',
+                    date: r.date || r.fDate || r.createdAt || new Date().toISOString(),
+                    status: r.status || r.maintenance_status || 'قيد الإنجاز',
+                    cost: parseFloat(r.cost || r.totalCost || 0),
+                    parts: r.parts || r.spareParts || [],
+                    history: r.history || [],
+                    description: r.description || r.notes || '',
+                    createdAt: r.createdAt || r.date || new Date().toISOString()
+                }));
+
+                console.log('✅ تم جلب الصيانة:', maintenanceData.length);
+                return maintenanceData;
+            } catch (error) {
+                console.error('❌ خطأ في جلب الصيانة:', error);
+                return [];
+            }
+        }
+
+        // ============================================================
+        // 5. RENDER MAINTENANCE
+        // ============================================================
+
+        async function renderMaintenance() {
+            if (isLoading) return;
+            isLoading = true;
+
+            const tbody = document.getElementById('maintenanceBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="empty-state">
+                        <div class="spinner"></div>
+                        <h3>جاري تحميل البيانات...</h3>
+                        <p>يرجى الانتظار</p>
+                    </td>
+                </tr>
+            `;
+
+            try {
+                // ✅ Load vessels first
+                const vessels = await loadVessels();
+
+                // ✅ Load maintenance
+                await loadMaintenance();
+
+                // ✅ Auto-add damaged vessels to maintenance
+                const damagedVessels = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب');
+                const existingIds = new Set(maintenanceData.map(m => m.vesselId));
+
+                let addedCount = 0;
+                damagedVessels.forEach(v => {
+                    const vid = v._id || v.id;
+                    if (!existingIds.has(vid)) {
+                        maintenanceData.push({
+                            id: 'damaged_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                            vesselId: vid,
+                            vesselName: v.name || 'مركب غير معروف',
+                            damage: v.break || v.break_type || 'عطل غير محدد',
+                            technician: 'غير محدد',
+                            date: v.fDate || v.fault_date || new Date().toISOString(),
+                            status: 'معطب',
+                            cost: 0,
+                            parts: [],
+                            history: [{
+                                action: 'تم إضافة المركب تلقائياً من السجل العام',
+                                date: new Date().toISOString()
+                            }],
+                            description: v.break || v.break_type || '',
+                            createdAt: new Date().toISOString()
+                        });
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount > 0) {
+                    console.log(`✅ تم إضافة ${addedCount} مركب معطب تلقائياً`);
+                }
+
+                // ✅ Apply filters
+                const search = document.getElementById('searchMaint').value.toLowerCase();
+                const yearFilter = document.getElementById('yearFilter').value;
+                const statusFilter = document.getElementById('statusFilter').value;
+
+                let filtered = maintenanceData.filter(r => {
+                    const searchText = [r.vesselName, r.damage, r.technician, r.description]
+                        .filter(Boolean).join(' ').toLowerCase();
+                    const matchSearch = !search || searchText.includes(search);
+
+                    const year = r.date ? new Date(r.date).getFullYear().toString() : '';
+                    const matchYear = yearFilter === 'الكل' || year === yearFilter;
+
+                    const matchStatus = statusFilter === 'الكل' || r.status === statusFilter;
+
+                    return matchSearch && matchYear && matchStatus;
+                });
+
+                // ✅ Sort by date (newest first)
+                filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                                <h3>لا توجد مهام صيانة</h3>
+                                <p>قم بإضافة مهمة صيانة جديدة</p>
+                                <button class="retry-btn" onclick="openAddMaintenance()">
+                                    <i class="fas fa-plus"></i> إضافة صيانة
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    updateStats(vessels);
+                    initFilters();
+                    isLoading = false;
+                    return;
+                }
+
+                // ✅ Build table rows
+                let html = '';
+                filtered.forEach((r, index) => {
+                    const statusMap = {
+                        'مكتملة': 'completed',
+                        'ملغية': 'cancelled',
+                        'قيد الإنجاز': 'active',
+                        'معطب': 'damaged'
+                    };
+                    const statusDisplay = r.status || 'قيد الإنجاز';
+                    const statusClassFinal = statusMap[statusDisplay] || 'pending';
+                    const isDamaged = statusDisplay === 'معطب';
+
+                    html += `<tr class="${isDamaged ? 'damaged' : ''}">
+                        <td>${index + 1}</td>
+                        <td><span class="vessel-name">${escapeHtml(r.vesselName)}</span></td>
+                        <td style="color:${isDamaged ? '#e17055' : 'rgba(255,255,255,0.6)'}">${escapeHtml(r.damage || '-')}</td>
+                        <td>${escapeHtml(r.technician)}</td>
+                        <td>${formatDate(r.date)}</td>
+                        <td><span class="status-badge ${statusClassFinal}">${escapeHtml(statusDisplay)}</span></td>
+                        <td>${r.cost ? r.cost.toFixed(2) : '0.00'} د.ت</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-sm edit" onclick="openEditModal('${r.id}')" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-sm complete" onclick="completeMaintenance('${r.id}')" title="إكمال">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn-sm history" onclick="showHistory('${r.id}')" title="السجل">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                                <button class="btn-sm delete" onclick="deleteMaintenance('${r.id}')" title="حذف">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+
+                tbody.innerHTML = html;
+
+                // ✅ Update stats and filters
+                updateStats(vessels);
+                initFilters();
+
+            } catch (error) {
+                console.error('❌ خطأ في renderMaintenance:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                            <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
+                            <p style="color:rgba(255,255,255,0.3);">${escapeHtml(error.message)}</p>
+                            <button class="retry-btn" onclick="renderMaintenance()">
+                                <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            isLoading = false;
+        }
+
+        // ============================================================
+        // 6. UPDATE STATS
+        // ============================================================
+
+        function updateStats(vessels) {
+            const total = maintenanceData.length;
+            const active = maintenanceData.filter(r => r.status === 'قيد الإنجاز').length;
+            const completed = maintenanceData.filter(r => r.status === 'مكتملة').length;
+            const damaged = maintenanceData.filter(r => r.status === 'معطب').length;
+            const totalCost = maintenanceData.reduce((sum, r) => sum + (r.cost || 0), 0);
+            const vesselList = vessels || window.allVessels || [];
+            const damagedVessels = vesselList.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('activeTasks').textContent = active;
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('damagedCount').textContent = damagedVessels || damaged;
+            document.getElementById('totalCost').textContent = totalCost.toFixed(0);
+        }
+
+        // ============================================================
+        // 7. HELPERS
+        // ============================================================
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(str).replace(/[&<>"']/g, m => map[m] || m);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+            } catch (_) { return dateStr; }
+        }
+
+        function getYears() {
+            const years = new Set();
+            maintenanceData.forEach(r => {
+                if (r.date) {
+                    const year = new Date(r.date).getFullYear();
+                    if (year) years.add(year.toString());
                 }
             });
+            return Array.from(years).sort();
+        }
 
-            // ✅ تطبيق الفلاتر
-            const search = document.getElementById('searchMaint').value.toLowerCase();
-            const yearFilter = document.getElementById('yearFilter').value;
-            const statusFilter = document.getElementById('statusFilter').value;
+        // ============================================================
+        // 8. FILTERS
+        // ============================================================
 
-            let filtered = maintenanceData.filter(r => {
-                const searchText = [r.vesselName, r.damage, r.technician, r.description]
-                    .filter(Boolean).join(' ').toLowerCase();
-                const matchSearch = !search || searchText.includes(search);
-                const year = r.date ? new Date(r.date).getFullYear().toString() : '';
-                const matchYear = yearFilter === 'الكل' || year === yearFilter;
-                const matchStatus = statusFilter === 'الكل' || r.status === statusFilter;
-                return matchSearch && matchYear && matchStatus;
+        function initFilters() {
+            const yearSelect = document.getElementById('yearFilter');
+            const years = getYears();
+            const currentValue = yearSelect.value;
+
+            yearSelect.innerHTML = '<option value="الكل">-- جميع السنوات --</option>';
+            years.forEach(y => {
+                const selected = y === currentValue ? 'selected' : '';
+                yearSelect.innerHTML += `<option value="${y}" ${selected}>${y}</option>`;
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('searchMaint').value = '';
+            document.getElementById('yearFilter').value = 'الكل';
+            document.getElementById('statusFilter').value = 'الكل';
+            renderMaintenance();
+        }
+
+        // ============================================================
+        // 9. OPEN ADD MODAL
+        // ============================================================
+
+        function openAddMaintenance() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '➕ إضافة مهمة صيانة جديدة';
+
+            const vessels = window.allVessels || [];
+            let vesselOptions = '<option value="">اختر المركب</option>';
+            vessels.forEach(v => {
+                const vid = v._id || v.id;
+                vesselOptions += `<option value="${vid}">${escapeHtml(v.name)}</option>`;
             });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr><td colspan="8" class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <h3>لا توجد مهام صيانة</h3>
-                        <p>قم بإضافة مهمة صيانة جديدة</p>
-                    </td></tr>
-                `;
-                updateStats(vessels);
+            document.getElementById('modalBody').innerHTML = `
+                <div class="form-group">
+                    <label><span class="required">*</span> المركب</label>
+                    <select id="mVessel">${vesselOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label><span class="required">*</span> نوع العطب</label>
+                    <input type="text" id="mDamage" placeholder="مثال: عطل في المحرك الرئيسي">
+                </div>
+                <div class="form-group">
+                    <label>👤 الفني المسؤول</label>
+                    <input type="text" id="mTechnician" placeholder="اسم الفني المسؤول">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 تاريخ العطب</label>
+                        <input type="date" id="mDate">
+                    </div>
+                    <div class="form-group">
+                        <label>💰 التكلفة التقديرية (د.ت)</label>
+                        <input type="number" id="mCost" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📝 وصف العطب</label>
+                    <textarea id="mDescription" placeholder="تفاصيل العطب..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>
+                    <input type="text" id="mParts" placeholder="مثال: محرك, مضخة, بطارية, سير">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-submit primary" onclick="saveMaintenance()">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                    <button class="btn-submit secondary" onclick="closeModal()">
+                        إلغاء
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('maintenanceModal').classList.add('active');
+        }
+
+        // ============================================================
+        // 10. OPEN EDIT MODAL
+        // ============================================================
+
+        function openEditModal(id) {
+            const record = maintenanceData.find(r => r.id == id);
+            if (!record) {
+                alert('❌ المهمة غير موجودة');
                 return;
             }
 
-            let html = '';
-            filtered.forEach((r, index) => {
-                const statusMap = {
-                    'مكتملة': 'completed',
-                    'ملغية': 'cancelled',
-                    'قيد الإنجاز': 'active',
-                    'معطب': 'damaged'
-                };
-                const statusDisplay = r.status || 'قيد الإنجاز';
-                const statusClassFinal = statusMap[statusDisplay] || 'pending';
-                const isDamaged = statusDisplay === 'معطب';
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '✏️ تعديل مهمة الصيانة';
 
-                html += `<tr class="${isDamaged ? 'damaged' : ''}">
-                    <td>${index + 1}</td>
-                    <td><strong style="color:#fff;">${r.vesselName}</strong></td>
-                    <td style="color:${isDamaged ? '#e17055' : 'rgba(255,255,255,0.6)'}">${r.damage || '-'}</td>
-                    <td>${r.technician}</td>
-                    <td>${formatDate(r.date)}</td>
-                    <td><span class="status-badge ${statusClassFinal}">${statusDisplay}</span></td>
-                    <td>${r.cost ? r.cost.toFixed(2) : '0.00'} د.ت</td>
-                    <td>
-                        <button class="btn-sm edit" onclick="openEditModal('${r.id}')"><i class="fas fa-edit"></i></button>
-                        <button class="btn-sm complete" onclick="completeMaintenance('${r.id}')"><i class="fas fa-check"></i></button>
-                        <button class="btn-sm history" onclick="showHistory('${r.id}')"><i class="fas fa-history"></i></button>
-                        <button class="btn-sm delete" onclick="deleteMaintenance('${r.id}')"><i class="fas fa-trash-alt"></i></button>
-                    </td>
-                </tr>`;
+            const vessels = window.allVessels || [];
+            let vesselOptions = '<option value="">اختر المركب</option>';
+            vessels.forEach(v => {
+                const vid = v._id || v.id;
+                const selected = vid == record.vesselId ? 'selected' : '';
+                vesselOptions += `<option value="${vid}" ${selected}>${escapeHtml(v.name)}</option>`;
             });
-            tbody.innerHTML = html;
-            updateStats(vessels);
-            initFilters();
 
-        } catch (error) {
-            console.error('❌ خطأ:', error);
-            tbody.innerHTML = `
-                <tr><td colspan="8" class="empty-state">
-                    <i class="fas fa-exclamation-triangle" style="color:#f87171;"></i>
-                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                    <p>${error.message}</p>
-                    <button onclick="renderMaintenance()" style="margin-top:10px;padding:6px 20px;background:linear-gradient(135deg,#e94560,#f5c842);border:none;border-radius:30px;color:#fff;font-weight:600;cursor:pointer;">
-                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
+            const partsText = (record.parts || []).map(p => typeof p === 'string' ? p : (p.name || p)).join(', ');
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="form-group">
+                    <label><span class="required">*</span> المركب</label>
+                    <select id="mVessel">${vesselOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label><span class="required">*</span> نوع العطب</label>
+                    <input type="text" id="mDamage" value="${escapeHtml(record.damage || '')}" placeholder="مثال: عطل في المحرك الرئيسي">
+                </div>
+                <div class="form-group">
+                    <label>👤 الفني المسؤول</label>
+                    <input type="text" id="mTechnician" value="${escapeHtml(record.technician || '')}" placeholder="اسم الفني المسؤول">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📅 تاريخ العطب</label>
+                        <input type="date" id="mDate" value="${record.date ? record.date.split('T')[0] : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>💰 التكلفة (د.ت)</label>
+                        <input type="number" id="mCost" value="${record.cost || 0}" step="0.01">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>📝 وصف العطب</label>
+                    <textarea id="mDescription">${escapeHtml(record.description || '')}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>
+                    <input type="text" id="mParts" value="${escapeHtml(partsText)}" placeholder="مثال: محرك, مضخة, بطارية, سير">
+                </div>
+                <div class="form-group">
+                    <label>📊 الحالة</label>
+                    <select id="mStatus">
+                        <option value="قيد الإنجاز" ${record.status === 'قيد الإنجاز' ? 'selected' : ''}>🔄 قيد الإنجاز</option>
+                        <option value="مكتملة" ${record.status === 'مكتملة' ? 'selected' : ''}>✅ مكتملة</option>
+                        <option value="ملغية" ${record.status === 'ملغية' ? 'selected' : ''}>❌ ملغية</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-submit primary" onclick="saveMaintenance()">
+                        <i class="fas fa-save"></i> تحديث
                     </button>
-                </td></tr>
+                    <button class="btn-submit secondary" onclick="closeModal()">
+                        إلغاء
+                    </button>
+                </div>
             `;
+
+            document.getElementById('maintenanceModal').classList.add('active');
         }
-    }
 
-    // ============================================================
-    // 6. تحديث الإحصائيات
-    // ============================================================
+        // ============================================================
+        // 11. SAVE MAINTENANCE
+        // ============================================================
 
-    function updateStats(vessels) {
-        const total = maintenanceData.length;
-        const active = maintenanceData.filter(r => r.status === 'قيد الإنجاز').length;
-        const completed = maintenanceData.filter(r => r.status === 'مكتملة').length;
-        const damaged = maintenanceData.filter(r => r.status === 'معطب').length;
-        const totalCost = maintenanceData.reduce((sum, r) => sum + (r.cost || 0), 0);
-        const vesselList = vessels || window.allVessels || [];
-        const damagedVessels = vesselList.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+        async function saveMaintenance() {
+            const vesselId = document.getElementById('mVessel').value;
+            const damage = document.getElementById('mDamage').value.trim();
+            const technician = document.getElementById('mTechnician').value.trim();
+            const date = document.getElementById('mDate').value;
+            const cost = parseFloat(document.getElementById('mCost').value) || 0;
+            const description = document.getElementById('mDescription').value.trim();
+            const partsInput = document.getElementById('mParts').value.trim();
+            const status = document.getElementById('mStatus') ? document.getElementById('mStatus').value : 'قيد الإنجاز';
 
-        document.getElementById('totalTasks').textContent = total;
-        document.getElementById('activeTasks').textContent = active;
-        document.getElementById('completedTasks').textContent = completed;
-        document.getElementById('damagedCount').textContent = damagedVessels || damaged;
-        document.getElementById('totalCost').textContent = totalCost.toFixed(0);
-    }
-
-    // ============================================================
-    // 7. دوال مساعدة
-    // ============================================================
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-        } catch (_) { return dateStr; }
-    }
-
-    function getYears() {
-        const years = new Set();
-        maintenanceData.forEach(r => {
-            if (r.date) {
-                const year = new Date(r.date).getFullYear();
-                if (year) years.add(year.toString());
-            }
-        });
-        return Array.from(years).sort();
-    }
-
-    // ============================================================
-    // 8. الفلاتر
-    // ============================================================
-
-    function initFilters() {
-        const yearSelect = document.getElementById('yearFilter');
-        const years = getYears();
-        yearSelect.innerHTML = '<option value="الكل">-- جميع السنوات --</option>';
-        years.forEach(y => {
-            yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
-        });
-    }
-
-    function resetFilters() {
-        document.getElementById('searchMaint').value = '';
-        document.getElementById('yearFilter').value = 'الكل';
-        document.getElementById('statusFilter').value = 'الكل';
-        renderMaintenance();
-    }
-
-    // ============================================================
-    // 9. فتح نموذج الإضافة
-    // ============================================================
-
-    function openAddMaintenance() {
-        currentEditId = null;
-        document.getElementById('modalTitle').textContent = '➕ إضافة مهمة صيانة جديدة';
-        
-        const vessels = window.allVessels || [];
-        let vesselOptions = '<option value="">اختر المركب</option>';
-        vessels.forEach(v => {
-            const vid = v._id || v.id;
-            vesselOptions += `<option value="${vid}">${v.name}</option>`;
-        });
-
-        document.getElementById('modalBody').innerHTML = `
-            <div class="form-group">
-                <label>🚢 المركب</label>
-                <select id="mVessel">${vesselOptions}</select>
-            </div>
-            <div class="form-group">
-                <label>🔧 نوع العطب</label>
-                <input type="text" id="mDamage" placeholder="مثال: عطل في المحرك">
-            </div>
-            <div class="form-group">
-                <label>👤 الفني المسؤول</label>
-                <input type="text" id="mTechnician" placeholder="اسم الفني">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>📅 تاريخ العطب</label>
-                    <input type="date" id="mDate">
-                </div>
-                <div class="form-group">
-                    <label>💰 التكلفة التقديرية (د.ت)</label>
-                    <input type="number" id="mCost" placeholder="0.00" step="0.01">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>📝 وصف العطب</label>
-                <textarea id="mDescription" placeholder="تفاصيل العطب..."></textarea>
-            </div>
-            <div class="form-group">
-                <label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>
-                <input type="text" id="mParts" placeholder="مثال: محرك, مضخة, بطارية">
-            </div>
-            <div class="modal-footer">
-                <button class="btn-submit" onclick="saveMaintenance()">💾 حفظ</button>
-                <button class="btn-submit secondary" onclick="closeModal()">إلغاء</button>
-            </div>
-        `;
-        
-        document.getElementById('maintenanceModal').classList.add('active');
-    }
-
-    // ============================================================
-    // 10. فتح نموذج التعديل
-    // ============================================================
-
-    function openEditModal(id) {
-        const record = maintenanceData.find(r => r.id == id);
-        if (!record) { alert('❌ المهمة غير موجودة'); return; }
-
-        currentEditId = id;
-        document.getElementById('modalTitle').textContent = '✏️ تعديل مهمة الصيانة';
-
-        const vessels = window.allVessels || [];
-        let vesselOptions = '<option value="">اختر المركب</option>';
-        vessels.forEach(v => {
-            const vid = v._id || v.id;
-            const selected = vid == record.vesselId ? 'selected' : '';
-            vesselOptions += `<option value="${vid}" ${selected}>${v.name}</option>`;
-        });
-
-        const partsText = (record.parts || []).map(p => p.name || p).join(', ');
-
-        document.getElementById('modalBody').innerHTML = `
-            <div class="form-group">
-                <label>🚢 المركب</label>
-                <select id="mVessel">${vesselOptions}</select>
-            </div>
-            <div class="form-group">
-                <label>🔧 نوع العطب</label>
-                <input type="text" id="mDamage" value="${record.damage || ''}" placeholder="مثال: عطل في المحرك">
-            </div>
-            <div class="form-group">
-                <label>👤 الفني المسؤول</label>
-                <input type="text" id="mTechnician" value="${record.technician || ''}" placeholder="اسم الفني">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>📅 تاريخ العطب</label>
-                    <input type="date" id="mDate" value="${record.date ? record.date.split('T')[0] : ''}">
-                </div>
-                <div class="form-group">
-                    <label>💰 التكلفة (د.ت)</label>
-                    <input type="number" id="mCost" value="${record.cost || 0}" step="0.01">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>📝 وصف العطب</label>
-                <textarea id="mDescription">${record.description || ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label>🔧 قطع الغيار (افصل بينها بفاصلة)</label>
-                <input type="text" id="mParts" value="${partsText}" placeholder="مثال: محرك, مضخة, بطارية">
-            </div>
-            <div class="form-group">
-                <label>📊 الحالة</label>
-                <select id="mStatus">
-                    <option value="قيد الإنجاز" ${record.status === 'قيد الإنجاز' ? 'selected' : ''}>🔄 قيد الإنجاز</option>
-                    <option value="مكتملة" ${record.status === 'مكتملة' ? 'selected' : ''}>✅ مكتملة</option>
-                    <option value="ملغية" ${record.status === 'ملغية' ? 'selected' : ''}>❌ ملغية</option>
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-submit" onclick="saveMaintenance()">💾 تحديث</button>
-                <button class="btn-submit secondary" onclick="closeModal()">إلغاء</button>
-            </div>
-        `;
-        
-        document.getElementById('maintenanceModal').classList.add('active');
-    }
-
-    // ============================================================
-    // 11. حفظ الصيانة
-    // ============================================================
-
-    async function saveMaintenance() {
-        const vesselId = document.getElementById('mVessel').value;
-        const damage = document.getElementById('mDamage').value.trim();
-        const technician = document.getElementById('mTechnician').value.trim();
-        const date = document.getElementById('mDate').value;
-        const cost = parseFloat(document.getElementById('mCost').value) || 0;
-        const description = document.getElementById('mDescription').value.trim();
-        const partsInput = document.getElementById('mParts').value.trim();
-        const status = document.getElementById('mStatus') ? document.getElementById('mStatus').value : 'قيد الإنجاز';
-
-        if (!vesselId) { alert('⚠️ يرجى اختيار المركب'); return; }
-        if (!damage) { alert('⚠️ يرجى إدخال نوع العطب'); return; }
-
-        const vessels = window.allVessels || [];
-        const vessel = vessels.find(v => (v._id || v.id) == vesselId);
-        const vesselName = vessel ? vessel.name : 'مركب غير معروف';
-
-        const parts = partsInput ? partsInput.split(',').map(p => p.trim()).filter(p => p) : [];
-
-        const data = {
-            vesselId: vesselId,
-            vesselName: vesselName,
-            damage: damage,
-            technician: technician || 'غير محدد',
-            date: date || new Date().toISOString(),
-            cost: cost,
-            parts: parts,
-            description: description,
-            status: status || 'قيد الإنجاز',
-            history: [{ action: currentEditId ? 'تم تعديل المهمة' : 'تم إنشاء المهمة', date: new Date().toISOString() }]
-        };
-
-        try {
-            const token = getToken();
-            const method = currentEditId ? 'PUT' : 'POST';
-            const url = currentEditId ? `/api/maintenance/${currentEditId}` : '/api/maintenance';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: getAuthHeaders(),
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'فشل حفظ البيانات');
+            if (!vesselId) {
+                alert('⚠️ يرجى اختيار المركب');
+                return;
             }
 
-            closeModal();
-            await renderMaintenance();
-            alert(currentEditId ? '✅ تم تحديث المهمة بنجاح' : '✅ تم إضافة المهمة بنجاح');
-        } catch (error) {
-            alert('❌ خطأ: ' + error.message);
+            if (!damage) {
+                alert('⚠️ يرجى إدخال نوع العطب');
+                return;
+            }
+
+            const vessels = window.allVessels || [];
+            const vessel = vessels.find(v => (v._id || v.id) == vesselId);
+            const vesselName = vessel ? vessel.name : 'مركب غير معروف';
+
+            const parts = partsInput ? partsInput.split(',').map(p => p.trim()).filter(p => p) : [];
+
+            const data = {
+                vesselId: vesselId,
+                vesselName: vesselName,
+                damage: damage,
+                technician: technician || 'غير محدد',
+                date: date || new Date().toISOString(),
+                cost: cost,
+                parts: parts,
+                description: description,
+                status: status || 'قيد الإنجاز',
+                history: [{
+                    action: currentEditId ? 'تم تعديل المهمة' : 'تم إنشاء المهمة',
+                    date: new Date().toISOString(),
+                    details: description
+                }]
+            };
+
+            try {
+                const token = getToken();
+                if (!token) {
+                    alert('⚠️ الرجاء تسجيل الدخول مرة أخرى');
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                const method = currentEditId ? 'PUT' : 'POST';
+                const url = currentEditId ? `/api/maintenance/${currentEditId}` : '/api/maintenance';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || error.message || 'فشل حفظ البيانات');
+                }
+
+                closeModal();
+                await renderMaintenance();
+                alert(currentEditId ? '✅ تم تحديث المهمة بنجاح' : '✅ تم إضافة المهمة بنجاح');
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            }
         }
-    }
 
-    // ============================================================
-    // 12. إكمال المهمة
-    // ============================================================
+        // ============================================================
+        // 12. COMPLETE MAINTENANCE
+        // ============================================================
 
-    async function completeMaintenance(id) {
-        if (!confirm('✅ هل تريد إكمال هذه المهمة؟')) return;
-        try {
+        async function completeMaintenance(id) {
+            if (!confirm('✅ هل تريد إكمال هذه المهمة؟')) return;
+
+            try {
+                const record = maintenanceData.find(r => r.id == id);
+                if (!record) {
+                    alert('❌ المهمة غير موجودة');
+                    return;
+                }
+
+                record.status = 'مكتملة';
+                record.history = record.history || [];
+                record.history.push({
+                    action: 'تم إكمال المهمة',
+                    date: new Date().toISOString(),
+                    details: 'أكملها الفني: ' + (record.technician || 'غير محدد')
+                });
+
+                const response = await fetch(`/api/maintenance/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(record)
+                });
+
+                if (!response.ok) {
+                    throw new Error('فشل إكمال المهمة');
+                }
+
+                await renderMaintenance();
+                alert('✅ تم إكمال المهمة بنجاح');
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            }
+        }
+
+        // ============================================================
+        // 13. DELETE MAINTENANCE
+        // ============================================================
+
+        async function deleteMaintenance(id) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذه المهمة؟')) return;
+
+            try {
+                const response = await fetch(`/api/maintenance/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('فشل حذف المهمة');
+                }
+
+                await renderMaintenance();
+                alert('✅ تم حذف المهمة بنجاح');
+            } catch (error) {
+                alert('❌ خطأ: ' + error.message);
+            }
+        }
+
+        // ============================================================
+        // 14. SHOW HISTORY
+        // ============================================================
+
+        function showHistory(id) {
             const record = maintenanceData.find(r => r.id == id);
-            if (!record) { alert('❌ المهمة غير موجودة'); return; }
+            if (!record) {
+                alert('❌ المهمة غير موجودة');
+                return;
+            }
 
-            record.status = 'مكتملة';
-            record.history = record.history || [];
-            record.history.push({ action: 'تم إكمال المهمة', date: new Date().toISOString() });
+            const history = record.history || [];
+            let historyHtml = '<div class="history-list">';
 
-            const response = await fetch(`/api/maintenance/${id}`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(record)
-            });
+            if (history.length === 0) {
+                historyHtml += '<p style="color:rgba(255,255,255,0.2);text-align:center;padding:20px;">لا يوجد سجل تاريخي</p>';
+            } else {
+                history.forEach(h => {
+                    historyHtml += `
+                        <div class="history-item">
+                            <div class="h-action">${escapeHtml(h.action || 'تحديث')}</div>
+                            <div class="h-date">${formatDate(h.date)}</div>
+                            <div class="h-details">${escapeHtml(h.details || '')}</div>
+                        </div>
+                    `;
+                });
+            }
+            historyHtml += '</div>';
 
-            if (!response.ok) throw new Error('فشل إكمال المهمة');
-
-            await renderMaintenance();
-            alert('✅ تم إكمال المهمة بنجاح');
-        } catch (error) {
-            alert('❌ خطأ: ' + error.message);
-        }
-    }
-
-    // ============================================================
-    // 13. حذف المهمة
-    // ============================================================
-
-    async function deleteMaintenance(id) {
-        if (!confirm('⚠️ هل أنت متأكد من حذف هذه المهمة؟')) return;
-        try {
-            const response = await fetch(`/api/maintenance/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-            if (!response.ok) throw new Error('فشل حذف المهمة');
-            await renderMaintenance();
-            alert('✅ تم حذف المهمة بنجاح');
-        } catch (error) {
-            alert('❌ خطأ: ' + error.message);
-        }
-    }
-
-    // ============================================================
-    // 14. عرض سجل التاريخ
-    // ============================================================
-
-    function showHistory(id) {
-        const record = maintenanceData.find(r => r.id == id);
-        if (!record) { alert('❌ المهمة غير موجودة'); return; }
-
-        const history = record.history || [];
-        let historyHtml = '<div class="history-list">';
-        if (history.length === 0) {
-            historyHtml += '<p style="color:rgba(255,255,255,0.3);">لا يوجد سجل تاريخي</p>';
-        } else {
-            history.forEach(h => {
-                historyHtml += `
-                    <div class="history-item">
-                        <div class="h-action">${h.action || 'تحديث'}</div>
-                        <div class="h-date">${formatDate(h.date)}</div>
-                        <div class="h-details">${h.details || ''}</div>
+            // ✅ Parts display
+            const parts = record.parts || [];
+            let partsHtml = '';
+            if (parts.length > 0) {
+                partsHtml = `
+                    <div style="margin: 12px 0;">
+                        <label style="font-size:0.75rem;color:rgba(255,255,255,0.4);display:block;margin-bottom:6px;">
+                            🔧 قطع الغيار المستخدمة:
+                        </label>
+                        <div class="parts-list">
+                            ${parts.map(p => {
+                                const name = typeof p === 'string' ? p : (p.name || p);
+                                const qty = typeof p === 'string' ? 1 : (p.qty || 1);
+                                const cost = typeof p === 'string' ? 0 : (p.cost || 0);
+                                return `
+                                    <div class="part-item">
+                                        <span class="part-name">${escapeHtml(name)}</span>
+                                        <span class="part-qty">الكمية: ${qty}</span>
+                                        <span class="part-cost">${cost ? cost.toFixed(2) + ' د.ت' : ''}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
-            });
-        }
-        historyHtml += '</div>';
+            }
 
-        // عرض قطع الغيار
-        const parts = record.parts || [];
-        let partsHtml = '';
-        if (parts.length > 0) {
-            partsHtml = `
-                <div style="margin: 10px 0;">
-                    <label style="font-size:0.75rem;color:rgba(255,255,255,0.4);">🔧 قطع الغيار المستخدمة:</label>
-                    <div class="parts-list">
-                        ${parts.map(p => `
-                            <div class="part-item">
-                                <span class="part-name">${typeof p === 'string' ? p : p.name || p}</span>
-                                <span class="part-qty">الكمية: ${p.qty || 1}</span>
-                                <span class="part-cost">${p.cost ? p.cost.toFixed(2) + ' د.ت' : ''}</span>
-                            </div>
-                        `).join('')}
+            document.getElementById('modalTitle').textContent = `📜 سجل الصيانة - ${record.vesselName}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="margin-bottom:14px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;">
+                        <div><strong style="color:#fff;">🔧 العطب:</strong> <span style="color:rgba(255,255,255,0.6);">${escapeHtml(record.damage || '-')}</span></div>
+                        <div><strong style="color:#fff;">👤 الفني:</strong> <span style="color:rgba(255,255,255,0.6);">${escapeHtml(record.technician || '-')}</span></div>
+                        <div><strong style="color:#fff;">💰 التكلفة:</strong> <span style="color:var(--gold-light);">${record.cost ? record.cost.toFixed(2) + ' د.ت' : '0.00 د.ت'}</span></div>
+                        <div><strong style="color:#fff;">📊 الحالة:</strong> <span class="status-badge ${record.status === 'مكتملة' ? 'completed' : (record.status === 'معطب' ? 'damaged' : 'active')}">${escapeHtml(record.status || 'قيد الإنجاز')}</span></div>
                     </div>
+                    ${partsHtml}
+                    ${record.description ? `<div style="margin-top:6px;font-size:0.8rem;color:rgba(255,255,255,0.4);">📝 ${escapeHtml(record.description)}</div>` : ''}
+                </div>
+                <hr style="border-color:rgba(255,255,255,0.04);margin:12px 0;">
+                <h4 style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:10px;">📋 سجل التعديلات</h4>
+                ${historyHtml}
+                <div style="margin-top:16px;">
+                    <button class="btn-submit secondary" onclick="closeModal()" style="width:100%;padding:10px;border:none;border-radius:var(--radius-sm);background:var(--glass-bg);color:rgba(255,255,255,0.4);cursor:pointer;font-weight:600;font-family:var(--font);transition:all var(--transition);">
+                        <i class="fas fa-times"></i> إغلاق
+                    </button>
                 </div>
             `;
+
+            document.getElementById('maintenanceModal').classList.add('active');
         }
 
-        document.getElementById('modalTitle').textContent = `📜 سجل الصيانة - ${record.vesselName}`;
-        document.getElementById('modalBody').innerHTML = `
-            <div style="margin-bottom:12px;">
-                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-                    <div><strong style="color:#fff;">🔧 العطب:</strong> <span style="color:rgba(255,255,255,0.6);">${record.damage || '-'}</span></div>
-                    <div><strong style="color:#fff;">👤 الفني:</strong> <span style="color:rgba(255,255,255,0.6);">${record.technician || '-'}</span></div>
-                    <div><strong style="color:#fff;">💰 التكلفة:</strong> <span style="color:#f5d76e;">${record.cost ? record.cost.toFixed(2) + ' د.ت' : '0.00 د.ت'}</span></div>
-                    <div><strong style="color:#fff;">📊 الحالة:</strong> <span class="status-badge ${record.status === 'مكتملة' ? 'completed' : 'active'}">${record.status || 'قيد الإنجاز'}</span></div>
-                </div>
-                ${partsHtml}
-            </div>
-            <hr style="border-color:rgba(255,255,255,0.04); margin:12px 0;">
-            <h4 style="color:rgba(255,255,255,0.5); font-size:0.9rem; margin-bottom:8px;">📋 سجل التعديلات</h4>
-            ${historyHtml}
-            <div class="modal-footer" style="margin-top:16px;">
-                <button class="btn-submit secondary" onclick="closeModal()" style="width:100%;">إغلاق</button>
-            </div>
-        `;
-        
-        document.getElementById('maintenanceModal').classList.add('active');
-    }
+        // ============================================================
+        // 15. CLOSE MODAL
+        // ============================================================
 
-    // ============================================================
-    // 15. إغلاق المودال
-    // ============================================================
+        function closeModal() {
+            document.getElementById('maintenanceModal').classList.remove('active');
+            currentEditId = null;
+        }
 
-    function closeModal() {
-        document.getElementById('maintenanceModal').classList.remove('active');
-        currentEditId = null;
-    }
+        // ============================================================
+        // 16. REFRESH
+        // ============================================================
 
-    // ============================================================
-    // 16. تحديث الصفحة
-    // ============================================================
+        function refreshMaintenance() {
+            renderMaintenance();
+        }
 
-    function refreshMaintenance() {
-        renderMaintenance();
-        alert('🔄 تم تحديث البيانات');
-    }
+        // ============================================================
+        // 17. INIT
+        // ============================================================
 
-    // ============================================================
-    // 17. التهيئة
-    // ============================================================
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔧 تحميل صفحة الصيانة v14.0...');
+            await renderMaintenance();
+            console.log('✅ صفحة الصيانة جاهزة');
 
-    document.addEventListener('DOMContentLoaded', async function() {
-        console.log('🔧 تحميل صفحة الصيانة...');
-        await renderMaintenance();
-        console.log('✅ صفحة الصيانة جاهزة');
-    });
+            // ✅ Close modal on ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
 
-    // ============================================================
-    // 18. الربط العالمي
-    // ============================================================
+            // ✅ Click outside to close modal
+            document.getElementById('maintenanceModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        });
 
-    window.renderMaintenance = renderMaintenance;
-    window.refreshMaintenance = refreshMaintenance;
-    window.resetFilters = resetFilters;
-    window.openAddMaintenance = openAddMaintenance;
-    window.openEditModal = openEditModal;
-    window.saveMaintenance = saveMaintenance;
-    window.deleteMaintenance = deleteMaintenance;
-    window.completeMaintenance = completeMaintenance;
-    window.showHistory = showHistory;
-    window.closeModal = closeModal;
-    window.getToken = getToken;
-    window.getAuthHeaders = getAuthHeaders;
+        // ============================================================
+        // 18. GLOBAL EXPOSURE
+        // ============================================================
 
-    console.log('✅ صفحة الصيانة v13.0 جاهزة');
+        window.renderMaintenance = renderMaintenance;
+        window.refreshMaintenance = refreshMaintenance;
+        window.resetFilters = resetFilters;
+        window.openAddMaintenance = openAddMaintenance;
+        window.openEditModal = openEditModal;
+        window.saveMaintenance = saveMaintenance;
+        window.deleteMaintenance = deleteMaintenance;
+        window.completeMaintenance = completeMaintenance;
+        window.showHistory = showHistory;
+        window.closeModal = closeModal;
+        window.getToken = getToken;
+        window.getAuthHeaders = getAuthHeaders;
+        window.loadVessels = loadVessels;
+        window.loadMaintenance = loadMaintenance;
+
+        console.log('✅ صفحة الصيانة v14.0 جاهزة');
+    })();
 </script>
 </div>
