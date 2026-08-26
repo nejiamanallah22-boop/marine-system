@@ -1,7 +1,8 @@
-<!-- public/pages/records.html -->
-<div id="page-records">
+<!-- public/pages/efficiency.html -->
+<div id="page-efficiency">
     <style>
-        #page-records {
+        /* ===== RESET & BASE ===== */
+        #page-efficiency {
             width: 100%;
             max-width: 100%;
             padding: 20px;
@@ -15,7 +16,7 @@
         }
 
         /* ===== HEADER ===== */
-        .rec-header {
+        .eff-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -28,17 +29,17 @@
             gap: 12px;
         }
 
-        .rec-header-left {
+        .eff-header-left {
             display: flex;
             align-items: center;
             gap: 14px;
         }
 
-        .rec-header-left .icon {
+        .eff-header-left .icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0984e3, #e6b31e);
+            background: linear-gradient(135deg, #e6b31e, #00b894);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -46,22 +47,22 @@
             color: #0a1628;
         }
 
-        .rec-header-left h2 {
+        .eff-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa, #fff);
+            background: linear-gradient(135deg, #f5d76e, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
         }
 
-        .rec-header-left p {
+        .eff-header-left p {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin: 0;
         }
 
-        .rec-header-actions {
+        .eff-header-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
@@ -82,13 +83,13 @@
         }
 
         .btn-action.primary {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            color: #fff;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
         }
 
         .btn-action.primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(9,132,227,0.35);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
         .btn-action.secondary {
@@ -102,17 +103,8 @@
             color: #fff;
         }
 
-        .btn-action.export {
-            background: linear-gradient(135deg, #00b894, #55efc4);
-            color: #0a1628;
-        }
-
-        .btn-action.export:hover {
-            transform: translateY(-2px);
-        }
-
         /* ===== STATS ===== */
-        .rec-stats {
+        .eff-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
@@ -136,21 +128,21 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #0984e3, #e6b31e);
+            background: linear-gradient(90deg, #e6b31e, #00b894);
             opacity: 0.6;
         }
 
         .stat-card .number {
             font-size: 26px;
             font-weight: 800;
-            color: #60a5fa;
+            color: #f5d76e;
             line-height: 1.2;
         }
 
-        .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.yellow { color: #fbbf24; }
         .stat-card .number.red { color: #f87171; }
-        .stat-card .number.purple { color: #a78bfa; }
+        .stat-card .number.blue { color: #60a5fa; }
 
         .stat-card .label {
             font-size: 11px;
@@ -180,8 +172,7 @@
             gap: 4px;
         }
 
-        .filter-bar select,
-        .filter-bar input {
+        .filter-bar select {
             padding: 6px 12px;
             border-radius: 20px;
             border: 1px solid rgba(255,255,255,0.06);
@@ -193,25 +184,14 @@
             font-family: 'Cairo', sans-serif;
         }
 
-        .filter-bar select:focus,
-        .filter-bar input:focus {
+        .filter-bar select:focus {
             outline: none;
-            border-color: #0984e3;
+            border-color: #e6b31e;
         }
 
         .filter-bar select option {
             background: #0a1628;
             color: #e2e8f0;
-        }
-
-        .filter-bar input[type="date"] {
-            min-width: 140px;
-            color-scheme: dark;
-        }
-
-        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.6);
-            cursor: pointer;
         }
 
         .btn-filter {
@@ -229,8 +209,8 @@
         }
 
         .btn-filter.primary {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            color: #fff;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
         }
 
         .btn-filter.primary:hover {
@@ -249,7 +229,7 @@
         }
 
         /* ===== SECTION ===== */
-        .rec-section {
+        .eff-section {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 14px;
@@ -279,7 +259,7 @@
         }
 
         .section-header h3 i {
-            color: #0984e3;
+            color: #e6b31e;
         }
 
         .badge {
@@ -287,11 +267,6 @@
             padding: 4px 16px;
             border-radius: 20px;
             font-weight: 600;
-        }
-
-        .badge.blue {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
         }
 
         .badge.gold {
@@ -302,6 +277,11 @@
         .badge.success {
             background: rgba(34,197,94,0.12);
             color: #4ade80;
+        }
+
+        .badge.warning {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
         }
 
         .badge.danger {
@@ -319,12 +299,12 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 800px;
+            min-width: 600px;
         }
 
         thead {
-            background: rgba(9,132,227,0.08);
-            border-bottom: 2px solid rgba(9,132,227,0.08);
+            background: rgba(230,179,30,0.08);
+            border-bottom: 2px solid rgba(230,179,30,0.08);
         }
 
         thead th {
@@ -340,7 +320,7 @@
 
         thead th i {
             margin-left: 4px;
-            color: #0984e3;
+            color: #e6b31e;
         }
 
         tbody td {
@@ -356,6 +336,36 @@
             background: rgba(255,255,255,0.03);
         }
 
+        .row-high {
+            background: rgba(34,197,94,0.05) !important;
+            border-right: 3px solid #4ade80;
+        }
+
+        .row-high .eff-cell {
+            color: #4ade80 !important;
+            font-weight: 700;
+        }
+
+        .row-mid {
+            background: rgba(234,179,8,0.05) !important;
+            border-right: 3px solid #fbbf24;
+        }
+
+        .row-mid .eff-cell {
+            color: #fbbf24 !important;
+            font-weight: 700;
+        }
+
+        .row-low {
+            background: rgba(239,68,68,0.05) !important;
+            border-right: 3px solid #f87171;
+        }
+
+        .row-low .eff-cell {
+            color: #f87171 !important;
+            font-weight: 700;
+        }
+
         /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 3px 12px;
@@ -366,33 +376,27 @@
             white-space: nowrap;
         }
 
-        .status-badge.completed {
+        .status-badge.excellent {
             background: rgba(34,197,94,0.12);
             color: #4ade80;
         }
 
-        .status-badge.in-progress {
+        .status-badge.good {
+            background: rgba(74,222,128,0.08);
+            color: #4ade80;
+        }
+
+        .status-badge.medium {
             background: rgba(234,179,8,0.12);
             color: #fbbf24;
-            animation: pulseProgress 2s infinite;
         }
 
-        @keyframes pulseProgress {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .status-badge.pending {
-            background: rgba(9,132,227,0.12);
-            color: #60a5fa;
-        }
-
-        .status-badge.cancelled {
+        .status-badge.low {
             background: rgba(239,68,68,0.12);
             color: #f87171;
         }
 
-        .status-badge.overdue {
+        .status-badge.critical {
             background: rgba(239,68,68,0.2);
             color: #f87171;
             animation: pulseDanger 1.5s infinite;
@@ -400,185 +404,163 @@
 
         @keyframes pulseDanger {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.6; }
         }
 
-        /* ===== PRIORITY ===== */
-        .priority-high {
-            border-right: 3px solid #ef4444;
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            min-width: 80px;
         }
 
-        .priority-medium {
-            border-right: 3px solid #fbbf24;
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.8s ease;
         }
 
-        .priority-low {
-            border-right: 3px solid #4ade80;
+        .progress-bar .fill.high {
+            background: linear-gradient(90deg, #22c55e, #4ade80);
         }
 
-        /* ===== ACTION BUTTONS ===== */
-        .action-btn {
-            padding: 4px 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+        .progress-bar .fill.mid {
+            background: linear-gradient(90deg, #eab308, #fbbf24);
         }
 
-        .action-btn.view {
-            background: rgba(9,132,227,0.1);
-            color: #60a5fa;
+        .progress-bar .fill.low {
+            background: linear-gradient(90deg, #ef4444, #f87171);
         }
 
-        .action-btn.view:hover {
-            background: rgba(9,132,227,0.2);
+        /* ===== REGIONS ===== */
+        .region-card {
+            padding: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
 
-        .action-btn.edit {
-            background: rgba(230,179,30,0.1);
-            color: #f5d76e;
+        .region-card:last-child {
+            border-bottom: none;
         }
 
-        .action-btn.edit:hover {
-            background: rgba(230,179,30,0.2);
-        }
-
-        .action-btn.delete {
-            background: rgba(239,68,68,0.1);
-            color: #f87171;
-        }
-
-        .action-btn.delete:hover {
-            background: rgba(239,68,68,0.2);
-        }
-
-        /* ===== PAGINATION ===== */
-        .pagination {
+        .region-card .region-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 20px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
             flex-wrap: wrap;
             gap: 8px;
-        }
-
-        .pagination .info {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.25);
-        }
-
-        .pagination .pages {
-            display: flex;
-            gap: 4px;
-        }
-
-        .page-btn {
-            padding: 4px 12px;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 6px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
             cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 0.75rem;
             transition: all 0.3s;
         }
 
-        .page-btn:hover {
+        .region-card .region-header:hover {
             background: rgba(255,255,255,0.04);
+        }
+
+        .region-card .region-header .region-name {
+            font-size: 15px;
+            font-weight: 700;
             color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .page-btn.active {
-            background: linear-gradient(135deg, #0984e3, #60a5fa);
-            border-color: #0984e3;
-            color: #fff;
+        .region-card .region-header .region-name i {
+            color: #e6b31e;
         }
 
-        .page-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: rgba(255,255,255,0.15);
-        }
-
-        .empty-state .empty-icon {
-            font-size: 4rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        .empty-state h3 {
-            font-size: 1rem;
+        .region-badge {
+            font-size: 12px;
             font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
+            padding: 4px 16px;
+            border-radius: 20px;
         }
 
-        .empty-state p {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.1);
+        .region-badge.excellent {
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34,197,94,0.1);
+        }
+
+        .region-badge.good {
+            background: rgba(74,222,128,0.1);
+            color: #4ade80;
+            border: 1px solid rgba(74,222,128,0.05);
+        }
+
+        .region-badge.medium {
+            background: rgba(234,179,8,0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(234,179,8,0.1);
+        }
+
+        .region-badge.low {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.1);
+        }
+
+        .region-badge.critical {
+            background: rgba(239,68,68,0.25);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.2);
+            animation: pulseDanger 1.5s infinite;
+        }
+
+        .region-card .region-body {
+            padding: 0 20px 16px;
         }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            #page-records { padding: 12px; }
-            .rec-header { flex-direction: column; align-items: flex-start; }
-            .rec-header-left { width: 100%; }
-            .rec-header-left h2 { font-size: 16px; }
-            .rec-header-actions { width: 100%; }
-            .rec-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            #page-efficiency { padding: 12px; }
+            .eff-header { flex-direction: column; align-items: flex-start; }
+            .eff-header-left { width: 100%; }
+            .eff-header-left h2 { font-size: 16px; }
+            .eff-header-actions { width: 100%; }
+            .eff-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .stat-card .number { font-size: 20px; }
             .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .filter-bar select { min-width: 100%; }
             .table-wrapper { padding: 12px; }
-            table { font-size: 0.7rem; min-width: 600px; }
+            table { font-size: 0.7rem; min-width: 500px; }
             thead th, tbody td { padding: 6px 8px; }
-            .pagination { flex-direction: column; align-items: center; }
+            .region-card .region-header { flex-direction: column; align-items: flex-start; }
+            .region-card .region-body { padding: 0 12px 12px; }
         }
 
         @media (max-width: 480px) {
-            .rec-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .eff-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
-            .rec-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
-            .rec-header-left h2 { font-size: 14px; }
+            .eff-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .eff-header-left h2 { font-size: 14px; }
             .section-header h3 { font-size: 13px; }
             thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
-            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
         }
     </style>
 
     <!-- ===== HEADER ===== -->
-    <div class="rec-header">
-        <div class="rec-header-left">
+    <div class="eff-header">
+        <div class="eff-header-left">
             <div class="icon">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-chart-line"></i>
             </div>
             <div>
-                <h2>سجل الصيانة والتاريخي</h2>
-                <p>أرشيف كامل لعمليات الصيانة والتدخلات الفنية</p>
+                <h2>جاهزية الأسطول</h2>
+                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
             </div>
         </div>
-        <div class="rec-header-actions">
+        <div class="eff-header-actions">
             <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn-action export" id="exportBtn">
-                <i class="fas fa-file-excel"></i> تصدير
             </button>
             <button class="btn-action secondary" onclick="window.print()">
                 <i class="fas fa-print"></i> طباعة
@@ -587,50 +569,47 @@
     </div>
 
     <!-- ===== STATS ===== -->
-    <div class="rec-stats" id="recordsStats">
+    <div class="eff-stats" id="statsCards">
         <div class="stat-card">
-            <div class="number" id="totalRecords">0</div>
-            <div class="label">📋 إجمالي السجلات</div>
+            <div class="number" id="totalVessels">0</div>
+            <div class="label">🚢 إجمالي المراكب</div>
         </div>
         <div class="stat-card">
-            <div class="number gold" id="pendingRecords">0</div>
-            <div class="label">⏳ قيد الانتظار</div>
+            <div class="number green" id="activeVessels">0</div>
+            <div class="label">✅ صالح للخدمة</div>
         </div>
         <div class="stat-card">
-            <div class="number green" id="completedRecords">0</div>
-            <div class="label">✅ مكتملة</div>
+            <div class="number yellow" id="maintenanceVessels">0</div>
+            <div class="label">🔧 تحت الصيانة</div>
         </div>
         <div class="stat-card">
-            <div class="number red" id="overdueRecords">0</div>
-            <div class="label">🚨 متأخرة</div>
+            <div class="number red" id="damagedVessels">0</div>
+            <div class="label">🟥 معطوبة</div>
         </div>
         <div class="stat-card">
-            <div class="number purple" id="inProgressRecords">0</div>
-            <div class="label">⚡ قيد التنفيذ</div>
+            <div class="number blue" id="efficiencyPercent">0%</div>
+            <div class="label">📈 نسبة النجاعة</div>
         </div>
     </div>
 
     <!-- ===== FILTER BAR ===== -->
     <div class="filter-bar">
-        <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchRecords" placeholder="رقم المركب، الفئة..." />
-
-        <label><i class="fas fa-ship"></i> المركب</label>
-        <select id="fVesselRec">
-            <option value="الكل">🚢 جميع المراكب</option>
-            <option value="البروق 01">البروق 01</option>
-            <option value="البروق 02">البروق 02</option>
-            <option value="البروق 05">البروق 05</option>
-            <option value="صقر 03">صقر 03</option>
-            <option value="صقر 08">صقر 08</option>
-            <option value="خافرة 07">خافرة 07</option>
-            <option value="خافرة 11">خافرة 11</option>
-            <option value="زورق مزدوج 12">زورق مزدوج 12</option>
-            <option value="طوافة 14">طوافة 14</option>
+        <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
+        <select id="fRegEff">
+            <option value="الكل">🌍 جميع الأقاليم</option>
+            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
+            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
+            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
+            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
         </select>
 
-        <label><i class="fas fa-tag"></i> الفئة</label>
-        <select id="fCatRec">
+        <label><i class="fas fa-filter"></i> الفئة</label>
+        <select id="fCatEff">
             <option value="الكل">📦 جميع الفئات</option>
             <option value="البروق">البروق</option>
             <option value="صقور">صقور</option>
@@ -639,20 +618,13 @@
             <option value="طوافات">طوافات</option>
         </select>
 
-        <label><i class="fas fa-circle"></i> الحالة</label>
-        <select id="fStatusRec">
+        <label><i class="fas fa-chart-bar"></i> الحالة</label>
+        <select id="fStatusEff">
             <option value="الكل">📊 جميع الحالات</option>
-            <option value="مكتملة">✅ مكتملة</option>
-            <option value="قيد التنفيذ">⚡ قيد التنفيذ</option>
-            <option value="قيد الانتظار">⏳ قيد الانتظار</option>
-            <option value="متأخرة">🚨 متأخرة</option>
-            <option value="ملغاة">❌ ملغاة</option>
+            <option value="صالح">✅ صالح</option>
+            <option value="صيانة">🔧 تحت الصيانة</option>
+            <option value="معطب">⚠️ معطب</option>
         </select>
-
-        <label><i class="fas fa-calendar-alt"></i> من</label>
-        <input type="date" id="fDateFrom" />
-        <label><i class="fas fa-calendar-alt"></i> إلى</label>
-        <input type="date" id="fDateTo" />
 
         <button class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
@@ -662,48 +634,43 @@
         </button>
     </div>
 
-    <!-- ===== TABLE ===== -->
-    <div class="rec-section">
+    <!-- ===== GENERAL TABLE ===== -->
+    <div class="eff-section">
         <div class="section-header">
-            <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة والتدخلات</h3>
-            <span class="badge blue" id="recordsBadge">📊 جاري التحميل...</span>
+            <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
+            <span class="badge gold" id="generalBadge">📊 جاري التحميل...</span>
         </div>
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> الرقم</th>
-                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
-                        <th><i class="fas fa-tag"></i> الفئة</th>
-                        <th><i class="fas fa-wrench"></i> نوع التدخل</th>
-                        <th><i class="fas fa-calendar-alt"></i> تاريخ البدء</th>
-                        <th><i class="fas fa-calendar-check"></i> تاريخ الانتهاء</th>
-                        <th><i class="fas fa-clock"></i> المدة</th>
+                        <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
+                        <th><i class="fas fa-check-circle"></i> صالح</th>
+                        <th><i class="fas fa-times-circle"></i> معطب</th>
+                        <th><i class="fas fa-percent"></i> النجاعة</th>
+                        <th><i class="fas fa-chart-bar"></i> التقدم</th>
                         <th><i class="fas fa-circle"></i> الحالة</th>
-                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
                     </tr>
                 </thead>
-                <tbody id="recordsBody">
+                <tbody id="generalBody">
                     <tr>
-                        <td colspan="9" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
-                            <h3>جاري تحميل السجلات...</h3>
-                            <p>يرجى الانتظار</p>
+                        <td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <div style="font-size:2rem;margin-bottom:10px;">📊</div>
+                            جاري تحميل البيانات...
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div class="pagination">
-            <span class="info" id="paginationInfo">عرض 1-10 من 0 سجل</span>
-            <div class="pages">
-                <button class="page-btn" id="prevPage">‹</button>
-                <button class="page-btn active" id="page1">1</button>
-                <button class="page-btn" id="page2">2</button>
-                <button class="page-btn" id="page3">3</button>
-                <button class="page-btn" id="nextPage">›</button>
-            </div>
+    </div>
+
+    <!-- ===== REGIONS ===== -->
+    <div class="eff-section">
+        <div class="section-header">
+            <h3><i class="fas fa-map-marked-alt"></i> تفاصيل الأقاليم ووحدات الصيانة</h3>
+            <span class="badge gold">📊 تحليل متقدم</span>
         </div>
+        <div id="regionTables"></div>
     </div>
 
     <!-- ===== JAVASCRIPT ===== -->
@@ -712,261 +679,305 @@
             'use strict';
 
             // ===== DATA =====
-            var recordsData = [
-                { id: 'R-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10', endDate: '2026-05-12', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15', endDate: '2026-06-20', status: 'قيد التنفيذ', priority: 'عالية', duration: '5 أيام' },
-                { id: 'R-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05', endDate: '2026-04-05', status: 'مكتملة', priority: 'متوسطة', duration: '1 يوم' },
-                { id: 'R-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15', endDate: '2026-03-25', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-005', vessel: 'البروق 05', category: 'البروق', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-03', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-006', vessel: 'صقر 08', category: 'صقور', type: 'استبدال قطع', startDate: '2026-05-20', endDate: '2026-05-28', status: 'قيد الانتظار', priority: 'متوسطة', duration: '8 أيام' },
-                { id: 'R-2026-007', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-02', status: 'مكتملة', priority: 'منخفضة', duration: '1 يوم' },
-                { id: 'R-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10', endDate: '2026-06-25', status: 'قيد التنفيذ', priority: 'عالية', duration: '15 أيام' },
-                { id: 'R-2026-009', vessel: 'طوافة 14', category: 'طوافات', type: 'فحص تقني', startDate: '2026-04-10', endDate: '2026-04-12', status: 'ملغاة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-010', vessel: 'البروق 09', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-05-18', endDate: '2026-05-22', status: 'مكتملة', priority: 'متوسطة', duration: '4 أيام' },
-                { id: 'R-2026-011', vessel: 'صقر 06', category: 'صقور', type: 'صيانة دورية', startDate: '2026-05-25', endDate: '2026-05-30', status: 'قيد الانتظار', priority: 'منخفضة', duration: '5 أيام' },
-                { id: 'R-2026-012', vessel: 'زورق مزدوج 22', category: 'زوارق مزدوجة', type: 'إصلاح عاجل', startDate: '2026-06-20', endDate: '2026-06-30', status: 'قيد التنفيذ', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-013', vessel: 'خافرة 18', category: 'خوافر', type: 'استبدال قطع', startDate: '2026-03-05', endDate: '2026-03-15', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
-                { id: 'R-2026-014', vessel: 'طوافة 25', category: 'طوافات', type: 'صيانة دورية', startDate: '2026-04-12', endDate: '2026-04-14', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
-                { id: 'R-2026-015', vessel: 'صقر 20', category: 'صقور', type: 'إصلاح محرك', startDate: '2026-02-01', endDate: '2026-02-15', status: 'متأخرة', priority: 'عالية', duration: '14 أيام' }
-            ];
-
-            // ===== STATE =====
-            var filteredData = recordsData.slice();
-            var currentPage = 1;
-            var itemsPerPage = 5;
+            var efficiencyData = {
+                general: [
+                    { category: 'البروق', active: 18, damaged: 4, efficiency: 81.8 },
+                    { category: 'صقور', active: 12, damaged: 3, efficiency: 80.0 },
+                    { category: 'خوافر', active: 8, damaged: 5, efficiency: 61.5 },
+                    { category: 'زوارق مزدوجة', active: 6, damaged: 1, efficiency: 85.7 },
+                    { category: 'طوافات', active: 4, damaged: 2, efficiency: 66.7 }
+                ],
+                regions: {
+                    'الحرس البحري بالشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
+                    'الحرس البحري بالساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
+                    'الحرس البحري بالوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
+                    'الحرس البحري بالجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
+                    'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
+                    'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
+                    'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
+                }
+            };
 
             // ===== DOM REFS =====
             var $ = function(id) { return document.getElementById(id); };
 
             // ===== HELPERS =====
+            function getStatusClass(eff) {
+                if (eff >= 80) return 'excellent';
+                if (eff >= 70) return 'good';
+                if (eff >= 50) return 'medium';
+                if (eff >= 30) return 'low';
+                return 'critical';
+            }
+
+            function getStatusText(eff) {
+                if (eff >= 80) return 'ممتازة';
+                if (eff >= 70) return 'جيدة';
+                if (eff >= 50) return 'متوسطة';
+                if (eff >= 30) return 'منخفضة';
+                return 'حرجة';
+            }
+
+            function getProgressClass(eff) {
+                if (eff >= 70) return 'high';
+                if (eff >= 50) return 'mid';
+                return 'low';
+            }
+
+            function getRowClass(eff) {
+                if (eff >= 70) return 'row-high';
+                if (eff >= 50) return 'row-mid';
+                return 'row-low';
+            }
+
+            function getRegionBadge(eff) {
+                if (eff >= 80) return 'excellent';
+                if (eff >= 70) return 'good';
+                if (eff >= 50) return 'medium';
+                if (eff >= 30) return 'low';
+                return 'critical';
+            }
+
             function formatDate(dateStr) {
+                if (!dateStr) return '-';
                 var parts = dateStr.split('-');
                 return parts[2] + '/' + parts[1] + '/' + parts[0];
             }
 
-            function getStatusClass(status) {
-                var map = {
-                    'مكتملة': 'completed',
-                    'قيد التنفيذ': 'in-progress',
-                    'قيد الانتظار': 'pending',
-                    'متأخرة': 'overdue',
-                    'ملغاة': 'cancelled'
-                };
-                return map[status] || '';
-            }
-
-            function getStatusLabel(status) {
-                var map = {
-                    'مكتملة': '✅ مكتملة',
-                    'قيد التنفيذ': '⚡ قيد التنفيذ',
-                    'قيد الانتظار': '⏳ قيد الانتظار',
-                    'متأخرة': '🚨 متأخرة',
-                    'ملغاة': '❌ ملغاة'
-                };
-                return map[status] || status;
-            }
-
-            function getPriorityClass(priority) {
-                var map = {
-                    'عالية': 'priority-high',
-                    'متوسطة': 'priority-medium',
-                    'منخفضة': 'priority-low'
-                };
-                return map[priority] || '';
-            }
-
             // ===== RENDER =====
-            function renderRecords() {
+            function renderEfficiency() {
                 renderStats();
-                renderTable();
-                renderPagination();
+                renderGeneralTable();
+                renderRegions();
             }
 
             function renderStats() {
-                var total = recordsData.length;
-                var pending = recordsData.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
-                var completed = recordsData.filter(function(r) { return r.status === 'مكتملة'; }).length;
-                var overdue = recordsData.filter(function(r) { return r.status === 'متأخرة'; }).length;
-                var inProgress = recordsData.filter(function(r) { return r.status === 'قيد التنفيذ'; }).length;
+                var regionFilter = $('fRegEff').value;
+                var total = 0, active = 0, maintenance = 0, damaged = 0;
 
-                $('totalRecords').textContent = total;
-                $('pendingRecords').textContent = pending;
-                $('completedRecords').textContent = completed;
-                $('overdueRecords').textContent = overdue;
-                $('inProgressRecords').textContent = inProgress;
-
-                var badge = $('recordsBadge');
-                if (overdue > 0) {
-                    badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
-                    badge.className = 'badge danger';
-                } else if (pending > 0) {
-                    badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
-                    badge.className = 'badge gold';
-                } else {
-                    badge.textContent = '✅ ' + completed + ' سجل مكتمل';
-                    badge.className = 'badge success';
+                for (var name in efficiencyData.regions) {
+                    var data = efficiencyData.regions[name];
+                    if (regionFilter === 'الكل' || name === regionFilter) {
+                        total += data.vessels;
+                        active += data.active;
+                        maintenance += data.maintenance;
+                        damaged += data.damaged;
+                    }
                 }
+
+                var efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+
+                $('totalVessels').textContent = total;
+                $('activeVessels').textContent = active;
+                $('maintenanceVessels').textContent = maintenance;
+                $('damagedVessels').textContent = damaged;
+                $('efficiencyPercent').textContent = efficiency + '%';
             }
 
-            function renderTable() {
-                var search = $('searchRecords').value.toLowerCase();
-                var vesselFilter = $('fVesselRec').value;
-                var categoryFilter = $('fCatRec').value;
-                var statusFilter = $('fStatusRec').value;
-                var dateFrom = $('fDateFrom').value;
-                var dateTo = $('fDateTo').value;
+            function renderGeneralTable() {
+                var categoryFilter = $('fCatEff').value;
+                var statusFilter = $('fStatusEff').value;
 
-                filteredData = recordsData.filter(function(r) {
-                    if (search && !r.id.toLowerCase().includes(search) && !r.vessel.includes(search) && !r.type.includes(search)) return false;
-                    if (vesselFilter !== 'الكل' && r.vessel !== vesselFilter) return false;
-                    if (categoryFilter !== 'الكل' && r.category !== categoryFilter) return false;
-                    if (statusFilter !== 'الكل' && r.status !== statusFilter) return false;
-                    if (dateFrom && r.startDate < dateFrom) return false;
-                    if (dateTo && r.startDate > dateTo) return false;
-                    return true;
-                });
+                var filtered = efficiencyData.general;
 
-                var tbody = $('recordsBody');
+                if (categoryFilter !== 'الكل') {
+                    filtered = filtered.filter(function(item) {
+                        return item.category === categoryFilter;
+                    });
+                }
 
-                if (filteredData.length === 0) {
-                    tbody.innerHTML = `
+                if (statusFilter !== 'الكل') {
+                    filtered = filtered.filter(function(item) {
+                        if (statusFilter === 'صالح') return item.efficiency >= 70;
+                        if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
+                        if (statusFilter === 'معطب') return item.efficiency < 50;
+                        return true;
+                    });
+                }
+
+                if (filtered.length === 0) {
+                    $('generalBody').innerHTML = `
                         <tr>
-                            <td colspan="9" class="empty-state">
-                                <span class="empty-icon"><i class="fas fa-search"></i></span>
-                                <h3>لا توجد سجلات مطابقة</h3>
-                                <p>حاول تغيير معايير البحث أو الفلترة</p>
+                            <td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                                <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
+                                لا توجد بيانات مطابقة
                             </td>
                         </tr>
                     `;
                     return;
                 }
 
-                var start = (currentPage - 1) * itemsPerPage;
-                var end = start + itemsPerPage;
-                var pageData = filteredData.slice(start, end);
-
                 var html = '';
-                for (var i = 0; i < pageData.length; i++) {
-                    var r = pageData[i];
-                    var statusClass = getStatusClass(r.status);
-                    var statusLabel = getStatusLabel(r.status);
-                    var priorityClass = getPriorityClass(r.priority);
+                for (var i = 0; i < filtered.length; i++) {
+                    var item = filtered[i];
+                    var eff = item.efficiency;
+                    var rowClass = getRowClass(eff);
+                    var statusClass = getStatusClass(eff);
+                    var statusText = getStatusText(eff);
+                    var progressClass = getProgressClass(eff);
+                    var effColor = eff >= 70 ? '#4ade80' : (eff >= 50 ? '#fbbf24' : '#f87171');
 
                     html += `
-                        <tr class="${priorityClass}">
-                            <td style="text-align:right;font-weight:600;color:#f5d76e;">${r.id}</td>
-                            <td style="text-align:right;font-weight:600;color:#fff;">${r.vessel}</td>
-                            <td>${r.category}</td>
-                            <td>${r.type}</td>
-                            <td>${formatDate(r.startDate)}</td>
-                            <td>${formatDate(r.endDate)}</td>
-                            <td>${r.duration}</td>
-                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                        <tr class="${rowClass}">
+                            <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
+                            <td>${item.active}</td>
+                            <td>${item.damaged}</td>
+                            <td class="eff-cell" style="color:${effColor};">${eff.toFixed(1)}%</td>
                             <td>
-                                <button class="action-btn view" onclick="viewRecord('${r.id}')"><i class="fas fa-eye"></i></button>
-                                <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn delete" onclick="deleteRecord('${r.id}')"><i class="fas fa-trash"></i></button>
+                                <div class="progress-bar">
+                                    <div class="fill ${progressClass}" style="width:${Math.min(eff, 100)}%;"></div>
+                                </div>
                             </td>
+                            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         </tr>
                     `;
                 }
 
-                tbody.innerHTML = html;
-                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' سجل';
+                $('generalBody').innerHTML = html;
+
+                // Update badge
+                var avgEff = filtered.reduce(function(sum, item) { return sum + item.efficiency; }, 0) / filtered.length;
+
+                var badge = $('generalBadge');
+                if (avgEff >= 80) {
+                    badge.textContent = '✅ أداء ممتاز';
+                    badge.className = 'badge success';
+                } else if (avgEff >= 70) {
+                    badge.textContent = '📈 أداء جيد';
+                    badge.className = 'badge gold';
+                } else if (avgEff >= 50) {
+                    badge.textContent = '⚠️ أداء متوسط';
+                    badge.className = 'badge warning';
+                } else {
+                    badge.textContent = '🚨 أداء منخفض';
+                    badge.className = 'badge danger';
+                }
             }
 
-            function renderPagination() {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                $('prevPage').disabled = currentPage <= 1;
-                $('nextPage').disabled = currentPage >= totalPages;
+            function renderRegions() {
+                var regionFilter = $('fRegEff').value;
+                var container = $('regionTables');
+                var html = '';
 
-                for (var i = 1; i <= 3; i++) {
-                    var btn = $('page' + i);
-                    if (i <= totalPages) {
-                        btn.style.display = 'inline-block';
-                        btn.textContent = i;
-                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
-                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
-                    } else {
-                        btn.style.display = 'none';
-                    }
+                var filteredNames = Object.keys(efficiencyData.regions);
+
+                if (regionFilter !== 'الكل') {
+                    filteredNames = filteredNames.filter(function(name) {
+                        return name === regionFilter;
+                    });
                 }
+
+                if (filteredNames.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding:30px;text-align:center;color:rgba(255,255,255,0.15);">
+                            <div style="font-size:2rem;margin-bottom:10px;">🗺️</div>
+                            لا توجد أقاليم مطابقة
+                        </div>
+                    `;
+                    return;
+                }
+
+                for (var i = 0; i < filteredNames.length; i++) {
+                    var name = filteredNames[i];
+                    var data = efficiencyData.regions[name];
+                    var eff = data.vessels > 0 ? ((data.active / data.vessels) * 100).toFixed(1) : 0;
+                    var badge = getRegionBadge(eff);
+
+                    // Sample vessels for each region
+                    var vessels = [
+                        { name: 'البروق 01', category: 'البروق', status: 'صالح', date: '2026-05-12' },
+                        { name: 'البروق 02', category: 'البروق', status: data.maintenance > 0 ? 'صيانة' : 'صالح', date: '2026-06-20' },
+                        { name: 'صقر 03', category: 'صقور', status: 'صالح', date: '2026-04-05' },
+                        { name: 'خافرة 07', category: 'خوافر', status: data.damaged > 0 ? 'معطب' : 'صالح', date: '2026-03-25' }
+                    ];
+
+                    var statusMap = {
+                        'صالح': 'excellent',
+                        'صيانة': 'medium',
+                        'معطب': 'low'
+                    };
+
+                    var statusLabel = {
+                        'صالح': '✅ صالح',
+                        'صيانة': '🔧 صيانة',
+                        'معطب': '⚠️ معطب'
+                    };
+
+                    var rows = '';
+                    for (var j = 0; j < Math.min(vessels.length, data.vessels); j++) {
+                        var v = vessels[j];
+                        var cls = statusMap[v.status] || 'excellent';
+                        var label = statusLabel[v.status] || v.status;
+                        rows += `
+                            <tr>
+                                <td style="text-align:right;font-weight:600;color:#fff;">${v.name}</td>
+                                <td>${v.category}</td>
+                                <td><span class="status-badge ${cls}">${label}</span></td>
+                                <td>${formatDate(v.date)}</td>
+                            </tr>
+                        `;
+                    }
+
+                    html += `
+                        <div class="region-card">
+                            <div class="region-header">
+                                <div class="region-name">
+                                    <i class="fas fa-map-pin"></i> ${name}
+                                </div>
+                                <span class="region-badge ${badge}">${eff}% جاهزية</span>
+                            </div>
+                            <div class="region-body">
+                                <div class="table-wrapper">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:right;">المركب</th>
+                                                <th>الفئة</th>
+                                                <th>الحالة</th>
+                                                <th>آخر صيانة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${rows || '<tr><td colspan="4" style="text-align:center;padding:20px;color:rgba(255,255,255,0.1);">لا توجد مراكب مسجلة</td></tr>'}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
             }
 
             // ===== ACTIONS =====
-            function changePage(delta) {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                var newPage = currentPage + delta;
-                if (newPage >= 1 && newPage <= totalPages) {
-                    currentPage = newPage;
-                    renderRecords();
-                }
-            }
-
-            function goToPage(page) {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                if (page >= 1 && page <= totalPages) {
-                    currentPage = page;
-                    renderRecords();
-                }
-            }
-
-            function refreshRecords() {
+            function refreshEfficiency() {
                 var btn = $('refreshBtn');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
                 setTimeout(function() {
-                    renderRecords();
+                    renderEfficiency();
                     btn.innerHTML = original;
                     btn.disabled = false;
-                    showNotification('✅ تم تحديث السجلات بنجاح', 'success');
+                    showNotification('✅ تم تحديث البيانات بنجاح', 'success');
                 }, 600);
             }
 
             function resetFilters() {
-                $('searchRecords').value = '';
-                $('fVesselRec').value = 'الكل';
-                $('fCatRec').value = 'الكل';
-                $('fStatusRec').value = 'الكل';
-                $('fDateFrom').value = '';
-                $('fDateTo').value = '';
-                currentPage = 1;
-                renderRecords();
+                $('fRegEff').value = 'الكل';
+                $('fCatEff').value = 'الكل';
+                $('fStatusEff').value = 'الكل';
+                renderEfficiency();
                 showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
             }
 
-            function exportRecords() {
-                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
-                setTimeout(function() {
-                    showNotification('✅ تم تصدير البيانات بنجاح', 'success');
-                }, 1500);
-            }
-
-            // ===== GLOBAL FUNCTIONS =====
-            window.viewRecord = function(id) {
-                showNotification('📋 عرض تفاصيل السجل ' + id, 'info');
-            };
-
-            window.editRecord = function(id) {
-                showNotification('✏️ تعديل السجل ' + id, 'info');
-            };
-
-            window.deleteRecord = function(id) {
-                if (confirm('هل أنت متأكد من حذف السجل ' + id + '؟')) {
-                    var idx = recordsData.findIndex(function(r) { return r.id === id; });
-                    if (idx !== -1) {
-                        recordsData.splice(idx, 1);
-                        renderRecords();
-                        showNotification('🗑️ تم حذف السجل ' + id + ' بنجاح', 'success');
-                    }
-                }
-            };
-
             // ===== NOTIFICATION =====
             function showNotification(message, type) {
-                var old = document.querySelector('.rec-notification');
+                var old = document.querySelector('.eff-notification');
                 if (old) old.remove();
 
                 var colors = {
@@ -976,7 +987,7 @@
                 };
 
                 var notif = document.createElement('div');
-                notif.className = 'rec-notification';
+                notif.className = 'eff-notification';
                 notif.style.cssText = `
                     position: fixed;
                     bottom: 24px;
@@ -1013,7 +1024,7 @@
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                .rec-notification {
+                .eff-notification {
                     direction: rtl;
                 }
             `;
@@ -1021,25 +1032,20 @@
 
             // ===== EVENT BINDING =====
             document.addEventListener('DOMContentLoaded', function() {
-                $('refreshBtn').addEventListener('click', refreshRecords);
-                $('exportBtn').addEventListener('click', exportRecords);
-                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderRecords(); });
+                $('refreshBtn').addEventListener('click', refreshEfficiency);
+                $('filterBtn').addEventListener('click', renderEfficiency);
                 $('resetBtn').addEventListener('click', resetFilters);
 
-                $('searchRecords').addEventListener('keyup', function() { currentPage = 1; renderRecords(); });
-                $('fVesselRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fCatRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fStatusRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderRecords(); });
-                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                $('fRegEff').addEventListener('change', renderEfficiency);
+                $('fCatEff').addEventListener('change', renderEfficiency);
+                $('fStatusEff').addEventListener('change', renderEfficiency);
 
-                $('prevPage').addEventListener('click', function() { changePage(-1); });
-                $('nextPage').addEventListener('click', function() { changePage(1); });
-
-                renderRecords();
-                console.log('✅ Records Page loaded successfully!');
-                console.log('📊 ' + recordsData.length + ' records loaded.');
+                renderEfficiency();
+                console.log('✅ Efficiency Page loaded successfully!');
             });
+
+            window.refreshEfficiency = refreshEfficiency;
+            window.resetFilters = resetFilters;
 
         })();
     </script>
