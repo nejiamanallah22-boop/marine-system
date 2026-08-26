@@ -2,10 +2,9 @@
 <div id="page-monitoring">
     <style>
         /* ============================================================
-           📊 MONITORING PAGE - TRACKING + SESSIONS
+           MONITORING PAGE - TRACKING + SESSIONS
            ============================================================ */
 
-        /* ===== RESET & BASE ===== */
         #page-monitoring {
             width: 100%;
             max-width: 100%;
@@ -19,7 +18,6 @@
             z-index: 1;
         }
 
-        /* ===== BACKGROUND ===== */
         #page-monitoring::before {
             content: '';
             position: fixed;
@@ -39,14 +37,11 @@
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* ===== HEADER ===== */
         .mon-header {
             display: flex;
             justify-content: space-between;
@@ -60,7 +55,6 @@
             position: sticky;
             top: 64px;
             z-index: 10;
-            margin: 0;
             width: 100%;
         }
 
@@ -70,7 +64,7 @@
             gap: 14px;
         }
 
-        .mon-header-left .header-icon {
+        .mon-header-left .icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -133,6 +127,16 @@
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
         .btn-action.secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
@@ -144,37 +148,22 @@
             color: #fff;
         }
 
-        .btn-action.danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
-            color: #fff;
-        }
-
-        .btn-action.danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
-        }
-
-        /* ============================================================
-           STATS CARDS - DOUBLE ROW
-           ============================================================ */
+        /* ===== STATS ===== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 10px;
             padding: 12px 24px;
-            margin: 0;
             width: 100%;
         }
 
         .stat-card {
             background: rgba(255,255,255,0.04);
-            backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 12px;
             padding: 12px 14px;
             text-align: center;
             transition: all 0.3s;
-            cursor: default;
             position: relative;
             overflow: hidden;
         }
@@ -216,9 +205,7 @@
             font-weight: 500;
         }
 
-        /* ============================================================
-           MAP TYPE SELECTOR
-           ============================================================ */
+        /* ===== MAP TYPE ===== */
         .map-type-selector {
             display: flex;
             gap: 10px;
@@ -263,9 +250,7 @@
             color: #0a1628;
         }
 
-        /* ============================================================
-           MAP + SESSIONS - TWO COLUMNS
-           ============================================================ */
+        /* ===== GRID: MAP + SESSIONS ===== */
         .monitoring-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -280,15 +265,13 @@
             }
         }
 
-        /* ============================================================
-           MAP CONTAINER
-           ============================================================ */
+        /* ===== MAP ===== */
         .map-container {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 14px;
             overflow: hidden;
-            min-height: 450px;
+            min-height: 420px;
             position: relative;
         }
 
@@ -301,23 +284,27 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .map-container .section-title i {
             color: #e6b31e;
         }
 
+        .map-container .section-title .hint {
+            font-size: 10px;
+            color: rgba(255,255,255,0.15);
+            margin-right: auto;
+        }
+
         .map-container canvas {
             width: 100% !important;
-            height: 100% !important;
-            min-height: 420px;
+            min-height: 400px;
             display: block;
             cursor: pointer;
         }
 
-        /* ============================================================
-           SESSIONS TABLE CONTAINER
-           ============================================================ */
+        /* ===== SESSIONS ===== */
         .sessions-container {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.06);
@@ -342,7 +329,7 @@
             color: #a78bfa;
         }
 
-        .sessions-container .section-title .badge {
+        .badge {
             font-size: 10px;
             padding: 3px 12px;
             border-radius: 20px;
@@ -354,18 +341,13 @@
             color: #4ade80;
         }
 
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: #f5d76e;
-        }
-
         .badge.purple {
             background: rgba(167,139,250,0.12);
             color: #a78bfa;
         }
 
         .sessions-scroll {
-            max-height: 420px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 0 12px 12px;
         }
@@ -373,17 +355,11 @@
         .sessions-scroll::-webkit-scrollbar {
             width: 4px;
         }
-
-        .sessions-scroll::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.02);
-        }
-
         .sessions-scroll::-webkit-scrollbar-thumb {
             background: #a78bfa;
             border-radius: 10px;
         }
 
-        /* ===== SESSIONS TABLE ===== */
         .sessions-table {
             width: 100%;
             border-collapse: collapse;
@@ -412,7 +388,6 @@
         .sessions-table tbody td {
             padding: 6px 4px;
             border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
             color: rgba(255,255,255,0.5);
             font-size: 0.7rem;
             text-align: center;
@@ -453,7 +428,7 @@
             color: #f87171;
         }
 
-        /* ===== USER DETAILS PANEL ===== */
+        /* ===== USER PANEL ===== */
         .user-panel {
             display: none;
             position: fixed;
@@ -489,7 +464,6 @@
             color: rgba(255,255,255,0.3);
             font-size: 1.3rem;
             cursor: pointer;
-            transition: all 0.3s;
         }
 
         .user-panel .close-btn:hover {
@@ -563,9 +537,7 @@
             display: block;
         }
 
-        /* ============================================================
-           TOAST
-           ============================================================ */
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -593,9 +565,7 @@
             border: 1px solid rgba(9,132,227,0.2);
         }
 
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .mon-header { padding: 12px 16px; top: 56px; flex-direction: column; align-items: flex-start; }
             .mon-header-left { width: 100%; }
@@ -610,9 +580,8 @@
             .monitoring-grid { padding: 10px 16px; gap: 12px; }
             .map-container { min-height: 300px; }
             .map-container canvas { min-height: 280px; }
-            .sessions-scroll { max-height: 300px; }
+            .sessions-scroll { max-height: 280px; }
             .sessions-table { font-size: 0.65rem; }
-            .sessions-table thead th, .sessions-table tbody td { padding: 4px 3px; }
             .user-panel { padding: 16px 20px; max-width: 95%; }
         }
 
@@ -622,177 +591,101 @@
             .stat-card .number { font-size: 16px; }
             .map-container { min-height: 250px; }
             .map-container canvas { min-height: 230px; }
-            .sessions-scroll { max-height: 250px; }
-            .mon-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
+            .sessions-scroll { max-height: 230px; }
+            .mon-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
             .mon-header-left h2 { font-size: 14px; }
-            .mon-header-left p { font-size: 10px; }
             .sessions-table { font-size: 0.6rem; }
             .sessions-table thead th, .sessions-table tbody td { padding: 3px 2px; }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
+    <!-- ===== HEADER ===== -->
     <div class="mon-header">
         <div class="mon-header-left">
-            <div class="header-icon">
-                <i class="fas fa-eye"></i>
-            </div>
+            <div class="icon"><i class="fas fa-eye"></i></div>
             <div>
                 <h2>المراقبة الشاملة</h2>
-                <p>تتبع المستخدمين + جلسات النشاط في صفحة واحدة</p>
+                <p>تتبع المستخدمين + جلسات النشاط</p>
             </div>
         </div>
         <div class="mon-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
-                <i class="fas fa-sync-alt"></i> تحديث الكل
-            </button>
-            <button class="btn-action danger" id="terminateAllBtn">
-                <i class="fas fa-power-off"></i> إنهاء الكل
-            </button>
-            <button class="btn-action secondary" onclick="window.print()">
-                <i class="fas fa-print"></i> طباعة
-            </button>
+            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action danger" id="terminateAllBtn"><i class="fas fa-power-off"></i> إنهاء الكل</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS - BOTH TRACKING + SESSIONS
-    ============================================================ -->
+    <!-- ===== STATS ===== -->
     <div class="stats-grid" id="monitoringStats">
-        <div class="stat-card">
-            <div class="number gold" id="totalUsers">0</div>
-            <div class="label">👥 إجمالي المستخدمين</div>
-        </div>
-        <div class="stat-card">
-            <div class="number green" id="activeNow">0</div>
-            <div class="label">🟢 نشط الآن</div>
-        </div>
-        <div class="stat-card">
-            <div class="number blue" id="readyUsers">0</div>
-            <div class="label">✅ جاهز</div>
-        </div>
-        <div class="stat-card">
-            <div class="number red" id="busyUsers">0</div>
-            <div class="label">🔴 مشغول</div>
-        </div>
-        <div class="stat-card">
-            <div class="number pink" id="offlineUsers">0</div>
-            <div class="label">⚫ غير متصل</div>
-        </div>
-        <div class="stat-card">
-            <div class="number purple" id="totalSessions">0</div>
-            <div class="label">🟣 جلسات نشطة</div>
-        </div>
+        <div class="stat-card"><div class="number gold" id="totalUsers">0</div><div class="label">👥 المستخدمين</div></div>
+        <div class="stat-card"><div class="number green" id="activeNow">0</div><div class="label">🟢 نشط</div></div>
+        <div class="stat-card"><div class="number blue" id="readyUsers">0</div><div class="label">✅ جاهز</div></div>
+        <div class="stat-card"><div class="number red" id="busyUsers">0</div><div class="label">🔴 مشغول</div></div>
+        <div class="stat-card"><div class="number pink" id="offlineUsers">0</div><div class="label">⚫ غير متصل</div></div>
+        <div class="stat-card"><div class="number purple" id="totalSessions">0</div><div class="label">🟣 جلسات نشطة</div></div>
     </div>
 
-    <!-- ============================================================
-    MAP TYPE SELECTOR
-    ============================================================ -->
+    <!-- ===== MAP TYPE ===== -->
     <div class="map-type-selector">
         <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
-        <button class="map-type-btn active" data-type="satellite">
-            <i class="fas fa-satellite"></i> قمر صناعي
-        </button>
-        <button class="map-type-btn" data-type="terrain">
-            <i class="fas fa-mountain"></i> تضاريس
-        </button>
-        <button class="map-type-btn" data-type="hybrid">
-            <i class="fas fa-layer-group"></i> هجين
-        </button>
+        <button class="map-type-btn active" data-type="satellite"><i class="fas fa-satellite"></i> قمر صناعي</button>
+        <button class="map-type-btn" data-type="terrain"><i class="fas fa-mountain"></i> تضاريس</button>
+        <button class="map-type-btn" data-type="hybrid"><i class="fas fa-layer-group"></i> هجين</button>
     </div>
 
-    <!-- ============================================================
-    GRID: MAP + SESSIONS
-    ============================================================ -->
+    <!-- ===== GRID ===== -->
     <div class="monitoring-grid">
-        <!-- ===== MAP ===== -->
+        <!-- MAP -->
         <div class="map-container">
             <div class="section-title">
                 <i class="fas fa-map-marked-alt"></i> مواقع المستخدمين
-                <span style="font-size:10px;color:rgba(255,255,255,0.15);margin-right:auto;">🖱️ اضغط على أي نقطة للتفاصيل</span>
+                <span class="hint">🖱️ اضغط على النقطة للتفاصيل</span>
             </div>
             <canvas id="trackingMap"></canvas>
         </div>
 
-        <!-- ===== SESSIONS ===== -->
+        <!-- SESSIONS -->
         <div class="sessions-container">
             <div class="section-title">
-                <span><i class="fas fa-list-ul"></i> جلسات المستخدمين النشطة</span>
+                <span><i class="fas fa-list-ul"></i> الجلسات النشطة</span>
                 <span class="badge purple" id="sessionBadge">📊 جاري التحميل...</span>
             </div>
             <div class="sessions-scroll" id="sessionsScroll">
                 <table class="sessions-table">
-                    <thead>
-                        <tr>
-                            <th>المستخدم</th>
-                            <th>البريد</th>
-                            <th>المدة</th>
-                            <th>الحالة</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>المستخدم</th><th>البريد</th><th>المدة</th><th>الحالة</th></tr></thead>
                     <tbody id="sessionsBody">
-                        <tr>
-                            <td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">
-                                <span style="font-size:2rem;display:block;margin-bottom:8px;">⏳</span>
-                                جاري تحميل الجلسات...
-                            </td>
-                        </tr>
+                        <tr><td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ============================================================
-    USER DETAILS PANEL
-    ============================================================ -->
+    <!-- ===== USER PANEL ===== -->
     <div class="panel-overlay" id="panelOverlay"></div>
     <div class="user-panel" id="userPanel">
         <button class="close-btn" id="closePanelBtn">✕</button>
         <div class="user-avatar" id="panelAvatar">👤</div>
-        <div class="user-name" id="panelName">اسم المستخدم</div>
-        <div class="user-role" id="panelRole">الدور</div>
-        <div class="detail-row">
-            <span class="label">🆔 المعرف</span>
-            <span class="value gold" id="panelId">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📍 الموقع</span>
-            <span class="value" id="panelLocation">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📌 الإحداثيات</span>
-            <span class="value" id="panelCoords">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">🟢 الحالة</span>
-            <span class="value" id="panelStatus">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">⚡ الجاهزية</span>
-            <span class="value" id="panelReadiness">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📅 آخر نشاط</span>
-            <span class="value" id="panelLastActive">-</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📧 البريد الإلكتروني</span>
-            <span class="value" id="panelEmail">-</span>
-        </div>
+        <div class="user-name" id="panelName">-</div>
+        <div class="user-role" id="panelRole">-</div>
+        <div class="detail-row"><span class="label">🆔 المعرف</span><span class="value gold" id="panelId">-</span></div>
+        <div class="detail-row"><span class="label">📍 الموقع</span><span class="value" id="panelLocation">-</span></div>
+        <div class="detail-row"><span class="label">📌 الإحداثيات</span><span class="value" id="panelCoords">-</span></div>
+        <div class="detail-row"><span class="label">🟢 الحالة</span><span class="value" id="panelStatus">-</span></div>
+        <div class="detail-row"><span class="label">⚡ الجاهزية</span><span class="value" id="panelReadiness">-</span></div>
+        <div class="detail-row"><span class="label">📅 آخر نشاط</span><span class="value" id="panelLastActive">-</span></div>
+        <div class="detail-row"><span class="label">📧 البريد</span><span class="value" id="panelEmail">-</span></div>
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - COMPLETE
+    JAVASCRIPT
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // ============================================================
-            // DATA - USERS + SESSIONS
+            // DATA
             // ============================================================
             var usersData = [
                 { id: 1, name: 'أحمد محمد', role: 'إداري', email: 'ahmed@marine.tn', lat: 36.8065, lng: 10.1815, status: 'نشط', readiness: 'جاهز', location: 'تونس - المركز', lastActive: '2026-08-26 10:30' },
@@ -826,7 +719,7 @@
             var currentMapType = 'satellite';
             var canvas = document.getElementById('trackingMap');
             var ctx = canvas.getContext('2d');
-            var animationId = null;
+            var animId = null;
 
             // ============================================================
             // HELPERS
@@ -838,43 +731,36 @@
                 return name.slice(0, 2);
             }
 
-            function getColorByStatus(status, readiness) {
-                if (status === 'غير متصل') return '#6b7280';
-                if (readiness === 'جاهز') return '#22c55e';
-                if (readiness === 'مشغول') return '#ef4444';
+            function getColor(user) {
+                if (user.status === 'غير متصل') return '#6b7280';
+                if (user.readiness === 'جاهز') return '#22c55e';
+                if (user.readiness === 'مشغول') return '#ef4444';
                 return '#fbbf24';
             }
 
-            function getStatusBadge(status) {
-                return status === 'نشط' ? '🟢 نشط' : '⚫ غير متصل';
-            }
+            function getStatusBadge(s) { return s === 'نشط' ? '🟢 نشط' : '⚫ غير متصل'; }
+            function getStatusClass(s) { return s === 'نشط' ? 'green' : 'red'; }
 
-            function getReadinessBadge(readiness) {
+            function getReadinessBadge(r) {
                 var map = { 'جاهز': '✅ جاهز', 'مشغول': '🔴 مشغول', 'غير جاهز': '⚫ غير جاهز' };
-                return map[readiness] || readiness;
+                return map[r] || r;
             }
-
-            function getStatusClass(status) {
-                return status === 'نشط' ? 'green' : 'red';
-            }
-
-            function getReadinessClass(readiness) {
+            function getReadinessClass(r) {
                 var map = { 'جاهز': 'green', 'مشغول': 'red', 'غير جاهز': 'pink' };
-                return map[readiness] || '';
+                return map[r] || '';
             }
 
-            function getSessionStatusClass(status) {
+            function getSessionClass(s) {
                 var map = { 'نشطة': 'active', 'منتهية': 'expired', 'ملغاة': 'terminated' };
-                return map[status] || '';
+                return map[s] || '';
             }
-
-            function getSessionStatusLabel(status) {
+            function getSessionLabel(s) {
                 var map = { 'نشطة': '🟢 نشطة', 'منتهية': '🟡 منتهية', 'ملغاة': '🔴 ملغاة' };
-                return map[status] || status;
+                return map[s] || s;
             }
 
             // ============================================================
-            // UPDATE STATS
+            // STATS
             // ============================================================
             function updateStats() {
                 var total = usersData.length;
@@ -907,7 +793,7 @@
             function drawMap() {
                 var rect = canvas.parentElement.getBoundingClientRect();
                 var width = rect.width - 2;
-                var height = Math.max(420, window.innerHeight * 0.45);
+                var height = Math.max(400, window.innerHeight * 0.42);
 
                 canvas.width = width * 2;
                 canvas.height = height * 2;
@@ -915,29 +801,25 @@
                 canvas.style.height = height + 'px';
                 ctx.scale(2, 2);
 
-                // ===== BACKGROUND =====
-                var gradient = ctx.createLinearGradient(0, 0, 0, height);
+                // Background
+                var grad = ctx.createLinearGradient(0, 0, 0, height);
                 if (currentMapType === 'satellite') {
-                    gradient.addColorStop(0, '#0a1628');
-                    gradient.addColorStop(0.3, '#1a2a4a');
-                    gradient.addColorStop(0.6, '#2d4a6a');
-                    gradient.addColorStop(1, '#1a3a4a');
+                    grad.addColorStop(0, '#0a1628');
+                    grad.addColorStop(0.5, '#1a2a4a');
+                    grad.addColorStop(1, '#1a3a4a');
                 } else if (currentMapType === 'terrain') {
-                    gradient.addColorStop(0, '#1a1a0a');
-                    gradient.addColorStop(0.3, '#3a2a1a');
-                    gradient.addColorStop(0.6, '#2a4a2a');
-                    gradient.addColorStop(1, '#1a3a2a');
+                    grad.addColorStop(0, '#1a1a0a');
+                    grad.addColorStop(0.5, '#2a4a2a');
+                    grad.addColorStop(1, '#1a3a2a');
                 } else {
-                    gradient.addColorStop(0, '#0a1628');
-                    gradient.addColorStop(0.3, '#1a2a4a');
-                    gradient.addColorStop(0.6, '#0a2a5a');
-                    gradient.addColorStop(1, '#0a1a3a');
+                    grad.addColorStop(0, '#0a1628');
+                    grad.addColorStop(0.5, '#1a2a5a');
+                    grad.addColorStop(1, '#0a1a3a');
                 }
-
-                ctx.fillStyle = gradient;
+                ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, width, height);
 
-                // ===== GRID =====
+                // Grid
                 ctx.strokeStyle = 'rgba(255,255,255,0.03)';
                 ctx.lineWidth = 1;
                 for (var gx = 0; gx < width; gx += 50) {
@@ -953,23 +835,24 @@
                     ctx.stroke();
                 }
 
-                // ===== BOUNDS (TUNISIA) =====
-                var minLat = 32.5, maxLat = 37.5, minLng = 8.0, maxLng = 12.0;
-                var latRange = maxLat - minLat;
-                var lngRange = maxLng - minLng;
+                // Tunisia bounds
+                var minLat = 32.5,
+                    maxLat = 37.5,
+                    minLng = 8.0,
+                    maxLng = 12.0;
+                var latR = maxLat - minLat,
+                    lngR = maxLng - minLng;
 
-                // ===== DRAW USERS =====
-                var radius = 16;
-
+                // Draw users
+                var radius = 15;
                 usersData.forEach(function(user) {
-                    var x = ((user.lng - minLng) / lngRange) * width;
-                    var y = ((maxLat - user.lat) / latRange) * height;
-
+                    var x = ((user.lng - minLng) / lngR) * width;
+                    var y = ((maxLat - user.lat) / latR) * height;
                     if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
 
-                    var color = getColorByStatus(user.status, user.readiness);
+                    var color = getColor(user);
 
-                    // ===== GLOW =====
+                    // Glow
                     var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
                     glow.addColorStop(0, color + '44');
                     glow.addColorStop(1, color + '00');
@@ -978,46 +861,45 @@
                     ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // ===== PULSE =====
-                    var pulseSize = radius * 1.5 + Math.sin(Date.now() / 800 + user.id * 1.5) * 4;
+                    // Pulse
+                    var pulse = radius * 1.5 + Math.sin(Date.now() / 800 + user.id * 1.5) * 4;
                     ctx.strokeStyle = color + '77';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+                    ctx.arc(x, y, pulse, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // ===== CIRCLE =====
-                    var grad = ctx.createRadialGradient(x - 3, y - 3, 0, x, y, radius);
-                    grad.addColorStop(0, '#ffffff');
-                    grad.addColorStop(0.2, color);
-                    grad.addColorStop(1, color + 'aa');
-                    ctx.fillStyle = grad;
+                    // Circle
+                    var cg = ctx.createRadialGradient(x - 3, y - 3, 0, x, y, radius);
+                    cg.addColorStop(0, '#ffffff');
+                    cg.addColorStop(0.2, color);
+                    cg.addColorStop(1, color + 'aa');
+                    ctx.fillStyle = cg;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // ===== BORDER =====
                     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // ===== INITIALS =====
+                    // Initials
                     ctx.fillStyle = '#0a1628';
                     ctx.font = 'bold 11px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(getInitials(user.name), x, y + 1);
 
-                    // ===== NAME =====
+                    // Name
                     ctx.fillStyle = 'rgba(255,255,255,0.8)';
                     ctx.font = '9px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
                     ctx.fillText(user.name, x, y - radius - 4);
 
-                    // ===== STATUS DOT =====
+                    // Status dot
                     var dotColor = user.status === 'نشط' ? '#22c55e' : '#6b7280';
                     ctx.fillStyle = dotColor;
                     ctx.shadowColor = dotColor + '66';
@@ -1027,7 +909,7 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
 
-                    // ===== READINESS ICON =====
+                    // Readiness icon
                     ctx.font = '9px Cairo, sans-serif';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
@@ -1035,47 +917,43 @@
                     ctx.fillStyle = 'rgba(255,255,255,0.6)';
                     ctx.fillText(icon, x + radius + 12, y - radius + 6);
 
-                    // Store for click detection
                     user._x = x;
                     user._y = y;
-                    user._radius = radius;
                 });
 
-                // ===== LEGEND =====
-                var lx = 10, ly = 10;
+                // Legend
+                var lx = 10,
+                    ly = 10;
                 ctx.fillStyle = 'rgba(0,0,0,0.5)';
                 ctx.beginPath();
-                ctx.roundRect(lx, ly, 150, 100, 8);
+                ctx.roundRect(lx, ly, 140, 90, 8);
                 ctx.fill();
 
-                var legendItems = [
+                var items = [
                     { color: '#22c55e', label: '🟢 جاهز' },
                     { color: '#ef4444', label: '🔴 مشغول' },
                     { color: '#6b7280', label: '⚫ غير متصل' }
                 ];
-
                 ctx.font = '9px Cairo, sans-serif';
-                legendItems.forEach(function(item, idx) {
-                    var yPos = ly + 18 + idx * 26;
+                items.forEach(function(item, idx) {
+                    var yp = ly + 16 + idx * 24;
                     ctx.fillStyle = item.color;
                     ctx.beginPath();
-                    ctx.arc(lx + 130, yPos, 5, 0, Math.PI * 2);
+                    ctx.arc(lx + 120, yp, 5, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.fillStyle = 'rgba(255,255,255,0.5)';
                     ctx.textAlign = 'right';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(item.label, lx + 123, yPos);
+                    ctx.fillText(item.label, lx + 113, yp);
                 });
 
-                // ===== MAP TYPE =====
-                var typeLabels = { 'satellite': '🛰️', 'terrain': '⛰️', 'hybrid': '🔀' };
+                // Info
+                var labels = { 'satellite': '🛰️', 'terrain': '⛰️', 'hybrid': '🔀' };
                 ctx.fillStyle = 'rgba(255,255,255,0.08)';
                 ctx.font = '10px Cairo, sans-serif';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'bottom';
-                ctx.fillText(typeLabels[currentMapType] || '', 10, height - 10);
-
-                // ===== USERS COUNT =====
+                ctx.fillText(labels[currentMapType] || '', 10, height - 10);
                 ctx.fillStyle = 'rgba(255,255,255,0.08)';
                 ctx.font = '9px Cairo, sans-serif';
                 ctx.textAlign = 'right';
@@ -1083,11 +961,11 @@
             }
 
             // ============================================================
-            // ANIMATION LOOP
+            // ANIMATE
             // ============================================================
-            function animateMap() {
+            function animate() {
                 drawMap();
-                animationId = requestAnimationFrame(animateMap);
+                animId = requestAnimationFrame(animate);
             }
 
             // ============================================================
@@ -1097,29 +975,24 @@
                 var rect = canvas.getBoundingClientRect();
                 var scaleX = canvas.width / (rect.width * 2);
                 var scaleY = canvas.height / (rect.height * 2);
-                var mouseX = (e.clientX - rect.left) * scaleX;
-                var mouseY = (e.clientY - rect.top) * scaleY;
+                var mx = (e.clientX - rect.left) * scaleX;
+                var my = (e.clientY - rect.top) * scaleY;
 
-                var found = null;
-                var minDist = 35;
+                var found = null,
+                    minD = 35;
                 usersData.forEach(function(user) {
                     if (user._x === undefined) return;
-                    var dist = Math.sqrt(Math.pow(mouseX - user._x, 2) + Math.pow(mouseY - user._y, 2));
-                    if (dist < minDist) {
-                        minDist = dist;
-                        found = user;
-                    }
+                    var d = Math.sqrt(Math.pow(mx - user._x, 2) + Math.pow(my - user._y, 2));
+                    if (d < minD) { minD = d;
+                        found = user; }
                 });
-
-                if (found) {
-                    showUserPanel(found);
-                }
+                if (found) showPanel(found);
             });
 
             // ============================================================
             // USER PANEL
             // ============================================================
-            function showUserPanel(user) {
+            function showPanel(user) {
                 document.getElementById('panelOverlay').classList.add('visible');
                 document.getElementById('userPanel').classList.add('visible');
 
@@ -1130,19 +1003,19 @@
                 document.getElementById('panelLocation').textContent = user.location;
                 document.getElementById('panelCoords').textContent = user.lat + '°, ' + user.lng + '°';
 
-                var statusEl = document.getElementById('panelStatus');
-                statusEl.textContent = getStatusBadge(user.status);
-                statusEl.className = 'value ' + getStatusClass(user.status);
+                var se = document.getElementById('panelStatus');
+                se.textContent = getStatusBadge(user.status);
+                se.className = 'value ' + getStatusClass(user.status);
 
-                var readinessEl = document.getElementById('panelReadiness');
-                readinessEl.textContent = getReadinessBadge(user.readiness);
-                readinessEl.className = 'value ' + getReadinessClass(user.readiness);
+                var re = document.getElementById('panelReadiness');
+                re.textContent = getReadinessBadge(user.readiness);
+                re.className = 'value ' + getReadinessClass(user.readiness);
 
-                document.getElementById('panelLastActive').textContent = user.lastActive || 'غير معروف';
+                document.getElementById('panelLastActive').textContent = user.lastActive || '-';
                 document.getElementById('panelEmail').textContent = user.email;
             }
 
-            function closeUserPanel() {
+            function closePanel() {
                 document.getElementById('panelOverlay').classList.remove('visible');
                 document.getElementById('userPanel').classList.remove('visible');
             }
@@ -1152,34 +1025,21 @@
             // ============================================================
             function renderSessions() {
                 var tbody = document.getElementById('sessionsBody');
-                var activeSessions = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
+                var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
 
-                if (activeSessions.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">
-                                <span style="font-size:2rem;display:block;margin-bottom:8px;">🟢</span>
-                                لا توجد جلسات نشطة حالياً
-                            </td>
-                        </tr>
-                    `;
+                if (active.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">🟢 لا توجد جلسات نشطة</td></tr>';
                     return;
                 }
 
                 var html = '';
-                activeSessions.forEach(function(s) {
-                    var statusClass = getSessionStatusClass(s.status);
-                    var statusLabel = getSessionStatusLabel(s.status);
-                    html += `
-                        <tr>
-                            <td class="user-name">${s.user}</td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.email}</td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.duration}</td>
-                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
-                        </tr>
-                    `;
+                active.forEach(function(s) {
+                    html += '<tr><td class="user-name">' + s.user + '</td><td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' +
+                        s.email + '</td><td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' + s.duration +
+                        '</td><td><span class="status-badge ' + getSessionClass(s.status) + '">' + getSessionLabel(s
+                        .status) + '</span></td></tr>';
                 });
-
                 tbody.innerHTML = html;
             }
 
@@ -1188,69 +1048,61 @@
             // ============================================================
             function refreshAll() {
                 var btn = document.getElementById('refreshBtn');
-                var original = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
                 btn.disabled = true;
-
                 setTimeout(function() {
                     updateStats();
                     renderSessions();
-                    btn.innerHTML = original;
+                    btn.innerHTML = orig;
                     btn.disabled = false;
-                    showToast('✅ تم تحديث جميع البيانات بنجاح', 'success');
-                }, 600);
+                    showToast('✅ تم التحديث', 'success');
+                }, 500);
             }
 
-            function terminateAllSessions() {
-                if (confirm('⚠️ هل أنت متأكد من إنهاء جميع الجلسات النشطة؟')) {
-                    var activeSessions = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
-                    if (activeSessions.length === 0) {
-                        showToast('ℹ️ لا توجد جلسات نشطة لإنهائها', 'info');
-                        return;
-                    }
-                    activeSessions.forEach(function(s) { s.status = 'ملغاة'; });
-                    updateStats();
-                    renderSessions();
-                    showToast('✅ تم إنهاء ' + activeSessions.length + ' جلسات بنجاح', 'success');
-                }
+            function terminateAll() {
+                if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
+                var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
+                if (active.length === 0) { showToast('ℹ️ لا توجد جلسات', 'info'); return; }
+                active.forEach(function(s) { s.status = 'ملغاة'; });
+                updateStats();
+                renderSessions();
+                showToast('✅ تم إنهاء ' + active.length + ' جلسات', 'success');
             }
 
             function switchMapType(type) {
                 currentMapType = type;
-                document.querySelectorAll('.map-type-btn').forEach(function(btn) {
-                    btn.classList.toggle('active', btn.dataset.type === type);
+                document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                    b.classList.toggle('active', b.dataset.type === type);
                 });
             }
 
             // ============================================================
             // TOAST
             // ============================================================
-            function showToast(message, type) {
+            function showToast(msg, type) {
                 var old = document.querySelector('.toast');
                 if (old) old.remove();
-
-                var notif = document.createElement('div');
-                notif.className = 'toast toast-' + (type || 'info');
-                notif.textContent = message;
-                document.body.appendChild(notif);
-
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
                 setTimeout(function() {
-                    notif.style.opacity = '0';
-                    notif.style.transform = 'translateY(20px)';
-                    notif.style.transition = 'all 0.4s ease-out';
-                    setTimeout(function() { notif.remove(); }, 400);
-                }, 3000);
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
             }
 
             // ============================================================
             // INIT
             // ============================================================
             function init() {
-                // RoundRect polyfill
                 if (!CanvasRenderingContext2D.prototype.roundRect) {
                     CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-                        if (r > w/2) r = w/2;
-                        if (r > h/2) r = h/2;
+                        if (r > w / 2) r = w / 2;
+                        if (r > h / 2) r = h / 2;
                         this.moveTo(x + r, y);
                         this.lineTo(x + w - r, y);
                         this.quadraticCurveTo(x + w, y, x + w, y + r);
@@ -1266,34 +1118,26 @@
 
                 updateStats();
                 renderSessions();
-                animateMap();
+                animate();
 
-                // ===== EVENTS =====
                 document.getElementById('refreshBtn').addEventListener('click', refreshAll);
-                document.getElementById('terminateAllBtn').addEventListener('click', terminateAllSessions);
-                document.getElementById('closePanelBtn').addEventListener('click', closeUserPanel);
-                document.getElementById('panelOverlay').addEventListener('click', closeUserPanel);
+                document.getElementById('terminateAllBtn').addEventListener('click', terminateAll);
+                document.getElementById('closePanelBtn').addEventListener('click', closePanel);
+                document.getElementById('panelOverlay').addEventListener('click', closePanel);
 
-                document.querySelectorAll('.map-type-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        switchMapType(this.dataset.type);
-                    });
+                document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                    b.addEventListener('click', function() { switchMapType(this.dataset.type); });
                 });
 
-                // Resize
-                var resizeTimer;
+                var timer;
                 window.addEventListener('resize', function() {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function() {
-                        drawMap();
-                    }, 300);
+                    clearTimeout(timer);
+                    timer = setTimeout(drawMap, 300);
                 });
 
-                console.log('✅ Monitoring Page loaded successfully!');
-                console.log('📍 ' + usersData.length + ' users on map');
+                console.log('✅ Monitoring Page loaded');
+                console.log('📍 ' + usersData.length + ' users');
                 console.log('🟣 ' + sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length + ' active sessions');
-                console.log('🗺️ 3 map types: satellite, terrain, hybrid');
-                console.log('💡 Click on any user on map to see details');
             }
 
             document.addEventListener('DOMContentLoaded', init);
