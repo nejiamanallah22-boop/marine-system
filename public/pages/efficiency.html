@@ -1,0 +1,1046 @@
+<!-- public/pages/records.html -->
+<div id="page-records">
+    <style>
+        #page-records {
+            width: 100%;
+            max-width: 100%;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== HEADER ===== */
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .rec-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .rec-header-left .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0984e3, #e6b31e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+        }
+
+        .rec-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .rec-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .rec-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, #0984e3, #60a5fa);
+            color: #fff;
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(9,132,227,0.35);
+        }
+
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        .btn-action.export {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            color: #0a1628;
+        }
+
+        .btn-action.export:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ===== STATS ===== */
+        .rec-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0984e3, #e6b31e);
+            opacity: 0.6;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #60a5fa;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: #f5d76e; }
+        .stat-card .number.green { color: #4ade80; }
+        .stat-card .number.red { color: #f87171; }
+        .stat-card .number.purple { color: #a78bfa; }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+
+        /* ===== FILTER BAR ===== */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            min-width: 120px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .filter-bar select:focus,
+        .filter-bar input:focus {
+            outline: none;
+            border-color: #0984e3;
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar input[type="date"] {
+            min-width: 140px;
+            color-scheme: dark;
+        }
+
+        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6);
+            cursor: pointer;
+        }
+
+        .btn-filter {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-filter.primary {
+            background: linear-gradient(135deg, #0984e3, #60a5fa);
+            color: #fff;
+        }
+
+        .btn-filter.primary:hover {
+            transform: scale(1.04);
+        }
+
+        .btn-filter.outline {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ===== SECTION ===== */
+        .rec-section {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header h3 i {
+            color: #0984e3;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge.blue {
+            background: rgba(9,132,227,0.12);
+            color: #60a5fa;
+        }
+
+        .badge.gold {
+            background: rgba(230,179,30,0.12);
+            color: #f5d76e;
+        }
+
+        .badge.success {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .badge.danger {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 16px 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 800px;
+        }
+
+        thead {
+            background: rgba(9,132,227,0.08);
+            border-bottom: 2px solid rgba(9,132,227,0.08);
+        }
+
+        thead th {
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        thead th i {
+            margin-left: 4px;
+            color: #0984e3;
+        }
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-badge.completed {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+            animation: pulseProgress 2s infinite;
+        }
+
+        @keyframes pulseProgress {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .status-badge.pending {
+            background: rgba(9,132,227,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.cancelled {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.overdue {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+            animation: pulseDanger 1.5s infinite;
+        }
+
+        @keyframes pulseDanger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ===== PRIORITY ===== */
+        .priority-high {
+            border-right: 3px solid #ef4444;
+        }
+
+        .priority-medium {
+            border-right: 3px solid #fbbf24;
+        }
+
+        .priority-low {
+            border-right: 3px solid #4ade80;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btn {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn.view {
+            background: rgba(9,132,227,0.1);
+            color: #60a5fa;
+        }
+
+        .action-btn.view:hover {
+            background: rgba(9,132,227,0.2);
+        }
+
+        .action-btn.edit {
+            background: rgba(230,179,30,0.1);
+            color: #f5d76e;
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(230,179,30,0.2);
+        }
+
+        .action-btn.delete {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pagination .info {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.25);
+        }
+
+        .pagination .pages {
+            display: flex;
+            gap: 4px;
+        }
+
+        .page-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #0984e3, #60a5fa);
+            border-color: #0984e3;
+            color: #fff;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.15);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 4rem;
+            color: rgba(255,255,255,0.04);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.1);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            #page-records { padding: 12px; }
+            .rec-header { flex-direction: column; align-items: flex-start; }
+            .rec-header-left { width: 100%; }
+            .rec-header-left h2 { font-size: 16px; }
+            .rec-header-actions { width: 100%; }
+            .rec-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-card .number { font-size: 20px; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .table-wrapper { padding: 12px; }
+            table { font-size: 0.7rem; min-width: 600px; }
+            thead th, tbody td { padding: 6px 8px; }
+            .pagination { flex-direction: column; align-items: center; }
+        }
+
+        @media (max-width: 480px) {
+            .rec-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .rec-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .rec-header-left h2 { font-size: 14px; }
+            .section-header h3 { font-size: 13px; }
+            thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
+            .action-btn { padding: 2px 6px; font-size: 0.55rem; }
+        }
+    </style>
+
+    <!-- ===== HEADER ===== -->
+    <div class="rec-header">
+        <div class="rec-header-left">
+            <div class="icon">
+                <i class="fas fa-history"></i>
+            </div>
+            <div>
+                <h2>سجل الصيانة والتاريخي</h2>
+                <p>أرشيف كامل لعمليات الصيانة والتدخلات الفنية</p>
+            </div>
+        </div>
+        <div class="rec-header-actions">
+            <button class="btn-action primary" id="refreshBtn">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+            <button class="btn-action export" id="exportBtn">
+                <i class="fas fa-file-excel"></i> تصدير
+            </button>
+            <button class="btn-action secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== STATS ===== -->
+    <div class="rec-stats" id="recordsStats">
+        <div class="stat-card">
+            <div class="number" id="totalRecords">0</div>
+            <div class="label">📋 إجمالي السجلات</div>
+        </div>
+        <div class="stat-card">
+            <div class="number gold" id="pendingRecords">0</div>
+            <div class="label">⏳ قيد الانتظار</div>
+        </div>
+        <div class="stat-card">
+            <div class="number green" id="completedRecords">0</div>
+            <div class="label">✅ مكتملة</div>
+        </div>
+        <div class="stat-card">
+            <div class="number red" id="overdueRecords">0</div>
+            <div class="label">🚨 متأخرة</div>
+        </div>
+        <div class="stat-card">
+            <div class="number purple" id="inProgressRecords">0</div>
+            <div class="label">⚡ قيد التنفيذ</div>
+        </div>
+    </div>
+
+    <!-- ===== FILTER BAR ===== -->
+    <div class="filter-bar">
+        <label><i class="fas fa-search"></i> بحث</label>
+        <input type="text" id="searchRecords" placeholder="رقم المركب، الفئة..." />
+
+        <label><i class="fas fa-ship"></i> المركب</label>
+        <select id="fVesselRec">
+            <option value="الكل">🚢 جميع المراكب</option>
+            <option value="البروق 01">البروق 01</option>
+            <option value="البروق 02">البروق 02</option>
+            <option value="البروق 05">البروق 05</option>
+            <option value="صقر 03">صقر 03</option>
+            <option value="صقر 08">صقر 08</option>
+            <option value="خافرة 07">خافرة 07</option>
+            <option value="خافرة 11">خافرة 11</option>
+            <option value="زورق مزدوج 12">زورق مزدوج 12</option>
+            <option value="طوافة 14">طوافة 14</option>
+        </select>
+
+        <label><i class="fas fa-tag"></i> الفئة</label>
+        <select id="fCatRec">
+            <option value="الكل">📦 جميع الفئات</option>
+            <option value="البروق">البروق</option>
+            <option value="صقور">صقور</option>
+            <option value="خوافر">خوافر</option>
+            <option value="زوارق مزدوجة">زوارق مزدوجة</option>
+            <option value="طوافات">طوافات</option>
+        </select>
+
+        <label><i class="fas fa-circle"></i> الحالة</label>
+        <select id="fStatusRec">
+            <option value="الكل">📊 جميع الحالات</option>
+            <option value="مكتملة">✅ مكتملة</option>
+            <option value="قيد التنفيذ">⚡ قيد التنفيذ</option>
+            <option value="قيد الانتظار">⏳ قيد الانتظار</option>
+            <option value="متأخرة">🚨 متأخرة</option>
+            <option value="ملغاة">❌ ملغاة</option>
+        </select>
+
+        <label><i class="fas fa-calendar-alt"></i> من</label>
+        <input type="date" id="fDateFrom" />
+        <label><i class="fas fa-calendar-alt"></i> إلى</label>
+        <input type="date" id="fDateTo" />
+
+        <button class="btn-filter primary" id="filterBtn">
+            <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-filter outline" id="resetBtn">
+            <i class="fas fa-undo-alt"></i> إلغاء
+        </button>
+    </div>
+
+    <!-- ===== TABLE ===== -->
+    <div class="rec-section">
+        <div class="section-header">
+            <h3><i class="fas fa-list-ul"></i> سجل عمليات الصيانة والتدخلات</h3>
+            <span class="badge blue" id="recordsBadge">📊 جاري التحميل...</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align:right;"><i class="fas fa-hashtag"></i> الرقم</th>
+                        <th style="text-align:right;"><i class="fas fa-ship"></i> المركب</th>
+                        <th><i class="fas fa-tag"></i> الفئة</th>
+                        <th><i class="fas fa-wrench"></i> نوع التدخل</th>
+                        <th><i class="fas fa-calendar-alt"></i> تاريخ البدء</th>
+                        <th><i class="fas fa-calendar-check"></i> تاريخ الانتهاء</th>
+                        <th><i class="fas fa-clock"></i> المدة</th>
+                        <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-cogs"></i> الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <tr>
+                        <td colspan="9" class="empty-state">
+                            <span class="empty-icon"><i class="fas fa-spinner fa-pulse"></i></span>
+                            <h3>جاري تحميل السجلات...</h3>
+                            <p>يرجى الانتظار</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span class="info" id="paginationInfo">عرض 1-10 من 0 سجل</span>
+            <div class="pages">
+                <button class="page-btn" id="prevPage">‹</button>
+                <button class="page-btn active" id="page1">1</button>
+                <button class="page-btn" id="page2">2</button>
+                <button class="page-btn" id="page3">3</button>
+                <button class="page-btn" id="nextPage">›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== DATA =====
+            var recordsData = [
+                { id: 'R-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10', endDate: '2026-05-12', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
+                { id: 'R-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15', endDate: '2026-06-20', status: 'قيد التنفيذ', priority: 'عالية', duration: '5 أيام' },
+                { id: 'R-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05', endDate: '2026-04-05', status: 'مكتملة', priority: 'متوسطة', duration: '1 يوم' },
+                { id: 'R-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15', endDate: '2026-03-25', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
+                { id: 'R-2026-005', vessel: 'البروق 05', category: 'البروق', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-03', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
+                { id: 'R-2026-006', vessel: 'صقر 08', category: 'صقور', type: 'استبدال قطع', startDate: '2026-05-20', endDate: '2026-05-28', status: 'قيد الانتظار', priority: 'متوسطة', duration: '8 أيام' },
+                { id: 'R-2026-007', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-02', status: 'مكتملة', priority: 'منخفضة', duration: '1 يوم' },
+                { id: 'R-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10', endDate: '2026-06-25', status: 'قيد التنفيذ', priority: 'عالية', duration: '15 أيام' },
+                { id: 'R-2026-009', vessel: 'طوافة 14', category: 'طوافات', type: 'فحص تقني', startDate: '2026-04-10', endDate: '2026-04-12', status: 'ملغاة', priority: 'منخفضة', duration: '2 أيام' },
+                { id: 'R-2026-010', vessel: 'البروق 09', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-05-18', endDate: '2026-05-22', status: 'مكتملة', priority: 'متوسطة', duration: '4 أيام' },
+                { id: 'R-2026-011', vessel: 'صقر 06', category: 'صقور', type: 'صيانة دورية', startDate: '2026-05-25', endDate: '2026-05-30', status: 'قيد الانتظار', priority: 'منخفضة', duration: '5 أيام' },
+                { id: 'R-2026-012', vessel: 'زورق مزدوج 22', category: 'زوارق مزدوجة', type: 'إصلاح عاجل', startDate: '2026-06-20', endDate: '2026-06-30', status: 'قيد التنفيذ', priority: 'عالية', duration: '10 أيام' },
+                { id: 'R-2026-013', vessel: 'خافرة 18', category: 'خوافر', type: 'استبدال قطع', startDate: '2026-03-05', endDate: '2026-03-15', status: 'متأخرة', priority: 'عالية', duration: '10 أيام' },
+                { id: 'R-2026-014', vessel: 'طوافة 25', category: 'طوافات', type: 'صيانة دورية', startDate: '2026-04-12', endDate: '2026-04-14', status: 'مكتملة', priority: 'منخفضة', duration: '2 أيام' },
+                { id: 'R-2026-015', vessel: 'صقر 20', category: 'صقور', type: 'إصلاح محرك', startDate: '2026-02-01', endDate: '2026-02-15', status: 'متأخرة', priority: 'عالية', duration: '14 أيام' }
+            ];
+
+            // ===== STATE =====
+            var filteredData = recordsData.slice();
+            var currentPage = 1;
+            var itemsPerPage = 5;
+
+            // ===== DOM REFS =====
+            var $ = function(id) { return document.getElementById(id); };
+
+            // ===== HELPERS =====
+            function formatDate(dateStr) {
+                var parts = dateStr.split('-');
+                return parts[2] + '/' + parts[1] + '/' + parts[0];
+            }
+
+            function getStatusClass(status) {
+                var map = {
+                    'مكتملة': 'completed',
+                    'قيد التنفيذ': 'in-progress',
+                    'قيد الانتظار': 'pending',
+                    'متأخرة': 'overdue',
+                    'ملغاة': 'cancelled'
+                };
+                return map[status] || '';
+            }
+
+            function getStatusLabel(status) {
+                var map = {
+                    'مكتملة': '✅ مكتملة',
+                    'قيد التنفيذ': '⚡ قيد التنفيذ',
+                    'قيد الانتظار': '⏳ قيد الانتظار',
+                    'متأخرة': '🚨 متأخرة',
+                    'ملغاة': '❌ ملغاة'
+                };
+                return map[status] || status;
+            }
+
+            function getPriorityClass(priority) {
+                var map = {
+                    'عالية': 'priority-high',
+                    'متوسطة': 'priority-medium',
+                    'منخفضة': 'priority-low'
+                };
+                return map[priority] || '';
+            }
+
+            // ===== RENDER =====
+            function renderRecords() {
+                renderStats();
+                renderTable();
+                renderPagination();
+            }
+
+            function renderStats() {
+                var total = recordsData.length;
+                var pending = recordsData.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
+                var completed = recordsData.filter(function(r) { return r.status === 'مكتملة'; }).length;
+                var overdue = recordsData.filter(function(r) { return r.status === 'متأخرة'; }).length;
+                var inProgress = recordsData.filter(function(r) { return r.status === 'قيد التنفيذ'; }).length;
+
+                $('totalRecords').textContent = total;
+                $('pendingRecords').textContent = pending;
+                $('completedRecords').textContent = completed;
+                $('overdueRecords').textContent = overdue;
+                $('inProgressRecords').textContent = inProgress;
+
+                var badge = $('recordsBadge');
+                if (overdue > 0) {
+                    badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
+                    badge.className = 'badge danger';
+                } else if (pending > 0) {
+                    badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
+                    badge.className = 'badge gold';
+                } else {
+                    badge.textContent = '✅ ' + completed + ' سجل مكتمل';
+                    badge.className = 'badge success';
+                }
+            }
+
+            function renderTable() {
+                var search = $('searchRecords').value.toLowerCase();
+                var vesselFilter = $('fVesselRec').value;
+                var categoryFilter = $('fCatRec').value;
+                var statusFilter = $('fStatusRec').value;
+                var dateFrom = $('fDateFrom').value;
+                var dateTo = $('fDateTo').value;
+
+                filteredData = recordsData.filter(function(r) {
+                    if (search && !r.id.toLowerCase().includes(search) && !r.vessel.includes(search) && !r.type.includes(search)) return false;
+                    if (vesselFilter !== 'الكل' && r.vessel !== vesselFilter) return false;
+                    if (categoryFilter !== 'الكل' && r.category !== categoryFilter) return false;
+                    if (statusFilter !== 'الكل' && r.status !== statusFilter) return false;
+                    if (dateFrom && r.startDate < dateFrom) return false;
+                    if (dateTo && r.startDate > dateTo) return false;
+                    return true;
+                });
+
+                var tbody = $('recordsBody');
+
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-search"></i></span>
+                                <h3>لا توجد سجلات مطابقة</h3>
+                                <p>حاول تغيير معايير البحث أو الفلترة</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+                var pageData = filteredData.slice(start, end);
+
+                var html = '';
+                for (var i = 0; i < pageData.length; i++) {
+                    var r = pageData[i];
+                    var statusClass = getStatusClass(r.status);
+                    var statusLabel = getStatusLabel(r.status);
+                    var priorityClass = getPriorityClass(r.priority);
+
+                    html += `
+                        <tr class="${priorityClass}">
+                            <td style="text-align:right;font-weight:600;color:#f5d76e;">${r.id}</td>
+                            <td style="text-align:right;font-weight:600;color:#fff;">${r.vessel}</td>
+                            <td>${r.category}</td>
+                            <td>${r.type}</td>
+                            <td>${formatDate(r.startDate)}</td>
+                            <td>${formatDate(r.endDate)}</td>
+                            <td>${r.duration}</td>
+                            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                            <td>
+                                <button class="action-btn view" onclick="viewRecord('${r.id}')"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn delete" onclick="deleteRecord('${r.id}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                tbody.innerHTML = html;
+                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' سجل';
+            }
+
+            function renderPagination() {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                $('prevPage').disabled = currentPage <= 1;
+                $('nextPage').disabled = currentPage >= totalPages;
+
+                for (var i = 1; i <= 3; i++) {
+                    var btn = $('page' + i);
+                    if (i <= totalPages) {
+                        btn.style.display = 'inline-block';
+                        btn.textContent = i;
+                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
+                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+            }
+
+            // ===== ACTIONS =====
+            function changePage(delta) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                var newPage = currentPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    renderRecords();
+                }
+            }
+
+            function goToPage(page) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderRecords();
+                }
+            }
+
+            function refreshRecords() {
+                var btn = $('refreshBtn');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    renderRecords();
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showNotification('✅ تم تحديث السجلات بنجاح', 'success');
+                }, 600);
+            }
+
+            function resetFilters() {
+                $('searchRecords').value = '';
+                $('fVesselRec').value = 'الكل';
+                $('fCatRec').value = 'الكل';
+                $('fStatusRec').value = 'الكل';
+                $('fDateFrom').value = '';
+                $('fDateTo').value = '';
+                currentPage = 1;
+                renderRecords();
+                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
+            }
+
+            function exportRecords() {
+                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
+                setTimeout(function() {
+                    showNotification('✅ تم تصدير البيانات بنجاح', 'success');
+                }, 1500);
+            }
+
+            // ===== GLOBAL FUNCTIONS =====
+            window.viewRecord = function(id) {
+                showNotification('📋 عرض تفاصيل السجل ' + id, 'info');
+            };
+
+            window.editRecord = function(id) {
+                showNotification('✏️ تعديل السجل ' + id, 'info');
+            };
+
+            window.deleteRecord = function(id) {
+                if (confirm('هل أنت متأكد من حذف السجل ' + id + '؟')) {
+                    var idx = recordsData.findIndex(function(r) { return r.id === id; });
+                    if (idx !== -1) {
+                        recordsData.splice(idx, 1);
+                        renderRecords();
+                        showNotification('🗑️ تم حذف السجل ' + id + ' بنجاح', 'success');
+                    }
+                }
+            };
+
+            // ===== NOTIFICATION =====
+            function showNotification(message, type) {
+                var old = document.querySelector('.rec-notification');
+                if (old) old.remove();
+
+                var colors = {
+                    success: 'rgba(34,197,94,0.15)',
+                    info: 'rgba(9,132,227,0.15)',
+                    error: 'rgba(239,68,68,0.15)'
+                };
+
+                var notif = document.createElement('div');
+                notif.className = 'rec-notification';
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: ${colors[type] || colors.info};
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    padding: 14px 24px;
+                    border-radius: 12px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    z-index: 9999;
+                    animation: slideUp 0.4s ease-out;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                `;
+                notif.textContent = message;
+
+                document.body.appendChild(notif);
+
+                setTimeout(function() {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(function() { notif.remove(); }, 400);
+                }, 3000);
+            }
+
+            // ===== ADD STYLES =====
+            var styleNotif = document.createElement('style');
+            styleNotif.textContent = `
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .rec-notification {
+                    direction: rtl;
+                }
+            `;
+            document.head.appendChild(styleNotif);
+
+            // ===== EVENT BINDING =====
+            document.addEventListener('DOMContentLoaded', function() {
+                $('refreshBtn').addEventListener('click', refreshRecords);
+                $('exportBtn').addEventListener('click', exportRecords);
+                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderRecords(); });
+                $('resetBtn').addEventListener('click', resetFilters);
+
+                $('searchRecords').addEventListener('keyup', function() { currentPage = 1; renderRecords(); });
+                $('fVesselRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                $('fCatRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                $('fStatusRec').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderRecords(); });
+
+                $('prevPage').addEventListener('click', function() { changePage(-1); });
+                $('nextPage').addEventListener('click', function() { changePage(1); });
+
+                renderRecords();
+                console.log('✅ Records Page loaded successfully!');
+                console.log('📊 ' + recordsData.length + ' records loaded.');
+            });
+
+        })();
+    </script>
+</div>
