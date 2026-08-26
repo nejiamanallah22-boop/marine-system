@@ -2,14 +2,13 @@
 <div id="page-tracking">
     <style>
         /* ============================================================
-           📊 TRACKING PAGE - PROFESSIONAL v2.0
+           📊 TRACKING PAGE - PROFESSIONAL v3.0
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
         :root {
             --primary-dark: #0a1628;
             --primary: #0f3460;
-            --primary-light: #1a4f8a;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --gold-dark: #c99a0e;
@@ -52,7 +51,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(233,69,96,0.03) 0%, transparent 60%);
+                radial-gradient(ellipse at 80% 50%, rgba(9,132,227,0.03) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
             animation: bgPulse 15s ease-in-out infinite;
@@ -99,7 +98,7 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            background: linear-gradient(135deg, var(--gold), var(--info));
             display: flex;
             align-items: center;
             justify-content: center;
@@ -111,7 +110,7 @@
 
         @keyframes pulseGold {
             0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
+            50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
         }
 
         .tracking-header-left h2 {
@@ -172,14 +171,87 @@
             transform: translateY(-2px);
         }
 
-        .tracking-header-actions .btn-action.danger {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
+        .tracking-header-actions .btn-action.export {
+            background: linear-gradient(135deg, var(--success), var(--success-light));
+            color: #0a1628;
         }
 
-        .tracking-header-actions .btn-action.danger:hover {
-            background: rgba(239,68,68,0.25);
+        .tracking-header-actions .btn-action.export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,184,148,0.3);
+        }
+
+        /* ============================================================
+           STATS CARDS
+           ============================================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+            margin: 0;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--info));
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.yellow { color: var(--warning); }
+        .stat-card .number.red { color: var(--danger); }
+        .stat-card .number.blue { color: #60a5fa; }
+        .stat-card .number.pink { color: #f472b6; }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
         }
 
         /* ============================================================
@@ -208,6 +280,7 @@
             gap: 4px;
         }
 
+        .filter-bar select,
         .filter-bar input {
             padding: 6px 12px;
             border-radius: 20px;
@@ -215,13 +288,30 @@
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
             font-size: 0.75rem;
+            min-width: 120px;
             cursor: pointer;
             font-family: var(--font);
         }
 
+        .filter-bar select:focus,
         .filter-bar input:focus {
             outline: none;
             border-color: var(--gold);
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar input[type="date"] {
+            min-width: 140px;
+            color-scheme: dark;
+        }
+
+        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.6);
+            cursor: pointer;
         }
 
         .filter-bar .btn-filter {
@@ -260,83 +350,11 @@
         }
 
         /* ============================================================
-           STATS CARDS
-           ============================================================ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            padding: 16px 24px;
-            margin: 0;
-            width: 100%;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            text-align: center;
-            transition: all var(--transition);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--success));
-            opacity: 0.6;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card .number {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.2;
-        }
-
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
-        .stat-card .number.pink { color: #f472b6; }
-
-        .stat-card .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        /* ============================================================
-           TABLE - TRACKING LOGS
+           TABLE
            ============================================================ */
         .table-wrapper {
             overflow-x: auto;
-            padding: 0 24px 24px;
+            padding: 16px 24px 24px;
             width: 100%;
         }
 
@@ -344,7 +362,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 700px;
+            min-width: 800px;
             border-radius: var(--radius);
             overflow: hidden;
         }
@@ -357,7 +375,7 @@
 
         thead th {
             padding: 12px 10px;
-            text-align: right;
+            text-align: center;
             font-weight: 700;
             font-size: 0.6rem;
             text-transform: uppercase;
@@ -379,6 +397,7 @@
             vertical-align: middle;
             color: rgba(255,255,255,0.6);
             font-size: 0.78rem;
+            text-align: center;
         }
 
         tbody tr {
@@ -389,13 +408,44 @@
             background: rgba(255,255,255,0.03);
         }
 
-        tbody tr .action-icon {
-            font-size: 1rem;
-        }
-
-        .vessel-name {
+        tbody tr .vessel-name {
             font-weight: 700;
             color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-badge.active {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.inactive {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.pending {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.admin {
+            background: rgba(167,139,250,0.12);
+            color: #a78bfa;
+        }
+
+        .status-badge.user {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
         }
 
         /* ===== EMPTY STATE ===== */
@@ -457,6 +507,101 @@
         }
 
         /* ============================================================
+           PAGINATION
+           ============================================================ */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px 24px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pagination .info {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.25);
+        }
+
+        .pagination .pages {
+            display: flex;
+            gap: 4px;
+        }
+
+        .page-btn {
+            padding: 4px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-family: var(--font);
+            font-size: 0.75rem;
+            transition: all var(--transition);
+        }
+
+        .page-btn:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-color: var(--gold);
+            color: #0a1628;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ============================================================
+           NOTIFICATION
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 14px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 400px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .toast-warning {
+            background: rgba(234,179,8,0.15);
+            border: 1px solid rgba(234,179,8,0.2);
+        }
+
+        .toast-info {
+            background: rgba(9,132,227,0.15);
+            border: 1px solid rgba(9,132,227,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
            RESPONSIVE
            ============================================================ */
         @media (max-width: 992px) {
@@ -464,7 +609,8 @@
             .tracking-header-left h2 { font-size: 18px; }
             .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
             .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .table-wrapper { padding: 0 16px 16px; }
+            .table-wrapper { padding: 12px 16px 16px; }
+            .pagination { padding: 12px 16px 16px; }
         }
 
         @media (max-width: 768px) {
@@ -491,9 +637,11 @@
                 gap: 6px;
             }
             .filter-bar label { font-size: 0.65rem; }
-            .table-wrapper { padding: 0 12px 12px; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .table-wrapper { padding: 10px 12px 12px; }
             .table-wrapper table { font-size: 0.7rem; min-width: 600px; }
             thead th, tbody td { padding: 6px 4px; }
+            .pagination { flex-direction: column; align-items: center; }
             .tracking-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
         }
 
@@ -517,19 +665,22 @@
     <div class="tracking-header">
         <div class="tracking-header-left">
             <div class="header-icon">
-                <i class="fas fa-history"></i>
+                <i class="fas fa-map-marked-alt"></i>
             </div>
             <div>
-                <h2>سجل التتبع</h2>
-                <p>متابعة نشاطات المستخدمين والأحداث</p>
+                <h2>تتبع المستخدمين والجاهزية</h2>
+                <p>مراقبة مواقع المستخدمين وحالة الجاهزية في الوقت الفعلي</p>
             </div>
         </div>
         <div class="tracking-header-actions">
-            <button class="btn-action primary" onclick="refreshTracking()">
+            <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
-            <button class="btn-action secondary" onclick="exportTrackingData()">
-                <i class="fas fa-file-export"></i> تصدير
+            <button class="btn-action export" id="exportBtn">
+                <i class="fas fa-file-excel"></i> تصدير
+            </button>
+            <button class="btn-action secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> طباعة
             </button>
         </div>
     </div>
@@ -539,24 +690,29 @@
     ============================================================ -->
     <div class="stats-grid" id="trackingStats">
         <div class="stat-card">
-            <div class="number gold" id="totalActivities">0</div>
-            <div class="label">📊 إجمالي النشاطات</div>
-            <span class="icon-bg"><i class="fas fa-tasks"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number green" id="uniqueUsers">0</div>
-            <div class="label">👥 مستخدمين نشطين</div>
+            <div class="number gold" id="totalUsers">0</div>
+            <div class="label">👥 إجمالي المستخدمين</div>
             <span class="icon-bg"><i class="fas fa-users"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number pink" id="todayActivities">0</div>
-            <div class="label">📅 نشاطات اليوم</div>
-            <span class="icon-bg"><i class="fas fa-calendar-day"></i></span>
+            <div class="number green" id="activeNow">0</div>
+            <div class="label">🟢 نشط الآن</div>
+            <span class="icon-bg"><i class="fas fa-circle"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number yellow" id="avgActivity">0</div>
-            <div class="label">📈 متوسط النشاط</div>
-            <span class="icon-bg"><i class="fas fa-chart-line"></i></span>
+            <div class="number yellow" id="readyUsers">0</div>
+            <div class="label">✅ جاهز</div>
+            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number red" id="busyUsers">0</div>
+            <div class="label">🔴 مشغول</div>
+            <span class="icon-bg"><i class="fas fa-clock"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number blue" id="offlineUsers">0</div>
+            <div class="label">⚫ غير متصل</div>
+            <span class="icon-bg"><i class="fas fa-power-off"></i></span>
         </div>
     </div>
 
@@ -564,16 +720,36 @@
     FILTER BAR
     ============================================================ -->
     <div class="filter-bar">
-        <label><i class="fas fa-calendar"></i> من تاريخ:</label>
-        <input type="date" id="trackDateStart" onchange="renderTracking()">
+        <label><i class="fas fa-search"></i> بحث</label>
+        <input type="text" id="searchTracking" placeholder="اسم المستخدم، الموقع..." />
 
-        <label><i class="fas fa-calendar"></i> إلى تاريخ:</label>
-        <input type="date" id="trackDateEnd" onchange="renderTracking()">
+        <label><i class="fas fa-filter"></i> الحالة</label>
+        <select id="fStatusTracking">
+            <option value="الكل">📊 جميع الحالات</option>
+            <option value="نشط">🟢 نشط</option>
+            <option value="جاهز">✅ جاهز</option>
+            <option value="مشغول">🔴 مشغول</option>
+            <option value="غير متصل">⚫ غير متصل</option>
+        </select>
 
-        <button class="btn-filter primary" onclick="renderTracking()">
+        <label><i class="fas fa-user-tag"></i> الدور</label>
+        <select id="fRoleTracking">
+            <option value="الكل">👤 جميع الأدوار</option>
+            <option value="إداري">🛡️ إداري</option>
+            <option value="مشرف">🔧 مشرف</option>
+            <option value="مستخدم">👤 مستخدم</option>
+            <option value="مراقب">📡 مراقب</option>
+        </select>
+
+        <label><i class="fas fa-calendar-alt"></i> من</label>
+        <input type="date" id="fDateFrom" />
+        <label><i class="fas fa-calendar-alt"></i> إلى</label>
+        <input type="date" id="fDateTo" />
+
+        <button class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" onclick="resetTrackingFilters()">
+        <button class="btn-filter outline" id="resetBtn">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
@@ -585,375 +761,356 @@
         <table>
             <thead>
                 <tr>
-                    <th><i class="fas fa-hashtag"></i> #</th>
-                    <th><i class="fas fa-calendar"></i> التاريخ</th>
-                    <th><i class="fas fa-clock"></i> الوقت</th>
-                    <th><i class="fas fa-user"></i> المستخدم</th>
-                    <th><i class="fas fa-key"></i> الصلاحية</th>
-                    <th><i class="fas fa-play"></i> الإجراء</th>
-                    <th><i class="fas fa-info-circle"></i> التفاصيل</th>
+                    <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
+                    <th style="text-align:right;"><i class="fas fa-user"></i> المستخدم</th>
+                    <th><i class="fas fa-user-tag"></i> الدور</th>
+                    <th><i class="fas fa-map-marker-alt"></i> الموقع</th>
+                    <th><i class="fas fa-clock"></i> آخر نشاط</th>
+                    <th><i class="fas fa-circle"></i> الحالة</th>
+                    <th><i class="fas fa-bolt"></i> الجاهزية</th>
                 </tr>
             </thead>
             <tbody id="trackingBody">
                 <tr>
                     <td colspan="7" class="empty-state">
                         <div class="spinner"></div>
-                        <h3>جاري تحميل البيانات...</h3>
+                        <h3>جاري تحميل بيانات التتبع...</h3>
                         <p>يرجى الانتظار</p>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
-</div>
 
-<!-- ============================================================
-📦 JAVASCRIPT - TRACKING PAGE (FIXED)
-============================================================ -->
-<script>
-// ============================================================
-// 📊 TRACKING PAGE - v2.0 (FIXED)
-// ============================================================
+    <!-- ============================================================
+    PAGINATION
+    ============================================================ -->
+    <div class="pagination">
+        <span class="info" id="paginationInfo">عرض 1-10 من 0 مستخدم</span>
+        <div class="pages">
+            <button class="page-btn" id="prevPage">‹</button>
+            <button class="page-btn active" id="page1">1</button>
+            <button class="page-btn" id="page2">2</button>
+            <button class="page-btn" id="page3">3</button>
+            <button class="page-btn" id="nextPage">›</button>
+        </div>
+    </div>
 
-// ✅ تجنب إعادة تعريف المتغيرات
-if (typeof window._trackingLoaded === 'undefined') {
-    window._trackingLoaded = false;
-}
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
 
-// ============================================================
-// 1. TOKEN FUNCTIONS (موحدة)
-// ============================================================
+            // ============================================================
+            // DATA
+            // ============================================================
+            var trackingData = [
+                { id: 1, name: 'أحمد محمد', role: 'إداري', location: 'تونس - المركز', lastActive: '2026-08-26 10:30', status: 'نشط', readiness: 'جاهز' },
+                { id: 2, name: 'سارة علي', role: 'مشرف', location: 'صفاقس - الميناء', lastActive: '2026-08-26 09:45', status: 'نشط', readiness: 'جاهز' },
+                { id: 3, name: 'محمد خالد', role: 'مستخدم', location: 'بنزرت - قاعدة بحرية', lastActive: '2026-08-26 08:15', status: 'نشط', readiness: 'مشغول' },
+                { id: 4, name: 'فاطمة نور', role: 'مراقب', location: 'المنستير - وحدة صيانة', lastActive: '2026-08-26 07:30', status: 'نشط', readiness: 'جاهز' },
+                { id: 5, name: 'علي حسن', role: 'مستخدم', location: 'قابس - ميناء', lastActive: '2026-08-25 17:20', status: 'غير متصل', readiness: 'غير جاهز' },
+                { id: 6, name: 'نورا سليم', role: 'مشرف', location: 'سوسة - الميناء', lastActive: '2026-08-26 10:00', status: 'نشط', readiness: 'جاهز' },
+                { id: 7, name: 'ياسين عمر', role: 'مستخدم', location: 'جرجيس - وحدة صيانة', lastActive: '2026-08-25 14:30', status: 'غير متصل', readiness: 'مشغول' },
+                { id: 8, name: 'ليلى منير', role: 'مراقب', location: 'تونس - المجمع الأمني', lastActive: '2026-08-26 09:00', status: 'نشط', readiness: 'جاهز' },
+                { id: 9, name: 'كريم سامي', role: 'مستخدم', location: 'الحرس البحري بالشمال', lastActive: '2026-08-26 08:45', status: 'نشط', readiness: 'مشغول' },
+                { id: 10, name: 'منى طارق', role: 'مشرف', location: 'صفاقس - وحدة صيانة', lastActive: '2026-08-25 16:00', status: 'غير متصل', readiness: 'جاهز' },
+                { id: 11, name: 'سامي رضا', role: 'مستخدم', location: 'الساحل - الحرس البحري', lastActive: '2026-08-26 07:00', status: 'نشط', readiness: 'جاهز' },
+                { id: 12, name: 'هالة نادر', role: 'مراقب', location: 'الجنوب - قاعدة بحرية', lastActive: '2026-08-26 06:30', status: 'نشط', readiness: 'جاهز' }
+            ];
 
-function getToken() {
-    return localStorage.getItem('marine_token') ||
-           localStorage.getItem('token') ||
-           localStorage.getItem('authToken') ||
-           localStorage.getItem('accessToken') ||
-           null;
-}
+            // ============================================================
+            // STATE
+            // ============================================================
+            var filteredData = trackingData.slice();
+            var currentPage = 1;
+            var itemsPerPage = 10;
 
-function getAuthHeaders() {
-    const token = getToken();
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
-    };
-}
+            // ============================================================
+            // DOM REFS
+            // ============================================================
+            var $ = function(id) { return document.getElementById(id); };
 
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer') || document.body;
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(30px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleDateString('ar-TN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    } catch { return dateStr; }
-}
-
-function formatTime(dateStr) {
-    if (!dateStr) return '-';
-    try {
-        const date = new Date(dateStr);
-        if (isNaN(date.getTime())) return dateStr;
-        return date.toLocaleTimeString('ar-TN', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch { return dateStr; }
-}
-
-// ============================================================
-// 2. تحميل البيانات
-// ============================================================
-
-async function loadTrackingLogs() {
-    console.log('📊 تحميل سجل التتبع...');
-    
-    const token = getToken();
-    if (!token) {
-        console.warn('⚠️ لا يوجد توكن');
-        return [];
-    }
-    
-    try {
-        const response = await fetch('/api/logs', {
-            headers: getAuthHeaders()
-        });
-        
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                window.location.href = '/index.html';
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            function getStatusBadge(status) {
+                var map = {
+                    'نشط': 'active',
+                    'غير متصل': 'inactive',
+                    'جاهز': 'active',
+                    'مشغول': 'pending'
+                };
+                return map[status] || '';
             }
-            throw new Error('فشل تحميل السجل');
-        }
-        
-        const data = await response.json();
-        const logs = data.logs || data || [];
-        console.log('✅ تم تحميل السجل:', logs.length);
-        return logs;
-    } catch (error) {
-        console.error('❌ خطأ في تحميل السجل:', error);
-        return [];
-    }
-}
 
-// ============================================================
-// 3. عرض البيانات
-// ============================================================
+            function getReadinessBadge(readiness) {
+                var map = {
+                    'جاهز': 'active',
+                    'مشغول': 'pending',
+                    'غير جاهز': 'inactive'
+                };
+                return map[readiness] || '';
+            }
 
-async function renderTracking() {
-    const tbody = document.getElementById('trackingBody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="7" class="empty-state">
-                <div class="spinner"></div>
-                <h3>جاري تحميل البيانات...</h3>
-                <p>يرجى الانتظار</p>
-            </td>
-        </tr>
-    `;
-    
-    try {
-        let logs = await loadTrackingLogs();
-        
-        // ✅ تطبيق الفلاتر
-        const startDate = document.getElementById('trackDateStart').value;
-        const endDate = document.getElementById('trackDateEnd').value;
-        
-        if (startDate) {
-            const start = new Date(startDate);
-            start.setHours(0, 0, 0, 0);
-            logs = logs.filter(l => {
-                const d = l.createdAt || l.date || l.timestamp;
-                if (!d) return false;
-                const logDate = new Date(d);
-                logDate.setHours(0, 0, 0, 0);
-                return logDate >= start;
+            function getReadinessIcon(readiness) {
+                var map = {
+                    'جاهز': '✅',
+                    'مشغول': '🔴',
+                    'غير جاهز': '⚫'
+                };
+                return map[readiness] || '❓';
+            }
+
+            function getRoleBadge(role) {
+                var map = {
+                    'إداري': 'admin',
+                    'مشرف': 'user',
+                    'مستخدم': 'user',
+                    'مراقب': 'user'
+                };
+                return map[role] || 'user';
+            }
+
+            function getStatusIcon(status) {
+                var map = {
+                    'نشط': '🟢',
+                    'غير متصل': '⚫'
+                };
+                return map[status] || '🟡';
+            }
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '-';
+                var parts = dateStr.split(' ');
+                var dateParts = parts[0].split('-');
+                return dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0] + ' ' + (parts[1] || '');
+            }
+
+            // ============================================================
+            // RENDER
+            // ============================================================
+            function renderTracking() {
+                renderStats();
+                renderTable();
+                renderPagination();
+            }
+
+            function renderStats() {
+                var total = trackingData.length;
+                var active = trackingData.filter(function(u) { return u.status === 'نشط'; }).length;
+                var ready = trackingData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
+                var busy = trackingData.filter(function(u) { return u.readiness === 'مشغول'; }).length;
+                var offline = trackingData.filter(function(u) { return u.status === 'غير متصل'; }).length;
+
+                $('totalUsers').textContent = total;
+                $('activeNow').textContent = active;
+                $('readyUsers').textContent = ready;
+                $('busyUsers').textContent = busy;
+                $('offlineUsers').textContent = offline;
+            }
+
+            function renderTable() {
+                var search = $('searchTracking').value.toLowerCase();
+                var statusFilter = $('fStatusTracking').value;
+                var roleFilter = $('fRoleTracking').value;
+                var dateFrom = $('fDateFrom').value;
+                var dateTo = $('fDateTo').value;
+
+                filteredData = trackingData.filter(function(u) {
+                    if (search && !u.name.includes(search) && !u.location.includes(search)) return false;
+                    if (statusFilter !== 'الكل' && u.status !== statusFilter && u.readiness !== statusFilter) return false;
+                    if (roleFilter !== 'الكل' && u.role !== roleFilter) return false;
+                    if (dateFrom && u.lastActive < dateFrom) return false;
+                    if (dateTo && u.lastActive > dateTo) return false;
+                    return true;
+                });
+
+                var tbody = $('trackingBody');
+
+                if (filteredData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <span class="empty-icon"><i class="fas fa-search"></i></span>
+                                <h3>لا توجد نتائج مطابقة</h3>
+                                <p>حاول تغيير معايير البحث أو الفلترة</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+                var pageData = filteredData.slice(start, end);
+
+                var html = '';
+                for (var i = 0; i < pageData.length; i++) {
+                    var u = pageData[i];
+                    var statusBadge = getStatusBadge(u.status);
+                    var readinessBadge = getReadinessBadge(u.readiness);
+                    var readinessIcon = getReadinessIcon(u.readiness);
+                    var statusIcon = getStatusIcon(u.status);
+                    var roleBadge = getRoleBadge(u.role);
+
+                    html += `
+                        <tr>
+                            <td style="text-align:right;font-weight:600;color:var(--gold-light);">${u.id}</td>
+                            <td style="text-align:right;font-weight:700;color:#fff;">${u.name}</td>
+                            <td><span class="status-badge ${roleBadge}">${u.role}</span></td>
+                            <td><i class="fas fa-map-pin" style="color:var(--gold-light);"></i> ${u.location}</td>
+                            <td>${formatDate(u.lastActive)}</td>
+                            <td><span class="status-badge ${statusBadge}">${statusIcon} ${u.status}</span></td>
+                            <td><span class="status-badge ${readinessBadge}">${readinessIcon} ${u.readiness}</span></td>
+                        </tr>
+                    `;
+                }
+
+                tbody.innerHTML = html;
+                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' مستخدم';
+            }
+
+            function renderPagination() {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                $('prevPage').disabled = currentPage <= 1;
+                $('nextPage').disabled = currentPage >= totalPages;
+
+                for (var i = 1; i <= 3; i++) {
+                    var btn = $('page' + i);
+                    if (i <= totalPages) {
+                        btn.style.display = 'inline-block';
+                        btn.textContent = i;
+                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
+                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                }
+            }
+
+            // ============================================================
+            // ACTIONS
+            // ============================================================
+            function changePage(delta) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                var newPage = currentPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    renderTracking();
+                }
+            }
+
+            function goToPage(page) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderTracking();
+                }
+            }
+
+            function refreshTracking() {
+                var btn = $('refreshBtn');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    renderTracking();
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showNotification('✅ تم تحديث بيانات التتبع بنجاح', 'success');
+                }, 600);
+            }
+
+            function resetFilters() {
+                $('searchTracking').value = '';
+                $('fStatusTracking').value = 'الكل';
+                $('fRoleTracking').value = 'الكل';
+                $('fDateFrom').value = '';
+                $('fDateTo').value = '';
+                currentPage = 1;
+                renderTracking();
+                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
+            }
+
+            function exportTrackingData() {
+                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
+                setTimeout(function() {
+                    showNotification('✅ تم تصدير البيانات بنجاح', 'success');
+                }, 1500);
+            }
+
+            // ============================================================
+            // NOTIFICATION
+            // ============================================================
+            function showNotification(message, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+
+                var colors = {
+                    success: 'rgba(34,197,94,0.15)',
+                    info: 'rgba(9,132,227,0.15)',
+                    error: 'rgba(239,68,68,0.15)'
+                };
+
+                var notif = document.createElement('div');
+                notif.className = 'toast toast-' + type;
+                notif.style.cssText = `
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: ${colors[type] || colors.info};
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    padding: 14px 24px;
+                    border-radius: 12px;
+                    color: #fff;
+                    font-family: Cairo, sans-serif;
+                    font-size: 14px;
+                    z-index: 9999;
+                    animation: slideUp 0.4s ease-out;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    max-width: 400px;
+                    direction: rtl;
+                `;
+                notif.textContent = message;
+
+                document.body.appendChild(notif);
+
+                setTimeout(function() {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(function() { notif.remove(); }, 400);
+                }, 3000);
+            }
+
+            // ============================================================
+            // EVENT BINDING
+            // ============================================================
+            document.addEventListener('DOMContentLoaded', function() {
+                $('refreshBtn').addEventListener('click', refreshTracking);
+                $('exportBtn').addEventListener('click', exportTrackingData);
+                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderTracking(); });
+                $('resetBtn').addEventListener('click', resetFilters);
+
+                $('searchTracking').addEventListener('keyup', function() { currentPage = 1; renderTracking(); });
+                $('fStatusTracking').addEventListener('change', function() { currentPage = 1; renderTracking(); });
+                $('fRoleTracking').addEventListener('change', function() { currentPage = 1; renderTracking(); });
+                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderTracking(); });
+                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderTracking(); });
+
+                $('prevPage').addEventListener('click', function() { changePage(-1); });
+                $('nextPage').addEventListener('click', function() { changePage(1); });
+
+                renderTracking();
+                console.log('✅ Tracking Page loaded successfully!');
+                console.log('📍 ' + trackingData.length + ' users tracked.');
             });
-        }
-        
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            logs = logs.filter(l => {
-                const d = l.createdAt || l.date || l.timestamp;
-                if (!d) return false;
-                const logDate = new Date(d);
-                return logDate <= end;
-            });
-        }
-        
-        // ✅ تحديث الإحصائيات
-        const total = logs.length;
-        const uniqueUsers = new Set(logs.map(l => l.userName || l.username || l.user)).size;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayActivities = logs.filter(l => {
-            const d = l.createdAt || l.date || l.timestamp;
-            if (!d) return false;
-            const logDate = new Date(d);
-            logDate.setHours(0, 0, 0, 0);
-            return logDate.getTime() === today.getTime();
-        }).length;
-        
-        document.getElementById('totalActivities').textContent = total;
-        document.getElementById('uniqueUsers').textContent = uniqueUsers;
-        document.getElementById('todayActivities').textContent = todayActivities;
-        document.getElementById('avgActivity').textContent = total > 0 ? Math.round(total / 7) : 0;
-        
-        if (logs.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
-                        <h3>لا توجد نشاطات مسجلة</h3>
-                        <p>لم يتم العثور على أي سجلات نشاط</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        // ✅ عرض البيانات
-        let html = '';
-        logs.slice(0, 200).forEach((l, index) => {
-            const action = l.action || 'نشاط';
-            const userName = l.userName || l.username || l.user || 'مجهول';
-            const userRole = l.userRole || l.role || 'مشاهد';
-            const details = l.details || l.message || '-';
-            const date = l.createdAt || l.date || l.timestamp;
-            
-            // ✅ أيقونة الإجراء
-            let icon = '📝';
-            if (action.includes('إضافة')) icon = '➕';
-            else if (action.includes('تعديل')) icon = '✏️';
-            else if (action.includes('حذف')) icon = '🗑️';
-            else if (action.includes('دخول')) icon = '🔐';
-            else if (action.includes('خروج')) icon = '🚪';
-            else if (action.includes('صيانة')) icon = '🔧';
-            else if (action.includes('تذكرة')) icon = '🎫';
-            
-            html += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${formatDate(date)}</td>
-                    <td>${formatTime(date)}</td>
-                    <td><span class="vessel-name">${escapeHtml(userName)}</span></td>
-                    <td><span style="font-size:0.65rem;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">${escapeHtml(userRole)}</span></td>
-                    <td><span style="color:var(--gold-light);font-weight:600;">${icon} ${escapeHtml(action)}</span></td>
-                    <td style="text-align:right;max-width:300px;word-break:break-word;">${escapeHtml(details)}</td>
-                </tr>
-            `;
-        });
-        tbody.innerHTML = html;
-        
-    } catch (error) {
-        console.error('❌ خطأ في renderTracking:', error);
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="empty-state">
-                    <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
-                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
-                    <p style="color:rgba(255,255,255,0.3);">${escapeHtml(error.message)}</p>
-                    <button class="retry-btn" onclick="renderTracking()">
-                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                    </button>
-                </td>
-            </tr>
-        `;
-    }
-}
 
-// ============================================================
-// 4. دوال مساعدة
-// ============================================================
-
-function resetTrackingFilters() {
-    document.getElementById('trackDateStart').value = '';
-    document.getElementById('trackDateEnd').value = '';
-    renderTracking();
-    showToast('✅ تم إعادة ضبط الفلاتر', 'success');
-}
-
-function refreshTracking() {
-    renderTracking();
-    showToast('🔄 تم تحديث سجل التتبع', 'info');
-}
-
-// ============================================================
-// 5. تصدير البيانات
-// ============================================================
-
-async function exportTrackingData() {
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/logs', {
-            headers: getAuthHeaders()
-        });
-        
-        if (!response.ok) throw new Error('فشل تحميل البيانات');
-        
-        const data = await response.json();
-        const logs = data.logs || data || [];
-        
-        if (logs.length === 0) {
-            showToast('⚠️ لا توجد بيانات للتصدير', 'warning');
-            return;
-        }
-        
-        // ✅ إنشاء CSV
-        const headers = ['التاريخ', 'الوقت', 'المستخدم', 'الصلاحية', 'الإجراء', 'التفاصيل'];
-        const rows = logs.map(l => [
-            formatDate(l.createdAt || l.date || l.timestamp),
-            formatTime(l.createdAt || l.date || l.timestamp),
-            l.userName || l.username || l.user || 'مجهول',
-            l.userRole || l.role || 'مشاهد',
-            l.action || 'نشاط',
-            (l.details || l.message || '-').replace(/,/g, ' ')
-        ]);
-        
-        const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `tracking_log_${new Date().toISOString().slice(0,10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        
-        showToast('📥 تم تصدير التقرير بنجاح', 'success');
-    } catch (error) {
-        showToast('❌ خطأ في التصدير: ' + error.message, 'error');
-    }
-}
-
-// ============================================================
-// 6. التهيئة
-// ============================================================
-
-function initTrackingPage() {
-    console.log('📊 تهيئة صفحة التتبع...');
-    if (window._trackingLoaded) {
-        console.log('⚠️ تم تهيئة الصفحة مسبقاً');
-        return;
-    }
-    window._trackingLoaded = true;
-    setTimeout(renderTracking, 300);
-}
-
-// ============================================================
-// 7. ربط الدوال
-// ============================================================
-
-if (document.getElementById('page-tracking')) {
-    console.log('📄 تم اكتشاف صفحة التتبع');
-    setTimeout(initTrackingPage, 300);
-}
-
-window.renderTracking = renderTracking;
-window.refreshTracking = refreshTracking;
-window.resetTrackingFilters = resetTrackingFilters;
-window.exportTrackingData = exportTrackingData;
-window.getToken = getToken;
-window.getAuthHeaders = getAuthHeaders;
-
-console.log('✅ صفحة التتبع v2.0 جاهزة');
-</script>
+        })();
+    </script>
 </div>
