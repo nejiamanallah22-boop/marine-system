@@ -1,0 +1,404 @@
+<!-- public/pages/records.html -->
+<div id="page-records">
+    <style>
+        #page-records {
+            width: 100%;
+            max-width: 100%;
+            padding: 20px;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+        }
+
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px 14px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .rec-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .rec-header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            background: linear-gradient(135deg, #0984e3, #60a5fa);
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #60a5fa;
+        }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .rec-section {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .section-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 16px 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 600px;
+        }
+
+        thead {
+            background: rgba(9,132,227,0.08);
+            border-bottom: 2px solid rgba(9,132,227,0.08);
+        }
+
+        thead th {
+            padding: 10px 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+        }
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-badge.completed {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.pending {
+            background: rgba(9,132,227,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.overdue {
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .pagination .info {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.25);
+        }
+
+        .page-btn {
+            padding: 4px 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px;
+            background: transparent;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #0984e3, #60a5fa);
+            border-color: #0984e3;
+            color: #fff;
+        }
+    </style>
+
+    <!-- HEADER -->
+    <div class="rec-header">
+        <div>
+            <h2>📋 سجل الصيانة والتاريخي</h2>
+            <p>أرشيف كامل لعمليات الصيانة والتدخلات الفنية</p>
+        </div>
+        <button class="btn-action" onclick="refreshRecords()">
+            <i class="fas fa-sync-alt"></i> تحديث
+        </button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid" id="recordsStats">
+        <div class="stat-card">
+            <div class="number" id="totalRecords">0</div>
+            <div class="label">📋 إجمالي السجلات</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="pendingRecords" style="color:#fbbf24;">0</div>
+            <div class="label">⏳ قيد الانتظار</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="completedRecords" style="color:#4ade80;">0</div>
+            <div class="label">✅ مكتملة</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="overdueRecords" style="color:#f87171;">0</div>
+            <div class="label">🚨 متأخرة</div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="rec-section">
+        <div class="section-header">
+            <h3>📊 سجل عمليات الصيانة والتدخلات</h3>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الرقم</th>
+                        <th>المركب</th>
+                        <th>الفئة</th>
+                        <th>نوع التدخل</th>
+                        <th>تاريخ البدء</th>
+                        <th>تاريخ الانتهاء</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsBody">
+                    <tr>
+                        <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+                            <h3 style="color:rgba(255,255,255,0.2);">جاري تحميل السجلات...</h3>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination">
+            <span class="info" id="paginationInfo">عرض 0 من 0 سجل</span>
+            <div>
+                <button class="page-btn" id="prevPage" onclick="changePage(-1)">‹</button>
+                <button class="page-btn active" id="page1" onclick="goToPage(1)">1</button>
+                <button class="page-btn" id="nextPage" onclick="changePage(1)">›</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ===== DATA =====
+            var recordsData = [
+                { id: 'R-2026-001', vessel: 'البروق 01', category: 'البروق', type: 'صيانة دورية', startDate: '2026-05-10', endDate: '2026-05-12', status: 'مكتملة' },
+                { id: 'R-2026-002', vessel: 'البروق 02', category: 'البروق', type: 'إصلاح محرك', startDate: '2026-06-15', endDate: '2026-06-20', status: 'قيد التنفيذ' },
+                { id: 'R-2026-003', vessel: 'صقر 03', category: 'صقور', type: 'فحص تقني', startDate: '2026-04-05', endDate: '2026-04-05', status: 'مكتملة' },
+                { id: 'R-2026-004', vessel: 'خافرة 07', category: 'خوافر', type: 'إصلاح عاجل', startDate: '2026-03-15', endDate: '2026-03-25', status: 'متأخرة' },
+                { id: 'R-2026-005', vessel: 'البروق 05', category: 'البروق', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-03', status: 'مكتملة' },
+                { id: 'R-2026-006', vessel: 'صقر 08', category: 'صقور', type: 'استبدال قطع', startDate: '2026-05-20', endDate: '2026-05-28', status: 'قيد الانتظار' },
+                { id: 'R-2026-007', vessel: 'زورق مزدوج 12', category: 'زوارق مزدوجة', type: 'صيانة دورية', startDate: '2026-06-01', endDate: '2026-06-02', status: 'مكتملة' },
+                { id: 'R-2026-008', vessel: 'خافرة 11', category: 'خوافر', type: 'إصلاح هيكل', startDate: '2026-06-10', endDate: '2026-06-25', status: 'قيد التنفيذ' }
+            ];
+
+            var filteredData = recordsData.slice();
+            var currentPage = 1;
+            var itemsPerPage = 5;
+
+            // ===== DOM REFS =====
+            var $ = function(id) { return document.getElementById(id); };
+
+            // ===== RENDER =====
+            function renderRecords() {
+                renderStats();
+                renderTable();
+                renderPagination();
+            }
+
+            function renderStats() {
+                var total = recordsData.length;
+                var pending = recordsData.filter(function(r) { return r.status === 'قيد الانتظار'; }).length;
+                var completed = recordsData.filter(function(r) { return r.status === 'مكتملة'; }).length;
+                var overdue = recordsData.filter(function(r) { return r.status === 'متأخرة'; }).length;
+
+                $('totalRecords').textContent = total;
+                $('pendingRecords').textContent = pending;
+                $('completedRecords').textContent = completed;
+                $('overdueRecords').textContent = overdue;
+            }
+
+            function renderTable() {
+                var tbody = $('recordsBody');
+                var start = (currentPage - 1) * itemsPerPage;
+                var end = start + itemsPerPage;
+                var pageData = filteredData.slice(start, end);
+
+                var statusMap = {
+                    'مكتملة': 'completed',
+                    'قيد التنفيذ': 'in-progress',
+                    'قيد الانتظار': 'pending',
+                    'متأخرة': 'overdue'
+                };
+
+                var statusLabel = {
+                    'مكتملة': '✅ مكتملة',
+                    'قيد التنفيذ': '⚡ قيد التنفيذ',
+                    'قيد الانتظار': '⏳ قيد الانتظار',
+                    'متأخرة': '🚨 متأخرة'
+                };
+
+                function formatDate(d) {
+                    var parts = d.split('-');
+                    return parts[2] + '/' + parts[1] + '/' + parts[0];
+                }
+
+                if (pageData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">لا توجد سجلات</td></tr>';
+                    return;
+                }
+
+                var html = '';
+                pageData.forEach(function(r) {
+                    html += `
+                        <tr>
+                            <td style="font-weight:600;color:#f5d76e;">${r.id}</td>
+                            <td style="font-weight:600;color:#fff;">${r.vessel}</td>
+                            <td>${r.category}</td>
+                            <td>${r.type}</td>
+                            <td>${formatDate(r.startDate)}</td>
+                            <td>${formatDate(r.endDate)}</td>
+                            <td><span class="status-badge ${statusMap[r.status] || ''}">${statusLabel[r.status] || r.status}</span></td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = html;
+                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' سجل';
+            }
+
+            function renderPagination() {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                var prev = $('prevPage');
+                var next = $('nextPage');
+
+                prev.disabled = currentPage <= 1;
+                next.disabled = currentPage >= totalPages;
+
+                var page1 = $('page1');
+                page1.textContent = currentPage;
+                page1.className = 'page-btn active';
+            }
+
+            // ===== ACTIONS =====
+            window.changePage = function(delta) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                var newPage = currentPage + delta;
+                if (newPage >= 1 && newPage <= totalPages) {
+                    currentPage = newPage;
+                    renderRecords();
+                }
+            };
+
+            window.goToPage = function(page) {
+                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+                if (page >= 1 && page <= totalPages) {
+                    currentPage = page;
+                    renderRecords();
+                }
+            };
+
+            window.refreshRecords = function() {
+                var btn = document.querySelector('.btn-action');
+                var originalHtml = btn.innerHTML;
+                btn.innerHTML = '⏳ جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    renderRecords();
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }, 500);
+            };
+
+            // ===== INIT =====
+            document.addEventListener('DOMContentLoaded', function() {
+                renderRecords();
+                console.log('📋 Records Page loaded successfully!');
+                console.log('📊 ' + recordsData.length + ' records loaded.');
+            });
+
+        })();
+    </script>
+</div>
