@@ -578,7 +578,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - SAFE VERSION
+    JAVASCRIPT - FIXED
     ============================================================ -->
     <script>
         (function() {
@@ -812,10 +812,13 @@
             document.addEventListener('DOMContentLoaded', init);
 
             // ============================================================
-            // EXPOSE GLOBALS
+            // ✅ EXPOSE FUNCTIONS TO GLOBAL (WINDOW) - FIX!
             // ============================================================
             window.refreshLogs = refreshLogs;
             window.exportLogs = exportLogs;
+            window.applyFilters = applyFilters;
+            window.resetFilters = resetFilters;
+            window.showToast = showToast;
 
         })();
     </script>
