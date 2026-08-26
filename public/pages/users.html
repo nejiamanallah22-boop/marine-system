@@ -14,6 +14,29 @@
             z-index: 1;
         }
 
+        #page-users::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(96,165,250,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(167,139,250,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
+
         /* ===== HEADER ===== */
         .users-header {
             display: flex;
@@ -100,6 +123,16 @@
         .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
+        }
+
+        .btn-action.success {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            color: #0a1628;
+        }
+
+        .btn-action.success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(34,197,94,0.3);
         }
 
         /* ===== STATS ===== */
@@ -645,6 +678,7 @@
             </div>
         </div>
         <div class="users-header-actions">
+            <button class="btn-action success" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
             <button class="btn-action primary" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
             <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
@@ -974,6 +1008,22 @@
             // CRUD OPERATIONS
             // ============================================================
 
+            // --- Refresh ---
+            function refreshUsers() {
+                var btn = document.getElementById('refreshBtn');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    updateStats();
+                    renderTable();
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                    showToast('✅ تم تحديث قائمة المستخدمين', 'success');
+                }, 600);
+            }
+
             // --- Open Add Modal ---
             function openAddModal() {
                 currentEditId = null;
@@ -981,6 +1031,7 @@
                 $('userName').value = '';
                 $('userEmail').value = '';
                 $('userPassword').value = '';
+                $('userPassword').placeholder = '********';
                 $('userUnit').value = '';
                 $('userRole').value = 'user';
                 $('userStatus').value = 'نشط';
@@ -1096,6 +1147,7 @@
             // ============================================================
             function applyFilters() {
                 renderTable();
+                showToast('✅ تم تطبيق الفلاتر', 'success');
             }
 
             function resetFilters() {
@@ -1115,24 +1167,27 @@
                 renderTable();
 
                 // --- Events ---
-                $('addUserBtn').addEventListener('click', openAddModal);
-                $('modalClose').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
-                $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
-                $('modalSave').addEventListener('click', saveUser);
+                document.getElementById('refreshBtn').addEventListener('click', refreshUsers);
+                document.getElementById('addUserBtn').addEventListener('click', openAddModal);
+                document.getElementById('modalClose').addEventListener('click', function() { document.getElementById(
+                        'userModal').classList.remove('visible'); });
+                document.getElementById('modalCancel').addEventListener('click', function() { document.getElementById(
+                        'userModal').classList.remove('visible'); });
+                document.getElementById('modalSave').addEventListener('click', saveUser);
 
-                $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove(
-                    'visible'); });
-                $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove(
-                    'visible'); });
-                $('passwordModalSave').addEventListener('click', savePassword);
+                document.getElementById('passwordModalClose').addEventListener('click', function() { document
+                        .getElementById('passwordModal').classList.remove('visible'); });
+                document.getElementById('passwordModalCancel').addEventListener('click', function() { document
+                        .getElementById('passwordModal').classList.remove('visible'); });
+                document.getElementById('passwordModalSave').addEventListener('click', savePassword);
 
-                $('filterBtn').addEventListener('click', applyFilters);
-                $('resetBtn').addEventListener('click', resetFilters);
+                document.getElementById('filterBtn').addEventListener('click', applyFilters);
+                document.getElementById('resetBtn').addEventListener('click', resetFilters);
 
-                $('searchUser').addEventListener('keyup', renderTable);
-                $('fUnitUser').addEventListener('change', renderTable);
-                $('fStatusUser').addEventListener('change', renderTable);
-                $('fRoleUser').addEventListener('change', renderTable);
+                document.getElementById('searchUser').addEventListener('keyup', renderTable);
+                document.getElementById('fUnitUser').addEventListener('change', renderTable);
+                document.getElementById('fStatusUser').addEventListener('change', renderTable);
+                document.getElementById('fRoleUser').addEventListener('change', renderTable);
 
                 // Close modal on overlay click
                 document.querySelectorAll('.modal-overlay').forEach(function(m) {
@@ -1156,6 +1211,7 @@
             window.deleteUser = deleteUser;
             window.changePassword = changePassword;
             window.showToast = showToast;
+            window.refreshUsers = refreshUsers;
 
         })();
     </script>
