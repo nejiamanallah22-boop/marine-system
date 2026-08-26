@@ -1,40 +1,13 @@
 <!-- public/pages/tracking.html -->
 <div id="page-tracking">
     <style>
-        /* ============================================================
-           📊 TRACKING PAGE - PROFESSIONAL v3.0
-           ============================================================ */
-
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --primary-dark: #0a1628;
-            --primary: #0f3460;
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
-            --success: #00b894;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --info: #0984e3;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        }
-
-        /* ===== FULL SCREEN RESET ===== */
+        /* ===== RESET & BASE ===== */
         #page-tracking {
             width: 100%;
             max-width: 100%;
             padding: 0;
             margin: 0;
-            font-family: var(--font);
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: #0a0e1a;
             color: #e8edf5;
             min-height: 100vh;
@@ -42,7 +15,7 @@
             z-index: 1;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
+        /* ===== BACKGROUND ===== */
         #page-tracking::before {
             content: '';
             position: fixed;
@@ -65,8 +38,7 @@
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
 
         /* ============================================================
            HEADER
@@ -78,9 +50,9 @@
             padding: 16px 24px;
             flex-wrap: wrap;
             gap: 12px;
-            background: var(--glass-bg);
+            background: rgba(255,255,255,0.04);
             backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
             position: sticky;
             top: 64px;
             z-index: 10;
@@ -98,13 +70,12 @@
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--info));
+            background: linear-gradient(135deg, #e6b31e, #0984e3);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
             animation: pulseGold 2s ease-in-out infinite;
         }
 
@@ -116,7 +87,7 @@
         .tracking-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
+            background: linear-gradient(135deg, #f5d76e, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
@@ -134,51 +105,143 @@
             flex-wrap: wrap;
         }
 
-        .tracking-header-actions .btn-action {
+        .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
             font-weight: 600;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-family: var(--font);
+            font-family: 'Cairo', sans-serif;
         }
 
-        .tracking-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        .btn-action.primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
         }
 
-        .tracking-header-actions .btn-action.primary:hover {
+        .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .tracking-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
 
-        .tracking-header-actions .btn-action.secondary:hover {
+        .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
-            transform: translateY(-2px);
         }
 
-        .tracking-header-actions .btn-action.export {
-            background: linear-gradient(135deg, var(--success), var(--success-light));
+        /* ============================================================
+           MAP TYPE SELECTOR - 3 TYPES
+           ============================================================ */
+        .map-type-selector {
+            display: flex;
+            gap: 10px;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .map-type-selector .label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .map-type-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 25px;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-type-btn:hover {
+            border-color: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
+        .map-type-btn.active {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            border-color: #e6b31e;
             color: #0a1628;
         }
 
-        .tracking-header-actions .btn-action.export:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0,184,148,0.3);
+        .map-type-btn i {
+            font-size: 1rem;
+        }
+
+        /* ============================================================
+           MAP CONTAINER
+           ============================================================ */
+        .map-container {
+            padding: 16px 24px;
+            width: 100%;
+        }
+
+        .map-wrapper {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            min-height: 500px;
+            position: relative;
+        }
+
+        .map-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 500px;
+            display: block;
+        }
+
+        .map-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            padding: 40px;
+            text-align: center;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .map-placeholder .map-icon {
+            font-size: 4rem;
+            color: rgba(255,255,255,0.05);
+            margin-bottom: 16px;
+        }
+
+        .map-placeholder h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.15);
+            margin-bottom: 8px;
+        }
+
+        .map-placeholder p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.08);
         }
 
         /* ============================================================
@@ -188,19 +251,19 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
-            padding: 16px 24px;
+            padding: 0 24px 16px;
             margin: 0;
             width: 100%;
         }
 
         .stat-card {
-            background: var(--glass-bg);
+            background: rgba(255,255,255,0.04);
             backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
             padding: 16px 18px;
             text-align: center;
-            transition: all var(--transition);
+            transition: all 0.3s;
             cursor: default;
             position: relative;
             overflow: hidden;
@@ -213,14 +276,13 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--info));
+            background: linear-gradient(90deg, #e6b31e, #0984e3);
             opacity: 0.6;
         }
 
         .stat-card:hover {
             transform: translateY(-3px);
             border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
         }
 
         .stat-card .number {
@@ -230,11 +292,10 @@
             line-height: 1.2;
         }
 
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
+        .stat-card .number.gold { color: #f5d76e; }
+        .stat-card .number.green { color: #55efc4; }
         .stat-card .number.blue { color: #60a5fa; }
+        .stat-card .number.red { color: #f87171; }
         .stat-card .number.pink { color: #f472b6; }
 
         .stat-card .label {
@@ -242,420 +303,151 @@
             color: rgba(255,255,255,0.3);
             margin-top: 4px;
             font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
         }
 
         /* ============================================================
-           FILTER BAR
+           USER DETAILS PANEL
            ============================================================ */
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-            margin: 0;
-            width: 100%;
-        }
-
-        .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .filter-bar select,
-        .filter-bar input {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
-            font-family: var(--font);
-        }
-
-        .filter-bar select:focus,
-        .filter-bar input:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-
-        .filter-bar select option {
-            background: #0a1628;
-            color: #e2e8f0;
-        }
-
-        .filter-bar input[type="date"] {
-            min-width: 140px;
-            color-scheme: dark;
-        }
-
-        .filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.6);
-            cursor: pointer;
-        }
-
-        .filter-bar .btn-filter {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-bar .btn-filter.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-        }
-
-        .filter-bar .btn-filter.primary:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
-        }
-
-        .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.3);
-        }
-
-        .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        /* ============================================================
-           TABLE
-           ============================================================ */
-        .table-wrapper {
-            overflow-x: auto;
-            padding: 16px 24px 24px;
-            width: 100%;
-        }
-
-        .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 800px;
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        thead {
-            background: rgba(15,52,96,0.4);
-            backdrop-filter: blur(12px);
-            border-bottom: 2px solid rgba(230,179,30,0.15);
-        }
-
-        thead th {
-            padding: 12px 10px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.8px;
-            white-space: nowrap;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-
-        thead th i {
-            margin-left: 6px;
-            color: var(--gold);
-            font-size: 0.7rem;
-        }
-
-        tbody td {
-            padding: 10px 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.78rem;
-            text-align: center;
-        }
-
-        tbody tr {
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        tbody tr .vessel-name {
-            font-weight: 700;
-            color: #fff;
-        }
-
-        /* ===== STATUS BADGES ===== */
-        .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .status-badge.active {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.inactive {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.pending {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.admin {
-            background: rgba(167,139,250,0.12);
-            color: #a78bfa;
-        }
-
-        .status-badge.user {
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-        }
-
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .empty-state .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state h3 {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
-        }
-
-        .empty-state p {
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        .empty-state .retry-btn {
-            margin-top: 12px;
-            padding: 8px 24px;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-            font-weight: 700;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-        }
-
-        .empty-state .retry-btn:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 24px rgba(230,179,30,0.2);
-        }
-
-        /* ============================================================
-           PAGINATION
-           ============================================================ */
-        .pagination {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 24px 24px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .pagination .info {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.25);
-        }
-
-        .pagination .pages {
-            display: flex;
-            gap: 4px;
-        }
-
-        .page-btn {
-            padding: 4px 12px;
-            border: 1px solid var(--glass-border);
-            border-radius: 6px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 0.75rem;
-            transition: all var(--transition);
-        }
-
-        .page-btn:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        .page-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
-            color: #0a1628;
-        }
-
-        .page-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        /* ============================================================
-           NOTIFICATION
-           ============================================================ */
-        .toast {
+        .user-panel {
+            display: none;
             position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            color: #fff;
-            font-family: var(--font);
-            font-size: 14px;
-            z-index: 9999;
-            animation: slideUp 0.4s ease-out;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 400px;
-            direction: rtl;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #0a1628;
+            border: 1px solid rgba(230,179,30,0.2);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            animation: slideUp 0.3s ease-out;
         }
 
-        .toast-success {
-            background: rgba(34,197,94,0.15);
-            border: 1px solid rgba(34,197,94,0.2);
-        }
-
-        .toast-error {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.2);
-        }
-
-        .toast-warning {
-            background: rgba(234,179,8,0.15);
-            border: 1px solid rgba(234,179,8,0.2);
-        }
-
-        .toast-info {
-            background: rgba(9,132,227,0.15);
-            border: 1px solid rgba(9,132,227,0.2);
+        .user-panel.visible {
+            display: block;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .user-panel .close-btn {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .user-panel .close-btn:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .user-panel .user-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #0984e3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #0a1628;
+            margin: 0 auto 16px;
+            font-weight: 700;
+        }
+
+        .user-panel .user-name {
+            font-size: 22px;
+            font-weight: 700;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .user-panel .user-role {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .user-panel .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.85rem;
+        }
+
+        .user-panel .detail-row .label {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .user-panel .detail-row .value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .user-panel .detail-row .value.gold { color: #f5d76e; }
+        .user-panel .detail-row .value.green { color: #55efc4; }
+        .user-panel .detail-row .value.red { color: #f87171; }
+        .user-panel .detail-row .value.blue { color: #60a5fa; }
+
+        /* ===== OVERLAY ===== */
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+        }
+
+        .panel-overlay.visible {
+            display: block;
         }
 
         /* ============================================================
            RESPONSIVE
            ============================================================ */
-        @media (max-width: 992px) {
-            .tracking-header { padding: 12px 16px; top: 60px; }
-            .tracking-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .table-wrapper { padding: 12px 16px 16px; }
-            .pagination { padding: 12px 16px 16px; }
-        }
-
         @media (max-width: 768px) {
-            .tracking-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
+            .tracking-header { padding: 12px 16px; top: 56px; flex-direction: column; align-items: flex-start; }
             .tracking-header-left { width: 100%; }
             .tracking-header-left h2 { font-size: 16px; }
             .tracking-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
-            .stat-card { padding: 12px 14px; }
+            .map-type-selector { padding: 10px 16px; justify-content: center; }
+            .map-type-btn { font-size: 0.7rem; padding: 6px 14px; }
+            .map-container { padding: 12px 16px; }
+            .map-wrapper { min-height: 350px; }
+            .map-wrapper canvas { min-height: 350px; }
+            .stats-grid { padding: 0 16px 12px; grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
-            .filter-bar label { font-size: 0.65rem; }
-            .filter-bar select, .filter-bar input { min-width: 100%; }
-            .table-wrapper { padding: 10px 12px 12px; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 600px; }
-            thead th, tbody td { padding: 6px 4px; }
-            .pagination { flex-direction: column; align-items: center; }
-            .tracking-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
+            .user-panel { padding: 20px; max-width: 95%; }
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
             .stat-card { padding: 10px 12px; }
             .stat-card .number { font-size: 18px; }
             .stat-card .label { font-size: 9px; }
-            .tracking-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .tracking-header-left h2 { font-size: 14px; }
-            .tracking-header-left p { font-size: 10px; }
+            .map-type-selector { gap: 6px; }
+            .map-type-btn { font-size: 0.6rem; padding: 4px 10px; }
+            .map-wrapper { min-height: 280px; }
+            .map-wrapper canvas { min-height: 280px; }
+            .user-panel { padding: 16px; }
+            .user-panel .user-name { font-size: 18px; }
         }
     </style>
 
@@ -668,21 +460,34 @@
                 <i class="fas fa-map-marked-alt"></i>
             </div>
             <div>
-                <h2>تتبع المستخدمين والجاهزية</h2>
+                <h2>تتبع المستخدمين - الخريطة</h2>
                 <p>مراقبة مواقع المستخدمين وحالة الجاهزية في الوقت الفعلي</p>
             </div>
         </div>
         <div class="tracking-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
+            <button class="btn-action primary" onclick="refreshTracking()">
                 <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn-action export" id="exportBtn">
-                <i class="fas fa-file-excel"></i> تصدير
             </button>
             <button class="btn-action secondary" onclick="window.print()">
                 <i class="fas fa-print"></i> طباعة
             </button>
         </div>
+    </div>
+
+    <!-- ============================================================
+    MAP TYPE SELECTOR - 3 TYPES
+    ============================================================ -->
+    <div class="map-type-selector">
+        <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
+        <button class="map-type-btn active" onclick="switchMap('satellite')">
+            <i class="fas fa-satellite"></i> قمر صناعي
+        </button>
+        <button class="map-type-btn" onclick="switchMap('terrain')">
+            <i class="fas fa-mountain"></i> تضاريس
+        </button>
+        <button class="map-type-btn" onclick="switchMap('hybrid')">
+            <i class="fas fa-layer-group"></i> هجين
+        </button>
     </div>
 
     <!-- ============================================================
@@ -692,424 +497,626 @@
         <div class="stat-card">
             <div class="number gold" id="totalUsers">0</div>
             <div class="label">👥 إجمالي المستخدمين</div>
-            <span class="icon-bg"><i class="fas fa-users"></i></span>
         </div>
         <div class="stat-card">
             <div class="number green" id="activeNow">0</div>
             <div class="label">🟢 نشط الآن</div>
-            <span class="icon-bg"><i class="fas fa-circle"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number yellow" id="readyUsers">0</div>
+            <div class="number blue" id="readyUsers">0</div>
             <div class="label">✅ جاهز</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
         </div>
         <div class="stat-card">
             <div class="number red" id="busyUsers">0</div>
             <div class="label">🔴 مشغول</div>
-            <span class="icon-bg"><i class="fas fa-clock"></i></span>
         </div>
         <div class="stat-card">
-            <div class="number blue" id="offlineUsers">0</div>
+            <div class="number pink" id="offlineUsers">0</div>
             <div class="label">⚫ غير متصل</div>
-            <span class="icon-bg"><i class="fas fa-power-off"></i></span>
         </div>
     </div>
 
     <!-- ============================================================
-    FILTER BAR
+    MAP CONTAINER
     ============================================================ -->
-    <div class="filter-bar">
-        <label><i class="fas fa-search"></i> بحث</label>
-        <input type="text" id="searchTracking" placeholder="اسم المستخدم، الموقع..." />
-
-        <label><i class="fas fa-filter"></i> الحالة</label>
-        <select id="fStatusTracking">
-            <option value="الكل">📊 جميع الحالات</option>
-            <option value="نشط">🟢 نشط</option>
-            <option value="جاهز">✅ جاهز</option>
-            <option value="مشغول">🔴 مشغول</option>
-            <option value="غير متصل">⚫ غير متصل</option>
-        </select>
-
-        <label><i class="fas fa-user-tag"></i> الدور</label>
-        <select id="fRoleTracking">
-            <option value="الكل">👤 جميع الأدوار</option>
-            <option value="إداري">🛡️ إداري</option>
-            <option value="مشرف">🔧 مشرف</option>
-            <option value="مستخدم">👤 مستخدم</option>
-            <option value="مراقب">📡 مراقب</option>
-        </select>
-
-        <label><i class="fas fa-calendar-alt"></i> من</label>
-        <input type="date" id="fDateFrom" />
-        <label><i class="fas fa-calendar-alt"></i> إلى</label>
-        <input type="date" id="fDateTo" />
-
-        <button class="btn-filter primary" id="filterBtn">
-            <i class="fas fa-filter"></i> فلترة
-        </button>
-        <button class="btn-filter outline" id="resetBtn">
-            <i class="fas fa-undo-alt"></i> إلغاء
-        </button>
-    </div>
-
-    <!-- ============================================================
-    TABLE
-    ============================================================ -->
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
-                    <th style="text-align:right;"><i class="fas fa-user"></i> المستخدم</th>
-                    <th><i class="fas fa-user-tag"></i> الدور</th>
-                    <th><i class="fas fa-map-marker-alt"></i> الموقع</th>
-                    <th><i class="fas fa-clock"></i> آخر نشاط</th>
-                    <th><i class="fas fa-circle"></i> الحالة</th>
-                    <th><i class="fas fa-bolt"></i> الجاهزية</th>
-                </tr>
-            </thead>
-            <tbody id="trackingBody">
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <div class="spinner"></div>
-                        <h3>جاري تحميل بيانات التتبع...</h3>
-                        <p>يرجى الانتظار</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ============================================================
-    PAGINATION
-    ============================================================ -->
-    <div class="pagination">
-        <span class="info" id="paginationInfo">عرض 1-10 من 0 مستخدم</span>
-        <div class="pages">
-            <button class="page-btn" id="prevPage">‹</button>
-            <button class="page-btn active" id="page1">1</button>
-            <button class="page-btn" id="page2">2</button>
-            <button class="page-btn" id="page3">3</button>
-            <button class="page-btn" id="nextPage">›</button>
+    <div class="map-container">
+        <div class="map-wrapper" id="mapWrapper">
+            <canvas id="trackingMap"></canvas>
         </div>
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
+    USER DETAILS PANEL
+    ============================================================ -->
+    <div class="panel-overlay" id="panelOverlay" onclick="closeUserPanel()"></div>
+    <div class="user-panel" id="userPanel">
+        <button class="close-btn" onclick="closeUserPanel()">✕</button>
+        <div class="user-avatar" id="panelAvatar">👤</div>
+        <div class="user-name" id="panelName">اسم المستخدم</div>
+        <div class="user-role" id="panelRole">الدور</div>
+        <div class="detail-row">
+            <span class="label">🆔 المعرف</span>
+            <span class="value gold" id="panelId">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">📍 الموقع</span>
+            <span class="value" id="panelLocation">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">📌 الإحداثيات</span>
+            <span class="value" id="panelCoords">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">🟢 الحالة</span>
+            <span class="value" id="panelStatus">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">⚡ الجاهزية</span>
+            <span class="value" id="panelReadiness">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">📅 آخر نشاط</span>
+            <span class="value" id="panelLastActive">-</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">📧 البريد الإلكتروني</span>
+            <span class="value" id="panelEmail">-</span>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - FULL MAP WITH 3 TYPES
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // ============================================================
-            // DATA
+            // DATA - USERS WITH REAL COORDINATES (TUNISIA)
             // ============================================================
-            var trackingData = [
-                { id: 1, name: 'أحمد محمد', role: 'إداري', location: 'تونس - المركز', lastActive: '2026-08-26 10:30', status: 'نشط', readiness: 'جاهز' },
-                { id: 2, name: 'سارة علي', role: 'مشرف', location: 'صفاقس - الميناء', lastActive: '2026-08-26 09:45', status: 'نشط', readiness: 'جاهز' },
-                { id: 3, name: 'محمد خالد', role: 'مستخدم', location: 'بنزرت - قاعدة بحرية', lastActive: '2026-08-26 08:15', status: 'نشط', readiness: 'مشغول' },
-                { id: 4, name: 'فاطمة نور', role: 'مراقب', location: 'المنستير - وحدة صيانة', lastActive: '2026-08-26 07:30', status: 'نشط', readiness: 'جاهز' },
-                { id: 5, name: 'علي حسن', role: 'مستخدم', location: 'قابس - ميناء', lastActive: '2026-08-25 17:20', status: 'غير متصل', readiness: 'غير جاهز' },
-                { id: 6, name: 'نورا سليم', role: 'مشرف', location: 'سوسة - الميناء', lastActive: '2026-08-26 10:00', status: 'نشط', readiness: 'جاهز' },
-                { id: 7, name: 'ياسين عمر', role: 'مستخدم', location: 'جرجيس - وحدة صيانة', lastActive: '2026-08-25 14:30', status: 'غير متصل', readiness: 'مشغول' },
-                { id: 8, name: 'ليلى منير', role: 'مراقب', location: 'تونس - المجمع الأمني', lastActive: '2026-08-26 09:00', status: 'نشط', readiness: 'جاهز' },
-                { id: 9, name: 'كريم سامي', role: 'مستخدم', location: 'الحرس البحري بالشمال', lastActive: '2026-08-26 08:45', status: 'نشط', readiness: 'مشغول' },
-                { id: 10, name: 'منى طارق', role: 'مشرف', location: 'صفاقس - وحدة صيانة', lastActive: '2026-08-25 16:00', status: 'غير متصل', readiness: 'جاهز' },
-                { id: 11, name: 'سامي رضا', role: 'مستخدم', location: 'الساحل - الحرس البحري', lastActive: '2026-08-26 07:00', status: 'نشط', readiness: 'جاهز' },
-                { id: 12, name: 'هالة نادر', role: 'مراقب', location: 'الجنوب - قاعدة بحرية', lastActive: '2026-08-26 06:30', status: 'نشط', readiness: 'جاهز' }
+            var usersData = [
+                { 
+                    id: 1, 
+                    name: 'أحمد محمد', 
+                    role: 'إداري', 
+                    email: 'ahmed@marine.tn',
+                    lat: 36.8065, 
+                    lng: 10.1815, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'تونس - المركز',
+                    lastActive: '2026-08-26 10:30'
+                },
+                { 
+                    id: 2, 
+                    name: 'سارة علي', 
+                    role: 'مشرف', 
+                    email: 'sara@marine.tn',
+                    lat: 34.7390, 
+                    lng: 10.7600, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'صفاقس - الميناء',
+                    lastActive: '2026-08-26 09:45'
+                },
+                { 
+                    id: 3, 
+                    name: 'محمد خالد', 
+                    role: 'مستخدم', 
+                    email: 'mohamed@marine.tn',
+                    lat: 37.2744, 
+                    lng: 9.8739, 
+                    status: 'نشط', 
+                    readiness: 'مشغول', 
+                    location: 'بنزرت - قاعدة بحرية',
+                    lastActive: '2026-08-26 08:15'
+                },
+                { 
+                    id: 4, 
+                    name: 'فاطمة نور', 
+                    role: 'مراقب', 
+                    email: 'fatma@marine.tn',
+                    lat: 35.7780, 
+                    lng: 10.8250, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'المنستير - وحدة صيانة',
+                    lastActive: '2026-08-26 07:30'
+                },
+                { 
+                    id: 5, 
+                    name: 'علي حسن', 
+                    role: 'مستخدم', 
+                    email: 'ali@marine.tn',
+                    lat: 33.8814, 
+                    lng: 10.0982, 
+                    status: 'غير متصل', 
+                    readiness: 'غير جاهز', 
+                    location: 'قابس - ميناء',
+                    lastActive: '2026-08-25 17:20'
+                },
+                { 
+                    id: 6, 
+                    name: 'نورا سليم', 
+                    role: 'مشرف', 
+                    email: 'nora@marine.tn',
+                    lat: 35.8290, 
+                    lng: 10.6400, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'سوسة - الميناء',
+                    lastActive: '2026-08-26 10:00'
+                },
+                { 
+                    id: 7, 
+                    name: 'ياسين عمر', 
+                    role: 'مستخدم', 
+                    email: 'yassin@marine.tn',
+                    lat: 33.5000, 
+                    lng: 11.1167, 
+                    status: 'غير متصل', 
+                    readiness: 'مشغول', 
+                    location: 'جرجيس - وحدة صيانة',
+                    lastActive: '2026-08-25 14:30'
+                },
+                { 
+                    id: 8, 
+                    name: 'ليلى منير', 
+                    role: 'مراقب', 
+                    email: 'layla@marine.tn',
+                    lat: 36.8065, 
+                    lng: 10.1815, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'تونس - المجمع الأمني',
+                    lastActive: '2026-08-26 09:00'
+                },
+                { 
+                    id: 9, 
+                    name: 'كريم سامي', 
+                    role: 'مستخدم', 
+                    email: 'karim@marine.tn',
+                    lat: 37.0000, 
+                    lng: 9.5000, 
+                    status: 'نشط', 
+                    readiness: 'مشغول', 
+                    location: 'الحرس البحري بالشمال',
+                    lastActive: '2026-08-26 08:45'
+                },
+                { 
+                    id: 10, 
+                    name: 'منى طارق', 
+                    role: 'مشرف', 
+                    email: 'mona@marine.tn',
+                    lat: 34.7390, 
+                    lng: 10.7600, 
+                    status: 'غير متصل', 
+                    readiness: 'جاهز', 
+                    location: 'صفاقس - وحدة صيانة',
+                    lastActive: '2026-08-25 16:00'
+                },
+                { 
+                    id: 11, 
+                    name: 'سامي رضا', 
+                    role: 'مستخدم', 
+                    email: 'sami@marine.tn',
+                    lat: 36.0000, 
+                    lng: 10.5000, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'الساحل - الحرس البحري',
+                    lastActive: '2026-08-26 07:00'
+                },
+                { 
+                    id: 12, 
+                    name: 'هالة نادر', 
+                    role: 'مراقب', 
+                    email: 'hala@marine.tn',
+                    lat: 33.0000, 
+                    lng: 10.0000, 
+                    status: 'نشط', 
+                    readiness: 'جاهز', 
+                    location: 'الجنوب - قاعدة بحرية',
+                    lastActive: '2026-08-26 06:30'
+                }
             ];
 
             // ============================================================
             // STATE
             // ============================================================
-            var filteredData = trackingData.slice();
-            var currentPage = 1;
-            var itemsPerPage = 10;
+            var currentMapType = 'satellite';
+            var selectedUser = null;
+            var mapInstance = null;
 
             // ============================================================
             // DOM REFS
             // ============================================================
-            var $ = function(id) { return document.getElementById(id); };
+            var canvas = document.getElementById('trackingMap');
 
             // ============================================================
             // HELPERS
             // ============================================================
             function getStatusBadge(status) {
                 var map = {
-                    'نشط': 'active',
-                    'غير متصل': 'inactive',
-                    'جاهز': 'active',
-                    'مشغول': 'pending'
+                    'نشط': '🟢 نشط',
+                    'غير متصل': '⚫ غير متصل'
+                };
+                return map[status] || status;
+            }
+
+            function getStatusClass(status) {
+                var map = {
+                    'نشط': 'green',
+                    'غير متصل': 'red'
                 };
                 return map[status] || '';
             }
 
             function getReadinessBadge(readiness) {
                 var map = {
-                    'جاهز': 'active',
-                    'مشغول': 'pending',
-                    'غير جاهز': 'inactive'
+                    'جاهز': '✅ جاهز',
+                    'مشغول': '🔴 مشغول',
+                    'غير جاهز': '⚫ غير جاهز'
+                };
+                return map[readiness] || readiness;
+            }
+
+            function getReadinessClass(readiness) {
+                var map = {
+                    'جاهز': 'green',
+                    'مشغول': 'red',
+                    'غير جاهز': 'gray'
                 };
                 return map[readiness] || '';
             }
 
-            function getReadinessIcon(readiness) {
-                var map = {
-                    'جاهز': '✅',
-                    'مشغول': '🔴',
-                    'غير جاهز': '⚫'
-                };
-                return map[readiness] || '❓';
+            function getInitials(name) {
+                if (!name) return '👤';
+                var parts = name.split(' ');
+                if (parts.length >= 2) {
+                    return parts[0][0] + parts[1][0];
+                }
+                return name.slice(0, 2);
             }
 
-            function getRoleBadge(role) {
-                var map = {
-                    'إداري': 'admin',
-                    'مشرف': 'user',
-                    'مستخدم': 'user',
-                    'مراقب': 'user'
-                };
-                return map[role] || 'user';
-            }
-
-            function getStatusIcon(status) {
-                var map = {
-                    'نشط': '🟢',
-                    'غير متصل': '⚫'
-                };
-                return map[status] || '🟡';
-            }
-
-            function formatDate(dateStr) {
-                if (!dateStr) return '-';
-                var parts = dateStr.split(' ');
-                var dateParts = parts[0].split('-');
-                return dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0] + ' ' + (parts[1] || '');
+            function getColorByStatus(status, readiness) {
+                if (status === 'غير متصل') return '#6b7280';
+                if (readiness === 'جاهز') return '#22c55e';
+                if (readiness === 'مشغول') return '#ef4444';
+                return '#fbbf24';
             }
 
             // ============================================================
-            // RENDER
+            // STATS
             // ============================================================
-            function renderTracking() {
-                renderStats();
-                renderTable();
-                renderPagination();
+            function updateStats() {
+                var total = usersData.length;
+                var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
+                var ready = usersData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
+                var busy = usersData.filter(function(u) { return u.readiness === 'مشغول'; }).length;
+                var offline = usersData.filter(function(u) { return u.status === 'غير متصل'; }).length;
+
+                document.getElementById('totalUsers').textContent = total;
+                document.getElementById('activeNow').textContent = active;
+                document.getElementById('readyUsers').textContent = ready;
+                document.getElementById('busyUsers').textContent = busy;
+                document.getElementById('offlineUsers').textContent = offline;
             }
 
-            function renderStats() {
-                var total = trackingData.length;
-                var active = trackingData.filter(function(u) { return u.status === 'نشط'; }).length;
-                var ready = trackingData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
-                var busy = trackingData.filter(function(u) { return u.readiness === 'مشغول'; }).length;
-                var offline = trackingData.filter(function(u) { return u.status === 'غير متصل'; }).length;
+            // ============================================================
+            // DRAW MAP - WITH 3 TYPES
+            // ============================================================
+            function drawMap() {
+                var ctx = canvas.getContext('2d');
+                var rect = canvas.parentElement.getBoundingClientRect();
+                var width = rect.width - 2;
+                var height = Math.max(500, window.innerHeight * 0.6);
 
-                $('totalUsers').textContent = total;
-                $('activeNow').textContent = active;
-                $('readyUsers').textContent = ready;
-                $('busyUsers').textContent = busy;
-                $('offlineUsers').textContent = offline;
-            }
+                canvas.width = width * 2;
+                canvas.height = height * 2;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.scale(2, 2);
 
-            function renderTable() {
-                var search = $('searchTracking').value.toLowerCase();
-                var statusFilter = $('fStatusTracking').value;
-                var roleFilter = $('fRoleTracking').value;
-                var dateFrom = $('fDateFrom').value;
-                var dateTo = $('fDateTo').value;
+                // ===== BACKGROUND =====
+                var gradient = ctx.createLinearGradient(0, 0, 0, height);
+                if (currentMapType === 'satellite') {
+                    gradient.addColorStop(0, '#1a2a4a');
+                    gradient.addColorStop(0.5, '#2d4a6a');
+                    gradient.addColorStop(1, '#1a3a4a');
+                } else if (currentMapType === 'terrain') {
+                    gradient.addColorStop(0, '#2d2a1a');
+                    gradient.addColorStop(0.3, '#4a3a2a');
+                    gradient.addColorStop(0.6, '#3a5a3a');
+                    gradient.addColorStop(1, '#2a4a3a');
+                } else {
+                    gradient.addColorStop(0, '#1a2a3a');
+                    gradient.addColorStop(0.3, '#2a3a4a');
+                    gradient.addColorStop(0.6, '#1a3a5a');
+                    gradient.addColorStop(1, '#1a2a4a');
+                }
 
-                filteredData = trackingData.filter(function(u) {
-                    if (search && !u.name.includes(search) && !u.location.includes(search)) return false;
-                    if (statusFilter !== 'الكل' && u.status !== statusFilter && u.readiness !== statusFilter) return false;
-                    if (roleFilter !== 'الكل' && u.role !== roleFilter) return false;
-                    if (dateFrom && u.lastActive < dateFrom) return false;
-                    if (dateTo && u.lastActive > dateTo) return false;
-                    return true;
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+
+                // ===== GRID LINES =====
+                ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctx.lineWidth = 1;
+                for (var gx = 0; gx < width; gx += 60) {
+                    ctx.beginPath();
+                    ctx.moveTo(gx, 0);
+                    ctx.lineTo(gx, height);
+                    ctx.stroke();
+                }
+                for (var gy = 0; gy < height; gy += 60) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, gy);
+                    ctx.lineTo(width, gy);
+                    ctx.stroke();
+                }
+
+                // ===== FIND BOUNDS =====
+                var minLat = 33, maxLat = 38, minLng = 8, maxLng = 12;
+                var latRange = maxLat - minLat;
+                var lngRange = maxLng - minLng;
+
+                // ===== DRAW USERS =====
+                var radius = 18;
+
+                usersData.forEach(function(user) {
+                    var x = ((user.lng - minLng) / lngRange) * width;
+                    var y = ((maxLat - user.lat) / latRange) * height;
+
+                    if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
+
+                    var color = getColorByStatus(user.status, user.readiness);
+
+                    // ===== GLOW =====
+                    var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
+                    glow.addColorStop(0, color + '44');
+                    glow.addColorStop(1, color + '00');
+                    ctx.fillStyle = glow;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // ===== PULSE ANIMATION =====
+                    var pulseSize = radius * 1.5 + Math.sin(Date.now() / 1000 + user.id) * 4;
+                    ctx.strokeStyle = color + '88';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // ===== CIRCLE =====
+                    var grad = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, radius);
+                    grad.addColorStop(0, '#ffffff');
+                    grad.addColorStop(0.3, color);
+                    grad.addColorStop(1, color + 'aa');
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // ===== BORDER =====
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // ===== USER INITIALS =====
+                    ctx.fillStyle = '#0a1628';
+                    ctx.font = 'bold 12px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(getInitials(user.name), x, y + 1);
+
+                    // ===== USER NAME LABEL =====
+                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                    ctx.font = '11px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(user.name, x, y - radius - 6);
+
+                    // ===== STATUS DOT =====
+                    var dotColor = user.status === 'نشط' ? '#22c55e' : '#6b7280';
+                    ctx.fillStyle = dotColor;
+                    ctx.shadowColor = dotColor + '88';
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(x + radius + 6, y - radius + 6, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    // ===== READINESS ICON =====
+                    ctx.font = '10px Cairo, sans-serif';
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'bottom';
+                    var icon = user.readiness === 'جاهز' ? '✅' : (user.readiness === 'مشغول' ? '🔴' : '⚫');
+                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.fillText(icon, x + radius + 14, y - radius + 8);
+
+                    // ===== CLICK AREA (invisible for interaction) =====
+                    // We handle clicks via canvas click event
+                    user._x = x;
+                    user._y = y;
+                    user._radius = radius;
                 });
 
-                var tbody = $('trackingBody');
+                // ===== LEGEND =====
+                var legendX = 16, legendY = 16;
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.beginPath();
+                ctx.roundRect(legendX, legendY, 180, 130, 10);
+                ctx.fill();
 
-                if (filteredData.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="empty-state">
-                                <span class="empty-icon"><i class="fas fa-search"></i></span>
-                                <h3>لا توجد نتائج مطابقة</h3>
-                                <p>حاول تغيير معايير البحث أو الفلترة</p>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.font = '11px Cairo, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
 
-                var start = (currentPage - 1) * itemsPerPage;
-                var end = start + itemsPerPage;
-                var pageData = filteredData.slice(start, end);
+                var legendItems = [
+                    { color: '#22c55e', label: '🟢 نشط - جاهز' },
+                    { color: '#ef4444', label: '🔴 نشط - مشغول' },
+                    { color: '#6b7280', label: '⚫ غير متصل' }
+                ];
 
-                var html = '';
-                for (var i = 0; i < pageData.length; i++) {
-                    var u = pageData[i];
-                    var statusBadge = getStatusBadge(u.status);
-                    var readinessBadge = getReadinessBadge(u.readiness);
-                    var readinessIcon = getReadinessIcon(u.readiness);
-                    var statusIcon = getStatusIcon(u.status);
-                    var roleBadge = getRoleBadge(u.role);
+                legendItems.forEach(function(item, idx) {
+                    var yPos = legendY + 20 + idx * 30;
+                    ctx.fillStyle = item.color;
+                    ctx.beginPath();
+                    ctx.arc(legendX + 155, yPos, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(item.label, legendX + 148, yPos);
+                });
 
-                    html += `
-                        <tr>
-                            <td style="text-align:right;font-weight:600;color:var(--gold-light);">${u.id}</td>
-                            <td style="text-align:right;font-weight:700;color:#fff;">${u.name}</td>
-                            <td><span class="status-badge ${roleBadge}">${u.role}</span></td>
-                            <td><i class="fas fa-map-pin" style="color:var(--gold-light);"></i> ${u.location}</td>
-                            <td>${formatDate(u.lastActive)}</td>
-                            <td><span class="status-badge ${statusBadge}">${statusIcon} ${u.status}</span></td>
-                            <td><span class="status-badge ${readinessBadge}">${readinessIcon} ${u.readiness}</span></td>
-                        </tr>
-                    `;
-                }
+                // ===== MAP TYPE LABEL =====
+                var typeLabels = {
+                    'satellite': '🛰️ قمر صناعي',
+                    'terrain': '⛰️ تضاريس',
+                    'hybrid': '🔀 هجين'
+                };
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.font = '11px Cairo, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(typeLabels[currentMapType] || '', 16, height - 16);
 
-                tbody.innerHTML = html;
-                $('paginationInfo').textContent = 'عرض ' + (start + 1) + '-' + Math.min(end, filteredData.length) + ' من ' + filteredData.length + ' مستخدم';
+                // ===== USERS COUNT =====
+                ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                ctx.font = '10px Cairo, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText('👥 ' + usersData.length + ' مستخدم', width - 16, height - 16);
             }
 
-            function renderPagination() {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                $('prevPage').disabled = currentPage <= 1;
-                $('nextPage').disabled = currentPage >= totalPages;
+            // ============================================================
+            // CANVAS CLICK - SHOW USER DETAILS
+            // ============================================================
+            canvas.addEventListener('click', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                var scaleX = canvas.width / (rect.width * 2);
+                var scaleY = canvas.height / (rect.height * 2);
+                var mouseX = (e.clientX - rect.left) * scaleX;
+                var mouseY = (e.clientY - rect.top) * scaleY;
 
-                for (var i = 1; i <= 3; i++) {
-                    var btn = $('page' + i);
-                    if (i <= totalPages) {
-                        btn.style.display = 'inline-block';
-                        btn.textContent = i;
-                        btn.className = 'page-btn ' + (i === currentPage ? 'active' : '');
-                        btn.onclick = function(page) { return function() { goToPage(page); }; }(i);
-                    } else {
-                        btn.style.display = 'none';
+                // Find closest user
+                var found = null;
+                var minDist = 50;
+                usersData.forEach(function(user) {
+                    if (user._x === undefined) return;
+                    var dist = Math.sqrt(Math.pow(mouseX - user._x, 2) + Math.pow(mouseY - user._y, 2));
+                    if (dist < minDist) {
+                        minDist = dist;
+                        found = user;
                     }
+                });
+
+                if (found) {
+                    showUserPanel(found);
                 }
-            }
+            });
 
             // ============================================================
-            // ACTIONS
+            // USER PANEL
             // ============================================================
-            function changePage(delta) {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                var newPage = currentPage + delta;
-                if (newPage >= 1 && newPage <= totalPages) {
-                    currentPage = newPage;
-                    renderTracking();
-                }
+            function showUserPanel(user) {
+                selectedUser = user;
+                document.getElementById('panelOverlay').classList.add('visible');
+                document.getElementById('userPanel').classList.add('visible');
+
+                document.getElementById('panelAvatar').textContent = getInitials(user.name);
+                document.getElementById('panelName').textContent = user.name;
+                document.getElementById('panelRole').textContent = '🔹 ' + user.role;
+                document.getElementById('panelId').textContent = '#' + user.id;
+                document.getElementById('panelLocation').textContent = user.location;
+                document.getElementById('panelCoords').textContent = user.lat + ', ' + user.lng;
+
+                var statusEl = document.getElementById('panelStatus');
+                statusEl.textContent = getStatusBadge(user.status);
+                statusEl.className = 'value ' + getStatusClass(user.status);
+
+                var readinessEl = document.getElementById('panelReadiness');
+                readinessEl.textContent = getReadinessBadge(user.readiness);
+                readinessEl.className = 'value ' + getReadinessClass(user.readiness);
+
+                document.getElementById('panelLastActive').textContent = user.lastActive || 'غير معروف';
+                document.getElementById('panelEmail').textContent = user.email;
             }
 
-            function goToPage(page) {
-                var totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
-                if (page >= 1 && page <= totalPages) {
-                    currentPage = page;
-                    renderTracking();
-                }
-            }
+            window.closeUserPanel = function() {
+                document.getElementById('panelOverlay').classList.remove('visible');
+                document.getElementById('userPanel').classList.remove('visible');
+                selectedUser = null;
+            };
 
-            function refreshTracking() {
-                var btn = $('refreshBtn');
+            // ============================================================
+            // MAP TYPE SWITCHER
+            // ============================================================
+            window.switchMap = function(type) {
+                currentMapType = type;
+                document.querySelectorAll('.map-type-btn').forEach(function(btn) {
+                    btn.classList.toggle('active', btn.getAttribute('onclick').includes(type));
+                });
+                drawMap();
+            };
+
+            // ============================================================
+            // REFRESH
+            // ============================================================
+            window.refreshTracking = function() {
+                var btn = document.querySelector('.btn-action.primary');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
                 setTimeout(function() {
-                    renderTracking();
+                    updateStats();
+                    drawMap();
                     btn.innerHTML = original;
                     btn.disabled = false;
-                    showNotification('✅ تم تحديث بيانات التتبع بنجاح', 'success');
                 }, 600);
-            }
-
-            function resetFilters() {
-                $('searchTracking').value = '';
-                $('fStatusTracking').value = 'الكل';
-                $('fRoleTracking').value = 'الكل';
-                $('fDateFrom').value = '';
-                $('fDateTo').value = '';
-                currentPage = 1;
-                renderTracking();
-                showNotification('✅ تم إلغاء جميع الفلاتر', 'success');
-            }
-
-            function exportTrackingData() {
-                showNotification('📊 جاري تصدير البيانات إلى Excel...', 'info');
-                setTimeout(function() {
-                    showNotification('✅ تم تصدير البيانات بنجاح', 'success');
-                }, 1500);
-            }
+            };
 
             // ============================================================
-            // NOTIFICATION
+            // INIT
             // ============================================================
-            function showNotification(message, type) {
-                var old = document.querySelector('.toast');
-                if (old) old.remove();
+            function init() {
+                // Add roundRect polyfill for older browsers
+                if (!CanvasRenderingContext2D.prototype.roundRect) {
+                    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                        if (r > w/2) r = w/2;
+                        if (r > h/2) r = h/2;
+                        this.moveTo(x + r, y);
+                        this.lineTo(x + w - r, y);
+                        this.quadraticCurveTo(x + w, y, x + w, y + r);
+                        this.lineTo(x + w, y + h - r);
+                        this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                        this.lineTo(x + r, y + h);
+                        this.quadraticCurveTo(x, y + h, x, y + h - r);
+                        this.lineTo(x, y + r);
+                        this.quadraticCurveTo(x, y, x + r, y);
+                        return this;
+                    };
+                }
 
-                var colors = {
-                    success: 'rgba(34,197,94,0.15)',
-                    info: 'rgba(9,132,227,0.15)',
-                    error: 'rgba(239,68,68,0.15)'
-                };
+                updateStats();
+                drawMap();
 
-                var notif = document.createElement('div');
-                notif.className = 'toast toast-' + type;
-                notif.style.cssText = `
-                    position: fixed;
-                    bottom: 24px;
-                    right: 24px;
-                    background: ${colors[type] || colors.info};
-                    backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255,255,255,0.1);
-                    padding: 14px 24px;
-                    border-radius: 12px;
-                    color: #fff;
-                    font-family: Cairo, sans-serif;
-                    font-size: 14px;
-                    z-index: 9999;
-                    animation: slideUp 0.4s ease-out;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                    max-width: 400px;
-                    direction: rtl;
-                `;
-                notif.textContent = message;
+                // Redraw on resize
+                window.addEventListener('resize', function() {
+                    drawMap();
+                });
 
-                document.body.appendChild(notif);
-
-                setTimeout(function() {
-                    notif.style.opacity = '0';
-                    notif.style.transform = 'translateY(20px)';
-                    notif.style.transition = 'all 0.4s ease-out';
-                    setTimeout(function() { notif.remove(); }, 400);
-                }, 3000);
+                console.log('✅ Tracking Map loaded successfully!');
+                console.log('📍 ' + usersData.length + ' users on map');
+                console.log('🗺️ 3 map types: satellite, terrain, hybrid');
             }
 
-            // ============================================================
-            // EVENT BINDING
-            // ============================================================
-            document.addEventListener('DOMContentLoaded', function() {
-                $('refreshBtn').addEventListener('click', refreshTracking);
-                $('exportBtn').addEventListener('click', exportTrackingData);
-                $('filterBtn').addEventListener('click', function() { currentPage = 1; renderTracking(); });
-                $('resetBtn').addEventListener('click', resetFilters);
-
-                $('searchTracking').addEventListener('keyup', function() { currentPage = 1; renderTracking(); });
-                $('fStatusTracking').addEventListener('change', function() { currentPage = 1; renderTracking(); });
-                $('fRoleTracking').addEventListener('change', function() { currentPage = 1; renderTracking(); });
-                $('fDateFrom').addEventListener('change', function() { currentPage = 1; renderTracking(); });
-                $('fDateTo').addEventListener('change', function() { currentPage = 1; renderTracking(); });
-
-                $('prevPage').addEventListener('click', function() { changePage(-1); });
-                $('nextPage').addEventListener('click', function() { changePage(1); });
-
-                renderTracking();
-                console.log('✅ Tracking Page loaded successfully!');
-                console.log('📍 ' + trackingData.length + ' users tracked.');
-            });
+            // Run on load
+            document.addEventListener('DOMContentLoaded', init);
 
         })();
     </script>
