@@ -1,19 +1,3 @@
-ث غالبًا عن token، ولذلك كانت تظهر رسالة No token found. كما أن الصفحة الأصلية تخزن التوكن تحت marine_token فعلًا.
-
-تم إصلاح:
-
-توحيد قراءة الـ Token.
-دعم marine_token وtoken وauthToken وaccessToken.
-حفظ التوكن بطريقة متوافقة مع الصفحات القديمة.
-جعل getToken() متاحة لصفحة Maintenance.
-إضافة getAuthHeaders().
-تحسين تحميل المراكب وتخزينها في window.allVessels وwindow.vesselsData.
-إرسال حدث عند اكتمال تحميل البيانات للصفحات الديناميكية.
-
-تحميل الملف المعدل
-
-مهم: إذا بقيت صفحة الصيانة تعرض Vessels data: 0 بعد هذا التعديل، أرسل لي ملف maintenance.html أيضًا وسأعدله ليتوافق مباشرة مع هذا النظام. 
-
 <!DOCTYPE html>  
 <html lang="ar" dir="rtl">  
 <head>  
@@ -23,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">  
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
     <style>  
+        /* ===== RESET & BASE ===== */  
         *{margin:0;padding:0;box-sizing:border-box}  
         body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}  
         :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}  
@@ -504,7 +489,7 @@
         };  
 
         // ============================================================  
-        // 📦 STATE - استخدام var لتجنب التكرار  
+        // 📦 STATE  
         // ============================================================  
 
         var currentUser = null;  
@@ -515,7 +500,7 @@
         var allLogs = [];  
         var sessionsData = [];  
 
-        // ✅ ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
+        // ✅ ربط المتغيرات بـ window  
         window.currentUser = currentUser;  
         window.allVessels = allVessels;  
         window.allUsers = allUsers;  
@@ -526,31 +511,7 @@
         // 🔧 HELPERS  
         // ============================================================  
 
-        function getToken() {
-            const keys = [CONFIG.KEYS.TOKEN, 'token', 'authToken', 'accessToken', 'marineToken'];
-            for (const key of keys) {
-                const token = localStorage.getItem(key);
-                if (token && token !== 'undefined' && token !== 'null') {
-                    if (key !== CONFIG.KEYS.TOKEN) localStorage.setItem(CONFIG.KEYS.TOKEN, token);
-                    // توافق مع صفحات النظام القديمة والديناميكية
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('authToken', token);
-                    console.log('🔑 Token saved successfully');
-                    return token;
-                }
-            }
-            console.warn('⚠️ No token found');
-            return null;
-        }
-
-        function getAuthHeaders(extra = {}) {
-            const token = getToken();
-            return {
-                'Accept': 'application/json',
-                ...(token ? { 'Authorization': 'Bearer ' + token } : {}),
-                ...extra
-            };
-        }  
+        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
 
         function getRoleName(r) {  
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
@@ -559,7 +520,7 @@
 
         function escapeHTML(s) {  
             if (!s) return '';  
-            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' } [m]));  
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));  
         }  
 
         // ============================================================  
@@ -680,61 +641,34 @@
         // 📊 LOAD DATA  
         // ============================================================  
 
-        async function loadAllData() {
-            const token = getToken();
+        async function loadAllData() {  
+            const token = getToken();  
+            if (!token) return;  
 
-            if (!token) {
-                console.warn('⚠️ [LOAD] No token found - loading skipped');
-                return false;
-            }
+            const headers = { 'Authorization': 'Bearer ' + token };  
 
-            const headers = getAuthHeaders();
+            try {  
+                const [vesselsRes, usersRes] = await Promise.all([  
+                    fetch(CONFIG.API + '/vessels', { headers }),  
+                    fetch(CONFIG.API + '/users', { headers })  
+                ]);  
 
-            try {
-                console.log('📡 تحميل البيانات العامة...');
-
-                const [vesselsResult, usersResult] = await Promise.allSettled([
-                    fetch(CONFIG.API + '/vessels', { headers }),
-                    fetch(CONFIG.API + '/users', { headers })
-                ]);
-
-                if (vesselsResult.status === 'fulfilled' && vesselsResult.value.ok) {
-                    const data = await vesselsResult.value.json();
-                    allVessels = Array.isArray(data)
-                        ? data
-                        : (data.vessels || data.data || []);
-                    if (!Array.isArray(allVessels)) allVessels = [];
-
-                    window.allVessels = allVessels;
-                    window.vesselsData = allVessels;
-                    updateBadge('fleetBadge', allVessels.length);
-                    console.log('✅ تم تحميل', allVessels.length, 'مركب');
-                } else {
-                    console.warn('⚠️ فشل تحميل المراكب');
-                }
-
-                if (usersResult.status === 'fulfilled' && usersResult.value.ok) {
-                    const data = await usersResult.value.json();
-                    allUsers = Array.isArray(data)
-                        ? data
-                        : (data.users || data.data || []);
-                    if (!Array.isArray(allUsers)) allUsers = [];
-
-                    window.allUsers = allUsers;
-                    updateBadge('usersBadge', allUsers.length);
-                }
-
-                window.dispatchEvent(new CustomEvent('marine:data-loaded', {
-                    detail: { vessels: allVessels, users: allUsers }
-                }));
-
-                return true;
-
-            } catch (error) {
-                console.error('❌ خطأ أثناء تحميل البيانات:', error);
-                return false;
-            }
-        }
+                if (vesselsRes.ok) {  
+                    const data = await vesselsRes.json();  
+                    allVessels = Array.isArray(data) ? data : [];  
+                    window.allVessels = allVessels;  
+                    updateBadge('fleetBadge', allVessels.length);  
+                }  
+                if (usersRes.ok) {  
+                    const data = await usersRes.json();  
+                    allUsers = Array.isArray(data) ? data : [];  
+                    window.allUsers = allUsers;  
+                    updateBadge('usersBadge', allUsers.length);  
+                }  
+            } catch (error) {  
+                console.error('❌ خطأ أثناء تحميل البيانات:', error);  
+            }  
+        }  
 
         function updateBadge(id, count) {  
             const el = document.getElementById(id);  
