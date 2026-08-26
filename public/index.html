@@ -1,1924 +1,948 @@
-<!-- public/pages/maintenance.html -->
-<div id="page-maintenance">
-    <style>
-        /* ============================================================
-           🔧 MAINTENANCE PAGE STYLES - ULTRA PRO
-           ============================================================ */
-        
-        .maintenance-container {
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .maintenance-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-            background: rgba(255,255,255,0.02);
-            padding: 16px 24px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        .maintenance-header h2 {
-            color: #fff;
-            margin: 0;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .maintenance-header h2 .badge {
-            font-size: 11px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            background: rgba(66,133,244,0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(66,133,244,0.1);
-            font-weight: 400;
-        }
-        
-        .maintenance-header .header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .maintenance-header .header-actions .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .maintenance-header .header-actions .btn-primary {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: #fff;
-        }
-        
-        .maintenance-header .header-actions .btn-primary:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
-        }
-        
-        .maintenance-header .header-actions .btn-outline {
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.6);
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .maintenance-header .header-actions .btn-outline:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        
-        .stat-card {
-            background: rgba(255,255,255,0.02);
-            padding: 18px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255,255,255,0.08);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-        }
-        
-        .stat-card .stat-icon {
-            font-size: 28px;
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .stat-card.stat-total .stat-icon { background: rgba(96,165,250,0.12); }
-        .stat-card.stat-progress .stat-icon { background: rgba(251,191,36,0.12); }
-        .stat-card.stat-completed .stat-icon { background: rgba(74,222,128,0.12); }
-        .stat-card.stat-cancelled .stat-icon { background: rgba(248,113,113,0.12); }
-        .stat-card.stat-cost .stat-icon { background: rgba(52,211,153,0.12); }
-        
-        .stat-card .stat-info h4 {
-            margin: 0;
-            font-size: 26px;
-            font-weight: 700;
-            color: #fff;
-            line-height: 1.2;
-        }
-        
-        .stat-card .stat-info p {
-            margin: 2px 0 0;
-            font-size: 13px;
-            color: rgba(255,255,255,0.3);
-        }
-        
-        .stat-card.stat-total h4 { color: #60a5fa; }
-        .stat-card.stat-progress h4 { color: #fbbf24; }
-        .stat-card.stat-completed h4 { color: #4ade80; }
-        .stat-card.stat-cancelled h4 { color: #f87171; }
-        .stat-card.stat-cost h4 { color: #34d399; }
-        
-        .stat-card .stat-trend {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            font-size: 11px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        
-        .stat-card .stat-trend.up { color: #4ade80; background: rgba(74,222,128,0.1); }
-        .stat-card .stat-trend.down { color: #f87171; background: rgba(248,113,113,0.1); }
-        
-        .stat-card .stat-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            width: 100%;
-            background: rgba(255,255,255,0.04);
-        }
-        
-        .stat-card .stat-bar .stat-bar-fill {
-            height: 100%;
-            border-radius: 0 3px 3px 0;
-            transition: width 0.8s ease;
-        }
-        
-        .stat-card.stat-progress .stat-bar-fill { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
-        .stat-card.stat-completed .stat-bar-fill { background: linear-gradient(90deg, #4ade80, #22c55e); }
-        .stat-card.stat-cancelled .stat-bar-fill { background: linear-gradient(90deg, #f87171, #ef4444); }
-        
-        .section-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 30px 0 15px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .section-title h3 {
-            color: #fff;
-            margin: 0;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .section-title .count-badge {
-            font-size: 12px;
-            padding: 2px 12px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.3);
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-            background: rgba(255,255,255,0.01);
-        }
-        
-        .maintenance-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            font-family: 'Cairo', sans-serif;
-        }
-        
-        .maintenance-table thead th {
-            padding: 12px 14px;
-            text-align: center;
-            color: rgba(255,255,255,0.4);
-            border-bottom: 2px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .maintenance-table tbody td {
-            padding: 12px 14px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.7);
-            vertical-align: middle;
-        }
-        
-        .maintenance-table tbody tr:hover td {
-            background: rgba(255,255,255,0.02);
-        }
-        
-        .maintenance-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .status-badge {
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .status-broken { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-        .status-maintenance { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-        .status-ready { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-        .status-completed { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-        .status-in-progress { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-        .status-cancelled { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-        .status-pending { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
-        
-        .btn-sm {
-            padding: 5px 12px;
-            font-size: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .btn-sm:hover { transform: scale(1.05); opacity: 0.9; }
-        .btn-sm:active { transform: scale(0.95); }
-        
-        .btn-sm.btn-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.1); }
-        .btn-sm.btn-primary { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.1); }
-        .btn-sm.btn-warning { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.1); }
-        .btn-sm.btn-danger { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.1); }
-        .btn-sm.btn-history { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.1); }
-        
-        .maintenance-form {
-            display: none;
-            background: rgba(255,255,255,0.02);
-            border-radius: 14px;
-            padding: 24px;
-            margin: 20px 0;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .maintenance-form.active {
-            display: block;
-            animation: slideDown 0.4s ease;
-        }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .maintenance-form .form-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .maintenance-form .form-header h3 {
-            color: #fff;
-            margin: 0;
-            font-size: 18px;
-        }
-        
-        .maintenance-form .form-header .btn-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.3);
-            font-size: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 0 8px;
-        }
-        
-        .maintenance-form .form-header .btn-close:hover {
-            color: #f87171;
-            transform: rotate(90deg);
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-        }
-        
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .form-group label {
-            font-size: 13px;
-            color: rgba(255,255,255,0.4);
-            font-weight: 600;
-        }
-        
-        .form-group label .required {
-            color: #f87171;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            color: #e2e8f0;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            transition: all 0.3s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #4285f4;
-            background: rgba(255,255,255,0.06);
-            box-shadow: 0 0 0 4px rgba(66,133,244,0.06);
-        }
-        
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: rgba(255,255,255,0.15);
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-        
-        .form-group select option {
-            background: #1a2332;
-            color: #e2e8f0;
-        }
-        
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .form-actions .btn-save {
-            padding: 12px 32px;
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .form-actions .btn-save:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 30px rgba(66,133,244,0.3);
-        }
-        
-        .form-actions .btn-cancel {
-            padding: 12px 32px;
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-        }
-        
-        .form-actions .btn-cancel:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        
-        .filters-bar {
-            background: rgba(255,255,255,0.02);
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin: 15px 0;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-        
-        .filters-grid .filter-group label {
-            display: block;
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-bottom: 3px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .filters-grid .filter-group input,
-        .filters-grid .filter-group select {
-            width: 100%;
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            color: #e2e8f0;
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-        
-        .filters-grid .filter-group input:focus,
-        .filters-grid .filter-group select:focus {
-            outline: none;
-            border-color: #4285f4;
-        }
-        
-        .filters-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-        
-        .filters-actions .btn-filter {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .filters-actions .btn-filter.apply {
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            color: #fff;
-        }
-        
-        .filters-actions .btn-filter.apply:hover {
-            transform: scale(1.02);
-        }
-        
-        .filters-actions .btn-filter.reset {
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.4);
-            border: 1px solid rgba(255,255,255,0.06);
-        }
-        
-        .filters-actions .btn-filter.reset:hover {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-        }
-        
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-overlay.active {
-            display: flex;
-        }
-        
-        .modal-box {
-            background: #1a2332;
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 800px;
-            width: 95%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            color: #fff;
-            margin: 0;
-            font-size: 22px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .modal-header .close-btn {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.3);
-            font-size: 28px;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 0 10px;
-        }
-        
-        .modal-header .close-btn:hover {
-            color: #f87171;
-            transform: rotate(90deg);
-        }
-        
-        .modal-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .modal-stat-item {
-            background: rgba(255,255,255,0.03);
-            padding: 14px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        .modal-stat-item .number {
-            font-size: 28px;
-            font-weight: 700;
-            color: #60a5fa;
-        }
-        
-        .modal-stat-item .label {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-        }
-        
-        .modal-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        
-        .modal-table th {
-            background: rgba(255,255,255,0.04);
-            padding: 10px 12px;
-            text-align: center;
-            color: rgba(255,255,255,0.4);
-            border-bottom: 2px solid rgba(255,255,255,0.06);
-            font-weight: 600;
-            font-size: 12px;
-        }
-        
-        .modal-table td {
-            padding: 10px 12px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.6);
-        }
-        
-        .modal-table tr:hover td {
-            background: rgba(255,255,255,0.02);
-        }
-        
-        .no-history {
-            text-align: center;
-            padding: 40px;
-            color: rgba(255,255,255,0.2);
-        }
-        
-        .no-history .icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        
-        .toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 99999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-width: 380px;
-            width: 100%;
-        }
-        
-        .toast {
-            padding: 14px 20px;
-            border-radius: 10px;
-            color: #fff;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            animation: slideInRight 0.4s ease;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .toast.success { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.1); color: #4ade80; }
-        .toast.warning { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.1); color: #fbbf24; }
-        .toast.danger { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.1); color: #f87171; }
-        .toast.info { background: rgba(96,165,250,0.15); border-color: rgba(96,165,250,0.1); color: #60a5fa; }
-        
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .toast .toast-icon { font-size: 20px; }
-        .toast .toast-close {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-size: 18px;
-            padding: 0 4px;
-        }
-        .toast .toast-close:hover { color: #fff; }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-top-color: #60a5fa;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        
-        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
-        .empty-state h3 { color: rgba(255,255,255,0.4); margin: 0; }
-        .empty-state p { color: rgba(255,255,255,0.2); margin-top: 5px; }
-        
-        @media (max-width: 768px) {
-            .maintenance-header { flex-direction: column; align-items: stretch; padding: 14px 18px; }
-            .maintenance-header h2 { font-size: 20px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .stat-card .stat-info h4 { font-size: 22px; }
-            .form-grid { grid-template-columns: 1fr; }
-            .filters-grid { grid-template-columns: 1fr 1fr; }
-            .maintenance-table { font-size: 12px; }
-            .maintenance-table thead th, .maintenance-table tbody td { padding: 8px 10px; }
-            .modal-box { padding: 20px; }
-            .modal-stats { grid-template-columns: repeat(2, 1fr); }
-        }
-        
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .stat-icon { width: 40px; height: 40px; font-size: 20px; }
-            .stat-card .stat-info h4 { font-size: 18px; }
-            .filters-grid { grid-template-columns: 1fr; }
-            .header-actions .btn { font-size: 12px; padding: 8px 14px; }
-            .form-actions .btn-save, .form-actions .btn-cancel { width: 100%; justify-content: center; }
-        }
-    </style>
+<!DOCTYPE html>  
+<html lang="ar" dir="rtl">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>⚓ منظومة الوسائل البحرية</title>  
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+    <style>  
+        *{margin:0;padding:0;box-sizing:border-box}  
+        body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}  
+        :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}  
+        ::-webkit-scrollbar{width:6px}  
+        ::-webkit-scrollbar-track{background:#0a1628}  
+        ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}  
+        ::-webkit-scrollbar-thumb:hover{background:var(--gold)}  
+          
+        #loginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);overflow:hidden}  
+        #loginOverlay::before{content:'';position:absolute;inset:-50%;background:radial-gradient(ellipse at 20% 50%,rgba(14,165,233,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(230,179,30,0.04) 0%,transparent 60%);animation:bgPulse 12s ease-in-out infinite}  
+        @keyframes bgPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(3deg)}}  
+          
+        .login-container{position:relative;z-index:10;width:100%;max-width:440px;padding:20px}  
+        .login-box{background:rgba(255,255,255,0.04);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:48px 40px 36px;text-align:center;animation:slideUp 0.7s cubic-bezier(0.16,1,0.3,1);box-shadow:0 30px 80px rgba(0,0,0,0.5)}  
+        @keyframes slideUp{from{opacity:0;transform:translateY(40px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}  
+          
+        .login-logo .logo-icon{display:inline-block;font-size:56px;animation:logoFloat 4s ease-in-out infinite}  
+        @keyframes logoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}  
+        .login-logo .logo-text{display:block;font-size:26px;font-weight:900;margin-top:6px;background:linear-gradient(135deg,#e6b31e,#f5d76e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}  
+        .login-subtitle{font-size:14px;color:rgba(255,255,255,0.3);margin-top:4px}  
+          
+        .developer-info{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 28px;padding:8px 0;position:relative}  
+        .developer-info::before,.developer-info::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,179,30,0.2),transparent)}  
+        .dev-badge{font-size:12px;color:rgba(255,255,255,0.3)}  
+        .dev-badge i{color:var(--gold-light)}  
+        .dev-name{font-size:16px;font-weight:700;color:var(--gold-light)}  
+        .dev-version{font-size:11px;color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.04)}  
+          
+        .login-form{margin-top:4px}  
+        .form-group{margin-bottom:14px}  
+        .input-wrapper{position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;transition:all 0.3s}  
+        .input-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06);box-shadow:0 0 0 4px rgba(230,179,30,0.06)}  
+        .input-wrapper .input-icon{position:absolute;right:16px;color:rgba(255,255,255,0.2);font-size:14px}  
+        .input-wrapper input{width:100%;padding:14px 46px 14px 16px;background:transparent;border:none;outline:none;color:#fff;font-size:15px;font-family:inherit}  
+        .input-wrapper input::placeholder{color:rgba(255,255,255,0.2)}  
+        .toggle-password{position:absolute;left:12px;background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}  
+        .toggle-password:hover{color:#fff;background:rgba(255,255,255,0.04)}  
+          
+        .login-options{display:flex;justify-content:space-between;align-items:center;margin:16px 0 20px}  
+        .checkbox-label{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer}  
+        .checkbox-label input[type="checkbox"]{display:none}  
+        .checkbox-label .checkmark{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.3s}  
+        .checkbox-label input:checked+.checkmark{background:var(--gold);border-color:var(--gold)}  
+        .checkbox-label input:checked+.checkmark::after{content:'✓';color:#0a1628;font-size:12px;font-weight:700}  
+        .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}  
+        .forgot-link:hover{color:var(--gold-light)}  
+          
+        .login-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 30px rgba(230,179,30,0.15)}  
+        .login-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}  
+        .login-btn:disabled{opacity:0.6;cursor:not-allowed}  
+        .login-btn .btn-content{display:flex;align-items:center;justify-content:center;gap:10px}  
+        .login-btn .spinner{display:none;width:22px;height:22px;border:3px solid rgba(0,0,0,0.15);border-top-color:#0a1628;border-radius:50%;animation:spin 0.8s linear infinite}  
+        .login-btn.loading .spinner{display:inline-block}  
+        .login-btn.loading .btn-text{display:none}  
+        @keyframes spin{to{transform:rotate(360deg)}}  
+          
+        .error-msg{color:var(--danger);font-size:14px;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.08);border-radius:8px;border-right:4px solid var(--danger);display:none;text-align:right}  
+        .error-msg.show{display:block;animation:shake 0.4s ease}  
+        .error-msg.success{color:var(--success);border-right-color:var(--success);background:rgba(34,197,94,0.08)}  
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}  
+          
+        .security-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;color:rgba(255,255,255,0.2);font-size:12px}  
+        .security-badge i{color:var(--success)}  
+          
+        .login-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.15);font-size:11px}  
+        .login-footer .footer-version{background:rgba(255,255,255,0.03);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.03)}  
+          
+        #mainApp{display:none;min-height:100vh}  
+        .main-header{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);height:64px;display:flex;align-items:center}  
+        .header-container{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 20px;max-width:1440px;margin:0 auto}  
+        .header-left{display:flex;align-items:center;gap:16px}  
+        .menu-toggle{display:flex;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}  
+        .menu-toggle:hover{background:rgba(255,255,255,0.04)}  
+        .menu-toggle span{display:block;width:24px;height:2px;background:#e2e8f0;border-radius:2px;transition:all 0.3s}  
+        .menu-toggle.active span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}  
+        .menu-toggle.active span:nth-child(2){opacity:0}  
+        .menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}  
+          
+        .brand{display:flex;align-items:center;gap:10px}  
+        .brand .brand-icon{font-size:24px}  
+        .brand h1{font-size:17px;font-weight:700;color:#fff}  
+        .brand .brand-tag{font-size:11px;font-weight:400;color:var(--gold-light);background:rgba(230,179,30,0.1);padding:2px 14px;border-radius:20px;border:1px solid rgba(230,179,30,0.1)}  
+          
+        .header-right{display:flex;align-items:center;gap:12px}  
+        .search-wrapper{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:0 16px;transition:all 0.3s}  
+        .search-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06)}  
+        .search-wrapper input{background:transparent;border:none;outline:none;color:#e2e8f0;padding:8px 0;font-size:13px;font-family:inherit;width:160px}  
+        .search-wrapper input:focus{width:220px}  
+        .search-wrapper input::placeholder{color:rgba(255,255,255,0.2);font-size:12px}  
+        .search-wrapper .search-icon{color:rgba(255,255,255,0.2);font-size:13px;margin-left:10px}  
+        .search-wrapper .search-shortcut{font-size:10px;color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);margin-right:6px}  
+          
+        .notification-wrapper{position:relative}  
+        .notif-btn{position:relative;background:none;border:none;color:rgba(255,255,255,0.3);font-size:20px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.3s}  
+        .notif-btn:hover{color:#fff;background:rgba(255,255,255,0.04)}  
+        .notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50%;min-width:18px;text-align:center;border:2px solid #0a1628;display:none}  
+          
+        .user-wrapper{position:relative}  
+        .user-btn{display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:20px;transition:all 0.3s}  
+        .user-btn:hover{background:rgba(255,255,255,0.04)}  
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0a1628;flex-shrink:0}  
+        .user-name{font-size:13px;color:#e2e8f0;font-weight:500}  
+        .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}  
+        .user-btn:hover .user-arrow{color:#fff}  
+          
+        .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}  
+        .sidebar::-webkit-scrollbar{width:4px}  
+        .sidebar::-webkit-scrollbar-track{background:transparent}  
+        .sidebar::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}  
+          
+        .sidebar-header{display:none;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:16px}  
+        .sidebar-brand{display:flex;align-items:center;gap:10px}  
+        .sidebar-brand .brand-icon{font-size:24px;color:var(--gold)}  
+        .sidebar-brand .brand-title{font-size:16px;font-weight:700;color:#fff}  
+        .sidebar-brand .brand-subtitle{font-size:10px;color:rgba(255,255,255,0.2)}  
+        .sidebar-close{display:none;background:none;border:none;color:rgba(255,255,255,0.2);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all 0.3s}  
+        .sidebar-close:hover{background:rgba(255,255,255,0.04);color:#fff}  
+          
+        .sidebar-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.04);margin-bottom:16px}  
+        .sidebar-user .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0a1628;flex-shrink:0}  
+        .sidebar-user .user-info{display:flex;flex-direction:column;flex:1;min-width:0}  
+        .sidebar-user .user-name{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}  
+        .sidebar-user .user-role{font-size:11px;color:rgba(255,255,255,0.3)}  
+          
+        .sidebar-nav{flex:1;display:flex;flex-direction:column;gap:4px}  
+        .nav-group{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}  
+        .nav-group-title{font-size:10px;font-weight:700;color:rgba(255,255,255,0.15);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px}  
+        .nav-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all 0.3s;text-align:right;width:100%;position:relative}  
+        .nav-btn i{width:20px;text-align:center;font-size:15px;flex-shrink:0}  
+        .nav-btn:hover{background:rgba(255,255,255,0.04);color:#fff}  
+        .nav-btn.active{background:rgba(230,179,30,0.06);color:var(--gold-light)}  
+        .nav-btn.active::before{content:'';position:absolute;right:0;top:20%;height:60%;width:3px;background:var(--gold);border-radius:0 3px 3px 0}  
+        .nav-btn .nav-badge{margin-right:auto;font-size:9px;padding:2px 8px;border-radius:50%;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);min-width:18px;text-align:center;display:none}  
+        .nav-btn .nav-badge.warning{background:rgba(239,68,68,0.12);color:var(--danger)}  
+        .nav-btn .nav-badge.success{background:rgba(34,197,94,0.12);color:var(--success)}  
+        .nav-btn .nav-badge.info{background:rgba(59,130,246,0.12);color:var(--info)}  
+          
+        .sidebar-footer{border-top:1px solid rgba(255,255,255,0.04);padding-top:14px;margin-top:8px;display:flex;flex-direction:column;gap:8px}  
+        .footer-status{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.2)}  
+        .footer-status .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}  
+        .footer-status .status-dot.online{background:var(--success);animation:pulseDot 2s ease-in-out infinite}  
+        @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}  
+          
+        .footer-version{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.15)}  
+        .footer-version i{color:var(--gold)}  
+        .footer-logout{display:flex;align-items:center;gap:10px;padding:8px 14px;border:none;border-radius:8px;background:rgba(239,68,68,0.08);color:var(--danger);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;width:100%}  
+        .footer-logout:hover{background:rgba(239,68,68,0.16)}  
+        .footer-logout i{font-size:14px}  
+          
+        .main-content{margin-right:240px;min-height:calc(100vh - 64px);padding:20px 24px}  
+        .page-container{max-width:1440px;margin:0 auto}  
+        .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:200px}  
+        .loader-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.04);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}  
+        .page-loader p{margin-top:16px;color:rgba(255,255,255,0.2);font-size:14px}  
+        .page-content{animation:fadePage 0.4s ease-out}  
+        @keyframes fadePage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}  
+        #pageContainer{min-height:300px}  
+          
+        .back-to-top{position:fixed;bottom:30px;right:30px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);border:none;color:#0a1628;font-size:20px;cursor:pointer;box-shadow:0 4px 30px rgba(230,179,30,0.15);transition:all 0.3s;z-index:40;display:none;align-items:center;justify-content:center}  
+        .back-to-top:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}  
+          
+        .connection-status{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.9);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;z-index:999;backdrop-filter:blur(10px)}  
+        .toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:420px;width:90%;pointer-events:none}  
+        .toast{padding:12px 18px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;animation:toastSlide 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(10px);display:flex;align-items:center;gap:10px;box-shadow:0 8px 40px rgba(0,0,0,0.3);pointer-events:auto;border:1px solid rgba(255,255,255,0.08)}  
+        .toast-success{background:rgba(16,185,129,0.92)}  
+        .toast-error{background:rgba(239,68,68,0.92)}  
+        .toast-warning{background:rgba(245,158,11,0.92)}  
+        .toast-info{background:rgba(59,130,246,0.92)}  
+        @keyframes toastSlide{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}  
+          
+        .modal-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}  
+        .modal-box{background:#111e3a;border:1px solid rgba(255,255,255,0.06);border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalFade 0.3s cubic-bezier(0.16,1,0.3,1)}  
+        @keyframes modalFade{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}  
+        .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04)}  
+        .modal-header h3{font-size:18px;font-weight:700;color:#fff}  
+        .modal-close{background:none;border:none;color:rgba(255,255,255,0.2);font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:all 0.3s}  
+        .modal-close:hover{background:rgba(255,255,255,0.04);color:#fff}  
+        .modal-body{padding:20px;max-height:400px;overflow-y:auto;color:#e2e8f0}  
+        .modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.04)}  
+          
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;text-decoration:none}  
+        .btn:active{transform:scale(0.97)}  
+        .btn-sm{padding:4px 12px;font-size:12px}  
+        .btn-primary{background:var(--info);color:#fff}  
+        .btn-primary:hover{box-shadow:0 4px 20px rgba(59,130,246,0.3)}  
+        .btn-success{background:var(--success);color:#fff}  
+        .btn-success:hover{box-shadow:0 4px 20px rgba(34,197,94,0.3)}  
+        .btn-warning{background:var(--warning);color:#0a1628}  
+        .btn-warning:hover{box-shadow:0 4px 20px rgba(234,179,8,0.3)}  
+        .btn-danger{background:var(--danger);color:#fff}  
+        .btn-danger:hover{box-shadow:0 4px 20px rgba(239,68,68,0.3)}  
+        .btn-gold{background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}  
+        .btn-gold:hover{box-shadow:0 4px 30px rgba(230,179,30,0.25)}  
+        .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#e2e8f0}  
+        .btn-outline:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12)}  
+        .btn-secondary{background:rgba(255,255,255,0.04);color:#94a3b8;border:1px solid rgba(255,255,255,0.06)}  
+        .btn-secondary:hover{background:rgba(255,255,255,0.06)}  
+          
+        @media (max-width:992px){  
+            .search-wrapper input{width:120px}  
+            .search-wrapper input:focus{width:160px}  
+            .brand .brand-tag{display:none}  
+            .main-content{margin-right:0;padding:14px 16px}  
+            .menu-toggle{display:flex}  
+            .sidebar{transform:translateX(calc(100% + 10px));width:280px;padding:12px}  
+            .sidebar.open{transform:translateX(0)}  
+            .sidebar-header{display:flex}  
+            .sidebar-close{display:block}  
+        }  
+        @media (max-width:768px){  
+            .login-box{padding:32px 24px 28px}  
+            .login-logo .logo-icon{font-size:42px}  
+            .login-logo .logo-text{font-size:20px}  
+            .brand h1{font-size:14px}  
+            .brand .brand-tag{display:none}  
+            .search-wrapper{display:none}  
+            .user-name{display:none}  
+            .main-content{padding:10px 12px}  
+        }  
+        @media (max-width:480px){  
+            .login-box{padding:24px 16px 20px}  
+            .login-logo .logo-icon{font-size:32px}  
+            .login-logo .logo-text{font-size:17px}  
+            .login-subtitle{font-size:12px}  
+            .developer-info{flex-wrap:wrap;gap:4px}  
+            .developer-info .dev-name{font-size:14px}  
+            .input-wrapper input{padding:12px 40px 12px 14px;font-size:14px}  
+            .login-btn{padding:14px;font-size:15px}  
+            .brand h1{font-size:12px}  
+            .brand .brand-icon{font-size:18px}  
+            .header-right{gap:6px}  
+            .notif-btn{font-size:17px;padding:6px}  
+            .user-avatar{width:28px;height:28px;font-size:12px}  
+            .sidebar{width:260px;padding:10px}  
+            .sidebar-user .user-avatar{width:34px;height:34px;font-size:14px}  
+            .nav-btn{padding:8px 12px;font-size:12px}  
+            .nav-btn i{font-size:13px;width:18px}  
+        }  
+        @media print{.main-header,.sidebar,.back-to-top,.toast-container,.modal-overlay,.no-print{display:none!important}.main-content{margin-right:0!important;padding:0!important}}  
+    </style>  
+</head>  
+<body>  
 
-    <!-- MAIN CONTAINER -->
-    <div class="maintenance-container">
-        
-        <!-- HEADER -->
-        <div class="maintenance-header">
-            <h2>
-                🔧 إدارة الصيانة
-                <span class="badge">v8.0</span>
-            </h2>
-            <div class="header-actions">
-                <button class="btn btn-primary" id="addMaintenanceBtn">➕ إضافة صيانة</button>
-                <button class="btn btn-outline" id="refreshMaintenanceBtn">🔄 تحديث</button>
-                <button class="btn btn-outline" id="exportMaintenanceBtn">📊 تصدير</button>
-            </div>
-        </div>
+    <!-- ===== LOGIN ===== -->  
+    <div id="loginOverlay">  
+        <div class="login-container">  
+            <div class="login-box">  
+                <div class="login-logo">  
+                    <span class="logo-icon">⚓</span>  
+                    <h1 class="logo-text">منظومة الوسائل البحرية</h1>  
+                    <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>  
+                </div>  
+                <div class="developer-info">  
+                    <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>  
+                    <span class="dev-name">أمان الله ناجي</span>  
+                    <span class="dev-version">v7.0</span>  
+                </div>  
+                <form id="loginForm" class="login-form" autocomplete="off" novalidate>  
+                    <div class="form-group">  
+                        <div class="input-wrapper">  
+                            <i class="fas fa-user input-icon"></i>  
+                            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>  
+                        </div>  
+                    </div>  
+                    <div class="form-group">  
+                        <div class="input-wrapper">  
+                            <i class="fas fa-lock input-icon"></i>  
+                            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>  
+                            <button type="button" class="toggle-password" id="togglePassword">  
+                                <i class="fas fa-eye"></i>  
+                            </button>  
+                        </div>  
+                    </div>  
+                    <div class="login-options">  
+                        <label class="checkbox-label">  
+                            <input type="checkbox" id="rememberMe">  
+                            <span class="checkmark"></span>  
+                            تذكرني  
+                        </label>  
+                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>  
+                    </div>  
+                    <button type="submit" class="login-btn" id="loginButton">  
+                        <span class="btn-content">  
+                            <span class="btn-text">🚀 دخول إلى النظام</span>  
+                            <span class="spinner"></span>  
+                        </span>  
+                    </button>  
+                    <div id="loginError" class="error-msg"></div>  
+                    <div class="security-badge">  
+                        <i class="fas fa-shield-alt"></i>  
+                        <span>اتصال آمن ومشفر</span>  
+                    </div>  
+                </form>  
+                <div class="login-footer">  
+                    <span>نظام إدارة وإسناد الوحدات البحرية</span>  
+                    <span class="footer-version">الإصدار الاحترافي v7.0</span>  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
 
-        <!-- STATS -->
-        <div class="stats-grid" id="maintenanceStats">
-            <div class="stat-card stat-total">
-                <div class="stat-icon">📊</div>
-                <div class="stat-info">
-                    <h4 id="totalCount">0</h4>
-                    <p>إجمالي المهام</p>
-                </div>
-                <div class="stat-trend up" id="totalTrend">+0%</div>
-            </div>
-            <div class="stat-card stat-progress">
-                <div class="stat-icon">🔄</div>
-                <div class="stat-info">
-                    <h4 id="inProgressCount">0</h4>
-                    <p>قيد الإنجاز</p>
-                </div>
-                <div class="stat-bar"><div class="stat-bar-fill" id="progressBar" style="width:0%"></div></div>
-            </div>
-            <div class="stat-card stat-completed">
-                <div class="stat-icon">✅</div>
-                <div class="stat-info">
-                    <h4 id="completedCount">0</h4>
-                    <p>مكتملة</p>
-                </div>
-                <div class="stat-bar"><div class="stat-bar-fill" id="completedBar" style="width:0%"></div></div>
-            </div>
-            <div class="stat-card stat-cancelled">
-                <div class="stat-icon">❌</div>
-                <div class="stat-info">
-                    <h4 id="cancelledCount">0</h4>
-                    <p>ملغية</p>
-                </div>
-                <div class="stat-bar"><div class="stat-bar-fill" id="cancelledBar" style="width:0%"></div></div>
-            </div>
-            <div class="stat-card stat-cost">
-                <div class="stat-icon">💰</div>
-                <div class="stat-info">
-                    <h4 id="totalCost">0</h4>
-                    <p>إجمالي التكلفة (د.ت)</p>
-                </div>
-            </div>
-        </div>
+    <!-- ===== MAIN APP ===== -->  
+    <div id="mainApp" style="display:none;">  
+        <header class="main-header">  
+            <div class="header-container">  
+                <div class="header-left">  
+                    <button class="menu-toggle" id="menuToggle">  
+                        <span></span><span></span><span></span>  
+                    </button>  
+                    <div class="brand">  
+                        <span class="brand-icon">⚓</span>  
+                        <h1>منظومة الوسائل البحرية</h1>  
+                        <span class="brand-tag">الوكيل أمان الله ناجي</span>  
+                    </div>  
+                </div>  
+                <div class="header-right">  
+                    <div class="search-wrapper">  
+                        <input type="text" id="quickSearch" placeholder="بحث سريع...">  
+                        <i class="fas fa-search search-icon"></i>  
+                        <kbd class="search-shortcut">⌘K</kbd>  
+                    </div>  
+                    <div class="notification-wrapper">  
+                        <button class="notif-btn" id="notifBtn">  
+                            <i class="fas fa-bell"></i>  
+                            <span class="notif-badge" id="notifBadge">0</span>  
+                        </button>  
+                    </div>  
+                    <div class="user-wrapper">  
+                        <button class="user-btn" id="userBtn">  
+                            <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>  
+                            <span class="user-name" id="userDisplayName">المستخدم</span>  
+                            <i class="fas fa-chevron-down user-arrow"></i>  
+                        </button>  
+                    </div>  
+                </div>  
+            </div>  
+        </header>  
 
-        <!-- BROKEN VESSELS -->
-        <div class="section-title">
-            <h3>🟥 المراكب المعطبة <span class="count-badge" id="brokenCount">0</span></h3>
-        </div>
-        <div id="generalMaintenanceContainer">
-            <div class="empty-state">
-                <div class="loading-spinner"></div>
-                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
-            </div>
-        </div>
+        <nav class="sidebar" id="sidebar">  
+            <div class="sidebar-header">  
+                <div class="sidebar-brand">  
+                    <span class="brand-icon">⚓</span>  
+                    <div>  
+                        <div class="brand-title">الأسطول البحري</div>  
+                        <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>  
+                    </div>  
+                </div>  
+                <button class="sidebar-close" id="sidebarClose">✕</button>  
+            </div>  
+            <div class="sidebar-user">  
+                <div class="user-avatar" id="sidebarUserAvatar">م</div>  
+                <div class="user-info">  
+                    <span class="user-name" id="sidebarUserName">المستخدم</span>  
+                    <span class="user-role" id="sidebarUserRole">مسؤول</span>  
+                </div>  
+            </div>  
+            <div class="sidebar-nav">  
+                <div class="nav-group">  
+                    <span class="nav-group-title">الرئيسية</span>  
+                    <button class="nav-btn active" data-page="dashboard">  
+                        <i class="fas fa-chart-pie"></i> لوحة التحكم  
+                    </button>  
+                    <button class="nav-btn" data-page="fleet">  
+                        <i class="fas fa-ship"></i> السجل العام  
+                        <span class="nav-badge" id="fleetBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">إدارة الأسطول</span>  
+                    <button class="nav-btn" data-page="maintenance">  
+                        <i class="fas fa-wrench"></i> الصيانة  
+                        <span class="nav-badge warning" id="maintenanceBadge">0</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="efficiency">  
+                        <i class="fas fa-chart-line"></i> الجاهزية  
+                    </button>  
+                    <button class="nav-btn" data-page="support">  
+                        <i class="fas fa-headset"></i> الدعم  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">العمليات</span>  
+                    <button class="nav-btn" data-page="notes">  
+                        <i class="fas fa-sticky-note"></i> Note Verbale  
+                    </button>  
+                    <button class="nav-btn" data-page="sessions">  
+                        <i class="fas fa-users-cog"></i> المراقبة  
+                        <span class="nav-badge success" id="sessionsBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">الإدارة</span>  
+                    <button class="nav-btn" data-page="users">  
+                        <i class="fas fa-users"></i> المستخدمين  
+                        <span class="nav-badge" id="usersBadge">0</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="logs">  
+                        <i class="fas fa-history"></i> السجلات  
+                        <span class="nav-badge" id="logsBadge">0</span>  
+                    </button>  
+                </div>  
+                <div class="nav-group">  
+                    <span class="nav-group-title">متقدم</span>  
+                    <button class="nav-btn" data-page="ai-assistant">  
+                        <i class="fas fa-robot"></i> المساعد الذكي  
+                        <span class="nav-badge success">AI</span>  
+                    </button>  
+                    <button class="nav-btn" data-page="settings">  
+                        <i class="fas fa-cog"></i> الإعدادات  
+                    </button>  
+                </div>  
+            </div>  
+            <div class="sidebar-footer">  
+                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>  
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>  
+                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>  
+            </div>  
+        </nav>  
 
-        <!-- FORM -->
-        <div class="maintenance-form" id="maintenanceForm">
-            <div class="form-header">
-                <h3 id="formTitle">📝 تسجيل صيانة جديدة</h3>
-                <button class="btn-close" id="formCloseBtn">✕</button>
-            </div>
+        <main class="main-content">  
+            <div class="page-container">  
+                <div class="page-loader" id="pageLoader" style="display:none;">  
+                    <div class="loader-spinner"></div>  
+                    <p>جاري التحميل...</p>  
+                </div>  
+                <div id="pageContainer"></div>  
+            </div>  
+        </main>  
+
+        <button class="back-to-top" id="backToTop" style="display:none;">  
+            <i class="fas fa-chevron-up"></i>  
+        </button>  
+        <div class="connection-status" id="connectionStatus" style="display:none;">  
+            <i class="fas fa-wifi"></i><span>غير متصل</span>  
+        </div>  
+    </div>  
+
+    <!-- ===== TOAST ===== -->  
+    <div class="toast-container" id="toastContainer"></div>  
+
+    <!-- ===== MODAL ===== -->  
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">  
+        <div class="modal-box">  
+            <div class="modal-header">  
+                <h3 id="modalTitle">عنوان</h3>  
+                <button class="modal-close" id="modalClose">✕</button>  
+            </div>  
+            <div class="modal-body" id="modalBody"></div>  
+            <div class="modal-footer">  
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>  
+                <button class="btn-primary" id="modalConfirm">تأكيد</button>  
+            </div>  
+        </div>  
+    </div>  
+
+    <!-- ============================================================  
+    📦 JAVASCRIPT - ULTRA PROFESSIONAL (FIXED)  
+    ============================================================ -->  
+    <script>  
+        // ============================================================  
+        // 🚢 MARINE SYSTEM - ULTRA PRO v8.0 (FIXED)  
+        // ============================================================  
+
+        console.log('🚢 Marine System Ultra Pro v8.0 - Loading...');  
+
+        // ============================================================  
+        // 📦 CONFIGURATION  
+        // ============================================================  
+
+        const CONFIG = {  
+            API: '/api',  
+            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },  
+            PAGES: {  
+                dashboard: 'لوحة التحكم', fleet: 'السجل العام',  
+                maintenance: 'الصيانة', efficiency: 'الجاهزية',  
+                support: 'الدعم', users: 'المستخدمين',  
+                notes: 'Note Verbale', sessions: 'المراقبة',  
+                'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',  
+                logs: 'السجلات', profile: 'الملف الشخصي'  
+            }  
+        };  
+
+        // ============================================================  
+        // 📦 STATE - استخدام var لتجنب التكرار  
+        // ============================================================  
+
+        var currentUser = null;  
+        var currentPage = 'dashboard';  
+        var notifications = [];  
+        var allVessels = [];  
+        var allMaintenance = [];  
+        var allUsers = [];  
+        var allLogs = [];  
+        var sessionsData = [];  
+
+        // ✅ ربط المتغيرات بـ window لتكون متاحة لكل الصفحات  
+        window.currentUser = currentUser;  
+        window.allVessels = allVessels;  
+        window.allMaintenance = allMaintenance;  
+        window.allUsers = allUsers;  
+        window.allLogs = allLogs;  
+        window.sessionsData = sessionsData;  
+
+        // ============================================================  
+        // 🔧 HELPERS  
+        // ============================================================  
+
+        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
+
+        function getRoleName(r) {  
+            const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
+            return R[r] || r || 'مستخدم';  
+        }  
+
+        function escapeHTML(s) {  
+            if (!s) return '';  
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));  
+        }  
+
+        // ============================================================  
+        // 🍞 TOAST  
+        // ============================================================  
+
+        function showToast(msg, type = 'info') {  
+            const c = document.getElementById('toastContainer');  
+            if (!c) return;  
+            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };  
+            const t = document.createElement('div');  
+            t.className = 'toast toast-' + type;  
+            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;  
+            c.appendChild(t);  
+            setTimeout(() => {  
+                t.style.opacity = '0';  
+                t.style.transform = 'translateX(30px)';  
+                setTimeout(() => t.remove(), 300);  
+            }, 3000);  
+        }  
+
+        // ============================================================  
+        // 🔐 LOGIN  
+        // ============================================================  
+
+        function doLogin() {  
+            console.log('🔐 محاولة تسجيل الدخول');  
+
+            const username = document.getElementById('username');  
+            const password = document.getElementById('password');  
+            const errorEl = document.getElementById('loginError');  
+            const loginBtn = document.getElementById('loginButton');  
+
+            const user = username.value.trim();  
+            const pass = password.value.trim();  
+
+            errorEl.className = 'error-msg';  
+            errorEl.textContent = '';  
+
+            if (!user || !pass) {  
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';  
+                errorEl.classList.add('show');  
+                return;  
+            }  
+
+            loginBtn.disabled = true;  
+            loginBtn.classList.add('loading');  
+
+            fetch(CONFIG.API + '/auth/login', {  
+                method: 'POST',  
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },  
+                body: JSON.stringify({ username: user, password: pass })  
+            })  
+            .then(response => response.json())  
+            .then(data => {  
+                loginBtn.disabled = false;  
+                loginBtn.classList.remove('loading');  
+
+                if (data.success && data.user) {  
+                    const token = data.token || data.accessToken;  
+                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');  
+
+                    currentUser = data.user;  
+                    window.currentUser = data.user;  
+                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);  
+
+                    document.getElementById('loginOverlay').style.display = 'none';  
+                    document.getElementById('mainApp').style.display = 'block';  
+
+                    updateUserDisplay();  
+                    loadPage('dashboard');  
+                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');  
+                    setTimeout(loadAllData, 300);  
+                } else {  
+                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');  
+                    errorEl.classList.add('show');  
+                }  
+            })  
+            .catch(error => {  
+                loginBtn.disabled = false;  
+                loginBtn.classList.remove('loading');  
+                errorEl.textContent = '❌ ' + error.message;  
+                errorEl.classList.add('show');  
+            });  
+        }  
+
+        // ============================================================  
+        // 🛡️ VERIFY TOKEN  
+        // ============================================================  
+
+        async function verifyToken(token) {  
+            try {  
+                console.log('🛡️ التحقق من التوكن...');  
+                const response = await fetch('/api/auth/me', {  
+                    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }  
+                });  
+
+                if (response.ok) {  
+                    const data = await response.json();  
+                    if (data.success && data.user) {  
+                        currentUser = data.user;  
+                        window.currentUser = data.user;  
+                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);  
+                        return true;  
+                    }  
+                }  
+                console.warn('⚠️ التوكن غير صالح، يتم حذفه');  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                return false;  
+            } catch (error) {  
+                console.warn('⚠️ خطأ في التحقق:', error.message);  
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                return false;  
+            }  
+        }  
+
+        // ============================================================  
+        // 📊 LOAD ALL DATA - ULTRA PRO  
+        // ============================================================  
+
+        async function loadAllData() {  
+            const token = getToken();  
+            if (!token) {  
+                console.warn('⚠️ [LOAD] No token found');  
+                return;  
+            }  
+
+            const headers = { 'Authorization': 'Bearer ' + token };  
+
+            try {  
+                console.log('🔄 [LOAD] جاري تحميل جميع البيانات...');  
+
+                // تحميل المراكب  
+                const vesselsRes = await fetch(CONFIG.API + '/vessels', { headers });  
+                if (vesselsRes.ok) {  
+                    const data = await vesselsRes.json();  
+                    allVessels = Array.isArray(data) ? data : [];  
+                    window.allVessels = allVessels;  
+                    console.log('✅ [LOAD] Vessels loaded:', allVessels.length);  
+                    updateBadge('fleetBadge', allVessels.length);  
+                }  
+
+                // تحميل سجل الصيانة  
+                const maintRes = await fetch(CONFIG.API + '/maintenance', { headers });  
+                if (maintRes.ok) {  
+                    const data = await maintRes.json();  
+                    allMaintenance = data.maintenance || data || [];  
+                    window.allMaintenance = allMaintenance;  
+                    console.log('✅ [LOAD] Maintenance loaded:', allMaintenance.length);  
+                    const brokenCount = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length;  
+                    updateBadge('maintenanceBadge', brokenCount);  
+                }  
+
+                // تحميل المستخدمين  
+                const usersRes = await fetch(CONFIG.API + '/users', { headers });  
+                if (usersRes.ok) {  
+                    const data = await usersRes.json();  
+                    allUsers = Array.isArray(data) ? data : [];  
+                    window.allUsers = allUsers;  
+                    console.log('✅ [LOAD] Users loaded:', allUsers.length);  
+                    updateBadge('usersBadge', allUsers.length);  
+                }  
+
+                // تحديث الصفحات الفرعية  
+                updateAllPages();  
+
+                console.log('✅ [LOAD] جميع البيانات تم تحميلها بنجاح');  
+            } catch (error) {  
+                console.error('❌ [LOAD] خطأ:', error);  
+            }  
+        }  
+
+        // ============================================================  
+        // 🔄 UPDATE ALL PAGES  
+        // ============================================================  
+
+        function updateAllPages() {  
+            console.log('🔄 [UPDATE] تحديث جميع الصفحات...');  
+
+            // تحديث الصيانة  
+            if (typeof window.loadMaintenanceData === 'function') {  
+                window.loadMaintenanceData();  
+            }  
+
+            // تحديث السجل العام  
+            if (typeof window.loadFleetData === 'function') {  
+                window.loadFleetData();  
+            }  
+
+            // تحديث لوحة التحكم  
+            if (typeof window.loadDashboardData === 'function') {  
+                window.loadDashboardData();  
+            }  
+
+            console.log('✅ [UPDATE] تم تحديث جميع الصفحات');  
+        }  
+
+        // ============================================================  
+        // 🔢 UPDATE BADGE  
+        // ============================================================  
+
+        function updateBadge(id, count) {  
+            const el = document.getElementById(id);  
+            if (el) {  
+                el.textContent = count;  
+                el.style.display = count > 0 ? 'inline' : 'none';  
+            }  
+        }  
+
+        // ============================================================  
+        // 👤 USER DISPLAY  
+        // ============================================================  
+
+        function updateUserDisplay() {  
+            if (!currentUser) return;  
+            const n = currentUser.name || currentUser.username;  
+            document.getElementById('userDisplayName').textContent = n;  
+            document.getElementById('userInitial').textContent = n.charAt(0);  
+            document.getElementById('sidebarUserName').textContent = n;  
+            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);  
+            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);  
+        }  
+
+        // ============================================================  
+        // 📄 LOAD PAGE - ULTRA PRO  
+        // ============================================================  
+
+        function loadPage(page) {  
+            currentPage = page;  
+            localStorage.setItem(CONFIG.KEYS.PAGE, page);  
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {  
+                btn.classList.toggle('active', btn.dataset.page === page);  
+            });  
+
+            const container = document.getElementById('pageContainer');  
+            const loader = document.getElementById('pageLoader');  
+
+            if (!container) return;  
+
+            loader.style.display = 'flex';  
+            container.innerHTML = '';  
+
+            fetch('/pages/' + page + '.html', { cache: 'no-store' })  
+                .then(response => {  
+                    if (!response.ok) throw new Error('فشل تحميل الصفحة (' + response.status + ')');  
+                    return response.text();  
+                })  
+                .then(html => {  
+                    container.innerHTML = html;  
+                    container.querySelectorAll('script').forEach(oldScript => {  
+                        const newScript = document.createElement('script');  
+                        newScript.textContent = oldScript.textContent;  
+                        document.body.appendChild(newScript);  
+                        oldScript.remove();  
+                    });  
+                    loader.style.display = 'none';  
+                    document.title = '⚓ ' + (CONFIG.PAGES[page] || page);  
+
+                    // بعد تحميل الصفحة، تحديث البيانات  
+                    setTimeout(() => {  
+                        loadAllData();  
+                    }, 300);  
+                })  
+                .catch(error => {  
+                    loader.style.display = 'none';  
+                    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#f87171;">  
+                        <div style="font-size:48px;">❌</div>  
+                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>  
+                        <p>${escapeHTML(error.message)}</p>  
+                        <button onclick="loadPage('dashboard')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>  
+                    </div>`;  
+                });  
+        }  
+
+        // ============================================================  
+        // 🚪 LOGOUT  
+        // ============================================================  
+
+        function doLogout() {  
+            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;  
+            currentUser = null;  
+            window.currentUser = null;  
+            localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+            document.getElementById('loginOverlay').style.display = 'flex';  
+            document.getElementById('mainApp').style.display = 'none';  
+            document.getElementById('username').value = '';  
+            document.getElementById('password').value = '';  
+            document.getElementById('loginError').className = 'error-msg';  
+            showToast('👋 تم تسجيل الخروج', 'info');  
+        }  
+
+        // ============================================================  
+        // 🧭 SIDEBAR  
+        // ============================================================  
+
+        function toggleSidebar() {  
+            document.getElementById('sidebar').classList.toggle('open');  
+            document.getElementById('menuToggle').classList.toggle('active');  
+        }  
+
+        function closeSidebar() {  
+            document.getElementById('sidebar').classList.remove('open');  
+            document.getElementById('menuToggle').classList.remove('active');  
+        }  
+
+        // ============================================================  
+        // 🌐 GLOBAL REFRESH - FIXED (بدون زر في الهيدر)  
+        // ============================================================  
+
+        window.globalRefresh = async function() {  
+            console.log('🔄 [GLOBAL] تحديث شامل...');  
+            await loadAllData();  
+            showToast('✅ تم تحديث جميع البيانات', 'success');  
+        };  
+
+        // ✅ دالة لتحديث الصفحة الحالية فقط (تستخدمها الصفحات الفرعية)  
+        window.refreshCurrentPage = async function() {  
+            console.log('🔄 [GLOBAL] تحديث الصفحة الحالية...');  
+            const page = currentPage || 'dashboard';  
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>🚢 المركب <span class="required">*</span></label>
-                    <select id="mVesselId"><option value="">-- اختر المركب --</option></select>
-                </div>
-                <div class="form-group">
-                    <label>📋 نوع الصيانة <span class="required">*</span></label>
-                    <select id="mType">
-                        <option value="كبرى">كبرى</option>
-                        <option value="دورية">دورية</option>
-                        <option value="طارئة">طارئة</option>
-                        <option value="عادية">عادية</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>🏭 الوحدة المسؤولة</label>
-                    <select id="mUnit">
-                        <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
-                        <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
-                        <option value="شركة خاصة">شركة خاصة</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>👨‍🔧 الفني المسؤول <span class="required">*</span></label>
-                    <input type="text" id="mTechnician" placeholder="اسم الفني">
-                </div>
-                <div class="form-group">
-                    <label>⚠️ نوع العطل</label>
-                    <select id="mFaultType">
-                        <option value="محرك">محرك</option>
-                        <option value="كهرباء">كهرباء</option>
-                        <option value="هيدروليك">هيدروليك</option>
-                        <option value="هيكل">هيكل</option>
-                        <option value="توجيه">توجيه</option>
-                        <option value="تبريد">تبريد</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>📅 تاريخ بدء العطل</label>
-                    <input type="date" id="mStartDate">
-                </div>
-                <div class="form-group">
-                    <label>📊 حالة الصيانة</label>
-                    <select id="mStatus">
-                        <option value="قيد الإنجاز">🔄 قيد الإنجاز</option>
-                        <option value="مكتملة">✅ مكتملة</option>
-                        <option value="ملغية">❌ ملغية</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>💰 التكلفة (د.ت)</label>
-                    <input type="number" id="mCost" placeholder="0">
-                </div>
-            </div>
-            
-            <div class="form-grid" style="margin-top:16px;">
-                <div class="form-group" style="grid-column: span 1;">
-                    <label>📝 وصف العطل <span class="required">*</span></label>
-                    <textarea id="mDescription" placeholder="وصف تفصيلي للعطل" rows="3"></textarea>
-                </div>
-                <div class="form-group" style="grid-column: span 1;">
-                    <label>🔧 الإصلاح المقترح</label>
-                    <textarea id="mRepair" placeholder="خطة الإصلاح المقترحة" rows="3"></textarea>
-                </div>
-            </div>
-            
-            <div class="form-grid" style="margin-top:16px;">
-                <div class="form-group">
-                    <label>📝 ملاحظات</label>
-                    <input type="text" id="mNotes" placeholder="ملاحظات إضافية">
-                </div>
-                <input type="hidden" id="mRecordId" value="">
-            </div>
-            
-            <div style="margin-top:16px;">
-                <label style="font-size:13px; color:rgba(255,255,255,0.4); font-weight:600; display:block; margin-bottom:8px;">🔩 قطع الغيار المستخدمة</label>
-                <div id="partsContainer">
-                    <div class="part-item" style="display:flex; gap:10px; margin-bottom:8px; flex-wrap:wrap; align-items:center;">
-                        <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
-                        <input type="number" placeholder="الكمية" class="part-qty" style="width:70px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
-                        <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:'Cairo',sans-serif;">
-                        <button class="remove-part-btn" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
-                    </div>
-                </div>
-                <button id="addPartBtn" style="padding:6px 16px; background:rgba(96,165,250,0.15); color:#60a5fa; border:1px solid rgba(96,165,250,0.1); border-radius:6px; cursor:pointer; font-family:'Cairo',sans-serif; font-size:13px;">➕ إضافة قطعة</button>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn-save" id="saveMaintenanceBtn">💾 حفظ</button>
-                <button class="btn-cancel" id="cancelMaintenanceBtn">❌ إلغاء</button>
-            </div>
-        </div>
-
-        <!-- HISTORY -->
-        <div class="section-title" style="margin-top:30px;">
-            <h3>📚 سجل الصيانة التاريخي <span class="count-badge" id="historyCount">0</span></h3>
-        </div>
-        
-        <div class="filters-bar">
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label>🚢 المركب</label>
-                    <input type="text" id="filterVessel" placeholder="بحث">
-                </div>
-                <div class="filter-group">
-                    <label>📅 السنة</label>
-                    <select id="filterYear"><option value="">-- جميع السنوات --</option></select>
-                </div>
-                <div class="filter-group">
-                    <label>🔧 نوع الصيانة</label>
-                    <select id="filterType">
-                        <option value="">الكل</option>
-                        <option value="كبرى">كبرى</option>
-                        <option value="دورية">دورية</option>
-                        <option value="طارئة">طارئة</option>
-                        <option value="عادية">عادية</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>🏭 الوحدة</label>
-                    <select id="filterUnit">
-                        <option value="">الكل</option>
-                        <option value="وحدة الصيانة والإسناد البحري تونس">تونس</option>
-                        <option value="وحدة الصيانة والإسناد البحري صفاقس">صفاقس</option>
-                        <option value="وحدة الصيانة والإسناد البحري المنستير">المنستير</option>
-                        <option value="وحدة الصيانة والإسناد البحري جرجيس">جرجيس</option>
-                        <option value="شركة خاصة">شركة خاصة</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>⚠️ نوع العطل</label>
-                    <select id="filterFaultType">
-                        <option value="">الكل</option>
-                        <option value="محرك">محرك</option>
-                        <option value="كهرباء">كهرباء</option>
-                        <option value="هيدروليك">هيدروليك</option>
-                        <option value="هيكل">هيكل</option>
-                        <option value="توجيه">توجيه</option>
-                        <option value="تبريد">تبريد</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>💰 التكلفة</label>
-                    <select id="filterCost">
-                        <option value="">الكل</option>
-                        <option value="0-1000">أقل من 1000</option>
-                        <option value="1000-5000">1000 - 5000</option>
-                        <option value="5000-10000">5000 - 10000</option>
-                        <option value="10000+">أكثر من 10000</option>
-                    </select>
-                </div>
-            </div>
-            <div class="filters-actions">
-                <button class="btn-filter apply" id="applyFilterBtn">🔍 فلترة</button>
-                <button class="btn-filter reset" id="resetFilterBtn">🔄 إلغاء</button>
-            </div>
-        </div>
-        
-        <div id="historyMaintenanceContainer">
-            <div class="empty-state">
-                <div class="loading-spinner"></div>
-                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
-            </div>
-        </div>
-
-        <!-- UNITS -->
-        <div class="section-title" style="margin-top:30px;">
-            <h3>🏭 وحدات الصيانة</h3>
-        </div>
-        <div id="maintenanceUnitsContainer">
-            <div class="empty-state">
-                <div class="loading-spinner"></div>
-                <p style="margin-top:10px; color:rgba(255,255,255,0.2);">جاري تحميل البيانات...</p>
-            </div>
-        </div>
-        
-    </div>
-
-    <!-- HISTORY MODAL -->
-    <div class="modal-overlay" id="historyModal">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>
-                    📜 تاريخ الإصلاحات
-                    <span id="historyVesselName" style="font-size:16px; color:rgba(255,255,255,0.4);"></span>
-                </h3>
-                <button class="close-btn" id="historyCloseBtn">✕</button>
-            </div>
-            
-            <div class="modal-stats">
-                <div class="modal-stat-item">
-                    <div class="number" id="historyTotal">0</div>
-                    <div class="label">📊 إجمالي الإصلاحات</div>
-                </div>
-                <div class="modal-stat-item">
-                    <div class="number" id="historyCompleted">0</div>
-                    <div class="label">✅ مكتملة</div>
-                </div>
-                <div class="modal-stat-item">
-                    <div class="number" id="historyCost">0</div>
-                    <div class="label">💰 إجمالي التكلفة</div>
-                </div>
-                <div class="modal-stat-item">
-                    <div class="number" id="historyAvg">0</div>
-                    <div class="label">📈 متوسط التكلفة</div>
-                </div>
-            </div>
-            
-            <div style="overflow-x:auto;">
-                <table class="modal-table">
-                    <thead>
-                        <tr>
-                            <th>📅 التاريخ</th>
-                            <th>🔧 نوع الصيانة</th>
-                            <th>👨‍🔧 الفني</th>
-                            <th>💰 التكلفة</th>
-                            <th>📊 الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody">
-                        <tr>
-                            <td colspan="5" class="no-history">
-                                <div class="icon">🚫</div>
-                                <div>لا توجد سجلات صيانة لهذا المركب</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    📦 JAVASCRIPT - FIXED (بدون currentUser مكرر)
-    ============================================================ -->
-    <script>
-    // ============================================================
-    // 🛡️ FIX: استخدام المتغيرات العامة من index.html
-    // ============================================================
-
-    // ✅ استخدام المتغيرات العامة (لا نعيد تعريفها)
-    const currentUser = window.currentUser || null;
-    
-    // ✅ التأكد من وجود المتغيرات العامة
-    if (typeof window.allVessels === 'undefined') {
-        window.allVessels = [];
-    }
-    if (typeof window.allMaintenance === 'undefined') {
-        window.allMaintenance = [];
-    }
-
-    console.log('🔧 Maintenance page loaded (fixed)');
-    console.log('👤 Current user:', currentUser?.name || 'Unknown');
-    console.log('🚢 Vessels:', window.allVessels.length);
-    console.log('🔧 Maintenance:', window.allMaintenance.length);
-
-    // ============================================================
-    // 1. HELPERS
-    // ============================================================
-
-    function getToken() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.warn('⚠️ No token found');
-            return null;
-        }
-        return token;
-    }
-
-    function showToast(message, type = 'info') {
-        let container = document.getElementById('toastContainer');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `
-            <span class="toast-icon">${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : type === 'danger' ? '❌' : 'ℹ️'}</span>
-            <span>${message}</span>
-            <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-        `;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            if (toast.parentElement) toast.remove();
-        }, 5000);
-    }
-
-    // ============================================================
-    // 2. LOAD DATA
-    // ============================================================
-
-    async function loadMaintenanceData() {
-        console.log('🔄 [MAINT] Loading maintenance data...');
-        
-        try {
-            const token = getToken();
-            if (!token) {
-                document.getElementById('generalMaintenanceContainer').innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">⚠️</div>
-                        <h3>يرجى تسجيل الدخول أولاً</h3>
-                    </div>
-                `;
-                return;
-            }
-
-            // تحميل المراكب
-            const vesselsRes = await fetch('/api/vessels', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (vesselsRes.ok) {
-                const data = await vesselsRes.json();
-                window.allVessels = data.vessels || data || [];
-                console.log('✅ [MAINT] Vessels loaded:', window.allVessels.length);
-            } else {
-                console.error('❌ [MAINT] Vessels API error:', vesselsRes.status);
-            }
-
-            // تحميل سجل الصيانة
-            const maintRes = await fetch('/api/maintenance', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            if (maintRes.ok) {
-                const data = await maintRes.json();
-                window.allMaintenance = data.maintenance || data || [];
-                console.log('✅ [MAINT] Maintenance loaded:', window.allMaintenance.length);
-            } else {
-                console.error('❌ [MAINT] Maintenance API error:', maintRes.status);
-            }
-
-            // تحديث الواجهة
-            renderAll();
-            
-            console.log('✅ [MAINT] Data loaded successfully');
-        } catch (error) {
-            console.error('❌ [MAINT] Load error:', error);
-            showToast('❌ فشل تحميل البيانات: ' + error.message, 'danger');
-        }
-    }
-
-    // ============================================================
-    // 3. RENDER FUNCTIONS
-    // ============================================================
-
-    function renderAll() {
-        renderStats();
-        renderBrokenVessels();
-        renderHistory();
-        renderUnits();
-        updateVesselSelect();
-        updateYearFilter();
-        updateBrokenBadge();
-    }
-
-    function renderStats() {
-        const records = window.allMaintenance || [];
-        const total = records.length;
-        const inProgress = records.filter(r => r.status === 'قيد الإنجاز' || r.status === 'معلقة').length;
-        const completed = records.filter(r => r.status === 'مكتملة').length;
-        const cancelled = records.filter(r => r.status === 'ملغية' || r.status === 'ملغاة').length;
-        const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-
-        document.getElementById('totalCount').textContent = total;
-        document.getElementById('inProgressCount').textContent = inProgress;
-        document.getElementById('completedCount').textContent = completed;
-        document.getElementById('cancelledCount').textContent = cancelled;
-        document.getElementById('totalCost').textContent = totalCost.toLocaleString();
-
-        const progressPercent = total > 0 ? Math.round((inProgress / total) * 100) : 0;
-        const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
-        const cancelledPercent = total > 0 ? Math.round((cancelled / total) * 100) : 0;
-
-        document.getElementById('progressBar').style.width = Math.min(progressPercent, 100) + '%';
-        document.getElementById('completedBar').style.width = Math.min(completedPercent, 100) + '%';
-        document.getElementById('cancelledBar').style.width = Math.min(cancelledPercent, 100) + '%';
-    }
-
-    function renderBrokenVessels() {
-        const container = document.getElementById('generalMaintenanceContainer');
-        if (!container) return;
-
-        const vessels = window.allVessels || [];
-        const broken = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة');
-
-        document.getElementById('brokenCount').textContent = broken.length;
-
-        if (broken.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state" style="border-color: rgba(74,222,128,0.1);">
-                    <div class="icon" style="font-size:48px;">✅</div>
-                    <h3 style="color:#4ade80;">لا توجد مراكب معطبة حالياً</h3>
-                    <p style="color:rgba(255,255,255,0.3);">جميع المراكب في حالة جاهزة</p>
-                </div>
-            `;
-            return;
-        }
-
-        let html = `
-            <div class="table-container">
-                <table class="maintenance-table">
-                    <thead>
-                        <tr>
-                            <th>🚢 المركب</th>
-                            <th>الفئة</th>
-                            <th>📊 الحالة</th>
-                            <th>⚠️ العطل</th>
-                            <th>🔄 الإصلاحات</th>
-                            <th>⚙️ الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        broken.forEach(v => {
-            const vesselId = v._id || v.id;
-            const records = window.allMaintenance || [];
-            const repairs = records.filter(r => r.vesselId == vesselId);
-            const completedRepairs = repairs.filter(r => r.status === 'مكتملة');
-            const totalCost = repairs.reduce((sum, r) => sum + (r.cost || 0), 0);
-
-            html += `
-                <tr>
-                    <td><strong>${v.name || '-'}</strong></td>
-                    <td style="color:rgba(255,255,255,0.4);">${v.cat || '-'}</td>
-                    <td><span class="status-badge status-broken">${v.stat === 'معطب' ? '🔴 معطبة' : '🟠 صيانة'}</span></td>
-                    <td style="color:rgba(255,255,255,0.4);">${v.break || '-'}</td>
-                    <td style="color:#60a5fa; font-weight:600;">
-                        ${completedRepairs.length} مرة
-                        ${totalCost > 0 ? `💰 ${totalCost} د.ت` : ''}
-                    </td>
-                    <td>
-                        <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                            <button class="btn-sm btn-success fix-btn" data-id="${vesselId}">✅ إصلاح</button>
-                            <button class="btn-sm btn-history history-btn" data-id="${vesselId}" data-name="${v.name}">📜 التاريخ (${repairs.length})</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table></div>`;
-        container.innerHTML = html;
-
-        // ربط الأحداث
-        container.querySelectorAll('.fix-btn').forEach(btn => {
-            btn.onclick = function() { fixVessel(this.dataset.id); };
-        });
-        container.querySelectorAll('.history-btn').forEach(btn => {
-            btn.onclick = function() { showHistory(this.dataset.id, this.dataset.name); };
-        });
-    }
-
-    function renderHistory() {
-        const container = document.getElementById('historyMaintenanceContainer');
-        if (!container) return;
-
-        let records = [...(window.allMaintenance || [])];
-        
-        // تطبيق الفلترة
-        const vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
-        const yearFilter = document.getElementById('filterYear')?.value || '';
-        const typeFilter = document.getElementById('filterType')?.value || '';
-        const unitFilter = document.getElementById('filterUnit')?.value || '';
-        const faultFilter = document.getElementById('filterFaultType')?.value || '';
-        const costFilter = document.getElementById('filterCost')?.value || '';
-
-        if (vesselFilter) {
-            records = records.filter(r => (r.vesselName || '').toLowerCase().includes(vesselFilter));
-        }
-        if (yearFilter) {
-            records = records.filter(r => r.date && r.date.startsWith(yearFilter));
-        }
-        if (typeFilter) {
-            records = records.filter(r => r.type === typeFilter);
-        }
-        if (unitFilter) {
-            records = records.filter(r => r.unit === unitFilter);
-        }
-        if (faultFilter) {
-            records = records.filter(r => r.faultType === faultFilter || (r.description || '').includes(faultFilter));
-        }
-        if (costFilter) {
-            records = records.filter(r => {
-                const cost = r.cost || 0;
-                switch(costFilter) {
-                    case '0-1000': return cost < 1000;
-                    case '1000-5000': return cost >= 1000 && cost <= 5000;
-                    case '5000-10000': return cost > 5000 && cost <= 10000;
-                    case '10000+': return cost > 10000;
-                    default: return true;
-                }
-            });
-        }
-
-        document.getElementById('historyCount').textContent = records.length;
-
-        if (records.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">📭</div>
-                    <h3>لا توجد سجلات صيانة</h3>
-                    <p>لا توجد سجلات مطابقة للفلترة</p>
-                </div>
-            `;
-            return;
-        }
-
-        const sorted = [...records].sort((a, b) => {
-            const dateA = a.date ? new Date(a.date) : new Date(0);
-            const dateB = b.date ? new Date(b.date) : new Date(0);
-            return dateB - dateA;
-        });
-
-        let html = `
-            <div class="table-container">
-                <table class="maintenance-table">
-                    <thead>
-                        <tr>
-                            <th>📅 التاريخ</th>
-                            <th>🚢 المركب</th>
-                            <th>🔧 النوع</th>
-                            <th>⚠️ العطل</th>
-                            <th>👨‍🔧 الفني</th>
-                            <th>💰 التكلفة</th>
-                            <th>📊 الحالة</th>
-                            <th>⚙️</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        sorted.forEach(r => {
-            const statusMap = {
-                'مكتملة': '<span class="status-badge status-completed">✅ مكتملة</span>',
-                'قيد الإنجاز': '<span class="status-badge status-in-progress">🔄 قيد الإنجاز</span>',
-                'معلقة': '<span class="status-badge status-pending">⏳ معلقة</span>',
-                'ملغية': '<span class="status-badge status-cancelled">❌ ملغية</span>'
-            };
-
-            html += `
-                <tr>
-                    <td>${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
-                    <td><strong>${r.vesselName || '-'}</strong></td>
-                    <td style="color:rgba(255,255,255,0.4);">${r.type || '-'}</td>
-                    <td style="color:rgba(255,255,255,0.4);">${r.description || '-'}</td>
-                    <td style="color:rgba(255,255,255,0.4);">${r.technician || '-'}</td>
-                    <td style="color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                    <td>${statusMap[r.status] || r.status || 'غير محدد'}</td>
-                    <td>
-                        <button class="btn-sm btn-danger delete-btn" data-id="${r._id || r.id}">🗑️</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table></div>`;
-        container.innerHTML = html;
-
-        container.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.onclick = function() { deleteMaintenance(this.dataset.id); };
-        });
-    }
-
-    function renderUnits() {
-        const container = document.getElementById('maintenanceUnitsContainer');
-        if (!container) return;
-
-        const records = window.allMaintenance || [];
-        const units = [
-            'وحدة الصيانة والإسناد البحري تونس',
-            'وحدة الصيانة والإسناد البحري صفاقس',
-            'وحدة الصيانة والإسناد البحري المنستير',
-            'وحدة الصيانة والإسناد البحري جرجيس',
-            'شركة خاصة'
-        ];
-
-        let html = '';
-        units.forEach(unit => {
-            const unitRecords = records.filter(r => r.unit === unit);
-            const total = unitRecords.length;
-            const completed = unitRecords.filter(r => r.status === 'مكتملة').length;
-            const inProgress = unitRecords.filter(r => r.status === 'قيد الإنجاز').length;
-
-            html += `
-                <div style="background:rgba(255,255,255,0.02); border-radius:12px; padding:16px 20px; margin:12px 0; border:1px solid rgba(255,255,255,0.04);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
-                        <div>
-                            <strong style="color:rgba(255,255,255,0.8);">🏭 ${unit.replace('وحدة الصيانة والإسناد البحري ', '')}</strong>
-                            <span style="font-size:12px; color:rgba(255,255,255,0.2); margin-left:10px;">📊 ${total} سجل</span>
-                        </div>
-                        <div style="font-size:12px; color:rgba(255,255,255,0.3);">
-                            ✅ ${completed} مكتملة &nbsp;|&nbsp; 🔄 ${inProgress} قيد الإنجاز
-                        </div>
-                    </div>
-                    ${total === 0 ? `
-                        <div style="text-align:center; padding:10px; color:rgba(255,255,255,0.15); font-size:13px;">
-                            🚫 لا توجد سجلات في هذه الوحدة
-                        </div>
-                    ` : `
-                        <div style="overflow-x:auto;">
-                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.2); border-bottom:1px solid rgba(255,255,255,0.04);">المركب</th>
-                                        <th style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.2); border-bottom:1px solid rgba(255,255,255,0.04);">👨‍🔧 الفني</th>
-                                        <th style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.2); border-bottom:1px solid rgba(255,255,255,0.04);">💰 التكلفة</th>
-                                        <th style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.2); border-bottom:1px solid rgba(255,255,255,0.04);">📊 الحالة</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${unitRecords.slice(-5).reverse().map(r => `
-                                        <tr>
-                                            <td style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.6);">${r.vesselName || '-'}</td>
-                                            <td style="padding:6px 10px; text-align:center; color:rgba(255,255,255,0.4);">${r.technician || '-'}</td>
-                                            <td style="padding:6px 10px; text-align:center; color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                                            <td style="padding:6px 10px; text-align:center;">
-                                                <span class="status-badge ${r.status === 'مكتملة' ? 'status-completed' : r.status === 'قيد الإنجاز' ? 'status-in-progress' : 'status-cancelled'}">
-                                                    ${r.status || 'غير محدد'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    `}
-                </div>
-            `;
-        });
-
-        container.innerHTML = html;
-    }
-
-    function updateBrokenBadge() {
-        const vessels = window.allVessels || [];
-        const brokenCount = vessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length;
-        const badge = document.getElementById('maintenanceBadge');
-        if (badge) {
-            badge.textContent = brokenCount;
-            badge.style.display = brokenCount > 0 ? 'inline' : 'none';
-        }
-        document.getElementById('brokenCount').textContent = brokenCount;
-    }
-
-    // ============================================================
-    // 4. FORM HELPERS
-    // ============================================================
-
-    function toggleMaintenanceForm() {
-        const form = document.getElementById('maintenanceForm');
-        const isActive = form.classList.contains('active');
-        
-        if (isActive) {
-            form.classList.remove('active');
-            document.getElementById('formTitle').textContent = '📝 تسجيل صيانة جديدة';
-            document.getElementById('mRecordId').value = '';
-            document.querySelectorAll('#maintenanceForm input, #maintenanceForm select, #maintenanceForm textarea').forEach(el => {
-                if (el.id !== 'mRecordId' && el.id !== 'mVesselId') {
-                    el.value = '';
-                }
-            });
-            document.getElementById('mStartDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('partsContainer').innerHTML = '';
-            addPart();
-        } else {
-            form.classList.add('active');
-            document.getElementById('mStartDate').value = new Date().toISOString().split('T')[0];
-            if (document.getElementById('partsContainer').children.length === 0) {
-                addPart();
-            }
-            updateVesselSelect();
-        }
-    }
-
-    function updateVesselSelect() {
-        const select = document.getElementById('mVesselId');
-        if (!select) return;
-        const vessels = window.allVessels || [];
-        const currentValue = select.value;
-        select.innerHTML = '<option value="">-- اختر المركب --</option>';
-        vessels.forEach(v => {
-            const option = document.createElement('option');
-            option.value = v._id || v.id;
-            option.textContent = `${v.name} (${v.num || 'بدون رقم'}) - ${v.cat || 'بدون فئة'}`;
-            if (option.value == currentValue) option.selected = true;
-            select.appendChild(option);
-        });
-    }
-
-    function updateYearFilter() {
-        const select = document.getElementById('filterYear');
-        if (!select) return;
-        const records = window.allMaintenance || [];
-        const years = new Set();
-        records.forEach(r => {
-            if (r.date) {
-                const year = r.date.split('-')[0];
-                if (year && year.length === 4) years.add(year);
-            }
-        });
-        const currentValue = select.value;
-        select.innerHTML = '<option value="">-- جميع السنوات --</option>';
-        Array.from(years).sort().reverse().forEach(year => {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = `📅 ${year}`;
-            if (year === currentValue) option.selected = true;
-            select.appendChild(option);
-        });
-    }
-
-    function addPart() {
-        const container = document.getElementById('partsContainer');
-        if (!container) return;
-        const div = document.createElement('div');
-        div.className = 'part-item';
-        div.style.cssText = 'display:flex; gap:10px; margin-bottom:8px; flex-wrap:wrap; align-items:center;';
-        div.innerHTML = `
-            <input type="text" placeholder="اسم القطعة" class="part-name" style="flex:2; min-width:120px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:\'Cairo\',sans-serif;">
-            <input type="number" placeholder="الكمية" class="part-qty" style="width:70px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:\'Cairo\',sans-serif;">
-            <input type="number" placeholder="السعر" class="part-price" style="width:80px; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:6px; color:white; font-family:\'Cairo\',sans-serif;">
-            <button class="remove-part-btn" style="padding:4px 10px; background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.1); border-radius:6px; cursor:pointer; font-size:16px;">✕</button>
-        `;
-        container.appendChild(div);
-
-        div.querySelector('.remove-part-btn').onclick = function() { removePart(this); };
-    }
-
-    function removePart(btn) {
-        const container = document.getElementById('partsContainer');
-        if (container.children.length > 1) {
-            btn.closest('.part-item').remove();
-        } else {
-            showToast('⚠️ يجب أن يكون هناك قطعة واحدة على الأقل', 'warning');
-        }
-    }
-
-    function getPartsData() {
-        const parts = [];
-        document.querySelectorAll('#partsContainer .part-item').forEach(item => {
-            const name = item.querySelector('.part-name')?.value;
-            const qty = parseFloat(item.querySelector('.part-qty')?.value) || 0;
-            const price = parseFloat(item.querySelector('.part-price')?.value) || 0;
-            if (name) {
-                parts.push({ name, quantity: qty, price });
-            }
-        });
-        return parts;
-    }
-
-    // ============================================================
-    // 5. CRUD OPERATIONS
-    // ============================================================
-
-    async function saveMaintenance() {
-        const vesselId = document.getElementById('mVesselId')?.value;
-        const type = document.getElementById('mType')?.value;
-        const unit = document.getElementById('mUnit')?.value;
-        const technician = document.getElementById('mTechnician')?.value.trim();
-        const description = document.getElementById('mDescription')?.value.trim();
-        const repair = document.getElementById('mRepair')?.value.trim();
-        const faultType = document.getElementById('mFaultType')?.value;
-        const startDate = document.getElementById('mStartDate')?.value;
-        const status = document.getElementById('mStatus')?.value;
-        const cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-        const notes = document.getElementById('mNotes')?.value.trim();
-        const parts = getPartsData();
-        const recordId = document.getElementById('mRecordId')?.value;
-
-        if (!vesselId) { showToast('⚠️ الرجاء اختيار المركب', 'warning'); return; }
-        if (!description) { showToast('⚠️ الرجاء إدخال وصف العطل', 'warning'); return; }
-        if (!technician) { showToast('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning'); return; }
-
-        const vessels = window.allVessels || [];
-        const vessel = vessels.find(v => (v._id || v.id) == vesselId);
-        const vesselName = vessel ? vessel.name : 'مركب غير معروف';
-
-        const data = {
-            vesselId, vesselName, type: type || 'عادية',
-            unit: unit || 'غير محدد', technician, description,
-            repair: repair || '', faultType: faultType || 'أخرى',
-            cost, notes: notes || '', parts,
-            status: status || 'قيد الإنجاز',
-            startDate: startDate || new Date().toISOString().split('T')[0],
-            createdBy: currentUser?.name || 'Admin'
-        };
-
-        try {
-            const token = getToken();
-            if (!token) return;
-
-            const url = recordId ? `/api/maintenance/${recordId}` : '/api/maintenance';
-            const method = recordId ? 'PUT' : 'POST';
-            
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) throw new Error('فشل الحفظ');
-            
-            showToast(`✅ ${recordId ? 'تم تحديث' : 'تم إضافة'} سجل الصيانة بنجاح`, 'success');
-            toggleMaintenanceForm();
-            await loadMaintenanceData();
-        } catch (error) {
-            console.error('❌ Save error:', error);
-            showToast('❌ ' + error.message, 'danger');
-        }
-    }
-
-    async function deleteMaintenance(id) {
-        if (!confirm('⚠️ هل أنت متأكد من حذف هذا السجل؟')) return;
-        try {
-            const token = getToken();
-            if (!token) return;
-
-            const response = await fetch(`/api/maintenance/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (!response.ok) throw new Error('فشل الحذف');
-            
-            showToast('✅ تم حذف السجل', 'success');
-            await loadMaintenanceData();
-        } catch (error) {
-            console.error('❌ Delete error:', error);
-            showToast('❌ ' + error.message, 'danger');
-        }
-    }
-
-    async function fixVessel(vesselId) {
-        const records = window.allMaintenance || [];
-        const openRecords = records.filter(r => 
-            r.vesselId == vesselId && 
-            (r.status === 'قيد الإنجاز' || r.status === 'معلقة')
-        );
-
-        if (openRecords.length > 0) {
-            if (!confirm(`⚠️ يوجد ${openRecords.length} سجل(ات) صيانة مفتوحة. إكمال الإصلاح سيغلقها تلقائياً.`)) {
-                return;
-            }
-        }
-
-        if (!confirm('⚠️ هل أنت متأكد من إصلاح هذا المركب وعودته للخدمة؟')) return;
-
-        try {
-            const token = getToken();
-            if (!token) return;
-
-            // تحديث حالة المركب
-            const vessels = window.allVessels || [];
-            const vessel = vessels.find(v => (v._id || v.id) == vesselId);
-            
-            await fetch(`/api/vessels/${vesselId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ 
-                    stat: 'صالح', 
-                    break: '',
-                    eDate: new Date().toISOString().split('T')[0]
-                })
-            });
-
-            // إغلاق سجلات الصيانة المفتوحة
-            for (const record of openRecords) {
-                await fetch(`/api/maintenance/${record._id || record.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({ 
-                        status: 'مكتملة',
-                        completedAt: new Date().toISOString()
-                    })
-                });
-            }
-
-            // تسجيل في التاريخ
-            await fetch('/api/maintenance', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({
-                    vesselId,
-                    vesselName: vessel ? vessel.name : 'مركب غير معروف',
-                    type: 'إصلاح كامل',
-                    unit: vessel?.repairUnit || 'غير محدد',
-                    technician: currentUser?.name || 'النظام',
-                    description: `تم إصلاح المركب وعودته للخدمة`,
-                    cost: 0,
-                    status: 'مكتملة',
-                    date: new Date().toISOString().split('T')[0],
-                    faultType: vessel?.break || 'تم الإصلاح',
-                    notes: `تم الإصلاح بواسطة ${currentUser?.name || 'النظام'}`
-                })
-            });
-
-            showToast(`✅ تم إصلاح المركب وعودته للخدمة`, 'success');
-            await loadMaintenanceData();
-        } catch (error) {
-            console.error('❌ Fix vessel error:', error);
-            showToast('❌ ' + error.message, 'danger');
-        }
-    }
-
-    // ============================================================
-    // 6. HISTORY MODAL
-    // ============================================================
-
-    function showHistory(vesselId, vesselName) {
-        const records = window.allMaintenance || [];
-        const vesselRecords = records.filter(r => r.vesselId == vesselId);
-        const total = vesselRecords.length;
-        const completed = vesselRecords.filter(r => r.status === 'مكتملة').length;
-        const totalCost = vesselRecords.reduce((sum, r) => sum + (r.cost || 0), 0);
-        const avgCost = total > 0 ? (totalCost / total).toFixed(0) : 0;
-
-        document.getElementById('historyVesselName').textContent = `- ${vesselName}`;
-        document.getElementById('historyTotal').textContent = total;
-        document.getElementById('historyCompleted').textContent = completed;
-        document.getElementById('historyCost').textContent = totalCost.toLocaleString();
-        document.getElementById('historyAvg').textContent = avgCost.toLocaleString();
-
-        const tbody = document.getElementById('historyTableBody');
-        if (vesselRecords.length === 0) {
-            tbody.innerHTML = `
-                <tr><td colspan="5" class="no-history">
-                    <div class="icon">🚫</div>
-                    <div>لا توجد سجلات صيانة لهذا المركب</div>
-                </td></tr>
-            `;
-        } else {
-            tbody.innerHTML = vesselRecords.map(r => {
-                const statusMap = {
-                    'مكتملة': '<span class="status-badge status-completed">✅ مكتملة</span>',
-                    'قيد الإنجاز': '<span class="status-badge status-in-progress">🔄 قيد الإنجاز</span>',
-                    'معلقة': '<span class="status-badge status-pending">⏳ معلقة</span>',
-                    'ملغية': '<span class="status-badge status-cancelled">❌ ملغية</span>'
-                };
-                return `
-                    <tr>
-                        <td>${r.date ? new Date(r.date).toLocaleDateString('ar-TN') : '-'}</td>
-                        <td>${r.type || '-'}</td>
-                        <td>${r.technician || '-'}</td>
-                        <td style="color:#4ade80; font-weight:600;">${r.cost ? r.cost + ' د.ت' : '-'}</td>
-                        <td>${statusMap[r.status] || r.status || '-'}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        document.getElementById('historyModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeHistoryModal() {
-        document.getElementById('historyModal').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    // ============================================================
-    // 7. FILTERS
-    // ============================================================
-
-    function applyHistoryFilters() { renderHistory(); showToast('✅ تم تطبيق الفلترة', 'success'); }
-    function resetHistoryFilters() {
-        document.querySelectorAll('#page-maintenance .filters-grid input, #page-maintenance .filters-grid select').forEach(el => {
-            if (el.tagName === 'INPUT') el.value = '';
-            if (el.tagName === 'SELECT') el.value = '';
-        });
-        renderHistory();
-        showToast('✅ تم إلغاء الفلترة', 'success');
-    }
-
-    // ============================================================
-    // 8. EXPORT
-    // ============================================================
-
-    function exportMaintenanceReport() {
-        const records = window.allMaintenance || [];
-        if (records.length === 0) {
-            showToast('⚠️ لا توجد بيانات للتصدير', 'warning');
-            return;
-        }
-
-        let csv = 'التاريخ,المركب,نوع الصيانة,الفني,التكلفة,الحالة,الوحدة\n';
-        records.forEach(r => {
-            csv += `${r.date || ''},${r.vesselName || ''},${r.type || ''},${r.technician || ''},${r.cost || 0},${r.status || ''},${r.unit || ''}\n`;
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `تقرير_الصيانة_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        showToast('✅ تم تصدير التقرير بنجاح', 'success');
-    }
-
-    // ============================================================
-    // 9. INIT - ربط الأزرار
-    // ============================================================
-
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🔧 Maintenance page loading (Fixed version)...');
-
-        // ✅ ربط زر التحديث
-        document.getElementById('refreshMaintenanceBtn').onclick = loadMaintenanceData;
-
-        // ✅ ربط زر الإضافة
-        document.getElementById('addMaintenanceBtn').onclick = toggleMaintenanceForm;
-
-        // ✅ ربط زر التصدير
-        document.getElementById('exportMaintenanceBtn').onclick = exportMaintenanceReport;
-
-        // ✅ ربط أزرار النموذج
-        document.getElementById('formCloseBtn').onclick = toggleMaintenanceForm;
-        document.getElementById('cancelMaintenanceBtn').onclick = toggleMaintenanceForm;
-        document.getElementById('saveMaintenanceBtn').onclick = saveMaintenance;
-        document.getElementById('addPartBtn').onclick = addPart;
-
-        // ✅ ربط أزرار الفلترة
-        document.getElementById('applyFilterBtn').onclick = applyHistoryFilters;
-        document.getElementById('resetFilterBtn').onclick = resetHistoryFilters;
-
-        // ✅ ربط أزرار المودال
-        document.getElementById('historyCloseBtn').onclick = closeHistoryModal;
-
-        // ✅ إغلاق المودال عند الضغط على الخلفية
-        document.getElementById('historyModal').onclick = function(e) {
-            if (e.target === this) closeHistoryModal();
-        };
-
-        // ✅ تحميل البيانات فوراً
-        setTimeout(loadMaintenanceData, 200);
-        setTimeout(loadMaintenanceData, 800);
-        
-        // ✅ تحديث كل 30 ثانية
-        setInterval(loadMaintenanceData, 30000);
-    });
-
-    // ============================================================
-    // 10. EXPOSE GLOBALS
-    // ============================================================
-
-    window.loadMaintenanceData = loadMaintenanceData;
-    window.toggleMaintenanceForm = toggleMaintenanceForm;
-    window.saveMaintenance = saveMaintenance;
-    window.deleteMaintenance = deleteMaintenance;
-    window.fixVessel = fixVessel;
-    window.showHistory = showHistory;
-    window.closeHistoryModal = closeHistoryModal;
-    window.addPart = addPart;
-    window.removePart = removePart;
-    window.applyHistoryFilters = applyHistoryFilters;
-    window.resetHistoryFilters = resetHistoryFilters;
-    window.exportMaintenanceReport = exportMaintenanceReport;
-    window.renderAll = renderAll;
-    window.renderStats = renderStats;
-    window.renderBrokenVessels = renderBrokenVessels;
-    window.renderHistory = renderHistory;
-    window.renderUnits = renderUnits;
-    window.updateVesselSelect = updateVesselSelect;
-    window.updateYearFilter = updateYearFilter;
-    window.updateBrokenBadge = updateBrokenBadge;
-
-    console.log('✅ Maintenance page script loaded - Fixed version v8.0');
-    </script>
-</div>
+            if (page === 'maintenance' && typeof window.loadMaintenanceData === 'function') {  
+                await window.loadMaintenanceData();  
+            } else if (page === 'fleet' && typeof window.loadFleetData === 'function') {  
+                await window.loadFleetData();  
+            } else {  
+                await loadAllData();  
+            }  
+            showToast('✅ تم تحديث الصفحة', 'success');  
+        };  
+
+        // ❌ لا نضيف زر تحديث في الهيدر - كل صفحة لها زرها الخاص  
+
+        // ============================================================  
+        // 🚀 INIT  
+        // ============================================================  
+
+        document.addEventListener('DOMContentLoaded', async function() {  
+            console.log('📄 DOM جاهز');  
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {  
+                e.preventDefault();  
+                const button = document.getElementById('loginButton');  
+                if (!button.disabled) doLogin();  
+            });  
+
+            document.getElementById('togglePassword').onclick = function() {  
+                const i = document.getElementById('password');  
+                const ic = this.querySelector('i');  
+                i.type = i.type === 'password' ? 'text' : 'password';  
+                ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';  
+            };  
+
+            document.getElementById('menuToggle').onclick = toggleSidebar;  
+            document.getElementById('sidebarClose').onclick = closeSidebar;  
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {  
+                btn.addEventListener('click', function() {  
+                    const page = this.dataset.page;  
+                    if (page) loadPage(page);  
+                    if (window.innerWidth <= 992) closeSidebar();  
+                });  
+            });  
+
+            document.getElementById('notifBtn').onclick = function() {  
+                showToast('📬 تم فتح الإشعارات', 'info');  
+            };  
+
+            document.getElementById('userBtn').onclick = function() {  
+                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();  
+            };  
+
+            document.getElementById('backToTop').onclick = function() {  
+                window.scrollTo({ top: 0, behavior: 'smooth' });  
+            };  
+            window.addEventListener('scroll', function() {  
+                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';  
+            });  
+
+            // التحقق من التوكن  
+            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
+            if (token) {  
+                const isValid = await verifyToken(token);  
+                if (isValid) {  
+                    document.getElementById('loginOverlay').style.display = 'none';  
+                    document.getElementById('mainApp').style.display = 'block';  
+                    updateUserDisplay();  
+                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';  
+                    loadPage(savedPage);  
+                    showToast('👋 مرحباً بعودتك', 'success');  
+                    setTimeout(loadAllData, 500);  
+                } else {  
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);  
+                }  
+            }  
+
+            console.log('✅ Marine System Ultra Pro v8.0 ready');  
+        });  
+
+        // ============================================================  
+        // 🌐 GLOBAL  
+        // ============================================================  
+
+        window.doLogin = doLogin;  
+        window.doLogout = doLogout;  
+        window.loadPage = loadPage;  
+        window.toggleSidebar = toggleSidebar;  
+        window.closeSidebar = closeSidebar;  
+        window.showToast = showToast;  
+        window.verifyToken = verifyToken;  
+        window.loadAllData = loadAllData;  
+        window.updateAllPages = updateAllPages;  
+        window.updateBadge = updateBadge;  
+        window.globalRefresh = globalRefresh;  
+        window.refreshCurrentPage = refreshCurrentPage;  
+        window.currentUser = currentUser;  
+
+        console.log('✅ Marine System Ultra Pro v8.0 loaded successfully');  
+    </script>  
+
+</body>  
+</html>
