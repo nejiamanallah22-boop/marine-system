@@ -463,7 +463,7 @@
     </div>  
 
     <!-- ============================================================  
-    📦 JAVASCRIPT - ULTRA PROFESSIONAL (FIXED)  
+    📦 JAVASCRIPT - ULTRA PRO v8.0 (FIXED)  
     ============================================================ -->  
     <script>  
         // ============================================================  
@@ -476,7 +476,7 @@
         // 📦 CONFIGURATION  
         // ============================================================  
 
-        const CONFIG = {  
+        var CONFIG = {  
             API: '/api',  
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },  
             PAGES: {  
@@ -517,31 +517,34 @@
         function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }  
 
         function getRoleName(r) {  
-            const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
+            var R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };  
             return R[r] || r || 'مستخدم';  
         }  
 
         function escapeHTML(s) {  
             if (!s) return '';  
-            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));  
+            return String(s).replace(/[&<>"']/g, function(m) {  
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m];  
+            });  
         }  
 
         // ============================================================  
         // 🍞 TOAST  
         // ============================================================  
 
-        function showToast(msg, type = 'info') {  
-            const c = document.getElementById('toastContainer');  
+        function showToast(msg, type) {  
+            type = type || 'info';  
+            var c = document.getElementById('toastContainer');  
             if (!c) return;  
-            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };  
-            const t = document.createElement('div');  
+            var I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };  
+            var t = document.createElement('div');  
             t.className = 'toast toast-' + type;  
             t.innerHTML = '<span>' + I[type] + '</span> ' + msg;  
             c.appendChild(t);  
-            setTimeout(() => {  
+            setTimeout(function() {  
                 t.style.opacity = '0';  
                 t.style.transform = 'translateX(30px)';  
-                setTimeout(() => t.remove(), 300);  
+                setTimeout(function() { t.remove(); }, 300);  
             }, 3000);  
         }  
 
@@ -552,13 +555,13 @@
         function doLogin() {  
             console.log('🔐 محاولة تسجيل الدخول');  
 
-            const username = document.getElementById('username');  
-            const password = document.getElementById('password');  
-            const errorEl = document.getElementById('loginError');  
-            const loginBtn = document.getElementById('loginButton');  
+            var username = document.getElementById('username');  
+            var password = document.getElementById('password');  
+            var errorEl = document.getElementById('loginError');  
+            var loginBtn = document.getElementById('loginButton');  
 
-            const user = username.value.trim();  
-            const pass = password.value.trim();  
+            var user = username.value.trim();  
+            var pass = password.value.trim();  
 
             errorEl.className = 'error-msg';  
             errorEl.textContent = '';  
@@ -577,13 +580,13 @@
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },  
                 body: JSON.stringify({ username: user, password: pass })  
             })  
-            .then(response => response.json())  
-            .then(data => {  
+            .then(function(response) { return response.json(); })  
+            .then(function(data) {  
                 loginBtn.disabled = false;  
                 loginBtn.classList.remove('loading');  
 
                 if (data.success && data.user) {  
-                    const token = data.token || data.accessToken;  
+                    var token = data.token || data.accessToken;  
                     if (!token) throw new Error('الخادم لم يرسل رمز الدخول');  
 
                     currentUser = data.user;  
@@ -602,7 +605,7 @@
                     errorEl.classList.add('show');  
                 }  
             })  
-            .catch(error => {  
+            .catch(function(error) {  
                 loginBtn.disabled = false;  
                 loginBtn.classList.remove('loading');  
                 errorEl.textContent = '❌ ' + error.message;  
@@ -617,12 +620,12 @@
         async function verifyToken(token) {  
             try {  
                 console.log('🛡️ التحقق من التوكن...');  
-                const response = await fetch('/api/auth/me', {  
+                var response = await fetch('/api/auth/me', {  
                     headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }  
                 });  
 
                 if (response.ok) {  
-                    const data = await response.json();  
+                    var data = await response.json();  
                     if (data.success && data.user) {  
                         currentUser = data.user;  
                         window.currentUser = data.user;  
@@ -645,21 +648,21 @@
         // ============================================================  
 
         async function loadAllData() {  
-            const token = getToken();  
+            var token = getToken();  
             if (!token) {  
                 console.warn('⚠️ [LOAD] No token found');  
                 return;  
             }  
 
-            const headers = { 'Authorization': 'Bearer ' + token };  
+            var headers = { 'Authorization': 'Bearer ' + token };  
 
             try {  
                 console.log('🔄 [LOAD] جاري تحميل جميع البيانات...');  
 
                 // تحميل المراكب  
-                const vesselsRes = await fetch(CONFIG.API + '/vessels', { headers });  
+                var vesselsRes = await fetch(CONFIG.API + '/vessels', { headers: headers });  
                 if (vesselsRes.ok) {  
-                    const data = await vesselsRes.json();  
+                    var data = await vesselsRes.json();  
                     allVessels = Array.isArray(data) ? data : [];  
                     window.allVessels = allVessels;  
                     console.log('✅ [LOAD] Vessels loaded:', allVessels.length);  
@@ -667,20 +670,20 @@
                 }  
 
                 // تحميل سجل الصيانة  
-                const maintRes = await fetch(CONFIG.API + '/maintenance', { headers });  
+                var maintRes = await fetch(CONFIG.API + '/maintenance', { headers: headers });  
                 if (maintRes.ok) {  
-                    const data = await maintRes.json();  
+                    var data = await maintRes.json();  
                     allMaintenance = data.maintenance || data || [];  
                     window.allMaintenance = allMaintenance;  
                     console.log('✅ [LOAD] Maintenance loaded:', allMaintenance.length);  
-                    const brokenCount = allVessels.filter(v => v.stat === 'معطب' || v.stat === 'صيانة').length;  
+                    var brokenCount = allVessels.filter(function(v) { return v.stat === 'معطب' || v.stat === 'صيانة'; }).length;  
                     updateBadge('maintenanceBadge', brokenCount);  
                 }  
 
                 // تحميل المستخدمين  
-                const usersRes = await fetch(CONFIG.API + '/users', { headers });  
+                var usersRes = await fetch(CONFIG.API + '/users', { headers: headers });  
                 if (usersRes.ok) {  
-                    const data = await usersRes.json();  
+                    var data = await usersRes.json();  
                     allUsers = Array.isArray(data) ? data : [];  
                     window.allUsers = allUsers;  
                     console.log('✅ [LOAD] Users loaded:', allUsers.length);  
@@ -726,7 +729,7 @@
         // ============================================================  
 
         function updateBadge(id, count) {  
-            const el = document.getElementById(id);  
+            var el = document.getElementById(id);  
             if (el) {  
                 el.textContent = count;  
                 el.style.display = count > 0 ? 'inline' : 'none';  
@@ -739,7 +742,7 @@
 
         function updateUserDisplay() {  
             if (!currentUser) return;  
-            const n = currentUser.name || currentUser.username;  
+            var n = currentUser.name || currentUser.username;  
             document.getElementById('userDisplayName').textContent = n;  
             document.getElementById('userInitial').textContent = n.charAt(0);  
             document.getElementById('sidebarUserName').textContent = n;  
@@ -755,12 +758,12 @@
             currentPage = page;  
             localStorage.setItem(CONFIG.KEYS.PAGE, page);  
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {  
+            document.querySelectorAll('.nav-btn').forEach(function(btn) {  
                 btn.classList.toggle('active', btn.dataset.page === page);  
             });  
 
-            const container = document.getElementById('pageContainer');  
-            const loader = document.getElementById('pageLoader');  
+            var container = document.getElementById('pageContainer');  
+            var loader = document.getElementById('pageLoader');  
 
             if (!container) return;  
 
@@ -768,14 +771,14 @@
             container.innerHTML = '';  
 
             fetch('/pages/' + page + '.html', { cache: 'no-store' })  
-                .then(response => {  
+                .then(function(response) {  
                     if (!response.ok) throw new Error('فشل تحميل الصفحة (' + response.status + ')');  
                     return response.text();  
                 })  
-                .then(html => {  
+                .then(function(html) {  
                     container.innerHTML = html;  
-                    container.querySelectorAll('script').forEach(oldScript => {  
-                        const newScript = document.createElement('script');  
+                    container.querySelectorAll('script').forEach(function(oldScript) {  
+                        var newScript = document.createElement('script');  
                         newScript.textContent = oldScript.textContent;  
                         document.body.appendChild(newScript);  
                         oldScript.remove();  
@@ -784,18 +787,13 @@
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);  
 
                     // بعد تحميل الصفحة، تحديث البيانات  
-                    setTimeout(() => {  
+                    setTimeout(function() {  
                         loadAllData();  
                     }, 300);  
                 })  
-                .catch(error => {  
+                .catch(function(error) {  
                     loader.style.display = 'none';  
-                    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#f87171;">  
-                        <div style="font-size:48px;">❌</div>  
-                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>  
-                        <p>${escapeHTML(error.message)}</p>  
-                        <button onclick="loadPage('dashboard')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>  
-                    </div>`;  
+                    container.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f87171;"><div style="font-size:48px;">❌</div><h2 style="color:#f87171;">فشل تحميل الصفحة</h2><p>' + escapeHTML(error.message) + '</p><button onclick="loadPage(\'dashboard\')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button></div>';  
                 });  
         }  
 
@@ -831,7 +829,7 @@
         }  
 
         // ============================================================  
-        // 🌐 GLOBAL REFRESH - FIXED (بدون زر في الهيدر)  
+        // 🌐 GLOBAL REFRESH  
         // ============================================================  
 
         window.globalRefresh = async function() {  
@@ -840,10 +838,9 @@
             showToast('✅ تم تحديث جميع البيانات', 'success');  
         };  
 
-        // ✅ دالة لتحديث الصفحة الحالية فقط (تستخدمها الصفحات الفرعية)  
         window.refreshCurrentPage = async function() {  
             console.log('🔄 [GLOBAL] تحديث الصفحة الحالية...');  
-            const page = currentPage || 'dashboard';  
+            var page = currentPage || 'dashboard';  
             
             if (page === 'maintenance' && typeof window.loadMaintenanceData === 'function') {  
                 await window.loadMaintenanceData();  
@@ -855,8 +852,6 @@
             showToast('✅ تم تحديث الصفحة', 'success');  
         };  
 
-        // ❌ لا نضيف زر تحديث في الهيدر - كل صفحة لها زرها الخاص  
-
         // ============================================================  
         // 🚀 INIT  
         // ============================================================  
@@ -866,13 +861,13 @@
 
             document.getElementById('loginForm').addEventListener('submit', function(e) {  
                 e.preventDefault();  
-                const button = document.getElementById('loginButton');  
+                var button = document.getElementById('loginButton');  
                 if (!button.disabled) doLogin();  
             });  
 
             document.getElementById('togglePassword').onclick = function() {  
-                const i = document.getElementById('password');  
-                const ic = this.querySelector('i');  
+                var i = document.getElementById('password');  
+                var ic = this.querySelector('i');  
                 i.type = i.type === 'password' ? 'text' : 'password';  
                 ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';  
             };  
@@ -880,9 +875,9 @@
             document.getElementById('menuToggle').onclick = toggleSidebar;  
             document.getElementById('sidebarClose').onclick = closeSidebar;  
 
-            document.querySelectorAll('.nav-btn').forEach(btn => {  
+            document.querySelectorAll('.nav-btn').forEach(function(btn) {  
                 btn.addEventListener('click', function() {  
-                    const page = this.dataset.page;  
+                    var page = this.dataset.page;  
                     if (page) loadPage(page);  
                     if (window.innerWidth <= 992) closeSidebar();  
                 });  
@@ -904,14 +899,14 @@
             });  
 
             // التحقق من التوكن  
-            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
+            var token = localStorage.getItem(CONFIG.KEYS.TOKEN);  
             if (token) {  
-                const isValid = await verifyToken(token);  
+                var isValid = await verifyToken(token);  
                 if (isValid) {  
                     document.getElementById('loginOverlay').style.display = 'none';  
                     document.getElementById('mainApp').style.display = 'block';  
                     updateUserDisplay();  
-                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';  
+                    var savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';  
                     loadPage(savedPage);  
                     showToast('👋 مرحباً بعودتك', 'success');  
                     setTimeout(loadAllData, 500);  
