@@ -1,564 +1,1107 @@
-<!-- ============================================================
-📊 لوحة التحكم - Dashboard v7.0 (محسنة)
-============================================================ -->
-<div class="page-content dashboard-page">
-    
-    <!-- ===== رأس الصفحة ===== -->
-    <div class="page-header">
-        <div>
-            <h2>📊 لوحة التحكم</h2>
-            <p class="page-subtitle">نظرة عامة على حالة النظام والعمليات</p>
-        </div>
-        <div class="page-actions">
-            <button class="btn btn-gold btn-sm" onclick="window.refreshPage()">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn btn-outline btn-sm" onclick="window.showToast('📊 تم تصدير التقرير', 'success')">
-                <i class="fas fa-file-export"></i> تصدير
-            </button>
-        </div>
-    </div>
+<!-- public/pages/dashboard.html -->
+<div id="page-dashboard">
+    <style>
+        /* ============================================================
+           🚀 DASHBOARD - ENTERPRISE PRO VERSION
+           ============================================================ */
 
-    <!-- ===== الوقت والتاريخ ===== -->
-    <div class="datetime-display">
-        <span class="date" id="currentDate"></span>
-        <span class="time" id="currentTime"></span>
-    </div>
-
-    <!-- ===== وثيقة التحكم ===== -->
-    <div class="control-document">
-        <div class="control-header">
-            <h3>📋 وثيقة التحكم</h3>
-            <span class="control-badge">تحديث فوري</span>
-        </div>
-        <div class="control-grid">
-            <!-- الصف الأول -->
-            <div class="control-item">
-                <span class="control-label">الجاهزية</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">الصيانة</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill maintenance" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">الأعطال</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill broken" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">الاحتياطي</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill reserve" style="width:0%"></div>
-                </div>
-            </div>
-
-            <!-- الصف الثاني -->
-            <div class="control-item">
-                <span class="control-label">المهام المنجزة</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill success" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">المهام المعلقة</span>
-                <div class="control-value">1</div>
-                <div class="control-bar">
-                    <div class="control-fill warning" style="width:10%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">المهام العاجلة</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill danger" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="control-item">
-                <span class="control-label">المهام المؤجلة</span>
-                <div class="control-value">0</div>
-                <div class="control-bar">
-                    <div class="control-fill muted" style="width:0%"></div>
-                </div>
-            </div>
-
-            <!-- الصف الثالث - نسب مئوية -->
-            <div class="control-item full">
-                <span class="control-label">معدل الإنجاز الكلي</span>
-                <div class="control-value large">100%</div>
-                <div class="control-bar large">
-                    <div class="control-fill gold" style="width:100%"></div>
-                </div>
-            </div>
-            <div class="control-item full">
-                <span class="control-label">معدل الجاهزية</span>
-                <div class="control-value large">0%</div>
-                <div class="control-bar large">
-                    <div class="control-fill" style="width:0%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== إحصائيات سريعة ===== -->
-    <div class="stats-grid">
-        <div class="stat-card animate-fade-up delay-1">
-            <div class="stat-icon">🚢</div>
-            <div class="stat-value" id="totalVessels">24</div>
-            <div class="stat-label">إجمالي المراكب</div>
-            <div class="stat-change positive">+2 هذا الشهر</div>
-        </div>
-        <div class="stat-card animate-fade-up delay-2">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value" id="readyVessels">18</div>
-            <div class="stat-label">جاهز للخدمة</div>
-            <div class="stat-change positive">75%</div>
-        </div>
-        <div class="stat-card animate-fade-up delay-3">
-            <div class="stat-icon">🔧</div>
-            <div class="stat-value" id="maintenanceVessels">4</div>
-            <div class="stat-label">تحت الصيانة</div>
-            <div class="stat-change negative">+1 هذا الأسبوع</div>
-        </div>
-        <div class="stat-card animate-fade-up delay-4">
-            <div class="stat-icon">⚠️</div>
-            <div class="stat-value" id="criticalVessels">2</div>
-            <div class="stat-label">أعطال حرجة</div>
-            <div class="stat-change negative">بحاجة لتدخل فوري</div>
-        </div>
-    </div>
-
-    <!-- ===== النشاط الأخير والمهام ===== -->
-    <div class="charts-grid">
-        <!-- النشاط الأخير -->
-        <div class="chart-card animate-fade-up delay-3">
-            <div class="chart-header">
-                <h3>🕐 النشاط الأخير</h3>
-                <span class="chart-badge">آخر 24 ساعة</span>
-            </div>
-            <div class="chart-body">
-                <div class="activity-list" id="activityList">
-                    <div class="activity-item">
-                        <span class="activity-dot online"></span>
-                        <div class="activity-content">
-                            <span class="activity-text">تم تحديث حالة المركب "الظافر"</span>
-                            <span class="activity-time">منذ 5 دقائق</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-dot warning"></span>
-                        <div class="activity-content">
-                            <span class="activity-text">تم إضافة مهمة صيانة جديدة</span>
-                            <span class="activity-time">منذ 23 دقيقة</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-dot success"></span>
-                        <div class="activity-content">
-                            <span class="activity-text">تم إنجاز مهمة صيانة #1042</span>
-                            <span class="activity-time">منذ ساعة</span>
-                        </div>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-dot online"></span>
-                        <div class="activity-content">
-                            <span class="activity-text">تسجيل دخول المستخدم أحمد</span>
-                            <span class="activity-time">منذ ساعتين</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- المهام العاجلة -->
-        <div class="chart-card animate-fade-up delay-4">
-            <div class="chart-header">
-                <h3>🚨 المهام العاجلة</h3>
-                <span class="badge-danger">1 مهمة</span>
-            </div>
-            <div class="chart-body">
-                <div class="tasks-list">
-                    <div class="task-item urgent">
-                        <div class="task-status critical"></div>
-                        <div class="task-info">
-                            <span class="task-title">إصلاح عطل في المركب "النصر"</span>
-                            <span class="task-meta">محرك رئيسي • عطل حرج</span>
-                        </div>
-                        <span class="task-time">مطلوب اليوم</span>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-status warning"></div>
-                        <div class="task-info">
-                            <span class="task-title">فحص دوري للمركب "الظافر"</span>
-                            <span class="task-meta">فحص شامل • دوري</span>
-                        </div>
-                        <span class="task-time">غداً</span>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-status info"></div>
-                        <div class="task-info">
-                            <span class="task-title">تحديث سجلات الصيانة</span>
-                            <span class="task-meta">توثيق • روتيني</span>
-                        </div>
-                        <span class="task-time">خلال 3 أيام</span>
-                    </div>
-                    <div class="task-item">
-                        <div class="task-status success"></div>
-                        <div class="task-info">
-                            <span class="task-title">تجهيز تقرير الجاهزية</span>
-                            <span class="task-meta">تقرير شهري</span>
-                        </div>
-                        <span class="task-time">خلال 5 أيام</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== دعم سريع ===== -->
-    <div class="quick-support animate-fade-up delay-5">
-        <div class="support-header">
-            <h3>🆘 الدعم السريع</h3>
-            <span class="support-status">متاح 24/7</span>
-        </div>
-        <div class="support-actions">
-            <button class="support-btn" onclick="window.loadPage('support')">
-                <i class="fas fa-headset"></i>
-                <span>طلب دعم</span>
-            </button>
-            <button class="support-btn" onclick="window.loadPage('notes')">
-                <i class="fas fa-sticky-note"></i>
-                <span>Note Verbale</span>
-            </button>
-            <button class="support-btn" onclick="window.loadPage('ai-assistant')">
-                <i class="fas fa-robot"></i>
-                <span>المساعد الذكي</span>
-            </button>
-            <button class="support-btn" onclick="window.showToast('📞 جاري الاتصال بالدعم...', 'info')">
-                <i class="fas fa-phone"></i>
-                <span>اتصال مباشر</span>
-            </button>
-        </div>
-    </div>
-
-</div>
-
-<!-- ============================================================
-📦 CSS الخاص بلوحة التحكم
-============================================================ -->
-<style>
-/* ===== وثيقة التحكم ===== */
-.control-document {
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.control-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.control-header h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-}
-
-.control-badge {
-    font-size: 11px;
-    color: var(--color-success);
-    background: rgba(34, 197, 94, 0.12);
-    padding: 2px 14px;
-    border-radius: var(--radius-full);
-}
-
-.control-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-}
-
-.control-item {
-    background: var(--color-bg-glass);
-    border-radius: var(--radius-sm);
-    padding: 12px 16px;
-    border: 1px solid var(--color-border);
-    transition: var(--transition-base);
-}
-
-.control-item:hover {
-    border-color: var(--color-border-hover);
-    background: var(--color-bg-card-hover);
-}
-
-.control-item.full {
-    grid-column: span 2;
-}
-
-.control-label {
-    display: block;
-    font-size: 12px;
-    color: var(--color-text-muted);
-    margin-bottom: 4px;
-}
-
-.control-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--color-text-primary);
-}
-
-.control-value.large {
-    font-size: 28px;
-}
-
-.control-bar {
-    width: 100%;
-    height: 6px;
-    background: var(--color-bg-tertiary);
-    border-radius: var(--radius-full);
-    margin-top: 8px;
-    overflow: hidden;
-}
-
-.control-bar.large {
-    height: 10px;
-}
-
-.control-fill {
-    height: 100%;
-    border-radius: var(--radius-full);
-    transition: width 1.5s ease;
-    background: var(--color-info);
-}
-
-.control-fill.maintenance {
-    background: var(--color-warning);
-}
-
-.control-fill.broken {
-    background: var(--color-danger);
-}
-
-.control-fill.reserve {
-    background: var(--color-purple);
-}
-
-.control-fill.success {
-    background: var(--color-success);
-}
-
-.control-fill.warning {
-    background: var(--color-warning);
-}
-
-.control-fill.danger {
-    background: var(--color-danger);
-}
-
-.control-fill.muted {
-    background: var(--color-text-dim);
-}
-
-.control-fill.gold {
-    background: var(--color-gold-gradient);
-}
-
-/* ===== الدعم السريع ===== */
-.quick-support {
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    padding: 18px 20px;
-    margin-top: 16px;
-}
-
-.support-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.support-header h3 {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--color-text-primary);
-}
-
-.support-status {
-    font-size: 12px;
-    color: var(--color-success);
-    background: rgba(34, 197, 94, 0.1);
-    padding: 2px 14px;
-    border-radius: var(--radius-full);
-}
-
-.support-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.support-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    background: var(--color-bg-glass);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    color: var(--color-text-secondary);
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    transition: var(--transition-base);
-}
-
-.support-btn:hover {
-    background: var(--color-bg-card-hover);
-    border-color: var(--color-border-hover);
-    color: var(--color-text-primary);
-    transform: translateY(-2px);
-}
-
-.support-btn i {
-    font-size: 16px;
-}
-
-/* ============================================================
-📱 RESPONSIVE
-============================================================ */
-@media (max-width: 992px) {
-    .control-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .control-item.full {
-        grid-column: span 1;
-    }
-}
-
-@media (max-width: 768px) {
-    .control-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-    
-    .control-item {
-        padding: 10px 12px;
-    }
-    
-    .control-value {
-        font-size: 18px;
-    }
-    
-    .control-value.large {
-        font-size: 22px;
-    }
-    
-    .support-actions {
-        flex-direction: column;
-    }
-    
-    .support-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .control-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .control-item.full {
-        grid-column: span 1;
-    }
-}
-</style>
-
-<!-- ============================================================
-📦 JavaScript الخاص بلوحة التحكم
-============================================================ -->
-<script>
-// ===== تحديث الوقت =====
-function updateDateTime() {
-    const now = new Date();
-    const dateEl = document.getElementById('currentDate');
-    const timeEl = document.getElementById('currentTime');
-    
-    if (dateEl) {
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        };
-        dateEl.textContent = now.toLocaleDateString('ar-SA', options);
-    }
-    
-    if (timeEl) {
-        timeEl.textContent = now.toLocaleTimeString('ar-SA', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    }
-}
-
-updateDateTime();
-setInterval(updateDateTime, 1000);
-
-// ===== تحديث الإحصائيات =====
-function updateStats() {
-    const total = 24;
-    const ready = 18;
-    const maintenance = 4;
-    const critical = 2;
-    
-    document.getElementById('totalVessels').textContent = total;
-    document.getElementById('readyVessels').textContent = ready;
-    document.getElementById('maintenanceVessels').textContent = maintenance;
-    document.getElementById('criticalVessels').textContent = critical;
-}
-
-updateStats();
-
-// ===== تحديث وثيقة التحكم =====
-function updateControlDocument() {
-    const items = document.querySelectorAll('.control-item');
-    items.forEach((item, index) => {
-        const fill = item.querySelector('.control-fill');
-        const value = item.querySelector('.control-value');
-        
-        if (fill && value) {
-            // محاكاة تحديث البيانات
-            const val = parseInt(value.textContent) || 0;
-            const maxVal = 100;
-            const percent = Math.min((val / maxVal) * 100, 100);
-            fill.style.width = percent + '%';
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #0a1628;
+            --secondary: #1a2a4a;
+            --gold: #e6b31e;
+            --gold-light: #f5d76e;
+            --gold-dark: #c99a0e;
+            --success: #00b894;
+            --success-light: #55efc4;
+            --danger: #e17055;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+            --info-light: #60a5fa;
+            --purple: #a78bfa;
+            --pink: #f472b6;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.06);
+            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
+            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
-    });
-}
 
-// تحديث كل 30 ثانية
-setInterval(updateControlDocument, 30000);
+        /* ===== FULL SCREEN RESET ===== */
+        #page-dashboard {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: var(--font);
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
 
-console.log('📊 Dashboard loaded successfully');
-</script>
+        /* ===== ANIMATED BACKGROUND ===== */
+        #page-dashboard::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, rgba(167,139,250,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(9,132,227,0.03) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes bgFloat {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            33% { transform: scale(1.05) rotate(2deg); }
+            66% { transform: scale(0.95) rotate(-2deg); }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .dash-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .dash-header-left .header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+            box-shadow: 0 0 40px rgba(230,179,30,0.15);
+            animation: pulseIcon 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
+            50% { box-shadow: 0 0 50px rgba(230,179,30,0.25); }
+        }
+
+        .dash-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold-light), var(--purple), var(--info-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .dash-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .dash-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font);
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .btn-action.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .btn-action.purple {
+            background: linear-gradient(135deg, var(--purple), #c4b5fd);
+            color: #0a1628;
+        }
+
+        .btn-action.purple:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(167,139,250,0.3);
+        }
+
+        /* ============================================================
+           WELCOME BANNER
+           ============================================================ */
+        .welcome-banner {
+            margin: 16px 24px;
+            padding: 20px 28px;
+            background: linear-gradient(135deg, rgba(230,179,30,0.08), rgba(167,139,250,0.08));
+            border: 1px solid rgba(230,179,30,0.1);
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            backdrop-filter: blur(12px);
+        }
+
+        .welcome-banner .greeting {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .welcome-banner .greeting span {
+            color: var(--gold-light);
+        }
+
+        .welcome-banner .date-time {
+            font-size: 14px;
+            color: rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .welcome-banner .date-time i {
+            color: var(--gold);
+        }
+
+        .welcome-banner .status-badge {
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+            border: 1px solid rgba(34,197,94,0.1);
+        }
+
+        /* ============================================================
+           STATS CARDS - ENTERPRISE
+           ============================================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 0 24px 16px;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: all var(--transition);
+            cursor: default;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--purple));
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .stat-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-card .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .stat-card .stat-icon.gold { background: rgba(230,179,30,0.12); color: var(--gold-light); }
+        .stat-card .stat-icon.green { background: rgba(34,197,94,0.12); color: var(--success-light); }
+        .stat-card .stat-icon.purple { background: rgba(167,139,250,0.12); color: var(--purple); }
+        .stat-card .stat-icon.blue { background: rgba(9,132,227,0.12); color: var(--info-light); }
+        .stat-card .stat-icon.pink { background: rgba(244,114,182,0.12); color: var(--pink); }
+        .stat-card .stat-icon.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+        .stat-card .stat-change {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .stat-card .stat-change.up {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .stat-card .stat-change.down {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            margin-top: 8px;
+        }
+
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.purple { color: var(--purple); }
+        .stat-card .number.blue { color: var(--info-light); }
+        .stat-card .number.pink { color: var(--pink); }
+        .stat-card .number.red { color: var(--danger); }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .stat-card .stat-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .stat-card .stat-bottom .sub-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        /* ============================================================
+           CHARTS SECTION
+           ============================================================ */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            padding: 0 24px 16px;
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: all var(--transition);
+        }
+
+        .chart-card:hover {
+            border-color: rgba(230,179,30,0.1);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .chart-card .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chart-card .chart-header h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            margin: 0;
+        }
+
+        .chart-card .chart-header h4 i {
+            color: var(--gold);
+            margin-left: 8px;
+        }
+
+        .chart-card .chart-header .chart-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .chart-card .chart-header .chart-actions button {
+            padding: 2px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            background: transparent;
+            color: rgba(255,255,255,0.2);
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .chart-card .chart-header .chart-actions button:hover {
+            border-color: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .chart-card .chart-header .chart-actions button.active {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-color: var(--gold);
+            color: #0a1628;
+        }
+
+        .chart-card canvas {
+            width: 100% !important;
+            max-height: 220px;
+        }
+
+        /* ============================================================
+           RECENT ACTIVITY
+           ============================================================ */
+        .activity-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: all var(--transition);
+        }
+
+        .activity-card:hover {
+            border-color: rgba(230,179,30,0.1);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .activity-card .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .activity-card .activity-header h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            margin: 0;
+        }
+
+        .activity-card .activity-header h4 i {
+            color: var(--purple);
+            margin-left: 8px;
+        }
+
+        .activity-card .activity-header .view-all {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+
+        .activity-card .activity-header .view-all:hover {
+            color: var(--gold-light);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            transition: all var(--transition);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-item:hover {
+            background: rgba(255,255,255,0.02);
+            margin: 0 -10px;
+            padding: 10px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .activity-item .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .activity-item .activity-icon.gold { background: rgba(230,179,30,0.12); color: var(--gold-light); }
+        .activity-item .activity-icon.green { background: rgba(34,197,94,0.12); color: var(--success-light); }
+        .activity-item .activity-icon.purple { background: rgba(167,139,250,0.12); color: var(--purple); }
+        .activity-item .activity-icon.blue { background: rgba(9,132,227,0.12); color: var(--info-light); }
+        .activity-item .activity-icon.red { background: rgba(239,68,68,0.12); color: var(--danger); }
+        .activity-item .activity-icon.pink { background: rgba(244,114,182,0.12); color: var(--pink); }
+
+        .activity-item .activity-content {
+            flex: 1;
+        }
+
+        .activity-item .activity-content .activity-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .activity-item .activity-content .activity-text strong {
+            color: #fff;
+        }
+
+        .activity-item .activity-content .activity-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .activity-item .activity-status {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .activity-item .activity-status.success {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .activity-item .activity-status.warning {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .activity-item .activity-status.danger {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        /* ============================================================
+           BOTTOM GRID
+           ============================================================ */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 0 24px 24px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 13px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-info {
+            background: rgba(9,132,227,0.15);
+            border: 1px solid rgba(9,132,227,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 768px) {
+            .dash-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .dash-header-left { width: 100%; }
+            .dash-header-left h2 { font-size: 16px; }
+            .dash-header-actions { width: 100%; justify-content: flex-start; }
+            .welcome-banner { margin: 12px 16px; padding: 16px 20px; flex-direction: column; align-items: flex-start; }
+            .welcome-banner .greeting { font-size: 16px; }
+            .stats-grid { padding: 0 16px 12px; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px 16px; }
+            .stat-card .number { font-size: 22px; }
+            .charts-grid { padding: 0 16px 12px; }
+            .bottom-grid { padding: 0 16px 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 10px; }
+            .welcome-banner .greeting { font-size: 14px; }
+            .chart-card canvas { max-height: 150px; }
+        }
+    </style>
+
+    <!-- ============================================================
+    HEADER
+    ============================================================ -->
+    <div class="dash-header">
+        <div class="dash-header-left">
+            <div class="header-icon"><i class="fas fa-chart-pie"></i></div>
+            <div>
+                <h2>لوحة القيادة</h2>
+                <p>نظرة شاملة على أداء الأسطول</p>
+            </div>
+        </div>
+        <div class="dash-header-actions">
+            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action purple" onclick="exportDashboard()"><i class="fas fa-file-export"></i> تصدير</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    WELCOME BANNER
+    ============================================================ -->
+    <div class="welcome-banner">
+        <div>
+            <div class="greeting">🌅 مرحباً بك، <span id="userNameDisplay">المستخدم</span></div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.3);margin-top:4px;">
+                <i class="fas fa-flag"></i> منصة إدارة الأسطول البحري المتقدمة
+            </div>
+        </div>
+        <div class="date-time">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="currentDate">...</span>
+            <span style="color:rgba(255,255,255,0.1);">|</span>
+            <i class="fas fa-clock"></i>
+            <span id="currentTime">...</span>
+            <span class="status-badge"><i class="fas fa-circle" style="font-size:8px;color:#4ade80;"></i> النظام يعمل</span>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    STATS CARDS
+    ============================================================ -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon gold"><i class="fas fa-ship"></i></div>
+                <span class="stat-change up">↑ 12%</span>
+            </div>
+            <div class="number gold" id="totalVessels">0</div>
+            <div class="label">🚢 إجمالي المراكب</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-check-circle" style="color:#4ade80;"></i> <span id="activeVessels">0</span> صالح</span>
+                <span class="sub-label"><i class="fas fa-tools" style="color:#fbbf24;"></i> <span id="maintenanceVessels">0</span> صيانة</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
+                <span class="stat-change up">↑ 8%</span>
+            </div>
+            <div class="number green" id="efficiencyRate">0%</div>
+            <div class="label">📈 نسبة الجاهزية</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-arrow-up" style="color:#4ade80;"></i> أعلى من الشهر الماضي</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon purple"><i class="fas fa-users"></i></div>
+                <span class="stat-change up">↑ 5%</span>
+            </div>
+            <div class="number purple" id="totalUsers">0</div>
+            <div class="label">👥 المستخدمين النشطين</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-user-plus" style="color:#a78bfa;"></i> <span id="newUsers">0</span> جديد هذا الشهر</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
+                <span class="stat-change down">↓ 3%</span>
+            </div>
+            <div class="number blue" id="pendingMaintenance">0</div>
+            <div class="label">🔧 طلبات الصيانة</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-clock" style="color:#fbbf24;"></i> <span id="overdueMaintenance">0</span> متأخرة</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <div class="stat-icon pink"><i class="fas fa-sync-alt"></i></div>
+                <span class="stat-change up">↑ 15%</span>
+            </div>
+            <div class="number pink" id="operationsToday">0</div>
+            <div class="label">📊 العمليات اليوم</div>
+            <div class="stat-bottom">
+                <span class="sub-label"><i class="fas fa-calendar-day" style="color:#f472b6;"></i> اليوم</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    CHARTS SECTION
+    ============================================================ -->
+    <div class="charts-grid">
+        <!-- Chart 1: Performance -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h4><i class="fas fa-chart-line"></i> أداء الأسطول</h4>
+                <div class="chart-actions">
+                    <button class="active" onclick="switchChart('week')">أسبوع</button>
+                    <button onclick="switchChart('month')">شهر</button>
+                    <button onclick="switchChart('year')">سنة</button>
+                </div>
+            </div>
+            <canvas id="performanceChart"></canvas>
+        </div>
+
+        <!-- Chart 2: Distribution -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h4><i class="fas fa-chart-pie"></i> توزيع المراكب</h4>
+                <div class="chart-actions">
+                    <button class="active" onclick="switchPieChart('category')">الفئة</button>
+                    <button onclick="switchPieChart('region')">الإقليم</button>
+                </div>
+            </div>
+            <canvas id="distributionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    BOTTOM GRID: Activity + Quick Stats
+    ============================================================ -->
+    <div class="bottom-grid">
+        <!-- Activity -->
+        <div class="activity-card">
+            <div class="activity-header">
+                <h4><i class="fas fa-bolt"></i> النشاطات الأخيرة</h4>
+                <a href="#" class="view-all">عرض الكل →</a>
+            </div>
+            <div id="activityList">
+                <div class="activity-item">
+                    <div class="activity-icon gold"><i class="fas fa-ship"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>البروق 01</strong> تم إضافة مركب جديد</div>
+                        <div class="activity-time">منذ 5 دقائق</div>
+                    </div>
+                    <span class="activity-status success">مكتمل</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon green"><i class="fas fa-check-circle"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>صيانة دورية</strong> اكتملت لـ <strong>صقر 03</strong></div>
+                        <div class="activity-time">منذ 15 دقيقة</div>
+                    </div>
+                    <span class="activity-status success">مكتمل</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon purple"><i class="fas fa-user"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>أحمد محمد</strong> قام بتسجيل الدخول</div>
+                        <div class="activity-time">منذ 32 دقيقة</div>
+                    </div>
+                    <span class="activity-status success">نشط</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>خافرة 07</strong> بحاجة إلى صيانة عاجلة</div>
+                        <div class="activity-time">منذ ساعة</div>
+                    </div>
+                    <span class="activity-status danger">عاجل</span>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon blue"><i class="fas fa-tools"></i></div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>وحدة الصيانة تونس</strong> تم تحديث الجدول</div>
+                        <div class="activity-time">منذ ساعتين</div>
+                    </div>
+                    <span class="activity-status warning">قيد التنفيذ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h4><i class="fas fa-tachometer-alt"></i> مؤشرات سريعة</h4>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.04);">
+                    <div style="font-size:20px;font-weight:800;color:#f5d76e;">98%</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">توفر النظام</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.04);">
+                    <div style="font-size:20px;font-weight:800;color:#4ade80;">24/7</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">دعم فني</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.04);">
+                    <div style="font-size:20px;font-weight:800;color:#a78bfa;">42</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">مهمة مكتملة</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.04);">
+                    <div style="font-size:20px;font-weight:800;color:#f472b6;">3</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.3);">تنبيهات نشطة</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            console.log('📊 Dashboard - loading...');
+
+            // ============================================================
+            // DATE & TIME
+            // ============================================================
+            function updateDateTime() {
+                var now = new Date();
+                var date = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var time = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                document.getElementById('currentDate').textContent = date;
+                document.getElementById('currentTime').textContent = time;
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
+            // ============================================================
+            // USER NAME
+            // ============================================================
+            var userName = localStorage.getItem('userName') || 'المستخدم';
+            document.getElementById('userNameDisplay').textContent = userName;
+
+            // ============================================================
+            // STATS
+            // ============================================================
+            function updateStats() {
+                document.getElementById('totalVessels').textContent = 24;
+                document.getElementById('activeVessels').textContent = 18;
+                document.getElementById('maintenanceVessels').textContent = 4;
+                document.getElementById('efficiencyRate').textContent = '87%';
+                document.getElementById('totalUsers').textContent = 12;
+                document.getElementById('newUsers').textContent = 3;
+                document.getElementById('pendingMaintenance').textContent = 8;
+                document.getElementById('overdueMaintenance').textContent = 2;
+                document.getElementById('operationsToday').textContent = 15;
+            }
+            updateStats();
+
+            // ============================================================
+            // CHARTS
+            // ============================================================
+            function initCharts() {
+                // Performance Chart
+                var perfCtx = document.getElementById('performanceChart');
+                if (perfCtx) {
+                    var perfChart = new Chart(perfCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+                            datasets: [{
+                                label: 'الجاهزية %',
+                                data: [75, 80, 78, 85, 82, 88, 87],
+                                borderColor: '#e6b31e',
+                                backgroundColor: 'rgba(230,179,30,0.08)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#f5d76e',
+                                pointBorderColor: '#0a1628',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            }, {
+                                label: 'الصيانة',
+                                data: [8, 6, 9, 5, 7, 4, 4],
+                                borderColor: '#a78bfa',
+                                backgroundColor: 'rgba(167,139,250,0.08)',
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: '#a78bfa',
+                                pointBorderColor: '#0a1628',
+                                pointBorderWidth: 2,
+                                pointRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: 'rgba(255,255,255,0.4)',
+                                        font: { family: 'Cairo, sans-serif', size: 11 }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    grid: { color: 'rgba(255,255,255,0.04)' },
+                                    ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
+                                            size: 10 } }
+                                },
+                                y: {
+                                    grid: { color: 'rgba(255,255,255,0.04)' },
+                                    ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'Cairo, sans-serif',
+                                            size: 10 } },
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    window._perfChart = perfChart;
+                }
+
+                // Distribution Chart (Pie)
+                var distCtx = document.getElementById('distributionChart');
+                if (distCtx) {
+                    var distChart = new Chart(distCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'],
+                            datasets: [{
+                                data: [18, 12, 8, 6, 4],
+                                backgroundColor: ['#f5d76e', '#60a5fa', '#a78bfa', '#f472b6', '#4ade80'],
+                                borderColor: '#0a1628',
+                                borderWidth: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: 'rgba(255,255,255,0.4)',
+                                        font: { family: 'Cairo, sans-serif', size: 11 },
+                                        padding: 12
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    window._distChart = distChart;
+                }
+            }
+
+            // ============================================================
+            // CHART SWITCHERS
+            // ============================================================
+            window.switchChart = function(period) {
+                document.querySelectorAll('.chart-card .chart-actions button').forEach(function(b) {
+                    b.classList.toggle('active', b.textContent.trim() === period);
+                });
+                showToast('📊 تم التبديل إلى ' + period, 'info');
+            };
+
+            window.switchPieChart = function(type) {
+                document.querySelectorAll('.chart-card .chart-actions button').forEach(function(b) {
+                    b.classList.toggle('active', b.textContent.trim() === type);
+                });
+                showToast('📊 تم التبديل إلى ' + type, 'info');
+            };
+
+            // ============================================================
+            // EXPORT
+            // ============================================================
+            window.exportDashboard = function() {
+                showToast('📥 جاري تصدير التقرير...', 'info');
+                setTimeout(function() {
+                    showToast('✅ تم تصدير التقرير بنجاح', 'success');
+                }, 1500);
+            };
+
+            // ============================================================
+            // REFRESH
+            // ============================================================
+            window.refreshDashboard = function() {
+                var btn = document.getElementById('refreshBtn');
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    updateStats();
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
+                    showToast('✅ تم تحديث لوحة القيادة', 'success');
+                }, 600);
+            };
+
+            document.getElementById('refreshBtn').addEventListener('click', window.refreshDashboard);
+
+            // ============================================================
+            // TOAST
+            // ============================================================
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
+            }
+            window.showToast = showToast;
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            function init() {
+                console.log('🚀 Initializing Dashboard...');
+
+                // Load Chart.js
+                if (typeof Chart === 'undefined') {
+                    var script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+                    script.onload = initCharts;
+                    document.head.appendChild(script);
+                } else {
+                    initCharts();
+                }
+
+                console.log('✅ Dashboard loaded successfully');
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+            // ============================================================
+            // EXPOSE
+            // ============================================================
+            window.updateStats = updateStats;
+            window.initCharts = initCharts;
+
+        })();
+    </script>
+</div>
