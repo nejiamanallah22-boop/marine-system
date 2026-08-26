@@ -760,7 +760,7 @@
         <div class="maintenance-header">
             <h2>
                 🔧 إدارة الصيانة
-                <span class="badge">v10.0</span>
+                <span class="badge">v11.0</span>
             </h2>
             <div class="header-actions">
                 <button class="btn btn-primary" id="addMaintenanceBtn">➕ إضافة صيانة</button>
@@ -1066,23 +1066,22 @@
     </div>
 
     <!-- ============================================================
-    📦 JAVASCRIPT - FIXED (بدون currentUser مكرر)
+    📦 JAVASCRIPT - FIXED (بدون تكرار المتغيرات)
     ============================================================ -->
     <script>
     // ============================================================
-    // 🛡️ FIX: استخدام المتغيرات العامة مباشرة (بدون إعادة تعريف)
+    // 🛡️ FIX: استخدام أسماء مختلفة لتجنب التكرار
     // ============================================================
 
-    // ✅ لا نعيد تعريف currentUser، نستخدم window.currentUser مباشرة
-    // ✅ نستخدم var للمتغيرات الأخرى لتجنب التكرار
+    // ✅ استخدام أسماء مختلفة لتجنب التعارض مع index.html
+    var vesselsData = window.allVessels || [];
+    var maintenanceData = window.allMaintenance || [];
+    var currentUser = window.currentUser || null;
 
-    var vessels = window.allVessels || [];
-    var maintenance = window.allMaintenance || [];
-
-    console.log('🔧 Maintenance page loaded (fixed)');
-    console.log('👤 Current user:', window.currentUser?.name || 'Unknown');
-    console.log('🚢 Vessels:', vessels.length);
-    console.log('🔧 Maintenance:', maintenance.length);
+    console.log('🔧 Maintenance page loaded (fixed v11.0)');
+    console.log('👤 Current user:', currentUser?.name || 'Unknown');
+    console.log('🚢 Vessels data:', vesselsData.length);
+    console.log('🔧 Maintenance data:', maintenanceData.length);
 
     // ============================================================
     // 1. HELPERS
@@ -1138,7 +1137,8 @@
             if (vesselsRes.ok) {
                 var data = await vesselsRes.json();
                 window.allVessels = data.vessels || data || [];
-                console.log('✅ [MAINT] Vessels loaded:', window.allVessels.length);
+                vesselsData = window.allVessels;
+                console.log('✅ [MAINT] Vessels loaded:', vesselsData.length);
             } else {
                 console.error('❌ [MAINT] Vessels API error:', vesselsRes.status);
             }
@@ -1150,7 +1150,8 @@
             if (maintRes.ok) {
                 var data = await maintRes.json();
                 window.allMaintenance = data.maintenance || data || [];
-                console.log('✅ [MAINT] Maintenance loaded:', window.allMaintenance.length);
+                maintenanceData = window.allMaintenance;
+                console.log('✅ [MAINT] Maintenance loaded:', maintenanceData.length);
             } else {
                 console.error('❌ [MAINT] Maintenance API error:', maintRes.status);
             }
@@ -1180,7 +1181,7 @@
     }
 
     function renderStats() {
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         var total = records.length;
         var inProgress = records.filter(function(r) { return r.status === 'قيد الإنجاز' || r.status === 'معلقة'; }).length;
         var completed = records.filter(function(r) { return r.status === 'مكتملة'; }).length;
@@ -1206,7 +1207,7 @@
         var container = document.getElementById('generalMaintenanceContainer');
         if (!container) return;
 
-        var vessels = window.allVessels || [];
+        var vessels = vesselsData || [];
         var broken = vessels.filter(function(v) { return v.stat === 'معطب' || v.stat === 'صيانة'; });
 
         document.getElementById('brokenCount').textContent = broken.length;
@@ -1220,7 +1221,7 @@
 
         broken.forEach(function(v) {
             var vesselId = v._id || v.id;
-            var records = window.allMaintenance || [];
+            var records = maintenanceData || [];
             var repairs = records.filter(function(r) { return r.vesselId == vesselId; });
             var completedRepairs = repairs.filter(function(r) { return r.status === 'مكتملة'; });
             var totalCost = repairs.reduce(function(sum, r) { return sum + (r.cost || 0); }, 0);
@@ -1244,7 +1245,7 @@
         var container = document.getElementById('historyMaintenanceContainer');
         if (!container) return;
 
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         
         // تطبيق الفلترة
         var vesselFilter = document.getElementById('filterVessel')?.value?.toLowerCase() || '';
@@ -1320,7 +1321,7 @@
         var container = document.getElementById('maintenanceUnitsContainer');
         if (!container) return;
 
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         var units = [
             'وحدة الصيانة والإسناد البحري تونس',
             'وحدة الصيانة والإسناد البحري صفاقس',
@@ -1358,7 +1359,7 @@
     }
 
     function updateBrokenBadge() {
-        var vessels = window.allVessels || [];
+        var vessels = vesselsData || [];
         var brokenCount = vessels.filter(function(v) { return v.stat === 'معطب' || v.stat === 'صيانة'; }).length;
         var badge = document.getElementById('maintenanceBadge');
         if (badge) {
@@ -1401,7 +1402,7 @@
     function updateVesselSelect() {
         var select = document.getElementById('mVesselId');
         if (!select) return;
-        var vessels = window.allVessels || [];
+        var vessels = vesselsData || [];
         var currentValue = select.value;
         select.innerHTML = '<option value="">-- اختر المركب --</option>';
         vessels.forEach(function(v) {
@@ -1416,7 +1417,7 @@
     function updateYearFilter() {
         var select = document.getElementById('filterYear');
         if (!select) return;
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         var years = new Set();
         records.forEach(function(r) {
             if (r.date) {
@@ -1492,7 +1493,7 @@
         if (!description) { showToast('⚠️ الرجاء إدخال وصف العطل', 'warning'); return; }
         if (!technician) { showToast('⚠️ الرجاء إدخال اسم الفني المسؤول', 'warning'); return; }
 
-        var vessels = window.allVessels || [];
+        var vessels = vesselsData || [];
         var vessel = vessels.find(function(v) { return (v._id || v.id) == vesselId; });
         var vesselName = vessel ? vessel.name : 'مركب غير معروف';
 
@@ -1503,7 +1504,7 @@
             cost: cost, notes: notes || '', parts: parts,
             status: status || 'قيد الإنجاز',
             startDate: startDate || new Date().toISOString().split('T')[0],
-            createdBy: window.currentUser?.name || 'Admin'
+            createdBy: currentUser?.name || 'Admin'
         };
 
         try {
@@ -1555,7 +1556,7 @@
     }
 
     async function fixVessel(vesselId) {
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         var openRecords = records.filter(function(r) { 
             return r.vesselId == vesselId && 
             (r.status === 'قيد الإنجاز' || r.status === 'معلقة');
@@ -1573,7 +1574,7 @@
             var token = getToken();
             if (!token) return;
 
-            var vessels = window.allVessels || [];
+            var vessels = vesselsData || [];
             var vessel = vessels.find(function(v) { return (v._id || v.id) == vesselId; });
             
             await fetch('/api/vessels/' + vesselId, {
@@ -1615,13 +1616,13 @@
                     vesselName: vessel ? vessel.name : 'مركب غير معروف',
                     type: 'إصلاح كامل',
                     unit: vessel?.repairUnit || 'غير محدد',
-                    technician: window.currentUser?.name || 'النظام',
+                    technician: currentUser?.name || 'النظام',
                     description: 'تم إصلاح المركب وعودته للخدمة',
                     cost: 0,
                     status: 'مكتملة',
                     date: new Date().toISOString().split('T')[0],
                     faultType: vessel?.break || 'تم الإصلاح',
-                    notes: 'تم الإصلاح بواسطة ' + (window.currentUser?.name || 'النظام')
+                    notes: 'تم الإصلاح بواسطة ' + (currentUser?.name || 'النظام')
                 })
             });
 
@@ -1638,7 +1639,7 @@
     // ============================================================
 
     function showHistory(vesselId, vesselName) {
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         var vesselRecords = records.filter(function(r) { return r.vesselId == vesselId; });
         var total = vesselRecords.length;
         var completed = vesselRecords.filter(function(r) { return r.status === 'مكتملة'; }).length;
@@ -1694,7 +1695,7 @@
     // ============================================================
 
     function exportMaintenanceReport() {
-        var records = window.allMaintenance || [];
+        var records = maintenanceData || [];
         if (records.length === 0) {
             showToast('⚠️ لا توجد بيانات للتصدير', 'warning');
             return;
@@ -1781,6 +1782,6 @@
     window.updateYearFilter = updateYearFilter;
     window.updateBrokenBadge = updateBrokenBadge;
 
-    console.log('✅ Maintenance page script loaded - Fixed version v10.0');
+    console.log('✅ Maintenance page script loaded - Fixed version v11.0');
     </script>
 </div>
