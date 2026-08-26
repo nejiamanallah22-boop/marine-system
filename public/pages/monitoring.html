@@ -399,6 +399,15 @@
             white-space: nowrap;
         }
 
+        .sessions-table .region-tag {
+            font-size: 0.55rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+
         /* ===== STATUS BADGES ===== */
         .status-badge {
             padding: 2px 10px;
@@ -624,8 +633,8 @@
     <div class="map-type-selector">
         <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
         <button class="map-type-btn active" data-type="satellite"><i class="fas fa-satellite"></i> قمر صناعي</button>
+        <button class="map-type-btn" data-type="standard"><i class="fas fa-map"></i> عادية</button>
         <button class="map-type-btn" data-type="terrain"><i class="fas fa-mountain"></i> تضاريس</button>
-        <button class="map-type-btn" data-type="hybrid"><i class="fas fa-layer-group"></i> هجين</button>
     </div>
 
     <!-- ===== GRID ===== -->
@@ -647,9 +656,17 @@
             </div>
             <div class="sessions-scroll" id="sessionsScroll">
                 <table class="sessions-table">
-                    <thead><tr><th>المستخدم</th><th>البريد</th><th>المدة</th><th>الحالة</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>الإقليم</th>
+                            <th>البريد</th>
+                            <th>المدة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
                     <tbody id="sessionsBody">
-                        <tr><td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
+                        <tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -677,47 +694,66 @@
         (function() {
             'use strict';
 
-            // ============================================================
-            // ✅ منع إعادة التحميل والتأكد من وجود canvas
-            // ============================================================
-
             console.log('🔄 monitoring.html - loading...');
 
             // ============================================================
-            // DATA
+            // DATA - USERS مع الأقاليم
             // ============================================================
             var usersData = [
-                { id: 1, name: 'أحمد محمد', role: 'إداري', email: 'ahmed@marine.tn', lat: 36.8065, lng: 10.1815, status: 'نشط', readiness: 'جاهز', location: 'تونس - المركز', lastActive: '2026-08-26 10:30' },
-                { id: 2, name: 'سارة علي', role: 'مشرف', email: 'sara@marine.tn', lat: 34.7390, lng: 10.7600, status: 'نشط', readiness: 'جاهز', location: 'صفاقس - الميناء', lastActive: '2026-08-26 09:45' },
-                { id: 3, name: 'محمد خالد', role: 'مستخدم', email: 'mohamed@marine.tn', lat: 37.2744, lng: 9.8739, status: 'نشط', readiness: 'مشغول', location: 'بنزرت - قاعدة بحرية', lastActive: '2026-08-26 08:15' },
-                { id: 4, name: 'فاطمة نور', role: 'مراقب', email: 'fatma@marine.tn', lat: 35.7780, lng: 10.8250, status: 'نشط', readiness: 'جاهز', location: 'المنستير - وحدة صيانة', lastActive: '2026-08-26 07:30' },
-                { id: 5, name: 'علي حسن', role: 'مستخدم', email: 'ali@marine.tn', lat: 33.8814, lng: 10.0982, status: 'غير متصل', readiness: 'غير جاهز', location: 'قابس - ميناء', lastActive: '2026-08-25 17:20' },
-                { id: 6, name: 'نورا سليم', role: 'مشرف', email: 'nora@marine.tn', lat: 35.8290, lng: 10.6400, status: 'نشط', readiness: 'جاهز', location: 'سوسة - الميناء', lastActive: '2026-08-26 10:00' },
-                { id: 7, name: 'ياسين عمر', role: 'مستخدم', email: 'yassin@marine.tn', lat: 33.5000, lng: 11.1167, status: 'غير متصل', readiness: 'مشغول', location: 'جرجيس - وحدة صيانة', lastActive: '2026-08-25 14:30' },
-                { id: 8, name: 'ليلى منير', role: 'مراقب', email: 'layla@marine.tn', lat: 36.8065, lng: 10.1815, status: 'نشط', readiness: 'جاهز', location: 'تونس - المجمع الأمني', lastActive: '2026-08-26 09:00' },
-                { id: 9, name: 'كريم سامي', role: 'مستخدم', email: 'karim@marine.tn', lat: 37.0000, lng: 9.5000, status: 'نشط', readiness: 'مشغول', location: 'الحرس البحري بالشمال', lastActive: '2026-08-26 08:45' },
-                { id: 10, name: 'منى طارق', role: 'مشرف', email: 'mona@marine.tn', lat: 34.7390, lng: 10.7600, status: 'غير متصل', readiness: 'جاهز', location: 'صفاقس - وحدة صيانة', lastActive: '2026-08-25 16:00' },
-                { id: 11, name: 'سامي رضا', role: 'مستخدم', email: 'sami@marine.tn', lat: 36.0000, lng: 10.5000, status: 'نشط', readiness: 'جاهز', location: 'الساحل - الحرس البحري', lastActive: '2026-08-26 07:00' },
-                { id: 12, name: 'هالة نادر', role: 'مراقب', email: 'hala@marine.tn', lat: 33.0000, lng: 10.0000, status: 'نشط', readiness: 'جاهز', location: 'الجنوب - قاعدة بحرية', lastActive: '2026-08-26 06:30' }
+                // الحرس البحري بالشمال
+                { id: 1, name: 'أحمد محمد', role: 'إداري', email: 'ahmed@marine.tn', lat: 36.8065, lng: 10.1815, status: 'نشط', readiness: 'جاهز', location: 'تونس - المركز', region: 'الشمال', lastActive: '2026-08-26 10:30' },
+                { id: 2, name: 'كريم سامي', role: 'مستخدم', email: 'karim@marine.tn', lat: 37.0000, lng: 9.5000, status: 'نشط', readiness: 'مشغول', location: 'الحرس البحري بالشمال', region: 'الشمال', lastActive: '2026-08-26 08:45' },
+                { id: 3, name: 'سامي رضا', role: 'مستخدم', email: 'sami@marine.tn', lat: 36.0000, lng: 10.5000, status: 'نشط', readiness: 'جاهز', location: 'الساحل - الحرس البحري', region: 'الساحل', lastActive: '2026-08-26 07:00' },
+                
+                // الحرس البحري بالساحل
+                { id: 4, name: 'نورا سليم', role: 'مشرف', email: 'nora@marine.tn', lat: 35.8290, lng: 10.6400, status: 'نشط', readiness: 'جاهز', location: 'سوسة - الميناء', region: 'الساحل', lastActive: '2026-08-26 10:00' },
+                { id: 5, name: 'فاطمة نور', role: 'مراقب', email: 'fatma@marine.tn', lat: 35.7780, lng: 10.8250, status: 'نشط', readiness: 'جاهز', location: 'المنستير - وحدة صيانة', region: 'الساحل', lastActive: '2026-08-26 07:30' },
+                
+                // الحرس البحري بالوسط
+                { id: 6, name: 'سارة علي', role: 'مشرف', email: 'sara@marine.tn', lat: 34.7390, lng: 10.7600, status: 'نشط', readiness: 'جاهز', location: 'صفاقس - الميناء', region: 'الوسط', lastActive: '2026-08-26 09:45' },
+                { id: 7, name: 'منى طارق', role: 'مشرف', email: 'mona@marine.tn', lat: 34.7390, lng: 10.7600, status: 'غير متصل', readiness: 'جاهز', location: 'صفاقس - وحدة صيانة', region: 'الوسط', lastActive: '2026-08-25 16:00' },
+                
+                // الحرس البحري بالجنوب
+                { id: 8, name: 'علي حسن', role: 'مستخدم', email: 'ali@marine.tn', lat: 33.8814, lng: 10.0982, status: 'غير متصل', readiness: 'غير جاهز', location: 'قابس - ميناء', region: 'الجنوب', lastActive: '2026-08-25 17:20' },
+                { id: 9, name: 'هالة نادر', role: 'مراقب', email: 'hala@marine.tn', lat: 33.0000, lng: 10.0000, status: 'نشط', readiness: 'جاهز', location: 'الجنوب - قاعدة بحرية', region: 'الجنوب', lastActive: '2026-08-26 06:30' },
+                
+                // وحدات الصيانة
+                { id: 10, name: 'ليلى منير', role: 'مراقب', email: 'layla@marine.tn', lat: 36.8065, lng: 10.1815, status: 'نشط', readiness: 'جاهز', location: 'تونس - المجمع الأمني', region: 'وحدة الصيانة تونس', lastActive: '2026-08-26 09:00' },
+                { id: 11, name: 'ياسين عمر', role: 'مستخدم', email: 'yassin@marine.tn', lat: 33.5000, lng: 11.1167, status: 'غير متصل', readiness: 'مشغول', location: 'جرجيس - وحدة صيانة', region: 'وحدة الصيانة جرجيس', lastActive: '2026-08-25 14:30' },
+                { id: 12, name: 'محمد خالد', role: 'مستخدم', email: 'mohamed@marine.tn', lat: 37.2744, lng: 9.8739, status: 'نشط', readiness: 'مشغول', location: 'بنزرت - قاعدة بحرية', region: 'وحدة الصيانة تونس', lastActive: '2026-08-26 08:15' }
             ];
 
+            // ============================================================
+            // SESSIONS DATA مع الأقاليم
+            // ============================================================
             var sessionsData = [
-                { id: 'S-2026-001', user: 'أحمد محمد', email: 'ahmed@example.com', duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-002', user: 'سارة علي', email: 'sara@example.com', duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-003', user: 'محمد خالد', email: 'mohamed@example.com', duration: '5 ساعات', status: 'منتهية' },
-                { id: 'S-2026-004', user: 'فاطمة نور', email: 'fatma@example.com', duration: '1 ساعة 50 دقيقة', status: 'ملغاة' },
-                { id: 'S-2026-005', user: 'علي حسن', email: 'ali@example.com', duration: '4 ساعات 20 دقيقة', status: 'نشطة' },
-                { id: 'S-2026-006', user: 'نورا سليم', email: 'nora@example.com', duration: '2 ساعات 45 دقيقة', status: 'منتهية' },
-                { id: 'S-2026-007', user: 'ياسين عمر', email: 'yassin@example.com', duration: '3 ساعات 10 دقيقة', status: 'ملغاة' },
-                { id: 'S-2026-008', user: 'ليلى منير', email: 'layla@example.com', duration: '6 ساعات 30 دقيقة', status: 'نشطة' }
+                // الشمال
+                { id: 'S-2026-001', user: 'أحمد محمد', email: 'ahmed@example.com', region: 'الشمال', duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-002', user: 'كريم سامي', email: 'karim@example.com', region: 'الشمال', duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-003', user: 'سامي رضا', email: 'sami@example.com', region: 'الساحل', duration: '5 ساعات', status: 'منتهية' },
+                
+                // الساحل
+                { id: 'S-2026-004', user: 'نورا سليم', email: 'nora@example.com', region: 'الساحل', duration: '1 ساعة 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-005', user: 'فاطمة نور', email: 'fatma@example.com', region: 'الساحل', duration: '4 ساعات 20 دقيقة', status: 'ملغاة' },
+                
+                // الوسط
+                { id: 'S-2026-006', user: 'سارة علي', email: 'sara@example.com', region: 'الوسط', duration: '2 ساعات 45 دقيقة', status: 'منتهية' },
+                { id: 'S-2026-007', user: 'منى طارق', email: 'mona@example.com', region: 'الوسط', duration: '3 ساعات 10 دقيقة', status: 'ملغاة' },
+                
+                // الجنوب
+                { id: 'S-2026-008', user: 'علي حسن', email: 'ali@example.com', region: 'الجنوب', duration: '6 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-009', user: 'هالة نادر', email: 'hala@example.com', region: 'الجنوب', duration: '2 ساعات 15 دقيقة', status: 'نشطة' },
+                
+                // وحدات الصيانة
+                { id: 'S-2026-010', user: 'ليلى منير', email: 'layla@example.com', region: 'وحدة الصيانة تونس', duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-011', user: 'ياسين عمر', email: 'yassin@example.com', region: 'وحدة الصيانة جرجيس', duration: '4 ساعات', status: 'منتهية' },
+                { id: 'S-2026-012', user: 'محمد خالد', email: 'mohamed@example.com', region: 'وحدة الصيانة تونس', duration: '2 ساعات 20 دقيقة', status: 'نشطة' }
             ];
 
             // ============================================================
             // STATE
             // ============================================================
             var currentMapType = 'satellite';
-            var canvas = document.getElementById('trackingMap');
-            var ctx = null;
             var animId = null;
 
             // ============================================================
@@ -756,6 +792,20 @@
             function getSessionLabel(s) {
                 var map = { 'نشطة': '🟢 نشطة', 'منتهية': '🟡 منتهية', 'ملغاة': '🔴 ملغاة' };
                 return map[s] || s;
+            }
+
+            function getRegionColor(region) {
+                var colors = {
+                    'الشمال': '#60a5fa',
+                    'الساحل': '#34d399',
+                    'الوسط': '#fbbf24',
+                    'الجنوب': '#f87171',
+                    'وحدة الصيانة تونس': '#a78bfa',
+                    'وحدة الصيانة جرجيس': '#f472b6',
+                    'وحدة الصيانة المنستير': '#818cf8',
+                    'وحدة الصيانة صفاقس': '#fb923c'
+                };
+                return colors[region] || '#6b7280';
             }
 
             // ============================================================
@@ -809,10 +859,7 @@
             // ============================================================
             function drawMap() {
                 var canvas = document.getElementById('trackingMap');
-                if (!canvas) {
-                    console.warn('⚠️ canvas not found');
-                    return;
-                }
+                if (!canvas) return;
 
                 var rect = canvas.parentElement.getBoundingClientRect();
                 var width = rect.width - 2;
@@ -826,163 +873,224 @@
                 var ctx = canvas.getContext('2d');
                 ctx.scale(2, 2);
 
-                // Background
+                // ===== BACKGROUND =====
                 var grad = ctx.createLinearGradient(0, 0, 0, height);
                 if (currentMapType === 'satellite') {
                     grad.addColorStop(0, '#0a1628');
-                    grad.addColorStop(0.5, '#1a2a4a');
-                    grad.addColorStop(1, '#1a3a4a');
-                } else if (currentMapType === 'terrain') {
-                    grad.addColorStop(0, '#1a1a0a');
-                    grad.addColorStop(0.5, '#2a4a2a');
-                    grad.addColorStop(1, '#1a3a2a');
+                    grad.addColorStop(0.3, '#0f2847');
+                    grad.addColorStop(0.6, '#1a3a5a');
+                    grad.addColorStop(0.8, '#0f2a4a');
+                    grad.addColorStop(1, '#0a1a2a');
+                } else if (currentMapType === 'standard') {
+                    grad.addColorStop(0, '#1a2a3a');
+                    grad.addColorStop(0.2, '#2a4a5a');
+                    grad.addColorStop(0.4, '#3a6a5a');
+                    grad.addColorStop(0.6, '#4a7a4a');
+                    grad.addColorStop(0.8, '#3a5a3a');
+                    grad.addColorStop(1, '#2a3a2a');
                 } else {
-                    grad.addColorStop(0, '#0a1628');
-                    grad.addColorStop(0.5, '#1a2a5a');
-                    grad.addColorStop(1, '#0a1a3a');
+                    grad.addColorStop(0, '#1a1a0a');
+                    grad.addColorStop(0.2, '#2a2a1a');
+                    grad.addColorStop(0.4, '#3a3a2a');
+                    grad.addColorStop(0.6, '#4a3a2a');
+                    grad.addColorStop(0.8, '#3a2a1a');
+                    grad.addColorStop(1, '#2a1a0a');
                 }
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, width, height);
 
-                // Grid
-                ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+                // ===== MAP FEATURES =====
+                ctx.fillStyle = 'rgba(255,255,255,0.02)';
+                ctx.beginPath();
+                ctx.ellipse(width * 0.5, height * 0.5, width * 0.35, height * 0.25, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.015)';
+                ctx.beginPath();
+                ctx.ellipse(width * 0.6, height * 0.4, width * 0.2, height * 0.15, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = 'rgba(255,255,255,0.01)';
+                ctx.beginPath();
+                ctx.ellipse(width * 0.4, height * 0.6, width * 0.25, height * 0.18, -0.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // ===== GRID =====
+                ctx.strokeStyle = 'rgba(255,255,255,0.04)';
                 ctx.lineWidth = 1;
-                for (var gx = 0; gx < width; gx += 50) {
+                for (var gx = 0; gx < width; gx += 60) {
                     ctx.beginPath();
                     ctx.moveTo(gx, 0);
                     ctx.lineTo(gx, height);
                     ctx.stroke();
                 }
-                for (var gy = 0; gy < height; gy += 50) {
+                for (var gy = 0; gy < height; gy += 60) {
                     ctx.beginPath();
                     ctx.moveTo(0, gy);
                     ctx.lineTo(width, gy);
                     ctx.stroke();
                 }
 
-                // Tunisia bounds
-                var minLat = 32.5,
-                    maxLat = 37.5,
-                    minLng = 8.0,
-                    maxLng = 12.0;
-                var latR = maxLat - minLat,
-                    lngR = maxLng - minLng;
+                // ===== BOUNDS (TUNISIA) =====
+                var minLat = 32.5, maxLat = 37.5, minLng = 8.0, maxLng = 12.0;
+                var latR = maxLat - minLat, lngR = maxLng - minLng;
 
-                // Draw users
-                var radius = 15;
+                // ===== DRAW USERS =====
+                var radius = 16;
+
                 usersData.forEach(function(user) {
                     var x = ((user.lng - minLng) / lngR) * width;
                     var y = ((maxLat - user.lat) / latR) * height;
                     if (x < -50 || x > width + 50 || y < -50 || y > height + 50) return;
 
                     var color = getColor(user);
+                    var regionColor = getRegionColor(user.region);
 
-                    // Glow
-                    var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
-                    glow.addColorStop(0, color + '44');
+                    // ===== GLOW =====
+                    var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.5);
+                    glow.addColorStop(0, color + '55');
+                    glow.addColorStop(0.5, color + '22');
                     glow.addColorStop(1, color + '00');
                     ctx.fillStyle = glow;
                     ctx.beginPath();
-                    ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+                    ctx.arc(x, y, radius * 3.5, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // Pulse
-                    var pulse = radius * 1.5 + Math.sin(Date.now() / 800 + user.id * 1.5) * 4;
+                    // ===== PULSE =====
+                    var pulse = radius * 1.6 + Math.sin(Date.now() / 800 + user.id * 1.7) * 5;
                     ctx.strokeStyle = color + '77';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.arc(x, y, pulse, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Circle
-                    var cg = ctx.createRadialGradient(x - 3, y - 3, 0, x, y, radius);
+                    // ===== REGION RING =====
+                    ctx.strokeStyle = regionColor + '44';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius * 2.2, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // ===== MAIN CIRCLE =====
+                    var cg = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, radius);
                     cg.addColorStop(0, '#ffffff');
-                    cg.addColorStop(0.2, color);
+                    cg.addColorStop(0.15, color);
+                    cg.addColorStop(0.7, color);
                     cg.addColorStop(1, color + 'aa');
                     ctx.fillStyle = cg;
+                    ctx.shadowColor = color + '66';
+                    ctx.shadowBlur = 15;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.shadowBlur = 0;
 
-                    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                    // ===== BORDER =====
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // Initials
+                    // ===== USER INITIALS =====
                     ctx.fillStyle = '#0a1628';
-                    ctx.font = 'bold 11px Cairo, sans-serif';
+                    ctx.font = 'bold 12px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(getInitials(user.name), x, y + 1);
 
-                    // Name
-                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                    ctx.font = '9px Cairo, sans-serif';
+                    // ===== USER NAME =====
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.font = '10px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
-                    ctx.fillText(user.name, x, y - radius - 4);
+                    ctx.fillText(user.name, x, y - radius - 6);
 
-                    // Status dot
+                    // ===== REGION LABEL =====
+                    ctx.fillStyle = regionColor;
+                    ctx.font = '8px Cairo, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    var shortRegion = user.region.length > 12 ? user.region.slice(0, 10) + '..' : user.region;
+                    ctx.fillText('📍 ' + shortRegion, x, y + radius + 6);
+
+                    // ===== STATUS DOT =====
                     var dotColor = user.status === 'نشط' ? '#22c55e' : '#6b7280';
                     ctx.fillStyle = dotColor;
-                    ctx.shadowColor = dotColor + '66';
-                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = dotColor + '88';
+                    ctx.shadowBlur = 10;
                     ctx.beginPath();
-                    ctx.arc(x + radius + 5, y - radius + 5, 4, 0, Math.PI * 2);
+                    ctx.arc(x + radius + 6, y - radius + 6, 5, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.shadowBlur = 0;
 
-                    // Readiness icon
-                    ctx.font = '9px Cairo, sans-serif';
+                    // ===== READINESS ICON =====
+                    ctx.font = '10px Cairo, sans-serif';
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
                     var icon = user.readiness === 'جاهز' ? '✅' : (user.readiness === 'مشغول' ? '🔴' : '⚫');
-                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                    ctx.fillText(icon, x + radius + 12, y - radius + 6);
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.fillText(icon, x + radius + 14, y - radius + 8);
 
                     user._x = x;
                     user._y = y;
                 });
 
-                // Legend
-                var lx = 10,
-                    ly = 10;
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                // ===== LEGEND =====
+                var lx = 12, ly = 12;
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
                 ctx.beginPath();
-                ctx.roundRect(lx, ly, 140, 90, 8);
+                ctx.roundRect(lx, ly, 170, 130, 10);
                 ctx.fill();
+                ctx.shadowBlur = 0;
 
                 var items = [
                     { color: '#22c55e', label: '🟢 جاهز' },
                     { color: '#ef4444', label: '🔴 مشغول' },
-                    { color: '#6b7280', label: '⚫ غير متصل' }
+                    { color: '#6b7280', label: '⚫ غير متصل' },
+                    { color: 'rgba(255,255,255,0.2)', label: '--- حلقة الإقليم' }
                 ];
-                ctx.font = '9px Cairo, sans-serif';
+                ctx.font = '10px Cairo, sans-serif';
                 items.forEach(function(item, idx) {
-                    var yp = ly + 16 + idx * 24;
-                    ctx.fillStyle = item.color;
-                    ctx.beginPath();
-                    ctx.arc(lx + 120, yp, 5, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    var yp = ly + 16 + idx * 26;
+                    if (idx < 3) {
+                        ctx.fillStyle = item.color;
+                        ctx.shadowBlur = 8;
+                        ctx.shadowColor = item.color + '44';
+                        ctx.beginPath();
+                        ctx.arc(lx + 150, yp, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                    } else {
+                        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([3, 3]);
+                        ctx.beginPath();
+                        ctx.arc(lx + 150, yp, 8, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                    ctx.fillStyle = 'rgba(255,255,255,0.55)';
                     ctx.textAlign = 'right';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(item.label, lx + 113, yp);
+                    ctx.fillText(item.label, lx + 142, yp);
                 });
 
-                // Info
-                var labels = { 'satellite': '🛰️', 'terrain': '⛰️', 'hybrid': '🔀' };
+                // ===== MAP TYPE =====
+                var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
                 ctx.fillStyle = 'rgba(255,255,255,0.08)';
                 ctx.font = '10px Cairo, sans-serif';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'bottom';
-                ctx.fillText(labels[currentMapType] || '', 10, height - 10);
+                ctx.fillText(labels[currentMapType] || '', 12, height - 12);
                 ctx.fillStyle = 'rgba(255,255,255,0.08)';
                 ctx.font = '9px Cairo, sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText('👥 ' + usersData.length, width - 10, height - 10);
+                ctx.fillText('👥 ' + usersData.length, width - 12, height - 12);
             }
 
             // ============================================================
@@ -1004,13 +1112,11 @@
                 var mx = (e.clientX - rect.left) * scaleX;
                 var my = (e.clientY - rect.top) * scaleY;
 
-                var found = null,
-                    minD = 35;
+                var found = null, minD = 35;
                 usersData.forEach(function(user) {
                     if (user._x === undefined) return;
                     var d = Math.sqrt(Math.pow(mx - user._x, 2) + Math.pow(my - user._y, 2));
-                    if (d < minD) { minD = d;
-                        found = user; }
+                    if (d < minD) { minD = d; found = user; }
                 });
                 if (found) showPanel(found);
             });
@@ -1024,7 +1130,7 @@
 
                 document.getElementById('panelAvatar').textContent = getInitials(user.name);
                 document.getElementById('panelName').textContent = user.name;
-                document.getElementById('panelRole').textContent = '🔹 ' + user.role;
+                document.getElementById('panelRole').textContent = '🔹 ' + user.role + ' | ' + user.region;
                 document.getElementById('panelId').textContent = '#' + user.id;
                 document.getElementById('panelLocation').textContent = user.location;
                 document.getElementById('panelCoords').textContent = user.lat + '°, ' + user.lng + '°';
@@ -1054,17 +1160,22 @@
                 var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
 
                 if (active.length === 0) {
-                    tbody.innerHTML =
-                        '<tr><td colspan="4" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">🟢 لا توجد جلسات نشطة</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">🟢 لا توجد جلسات نشطة</td></tr>';
                     return;
                 }
 
                 var html = '';
                 active.forEach(function(s) {
-                    html += '<tr><td class="user-name">' + s.user + '</td><td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' +
-                        s.email + '</td><td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">' + s.duration +
-                        '</td><td><span class="status-badge ' + getSessionClass(s.status) + '">' + getSessionLabel(s
-                        .status) + '</span></td></tr>';
+                    var regionColor = getRegionColor(s.region);
+                    html += `
+                        <tr>
+                            <td class="user-name">${s.user}</td>
+                            <td><span class="region-tag" style="color:${regionColor};border:1px solid ${regionColor}44;">${s.region}</span></td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.email}</td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.duration}</td>
+                            <td><span class="status-badge ${getSessionClass(s.status)}">${getSessionLabel(s.status)}</span></td>
+                        </tr>
+                    `;
                 });
                 tbody.innerHTML = html;
             }
@@ -1105,18 +1216,6 @@
             }
 
             // ============================================================
-            // RESIZE HANDLER
-            // ============================================================
-            var resizeTimer;
-
-            function handleResize() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function() {
-                    drawMap();
-                }, 300);
-            }
-
-            // ============================================================
             // ROUND RECT POLYFILL
             // ============================================================
             if (!CanvasRenderingContext2D.prototype.roundRect) {
@@ -1137,15 +1236,21 @@
             }
 
             // ============================================================
+            // RESIZE
+            // ============================================================
+            var resizeTimer;
+
+            function handleResize() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() { drawMap(); }, 300);
+            }
+
+            // ============================================================
             // INIT
             // ============================================================
             function init() {
-                console.log('✅ monitoring.js - init()');
-
-                // تحقق من وجود canvas
                 var canvas = document.getElementById('trackingMap');
                 if (!canvas) {
-                    console.warn('⚠️ Canvas not found, retrying...');
                     setTimeout(init, 500);
                     return;
                 }
@@ -1154,7 +1259,6 @@
                 renderSessions();
                 animate();
 
-                // Event listeners
                 document.getElementById('refreshBtn').addEventListener('click', refreshAll);
                 document.getElementById('terminateAllBtn').addEventListener('click', terminateAll);
                 document.getElementById('closePanelBtn').addEventListener('click', closePanel);
@@ -1169,20 +1273,15 @@
                 console.log('✅ Monitoring Page loaded');
                 console.log('📍 ' + usersData.length + ' users');
                 console.log('🟣 ' + sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length + ' active sessions');
+                console.log('🗺️ أقاليم: الشمال، الساحل، الوسط، الجنوب، وحدات الصيانة');
             }
 
-            // ============================================================
-            // START
-            // ============================================================
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
                 init();
             }
 
-            // ============================================================
-            // EXPOSE FUNCTIONS
-            // ============================================================
             window.refreshAll = refreshAll;
             window.terminateAll = terminateAll;
             window.switchMapType = switchMapType;
