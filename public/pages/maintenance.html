@@ -1,6 +1,6 @@
+<!-- public/pages/maintenance.html -->
 <div id="page-maintenance">
     <style>
-        /* ===== STYLES ===== */
         .maint-header { display:flex; justify-content:space-between; align-items:center; padding:10px 0; flex-wrap:wrap; gap:8px; border-bottom:1px solid rgba(255,255,255,0.05); }
         .maint-header h2 { margin:0; color:white; font-size:22px; }
         .maint-header p { margin:0; color:rgba(255,255,255,0.4); font-size:13px; }
@@ -152,56 +152,21 @@
 
 <script>
 // ============================================================
-// 🔧 MAINTENANCE PAGE - FINAL FIXED
+// 🔧 MAINTENANCE PAGE - FIXED (No duplicate variables)
 // ============================================================
 
-// ============================================================
-// ✅ 1. قراءة التوكن مباشرة
-// ============================================================
-
-const TOKEN_KEY = 'marine_token';
-const token = localStorage.getItem(TOKEN_KEY);
-
-console.log('🔑 التوكن:', token ? '✅ موجود' : '❌ غير موجود');
+// ✅ استخدم المتغيرات العالمية بدلاً من تعريفها مرة أخرى
+// ✅ التحقق من وجود المتغيرات قبل التعريف
 
 // ============================================================
-// ✅ 2. قراءة المراكب من window.allVessels
+// 1. DATA - تجنب التكرار
 // ============================================================
 
-let vesselsData = window.allVessels || [];
-console.log('🚢 عدد المراكب:', vesselsData.length);
+// ✅ استخدم window.allVessels مباشرة
+// ✅ لا تعيد تعريف ZONES_DATA و CATS_LIST
 
 // ============================================================
-// ✅ 3. إذا لم توجد بيانات، جرب جلبها من API
-// ============================================================
-
-async function loadVesselsFromAPI() {
-    try {
-        if (!token) return [];
-        const response = await fetch('/api/vessels', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        if (!response.ok) return [];
-        const data = await response.json();
-        vesselsData = Array.isArray(data) ? data : [];
-        window.allVessels = vesselsData;
-        console.log('✅ تم جلب المراكب من API:', vesselsData.length);
-        return vesselsData;
-    } catch (error) {
-        console.error('❌ خطأ في جلب المراكب:', error);
-        return [];
-    }
-}
-
-// ============================================================
-// ✅ 4. متغيرات الصيانة
-// ============================================================
-
-let maintenanceData = [];
-let currentEditId = null;
-
-// ============================================================
-// ✅ 5. دوال التوكن (للتوافق)
+// 2. TOKEN FUNCTIONS - موحدة
 // ============================================================
 
 function getToken() {
@@ -213,31 +178,59 @@ function getToken() {
 }
 
 function getAuthHeaders() {
-    const t = getToken();
+    const token = getToken();
     return {
         'Content-Type': 'application/json',
-        'Authorization': t ? 'Bearer ' + t : ''
+        'Authorization': token ? 'Bearer ' + token : ''
     };
 }
 
 // ============================================================
-// ✅ 6. جلب الصيانة
+// 3. متغيرات الصيانة - استخدم var لتجنب التكرار
+// ============================================================
+
+if (typeof maintenanceData === 'undefined') {
+    var maintenanceData = [];
+}
+var currentEditId = null;
+
+// ============================================================
+// 4. جلب المراكب
+// ============================================================
+
+async function loadVessels() {
+    if (window.allVessels && window.allVessels.length > 0) {
+        return window.allVessels;
+    }
+    try {
+        const token = getToken();
+        if (!token) return [];
+        const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
+        if (!response.ok) return [];
+        const data = await response.json();
+        window.allVessels = Array.isArray(data) ? data : [];
+        return window.allVessels;
+    } catch (error) {
+        console.error('❌ خطأ في تحميل المراكب:', error);
+        return [];
+    }
+}
+
+// ============================================================
+// 5. جلب الصيانة
 // ============================================================
 
 async function loadMaintenance() {
     try {
-        const t = getToken();
-        if (!t) return [];
+        const token = getToken();
+        if (!token) return [];
 
-        const response = await fetch('/api/maintenance', {
-            headers: getAuthHeaders()
-        });
-
+        const response = await fetch('/api/maintenance', { headers: getAuthHeaders() });
         if (!response.ok) return [];
 
         const data = await response.json();
         const records = data.maintenance || data || [];
-
+        
         maintenanceData = records.map(r => ({
             id: r._id || r.id || Date.now(),
             vesselId: r.vesselId || r.vessel_id || '',
@@ -261,7 +254,7 @@ async function loadMaintenance() {
 }
 
 // ============================================================
-// ✅ 7. عرض البيانات
+// 6. عرض البيانات
 // ============================================================
 
 async function renderMaintenance() {
@@ -269,16 +262,11 @@ async function renderMaintenance() {
     tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-spinner fa-pulse"></i><h3>جاري تحميل البيانات...</h3><p>يرجى الانتظار</p></td></tr>`;
 
     try {
-        // ✅ جلب المراكب
-        if (!vesselsData || vesselsData.length === 0) {
-            vesselsData = await loadVesselsFromAPI();
-        }
-
-        // ✅ جلب الصيانة
+        const vessels = await loadVessels();
         await loadMaintenance();
 
         // ✅ إضافة المراكب المعطوبة تلقائياً
-        const damagedVessels = vesselsData.filter(v => v.stat === 'معطب' || v.status === 'معطب');
+        const damagedVessels = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب');
         const existingIds = new Set(maintenanceData.map(m => m.vesselId));
 
         damagedVessels.forEach(v => {
@@ -315,12 +303,11 @@ async function renderMaintenance() {
             return matchSearch && matchYear && matchStatus;
         });
 
-        // ✅ ترتيب حسب التاريخ
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
             tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><i class="fas fa-inbox"></i><h3>لا توجد مهام صيانة</h3><p>قم بإضافة مهمة صيانة جديدة</p><button onclick="openAddMaintenance()" style="margin-top:10px;padding:6px 20px;background:linear-gradient(135deg,#e94560,#f5c842);border:none;border-radius:30px;color:#0a1628;font-weight:600;cursor:pointer;"><i class="fas fa-plus"></i> إضافة صيانة</button></td></tr>`;
-            updateStats();
+            updateStats(vessels);
             initFilters();
             return;
         }
@@ -349,7 +336,7 @@ async function renderMaintenance() {
             </tr>`;
         });
         tbody.innerHTML = html;
-        updateStats();
+        updateStats(vessels);
         initFilters();
 
     } catch (error) {
@@ -359,16 +346,17 @@ async function renderMaintenance() {
 }
 
 // ============================================================
-// ✅ 8. تحديث الإحصائيات
+// 7. تحديث الإحصائيات
 // ============================================================
 
-function updateStats() {
+function updateStats(vessels) {
     const total = maintenanceData.length;
     const active = maintenanceData.filter(r => r.status === 'قيد الإنجاز').length;
     const completed = maintenanceData.filter(r => r.status === 'مكتملة').length;
     const damaged = maintenanceData.filter(r => r.status === 'معطب').length;
     const totalCost = maintenanceData.reduce((sum, r) => sum + (r.cost || 0), 0);
-    const damagedVessels = vesselsData.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+    const vesselList = vessels || window.allVessels || [];
+    const damagedVessels = vesselList.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
 
     document.getElementById('totalTasks').textContent = total;
     document.getElementById('activeTasks').textContent = active;
@@ -378,7 +366,7 @@ function updateStats() {
 }
 
 // ============================================================
-// ✅ 9. دوال مساعدة
+// 8. دوال مساعدة
 // ============================================================
 
 function escapeHtml(str) { if (!str) return ''; return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])); }
@@ -392,6 +380,7 @@ function getYears() {
 
 function initFilters() {
     const yearSelect = document.getElementById('yearFilter');
+    if (!yearSelect) return;
     const years = getYears();
     yearSelect.innerHTML = '<option value="الكل">-- جميع السنوات --</option>';
     years.forEach(y => { yearSelect.innerHTML += `<option value="${y}">${y}</option>`; });
@@ -405,15 +394,16 @@ function resetFilters() {
 }
 
 // ============================================================
-// ✅ 10. فتح مودال الإضافة
+// 9. فتح مودال الإضافة
 // ============================================================
 
 function openAddMaintenance() {
     currentEditId = null;
     document.getElementById('modalTitle').textContent = '➕ إضافة مهمة صيانة جديدة';
 
+    const vessels = window.allVessels || [];
     let vesselOptions = '<option value="">اختر المركب</option>';
-    vesselsData.forEach(v => {
+    vessels.forEach(v => {
         const vid = v._id || v.id;
         vesselOptions += `<option value="${vid}">${v.name}</option>`;
     });
@@ -437,7 +427,7 @@ function openAddMaintenance() {
 }
 
 // ============================================================
-// ✅ 11. فتح مودال التعديل
+// 10. فتح مودال التعديل
 // ============================================================
 
 function openEditModal(id) {
@@ -447,8 +437,9 @@ function openEditModal(id) {
     currentEditId = id;
     document.getElementById('modalTitle').textContent = '✏️ تعديل مهمة الصيانة';
 
+    const vessels = window.allVessels || [];
     let vesselOptions = '<option value="">اختر المركب</option>';
-    vesselsData.forEach(v => {
+    vessels.forEach(v => {
         const vid = v._id || v.id;
         const selected = vid == record.vesselId ? 'selected' : '';
         vesselOptions += `<option value="${vid}" ${selected}>${v.name}</option>`;
@@ -482,7 +473,7 @@ function openEditModal(id) {
 }
 
 // ============================================================
-// ✅ 12. حفظ الصيانة
+// 11. حفظ الصيانة
 // ============================================================
 
 async function saveMaintenance() {
@@ -498,7 +489,7 @@ async function saveMaintenance() {
     if (!vesselId) { alert('⚠️ يرجى اختيار المركب'); return; }
     if (!damage) { alert('⚠️ يرجى إدخال نوع العطب'); return; }
 
-    const vessel = vesselsData.find(v => (v._id || v.id) == vesselId);
+    const vessel = (window.allVessels || []).find(v => (v._id || v.id) == vesselId);
     const vesselName = vessel ? vessel.name : 'مركب غير معروف';
     const parts = partsInput ? partsInput.split(',').map(p => p.trim()).filter(p => p) : [];
 
@@ -510,8 +501,8 @@ async function saveMaintenance() {
     };
 
     try {
-        const t = getToken();
-        if (!t) { alert('⚠️ الرجاء تسجيل الدخول مرة أخرى'); window.location.href = '/index.html'; return; }
+        const token = getToken();
+        if (!token) { alert('⚠️ الرجاء تسجيل الدخول مرة أخرى'); window.location.href = '/index.html'; return; }
 
         const method = currentEditId ? 'PUT' : 'POST';
         const url = currentEditId ? `/api/maintenance/${currentEditId}` : '/api/maintenance';
@@ -536,7 +527,7 @@ async function saveMaintenance() {
 }
 
 // ============================================================
-// ✅ 13. إكمال المهمة
+// 12. إكمال المهمة
 // ============================================================
 
 async function completeMaintenance(id) {
@@ -562,7 +553,7 @@ async function completeMaintenance(id) {
 }
 
 // ============================================================
-// ✅ 14. حذف المهمة
+// 13. حذف المهمة
 // ============================================================
 
 async function deleteMaintenance(id) {
@@ -579,7 +570,7 @@ async function deleteMaintenance(id) {
 }
 
 // ============================================================
-// ✅ 15. عرض سجل التاريخ
+// 14. عرض سجل التاريخ
 // ============================================================
 
 function showHistory(id) {
@@ -629,7 +620,7 @@ function showHistory(id) {
 }
 
 // ============================================================
-// ✅ 16. إغلاق المودال
+// 15. إغلاق المودال
 // ============================================================
 
 function closeModal() {
@@ -638,7 +629,7 @@ function closeModal() {
 }
 
 // ============================================================
-// ✅ 17. تحديث الصفحة
+// 16. تحديث الصفحة
 // ============================================================
 
 function refreshMaintenance() {
@@ -646,7 +637,7 @@ function refreshMaintenance() {
 }
 
 // ============================================================
-// ✅ 18. التهيئة
+// 17. التهيئة
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -656,7 +647,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // ============================================================
-// ✅ 19. الربط العالمي
+// 18. الربط العالمي
 // ============================================================
 
 window.renderMaintenance = renderMaintenance;
