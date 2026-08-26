@@ -187,10 +187,6 @@
             color: #0a1628;
         }
 
-        .map-type-btn i {
-            font-size: 1rem;
-        }
-
         /* ============================================================
            MAP CONTAINER
            ============================================================ */
@@ -213,35 +209,7 @@
             height: 100% !important;
             min-height: 500px;
             display: block;
-        }
-
-        .map-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 500px;
-            padding: 40px;
-            text-align: center;
-            color: rgba(255,255,255,0.2);
-        }
-
-        .map-placeholder .map-icon {
-            font-size: 4rem;
-            color: rgba(255,255,255,0.05);
-            margin-bottom: 16px;
-        }
-
-        .map-placeholder h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.15);
-            margin-bottom: 8px;
-        }
-
-        .map-placeholder p {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.08);
+            cursor: pointer;
         }
 
         /* ============================================================
@@ -306,7 +274,7 @@
         }
 
         /* ============================================================
-           USER DETAILS PANEL
+           USER DETAILS PANEL (عند النقر على المستخدم)
            ============================================================ */
         .user-panel {
             display: none;
@@ -401,6 +369,7 @@
         .user-panel .detail-row .value.green { color: #55efc4; }
         .user-panel .detail-row .value.red { color: #f87171; }
         .user-panel .detail-row .value.blue { color: #60a5fa; }
+        .user-panel .detail-row .value.pink { color: #f472b6; }
 
         /* ===== OVERLAY ===== */
         .panel-overlay {
@@ -417,6 +386,36 @@
 
         .panel-overlay.visible {
             display: block;
+        }
+
+        /* ============================================================
+           TOAST NOTIFICATION
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 400px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-info {
+            background: rgba(9,132,227,0.15);
+            border: 1px solid rgba(9,132,227,0.2);
         }
 
         /* ============================================================
@@ -460,12 +459,12 @@
                 <i class="fas fa-map-marked-alt"></i>
             </div>
             <div>
-                <h2>تتبع المستخدمين - الخريطة</h2>
+                <h2>تتبع المستخدمين - الخريطة التفاعلية</h2>
                 <p>مراقبة مواقع المستخدمين وحالة الجاهزية في الوقت الفعلي</p>
             </div>
         </div>
         <div class="tracking-header-actions">
-            <button class="btn-action primary" onclick="refreshTracking()">
+            <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
             <button class="btn-action secondary" onclick="window.print()">
@@ -479,13 +478,13 @@
     ============================================================ -->
     <div class="map-type-selector">
         <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
-        <button class="map-type-btn active" onclick="switchMap('satellite')">
+        <button class="map-type-btn active" data-type="satellite">
             <i class="fas fa-satellite"></i> قمر صناعي
         </button>
-        <button class="map-type-btn" onclick="switchMap('terrain')">
+        <button class="map-type-btn" data-type="terrain">
             <i class="fas fa-mountain"></i> تضاريس
         </button>
-        <button class="map-type-btn" onclick="switchMap('hybrid')">
+        <button class="map-type-btn" data-type="hybrid">
             <i class="fas fa-layer-group"></i> هجين
         </button>
     </div>
@@ -528,9 +527,9 @@
     <!-- ============================================================
     USER DETAILS PANEL
     ============================================================ -->
-    <div class="panel-overlay" id="panelOverlay" onclick="closeUserPanel()"></div>
+    <div class="panel-overlay" id="panelOverlay"></div>
     <div class="user-panel" id="userPanel">
-        <button class="close-btn" onclick="closeUserPanel()">✕</button>
+        <button class="close-btn" id="closePanelBtn">✕</button>
         <div class="user-avatar" id="panelAvatar">👤</div>
         <div class="user-name" id="panelName">اسم المستخدم</div>
         <div class="user-role" id="panelRole">الدور</div>
@@ -565,7 +564,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FULL MAP WITH 3 TYPES
+    JAVASCRIPT
     ============================================================ -->
     <script>
         (function() {
@@ -725,51 +724,13 @@
             // STATE
             // ============================================================
             var currentMapType = 'satellite';
-            var selectedUser = null;
-            var mapInstance = null;
-
-            // ============================================================
-            // DOM REFS
-            // ============================================================
             var canvas = document.getElementById('trackingMap');
+            var ctx = canvas.getContext('2d');
+            var animationId = null;
 
             // ============================================================
             // HELPERS
             // ============================================================
-            function getStatusBadge(status) {
-                var map = {
-                    'نشط': '🟢 نشط',
-                    'غير متصل': '⚫ غير متصل'
-                };
-                return map[status] || status;
-            }
-
-            function getStatusClass(status) {
-                var map = {
-                    'نشط': 'green',
-                    'غير متصل': 'red'
-                };
-                return map[status] || '';
-            }
-
-            function getReadinessBadge(readiness) {
-                var map = {
-                    'جاهز': '✅ جاهز',
-                    'مشغول': '🔴 مشغول',
-                    'غير جاهز': '⚫ غير جاهز'
-                };
-                return map[readiness] || readiness;
-            }
-
-            function getReadinessClass(readiness) {
-                var map = {
-                    'جاهز': 'green',
-                    'مشغول': 'red',
-                    'غير جاهز': 'gray'
-                };
-                return map[readiness] || '';
-            }
-
             function getInitials(name) {
                 if (!name) return '👤';
                 var parts = name.split(' ');
@@ -786,8 +747,34 @@
                 return '#fbbf24';
             }
 
+            function getStatusBadge(status) {
+                return status === 'نشط' ? '🟢 نشط' : '⚫ غير متصل';
+            }
+
+            function getReadinessBadge(readiness) {
+                var map = {
+                    'جاهز': '✅ جاهز',
+                    'مشغول': '🔴 مشغول',
+                    'غير جاهز': '⚫ غير جاهز'
+                };
+                return map[readiness] || readiness;
+            }
+
+            function getStatusClass(status) {
+                return status === 'نشط' ? 'green' : 'red';
+            }
+
+            function getReadinessClass(readiness) {
+                var map = {
+                    'جاهز': 'green',
+                    'مشغول': 'red',
+                    'غير جاهز': 'pink'
+                };
+                return map[readiness] || '';
+            }
+
             // ============================================================
-            // STATS
+            // UPDATE STATS
             // ============================================================
             function updateStats() {
                 var total = usersData.length;
@@ -804,13 +791,12 @@
             }
 
             // ============================================================
-            // DRAW MAP - WITH 3 TYPES
+            // DRAW MAP
             // ============================================================
             function drawMap() {
-                var ctx = canvas.getContext('2d');
                 var rect = canvas.parentElement.getBoundingClientRect();
                 var width = rect.width - 2;
-                var height = Math.max(500, window.innerHeight * 0.6);
+                var height = Math.max(500, window.innerHeight * 0.55);
 
                 canvas.width = width * 2;
                 canvas.height = height * 2;
@@ -821,42 +807,43 @@
                 // ===== BACKGROUND =====
                 var gradient = ctx.createLinearGradient(0, 0, 0, height);
                 if (currentMapType === 'satellite') {
-                    gradient.addColorStop(0, '#1a2a4a');
-                    gradient.addColorStop(0.5, '#2d4a6a');
+                    gradient.addColorStop(0, '#0a1628');
+                    gradient.addColorStop(0.3, '#1a2a4a');
+                    gradient.addColorStop(0.6, '#2d4a6a');
                     gradient.addColorStop(1, '#1a3a4a');
                 } else if (currentMapType === 'terrain') {
-                    gradient.addColorStop(0, '#2d2a1a');
-                    gradient.addColorStop(0.3, '#4a3a2a');
-                    gradient.addColorStop(0.6, '#3a5a3a');
-                    gradient.addColorStop(1, '#2a4a3a');
+                    gradient.addColorStop(0, '#1a1a0a');
+                    gradient.addColorStop(0.3, '#3a2a1a');
+                    gradient.addColorStop(0.6, '#2a4a2a');
+                    gradient.addColorStop(1, '#1a3a2a');
                 } else {
-                    gradient.addColorStop(0, '#1a2a3a');
-                    gradient.addColorStop(0.3, '#2a3a4a');
-                    gradient.addColorStop(0.6, '#1a3a5a');
-                    gradient.addColorStop(1, '#1a2a4a');
+                    gradient.addColorStop(0, '#0a1628');
+                    gradient.addColorStop(0.3, '#1a2a4a');
+                    gradient.addColorStop(0.6, '#0a2a5a');
+                    gradient.addColorStop(1, '#0a1a3a');
                 }
 
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, width, height);
 
-                // ===== GRID LINES =====
+                // ===== GRID =====
                 ctx.strokeStyle = 'rgba(255,255,255,0.03)';
                 ctx.lineWidth = 1;
-                for (var gx = 0; gx < width; gx += 60) {
+                for (var gx = 0; gx < width; gx += 50) {
                     ctx.beginPath();
                     ctx.moveTo(gx, 0);
                     ctx.lineTo(gx, height);
                     ctx.stroke();
                 }
-                for (var gy = 0; gy < height; gy += 60) {
+                for (var gy = 0; gy < height; gy += 50) {
                     ctx.beginPath();
                     ctx.moveTo(0, gy);
                     ctx.lineTo(width, gy);
                     ctx.stroke();
                 }
 
-                // ===== FIND BOUNDS =====
-                var minLat = 33, maxLat = 38, minLng = 8, maxLng = 12;
+                // ===== BOUNDS (TUNISIA) =====
+                var minLat = 32.5, maxLat = 37.5, minLng = 8.0, maxLng = 12.0;
                 var latRange = maxLat - minLat;
                 var lngRange = maxLng - minLng;
 
@@ -872,17 +859,17 @@
                     var color = getColorByStatus(user.status, user.readiness);
 
                     // ===== GLOW =====
-                    var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
-                    glow.addColorStop(0, color + '44');
+                    var glow = ctx.createRadialGradient(x, y, 0, x, y, radius * 3.5);
+                    glow.addColorStop(0, color + '55');
                     glow.addColorStop(1, color + '00');
                     ctx.fillStyle = glow;
                     ctx.beginPath();
-                    ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+                    ctx.arc(x, y, radius * 3.5, 0, Math.PI * 2);
                     ctx.fill();
 
-                    // ===== PULSE ANIMATION =====
-                    var pulseSize = radius * 1.5 + Math.sin(Date.now() / 1000 + user.id) * 4;
-                    ctx.strokeStyle = color + '88';
+                    // ===== PULSE =====
+                    var pulseSize = radius * 1.6 + Math.sin(Date.now() / 800 + user.id * 1.5) * 5;
+                    ctx.strokeStyle = color + '77';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.arc(x, y, pulseSize, 0, Math.PI * 2);
@@ -891,7 +878,7 @@
                     // ===== CIRCLE =====
                     var grad = ctx.createRadialGradient(x - 4, y - 4, 0, x, y, radius);
                     grad.addColorStop(0, '#ffffff');
-                    grad.addColorStop(0.3, color);
+                    grad.addColorStop(0.2, color);
                     grad.addColorStop(1, color + 'aa');
                     ctx.fillStyle = grad;
                     ctx.beginPath();
@@ -899,22 +886,22 @@
                     ctx.fill();
 
                     // ===== BORDER =====
-                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
                     ctx.arc(x, y, radius, 0, Math.PI * 2);
                     ctx.stroke();
 
-                    // ===== USER INITIALS =====
+                    // ===== INITIALS =====
                     ctx.fillStyle = '#0a1628';
                     ctx.font = 'bold 12px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(getInitials(user.name), x, y + 1);
 
-                    // ===== USER NAME LABEL =====
-                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                    ctx.font = '11px Cairo, sans-serif';
+                    // ===== NAME =====
+                    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                    ctx.font = '10px Cairo, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
                     ctx.fillText(user.name, x, y - radius - 6);
@@ -934,27 +921,21 @@
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'bottom';
                     var icon = user.readiness === 'جاهز' ? '✅' : (user.readiness === 'مشغول' ? '🔴' : '⚫');
-                    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
                     ctx.fillText(icon, x + radius + 14, y - radius + 8);
 
-                    // ===== CLICK AREA (invisible for interaction) =====
-                    // We handle clicks via canvas click event
+                    // Store for click detection
                     user._x = x;
                     user._y = y;
                     user._radius = radius;
                 });
 
                 // ===== LEGEND =====
-                var legendX = 16, legendY = 16;
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                var lx = 14, ly = 14;
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
                 ctx.beginPath();
-                ctx.roundRect(legendX, legendY, 180, 130, 10);
+                ctx.roundRect(lx, ly, 175, 130, 10);
                 ctx.fill();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.font = '11px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
 
                 var legendItems = [
                     { color: '#22c55e', label: '🟢 نشط - جاهز' },
@@ -962,34 +943,48 @@
                     { color: '#6b7280', label: '⚫ غير متصل' }
                 ];
 
+                ctx.font = '11px Cairo, sans-serif';
                 legendItems.forEach(function(item, idx) {
-                    var yPos = legendY + 20 + idx * 30;
+                    var yPos = ly + 22 + idx * 30;
                     ctx.fillStyle = item.color;
                     ctx.beginPath();
-                    ctx.arc(legendX + 155, yPos, 6, 0, Math.PI * 2);
+                    ctx.arc(lx + 152, yPos, 6, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.fillStyle = 'rgba(255,255,255,0.6)';
                     ctx.textAlign = 'right';
-                    ctx.fillText(item.label, legendX + 148, yPos);
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.label, lx + 145, yPos);
                 });
 
-                // ===== MAP TYPE LABEL =====
+                // ===== MAP TYPE =====
                 var typeLabels = {
                     'satellite': '🛰️ قمر صناعي',
                     'terrain': '⛰️ تضاريس',
                     'hybrid': '🔀 هجين'
                 };
-                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.fillStyle = 'rgba(255,255,255,0.12)';
                 ctx.font = '11px Cairo, sans-serif';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'bottom';
-                ctx.fillText(typeLabels[currentMapType] || '', 16, height - 16);
+                ctx.fillText(typeLabels[currentMapType] || '', 14, height - 14);
 
                 // ===== USERS COUNT =====
                 ctx.fillStyle = 'rgba(255,255,255,0.1)';
                 ctx.font = '10px Cairo, sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText('👥 ' + usersData.length + ' مستخدم', width - 16, height - 16);
+                ctx.fillText('👥 ' + usersData.length + ' مستخدم', width - 14, height - 14);
+                ctx.textAlign = 'left';
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                ctx.font = '9px Cairo, sans-serif';
+                ctx.fillText('🖱️ اضغط على أي نقطة للمستخدم', 14, height - 30);
+            }
+
+            // ============================================================
+            // ANIMATION LOOP
+            // ============================================================
+            function animateMap() {
+                drawMap();
+                animationId = requestAnimationFrame(animateMap);
             }
 
             // ============================================================
@@ -1002,9 +997,8 @@
                 var mouseX = (e.clientX - rect.left) * scaleX;
                 var mouseY = (e.clientY - rect.top) * scaleY;
 
-                // Find closest user
                 var found = null;
-                var minDist = 50;
+                var minDist = 40;
                 usersData.forEach(function(user) {
                     if (user._x === undefined) return;
                     var dist = Math.sqrt(Math.pow(mouseX - user._x, 2) + Math.pow(mouseY - user._y, 2));
@@ -1020,10 +1014,9 @@
             });
 
             // ============================================================
-            // USER PANEL
+            // SHOW USER PANEL
             // ============================================================
             function showUserPanel(user) {
-                selectedUser = user;
                 document.getElementById('panelOverlay').classList.add('visible');
                 document.getElementById('userPanel').classList.add('visible');
 
@@ -1032,7 +1025,7 @@
                 document.getElementById('panelRole').textContent = '🔹 ' + user.role;
                 document.getElementById('panelId').textContent = '#' + user.id;
                 document.getElementById('panelLocation').textContent = user.location;
-                document.getElementById('panelCoords').textContent = user.lat + ', ' + user.lng;
+                document.getElementById('panelCoords').textContent = user.lat + '°, ' + user.lng + '°';
 
                 var statusEl = document.getElementById('panelStatus');
                 statusEl.textContent = getStatusBadge(user.status);
@@ -1046,45 +1039,63 @@
                 document.getElementById('panelEmail').textContent = user.email;
             }
 
-            window.closeUserPanel = function() {
+            function closeUserPanel() {
                 document.getElementById('panelOverlay').classList.remove('visible');
                 document.getElementById('userPanel').classList.remove('visible');
-                selectedUser = null;
-            };
+            }
 
             // ============================================================
-            // MAP TYPE SWITCHER
+            // SWITCH MAP TYPE
             // ============================================================
-            window.switchMap = function(type) {
+            function switchMapType(type) {
                 currentMapType = type;
                 document.querySelectorAll('.map-type-btn').forEach(function(btn) {
-                    btn.classList.toggle('active', btn.getAttribute('onclick').includes(type));
+                    btn.classList.toggle('active', btn.dataset.type === type);
                 });
-                drawMap();
-            };
+            }
 
             // ============================================================
             // REFRESH
             // ============================================================
-            window.refreshTracking = function() {
-                var btn = document.querySelector('.btn-action.primary');
+            function refreshTracking() {
+                var btn = document.getElementById('refreshBtn');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
 
                 setTimeout(function() {
                     updateStats();
-                    drawMap();
                     btn.innerHTML = original;
                     btn.disabled = false;
+                    showToast('✅ تم تحديث البيانات بنجاح', 'success');
                 }, 600);
-            };
+            }
+
+            // ============================================================
+            // TOAST
+            // ============================================================
+            function showToast(message, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+
+                var notif = document.createElement('div');
+                notif.className = 'toast toast-' + (type || 'info');
+                notif.textContent = message;
+                document.body.appendChild(notif);
+
+                setTimeout(function() {
+                    notif.style.opacity = '0';
+                    notif.style.transform = 'translateY(20px)';
+                    notif.style.transition = 'all 0.4s ease-out';
+                    setTimeout(function() { notif.remove(); }, 400);
+                }, 3000);
+            }
 
             // ============================================================
             // INIT
             // ============================================================
             function init() {
-                // Add roundRect polyfill for older browsers
+                // RoundRect polyfill
                 if (!CanvasRenderingContext2D.prototype.roundRect) {
                     CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
                         if (r > w/2) r = w/2;
@@ -1103,19 +1114,34 @@
                 }
 
                 updateStats();
-                drawMap();
+                animateMap();
+
+                // ===== EVENTS =====
+                document.getElementById('refreshBtn').addEventListener('click', refreshTracking);
+                document.getElementById('closePanelBtn').addEventListener('click', closeUserPanel);
+                document.getElementById('panelOverlay').addEventListener('click', closeUserPanel);
+
+                document.querySelectorAll('.map-type-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        switchMapType(this.dataset.type);
+                    });
+                });
 
                 // Redraw on resize
+                var resizeTimer;
                 window.addEventListener('resize', function() {
-                    drawMap();
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function() {
+                        drawMap();
+                    }, 300);
                 });
 
                 console.log('✅ Tracking Map loaded successfully!');
                 console.log('📍 ' + usersData.length + ' users on map');
                 console.log('🗺️ 3 map types: satellite, terrain, hybrid');
+                console.log('💡 Click on any user to see details');
             }
 
-            // Run on load
             document.addEventListener('DOMContentLoaded', init);
 
         })();
