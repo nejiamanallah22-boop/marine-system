@@ -781,7 +781,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - WITH REAL MAP (LEAFLET)
+    JAVASCRIPT - FIXED
     ============================================================ -->
     <script>
         (function() {
@@ -1275,11 +1275,17 @@
                 init();
             }
 
+            // ============================================================
+            // ✅ EXPOSE FUNCTIONS TO GLOBAL (WINDOW) - FIX!
+            // ============================================================
             window.refreshAll = refreshAll;
             window.terminateAll = terminateAll;
             window.switchMapType = switchMapType;
             window.showToast = showToast;
             window.initMap = initMap;
+            window.updateStats = updateStats;
+            window.renderSessions = renderSessions;
+            window.updateMarkers = updateMarkers;
 
         })();
     </script>
