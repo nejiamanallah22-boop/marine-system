@@ -345,18 +345,21 @@
 
 <script>
     // ============================================================
-    // 🔧 MAINTENANCE PAGE - FIXED
+    // 🔧 MAINTENANCE PAGE - FIXED (No duplicate variables)
     // ============================================================
 
-    let maintenanceData = [];
-    let vesselsData = [];
+    // ✅ استخدم var بدلاً من let لتجنب خطأ التكرار
+    // ✅ تحقق من وجود المتغيرات قبل تعريفها
+
+    if (typeof maintenanceData === 'undefined') {
+        var maintenanceData = [];
+    }
 
     // ============================================================
     // 1. GET TOKEN - متوافق مع جميع الأنظمة
     // ============================================================
 
     function getToken() {
-        // ✅ محاولة قراءة التوكن من جميع المصادر الممكنة
         return localStorage.getItem('marine_token') ||
                localStorage.getItem('token') ||
                localStorage.getItem('authToken') ||
@@ -377,21 +380,13 @@
     // ============================================================
 
     async function loadVessels() {
-        // ✅ أولاً: حاول القراءة من window.allVessels (من index.html)
+        // ✅ استخدام window.allVessels مباشرة
         if (window.allVessels && window.allVessels.length > 0) {
-            vesselsData = window.allVessels;
-            console.log('✅ تم تحميل المراكب من window.allVessels:', vesselsData.length);
-            return vesselsData;
+            console.log('✅ تم تحميل المراكب من window.allVessels:', window.allVessels.length);
+            return window.allVessels;
         }
 
-        // ✅ ثانياً: حاول القراءة من window.vesselsData
-        if (window.vesselsData && window.vesselsData.length > 0) {
-            vesselsData = window.vesselsData;
-            console.log('✅ تم تحميل المراكب من window.vesselsData:', vesselsData.length);
-            return vesselsData;
-        }
-
-        // ✅ ثالثاً: جلب من API
+        // ✅ جلب من API
         try {
             const token = getToken();
             if (!token) {
@@ -409,14 +404,13 @@
             }
 
             const data = await response.json();
-            vesselsData = Array.isArray(data) ? data : [];
+            const vessels = Array.isArray(data) ? data : [];
             
-            // ✅ حفظ في window للمرة القادمة
-            window.allVessels = vesselsData;
-            window.vesselsData = vesselsData;
+            // ✅ حفظ في window.allVessels
+            window.allVessels = vessels;
             
-            console.log('✅ تم تحميل المراكب من API:', vesselsData.length);
-            return vesselsData;
+            console.log('✅ تم تحميل المراكب من API:', vessels.length);
+            return vessels;
         } catch (error) {
             console.error('❌ خطأ في تحميل المراكب:', error);
             return [];
@@ -447,7 +441,6 @@
             const data = await response.json();
             const records = data.maintenance || data || [];
             
-            // ✅ تحويل البيانات إلى صيغة موحدة
             maintenanceData = records.map(r => ({
                 id: r._id || r.id || Date.now(),
                 vesselId: r.vesselId || r.vessel_id || '',
@@ -488,13 +481,13 @@
 
         try {
             // ✅ تحميل المراكب أولاً
-            await loadVessels();
+            const vessels = await loadVessels();
             
             // ✅ تحميل الصيانة
             await loadMaintenance();
 
             // ✅ تحديث الإحصائيات
-            updateStats();
+            updateStats(vessels);
 
             // ✅ تطبيق الفلاتر
             const search = document.getElementById('searchMaint').value.toLowerCase();
@@ -503,19 +496,13 @@
             const unitFilter = document.getElementById('unitFilter').value;
 
             let filtered = maintenanceData.filter(r => {
-                // البحث
                 const searchText = [r.vesselName, r.type, r.technician, r.description, r.unit]
                     .filter(Boolean).join(' ').toLowerCase();
                 const matchSearch = !search || searchText.includes(search);
                 
-                // السنة
                 const year = r.date ? new Date(r.date).getFullYear().toString() : '';
                 const matchYear = yearFilter === 'الكل' || year === yearFilter;
-                
-                // النوع
                 const matchType = typeFilter === 'الكل' || r.type === typeFilter;
-                
-                // الوحدة
                 const matchUnit = unitFilter === 'الكل' || r.unit === unitFilter;
                 
                 return matchSearch && matchYear && matchType && matchUnit;
@@ -534,13 +521,8 @@
                 return;
             }
 
-            // ✅ عرض البيانات
             let html = '';
             filtered.forEach((r, index) => {
-                const statusClass = r.status === 'مكتملة' ? 'completed' :
-                                   r.status === 'ملغية' ? 'cancelled' :
-                                   r.status === 'قيد الإنجاز' ? 'active' : 'pending';
-                
                 const statusMap = {
                     'مكتملة': 'completed',
                     'ملغية': 'cancelled',
@@ -567,6 +549,9 @@
             });
             tbody.innerHTML = html;
 
+            // ✅ تحديث الفلاتر بعد تحميل البيانات
+            initFilters();
+
         } catch (error) {
             console.error('❌ خطأ في renderMaintenance:', error);
             tbody.innerHTML = `
@@ -588,13 +573,16 @@
     // 5. تحديث الإحصائيات
     // ============================================================
 
-    function updateStats() {
+    function updateStats(vessels) {
         const total = maintenanceData.length;
         const active = maintenanceData.filter(r => r.status === 'قيد الإنجاز').length;
         const completed = maintenanceData.filter(r => r.status === 'مكتملة').length;
         const cancelled = maintenanceData.filter(r => r.status === 'ملغية').length;
         const totalCost = maintenanceData.reduce((sum, r) => sum + (r.cost || 0), 0);
-        const damaged = vesselsData.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
+        
+        // ✅ استخدام vessels المرسلة أو window.allVessels
+        const vesselList = vessels || window.allVessels || [];
+        const damaged = vesselList.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
 
         document.getElementById('totalTasks').textContent = total;
         document.getElementById('activeTasks').textContent = active;
@@ -644,14 +632,12 @@
         const yearSelect = document.getElementById('yearFilter');
         const unitSelect = document.getElementById('unitFilter');
 
-        // تعبئة السنوات
         const years = getYears();
         yearSelect.innerHTML = '<option value="الكل">-- جميع السنوات --</option>';
         years.forEach(y => {
             yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
         });
 
-        // تعبئة الوحدات
         const units = getUnits();
         unitSelect.innerHTML = '<option value="الكل">الكل</option>';
         units.forEach(u => {
@@ -733,7 +719,6 @@
     document.addEventListener('DOMContentLoaded', async function() {
         console.log('🔧 تحميل صفحة الصيانة...');
         await renderMaintenance();
-        initFilters();
         console.log('✅ صفحة الصيانة جاهزة');
     });
 
