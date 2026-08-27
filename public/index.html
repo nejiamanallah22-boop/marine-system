@@ -468,7 +468,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FULLY FIXED
+    JAVASCRIPT - FIXED (مع إعادة تنفيذ Scripts)
     ============================================================ -->
     <script>
         // ============================================================
@@ -699,63 +699,36 @@
         }
 
         // ============================================================
-        // ⏰ SAFE UPDATE DATE TIME - FULLY FIXED
+        // ⏰ UPDATE DATE TIME
         // ============================================================
 
-        // ✅ إعادة تعريف الدالة بشكل آمن
         function updateDateTime() {
-            var dateEl = document.getElementById('currentDate');
-            var timeEl = document.getElementById('currentTime');
-
-            // ✅ التحقق من وجود العناصر
-            if (!dateEl || !timeEl) {
-                // ✅ عدم ظهور أي خطأ في الـ console
-                return;
-            }
-
             try {
+                var dateEl = document.getElementById('currentDate');
+                var timeEl = document.getElementById('currentTime');
+                if (!dateEl && !timeEl) return;
+
                 var now = new Date();
-                var date = now.toLocaleDateString('ar-TN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                var time = now.toLocaleTimeString('ar-TN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-
-                dateEl.textContent = date;
-                timeEl.textContent = time;
-            } catch(e) {
-                // تجاهل أي خطأ
-            }
-        }
-
-        // ✅ إلغاء المؤقتات القديمة
-        if (window._dateTimeInterval) {
-            clearInterval(window._dateTimeInterval);
-        }
-
-        // ✅ تشغيل الدالة بأمان
-        setTimeout(function() {
-            try {
-                updateDateTime();
+                if (dateEl) {
+                    dateEl.textContent = now.toLocaleDateString('ar-TN', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+                if (timeEl) {
+                    timeEl.textContent = now.toLocaleTimeString('ar-TN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
             } catch(e) {}
-        }, 100);
-
-        window._dateTimeInterval = setInterval(function() {
-            try {
-                updateDateTime();
-            } catch(e) {}
-        }, 1000);
-
-        console.log('✅ updateDateTime fixed successfully');
+        }
 
         // ============================================================
-        // 📄 LOAD PAGE
+        // 📄 LOAD PAGE - FIXED (مع إعادة تنفيذ الـ Scripts)
         // ============================================================
 
         function loadPage(page) {
@@ -780,15 +753,43 @@
                     return response.text();
                 })
                 .then(html => {
-                    container.innerHTML = html;
-                    container.querySelectorAll('script').forEach(oldScript => {
-                        const newScript = document.createElement('script');
-                        newScript.textContent = oldScript.textContent;
-                        document.body.appendChild(newScript);
-                        oldScript.remove();
+                    // 🔥 استخراج الـ HTML والـ Scripts بشكل منفصل
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // استخراج كل الـ script tags
+                    const scripts = tempDiv.querySelectorAll('script');
+                    const scriptContents = [];
+                    scripts.forEach(script => {
+                        scriptContents.push(script.textContent);
+                        script.remove(); // إزالة الـ script من الـ HTML
                     });
+                    
+                    // إدراج الـ HTML النظيف
+                    container.innerHTML = tempDiv.innerHTML;
+                    
+                    // 🔥 تنفيذ الـ scripts المستخرجة
+                    scriptContents.forEach(content => {
+                        if (content.trim()) {
+                            try {
+                                // إنشاء script جديد وتنفيذه
+                                const newScript = document.createElement('script');
+                                newScript.textContent = content;
+                                document.body.appendChild(newScript);
+                                // إزالة الـ script بعد التنفيذ
+                                setTimeout(() => {
+                                    if (newScript.parentNode) newScript.remove();
+                                }, 10);
+                            } catch (e) {
+                                console.warn('⚠️ خطأ في تنفيذ script:', e.message);
+                            }
+                        }
+                    });
+                    
                     loader.style.display = 'none';
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+                    
+                    console.log('✅ تم تحميل الصفحة:', page);
                 })
                 .catch(error => {
                     loader.style.display = 'none';
@@ -878,6 +879,10 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
+            // ✅ تحديث الوقت
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+
             // ✅ التحقق من التوكن
             const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
             if (token) {
@@ -912,17 +917,6 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
-
-        // ✅ منع أي استدعاء خارجي لـ updateDateTime من التسبب في خطأ
-        // override for safety
-        var originalUpdate = window.updateDateTime;
-        window.updateDateTime = function() {
-            try {
-                originalUpdate();
-            } catch(e) {
-                // ignore
-            }
-        };
 
         console.log('✅ Marine System v7.0 loaded successfully');
     </script>
