@@ -721,41 +721,88 @@
             });
 
             // ============================================================
-            // LOGO PREVIEW
+            // LOGO PREVIEW - FIXED: Save and display logo
             // ============================================================
             document.getElementById('logoUpload').addEventListener('change', function(e) {
                 var file = e.target.files[0];
                 if (file) {
                     var reader = new FileReader();
                     reader.onload = function(event) {
+                        var imageData = event.target.result;
+                        var preview = document.getElementById('logoPreview');
                         var img = document.createElement('img');
-                        img.src = event.target.result;
+                        img.src = imageData;
                         img.style.maxWidth = '100px';
                         img.style.maxHeight = '60px';
                         img.style.borderRadius = '8px';
-                        var preview = document.getElementById('logoPreview');
                         preview.innerHTML = '';
                         preview.appendChild(img);
+                        document.getElementById('logoNamePreview').style.display = 'none';
+
+                        // ✅ Save to localStorage
+                        localStorage.setItem('app_logo', imageData);
+                        localStorage.setItem('app_logo_name', file.name);
+                        showToast('✅ تم تحميل الشعار بنجاح', 'success');
                     };
                     reader.readAsDataURL(file);
                 }
             });
 
+            // ============================================================
+            // LOAD LOGO ON PAGE START
+            // ============================================================
+            function loadLogo() {
+                var savedLogo = localStorage.getItem('app_logo');
+                if (savedLogo) {
+                    var preview = document.getElementById('logoPreview');
+                    var img = document.createElement('img');
+                    img.src = savedLogo;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '60px';
+                    img.style.borderRadius = '8px';
+                    preview.innerHTML = '';
+                    preview.appendChild(img);
+                    document.getElementById('logoNamePreview').style.display = 'none';
+                    console.log('✅ تم تحميل الشعار المحفوظ');
+                }
+            }
+
+            // ============================================================
+            // BACKGROUND IMAGE - FIXED
+            // ============================================================
             document.getElementById('bgImageUpload').addEventListener('change', function(e) {
                 var file = e.target.files[0];
                 if (file) {
                     var reader = new FileReader();
                     reader.onload = function(event) {
-                        document.getElementById('page-settings').style.backgroundImage = 'url(' + event.target
-                            .result + ')';
+                        var imageData = event.target.result;
+                        document.getElementById('page-settings').style.backgroundImage = 'url(' + imageData +
+                            ')';
                         document.getElementById('page-settings').style.backgroundSize = 'cover';
                         document.getElementById('page-settings').style.backgroundPosition = 'center';
                         document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
+
+                        // ✅ Save to localStorage
+                        localStorage.setItem('app_background', imageData);
                         showToast('✅ تم تحميل صورة الخلفية', 'success');
                     };
                     reader.readAsDataURL(file);
                 }
             });
+
+            // ============================================================
+            // LOAD BACKGROUND ON PAGE START
+            // ============================================================
+            function loadBackground() {
+                var savedBg = localStorage.getItem('app_background');
+                if (savedBg) {
+                    document.getElementById('page-settings').style.backgroundImage = 'url(' + savedBg + ')';
+                    document.getElementById('page-settings').style.backgroundSize = 'cover';
+                    document.getElementById('page-settings').style.backgroundPosition = 'center';
+                    document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
+                    console.log('✅ تم تحميل الخلفية المحفوظة');
+                }
+            }
 
             // ============================================================
             // SAVE FUNCTIONS
@@ -786,13 +833,20 @@
                 if (file) {
                     var reader = new FileReader();
                     reader.onload = function(event) {
-                        localStorage.setItem('app_logo', event.target.result);
+                        var imageData = event.target.result;
+                        localStorage.setItem('app_logo', imageData);
                         localStorage.setItem('app_logo_size', size);
                         showToast('✅ تم تحديث الشعار بنجاح', 'success');
                     };
                     reader.readAsDataURL(file);
                 } else {
-                    showToast('⚠️ يرجى اختيار صورة للشعار', 'error');
+                    var savedLogo = localStorage.getItem('app_logo');
+                    if (savedLogo) {
+                        localStorage.setItem('app_logo_size', size);
+                        showToast('✅ تم تحديث حجم الشعار', 'success');
+                    } else {
+                        showToast('⚠️ يرجى اختيار صورة للشعار', 'error');
+                    }
                 }
             };
 
@@ -871,17 +925,10 @@
                 }
 
                 // Logo
-                var logo = localStorage.getItem('app_logo');
-                if (logo) {
-                    var img = document.createElement('img');
-                    img.src = logo;
-                    img.style.maxWidth = '100px';
-                    img.style.maxHeight = '60px';
-                    img.style.borderRadius = '8px';
-                    var preview = document.getElementById('logoPreview');
-                    preview.innerHTML = '';
-                    preview.appendChild(img);
-                }
+                loadLogo();
+
+                // Background
+                loadBackground();
 
                 // Layout
                 var darkMode = localStorage.getItem('layout_darkMode');
