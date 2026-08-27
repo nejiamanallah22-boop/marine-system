@@ -1,2030 +1,931 @@
-<!-- public/pages/efficiency.html -->
-<div id="page-efficiency">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚓ منظومة الوسائل البحرية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- ✅ LEAFTLET - MAP LIBRARY -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
     <style>
-        /* ============================================================
-           📊 EFFICIENCY PAGE - FIXED (No duplicate declaration)
-           ============================================================ */
-
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --primary-dark: #0a1628;
-            --primary: #0f3460;
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
-            --success: #00b894;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --info: #0984e3;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        }
-
-        /* ===== FULL SCREEN RESET ===== */
-        #page-efficiency {
-            width: 100%;
-            max-width: 100%;
-            padding: 0;
-            margin: 0;
-            font-family: var(--font);
-            background: #0a0e1a;
-            color: #e8edf5;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ===== BACKGROUND EFFECT ===== */
-        #page-efficiency::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.03) 0%, transparent 60%);
-            z-index: -1;
-            pointer-events: none;
-            animation: bgPulse 15s ease-in-out infinite;
-        }
-
-        @keyframes bgPulse {
-            0%, 100% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.05) rotate(2deg); }
-        }
-
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
-
-        /* ============================================================
-           HEADER
-           ============================================================ */
-        .eff-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 64px;
-            z-index: 10;
-            margin: 0;
-            width: 100%;
-        }
-
-        .eff-header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .eff-header-left .header-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--success));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #0a1628;
-            box-shadow: var(--shadow-gold);
-            animation: pulseGold 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseGold {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
-        }
-
-        .eff-header-left h2 {
-            font-size: 22px;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .eff-header-left p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin: 0;
-        }
-
-        .eff-header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .eff-header-actions .btn-action {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--font);
-        }
-
-        .eff-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-            box-shadow: var(--shadow-gold);
-        }
-
-        .eff-header-actions .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
-        }
-
-        .eff-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.5);
-        }
-
-        .eff-header-actions .btn-action.secondary:hover {
-            background: rgba(255,255,255,0.06);
-            color: #fff;
-            transform: translateY(-2px);
-        }
-
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            padding: 16px 24px;
-            margin: 0;
-            width: 100%;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            text-align: center;
-            transition: all var(--transition);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--success));
-            opacity: 0.6;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card .number {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.2;
-        }
-
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
-
-        .stat-card .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-            margin: 0;
-            width: 100%;
-        }
-
-        .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .filter-bar select {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
-            font-family: var(--font);
-        }
-
-        .filter-bar select:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-
-        .filter-bar select option {
-            background: #0a1628;
-            color: #e2e8f0;
-        }
-
-        .filter-bar .btn-filter {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-bar .btn-filter.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-        }
-
-        .filter-bar .btn-filter.primary:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
-        }
-
-        .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.3);
-        }
-
-        .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        /* ============================================================
-           TABLE STYLES
-           ============================================================ */
-        .eff-section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin: 0 24px 16px;
-            overflow: hidden;
-        }
-
-        .eff-section .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.02);
-        }
-
-        .eff-section .section-header h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .eff-section .section-header h3 i {
-            color: var(--gold);
-        }
-
-        .eff-section .section-header .badge {
-            font-size: 11px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-        }
-
-        .section-content {
-            padding: 16px 20px;
-        }
-
-        /* ===== TABLES ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
-
-        .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 650px;
-        }
-
-        thead {
-            background: rgba(15,52,96,0.3);
-            border-bottom: 2px solid rgba(230,179,30,0.08);
-        }
-
-        thead th {
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        thead th i {
-            margin-left: 4px;
-            color: var(--gold);
-            font-size: 0.7rem;
-        }
-
-        tbody td {
-            padding: 9px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.78rem;
-            text-align: center;
-        }
-
-        tbody tr {
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        /* ===== ROW CLASSES ===== */
-        .row-high {
-            background: rgba(34, 197, 94, 0.05) !important;
-            border-right: 3px solid #4ade80;
-        }
-
-        .row-high .eff-cell {
-            color: #4ade80 !important;
-            font-weight: 700;
-        }
-
-        .row-mid {
-            background: rgba(234, 179, 8, 0.05) !important;
-            border-right: 3px solid #fbbf24;
-        }
-
-        .row-mid .eff-cell {
-            color: #fbbf24 !important;
-            font-weight: 700;
-        }
-
-        .row-low {
-            background: rgba(239, 68, 68, 0.05) !important;
-            border-right: 3px solid #f87171;
-        }
-
-        .row-low .eff-cell {
-            color: #f87171 !important;
-            font-weight: 700;
-        }
-
-        /* ===== STATUS BADGES ===== */
-        .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .status-badge.excellent {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.good {
-            background: rgba(74,222,128,0.08);
-            color: #4ade80;
-        }
-
-        .status-badge.medium {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.low {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.critical {
-            background: rgba(239,68,68,0.2);
-            color: #f87171;
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        /* ===== PROGRESS BAR ===== */
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            min-width: 80px;
-        }
-
-        .progress-bar .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-        }
-
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-        }
-
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #eab308, #fbbf24);
-        }
-
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #ef4444, #f87171);
-        }
-
-        /* ============================================================
-           REGION TABLES
-           ============================================================ */
-        .region-card {
-            padding: 0;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .region-card:last-child {
-            border-bottom: none;
-        }
-
-        .region-card .region-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background: rgba(255,255,255,0.02);
-            flex-wrap: wrap;
-            gap: 8px;
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-
-        .region-card .region-header:hover {
-            background: rgba(255,255,255,0.04);
-        }
-
-        .region-card .region-header .region-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .region-card .region-header .region-name i {
-            color: var(--gold);
-        }
-
-        .region-card .region-header .region-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 16px;
-            border-radius: 20px;
-        }
-
-        .region-badge.excellent {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
-        }
-
-        .region-badge.good {
-            background: rgba(74,222,128,0.1);
-            color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.05);
-        }
-
-        .region-badge.medium {
-            background: rgba(234,179,8,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(234,179,8,0.1);
-        }
-
-        .region-badge.low {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .region-badge.critical {
-            background: rgba(239,68,68,0.25);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.2);
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-
-        .region-card .region-body {
-            padding: 0 20px 16px;
-        }
-
-        /* ============================================================
-           CHARTS
-           ============================================================ */
-        .chart-section {
-            margin: 0 24px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--glass-bg);
-        }
-
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.02);
-        }
-
-        .chart-btn {
-            padding: 6px 18px;
-            border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .chart-btn:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
-            color: #0a1628;
-        }
-
-        .chart-btn i {
-            margin-left: 6px;
-        }
-
-        .charts-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .chart-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .chart-box.full {
-            grid-column: 1 / -1;
-        }
-
-        .chart-box h4 {
-            font-size: 14px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .chart-box canvas {
-            width: 100% !important;
-            max-height: 280px;
-        }
-
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.15);
-        }
-
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .empty-state .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid rgba(255,255,255,0.04);
-            border-top-color: var(--gold);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
-        }
-
-        .empty-state p {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 992px) {
-            .eff-header { padding: 12px 16px; top: 60px; }
-            .eff-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .eff-section { margin: 0 16px 12px; }
-            .chart-section { margin: 0 16px 16px; }
-            .charts-container { grid-template-columns: 1fr; padding: 12px; }
-            .chart-box.full { grid-column: 1; }
-            .region-card .region-body { padding: 0 12px 12px; }
-        }
-
-        @media (max-width: 768px) {
-            .eff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
-            .eff-header-left { width: 100%; }
-            .eff-header-left h2 { font-size: 16px; }
-            .eff-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
-            .filter-bar label { font-size: 0.65rem; }
-            .filter-bar select { min-width: 100%; }
-            .eff-section { margin: 0 12px 10px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
-            .section-content { padding: 12px 14px; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
-            thead th, tbody td { padding: 6px 8px; }
-            .chart-section { margin: 0 12px 12px; }
-            .charts-container { padding: 10px; gap: 12px; }
-            .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 200px; }
-            .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
-            .chart-switch { padding: 10px 12px; justify-content: center; }
-            .chart-btn { font-size: 11px; padding: 4px 12px; }
-            .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
-            .region-card .region-body { padding: 0 10px 10px; }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
-            .stat-card { padding: 10px 12px; }
-            .stat-card .number { font-size: 18px; }
-            .stat-card .label { font-size: 9px; }
-            .eff-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .eff-header-left h2 { font-size: 14px; }
-            .eff-header-left p { font-size: 10px; }
-            .section-header h3 { font-size: 13px; }
-            .section-content { padding: 10px 12px; }
-            thead th, tbody td { padding: 4px 6px; font-size: 0.65rem; }
-        }
+        /* ===== RESET & BASE ===== */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Cairo',sans-serif;background:#0a1628;color:#e2e8f0;min-height:100vh;direction:rtl;overflow-x:hidden}
+        :root{--gold:#e6b31e;--gold-light:#f5d76e;--gold-dark:#c99a0e;--success:#22c55e;--danger:#ef4444;--warning:#eab308;--info:#3b82f6}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:#0a1628}
+        ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+          
+        #loginOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1628,#1a2a4a);overflow:hidden}
+        #loginOverlay::before{content:'';position:absolute;inset:-50%;background:radial-gradient(ellipse at 20% 50%,rgba(14,165,233,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(230,179,30,0.04) 0%,transparent 60%);animation:bgPulse 12s ease-in-out infinite}
+        @keyframes bgPulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.08) rotate(3deg)}}
+          
+        .login-container{position:relative;z-index:10;width:100%;max-width:440px;padding:20px}
+        .login-box{background:rgba(255,255,255,0.04);backdrop-filter:blur(40px);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:48px 40px 36px;text-align:center;animation:slideUp 0.7s cubic-bezier(0.16,1,0.3,1);box-shadow:0 30px 80px rgba(0,0,0,0.5)}
+        @keyframes slideUp{from{opacity:0;transform:translateY(40px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+          
+        .login-logo .logo-icon{display:inline-block;font-size:56px;animation:logoFloat 4s ease-in-out infinite}
+        @keyframes logoFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}
+        .login-logo .logo-text{display:block;font-size:26px;font-weight:900;margin-top:6px;background:linear-gradient(135deg,#e6b31e,#f5d76e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .login-subtitle{font-size:14px;color:rgba(255,255,255,0.3);margin-top:4px}
+          
+        .developer-info{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 28px;padding:8px 0;position:relative}
+        .developer-info::before,.developer-info::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(230,179,30,0.2),transparent)}
+        .dev-badge{font-size:12px;color:rgba(255,255,255,0.3)}.dev-badge i{color:var(--gold-light)}
+        .dev-name{font-size:16px;font-weight:700;color:var(--gold-light)}
+        .dev-version{font-size:11px;color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.04);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.04)}
+          
+        .login-form{margin-top:4px}
+        .form-group{margin-bottom:14px}
+        .input-wrapper{position:relative;display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:12px;transition:all 0.3s}
+        .input-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06);box-shadow:0 0 0 4px rgba(230,179,30,0.06)}
+        .input-wrapper .input-icon{position:absolute;right:16px;color:rgba(255,255,255,0.2);font-size:14px}
+        .input-wrapper input{width:100%;padding:14px 46px 14px 16px;background:transparent;border:none;outline:none;color:#fff;font-size:15px;font-family:inherit}
+        .input-wrapper input::placeholder{color:rgba(255,255,255,0.2)}
+        .toggle-password{position:absolute;left:12px;background:none;border:none;color:rgba(255,255,255,0.2);cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}
+        .toggle-password:hover{color:#fff;background:rgba(255,255,255,0.04)}
+          
+        .login-options{display:flex;justify-content:space-between;align-items:center;margin:16px 0 20px}
+        .checkbox-label{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer}
+        .checkbox-label input[type="checkbox"]{display:none}
+        .checkbox-label .checkmark{width:20px;height:20px;border:2px solid rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+        .checkbox-label input:checked+.checkmark{background:var(--gold);border-color:var(--gold)}
+        .checkbox-label input:checked+.checkmark::after{content:'✓';color:#0a1628;font-size:12px;font-weight:700}
+        .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}
+        .forgot-link:hover{color:var(--gold-light)}
+          
+        .login-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 30px rgba(230,179,30,0.15)}
+        .login-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}
+        .login-btn:disabled{opacity:0.6;cursor:not-allowed}
+        .login-btn .btn-content{display:flex;align-items:center;justify-content:center;gap:10px}
+        .login-btn .spinner{display:none;width:22px;height:22px;border:3px solid rgba(0,0,0,0.15);border-top-color:#0a1628;border-radius:50%;animation:spin 0.8s linear infinite}
+        .login-btn.loading .spinner{display:inline-block}.login-btn.loading .btn-text{display:none}
+        @keyframes spin{to{transform:rotate(360deg)}}
+          
+        .error-msg{color:var(--danger);font-size:14px;margin-top:12px;padding:12px 16px;background:rgba(239,68,68,0.08);border-radius:8px;border-right:4px solid var(--danger);display:none;text-align:right}
+        .error-msg.show{display:block;animation:shake 0.4s ease}
+        .error-msg.success{color:var(--success);border-right-color:var(--success);background:rgba(34,197,94,0.08)}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+          
+        .security-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;color:rgba(255,255,255,0.2);font-size:12px}
+        .security-badge i{color:var(--success)}
+          
+        .login-footer{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.15);font-size:11px}
+        .login-footer .footer-version{background:rgba(255,255,255,0.03);padding:2px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.03)}
+          
+        #mainApp{display:none;min-height:100vh}
+        .main-header{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.04);height:64px;display:flex;align-items:center}
+        .header-container{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0 20px;max-width:1440px;margin:0 auto}
+        .header-left{display:flex;align-items:center;gap:16px}
+        .menu-toggle{display:flex;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.3s}
+        .menu-toggle:hover{background:rgba(255,255,255,0.04)}
+        .menu-toggle span{display:block;width:24px;height:2px;background:#e2e8f0;border-radius:2px;transition:all 0.3s}
+        .menu-toggle.active span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+        .menu-toggle.active span:nth-child(2){opacity:0}
+        .menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+          
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand .brand-icon{font-size:24px}
+        .brand h1{font-size:17px;font-weight:700;color:#fff}
+        .brand .brand-tag{font-size:11px;font-weight:400;color:var(--gold-light);background:rgba(230,179,30,0.1);padding:2px 14px;border-radius:20px;border:1px solid rgba(230,179,30,0.1)}
+          
+        .header-right{display:flex;align-items:center;gap:12px}
+        .search-wrapper{display:flex;align-items:center;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:0 16px;transition:all 0.3s}
+        .search-wrapper:focus-within{border-color:var(--gold);background:rgba(255,255,255,0.06)}
+        .search-wrapper input{background:transparent;border:none;outline:none;color:#e2e8f0;padding:8px 0;font-size:13px;font-family:inherit;width:160px}
+        .search-wrapper input:focus{width:220px}
+        .search-wrapper input::placeholder{color:rgba(255,255,255,0.2);font-size:12px}
+        .search-wrapper .search-icon{color:rgba(255,255,255,0.2);font-size:13px;margin-left:10px}
+        .search-wrapper .search-shortcut{font-size:10px;color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);padding:2px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);margin-right:6px}
+          
+        .notification-wrapper{position:relative}
+        .notif-btn{position:relative;background:none;border:none;color:rgba(255,255,255,0.3);font-size:20px;cursor:pointer;padding:8px;border-radius:50%;transition:all 0.3s}
+        .notif-btn:hover{color:#fff;background:rgba(255,255,255,0.04)}
+        .notif-badge{position:absolute;top:4px;right:4px;background:var(--danger);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:50%;min-width:18px;text-align:center;border:2px solid #0a1628;display:none}
+          
+        .user-wrapper{position:relative}
+        .user-btn{display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:20px;transition:all 0.3s}
+        .user-btn:hover{background:rgba(255,255,255,0.04)}
+        .user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#0a1628;flex-shrink:0}
+        .user-name{font-size:13px;color:#e2e8f0;font-weight:500}
+        .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}
+        .user-btn:hover .user-arrow{color:#fff}
+          
+        .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
+        .sidebar::-webkit-scrollbar{width:4px}
+        .sidebar::-webkit-scrollbar-track{background:transparent}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:10px}
+          
+        .sidebar-header{display:none;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:16px}
+        .sidebar-brand{display:flex;align-items:center;gap:10px}
+        .sidebar-brand .brand-icon{font-size:24px;color:var(--gold)}
+        .sidebar-brand .brand-title{font-size:16px;font-weight:700;color:#fff}
+        .sidebar-brand .brand-subtitle{font-size:10px;color:rgba(255,255,255,0.2)}
+        .sidebar-close{display:none;background:none;border:none;color:rgba(255,255,255,0.2);font-size:20px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:all 0.3s}
+        .sidebar-close:hover{background:rgba(255,255,255,0.04);color:#fff}
+          
+        .sidebar-user{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:12px;border:1px solid rgba(255,255,255,0.04);margin-bottom:16px}
+        .sidebar-user .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0a1628;flex-shrink:0}
+        .sidebar-user .user-info{display:flex;flex-direction:column;flex:1;min-width:0}
+        .sidebar-user .user-name{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .sidebar-user .user-role{font-size:11px;color:rgba(255,255,255,0.3)}
+          
+        .sidebar-nav{flex:1;display:flex;flex-direction:column;gap:4px}
+        .nav-group{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+        .nav-group-title{font-size:10px;font-weight:700;color:rgba(255,255,255,0.15);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px}
+        .nav-btn{display:flex;align-items:center;gap:12px;padding:10px 14px;border:none;border-radius:8px;background:transparent;color:rgba(255,255,255,0.4);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:all 0.3s;text-align:right;width:100%;position:relative}
+        .nav-btn i{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+        .nav-btn:hover{background:rgba(255,255,255,0.04);color:#fff}
+        .nav-btn.active{background:rgba(230,179,30,0.06);color:var(--gold-light)}
+        .nav-btn.active::before{content:'';position:absolute;right:0;top:20%;height:60%;width:3px;background:var(--gold);border-radius:0 3px 3px 0}
+        .nav-btn .nav-badge{margin-right:auto;font-size:9px;padding:2px 8px;border-radius:50%;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);min-width:18px;text-align:center;display:none}
+        .nav-btn .nav-badge.warning{background:rgba(239,68,68,0.12);color:var(--danger)}
+        .nav-btn .nav-badge.success{background:rgba(34,197,94,0.12);color:var(--success)}
+        .nav-btn .nav-badge.info{background:rgba(59,130,246,0.12);color:var(--info)}
+          
+        .sidebar-footer{border-top:1px solid rgba(255,255,255,0.04);padding-top:14px;margin-top:8px;display:flex;flex-direction:column;gap:8px}
+        .footer-status{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,0.2)}
+        .footer-status .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+        .footer-status .status-dot.online{background:var(--success);animation:pulseDot 2s ease-in-out infinite}
+        @keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.2)}}
+          
+        .footer-version{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.15)}
+        .footer-version i{color:var(--gold)}
+        .footer-logout{display:flex;align-items:center;gap:10px;padding:8px 14px;border:none;border-radius:8px;background:rgba(239,68,68,0.08);color:var(--danger);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;width:100%}
+        .footer-logout:hover{background:rgba(239,68,68,0.16)}
+        .footer-logout i{font-size:14px}
+          
+        .main-content{margin-right:240px;min-height:calc(100vh - 64px);padding:20px 24px}
+        .page-container{max-width:1440px;margin:0 auto}
+        .page-loader{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;min-height:200px}
+        .loader-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.04);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite}
+        .page-loader p{margin-top:16px;color:rgba(255,255,255,0.2);font-size:14px}
+        .page-content{animation:fadePage 0.4s ease-out}
+        @keyframes fadePage{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        #pageContainer{min-height:300px}
+          
+        .back-to-top{position:fixed;bottom:30px;right:30px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);border:none;color:#0a1628;font-size:20px;cursor:pointer;box-shadow:0 4px 30px rgba(230,179,30,0.15);transition:all 0.3s;z-index:40;display:none;align-items:center;justify-content:center}
+        .back-to-top:hover{transform:translateY(-3px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}
+          
+        .connection-status{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.9);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;z-index:999;backdrop-filter:blur(10px)}
+        .toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:420px;width:90%;pointer-events:none}
+        .toast{padding:12px 18px;border-radius:12px;color:#fff;font-size:14px;font-weight:500;animation:toastSlide 0.4s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(10px);display:flex;align-items:center;gap:10px;box-shadow:0 8px 40px rgba(0,0,0,0.3);pointer-events:auto;border:1px solid rgba(255,255,255,0.08)}
+        .toast-success{background:rgba(16,185,129,0.92)}
+        .toast-error{background:rgba(239,68,68,0.92)}
+        .toast-warning{background:rgba(245,158,11,0.92)}
+        .toast-info{background:rgba(59,130,246,0.92)}
+        @keyframes toastSlide{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+          
+        .modal-overlay{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}
+        .modal-box{background:#111e3a;border:1px solid rgba(255,255,255,0.06);border-radius:16px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalFade 0.3s cubic-bezier(0.16,1,0.3,1)}
+        @keyframes modalFade{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .modal-header h3{font-size:18px;font-weight:700;color:#fff}
+        .modal-close{background:none;border:none;color:rgba(255,255,255,0.2);font-size:24px;cursor:pointer;padding:4px;border-radius:8px;transition:all 0.3s}
+        .modal-close:hover{background:rgba(255,255,255,0.04);color:#fff}
+        .modal-body{padding:20px;max-height:400px;overflow-y:auto;color:#e2e8f0}
+        .modal-footer{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.04)}
+          
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.3s;text-decoration:none}
+        .btn:active{transform:scale(0.97)}
+        .btn-sm{padding:4px 12px;font-size:12px}
+        .btn-primary{background:var(--info);color:#fff}
+        .btn-primary:hover{box-shadow:0 4px 20px rgba(59,130,246,0.3)}
+        .btn-success{background:var(--success);color:#fff}
+        .btn-success:hover{box-shadow:0 4px 20px rgba(34,197,94,0.3)}
+        .btn-warning{background:var(--warning);color:#0a1628}
+        .btn-warning:hover{box-shadow:0 4px 20px rgba(234,179,8,0.3)}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn-danger:hover{box-shadow:0 4px 20px rgba(239,68,68,0.3)}
+        .btn-gold{background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628}
+        .btn-gold:hover{box-shadow:0 4px 30px rgba(230,179,30,0.25)}
+        .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#e2e8f0}
+        .btn-outline:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.12)}
+        .btn-secondary{background:rgba(255,255,255,0.04);color:#94a3b8;border:1px solid rgba(255,255,255,0.06)}
+        .btn-secondary:hover{background:rgba(255,255,255,0.06)}
+          
+        @media (max-width:992px){
+            .search-wrapper input{width:120px}
+            .search-wrapper input:focus{width:160px}
+            .brand .brand-tag{display:none}
+            .main-content{margin-right:0;padding:14px 16px}
+            .menu-toggle{display:flex}
+            .sidebar{transform:translateX(calc(100% + 10px));width:280px;padding:12px}
+            .sidebar.open{transform:translateX(0)}
+            .sidebar-header{display:flex}
+            .sidebar-close{display:block}
+        }
+        @media (max-width:768px){
+            .login-box{padding:32px 24px 28px}
+            .login-logo .logo-icon{font-size:42px}
+            .login-logo .logo-text{font-size:20px}
+            .brand h1{font-size:14px}
+            .brand .brand-tag{display:none}
+            .search-wrapper{display:none}
+            .user-name{display:none}
+            .main-content{padding:10px 12px}
+        }
+        @media (max-width:480px){
+            .login-box{padding:24px 16px 20px}
+            .login-logo .logo-icon{font-size:32px}
+            .login-logo .logo-text{font-size:17px}
+            .login-subtitle{font-size:12px}
+            .developer-info{flex-wrap:wrap;gap:4px}
+            .developer-info .dev-name{font-size:14px}
+            .input-wrapper input{padding:12px 40px 12px 14px;font-size:14px}
+            .login-btn{padding:14px;font-size:15px}
+            .brand h1{font-size:12px}
+            .brand .brand-icon{font-size:18px}
+            .header-right{gap:6px}
+            .notif-btn{font-size:17px;padding:6px}
+            .user-avatar{width:28px;height:28px;font-size:12px}
+            .sidebar{width:260px;padding:10px}
+            .sidebar-user .user-avatar{width:34px;height:34px;font-size:14px}
+            .nav-btn{padding:8px 12px;font-size:12px}
+            .nav-btn i{font-size:13px;width:18px}
+        }
+        @media print{.main-header,.sidebar,.back-to-top,.toast-container,.modal-overlay,.no-print{display:none!important}.main-content{margin-right:0!important;padding:0!important}}
     </style>
+</head>
+<body>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
-    <div class="eff-header">
-        <div class="eff-header-left">
-            <div class="header-icon">
-                <i class="fas fa-chart-line"></i>
+    <!-- ===== LOGIN ===== -->
+    <div id="loginOverlay">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="login-logo">
+                    <span class="logo-icon">⚓</span>
+                    <h1 class="logo-text">منظومة الوسائل البحرية</h1>
+                    <p class="login-subtitle">نظام متابعة وإدارة الأسطول البحري المتقدم</p>
+                </div>
+                <div class="developer-info">
+                    <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
+                    <span class="dev-name">أمان الله ناجي</span>
+                    <span class="dev-version">v7.0</span>
+                </div>
+                <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password" required>
+                            <button type="button" class="toggle-password" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="login-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            تذكرني
+                        </label>
+                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
+                    </div>
+                    <button type="submit" class="login-btn" id="loginButton">
+                        <span class="btn-content">
+                            <span class="btn-text">🚀 دخول إلى النظام</span>
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                    <div id="loginError" class="error-msg"></div>
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>اتصال آمن ومشفر</span>
+                    </div>
+                </form>
+                <div class="login-footer">
+                    <span>نظام إدارة وإسناد الوحدات البحرية</span>
+                    <span class="footer-version">الإصدار الاحترافي v7.0</span>
+                </div>
             </div>
-            <div>
-                <h2>جاهزية الأسطول</h2>
-                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
-            </div>
-        </div>
-        <div class="eff-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn-action secondary" onclick="window.print()">
-                <i class="fas fa-print"></i> طباعة
-            </button>
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
-    <div class="stats-grid" id="statsCards">
-        <div class="stat-card">
-            <div class="number gold" id="totalVessels">0</div>
-            <div class="label">🚢 إجمالي المراكب</div>
-            <span class="icon-bg"><i class="fas fa-ship"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number green" id="activeVessels">0</div>
-            <div class="label">✅ صالح للخدمة</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number yellow" id="maintenanceVessels">0</div>
-            <div class="label">🔧 تحت الصيانة</div>
-            <span class="icon-bg"><i class="fas fa-tools"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number red" id="damagedVessels">0</div>
-            <div class="label">🟥 معطوبة</div>
-            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
-        </div>
-        <div class="stat-card">
-            <div class="number" id="efficiencyPercent" style="color:var(--gold-light);">0%</div>
-            <div class="label">📈 نسبة النجاعة</div>
-            <span class="icon-bg"><i class="fas fa-chart-pie"></i></span>
-        </div>
-    </div>
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp" style="display:none;">
+        <header class="main-header">
+            <div class="header-container">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <span></span><span></span><span></span>
+                    </button>
+                    <div class="brand">
+                        <span class="brand-icon">⚓</span>
+                        <h1>منظومة الوسائل البحرية</h1>
+                        <span class="brand-tag">الوكيل أمان الله ناجي</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-wrapper">
+                        <input type="text" id="quickSearch" placeholder="بحث سريع...">
+                        <i class="fas fa-search search-icon"></i>
+                        <kbd class="search-shortcut">⌘K</kbd>
+                    </div>
+                    <div class="notification-wrapper">
+                        <button class="notif-btn" id="notifBtn">
+                            <i class="fas fa-bell"></i>
+                            <span class="notif-badge" id="notifBadge">0</span>
+                        </button>
+                    </div>
+                    <div class="user-wrapper">
+                        <button class="user-btn" id="userBtn">
+                            <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>
+                            <span class="user-name" id="userDisplayName">المستخدم</span>
+                            <i class="fas fa-chevron-down user-arrow"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-    <!-- ============================================================
-    FILTER BAR
-    ============================================================ -->
-    <div class="filter-bar">
-        <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
-        <select id="fRegEff">
-            <option value="الكل">🌍 جميع الأقاليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <span class="brand-icon">⚓</span>
+                    <div>
+                        <div class="brand-title">الأسطول البحري</div>
+                        <div class="brand-subtitle">نظام إدارة الوسائل البحرية</div>
+                    </div>
+                </div>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
+            </div>
+            <div class="sidebar-user">
+                <div class="user-avatar" id="sidebarUserAvatar">م</div>
+                <div class="user-info">
+                    <span class="user-name" id="sidebarUserName">المستخدم</span>
+                    <span class="user-role" id="sidebarUserRole">مسؤول</span>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-group">
+                    <span class="nav-group-title">الرئيسية</span>
+                    <button class="nav-btn active" data-page="dashboard">
+                        <i class="fas fa-chart-pie"></i> لوحة التحكم
+                    </button>
+                    <button class="nav-btn" data-page="fleet">
+                        <i class="fas fa-ship"></i> السجل العام
+                        <span class="nav-badge" id="fleetBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">إدارة الأسطول</span>
+                    <button class="nav-btn" data-page="maintenance">
+                        <i class="fas fa-wrench"></i> الصيانة
+                        <span class="nav-badge warning" id="maintenanceBadge">0</span>
+                    </button>
+                    <button class="nav-btn" data-page="efficiency">
+                        <i class="fas fa-chart-line"></i> الجاهزية
+                    </button>
+                    <button class="nav-btn" data-page="support">
+                        <i class="fas fa-headset"></i> الدعم
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">العمليات</span>
+                    <button class="nav-btn" data-page="notes">
+                        <i class="fas fa-sticky-note"></i> Note Verbale
+                    </button>
+                    <button class="nav-btn" data-page="monitoring">
+                        <i class="fas fa-map-marked-alt"></i> المراقبة الشاملة
+                        <span class="nav-badge success" id="sessionsBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">الإدارة</span>
+                    <button class="nav-btn" data-page="users">
+                        <i class="fas fa-users"></i> المستخدمين
+                        <span class="nav-badge" id="usersBadge">0</span>
+                    </button>
+                    <button class="nav-btn" data-page="logs">
+                        <i class="fas fa-history"></i> سجلات الصيانة
+                        <span class="nav-badge" id="logsBadge">0</span>
+                    </button>
+                </div>
+                <div class="nav-group">
+                    <span class="nav-group-title">متقدم</span>
+                    <button class="nav-btn" data-page="ai-assistant">
+                        <i class="fas fa-robot"></i> المساعد الذكي
+                        <span class="nav-badge success">AI</span>
+                    </button>
+                    <button class="nav-btn" data-page="settings">
+                        <i class="fas fa-cog"></i> الإعدادات
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>
+                <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+            </div>
+        </nav>
 
-        <label><i class="fas fa-filter"></i> الفئة</label>
-        <select id="fCatEff">
-            <option value="الكل">📦 جميع الفئات</option>
-            <option value="البروق">البروق</option>
-            <option value="صقور">صقور</option>
-            <option value="خوافر">خوافر</option>
-            <option value="زوارق مزدوجة">زوارق مزدوجة</option>
-            <option value="طوافات">طوافات</option>
-        </select>
+        <main class="main-content">
+            <div class="page-container">
+                <div class="page-loader" id="pageLoader" style="display:none;">
+                    <div class="loader-spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+                <div id="pageContainer"></div>
+            </div>
+        </main>
 
-        <label><i class="fas fa-chart-bar"></i> الحالة</label>
-        <select id="fStatusEff">
-            <option value="الكل">📊 جميع الحالات</option>
-            <option value="صالح">✅ صالح</option>
-            <option value="صيانة">🔧 تحت الصيانة</option>
-            <option value="معطب">⚠️ معطب</option>
-        </select>
-
-        <button class="btn-filter primary" id="filterBtn">
-            <i class="fas fa-filter"></i> فلترة
+        <button class="back-to-top" id="backToTop" style="display:none;">
+            <i class="fas fa-chevron-up"></i>
         </button>
-        <button class="btn-filter outline" id="resetBtn">
-            <i class="fas fa-undo-alt"></i> إلغاء
-        </button>
+        <div class="connection-status" id="connectionStatus" style="display:none;">
+            <i class="fas fa-wifi"></i><span>غير متصل</span>
+        </div>
     </div>
 
-    <!-- ============================================================
-    GENERAL EFFICIENCY TABLE
-    ============================================================ -->
-    <div class="eff-section">
-        <div class="section-header">
-            <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
-            <span class="badge gold" id="generalBadge">📊 جاري التحميل...</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح %</th>
-                            <th><i class="fas fa-times-circle"></i> معطب %</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="generalBody">
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل البيانات...</h3>
-                                <p>يرجى الانتظار</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- ===== TOAST ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ===== MODAL ===== -->
+    <div class="modal-overlay" id="modalOverlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle">عنوان</h3>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancel">إلغاء</button>
+                <button class="btn-primary" id="modalConfirm">تأكيد</button>
             </div>
         </div>
     </div>
 
     <!-- ============================================================
-    REGIONS TABLES
-    ============================================================ -->
-    <div class="eff-section">
-        <div class="section-header">
-            <h3><i class="fas fa-map-marked-alt"></i> تفاصيل الأقاليم ووحدات الصيانة</h3>
-            <span class="badge gold">📊 تحليل متقدم</span>
-        </div>
-        <div id="regionTables">
-
-            <!-- ===== REGION 1: الشمال ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</div>
-                    <span class="region-badge good">78% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>88.9%</td>
-                                    <td>11.1%</td>
-                                    <td class="eff-cell">88.9%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:89%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>66.7%</td>
-                                    <td>33.3%</td>
-                                    <td class="eff-cell">66.7%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 2: الساحل ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</div>
-                    <span class="region-badge excellent">92% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 3: الوسط ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</div>
-                    <span class="region-badge medium">65% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>80.0%</td>
-                                    <td>20.0%</td>
-                                    <td class="eff-cell">80.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:80%;"></div></div></td>
-                                    <td><span class="status-badge good">جيدة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>66.7%</td>
-                                    <td>33.3%</td>
-                                    <td class="eff-cell">66.7%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>33.3%</td>
-                                    <td>66.7%</td>
-                                    <td class="eff-cell">33.3%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
-                                    <td><span class="status-badge low">منخفضة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 4: الجنوب ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</div>
-                    <span class="region-badge critical">45% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>75.0%</td>
-                                    <td>25.0%</td>
-                                    <td class="eff-cell">75.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:75%;"></div></div></td>
-                                    <td><span class="status-badge good">جيدة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>33.3%</td>
-                                    <td>66.7%</td>
-                                    <td class="eff-cell">33.3%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
-                                    <td><span class="status-badge low">منخفضة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>0%</td>
-                                    <td>100%</td>
-                                    <td class="eff-cell">0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
-                                    <td><span class="status-badge critical">حرجة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 5: وحدة الصيانة تونس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</div>
-                    <span class="region-badge good">85% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 6: وحدة الصيانة المنستير ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</div>
-                    <span class="region-badge excellent">95% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 7: وحدة الصيانة صفاقس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</div>
-                    <span class="region-badge medium">70% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>0%</td>
-                                    <td>100%</td>
-                                    <td class="eff-cell">0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
-                                    <td><span class="status-badge critical">حرجة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 8: وحدة الصيانة جرجيس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</div>
-                    <span class="region-badge good">88% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 9: المجمع الأمني بقبيبة ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-building"></i> المجمع الأمني بقبيبة</div>
-                    <span class="region-badge excellent">90% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ============================================================
-    CHARTS SECTION
-    ============================================================ -->
-    <div class="chart-section">
-        <div class="chart-switch">
-            <button class="chart-btn active" onclick="switchChart('pie')">
-                <i class="fas fa-chart-pie"></i> دائري
-            </button>
-            <button class="chart-btn" onclick="switchChart('bar')">
-                <i class="fas fa-chart-bar"></i> أعمدة
-            </button>
-            <button class="chart-btn" onclick="switchChart('line')">
-                <i class="fas fa-chart-line"></i> خطي
-            </button>
-        </div>
-        <div class="charts-container">
-            <div class="chart-box full">
-                <h4>📊 توزيع الجاهزية حسب الإقليم</h4>
-                <canvas id="efficiencyChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    JAVASCRIPT - FIXED (using var instead of const)
+    JAVASCRIPT - FULLY FIXED
     ============================================================ -->
     <script>
         // ============================================================
-        // ✅ FIX: Using var to avoid duplicate declaration
+        // 🚢 MARINE SYSTEM - v7.0 (FULLY FIXED)
         // ============================================================
 
-        // ✅ Check if already defined to prevent errors
-        if (typeof window.efficiencyData === 'undefined') {
-            window.efficiencyData = {
-                general: [
-                    { category: 'البروق', active: 18, damaged: 4, total: 22, efficiency: 81.8 },
-                    { category: 'صقور', active: 12, damaged: 3, total: 15, efficiency: 80.0 },
-                    { category: 'خوافر', active: 8, damaged: 5, total: 13, efficiency: 61.5 },
-                    { category: 'زوارق مزدوجة', active: 6, damaged: 1, total: 7, efficiency: 85.7 },
-                    { category: 'طوافات', active: 4, damaged: 2, total: 6, efficiency: 66.7 }
-                ],
-                regions: {
-                    'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
-                    'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
-                    'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
-                    'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
-                    'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
-                    'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
-                    'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
-                    'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
-                    'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
-                }
-            };
-        }
-
-        // ✅ Use the global data
-        var efficiencyData = window.efficiencyData;
+        console.log('🚢 Marine System v7.0 - Loading...');
 
         // ============================================================
-        // RENDER FUNCTIONS
+        // 📦 CONFIGURATION
         // ============================================================
-        function renderEfficiency() {
-            renderStats();
-            renderGeneralTable();
-            updateBadge();
+
+        const CONFIG = {
+            API: '/api',
+            KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
+            PAGES: {
+                dashboard: 'لوحة التحكم', fleet: 'السجل العام',
+                maintenance: 'الصيانة', efficiency: 'الجاهزية',
+                support: 'الدعم', users: 'المستخدمين',
+                notes: 'Note Verbale', monitoring: 'المراقبة الشاملة',
+                'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',
+                logs: 'السجلات', profile: 'الملف الشخصي'
+            }
+        };
+
+        // ============================================================
+        // 📦 STATE
+        // ============================================================
+
+        var currentUser = null;
+        var currentPage = 'dashboard';
+        var notifications = [];
+        var allVessels = [];
+        var allUsers = [];
+        var allLogs = [];
+        var sessionsData = [];
+
+        // ✅ ربط المتغيرات بـ window
+        window.currentUser = currentUser;
+        window.allVessels = allVessels;
+        window.allUsers = allUsers;
+        window.allLogs = allLogs;
+        window.sessionsData = sessionsData;
+
+        // ============================================================
+        // 🔧 HELPERS
+        // ============================================================
+
+        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+
+        function getRoleName(r) {
+            const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
+            return R[r] || r || 'مستخدم';
         }
 
-        function renderStats() {
-            var regionFilter = document.getElementById('fRegEff').value;
-            var total = 0,
-                active = 0,
-                maintenance = 0,
-                damaged = 0;
-
-            for (var name in efficiencyData.regions) {
-                var data = efficiencyData.regions[name];
-                if (regionFilter === 'الكل' || name === regionFilter) {
-                    total += data.vessels;
-                    active += data.active;
-                    maintenance += data.maintenance;
-                    damaged += data.damaged;
-                }
-            }
-
-            var efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
-        }
-
-        function renderGeneralTable() {
-            var tbody = document.getElementById('generalBody');
-            var categoryFilter = document.getElementById('fCatEff').value;
-            var statusFilter = document.getElementById('fStatusEff').value;
-
-            var filtered = efficiencyData.general;
-
-            if (categoryFilter !== 'الكل') {
-                filtered = filtered.filter(function(item) {
-                    return item.category === categoryFilter;
-                });
-            }
-
-            if (statusFilter !== 'الكل') {
-                filtered = filtered.filter(function(item) {
-                    if (statusFilter === 'صالح') return item.efficiency >= 70;
-                    if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
-                    if (statusFilter === 'معطب') return item.efficiency < 50;
-                    return true;
-                });
-            }
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد بيانات</h3>
-                            <p>حاول تغيير معايير الفلترة</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            var html = '';
-            for (var i = 0; i < filtered.length; i++) {
-                var item = filtered[i];
-                var efficiency = item.efficiency;
-                var total = item.total || (item.active + item.damaged);
-                var activePercent = total > 0 ? ((item.active / total) * 100).toFixed(1) : 0;
-                var damagedPercent = total > 0 ? ((item.damaged / total) * 100).toFixed(1) : 0;
-
-                var rowClass = 'row-mid';
-                var statusClass = 'medium';
-                var statusText = 'متوسطة';
-
-                if (efficiency >= 80) {
-                    rowClass = 'row-high';
-                    statusClass = 'excellent';
-                    statusText = 'ممتازة';
-                } else if (efficiency >= 70) {
-                    rowClass = 'row-high';
-                    statusClass = 'good';
-                    statusText = 'جيدة';
-                } else if (efficiency >= 50) {
-                    rowClass = 'row-mid';
-                    statusClass = 'medium';
-                    statusText = 'متوسطة';
-                } else if (efficiency >= 30) {
-                    rowClass = 'row-low';
-                    statusClass = 'low';
-                    statusText = 'منخفضة';
-                } else {
-                    rowClass = 'row-low';
-                    statusClass = 'critical';
-                    statusText = 'حرجة';
-                }
-
-                var progressClass = efficiency >= 70 ? 'high' : (efficiency >= 50 ? 'mid' : 'low');
-
-                html += `
-                    <tr class="${rowClass}">
-                        <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                        <td>${activePercent}%</td>
-                        <td>${damagedPercent}%</td>
-                        <td class="eff-cell">${efficiency.toFixed(1)}%</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${progressClass}" style="width:${Math.min(efficiency, 100)}%;"></div>
-                            </div>
-                        </td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
-            }
-
-            tbody.innerHTML = html;
-        }
-
-        function updateBadge() {
-            var badge = document.getElementById('generalBadge');
-            var filtered = efficiencyData.general;
-            var sum = 0;
-            for (var i = 0; i < filtered.length; i++) {
-                sum += filtered[i].efficiency;
-            }
-            var avgEfficiency = sum / filtered.length;
-
-            if (avgEfficiency >= 80) {
-                badge.textContent = '✅ أداء ممتاز';
-                badge.className = 'badge success';
-            } else if (avgEfficiency >= 70) {
-                badge.textContent = '📈 أداء جيد';
-                badge.className = 'badge gold';
-            } else if (avgEfficiency >= 50) {
-                badge.textContent = '⚠️ أداء متوسط';
-                badge.className = 'badge warning';
-            } else {
-                badge.textContent = '🚨 أداء منخفض';
-                badge.className = 'badge danger';
-            }
+        function escapeHTML(s) {
+            if (!s) return '';
+            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
         }
 
         // ============================================================
-        // FILTER FUNCTIONS
+        // 🍞 TOAST
         // ============================================================
-        function resetEfficiencyFilters() {
-            document.getElementById('fRegEff').value = 'الكل';
-            document.getElementById('fCatEff').value = 'الكل';
-            document.getElementById('fStatusEff').value = 'الكل';
-            renderEfficiency();
-        }
 
-        function refreshEfficiency() {
-            var btn = document.querySelector('.btn-action.primary');
-            var originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-
-            setTimeout(function() {
-                renderEfficiency();
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
-            }, 800);
-        }
-
-        // ============================================================
-        // CHART FUNCTIONS
-        // ============================================================
-        var currentChart = 'pie';
-
-        function switchChart(type) {
-            currentChart = type;
-            var btns = document.querySelectorAll('.chart-btn');
-            for (var i = 0; i < btns.length; i++) {
-                btns[i].classList.remove('active');
-            }
-            var target = document.querySelector('.chart-btn[onclick="switchChart(\'' + type + '\')"]');
-            if (target) target.classList.add('active');
-            drawChart(type);
-        }
-
-        function drawChart(type) {
-            var canvas = document.getElementById('efficiencyChart');
-            var ctx = canvas.getContext('2d');
-            var width = canvas.parentElement.clientWidth - 32;
-            var height = 250;
-
-            canvas.width = width * 2;
-            canvas.height = height * 2;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-            ctx.scale(2, 2);
-
-            ctx.clearRect(0, 0, width, height);
-
-            var data = [];
-            var keys = Object.keys(efficiencyData.regions);
-            var colors = ['#e6b31e', '#4ade80', '#fbbf24', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#34d399', '#fb923c'];
-
-            for (var i = 0; i < keys.length; i++) {
-                var name = keys[i];
-                var d = efficiencyData.regions[name];
-                data.push({
-                    label: name,
-                    value: d.vessels > 0 ? ((d.active / d.vessels) * 100) : 0,
-                    color: colors[i % colors.length]
-                });
-            }
-
-            if (type === 'pie') {
-                drawPieChart(ctx, data, width, height);
-            } else if (type === 'bar') {
-                drawBarChart(ctx, data, width, height);
-            } else if (type === 'line') {
-                drawLineChart(ctx, data, width, height);
-            }
-        }
-
-        function drawPieChart(ctx, data, width, height) {
-            var cx = width / 2;
-            var cy = height / 2;
-            var radius = Math.min(width, height) / 2 - 40;
-
-            var startAngle = -Math.PI / 2;
-            var total = 0;
-            for (var i = 0; i < data.length; i++) {
-                total += data[i].value;
-            }
-
-            if (total === 0) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('لا توجد بيانات', cx, cy);
-                return;
-            }
-
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
-                var sliceAngle = (item.value / total) * 2 * Math.PI;
-                var endAngle = startAngle + sliceAngle;
-
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.closePath();
-
-                ctx.fillStyle = item.color;
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(10,14,26,0.8)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                var midAngle = startAngle + sliceAngle / 2;
-                var labelRadius = radius * 0.65;
-                var lx = cx + Math.cos(midAngle) * labelRadius;
-                var ly = cy + Math.sin(midAngle) * labelRadius;
-
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 10px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                if (sliceAngle > 0.3) {
-                    ctx.fillText(item.value.toFixed(0) + '%', lx, ly);
-                }
-
-                startAngle = endAngle;
-            }
-
-            // Legend
-            var legendY = 10;
-            var legendX = width - 120;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-
-            var maxItems = Math.min(data.length, 6);
-            for (var i = 0; i < maxItems; i++) {
-                var item = data[i];
-                var y = legendY + i * 18;
-                ctx.fillStyle = item.color;
-                ctx.fillRect(legendX, y, 12, 12);
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '9px Cairo, sans-serif';
-                var label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
-                ctx.fillText(label, legendX + 16, y);
-            }
-        }
-
-        function drawBarChart(ctx, data, width, height) {
-            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            var chartWidth = width - padding.left - padding.right;
-            var chartHeight = height - padding.top - padding.bottom;
-
-            var maxVal = 100;
-            var barWidth = Math.min(chartWidth / data.length * 0.7, 50);
-            var gap = chartWidth / data.length;
-
-            for (var i = 0; i <= 4; i++) {
-                var y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
-            }
-
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
-                var x = padding.left + i * gap + (gap - barWidth) / 2;
-                var barHeight = (item.value / maxVal) * chartHeight;
-                var y = padding.top + chartHeight - barHeight;
-
-                var gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
-                gradient.addColorStop(0, item.color);
-                gradient.addColorStop(1, item.color + '33');
-                ctx.fillStyle = gradient;
-                ctx.shadowColor = item.color + '44';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(x, y, barWidth, barHeight);
-                ctx.shadowBlur = 0;
-
-                ctx.strokeStyle = item.color;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, barWidth, barHeight);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                var label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
-                ctx.fillText(label, x + barWidth / 2, padding.top + chartHeight + 5);
-            }
-        }
-
-        function drawLineChart(ctx, data, width, height) {
-            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            var chartWidth = width - padding.left - padding.right;
-            var chartHeight = height - padding.top - padding.bottom;
-
-            var maxVal = 100;
-            var points = [];
-            for (var i = 0; i < data.length; i++) {
-                points.push({
-                    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
-                    y: padding.top + chartHeight - (data[i].value / maxVal) * chartHeight,
-                    value: data[i].value,
-                    label: data[i].label
-                });
-            }
-
-            for (var i = 0; i <= 4; i++) {
-                var y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
-            }
-
-            ctx.strokeStyle = '#e6b31e';
-            ctx.lineWidth = 2;
-            ctx.shadowColor = '#e6b31e44';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            for (var i = 0; i < points.length; i++) {
-                if (i === 0) ctx.moveTo(points[i].x, points[i].y);
-                else ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            var lastPoint = points[points.length - 1];
-            ctx.lineTo(lastPoint.x, padding.top + chartHeight);
-            ctx.lineTo(points[0].x, padding.top + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(230,179,30,0.08)';
-            ctx.fill();
-
-            for (var i = 0; i < points.length; i++) {
-                var p = points[i];
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
-                ctx.fillStyle = '#e6b31e';
-                ctx.fill();
-                ctx.strokeStyle = '#0a0e1a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = 'bold 9px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(p.value.toFixed(0) + '%', p.x, p.y - 6);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                var label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
-                ctx.fillText(label, p.x, padding.top + chartHeight + 5);
-            }
-        }
-
-        // ============================================================
-        // NOTIFICATION
-        // ============================================================
-        function showNotification(message, type) {
-            var old = document.querySelector('.eff-notification');
-            if (old) old.remove();
-
-            var notif = document.createElement('div');
-            notif.className = 'eff-notification';
-            notif.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background: ${type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};
-                backdrop-filter: blur(12px);
-                border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
-                padding: 12px 20px;
-                border-radius: 12px;
-                color: #fff;
-                font-family: Cairo, sans-serif;
-                font-size: 14px;
-                z-index: 9999;
-                animation: slideUp 0.4s ease-out;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            `;
-            notif.textContent = message;
-
-            document.body.appendChild(notif);
-
-            setTimeout(function() {
-                notif.style.opacity = '0';
-                notif.style.transform = 'translateY(20px)';
-                notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(function() { notif.remove(); }, 400);
+        function showToast(msg, type = 'info') {
+            const c = document.getElementById('toastContainer');
+            if (!c) return;
+            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const t = document.createElement('div');
+            t.className = 'toast toast-' + type;
+            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;
+            c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(30px)';
+                setTimeout(() => t.remove(), 300);
             }, 3000);
         }
 
         // ============================================================
-        // ADDITIONAL STYLES FOR NOTIFICATION
+        // 🔐 LOGIN
         // ============================================================
-        var styleNotif = document.createElement('style');
-        styleNotif.textContent = `
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
+
+        function doLogin() {
+            console.log('🔐 محاولة تسجيل الدخول');
+
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginButton');
+
+            const user = username.value.trim();
+            const pass = password.value.trim();
+
+            errorEl.className = 'error-msg';
+            errorEl.textContent = '';
+
+            if (!user || !pass) {
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
+                errorEl.classList.add('show');
+                return;
             }
-        `;
-        document.head.appendChild(styleNotif);
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            fetch(CONFIG.API + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+
+                if (data.success && data.user) {
+                    const token = data.token || data.accessToken;
+                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
+
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+
+                    updateUserDisplay();
+                    loadPage('dashboard');
+                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
+                    loadAllData();
+                } else {
+                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                    errorEl.classList.add('show');
+                }
+            })
+            .catch(error => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                errorEl.textContent = '❌ ' + error.message;
+                errorEl.classList.add('show');
+            });
+        }
 
         // ============================================================
-        // EVENT BINDING
+        // 🛡️ VERIFY TOKEN
         // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // ✅ Bind buttons with addEventListener
-            document.getElementById('refreshBtn').addEventListener('click', refreshEfficiency);
-            document.getElementById('filterBtn').addEventListener('click', renderEfficiency);
-            document.getElementById('resetBtn').addEventListener('click', resetEfficiencyFilters);
 
-            document.getElementById('fRegEff').addEventListener('change', renderEfficiency);
-            document.getElementById('fCatEff').addEventListener('change', renderEfficiency);
-            document.getElementById('fStatusEff').addEventListener('change', renderEfficiency);
+        async function verifyToken(token) {
+            try {
+                console.log('🛡️ التحقق من التوكن...');
+                const response = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
+                });
 
-            renderEfficiency();
-            setTimeout(function() { drawChart('pie'); }, 100);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.user) {
+                        currentUser = data.user;
+                        window.currentUser = data.user;
+                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);
+                        return true;
+                    }
+                }
+                console.warn('⚠️ التوكن غير صالح، يتم حذفه');
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                return false;
+            } catch (error) {
+                console.warn('⚠️ خطأ في التحقق:', error.message);
+                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                return false;
+            }
+        }
 
-            console.log('📊 Efficiency Page loaded successfully!');
-            console.log('ℹ️ Use renderEfficiency() to refresh data.');
+        // ============================================================
+        // 📊 LOAD DATA
+        // ============================================================
+
+        async function loadAllData() {
+            const token = getToken();
+            if (!token) return;
+
+            const headers = { 'Authorization': 'Bearer ' + token };
+
+            try {
+                const [vesselsRes, usersRes] = await Promise.all([
+                    fetch(CONFIG.API + '/vessels', { headers }),
+                    fetch(CONFIG.API + '/users', { headers })
+                ]);
+
+                if (vesselsRes.ok) {
+                    const data = await vesselsRes.json();
+                    allVessels = Array.isArray(data) ? data : [];
+                    window.allVessels = allVessels;
+                    updateBadge('fleetBadge', allVessels.length);
+                }
+                if (usersRes.ok) {
+                    const data = await usersRes.json();
+                    allUsers = Array.isArray(data) ? data : [];
+                    window.allUsers = allUsers;
+                    updateBadge('usersBadge', allUsers.length);
+                }
+            } catch (error) {
+                console.error('❌ خطأ أثناء تحميل البيانات:', error);
+            }
+        }
+
+        function updateBadge(id, count) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = count;
+                el.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+
+        // ============================================================
+        // 👤 USER DISPLAY
+        // ============================================================
+
+        function updateUserDisplay() {
+            if (!currentUser) return;
+            const n = currentUser.name || currentUser.username;
+            document.getElementById('userDisplayName').textContent = n;
+            document.getElementById('userInitial').textContent = n.charAt(0);
+            document.getElementById('sidebarUserName').textContent = n;
+            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
+            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
+        }
+
+        // ============================================================
+        // ⏰ SAFE UPDATE DATE TIME - FULLY FIXED
+        // ============================================================
+
+        // ✅ إعادة تعريف الدالة بشكل آمن
+        function updateDateTime() {
+            var dateEl = document.getElementById('currentDate');
+            var timeEl = document.getElementById('currentTime');
+
+            // ✅ التحقق من وجود العناصر
+            if (!dateEl || !timeEl) {
+                // ✅ عدم ظهور أي خطأ في الـ console
+                return;
+            }
+
+            try {
+                var now = new Date();
+                var date = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var time = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                dateEl.textContent = date;
+                timeEl.textContent = time;
+            } catch(e) {
+                // تجاهل أي خطأ
+            }
+        }
+
+        // ✅ إلغاء المؤقتات القديمة
+        if (window._dateTimeInterval) {
+            clearInterval(window._dateTimeInterval);
+        }
+
+        // ✅ تشغيل الدالة بأمان
+        setTimeout(function() {
+            try {
+                updateDateTime();
+            } catch(e) {}
+        }, 100);
+
+        window._dateTimeInterval = setInterval(function() {
+            try {
+                updateDateTime();
+            } catch(e) {}
+        }, 1000);
+
+        console.log('✅ updateDateTime fixed successfully');
+
+        // ============================================================
+        // 📄 LOAD PAGE
+        // ============================================================
+
+        function loadPage(page) {
+            currentPage = page;
+            localStorage.setItem(CONFIG.KEYS.PAGE, page);
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.page === page);
+            });
+
+            const container = document.getElementById('pageContainer');
+            const loader = document.getElementById('pageLoader');
+
+            if (!container) return;
+
+            loader.style.display = 'flex';
+            container.innerHTML = '';
+
+            fetch('/pages/' + page + '.html', { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) throw new Error('فشل تحميل الصفحة (' + response.status + ')');
+                    return response.text();
+                })
+                .then(html => {
+                    container.innerHTML = html;
+                    container.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        newScript.textContent = oldScript.textContent;
+                        document.body.appendChild(newScript);
+                        oldScript.remove();
+                    });
+                    loader.style.display = 'none';
+                    document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
+                })
+                .catch(error => {
+                    loader.style.display = 'none';
+                    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#f87171;">
+                        <div style="font-size:48px;">❌</div>
+                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>
+                        <p>${escapeHTML(error.message)}</p>
+                        <button onclick="loadPage('dashboard')" style="margin-top:16px;padding:8px 20px;background:var(--gold);border:none;border-radius:8px;color:#0a1628;cursor:pointer;">📊 العودة للرئيسية</button>
+                    </div>`;
+                });
+        }
+
+        // ============================================================
+        // 🚪 LOGOUT
+        // ============================================================
+
+        function doLogout() {
+            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+            currentUser = null;
+            window.currentUser = null;
+            localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').className = 'error-msg';
+            showToast('👋 تم تسجيل الخروج', 'info');
+        }
+
+        // ============================================================
+        // 🧭 SIDEBAR
+        // ============================================================
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('menuToggle').classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('menuToggle').classList.remove('active');
+        }
+
+        // ============================================================
+        // 🚀 INIT
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('📄 DOM جاهز');
+
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const button = document.getElementById('loginButton');
+                if (!button.disabled) doLogin();
+            });
+
+            document.getElementById('togglePassword').onclick = function() {
+                const i = document.getElementById('password');
+                const ic = this.querySelector('i');
+                i.type = i.type === 'password' ? 'text' : 'password';
+                ic.className = i.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            };
+
+            document.getElementById('menuToggle').onclick = toggleSidebar;
+            document.getElementById('sidebarClose').onclick = closeSidebar;
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const page = this.dataset.page;
+                    if (page) loadPage(page);
+                    if (window.innerWidth <= 992) closeSidebar();
+                });
+            });
+
+            document.getElementById('notifBtn').onclick = function() {
+                showToast('📬 تم فتح الإشعارات', 'info');
+            };
+
+            document.getElementById('userBtn').onclick = function() {
+                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
+            };
+
+            document.getElementById('backToTop').onclick = function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+            window.addEventListener('scroll', function() {
+                document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
+            });
+
+            // ✅ التحقق من التوكن
+            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+            if (token) {
+                const isValid = await verifyToken(token);
+                if (isValid) {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                    updateUserDisplay();
+                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+                    loadPage(savedPage);
+                    showToast('👋 مرحباً بعودتك', 'success');
+                    setTimeout(loadAllData, 500);
+                } else {
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                }
+            }
+
+            console.log('✅ Marine System v7.0 ready');
         });
 
         // ============================================================
-        // GLOBAL FUNCTIONS
+        // 🌐 GLOBAL
         // ============================================================
-        window.renderEfficiency = renderEfficiency;
-        window.refreshEfficiency = refreshEfficiency;
-        window.resetEfficiencyFilters = resetEfficiencyFilters;
-        window.switchChart = switchChart;
-        window.showNotification = showNotification;
+
+        window.doLogin = doLogin;
+        window.doLogout = doLogout;
+        window.loadPage = loadPage;
+        window.toggleSidebar = toggleSidebar;
+        window.closeSidebar = closeSidebar;
+        window.showToast = showToast;
+        window.verifyToken = verifyToken;
+        window.loadAllData = loadAllData;
+        window.currentUser = currentUser;
+        window.updateDateTime = updateDateTime;
+
+        // ✅ منع أي استدعاء خارجي لـ updateDateTime من التسبب في خطأ
+        // override for safety
+        var originalUpdate = window.updateDateTime;
+        window.updateDateTime = function() {
+            try {
+                originalUpdate();
+            } catch(e) {
+                // ignore
+            }
+        };
+
+        console.log('✅ Marine System v7.0 loaded successfully');
     </script>
-</div>
+
+</body>
+</html>
