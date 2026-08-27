@@ -1,6 +1,10 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
+        /* ============================================================
+           👥 USERS PAGE - ENTERPRISE PRO VERSION
+           ============================================================ */
+
         #page-users {
             width: 100%;
             max-width: 100%;
@@ -135,6 +139,16 @@
             color: #fff;
         }
 
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
         /* ===== STATS ===== */
         .users-stats {
             display: grid;
@@ -174,6 +188,7 @@
         .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #4ade80; }
         .stat-card .number.red { color: #f87171; }
+        .stat-card .number.pink { color: #f472b6; }
 
         .stat-card .label {
             font-size: 11px;
@@ -322,6 +337,11 @@
             color: #f87171;
         }
 
+        .badge.pink {
+            background: rgba(244,114,182,0.12);
+            color: #f472b6;
+        }
+
         .table-wrapper {
             overflow-x: auto;
             padding: 16px 20px;
@@ -403,6 +423,23 @@
             color: #60a5fa;
         }
 
+        /* ===== SUSPICIOUS BADGE ===== */
+        .suspicious-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            animation: pulseSuspicious 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseSuspicious {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
+        }
+
         /* ===== ACTION BUTTONS ===== */
         .action-btn {
             padding: 4px 10px;
@@ -445,7 +482,499 @@
             background: rgba(96,165,250,0.2);
         }
 
-        /* ===== MODAL ===== */
+        .action-btn.devices {
+            background: rgba(167,139,250,0.1);
+            color: #a78bfa;
+        }
+
+        .action-btn.devices:hover {
+            background: rgba(167,139,250,0.2);
+        }
+
+        .action-btn.lock {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+        }
+
+        .action-btn.lock:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .action-btn.unlock {
+            background: rgba(34,197,94,0.1);
+            color: #4ade80;
+        }
+
+        .action-btn.unlock:hover {
+            background: rgba(34,197,94,0.2);
+        }
+
+        .action-btn.notify {
+            background: rgba(96,165,250,0.1);
+            color: #60a5fa;
+        }
+
+        .action-btn.notify:hover {
+            background: rgba(96,165,250,0.2);
+        }
+
+        /* ============================================================
+           DEVICES MODAL
+           ============================================================ */
+        .devices-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(12px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .devices-modal.active {
+            display: flex;
+        }
+
+        .devices-modal .modal-box {
+            background: #111e3a;
+            border: 1px solid rgba(167,139,250,0.15);
+            border-radius: 16px;
+            max-width: 580px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            padding: 24px 28px;
+            animation: modalFade 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .devices-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .devices-modal .modal-header h3 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .devices-modal .modal-header h3 i {
+            color: #a78bfa;
+        }
+
+        .devices-modal .modal-close {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .devices-modal .modal-close:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .devices-modal .device-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .devices-modal .device-item:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .devices-modal .device-item .device-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .devices-modal .device-item .device-info .device-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .devices-modal .device-item .device-info .device-id {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            font-family: 'Courier New', monospace;
+        }
+
+        .devices-modal .device-item .device-info .device-date {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .devices-modal .device-item .device-status {
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .devices-modal .device-item .device-status.approved {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .devices-modal .device-item .device-status.pending {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .devices-modal .device-item .device-status.rejected {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .devices-modal .device-item .device-actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm {
+            padding: 3px 8px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.approve {
+            background: rgba(34,197,94,0.1);
+            color: #4ade80;
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.approve:hover {
+            background: rgba(34,197,94,0.2);
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.reject {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.reject:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.remove {
+            background: rgba(239,68,68,0.08);
+            color: #f87171;
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.remove:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.suspect {
+            background: rgba(239,68,68,0.08);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.1);
+        }
+
+        .devices-modal .device-item .device-actions .btn-sm.suspect:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .devices-modal .device-item .device-suspicious {
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            animation: pulseSuspicious 1.5s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        .devices-modal .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .devices-modal .modal-footer .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .devices-modal .modal-footer .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.4);
+        }
+
+        .devices-modal .modal-footer .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .devices-modal .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
+        }
+
+        .devices-modal .modal-footer .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(96,165,250,0.3);
+        }
+
+        .devices-modal .modal-footer .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .devices-modal .modal-footer .btn-danger:hover {
+            box-shadow: 0 4px 20px rgba(239,68,68,0.3);
+        }
+
+        .devices-modal .empty-devices {
+            text-align: center;
+            padding: 30px 20px;
+            color: rgba(255,255,255,0.1);
+        }
+
+        .devices-modal .empty-devices i {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.03);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .devices-modal .empty-devices h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.15);
+        }
+
+        /* ============================================================
+           ALERT MODAL
+           ============================================================ */
+        .alert-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 99998;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(16px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .alert-modal.active {
+            display: flex;
+        }
+
+        .alert-modal .alert-box {
+            background: #111e3a;
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            padding: 28px 24px;
+            animation: modalFade 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .alert-modal .alert-box .alert-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .alert-modal .alert-box .alert-icon.danger { color: #f87171; }
+        .alert-modal .alert-box .alert-icon.warning { color: #fbbf24; }
+        .alert-modal .alert-box .alert-icon.info { color: #60a5fa; }
+
+        .alert-modal .alert-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .alert-modal .alert-box p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .alert-modal .alert-box .alert-details {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: right;
+            font-size: 13px;
+            color: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-bottom: 16px;
+        }
+
+        .alert-modal .alert-box .alert-details .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .alert-modal .alert-box .alert-details .row:last-child {
+            border-bottom: none;
+        }
+
+        .alert-modal .alert-box .alert-details .row .label {
+            color: rgba(255,255,255,0.2);
+            font-size: 12px;
+        }
+
+        .alert-modal .alert-box .alert-details .row .value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .alert-modal .alert-box .alert-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(96,165,250,0.3);
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-danger:hover {
+            box-shadow: 0 4px 20px rgba(239,68,68,0.3);
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.4);
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-secondary:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-gold {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+
+        .alert-modal .alert-box .alert-actions .btn-gold:hover {
+            box-shadow: 0 4px 20px rgba(230,179,30,0.3);
+        }
+
+        /* ============================================================
+           TOAST
+           ============================================================ */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .toast-info {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
+        }
+
+        .toast-warning {
+            background: rgba(245,200,66,0.15);
+            border: 1px solid rgba(245,200,66,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           MODAL
+           ============================================================ */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -472,11 +1001,6 @@
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             animation: modalFade 0.3s ease-out;
-        }
-
-        @keyframes modalFade {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .modal-header {
@@ -600,45 +1124,9 @@
             color: #fff;
         }
 
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 12px 20px;
-            border-radius: 12px;
-            color: #fff;
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            z-index: 99999;
-            animation: slideUp 0.4s ease-out;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 350px;
-            direction: rtl;
-        }
-
-        .toast-success {
-            background: rgba(34,197,94,0.15);
-            border: 1px solid rgba(34,197,94,0.2);
-        }
-
-        .toast-error {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.2);
-        }
-
-        .toast-info {
-            background: rgba(96,165,250,0.15);
-            border: 1px solid rgba(96,165,250,0.2);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ===== RESPONSIVE ===== */
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
         @media (max-width: 768px) {
             #page-users { padding: 12px; }
             .users-header { flex-direction: column; align-items: flex-start; }
@@ -653,6 +1141,8 @@
             table { font-size: 0.7rem; min-width: 700px; }
             thead th, tbody td { padding: 6px 8px; }
             .modal-box { max-width: 95%; }
+            .devices-modal .modal-box { max-width: 95%; padding: 16px; }
+            .alert-modal .alert-box { max-width: 95%; padding: 20px; }
         }
 
         @media (max-width: 480px) {
@@ -665,16 +1155,21 @@
             .section-header h3 { font-size: 13px; }
             thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
             .action-btn { padding: 2px 6px; font-size: 0.55rem; }
+            .devices-modal .device-item { flex-wrap: wrap; gap: 6px; }
+            .devices-modal .device-item .device-actions { width: 100%; justify-content: flex-start; }
+            .alert-modal .alert-box .alert-actions .btn { min-width: 80px; font-size: 12px; }
         }
     </style>
 
-    <!-- ===== HEADER ===== -->
+    <!-- ============================================================
+    HEADER
+    ============================================================ -->
     <div class="users-header">
         <div class="users-header-left">
             <div class="icon"><i class="fas fa-users"></i></div>
             <div>
                 <h2>إدارة المستخدمين</h2>
-                <p>إدارة حسابات المستخدمين والأقاليم والوحدات</p>
+                <p>إدارة حسابات المستخدمين والأجهزة والتنبيهات الأمنية</p>
             </div>
         </div>
         <div class="users-header-actions">
@@ -684,15 +1179,20 @@
         </div>
     </div>
 
-    <!-- ===== STATS ===== -->
+    <!-- ============================================================
+    STATS
+    ============================================================ -->
     <div class="users-stats" id="usersStats">
         <div class="stat-card"><div class="number" id="totalUsers">0</div><div class="label">👥 إجمالي المستخدمين</div></div>
         <div class="stat-card"><div class="number green" id="activeUsers">0</div><div class="label">🟢 نشط</div></div>
         <div class="stat-card"><div class="number red" id="inactiveUsers">0</div><div class="label">🔴 غير نشط</div></div>
         <div class="stat-card"><div class="number gold" id="adminUsers">0</div><div class="label">🛡️ مدراء</div></div>
+        <div class="stat-card"><div class="number pink" id="suspiciousUsers">0</div><div class="label">🚨 مشبوهين</div></div>
     </div>
 
-    <!-- ===== FILTER BAR ===== -->
+    <!-- ============================================================
+    FILTER BAR
+    ============================================================ -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchUser" placeholder="اسم المستخدم، البريد..." />
@@ -731,7 +1231,9 @@
         <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
-    <!-- ===== TABLE ===== -->
+    <!-- ============================================================
+    TABLE
+    ============================================================ -->
     <div class="users-section">
         <div class="section-header">
             <h3><i class="fas fa-list-ul"></i> قائمة المستخدمين</h3>
@@ -747,12 +1249,14 @@
                         <th><i class="fas fa-building"></i> الوحدة</th>
                         <th><i class="fas fa-user-tag"></i> الدور</th>
                         <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-laptop"></i> الأجهزة</th>
+                        <th><i class="fas fa-shield-alt"></i> الأمان</th>
                         <th><i class="fas fa-cogs"></i> الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersBody">
                     <tr>
-                        <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                        <td colspan="9" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
                             <div style="font-size:2rem;margin-bottom:10px;">👥</div>
                             جاري تحميل المستخدمين...
                         </td>
@@ -762,7 +1266,9 @@
         </div>
     </div>
 
-    <!-- ===== MODAL: إضافة / تعديل مستخدم ===== -->
+    <!-- ============================================================
+    MODAL: إضافة / تعديل مستخدم
+    ============================================================ -->
     <div class="modal-overlay" id="userModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -822,7 +1328,9 @@
         </div>
     </div>
 
-    <!-- ===== MODAL: تغيير كلمة المرور ===== -->
+    <!-- ============================================================
+    MODAL: تغيير كلمة المرور
+    ============================================================ -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -852,7 +1360,52 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED
+    MODAL: إدارة الأجهزة
+    ============================================================ -->
+    <div class="devices-modal" id="devicesModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-laptop"></i> الأجهزة المسموحة - <span id="devicesUserName">المستخدم</span></h3>
+                <button class="modal-close" id="devicesModalClose">✕</button>
+            </div>
+            <div id="devicesBody">
+                <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.1);">
+                    <i class="fas fa-spinner fa-pulse" style="font-size:2rem;"></i>
+                    <p>جاري تحميل الأجهزة...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="devicesModalCancel">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    MODAL: التنبيه الأمني (Alert)
+    ============================================================ -->
+    <div class="alert-modal" id="alertModal">
+        <div class="alert-box">
+            <span class="alert-icon danger" id="alertIcon">🚨</span>
+            <h3 id="alertTitle">تنبيه أمني</h3>
+            <p id="alertMessage">تم اكتشاف نشاط مشبوه لهذا المستخدم</p>
+            <div class="alert-details" id="alertDetails">
+                <div class="row"><span class="label">👤 المستخدم</span><span class="value" id="alertUser">-</span></div>
+                <div class="row"><span class="label">📧 البريد</span><span class="value" id="alertEmail">-</span></div>
+                <div class="row"><span class="label">🆔 الجهاز</span><span class="value" id="alertDevice">-</span></div>
+                <div class="row"><span class="label">📅 التاريخ</span><span class="value" id="alertDate">-</span></div>
+                <div class="row"><span class="label">📍 الموقع</span><span class="value" id="alertLocation">-</span></div>
+                <div class="row"><span class="label">⚠️ السبب</span><span class="value" id="alertReason">-</span></div>
+            </div>
+            <div class="alert-actions">
+                <button class="btn-secondary" id="alertClose">إغلاق</button>
+                <button class="btn-danger" id="alertLock">🔒 قفل الحساب</button>
+                <button class="btn-gold" id="alertNotify">📧 إرسال إشعار</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT
     ============================================================ -->
     <script>
         (function() {
@@ -865,30 +1418,32 @@
             // ============================================================
             var usersData = [
                 { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.tn', unit: 'الحرس البحري بالشمال', role: 'admin',
-                    status: 'نشط' },
+                    status: 'نشط', devices: ['DEV-A1B2C3D4E5F6', 'DEV-1A2B3C4D5E6F'], suspicious: false },
                 { id: 2, name: 'سارة علي', email: 'sara@marine.tn', unit: 'الحرس البحري بالساحل', role: 'admin',
-                    status: 'نشط' },
+                    status: 'نشط', devices: ['DEV-123456789ABC'], suspicious: false },
                 { id: 3, name: 'محمد خالد', email: 'mohamed@marine.tn', unit: 'وحدة الصيانة والإسناد البحري تونس',
-                    role: 'user', status: 'نشط' },
+                    role: 'user', status: 'نشط', devices: [], suspicious: false },
                 { id: 4, name: 'فاطمة نور', email: 'fatma@marine.tn', unit: 'الحرس البحري بالوسط', role: 'operator',
-                    status: 'نشط' },
+                    status: 'نشط', devices: ['DEV-ABCDEF123456'], suspicious: true },
                 { id: 5, name: 'علي حسن', email: 'ali@marine.tn', unit: 'الحرس البحري بالجنوب', role: 'viewer',
-                    status: 'غير نشط' },
+                    status: 'غير نشط', devices: [], suspicious: false },
                 { id: 6, name: 'نورا سليم', email: 'nora@marine.tn', unit: 'وحدة الصيانة والإسناد البحري المنستير',
-                    role: 'user', status: 'نشط' },
+                    role: 'user', status: 'نشط', devices: ['DEV-9876543210'], suspicious: false },
                 { id: 7, name: 'ياسين عمر', email: 'yassin@marine.tn', unit: 'وحدة الصيانة والإسناد البحري جرجيس',
-                    role: 'operator', status: 'غير نشط' },
+                    role: 'operator', status: 'غير نشط', devices: [], suspicious: true },
                 { id: 8, name: 'ليلى منير', email: 'layla@marine.tn', unit: 'المجمع الأمني بقبيبة', role: 'admin',
-                    status: 'نشط' },
+                    status: 'نشط', devices: ['DEV-555555555555'], suspicious: false },
                 { id: 9, name: 'كريم سامي', email: 'karim@marine.tn', unit: 'الحرس البحري بالشمال', role: 'user',
-                    status: 'نشط' },
+                    status: 'نشط', devices: [], suspicious: false },
                 { id: 10, name: 'منى طارق', email: 'mona@marine.tn', unit: 'وحدة الصيانة والإسناد البحري صفاقس',
-                    role: 'viewer', status: 'نشط' }
+                    role: 'viewer', status: 'نشط', devices: ['DEV-777777777777'], suspicious: false }
             ];
 
             var nextId = 11;
             var filteredData = usersData.slice();
             var currentEditId = null;
+            var currentDevicesUserId = null;
+            var currentAlertUserId = null;
 
             // ============================================================
             // DOM REFS
@@ -916,9 +1471,22 @@
                 return status === 'نشط' ? '🟢 نشط' : '🔴 غير نشط';
             }
 
-            // ============================================================
-            // TOAST
-            // ============================================================
+            function getDeviceStatus(deviceId, userDevices) {
+                if (!userDevices || !Array.isArray(userDevices)) return 'pending';
+                if (userDevices.includes(deviceId)) return 'approved';
+                return 'pending';
+            }
+
+            function getDeviceStatusLabel(status) {
+                var map = { 'approved': '✅ معتمد', 'pending': '⏳ قيد المراجعة', 'rejected': '❌ مرفوض' };
+                return map[status] || status;
+            }
+
+            function getDeviceStatusClass(status) {
+                var map = { 'approved': 'approved', 'pending': 'pending', 'rejected': 'rejected' };
+                return map[status] || 'pending';
+            }
+
             function showToast(msg, type) {
                 var old = document.querySelector('.toast');
                 if (old) old.remove();
@@ -942,15 +1510,22 @@
                 var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
                 var inactive = usersData.filter(function(u) { return u.status === 'غير نشط'; }).length;
                 var admins = usersData.filter(function(u) { return u.role === 'admin'; }).length;
+                var suspicious = usersData.filter(function(u) { return u.suspicious === true; }).length;
 
                 $('totalUsers').textContent = total;
                 $('activeUsers').textContent = active;
                 $('inactiveUsers').textContent = inactive;
                 $('adminUsers').textContent = admins;
+                $('suspiciousUsers').textContent = suspicious;
 
                 var badge = $('usersBadge');
-                badge.textContent = '👥 ' + total + ' مستخدم';
-                badge.className = 'badge blue';
+                if (suspicious > 0) {
+                    badge.textContent = '🚨 ' + suspicious + ' مستخدم مشبوه';
+                    badge.className = 'badge pink';
+                } else {
+                    badge.textContent = '👥 ' + total + ' مستخدم';
+                    badge.className = 'badge blue';
+                }
             }
 
             // ============================================================
@@ -975,7 +1550,7 @@
                 if (filteredData.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <td colspan="9" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
                                 <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
                                 لا توجد نتائج مطابقة
                             </td>
@@ -986,6 +1561,9 @@
 
                 var html = '';
                 filteredData.forEach(function(u, index) {
+                    var deviceCount = (u.devices && Array.isArray(u.devices)) ? u.devices.length : 0;
+                    var isSuspicious = u.suspicious === true;
+
                     html += `
                         <tr>
                             <td style="font-weight:600;color:#60a5fa;">${index + 1}</td>
@@ -995,9 +1573,22 @@
                             <td><span class="status-badge ${getRoleClass(u.role)}">${getRoleLabel(u.role)}</span></td>
                             <td><span class="status-badge ${getStatusClass(u.status)}">${getStatusBadge(u.status)}</span></td>
                             <td>
+                                <button class="action-btn devices" onclick="openDevicesModal(${u.id})">
+                                    <i class="fas fa-laptop"></i> ${deviceCount}
+                                </button>
+                            </td>
+                            <td>
+                                ${isSuspicious ? '<span class="suspicious-badge">🚨 مشبوه</span>' : '<span style="font-size:0.6rem;color:rgba(255,255,255,0.2);">✅ آمن</span>'}
+                            </td>
+                            <td>
                                 <button class="action-btn edit" onclick="editUser(${u.id})"><i class="fas fa-edit"></i></button>
                                 <button class="action-btn password" onclick="changePassword(${u.id})"><i class="fas fa-key"></i></button>
                                 <button class="action-btn delete" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
+                                ${isSuspicious ? 
+                                    `<button class="action-btn unlock" onclick="clearSuspicious(${u.id})"><i class="fas fa-check-circle"></i></button>` :
+                                    `<button class="action-btn lock" onclick="markSuspicious(${u.id})"><i class="fas fa-exclamation-triangle"></i></button>`
+                                }
+                                <button class="action-btn notify" onclick="sendNotification(${u.id})"><i class="fas fa-bell"></i></button>
                             </td>
                         </tr>
                     `;
@@ -1012,7 +1603,7 @@
 
             // --- Refresh ---
             function refreshUsers() {
-                var btn = document.getElementById('refreshBtn');
+                var btn = $('refreshBtn');
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
@@ -1079,7 +1670,9 @@
                         email: email,
                         unit: unit,
                         role: role,
-                        status: status
+                        status: status,
+                        devices: [],
+                        suspicious: false
                     };
                     usersData.push(newUser);
                     showToast('✅ تم إضافة المستخدم ' + name + ' بنجاح', 'success');
@@ -1145,6 +1738,327 @@
             }
 
             // ============================================================
+            // SECURITY FUNCTIONS - Suspicious Activity
+            // ============================================================
+
+            // --- Mark User as Suspicious ---
+            window.markSuspicious = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
+
+                if (!confirm('⚠️ هل أنت متأكد من وضع علامة "مشبوه" على المستخدم ' + user.name + '؟')) return;
+
+                user.suspicious = true;
+                updateStats();
+                renderTable();
+
+                // Show alert modal
+                showAlertModal(user, 'تم وضع علامة مشبوه على هذا المستخدم بسبب نشاط غير اعتيادي', '🚨');
+
+                showToast('🚨 تم وضع علامة مشبوه على ' + user.name, 'warning');
+            };
+
+            // --- Clear Suspicious ---
+            window.clearSuspicious = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
+
+                if (!confirm('✅ هل أنت متأكد من إزالة علامة "مشبوه" عن المستخدم ' + user.name + '؟')) return;
+
+                user.suspicious = false;
+                updateStats();
+                renderTable();
+                showToast('✅ تم إزالة علامة المشبوه عن ' + user.name, 'success');
+            };
+
+            // ============================================================
+            // SEND NOTIFICATION TO ADMIN
+            // ============================================================
+
+            window.sendNotification = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
+
+                // ✅ إرسال إشعار إلى البريد الإلكتروني للمسؤول
+                var adminEmail = 'nejiamanallah22@gmail.com';
+                var subject = '🚨 تنبيه أمني - مستخدم مشبوه';
+                var message = `
+                    تنبيه أمني من نظام إدارة المستخدمين
+
+                    👤 المستخدم: ${user.name}
+                    📧 البريد: ${user.email}
+                    🏛️ الوحدة: ${user.unit}
+                    🛡️ الدور: ${getRoleLabel(user.role)}
+                    🟢 الحالة: ${user.status}
+                    🚨 الحالة الأمنية: ${user.suspicious ? '⚠️ مشبوه' : '✅ آمن'}
+                    📱 عدد الأجهزة: ${user.devices ? user.devices.length : 0}
+                    🕐 الوقت: ${new Date().toLocaleString('ar-TN')}
+
+                    يرجى اتخاذ الإجراء المناسب.
+                `;
+
+                console.log('📧 إرسال إشعار إلى:', adminEmail);
+                console.log('📧 الموضوع:', subject);
+                console.log('📧 الرسالة:', message);
+
+                // ✅ محاكاة إرسال البريد (في الإنتاج: استدعاء API)
+                showToast('📧 تم إرسال إشعار إلى المسؤول (' + adminEmail + ')', 'info');
+
+                // عرض تفاصيل التنبيه
+                showAlertModal(user, 'تم إرسال إشعار إلى المسؤول عبر البريد الإلكتروني', '📧');
+            };
+
+            // ============================================================
+            // ALERT MODAL
+            // ============================================================
+
+            function showAlertModal(user, message, icon) {
+                $('alertIcon').textContent = icon || '🚨';
+                $('alertTitle').textContent = 'تنبيه أمني';
+                $('alertMessage').textContent = message || 'تم اكتشاف نشاط مشبوه لهذا المستخدم';
+                $('alertUser').textContent = user.name;
+                $('alertEmail').textContent = user.email;
+                $('alertDevice').textContent = (user.devices && user.devices.length > 0) ? user.devices.join(', ') : 'لا توجد أجهزة';
+                $('alertDate').textContent = new Date().toLocaleString('ar-TN');
+                $('alertLocation').textContent = 'تونس (تقديري)';
+                $('alertReason').textContent = user.suspicious ? 'نشاط مشبوه - تم التحديد يدوياً' : 'تنبيه أمني عام';
+
+                currentAlertUserId = user.id;
+                $('alertModal').classList.add('active');
+            }
+
+            function closeAlertModal() {
+                $('alertModal').classList.remove('active');
+                currentAlertUserId = null;
+            }
+
+            function lockUserFromAlert() {
+                if (currentAlertUserId) {
+                    var user = usersData.find(function(u) { return u.id === currentAlertUserId; });
+                    if (user) {
+                        user.status = 'غير نشط';
+                        user.suspicious = true;
+                        updateStats();
+                        renderTable();
+                        showToast('🔒 تم قفل حساب ' + user.name, 'error');
+                        closeAlertModal();
+                    }
+                }
+            }
+
+            function sendNotificationFromAlert() {
+                if (currentAlertUserId) {
+                    var user = usersData.find(function(u) { return u.id === currentAlertUserId; });
+                    if (user) {
+                        sendNotification(currentAlertUserId);
+                        closeAlertModal();
+                    }
+                }
+            }
+
+            // ============================================================
+            // DEVICES MANAGEMENT
+            // ============================================================
+
+            window.openDevicesModal = function(id) {
+                var user = usersData.find(function(u) { return u.id === id; });
+                if (!user) return;
+
+                currentDevicesUserId = id;
+                $('devicesUserName').textContent = user.name;
+                $('devicesModal').classList.add('active');
+
+                renderDevices(user);
+            };
+
+            function renderDevices(user) {
+                var body = $('devicesBody');
+
+                // قائمة الأجهزة التجريبية
+                var allDevices = [
+                    { id: 'DEV-A1B2C3D4E5F6', name: 'كمبيوتر المكتب - Chrome', date: '2026-08-27 10:30',
+                    suspicious: false },
+                    { id: 'DEV-1A2B3C4D5E6F', name: 'لابتوب شخصي - Firefox', date: '2026-08-26 14:20',
+                    suspicious: false },
+                    { id: 'DEV-123456789ABC', name: 'جهاز لوحي - Safari', date: '2026-08-25 09:15',
+                    suspicious: false },
+                    { id: 'DEV-ABCDEF123456', name: 'هاتف Android - Chrome', date: '2026-08-24 16:45',
+                    suspicious: true },
+                    { id: 'DEV-9876543210', name: 'كمبيوتر المحطة - Edge', date: '2026-08-23 11:30',
+                    suspicious: false },
+                    { id: 'DEV-555555555555', name: 'لابتوب العمل - Chrome', date: '2026-08-22 08:00',
+                    suspicious: false },
+                    { id: 'DEV-777777777777', name: 'جهاز iPhone - Safari', date: '2026-08-21 13:20',
+                    suspicious: false },
+                    { id: 'DEV-AAAAAAAAAAAA', name: 'جهاز غير معروف - Chrome', date: '2026-08-20 19:45',
+                    suspicious: true },
+                    { id: 'DEV-BBBBBBBBBBBB', name: 'كمبيوتر الضيوف - Firefox', date: '2026-08-19 07:30',
+                    suspicious: false }
+                ];
+
+                var userDevices = user.devices || [];
+
+                var html = '<div style="padding:4px 0;">';
+                html +=
+                    '<div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">';
+                html += '📱 <strong style="color:#fff;">' + userDevices.length +
+                    '</strong> جهاز مسموح من أصل <strong style="color:#fff;">3</strong> كحد أقصى';
+                html +=
+                    ' &nbsp;|&nbsp; 🚨 <strong style="color:#f87171;">' + allDevices.filter(function(d) { return d
+                        .suspicious; }).length + '</strong> جهاز مشبوه';
+                html += '</div>';
+
+                if (allDevices.length === 0) {
+                    html += `
+                        <div class="empty-devices">
+                            <i class="fas fa-laptop"></i>
+                            <h4>لا توجد أجهزة مسجلة</h4>
+                        </div>
+                    `;
+                } else {
+                    html += '<div style="max-height:350px;overflow-y:auto;">';
+                    allDevices.forEach(function(device) {
+                        var isApproved = userDevices.includes(device.id);
+                        var status = isApproved ? 'approved' : 'pending';
+                        var statusLabel = isApproved ? '✅ معتمد' : '⏳ قيد المراجعة';
+
+                        html += `
+                            <div class="device-item">
+                                <div class="device-info">
+                                    <div class="device-name">${device.name} ${device.suspicious ? '<span class="device-suspicious">🚨 مشبوه</span>' : ''}</div>
+                                    <div class="device-id">🆔 ${device.id}</div>
+                                    <div class="device-date">📅 ${device.date}</div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                    <span class="device-status ${status}">${statusLabel}</span>
+                                    <div class="device-actions">
+                                        ${!isApproved ? `
+                                            <button class="btn-sm approve" onclick="approveDevice(${user.id}, '${device.id}')" title="الموافقة على الجهاز">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn-sm reject" onclick="rejectDevice(${user.id}, '${device.id}')" title="رفض الجهاز">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        ` : `
+                                            <button class="btn-sm remove" onclick="removeDevice(${user.id}, '${device.id}')" title="إزالة الجهاز">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        `}
+                                        ${device.suspicious ? `
+                                            <button class="btn-sm suspect" onclick="reportSuspiciousDevice(${user.id}, '${device.id}')" title="الإبلاغ عن جهاز مشبوه">
+                                                <i class="fas fa-flag"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                html += `
+                    <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+                        <div style="font-size:12px;color:rgba(255,255,255,0.3);">
+                            <i class="fas fa-info-circle" style="color:#60a5fa;"></i>
+                            يمكنك الموافقة على الأجهزة الجديدة، رفضها، أو إزالة الأجهزة المعتمدة
+                        </div>
+                    </div>
+                `;
+
+                body.innerHTML = html;
+            }
+
+            // --- Approve Device ---
+            window.approveDevice = function(userId, deviceId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                if (!user.devices) user.devices = [];
+                if (user.devices.length >= 3) {
+                    showToast('⚠️ الحد الأقصى للأجهزة هو 3 أجهزة', 'error');
+                    return;
+                }
+
+                if (!user.devices.includes(deviceId)) {
+                    user.devices.push(deviceId);
+                    showToast('✅ تمت الموافقة على الجهاز بنجاح', 'success');
+
+                    // إرسال إشعار
+                    sendNotification(userId);
+                    renderDevices(user);
+                    renderTable();
+                    updateStats();
+                }
+            };
+
+            // --- Reject Device ---
+            window.rejectDevice = function(userId, deviceId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                if (!confirm('⚠️ هل أنت متأكد من رفض هذا الجهاز؟')) return;
+
+                showToast('❌ تم رفض الجهاز', 'error');
+                renderDevices(user);
+            };
+
+            // --- Remove Device ---
+            window.removeDevice = function(userId, deviceId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                if (!confirm('⚠️ هل أنت متأكد من إزالة هذا الجهاز؟')) return;
+
+                if (user.devices) {
+                    user.devices = user.devices.filter(function(d) { return d !== deviceId; });
+                    showToast('✅ تم إزالة الجهاز بنجاح', 'success');
+
+                    // إرسال إشعار
+                    sendNotification(userId);
+                    renderDevices(user);
+                    renderTable();
+                    updateStats();
+                }
+            };
+
+            // --- Report Suspicious Device ---
+            window.reportSuspiciousDevice = function(userId, deviceId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                if (!confirm('🚨 هل تريد الإبلاغ عن هذا الجهاز كمشبوه وإرسال إشعار للمسؤول؟')) return;
+
+                // إرسال إشعار للمسؤول
+                var adminEmail = 'nejiamanallah22@gmail.com';
+                var subject = '🚨 جهاز مشبوه - ' + user.name;
+                var message = `
+                    تم الإبلاغ عن جهاز مشبوه
+
+                    👤 المستخدم: ${user.name}
+                    📧 البريد: ${user.email}
+                    🆔 الجهاز: ${deviceId}
+                    🕐 الوقت: ${new Date().toLocaleString('ar-TN')}
+
+                    يرجى التحقق من نشاط هذا المستخدم.
+                `;
+
+                console.log('📧 إرسال تقرير جهاز مشبوه إلى:', adminEmail);
+                console.log('📧 الموضوع:', subject);
+                console.log('📧 الرسالة:', message);
+
+                showToast('🚨 تم الإبلاغ عن الجهاز المشبوه وإرسال إشعار للمسؤول', 'warning');
+
+                // وضع علامة مشبوه على المستخدم
+                user.suspicious = true;
+                updateStats();
+                renderTable();
+                renderDevices(user);
+
+                showAlertModal(user, 'تم الإبلاغ عن جهاز مشبوه لهذا المستخدم - تم إشعار المسؤول', '🚨');
+            };
+
+            // ============================================================
             // FILTERS
             // ============================================================
             function applyFilters() {
@@ -1170,39 +2084,54 @@
                 renderTable();
 
                 // --- Events ---
-                document.getElementById('refreshBtn').addEventListener('click', refreshUsers);
-                document.getElementById('addUserBtn').addEventListener('click', openAddModal);
-                document.getElementById('modalClose').addEventListener('click', function() { document.getElementById(
-                        'userModal').classList.remove('visible'); });
-                document.getElementById('modalCancel').addEventListener('click', function() { document.getElementById(
-                        'userModal').classList.remove('visible'); });
-                document.getElementById('modalSave').addEventListener('click', saveUser);
+                $('refreshBtn').addEventListener('click', refreshUsers);
+                $('addUserBtn').addEventListener('click', openAddModal);
+                $('modalClose').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
+                $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
+                $('modalSave').addEventListener('click', saveUser);
 
-                document.getElementById('passwordModalClose').addEventListener('click', function() { document
-                        .getElementById('passwordModal').classList.remove('visible'); });
-                document.getElementById('passwordModalCancel').addEventListener('click', function() { document
-                        .getElementById('passwordModal').classList.remove('visible'); });
-                document.getElementById('passwordModalSave').addEventListener('click', savePassword);
+                $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
+                $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
+                $('passwordModalSave').addEventListener('click', savePassword);
 
-                document.getElementById('filterBtn').addEventListener('click', applyFilters);
-                document.getElementById('resetBtn').addEventListener('click', resetFilters);
+                $('devicesModalClose').addEventListener('click', function() { $('devicesModal').classList.remove(
+                    'active'); });
+                $('devicesModalCancel').addEventListener('click', function() { $('devicesModal').classList.remove(
+                    'active'); });
 
-                document.getElementById('searchUser').addEventListener('keyup', renderTable);
-                document.getElementById('fUnitUser').addEventListener('change', renderTable);
-                document.getElementById('fStatusUser').addEventListener('change', renderTable);
-                document.getElementById('fRoleUser').addEventListener('change', renderTable);
+                $('alertClose').addEventListener('click', closeAlertModal);
+                $('alertLock').addEventListener('click', lockUserFromAlert);
+                $('alertNotify').addEventListener('click', sendNotificationFromAlert);
 
-                // Close modal on overlay click
-                document.querySelectorAll('.modal-overlay').forEach(function(m) {
+                $('filterBtn').addEventListener('click', applyFilters);
+                $('resetBtn').addEventListener('click', resetFilters);
+
+                $('searchUser').addEventListener('keyup', renderTable);
+                $('fUnitUser').addEventListener('change', renderTable);
+                $('fStatusUser').addEventListener('change', renderTable);
+                $('fRoleUser').addEventListener('change', renderTable);
+
+                // Close modals on overlay click
+                document.querySelectorAll('.modal-overlay, .devices-modal, .alert-modal').forEach(function(m) {
                     m.addEventListener('click', function(e) {
                         if (e.target === this) {
                             this.classList.remove('visible');
+                            if (this.id === 'devicesModal') {
+                                this.classList.remove('active');
+                            }
+                            if (this.id === 'alertModal') {
+                                this.classList.remove('active');
+                            }
                         }
                     });
                 });
 
                 console.log('✅ Users Page loaded successfully');
                 console.log('👥 ' + usersData.length + ' users loaded');
+                console.log('🔐 Device management + Suspicious activity monitoring');
+                console.log('📧 Admin notifications enabled');
             }
 
             document.addEventListener('DOMContentLoaded', init);
@@ -1213,6 +2142,14 @@
             window.editUser = editUser;
             window.deleteUser = deleteUser;
             window.changePassword = changePassword;
+            window.openDevicesModal = openDevicesModal;
+            window.approveDevice = approveDevice;
+            window.rejectDevice = rejectDevice;
+            window.removeDevice = removeDevice;
+            window.reportSuspiciousDevice = reportSuspiciousDevice;
+            window.markSuspicious = markSuspicious;
+            window.clearSuspicious = clearSuspicious;
+            window.sendNotification = sendNotification;
             window.showToast = showToast;
             window.refreshUsers = refreshUsers;
 
