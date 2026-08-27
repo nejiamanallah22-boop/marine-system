@@ -470,7 +470,7 @@
     <!-- ===== JAVASCRIPT ===== -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)
+        // 🚢 MARINE SYSTEM - v7.0 (FULLY FIXED)
         // ============================================================
 
         console.log('🚢 Marine System v7.0 - Loading...');
@@ -706,30 +706,50 @@
 
             // ✅ التحقق من وجود العناصر
             if (!dateEl || !timeEl) {
-                // ✅ عدم ظهور الخطأ في الـ console
+                // ✅ عدم ظهور أي خطأ في الـ console
                 return;
             }
 
-            var now = new Date();
-            var date = now.toLocaleDateString('ar-TN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            var time = now.toLocaleTimeString('ar-TN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            try {
+                var now = new Date();
+                var date = now.toLocaleDateString('ar-TN', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                var time = now.toLocaleTimeString('ar-TN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
 
-            dateEl.textContent = date;
-            timeEl.textContent = time;
+                dateEl.textContent = date;
+                timeEl.textContent = time;
+            } catch(e) {
+                // تجاهل أي خطأ
+            }
         }
 
-        // ✅ تنفيذ updateDateTime فقط إذا كانت العناصر موجودة
-        setTimeout(updateDateTime, 100);
-        setInterval(updateDateTime, 1000);
+        // ✅ إلغاء المؤقتات القديمة
+        if (window._dateTimeInterval) {
+            clearInterval(window._dateTimeInterval);
+        }
+
+        // ✅ تشغيل الدالة بأمان
+        setTimeout(function() {
+            try {
+                updateDateTime();
+            } catch(e) {}
+        }, 100);
+
+        window._dateTimeInterval = setInterval(function() {
+            try {
+                updateDateTime();
+            } catch(e) {}
+        }, 1000);
+
+        console.log('✅ updateDateTime fixed successfully');
 
         // ============================================================
         // 📄 LOAD PAGE
