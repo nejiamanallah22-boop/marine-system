@@ -2,7 +2,7 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           📊 EFFICIENCY PAGE - FIXED (No duplicate declaration)
+           📊 EFFICIENCY PAGE - FULLY FIXED
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -1490,7 +1490,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED (using var instead of const)
+    JAVASCRIPT - FULLY FIXED
     ============================================================ -->
     <script>
         // ============================================================
@@ -1684,7 +1684,7 @@
         }
 
         function refreshEfficiency() {
-            var btn = document.querySelector('.btn-action.primary');
+            var btn = document.getElementById('refreshBtn');
             var originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
             btn.disabled = true;
