@@ -1,597 +1,655 @@
 <!-- public/pages/monitoring.html -->
-<script>
-    (function() {
-        'use strict';
+<div id="page-monitoring">
+    <!-- ===== CSS ===== -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- ===== HEADER ===== -->
+    <div class="mon-header">
+        <div class="mon-header-left">
+            <div class="icon"><i class="fas fa-eye"></i></div>
+            <div>
+                <h2>المراقبة الشاملة</h2>
+                <p>تتبع المستخدمين + جلسات النشاط - خريطة قمر صناعي حقيقية</p>
+            </div>
+        </div>
+        <div class="mon-header-actions">
+            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action danger" id="terminateAllBtn"><i class="fas fa-power-off"></i> إنهاء الكل</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
+        </div>
+    </div>
 
-        console.log('🔄 monitoring.html - loading with REAL MAP...');
+    <!-- ===== STATS ===== -->
+    <div class="stats-grid" id="monitoringStats">
+        <div class="stat-card"><div class="number gold" id="totalUsers">0</div><div class="label">👥 المستخدمين</div></div>
+        <div class="stat-card"><div class="number green" id="activeNow">0</div><div class="label">🟢 نشط</div></div>
+        <div class="stat-card"><div class="number blue" id="readyUsers">0</div><div class="label">✅ جاهز</div></div>
+        <div class="stat-card"><div class="number red" id="busyUsers">0</div><div class="label">🔴 مشغول</div></div>
+        <div class="stat-card"><div class="number pink" id="offlineUsers">0</div><div class="label">⚫ غير متصل</div></div>
+        <div class="stat-card"><div class="number purple" id="totalSessions">0</div><div class="label">🟣 جلسات نشطة</div></div>
+    </div>
 
-        // ============================================================
-        // ✅ FIX: Update DateTime with null check
-        // ============================================================
-        function updateDateTime() {
-            var dateEl = document.getElementById('currentDate');
-            var timeEl = document.getElementById('currentTime');
-            
-            if (!dateEl || !timeEl) {
-                console.warn('⚠️ Date/Time elements not found');
-                return;
+    <!-- ===== MAP TYPE ===== -->
+    <div class="map-type-selector">
+        <span class="label"><i class="fas fa-globe"></i> نوع الخريطة:</span>
+        <button class="map-type-btn active" data-type="satellite"><i class="fas fa-satellite"></i> قمر صناعي</button>
+        <button class="map-type-btn" data-type="standard"><i class="fas fa-map"></i> عادية</button>
+        <button class="map-type-btn" data-type="terrain"><i class="fas fa-mountain"></i> تضاريس</button>
+    </div>
+
+    <!-- ===== GRID ===== -->
+    <div class="monitoring-grid">
+        <!-- MAP -->
+        <div class="map-container">
+            <div class="section-title">
+                <i class="fas fa-map-marked-alt"></i> مواقع المستخدمين - خريطة حقيقية
+                <span class="hint">🖱️ اضغط على العلامة للتفاصيل</span>
+            </div>
+            <div id="realMap"></div>
+        </div>
+
+        <!-- SESSIONS -->
+        <div class="sessions-container">
+            <div class="section-title">
+                <span><i class="fas fa-list-ul"></i> الجلسات النشطة</span>
+                <span class="badge purple" id="sessionBadge">📊 جاري التحميل...</span>
+            </div>
+            <div class="sessions-scroll" id="sessionsScroll">
+                <table class="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>الإقليم</th>
+                            <th>البريد</th>
+                            <th>المدة</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionsBody">
+                        <tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">⏳ جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== USER PANEL ===== -->
+    <div class="panel-overlay" id="panelOverlay"></div>
+    <div class="user-panel" id="userPanel">
+        <button class="close-btn" id="closePanelBtn">✕</button>
+        <div class="user-avatar" id="panelAvatar">👤</div>
+        <div class="user-name" id="panelName">-</div>
+        <div class="user-role" id="panelRole">-</div>
+        <div class="detail-row"><span class="label">🆔 المعرف</span><span class="value gold" id="panelId">-</span></div>
+        <div class="detail-row"><span class="label">📍 الموقع</span><span class="value" id="panelLocation">-</span></div>
+        <div class="detail-row"><span class="label">📌 الإحداثيات</span><span class="value" id="panelCoords">-</span></div>
+        <div class="detail-row"><span class="label">🟢 الحالة</span><span class="value" id="panelStatus">-</span></div>
+        <div class="detail-row"><span class="label">⚡ الجاهزية</span><span class="value" id="panelReadiness">-</span></div>
+        <div class="detail-row"><span class="label">📅 آخر نشاط</span><span class="value" id="panelLastActive">-</span></div>
+        <div class="detail-row"><span class="label">📧 البريد</span><span class="value" id="panelEmail">-</span></div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - FIXED
+    ============================================================ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <script>
+        (function() {
+            'use strict';
+
+            console.log('🔄 monitoring.html - loading with REAL MAP...');
+
+            // ============================================================
+            // DATA - USERS
+            // ============================================================
+            var usersData = [
+                { id: 1, name: 'أحمد محمد', role: 'إداري', email: 'ahmed@marine.tn', lat: 36.8065, lng: 10.1815,
+                    status: 'نشط', readiness: 'جاهز', location: 'تونس - المركز', region: 'الشمال',
+                    lastActive: '2026-08-27 10:30' },
+                { id: 2, name: 'كريم سامي', role: 'مستخدم', email: 'karim@marine.tn', lat: 37.0000, lng: 9.5000,
+                    status: 'نشط', readiness: 'مشغول', location: 'الحرس البحري بالشمال', region: 'الشمال',
+                    lastActive: '2026-08-27 08:45' },
+                { id: 3, name: 'سامي رضا', role: 'مستخدم', email: 'sami@marine.tn', lat: 36.0000, lng: 10.5000,
+                    status: 'نشط', readiness: 'جاهز', location: 'الساحل - الحرس البحري', region: 'الساحل',
+                    lastActive: '2026-08-27 07:00' },
+                { id: 4, name: 'نورا سليم', role: 'مشرف', email: 'nora@marine.tn', lat: 35.8290, lng: 10.6400,
+                    status: 'نشط', readiness: 'جاهز', location: 'سوسة - الميناء', region: 'الساحل',
+                    lastActive: '2026-08-27 10:00' },
+                { id: 5, name: 'فاطمة نور', role: 'مراقب', email: 'fatma@marine.tn', lat: 35.7780, lng: 10.8250,
+                    status: 'نشط', readiness: 'جاهز', location: 'المنستير - وحدة صيانة', region: 'الساحل',
+                    lastActive: '2026-08-27 07:30' },
+                { id: 6, name: 'سارة علي', role: 'مشرف', email: 'sara@marine.tn', lat: 34.7390, lng: 10.7600,
+                    status: 'نشط', readiness: 'جاهز', location: 'صفاقس - الميناء', region: 'الوسط',
+                    lastActive: '2026-08-27 09:45' },
+                { id: 7, name: 'منى طارق', role: 'مشرف', email: 'mona@marine.tn', lat: 34.7390, lng: 10.7600,
+                    status: 'غير متصل', readiness: 'جاهز', location: 'صفاقس - وحدة صيانة', region: 'الوسط',
+                    lastActive: '2026-08-26 16:00' },
+                { id: 8, name: 'علي حسن', role: 'مستخدم', email: 'ali@marine.tn', lat: 33.8814, lng: 10.0982,
+                    status: 'غير متصل', readiness: 'غير جاهز', location: 'قابس - ميناء', region: 'الجنوب',
+                    lastActive: '2026-08-26 17:20' },
+                { id: 9, name: 'هالة نادر', role: 'مراقب', email: 'hala@marine.tn', lat: 33.0000, lng: 10.0000,
+                    status: 'نشط', readiness: 'جاهز', location: 'الجنوب - قاعدة بحرية', region: 'الجنوب',
+                    lastActive: '2026-08-27 06:30' },
+                { id: 10, name: 'ليلى منير', role: 'مراقب', email: 'layla@marine.tn', lat: 36.8065, lng: 10.1815,
+                    status: 'نشط', readiness: 'جاهز', location: 'تونس - المجمع الأمني', region: 'وحدة الصيانة تونس',
+                    lastActive: '2026-08-27 09:00' },
+                { id: 11, name: 'ياسين عمر', role: 'مستخدم', email: 'yassin@marine.tn', lat: 33.5000, lng: 11.1167,
+                    status: 'غير متصل', readiness: 'مشغول', location: 'جرجيس - وحدة صيانة', region: 'وحدة الصيانة جرجيس',
+                    lastActive: '2026-08-26 14:30' },
+                { id: 12, name: 'محمد خالد', role: 'مستخدم', email: 'mohamed@marine.tn', lat: 37.2744, lng: 9.8739,
+                    status: 'نشط', readiness: 'مشغول', location: 'بنزرت - قاعدة بحرية', region: 'وحدة الصيانة تونس',
+                    lastActive: '2026-08-27 08:15' }
+            ];
+
+            // ============================================================
+            // SESSIONS DATA
+            // ============================================================
+            var sessionsData = [
+                { id: 'S-2026-001', user: 'أحمد محمد', email: 'ahmed@example.com', region: 'الشمال',
+                    duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-002', user: 'كريم سامي', email: 'karim@example.com', region: 'الشمال',
+                    duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-003', user: 'سامي رضا', email: 'sami@example.com', region: 'الساحل', duration: '5 ساعات',
+                    status: 'منتهية' },
+                { id: 'S-2026-004', user: 'نورا سليم', email: 'nora@example.com', region: 'الساحل',
+                    duration: '1 ساعة 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-005', user: 'فاطمة نور', email: 'fatma@example.com', region: 'الساحل',
+                    duration: '4 ساعات 20 دقيقة', status: 'ملغاة' },
+                { id: 'S-2026-006', user: 'سارة علي', email: 'sara@example.com', region: 'الوسط', duration: '2 ساعات 45 دقيقة',
+                    status: 'منتهية' },
+                { id: 'S-2026-007', user: 'منى طارق', email: 'mona@example.com', region: 'الوسط', duration: '3 ساعات 10 دقيقة',
+                    status: 'ملغاة' },
+                { id: 'S-2026-008', user: 'علي حسن', email: 'ali@example.com', region: 'الجنوب', duration: '6 ساعات 30 دقيقة',
+                    status: 'نشطة' },
+                { id: 'S-2026-009', user: 'هالة نادر', email: 'hala@example.com', region: 'الجنوب', duration: '2 ساعات 15 دقيقة',
+                    status: 'نشطة' },
+                { id: 'S-2026-010', user: 'ليلى منير', email: 'layla@example.com', region: 'وحدة الصيانة تونس',
+                    duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
+                { id: 'S-2026-011', user: 'ياسين عمر', email: 'yassin@example.com', region: 'وحدة الصيانة جرجيس',
+                    duration: '4 ساعات', status: 'منتهية' },
+                { id: 'S-2026-012', user: 'محمد خالد', email: 'mohamed@example.com', region: 'وحدة الصيانة تونس',
+                    duration: '2 ساعات 20 دقيقة', status: 'نشطة' }
+            ];
+
+            // ============================================================
+            // STATE
+            // ============================================================
+            var map = null;
+            var markers = [];
+            var currentMapType = 'satellite';
+            var mapInitialized = false;
+
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            function getInitials(name) {
+                if (!name) return '👤';
+                var parts = name.split(' ');
+                if (parts.length >= 2) return parts[0][0] + parts[1][0];
+                return name.slice(0, 2);
             }
-            
-            var now = new Date();
-            var date = now.toLocaleDateString('ar-TN', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            var time = now.toLocaleTimeString('ar-TN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            dateEl.textContent = date;
-            timeEl.textContent = time;
-        }
 
-        // Run once and then every second
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-
-        // ============================================================
-        // ✅ FIX: Check if L (Leaflet) is defined
-        // ============================================================
-        function waitForLeaflet(callback, attempts) {
-            attempts = attempts || 0;
-            if (typeof L !== 'undefined') {
-                callback();
-                return;
+            function getColor(user) {
+                if (user.status === 'غير متصل') return '#6b7280';
+                if (user.readiness === 'جاهز') return '#22c55e';
+                if (user.readiness === 'مشغول') return '#ef4444';
+                return '#fbbf24';
             }
-            if (attempts > 20) {
-                console.error('❌ Leaflet failed to load after 20 attempts');
-                showToast('❌ فشل تحميل الخريطة، يرجى تحديث الصفحة', 'error');
-                return;
+
+            function getStatusBadge(s) { return s === 'نشط' ? '🟢 نشط' : '⚫ غير متصل'; }
+            function getStatusClass(s) { return s === 'نشط' ? 'green' : 'red'; }
+
+            function getReadinessBadge(r) {
+                var map = { 'جاهز': '✅ جاهز', 'مشغول': '🔴 مشغول', 'غير جاهز': '⚫ غير جاهز' };
+                return map[r] || r;
             }
-            console.log('⏳ Waiting for Leaflet to load... attempt ' + (attempts + 1));
-            setTimeout(function() {
-                waitForLeaflet(callback, attempts + 1);
-            }, 300);
-        }
+            function getReadinessClass(r) {
+                var map = { 'جاهز': 'green', 'مشغول': 'red', 'غير جاهز': 'pink' };
+                return map[r] || '';
+            }
 
-        // ============================================================
-        // DATA - USERS
-        // ============================================================
-        var usersData = [
-            // الحرس البحري بالشمال
-            { id: 1, name: 'أحمد محمد', role: 'إداري', email: 'ahmed@marine.tn', lat: 36.8065, lng: 10.1815,
-                status: 'نشط', readiness: 'جاهز', location: 'تونس - المركز', region: 'الشمال',
-                lastActive: '2026-08-27 10:30' },
-            { id: 2, name: 'كريم سامي', role: 'مستخدم', email: 'karim@marine.tn', lat: 37.0000, lng: 9.5000,
-                status: 'نشط', readiness: 'مشغول', location: 'الحرس البحري بالشمال', region: 'الشمال',
-                lastActive: '2026-08-27 08:45' },
-            { id: 3, name: 'سامي رضا', role: 'مستخدم', email: 'sami@marine.tn', lat: 36.0000, lng: 10.5000,
-                status: 'نشط', readiness: 'جاهز', location: 'الساحل - الحرس البحري', region: 'الساحل',
-                lastActive: '2026-08-27 07:00' },
-            { id: 4, name: 'نورا سليم', role: 'مشرف', email: 'nora@marine.tn', lat: 35.8290, lng: 10.6400,
-                status: 'نشط', readiness: 'جاهز', location: 'سوسة - الميناء', region: 'الساحل',
-                lastActive: '2026-08-27 10:00' },
-            { id: 5, name: 'فاطمة نور', role: 'مراقب', email: 'fatma@marine.tn', lat: 35.7780, lng: 10.8250,
-                status: 'نشط', readiness: 'جاهز', location: 'المنستير - وحدة صيانة', region: 'الساحل',
-                lastActive: '2026-08-27 07:30' },
-            { id: 6, name: 'سارة علي', role: 'مشرف', email: 'sara@marine.tn', lat: 34.7390, lng: 10.7600,
-                status: 'نشط', readiness: 'جاهز', location: 'صفاقس - الميناء', region: 'الوسط',
-                lastActive: '2026-08-27 09:45' },
-            { id: 7, name: 'منى طارق', role: 'مشرف', email: 'mona@marine.tn', lat: 34.7390, lng: 10.7600,
-                status: 'غير متصل', readiness: 'جاهز', location: 'صفاقس - وحدة صيانة', region: 'الوسط',
-                lastActive: '2026-08-26 16:00' },
-            { id: 8, name: 'علي حسن', role: 'مستخدم', email: 'ali@marine.tn', lat: 33.8814, lng: 10.0982,
-                status: 'غير متصل', readiness: 'غير جاهز', location: 'قابس - ميناء', region: 'الجنوب',
-                lastActive: '2026-08-26 17:20' },
-            { id: 9, name: 'هالة نادر', role: 'مراقب', email: 'hala@marine.tn', lat: 33.0000, lng: 10.0000,
-                status: 'نشط', readiness: 'جاهز', location: 'الجنوب - قاعدة بحرية', region: 'الجنوب',
-                lastActive: '2026-08-27 06:30' },
-            { id: 10, name: 'ليلى منير', role: 'مراقب', email: 'layla@marine.tn', lat: 36.8065, lng: 10.1815,
-                status: 'نشط', readiness: 'جاهز', location: 'تونس - المجمع الأمني', region: 'وحدة الصيانة تونس',
-                lastActive: '2026-08-27 09:00' },
-            { id: 11, name: 'ياسين عمر', role: 'مستخدم', email: 'yassin@marine.tn', lat: 33.5000, lng: 11.1167,
-                status: 'غير متصل', readiness: 'مشغول', location: 'جرجيس - وحدة صيانة', region: 'وحدة الصيانة جرجيس',
-                lastActive: '2026-08-26 14:30' },
-            { id: 12, name: 'محمد خالد', role: 'مستخدم', email: 'mohamed@marine.tn', lat: 37.2744, lng: 9.8739,
-                status: 'نشط', readiness: 'مشغول', location: 'بنزرت - قاعدة بحرية', region: 'وحدة الصيانة تونس',
-                lastActive: '2026-08-27 08:15' }
-        ];
+            function getSessionClass(s) {
+                var map = { 'نشطة': 'active', 'منتهية': 'expired', 'ملغاة': 'terminated' };
+                return map[s] || '';
+            }
+            function getSessionLabel(s) {
+                var map = { 'نشطة': '🟢 نشطة', 'منتهية': '🟡 منتهية', 'ملغاة': '🔴 ملغاة' };
+                return map[s] || s;
+            }
 
-        // ============================================================
-        // SESSIONS DATA
-        // ============================================================
-        var sessionsData = [
-            { id: 'S-2026-001', user: 'أحمد محمد', email: 'ahmed@example.com', region: 'الشمال',
-                duration: '3 ساعات 15 دقيقة', status: 'نشطة' },
-            { id: 'S-2026-002', user: 'كريم سامي', email: 'karim@example.com', region: 'الشمال',
-                duration: '2 ساعات 30 دقيقة', status: 'نشطة' },
-            { id: 'S-2026-003', user: 'سامي رضا', email: 'sami@example.com', region: 'الساحل', duration: '5 ساعات',
-                status: 'منتهية' },
-            { id: 'S-2026-004', user: 'نورا سليم', email: 'nora@example.com', region: 'الساحل',
-                duration: '1 ساعة 50 دقيقة', status: 'نشطة' },
-            { id: 'S-2026-005', user: 'فاطمة نور', email: 'fatma@example.com', region: 'الساحل',
-                duration: '4 ساعات 20 دقيقة', status: 'ملغاة' },
-            { id: 'S-2026-006', user: 'سارة علي', email: 'sara@example.com', region: 'الوسط', duration: '2 ساعات 45 دقيقة',
-                status: 'منتهية' },
-            { id: 'S-2026-007', user: 'منى طارق', email: 'mona@example.com', region: 'الوسط', duration: '3 ساعات 10 دقيقة',
-                status: 'ملغاة' },
-            { id: 'S-2026-008', user: 'علي حسن', email: 'ali@example.com', region: 'الجنوب', duration: '6 ساعات 30 دقيقة',
-                status: 'نشطة' },
-            { id: 'S-2026-009', user: 'هالة نادر', email: 'hala@example.com', region: 'الجنوب', duration: '2 ساعات 15 دقيقة',
-                status: 'نشطة' },
-            { id: 'S-2026-010', user: 'ليلى منير', email: 'layla@example.com', region: 'وحدة الصيانة تونس',
-                duration: '3 ساعات 50 دقيقة', status: 'نشطة' },
-            { id: 'S-2026-011', user: 'ياسين عمر', email: 'yassin@example.com', region: 'وحدة الصيانة جرجيس',
-                duration: '4 ساعات', status: 'منتهية' },
-            { id: 'S-2026-012', user: 'محمد خالد', email: 'mohamed@example.com', region: 'وحدة الصيانة تونس',
-                duration: '2 ساعات 20 دقيقة', status: 'نشطة' }
-        ];
+            function getRegionColor(region) {
+                var colors = {
+                    'الشمال': '#60a5fa',
+                    'الساحل': '#34d399',
+                    'الوسط': '#fbbf24',
+                    'الجنوب': '#f87171',
+                    'وحدة الصيانة تونس': '#a78bfa',
+                    'وحدة الصيانة جرجيس': '#f472b6'
+                };
+                return colors[region] || '#6b7280';
+            }
 
-        // ============================================================
-        // STATE
-        // ============================================================
-        var map = null;
-        var markers = [];
-        var currentMapType = 'satellite';
-        var mapInitialized = false;
+            // ============================================================
+            // TOAST
+            // ============================================================
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
+            }
 
-        // ============================================================
-        // HELPERS
-        // ============================================================
-        function getInitials(name) {
-            if (!name) return '👤';
-            var parts = name.split(' ');
-            if (parts.length >= 2) return parts[0][0] + parts[1][0];
-            return name.slice(0, 2);
-        }
+            // ============================================================
+            // STATS
+            // ============================================================
+            function updateStats() {
+                var total = usersData.length;
+                var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
+                var ready = usersData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
+                var busy = usersData.filter(function(u) { return u.readiness === 'مشغول'; }).length;
+                var offline = usersData.filter(function(u) { return u.status === 'غير متصل'; }).length;
+                var activeSessions = sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length;
 
-        function getColor(user) {
-            if (user.status === 'غير متصل') return '#6b7280';
-            if (user.readiness === 'جاهز') return '#22c55e';
-            if (user.readiness === 'مشغول') return '#ef4444';
-            return '#fbbf24';
-        }
+                var el = function(id) { return document.getElementById(id); };
 
-        function getStatusBadge(s) { return s === 'نشط' ? '🟢 نشط' : '⚫ غير متصل'; }
-        function getStatusClass(s) { return s === 'نشط' ? 'green' : 'red'; }
+                if (el('totalUsers')) el('totalUsers').textContent = total;
+                if (el('activeNow')) el('activeNow').textContent = active;
+                if (el('readyUsers')) el('readyUsers').textContent = ready;
+                if (el('busyUsers')) el('busyUsers').textContent = busy;
+                if (el('offlineUsers')) el('offlineUsers').textContent = offline;
+                if (el('totalSessions')) el('totalSessions').textContent = activeSessions;
 
-        function getReadinessBadge(r) {
-            var map = { 'جاهز': '✅ جاهز', 'مشغول': '🔴 مشغول', 'غير جاهز': '⚫ غير جاهز' };
-            return map[r] || r;
-        }
-        function getReadinessClass(r) {
-            var map = { 'جاهز': 'green', 'مشغول': 'red', 'غير جاهز': 'pink' };
-            return map[r] || '';
-        }
-
-        function getSessionClass(s) {
-            var map = { 'نشطة': 'active', 'منتهية': 'expired', 'ملغاة': 'terminated' };
-            return map[s] || '';
-        }
-        function getSessionLabel(s) {
-            var map = { 'نشطة': '🟢 نشطة', 'منتهية': '🟡 منتهية', 'ملغاة': '🔴 ملغاة' };
-            return map[s] || s;
-        }
-
-        function getRegionColor(region) {
-            var colors = {
-                'الشمال': '#60a5fa',
-                'الساحل': '#34d399',
-                'الوسط': '#fbbf24',
-                'الجنوب': '#f87171',
-                'وحدة الصيانة تونس': '#a78bfa',
-                'وحدة الصيانة جرجيس': '#f472b6'
-            };
-            return colors[region] || '#6b7280';
-        }
-
-        // ============================================================
-        // TOAST
-        // ============================================================
-        function showToast(msg, type) {
-            var old = document.querySelector('.toast');
-            if (old) old.remove();
-            var n = document.createElement('div');
-            n.className = 'toast toast-' + (type || 'info');
-            n.textContent = msg;
-            document.body.appendChild(n);
-            setTimeout(function() {
-                n.style.opacity = '0';
-                n.style.transform = 'translateY(20px)';
-                n.style.transition = 'all 0.4s';
-                setTimeout(function() { n.remove(); }, 400);
-            }, 2500);
-        }
-
-        // ============================================================
-        // STATS
-        // ============================================================
-        function updateStats() {
-            var total = usersData.length;
-            var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
-            var ready = usersData.filter(function(u) { return u.readiness === 'جاهز'; }).length;
-            var busy = usersData.filter(function(u) { return u.readiness === 'مشغول'; }).length;
-            var offline = usersData.filter(function(u) { return u.status === 'غير متصل'; }).length;
-            var activeSessions = sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length;
-
-            var el = function(id) { return document.getElementById(id); };
-            
-            if (el('totalUsers')) el('totalUsers').textContent = total;
-            if (el('activeNow')) el('activeNow').textContent = active;
-            if (el('readyUsers')) el('readyUsers').textContent = ready;
-            if (el('busyUsers')) el('busyUsers').textContent = busy;
-            if (el('offlineUsers')) el('offlineUsers').textContent = offline;
-            if (el('totalSessions')) el('totalSessions').textContent = activeSessions;
-
-            var badge = document.getElementById('sessionBadge');
-            if (badge) {
-                if (activeSessions > 0) {
-                    badge.textContent = '🟢 ' + activeSessions + ' جلسات نشطة';
-                    badge.className = 'badge success';
-                } else {
-                    badge.textContent = '📊 لا توجد جلسات نشطة';
-                    badge.className = 'badge purple';
+                var badge = document.getElementById('sessionBadge');
+                if (badge) {
+                    if (activeSessions > 0) {
+                        badge.textContent = '🟢 ' + activeSessions + ' جلسات نشطة';
+                        badge.className = 'badge success';
+                    } else {
+                        badge.textContent = '📊 لا توجد جلسات نشطة';
+                        badge.className = 'badge purple';
+                    }
                 }
             }
-        }
 
-        // ============================================================
-        // INIT MAP - REAL MAP WITH LEAFLET
-        // ============================================================
-        function initMap() {
-            console.log('🗺️ Initializing map...');
+            // ============================================================
+            // INIT MAP - REAL MAP WITH LEAFLET
+            // ============================================================
+            function initMap() {
+                console.log('🗺️ Initializing map...');
 
-            var container = document.getElementById('realMap');
-            if (!container) {
-                console.warn('⚠️ Map container not found, retrying...');
-                setTimeout(initMap, 500);
-                return;
+                var container = document.getElementById('realMap');
+                if (!container) {
+                    console.warn('⚠️ Map container not found, retrying...');
+                    setTimeout(initMap, 500);
+                    return;
+                }
+
+                // ✅ Check if L is defined (Leaflet)
+                if (typeof L === 'undefined') {
+                    console.warn('⚠️ Leaflet not loaded, loading now...');
+                    // Load Leaflet dynamically
+                    var script = document.createElement('script');
+                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = function() {
+                        console.log('✅ Leaflet loaded dynamically');
+                        // Load CSS too
+                        var link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                        document.head.appendChild(link);
+                        setTimeout(initMap, 200);
+                    };
+                    script.onerror = function() {
+                        console.error('❌ Failed to load Leaflet');
+                        showToast('❌ فشل تحميل الخريطة', 'error');
+                    };
+                    document.head.appendChild(script);
+                    return;
+                }
+
+                // Create map centered on Tunisia
+                map = L.map('realMap').setView([34.5, 9.5], 7);
+
+                // ===== TILE LAYERS =====
+                var tileLayers = {
+                    satellite: L.tileLayer(
+                        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                            attribution: '&copy; Esri',
+                            maxZoom: 19
+                        }),
+                    standard: L.tileLayer(
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap',
+                            maxZoom: 19
+                        }),
+                    terrain: L.tileLayer(
+                        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenTopoMap',
+                            maxZoom: 17
+                        })
+                };
+
+                // Add default layer
+                tileLayers.satellite.addTo(map);
+
+                // Store layers for switching
+                map._tileLayers = tileLayers;
+                map._currentLayer = 'satellite';
+
+                // ===== FIT BOUNDS =====
+                var bounds = L.latLngBounds(
+                    L.latLng(32.5, 8.0),
+                    L.latLng(37.5, 12.0)
+                );
+                map.fitBounds(bounds, { padding: [20, 20] });
+
+                mapInitialized = true;
+
+                // Add markers
+                addMarkers();
+
+                console.log('✅ Real Map initialized with Satellite imagery');
+                console.log('📍 ' + usersData.length + ' users on map');
             }
 
-            // ✅ Check if L is defined
-            if (typeof L === 'undefined') {
-                console.warn('⚠️ Leaflet not loaded, waiting...');
-                setTimeout(initMap, 500);
-                return;
+            // ============================================================
+            // ADD MARKERS
+            // ============================================================
+            function addMarkers() {
+                if (!map) return;
+
+                // Clear existing markers
+                markers.forEach(function(m) { map.removeLayer(m); });
+                markers = [];
+
+                usersData.forEach(function(user) {
+                    var color = getColor(user);
+                    var iconHtml = getInitials(user.name);
+
+                    // Custom icon with initials
+                    var icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: '<div style="background:' + color +
+                            ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ' +
+                            color + '44;">' + iconHtml + '</div>',
+                        iconSize: [38, 38],
+                        iconAnchor: [19, 19],
+                        popupAnchor: [0, -25]
+                    });
+
+                    // Status dot
+                    var statusDot = user.status === 'نشط' ?
+                        '<span class="popup-status online">🟢 نشط</span>' :
+                        '<span class="popup-status offline">⚫ غير متصل</span>';
+
+                    var readinessDot = user.readiness === 'جاهز' ?
+                        '<span class="popup-readiness ready">✅ جاهز</span>' :
+                        (user.readiness === 'مشغول' ?
+                            '<span class="popup-readiness busy">🔴 مشغول</span>' :
+                            '<span class="popup-readiness offline">⚫ غير جاهز</span>');
+
+                    // Popup content
+                    var popupContent =
+                        '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
+                        '<div class="popup-user-name">' + user.name + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + user.role + ' | ' + user
+                        .region + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-map-pin"></i> ' + user.location + '</div>' +
+                        '<div class="popup-user-detail"><i class="fas fa-id-card"></i> #' + user.id + '</div>' +
+                        '<div style="margin-top:6px;">' + statusDot + ' ' + readinessDot + '</div>' +
+                        '<div class="popup-user-detail" style="margin-top:4px;font-size:10px;color:rgba(255,255,255,0.2);">🕐 ' +
+                        user.lastActive + '</div>' +
+                        '<div class="popup-user-detail" style="font-size:10px;color:rgba(255,255,255,0.15);">📧 ' + user
+                        .email + '</div>' +
+                        '</div>';
+
+                    var marker = L.marker([user.lat, user.lng], { icon: icon })
+                        .bindPopup(popupContent, { maxWidth: 280, className: 'custom-popup' });
+
+                    // Click on marker shows panel
+                    marker.on('click', function() {
+                        showPanel(user);
+                    });
+
+                    marker.addTo(map);
+                    markers.push(marker);
+                });
             }
 
-            // Create map centered on Tunisia
-            map = L.map('realMap').setView([34.5, 9.5], 7);
+            // ============================================================
+            // UPDATE MARKERS
+            // ============================================================
+            function updateMarkers() {
+                addMarkers();
+            }
 
-            // ===== TILE LAYERS =====
-            var tileLayers = {
-                satellite: L.tileLayer(
-                    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                        attribution: '&copy; Esri',
-                        maxZoom: 19
-                    }),
-                standard: L.tileLayer(
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenStreetMap',
-                        maxZoom: 19
-                    }),
-                terrain: L.tileLayer(
-                    'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                        attribution: '&copy; OpenTopoMap',
-                        maxZoom: 17
-                    })
-            };
+            // ============================================================
+            // SWITCH MAP TYPE
+            // ============================================================
+            function switchMapType(type) {
+                if (!map || !map._tileLayers) return;
 
-            // Add default layer
-            tileLayers.satellite.addTo(map);
+                currentMapType = type;
 
-            // Store layers for switching
-            map._tileLayers = tileLayers;
-            map._currentLayer = 'satellite';
+                // Remove current layer
+                if (map._currentLayer) {
+                    map.removeLayer(map._tileLayers[map._currentLayer]);
+                }
 
-            // ===== FIT BOUNDS =====
-            var bounds = L.latLngBounds(
-                L.latLng(32.5, 8.0),
-                L.latLng(37.5, 12.0)
-            );
-            map.fitBounds(bounds, { padding: [20, 20] });
+                // Add new layer
+                map._tileLayers[type].addTo(map);
+                map._currentLayer = type;
 
-            mapInitialized = true;
-
-            // Add markers
-            addMarkers();
-
-            console.log('✅ Real Map initialized with Satellite imagery');
-            console.log('📍 ' + usersData.length + ' users on map');
-        }
-
-        // ============================================================
-        // ADD MARKERS
-        // ============================================================
-        function addMarkers() {
-            if (!map) return;
-
-            // Clear existing markers
-            markers.forEach(function(m) { map.removeLayer(m); });
-            markers = [];
-
-            usersData.forEach(function(user) {
-                var color = getColor(user);
-                var iconHtml = getInitials(user.name);
-
-                // Custom icon with initials
-                var icon = L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div style="background:' + color +
-                        ';width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0a1628;border:3px solid rgba(255,255,255,0.3);box-shadow:0 0 20px ' +
-                        color + '44;">' + iconHtml + '</div>',
-                    iconSize: [38, 38],
-                    iconAnchor: [19, 19],
-                    popupAnchor: [0, -25]
+                // Update button states
+                document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                    b.classList.toggle('active', b.dataset.type === type);
                 });
 
-                // Status dot
-                var statusDot = user.status === 'نشط' ?
-                    '<span class="popup-status online">🟢 نشط</span>' :
-                    '<span class="popup-status offline">⚫ غير متصل</span>';
+                var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
+                showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
+            }
 
-                var readinessDot = user.readiness === 'جاهز' ?
-                    '<span class="popup-readiness ready">✅ جاهز</span>' :
-                    (user.readiness === 'مشغول' ?
-                        '<span class="popup-readiness busy">🔴 مشغول</span>' :
-                        '<span class="popup-readiness offline">⚫ غير جاهز</span>');
+            // ============================================================
+            // SESSIONS TABLE
+            // ============================================================
+            function renderSessions() {
+                var tbody = document.getElementById('sessionsBody');
+                if (!tbody) return;
 
-                // Popup content
-                var popupContent =
-                    '<div style="text-align:right;font-family:Cairo,sans-serif;">' +
-                    '<div class="popup-user-name">' + user.name + '</div>' +
-                    '<div class="popup-user-detail"><i class="fas fa-user-tag"></i> ' + user.role + ' | ' + user
-                    .region + '</div>' +
-                    '<div class="popup-user-detail"><i class="fas fa-map-pin"></i> ' + user.location + '</div>' +
-                    '<div class="popup-user-detail"><i class="fas fa-id-card"></i> #' + user.id + '</div>' +
-                    '<div style="margin-top:6px;">' + statusDot + ' ' + readinessDot + '</div>' +
-                    '<div class="popup-user-detail" style="margin-top:4px;font-size:10px;color:rgba(255,255,255,0.2);">🕐 ' +
-                    user.lastActive + '</div>' +
-                    '<div class="popup-user-detail" style="font-size:10px;color:rgba(255,255,255,0.15);">📧 ' + user
-                    .email + '</div>' +
-                    '</div>';
+                var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
 
-                var marker = L.marker([user.lat, user.lng], { icon: icon })
-                    .bindPopup(popupContent, { maxWidth: 280, className: 'custom-popup' });
+                if (active.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">🟢 لا توجد جلسات نشطة</td></tr>';
+                    return;
+                }
 
-                // Click on marker shows panel
-                marker.on('click', function() {
-                    showPanel(user);
+                var html = '';
+                active.forEach(function(s) {
+                    var regionColor = getRegionColor(s.region);
+                    html += `
+                        <tr>
+                            <td class="user-name">${s.user}</td>
+                            <td><span class="region-tag" style="color:${regionColor};border:1px solid ${regionColor}44;">${s.region}</span></td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.email}</td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.duration}</td>
+                            <td><span class="status-badge ${getSessionClass(s.status)}">${getSessionLabel(s.status)}</span></td>
+                        </tr>
+                    `;
                 });
-
-                marker.addTo(map);
-                markers.push(marker);
-            });
-        }
-
-        // ============================================================
-        // UPDATE MARKERS
-        // ============================================================
-        function updateMarkers() {
-            addMarkers();
-        }
-
-        // ============================================================
-        // SWITCH MAP TYPE
-        // ============================================================
-        function switchMapType(type) {
-            if (!map || !map._tileLayers) return;
-
-            currentMapType = type;
-
-            // Remove current layer
-            if (map._currentLayer) {
-                map.removeLayer(map._tileLayers[map._currentLayer]);
+                tbody.innerHTML = html;
             }
 
-            // Add new layer
-            map._tileLayers[type].addTo(map);
-            map._currentLayer = type;
+            // ============================================================
+            // USER PANEL
+            // ============================================================
+            function showPanel(user) {
+                var overlay = document.getElementById('panelOverlay');
+                var panel = document.getElementById('userPanel');
 
-            // Update button states
-            document.querySelectorAll('.map-type-btn').forEach(function(b) {
-                b.classList.toggle('active', b.dataset.type === type);
-            });
+                if (!overlay || !panel) return;
 
-            var labels = { 'satellite': '🛰️ قمر صناعي', 'standard': '🗺️ عادية', 'terrain': '⛰️ تضاريس' };
-            showToast('🗺️ تم التبديل إلى ' + labels[type], 'info');
-        }
+                overlay.classList.add('visible');
+                panel.classList.add('visible');
 
-        // ============================================================
-        // SESSIONS TABLE
-        // ============================================================
-        function renderSessions() {
-            var tbody = document.getElementById('sessionsBody');
-            if (!tbody) return;
-            
-            var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
+                var el = function(id) { return document.getElementById(id); };
 
-            if (active.length === 0) {
-                tbody.innerHTML =
-                    '<tr><td colspan="5" style="text-align:center;padding:30px;color:rgba(255,255,255,0.1);">🟢 لا توجد جلسات نشطة</td></tr>';
-                return;
+                if (el('panelAvatar')) el('panelAvatar').textContent = getInitials(user.name);
+                if (el('panelName')) el('panelName').textContent = user.name;
+                if (el('panelRole')) el('panelRole').textContent = '🔹 ' + user.role + ' | ' + user.region;
+                if (el('panelId')) el('panelId').textContent = '#' + user.id;
+                if (el('panelLocation')) el('panelLocation').textContent = user.location;
+                if (el('panelCoords')) el('panelCoords').textContent = user.lat + '°, ' + user.lng + '°';
+
+                var se = document.getElementById('panelStatus');
+                if (se) {
+                    se.textContent = getStatusBadge(user.status);
+                    se.className = 'value ' + getStatusClass(user.status);
+                }
+
+                var re = document.getElementById('panelReadiness');
+                if (re) {
+                    re.textContent = getReadinessBadge(user.readiness);
+                    re.className = 'value ' + getReadinessClass(user.readiness);
+                }
+
+                if (el('panelLastActive')) el('panelLastActive').textContent = user.lastActive || '-';
+                if (el('panelEmail')) el('panelEmail').textContent = user.email;
             }
 
-            var html = '';
-            active.forEach(function(s) {
-                var regionColor = getRegionColor(s.region);
-                html += `
-                    <tr>
-                        <td class="user-name">${s.user}</td>
-                        <td><span class="region-tag" style="color:${regionColor};border:1px solid ${regionColor}44;">${s.region}</span></td>
-                        <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.email}</td>
-                        <td style="color:rgba(255,255,255,0.4);font-size:0.65rem;">${s.duration}</td>
-                        <td><span class="status-badge ${getSessionClass(s.status)}">${getSessionLabel(s.status)}</span></td>
-                    </tr>
-                `;
-            });
-            tbody.innerHTML = html;
-        }
-
-        // ============================================================
-        // USER PANEL
-        // ============================================================
-        function showPanel(user) {
-            var overlay = document.getElementById('panelOverlay');
-            var panel = document.getElementById('userPanel');
-            
-            if (!overlay || !panel) return;
-            
-            overlay.classList.add('visible');
-            panel.classList.add('visible');
-
-            var el = function(id) { return document.getElementById(id); };
-            
-            if (el('panelAvatar')) el('panelAvatar').textContent = getInitials(user.name);
-            if (el('panelName')) el('panelName').textContent = user.name;
-            if (el('panelRole')) el('panelRole').textContent = '🔹 ' + user.role + ' | ' + user.region;
-            if (el('panelId')) el('panelId').textContent = '#' + user.id;
-            if (el('panelLocation')) el('panelLocation').textContent = user.location;
-            if (el('panelCoords')) el('panelCoords').textContent = user.lat + '°, ' + user.lng + '°';
-
-            var se = document.getElementById('panelStatus');
-            if (se) {
-                se.textContent = getStatusBadge(user.status);
-                se.className = 'value ' + getStatusClass(user.status);
+            function closePanel() {
+                var overlay = document.getElementById('panelOverlay');
+                var panel = document.getElementById('userPanel');
+                if (overlay) overlay.classList.remove('visible');
+                if (panel) panel.classList.remove('visible');
             }
 
-            var re = document.getElementById('panelReadiness');
-            if (re) {
-                re.textContent = getReadinessBadge(user.readiness);
-                re.className = 'value ' + getReadinessClass(user.readiness);
+            // ============================================================
+            // REFRESH
+            // ============================================================
+            function refreshAll() {
+                var btn = document.getElementById('refreshBtn');
+                if (!btn) return;
+
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+                btn.disabled = true;
+
+                setTimeout(function() {
+                    updateStats();
+                    renderSessions();
+                    updateMarkers();
+                    btn.innerHTML = orig;
+                    btn.disabled = false;
+                    showToast('✅ تم تحديث البيانات', 'success');
+                }, 500);
             }
 
-            if (el('panelLastActive')) el('panelLastActive').textContent = user.lastActive || '-';
-            if (el('panelEmail')) el('panelEmail').textContent = user.email;
-        }
-
-        function closePanel() {
-            var overlay = document.getElementById('panelOverlay');
-            var panel = document.getElementById('userPanel');
-            if (overlay) overlay.classList.remove('visible');
-            if (panel) panel.classList.remove('visible');
-        }
-
-        // ============================================================
-        // REFRESH
-        // ============================================================
-        function refreshAll() {
-            var btn = document.getElementById('refreshBtn');
-            if (!btn) return;
-            
-            var orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-
-            setTimeout(function() {
+            // ============================================================
+            // TERMINATE ALL
+            // ============================================================
+            function terminateAll() {
+                if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
+                var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
+                if (active.length === 0) { showToast('ℹ️ لا توجد جلسات', 'info'); return; }
+                active.forEach(function(s) { s.status = 'ملغاة'; });
                 updateStats();
                 renderSessions();
-                updateMarkers();
-                btn.innerHTML = orig;
-                btn.disabled = false;
-                showToast('✅ تم تحديث البيانات', 'success');
-            }, 500);
-        }
+                showToast('✅ تم إنهاء ' + active.length + ' جلسات', 'success');
+            }
 
-        // ============================================================
-        // TERMINATE ALL
-        // ============================================================
-        function terminateAll() {
-            if (!confirm('⚠️ إنهاء جميع الجلسات النشطة؟')) return;
-            var active = sessionsData.filter(function(s) { return s.status === 'نشطة'; });
-            if (active.length === 0) { showToast('ℹ️ لا توجد جلسات', 'info'); return; }
-            active.forEach(function(s) { s.status = 'ملغاة'; });
-            updateStats();
-            renderSessions();
-            showToast('✅ تم إنهاء ' + active.length + ' جلسات', 'success');
-        }
+            // ============================================================
+            // RESIZE
+            // ============================================================
+            var resizeTimer;
 
-        // ============================================================
-        // RESIZE
-        // ============================================================
-        var resizeTimer;
+            function handleResize() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 300);
+            }
 
-        function handleResize() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                if (map) {
-                    map.invalidateSize();
+            // ============================================================
+            // INIT
+            // ============================================================
+            function init() {
+                console.log('🚀 Initializing monitoring page...');
+
+                updateStats();
+                renderSessions();
+
+                // ✅ Start map initialization with retry
+                setTimeout(function() {
+                    initMap();
+                }, 500);
+
+                // ✅ Event listeners with null checks
+                var refreshBtn = document.getElementById('refreshBtn');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', refreshAll);
                 }
-            }, 300);
-        }
 
-        // ============================================================
-        // ✅ FIX: INIT - Check elements exist
-        // ============================================================
-        function init() {
-            console.log('🚀 Initializing monitoring page...');
-            
-            // ✅ Only update stats if elements exist
-            updateStats();
-            renderSessions();
+                var terminateBtn = document.getElementById('terminateAllBtn');
+                if (terminateBtn) {
+                    terminateBtn.addEventListener('click', terminateAll);
+                }
 
-            // ✅ Wait for Leaflet to load
-            waitForLeaflet(function() {
-                initMap();
-            });
+                var closeBtn = document.getElementById('closePanelBtn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', closePanel);
+                }
 
-            // ✅ Event listeners with null checks
-            var refreshBtn = document.getElementById('refreshBtn');
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', refreshAll);
-            }
-            
-            var terminateBtn = document.getElementById('terminateAllBtn');
-            if (terminateBtn) {
-                terminateBtn.addEventListener('click', terminateAll);
-            }
-            
-            var closeBtn = document.getElementById('closePanelBtn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', closePanel);
-            }
-            
-            var overlay = document.getElementById('panelOverlay');
-            if (overlay) {
-                overlay.addEventListener('click', closePanel);
-            }
+                var overlay = document.getElementById('panelOverlay');
+                if (overlay) {
+                    overlay.addEventListener('click', closePanel);
+                }
 
-            document.querySelectorAll('.map-type-btn').forEach(function(b) {
-                b.addEventListener('click', function() {
-                    switchMapType(this.dataset.type);
+                document.querySelectorAll('.map-type-btn').forEach(function(b) {
+                    b.addEventListener('click', function() {
+                        switchMapType(this.dataset.type);
+                    });
                 });
-            });
 
-            window.addEventListener('resize', handleResize);
+                window.addEventListener('resize', handleResize);
 
-            console.log('✅ Monitoring Page with REAL MAP loaded');
-            console.log('📍 ' + usersData.length + ' users');
-            console.log('🟣 ' + sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length +
-                ' active sessions');
-            console.log('🗺️ Map types: Satellite (real), Standard, Terrain');
-        }
+                console.log('✅ Monitoring Page with REAL MAP loaded');
+                console.log('📍 ' + usersData.length + ' users');
+                console.log('🟣 ' + sessionsData.filter(function(s) { return s.status === 'نشطة'; }).length +
+                    ' active sessions');
+                console.log('🗺️ Map types: Satellite (real), Standard, Terrain');
+            }
 
-        // ============================================================
-        // START
-        // ============================================================
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+            // ============================================================
+            // START
+            // ============================================================
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
 
-        // ============================================================
-        // EXPOSE GLOBALS
-        // ============================================================
-        window.refreshAll = refreshAll;
-        window.terminateAll = terminateAll;
-        window.switchMapType = switchMapType;
-        window.showToast = showToast;
-        window.initMap = initMap;
+            // ============================================================
+            // EXPOSE GLOBALS
+            // ============================================================
+            window.refreshAll = refreshAll;
+            window.terminateAll = terminateAll;
+            window.switchMapType = switchMapType;
+            window.showToast = showToast;
+            window.initMap = initMap;
 
-    })();
-</script>
+        })();
+    </script>
+</div>
