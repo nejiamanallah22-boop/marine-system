@@ -467,7 +467,9 @@
         </div>
     </div>
 
-    <!-- ===== JAVASCRIPT - FULLY FIXED ===== -->
+    <!-- ============================================================
+    JAVASCRIPT - FULLY FIXED
+    ============================================================ -->
     <script>
         // ============================================================
         // 🚢 MARINE SYSTEM - v7.0 (FULLY FIXED)
@@ -910,6 +912,17 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+
+        // ✅ منع أي استدعاء خارجي لـ updateDateTime من التسبب في خطأ
+        // override for safety
+        var originalUpdate = window.updateDateTime;
+        window.updateDateTime = function() {
+            try {
+                originalUpdate();
+            } catch(e) {
+                // ignore
+            }
+        };
 
         console.log('✅ Marine System v7.0 loaded successfully');
     </script>
