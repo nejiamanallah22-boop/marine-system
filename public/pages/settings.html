@@ -2,40 +2,15 @@
 <div id="page-settings">
     <style>
         /* ============================================================
-           ⚙️ SETTINGS PAGE - PROFESSIONAL v3.0
+           ⚙️ SETTINGS PAGE - ENTERPRISE PRO VERSION
            ============================================================ */
 
-        /* ===== CSS VARIABLES ===== */
-        :root {
-            --primary-dark: #0a1628;
-            --primary: #0f3460;
-            --primary-light: #1a4f8a;
-            --gold: #e6b31e;
-            --gold-light: #f5d76e;
-            --gold-dark: #c99a0e;
-            --success: #00b894;
-            --success-light: #55efc4;
-            --danger: #e17055;
-            --warning: #fdcb6e;
-            --info: #0984e3;
-            --glass-bg: rgba(255,255,255,0.04);
-            --glass-border: rgba(255,255,255,0.06);
-            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
-            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
-            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
-            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
-        }
-
-        /* ===== FULL SCREEN RESET ===== */
         #page-settings {
             width: 100%;
             max-width: 100%;
-            padding: 0;
+            padding: 20px;
             margin: 0;
-            font-family: var(--font);
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
             background: #0a0e1a;
             color: #e8edf5;
             min-height: 100vh;
@@ -43,7 +18,6 @@
             z-index: 1;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
         #page-settings::before {
             content: '';
             position: fixed;
@@ -52,7 +26,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(233,69,96,0.03) 0%, transparent 60%);
+                radial-gradient(ellipse at 80% 50%, rgba(96,165,250,0.03) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
             animation: bgPulse 15s ease-in-out infinite;
@@ -63,30 +37,22 @@
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
-        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
+        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
+        /* ===== HEADER ===== */
         .settings-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 24px;
+            background: rgba(255,255,255,0.04);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 12px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 64px;
-            z-index: 10;
-            margin: 0;
-            width: 100%;
         }
 
         .settings-header-left {
@@ -95,29 +61,22 @@
             gap: 14px;
         }
 
-        .settings-header-left .header-icon {
+        .settings-header-left .icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            background: linear-gradient(135deg, #e6b31e, #60a5fa);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
-            animation: pulseGold 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseGold {
-            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
-            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
         }
 
         .settings-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
+            background: linear-gradient(135deg, #f5d76e, #60a5fa, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
@@ -135,552 +94,329 @@
             flex-wrap: wrap;
         }
 
-        .settings-header-actions .btn-action {
+        .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
             font-weight: 600;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.3s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-family: var(--font);
+            font-family: 'Cairo', sans-serif;
         }
 
-        .settings-header-actions .btn-action.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        .btn-action.primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
             color: #0a1628;
-            box-shadow: var(--shadow-gold);
         }
 
-        .settings-header-actions .btn-action.primary:hover {
+        .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .settings-header-actions .btn-action.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
 
-        .settings-header-actions .btn-action.secondary:hover {
+        .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
-            transform: translateY(-2px);
         }
 
-        .settings-header-actions .btn-action.danger {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .settings-header-actions .btn-action.danger:hover {
-            background: rgba(239,68,68,0.25);
-            transform: translateY(-2px);
-        }
-
-        /* ============================================================
-           SETTINGS CONTENT
-           ============================================================ */
-        .settings-content {
-            padding: 20px 24px;
+        /* ===== SETTINGS GRID ===== */
+        .settings-grid {
             display: grid;
-            grid-template-columns: 260px 1fr;
-            gap: 24px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
         }
 
-        /* ===== SIDEBAR ===== */
-        .settings-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 12px;
-            height: fit-content;
-            position: sticky;
-            top: 100px;
+        @media (max-width: 992px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .settings-sidebar .sidebar-title {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: rgba(255,255,255,0.2);
-            padding: 8px 12px 4px;
+        .settings-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            padding: 20px 24px;
+            transition: all 0.3s;
+        }
+
+        .settings-card:hover {
+            border-color: rgba(230,179,30,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        }
+
+        .settings-card .card-title {
+            font-size: 16px;
             font-weight: 700;
-        }
-
-        .settings-sidebar .sidebar-item {
+            color: #fff;
+            margin-bottom: 4px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: all var(--transition);
-            color: rgba(255,255,255,0.4);
-            font-size: 13px;
-            font-weight: 500;
-            border: none;
-            background: none;
-            width: 100%;
-            text-align: right;
-            font-family: var(--font);
+            gap: 10px;
         }
 
-        .settings-sidebar .sidebar-item:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
+        .settings-card .card-title i {
+            color: #e6b31e;
         }
 
-        .settings-sidebar .sidebar-item.active {
-            background: rgba(230,179,30,0.08);
-            color: var(--gold-light);
-            border-right: 3px solid var(--gold);
-        }
-
-        .settings-sidebar .sidebar-item i {
-            width: 20px;
-            text-align: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .settings-sidebar .sidebar-item .badge {
-            margin-right: auto;
-            font-size: 9px;
-            padding: 2px 8px;
-            border-radius: 20px;
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-            font-weight: 700;
-        }
-
-        .settings-sidebar .sidebar-item .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        /* ===== MAIN CONTENT ===== */
-        .settings-main {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .settings-panel {
-            display: none;
-            animation: fadePanel 0.3s ease;
-        }
-
-        .settings-panel.active {
-            display: block;
-        }
-
-        @keyframes fadePanel {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .settings-panel .panel-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-
-        .settings-panel .panel-subtitle {
-            font-size: 13px;
+        .settings-card .card-subtitle {
+            font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin-bottom: 16px;
         }
 
-        /* ===== SETTINGS CARDS ===== */
-        .settings-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 18px 22px;
+        .settings-card .form-group {
             margin-bottom: 14px;
-            transition: all var(--transition);
         }
 
-        .settings-card:hover {
-            border-color: rgba(230,179,30,0.08);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .settings-card .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .settings-card .card-header h4 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .settings-card .card-header h4 i {
-            color: var(--gold);
-        }
-
-        .settings-card .card-header .card-badge {
-            font-size: 10px;
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .settings-card .card-header .card-badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .settings-card .card-header .card-badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .settings-card .card-header .card-badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .settings-card .card-body {
-            color: rgba(255,255,255,0.5);
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .settings-card .card-body .form-group {
-            margin-bottom: 12px;
-        }
-
-        .settings-card .card-body .form-group label {
+        .settings-card .form-group label {
             display: block;
             font-size: 12px;
-            color: rgba(255,255,255,0.4);
-            margin-bottom: 4px;
             font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 4px;
         }
 
-        .settings-card .card-body .form-group input,
-        .settings-card .card-body .form-group select {
+        .settings-card .form-group input,
+        .settings-card .form-group select,
+        .settings-card .form-group textarea {
             width: 100%;
-            padding: 8px 14px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--glass-border);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
             background: rgba(255,255,255,0.03);
             color: #e2e8f0;
-            font-family: var(--font);
-            font-size: 13px;
-            transition: all var(--transition);
+            font-size: 14px;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.3s;
         }
 
-        .settings-card .card-body .form-group input:focus,
-        .settings-card .card-body .form-group select:focus {
-            border-color: var(--gold);
+        .settings-card .form-group input:focus,
+        .settings-card .form-group select:focus,
+        .settings-card .form-group textarea:focus {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            border-color: #e6b31e;
+            background: rgba(255,255,255,0.06);
         }
 
-        .settings-card .card-body .form-group input::placeholder {
-            color: rgba(255,255,255,0.15);
+        .settings-card .form-group input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
         }
 
-        .settings-card .card-body .form-group .help-text {
-            font-size: 11px;
-            color: rgba(255,255,255,0.15);
-            margin-top: 4px;
+        .settings-card .form-group input[type="file"]::-webkit-file-upload-button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
         }
 
-        /* ===== TOGGLE SWITCH ===== */
-        .toggle-switch {
+        .settings-card .form-group .color-picker {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .settings-card .form-group .color-picker .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .settings-card .form-group .color-picker .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .settings-card .form-group .color-picker .color-option.active {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .settings-card .form-group .toggle-switch {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            gap: 12px;
+            cursor: pointer;
         }
 
-        .toggle-switch:last-child {
-            border-bottom: none;
+        .settings-card .form-group .toggle-switch input {
+            display: none;
         }
 
-        .toggle-switch .toggle-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .toggle-switch .toggle-info .toggle-label {
-            font-size: 14px;
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .toggle-switch .toggle-info .toggle-desc {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-        }
-
-        .toggle-switch .toggle {
+        .settings-card .form-group .toggle-switch .toggle-track {
             width: 48px;
             height: 26px;
+            border-radius: 13px;
             background: rgba(255,255,255,0.06);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all var(--transition);
+            transition: all 0.3s;
             position: relative;
-            flex-shrink: 0;
         }
 
-        .toggle-switch .toggle.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-        }
-
-        .toggle-switch .toggle .toggle-dot {
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border-radius: 50%;
+        .settings-card .form-group .toggle-switch .toggle-track::after {
+            content: '';
             position: absolute;
             top: 3px;
             right: 3px;
-            transition: all var(--transition);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s;
         }
 
-        .toggle-switch .toggle.active .toggle-dot {
+        .settings-card .form-group .toggle-switch input:checked+.toggle-track {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+        }
+
+        .settings-card .form-group .toggle-switch input:checked+.toggle-track::after {
             right: 25px;
-            background: #0a1628;
+            background: #fff;
         }
 
-        /* ===== BUTTONS ===== */
-        .btn-settings {
-            padding: 8px 20px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
+        .settings-card .form-group .toggle-label {
             font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .settings-card .btn-save {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 14px;
             cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
         }
 
-        .btn-settings.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-        }
-
-        .btn-settings.primary:hover {
+        .settings-card .btn-save:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .btn-settings.danger {
-            background: rgba(239,68,68,0.15);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.1);
-        }
-
-        .btn-settings.danger:hover {
-            background: rgba(239,68,68,0.25);
-        }
-
-        .btn-settings.secondary {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.4);
-        }
-
-        .btn-settings.secondary:hover {
-            background: rgba(255,255,255,0.06);
+        .settings-card .btn-save.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
             color: #fff;
         }
 
-        .btn-settings.success {
+        .settings-card .btn-save.danger:hover {
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
+        /* ===== THEME PREVIEW ===== */
+        .theme-preview {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .theme-preview .preview-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .theme-preview .preview-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .theme-preview .preview-text strong {
+            color: #fff;
+        }
+
+        .theme-preview .preview-text span {
+            color: #e6b31e;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
             background: rgba(34,197,94,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.2);
         }
 
-        .btn-settings.success:hover {
-            background: rgba(34,197,94,0.25);
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
         }
 
-        .btn-settings .spinner {
-            display: none;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(0,0,0,0.15);
-            border-top-color: #0a1628;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+        .toast-info {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
         }
 
-        .btn-settings.loading .spinner {
-            display: inline-block;
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .btn-settings.loading .btn-text {
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 992px) {
-            .settings-content {
-                grid-template-columns: 1fr;
-                padding: 16px;
-            }
-
-            .settings-sidebar {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 4px;
-                position: static;
-                padding: 8px;
-            }
-
-            .settings-sidebar .sidebar-title {
-                display: none;
-            }
-
-            .settings-sidebar .sidebar-item {
-                padding: 8px 12px;
-                font-size: 12px;
-                justify-content: center;
-                border-radius: var(--radius-sm);
-            }
-
-            .settings-sidebar .sidebar-item.active {
-                border-right: none;
-                border-bottom: 3px solid var(--gold);
-            }
-
-            .settings-sidebar .sidebar-item .badge {
-                display: none;
-            }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .settings-header {
-                padding: 12px 16px;
-                top: 56px;
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .settings-header-left {
-                width: 100%;
-            }
-
-            .settings-header-left h2 {
-                font-size: 16px;
-            }
-
-            .settings-header-actions {
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .settings-content {
-                padding: 12px;
-                gap: 16px;
-            }
-
-            .settings-card {
-                padding: 14px 16px;
-            }
-
-            .settings-card .card-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .settings-sidebar {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            }
-
-            .settings-sidebar .sidebar-item {
-                font-size: 11px;
-                padding: 6px 10px;
-            }
-
-            .settings-sidebar .sidebar-item i {
-                font-size: 12px;
-                width: 16px;
-            }
+            #page-settings { padding: 12px; }
+            .settings-header { flex-direction: column; align-items: flex-start; }
+            .settings-header-left { width: 100%; }
+            .settings-header-left h2 { font-size: 16px; }
+            .settings-header-actions { width: 100%; }
+            .settings-grid { gap: 12px; }
+            .settings-card { padding: 16px; }
+            .settings-card .card-title { font-size: 14px; }
         }
 
         @media (max-width: 480px) {
-            .settings-header-left .header-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-
-            .settings-header-left h2 {
-                font-size: 14px;
-            }
-
-            .settings-header-left p {
-                font-size: 10px;
-            }
-
-            .settings-card {
-                padding: 12px 14px;
-            }
-
-            .settings-card .card-header h4 {
-                font-size: 13px;
-            }
-
-            .toggle-switch .toggle {
-                width: 40px;
-                height: 22px;
-            }
-
-            .toggle-switch .toggle .toggle-dot {
-                width: 16px;
-                height: 16px;
-                top: 3px;
-                right: 3px;
-            }
-
-            .toggle-switch .toggle.active .toggle-dot {
-                right: 21px;
-            }
-
-            .settings-sidebar {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .settings-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .settings-header-left h2 { font-size: 14px; }
+            .settings-card { padding: 12px; }
+            .settings-card .form-group input,
+            .settings-card .form-group select { font-size: 13px; }
+            .theme-preview { flex-direction: column; align-items: flex-start; }
         }
     </style>
 
@@ -689,763 +425,536 @@
     ============================================================ -->
     <div class="settings-header">
         <div class="settings-header-left">
-            <div class="header-icon">
-                <i class="fas fa-cog"></i>
-            </div>
+            <div class="icon"><i class="fas fa-cog"></i></div>
             <div>
-                <h2>الإعدادات</h2>
-                <p>تخصيص النظام وإدارة التفضيلات</p>
+                <h2>الإعدادات المتقدمة</h2>
+                <p>تخصيص النظام وتغيير المظهر والإعدادات العامة</p>
             </div>
         </div>
         <div class="settings-header-actions">
-            <button class="btn-action primary" onclick="saveSettings()">
-                <i class="fas fa-save"></i> حفظ الإعدادات
-            </button>
-            <button class="btn-action secondary" onclick="resetSettings()">
-                <i class="fas fa-undo-alt"></i> إعادة ضبط
-            </button>
+            <button class="btn-action primary" id="saveAllBtn"><i class="fas fa-save"></i> حفظ الكل</button>
+            <button class="btn-action secondary" onclick="location.reload()"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
     <!-- ============================================================
-    CONTENT
+    SETTINGS GRID
     ============================================================ -->
-    <div class="settings-content">
+    <div class="settings-grid">
 
-        <!-- ===== SIDEBAR ===== -->
-        <div class="settings-sidebar">
-            <div class="sidebar-title">الأقسام</div>
-            <button class="sidebar-item active" data-panel="general">
-                <i class="fas fa-sliders-h"></i> عام
-            </button>
-            <button class="sidebar-item" data-panel="profile">
-                <i class="fas fa-user"></i> الملف الشخصي
-            </button>
-            <button class="sidebar-item" data-panel="security">
-                <i class="fas fa-shield-alt"></i> الأمان
-                <span class="badge danger">مهم</span>
-            </button>
-            <button class="sidebar-item" data-panel="notifications">
-                <i class="fas fa-bell"></i> الإشعارات
-            </button>
-            <button class="sidebar-item" data-panel="appearance">
-                <i class="fas fa-palette"></i> المظهر
-            </button>
-            <button class="sidebar-item" data-panel="backup">
-                <i class="fas fa-database"></i> النسخ الاحتياطي
-            </button>
-            <button class="sidebar-item" data-panel="about" style="color:var(--gold-light);">
-                <i class="fas fa-info-circle"></i> حول النظام
-            </button>
+        <!-- ===== CARD 1: APP THEME ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-palette"></i> مظهر التطبيق (Theme)</div>
+            <div class="card-subtitle">تغيير ألوان واجهة التطبيق حسب رغبتك</div>
+
+            <div class="form-group">
+                <label>🎨 الألوان الأساسية</label>
+                <div class="color-picker" id="colorPicker">
+                    <div class="color-option active" style="background:linear-gradient(135deg,#0a1628,#1a2a4a);" data-primary="#0a1628" data-secondary="#1a2a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a);" data-primary="#1a0a28" data-secondary="#2a1a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#001a2a,#002a4a);" data-primary="#001a2a" data-secondary="#002a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a);" data-primary="#2a1a0a" data-secondary="#4a2a1a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a);" data-primary="#0a2a1a" data-secondary="#1a4a2a"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🌟 لون الذهب الأساسي</label>
+                <div class="color-picker" id="goldColorPicker">
+                    <div class="color-option active" style="background:#e6b31e;" data-gold="#e6b31e"></div>
+                    <div class="color-option" style="background:#f5d76e;" data-gold="#f5d76e"></div>
+                    <div class="color-option" style="background:#c99a0e;" data-gold="#c99a0e"></div>
+                    <div class="color-option" style="background:#ff6b6b;" data-gold="#ff6b6b"></div>
+                    <div class="color-option" style="background:#00b894;" data-gold="#00b894"></div>
+                    <div class="color-option" style="background:#6c5ce7;" data-gold="#6c5ce7"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📷 صورة الخلفية (Background Image)</label>
+                <input type="file" id="bgImageUpload" accept="image/*">
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> يفضل استخدام صور بحجم 1920x1080 أو أكبر
+                </div>
+            </div>
+
+            <div class="theme-preview" id="themePreview">
+                <div class="preview-color" id="previewPrimary" style="background:#0a1628;"></div>
+                <div class="preview-color" id="previewSecondary" style="background:#1a2a4a;"></div>
+                <div class="preview-color" id="previewGold" style="background:#e6b31e;"></div>
+                <div class="preview-text">
+                    <strong>معاينة المظهر</strong><br>
+                    <span id="previewColors">الخلفية: <span>#0a1628</span> | الذهب: <span>#e6b31e</span></span>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="saveTheme()"><i class="fas fa-palette"></i> تطبيق المظهر</button>
         </div>
 
-        <!-- ===== MAIN ===== -->
-        <div class="settings-main">
+        <!-- ===== CARD 2: APP LOGO ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-image"></i> شعار التطبيق (Logo)</div>
+            <div class="card-subtitle">تغيير شعار التطبيق الظاهر في أعلى الصفحة</div>
 
-            <!-- ===== PANEL: GENERAL ===== -->
-            <div class="settings-panel active" id="panel-general">
-                <div class="panel-title">⚙️ الإعدادات العامة</div>
-                <div class="panel-subtitle">تخصيص الإعدادات الأساسية للنظام</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-globe"></i> اللغة</h4>
-                        <span class="card-badge success">✓ نشط</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>اختر اللغة</label>
-                            <select id="settingsLanguage">
-                                <option value="ar">العربية</option>
-                                <option value="fr">Français</option>
-                                <option value="en">English</option>
-                            </select>
-                            <div class="help-text">تغيير لغة واجهة المستخدم</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-clock"></i> المنطقة الزمنية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>المنطقة الزمنية</label>
-                            <select id="settingsTimezone">
-                                <option value="Africa/Tunis">تونس (GMT+1)</option>
-                                <option value="Africa/Cairo">القاهرة (GMT+2)</option>
-                                <option value="UTC">UTC</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-robot"></i> الذكاء الاصطناعي</h4>
-                        <span class="card-badge warning">⚠️ تجريبي</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل المساعد الذكي</span>
-                                <span class="toggle-desc">تمكين المساعد الذكي في جميع الصفحات</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">الإكمال التلقائي</span>
-                                <span class="toggle-desc">اقتراح إكمال تلقائي للنصوص</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="form-group">
+                <label>📷 تحميل شعار جديد</label>
+                <input type="file" id="logoUpload" accept="image/*">
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> يفضل استخدام صورة PNG بخلفية شفافة - حجم 200x60 بكسل
                 </div>
             </div>
 
-            <!-- ===== PANEL: PROFILE ===== -->
-            <div class="settings-panel" id="panel-profile">
-                <div class="panel-title">👤 الملف الشخصي</div>
-                <div class="panel-subtitle">تحديث معلوماتك الشخصية</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-user"></i> المعلومات الأساسية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>الاسم الكامل</label>
-                            <input type="text" id="profileName" placeholder="أدخل اسمك الكامل" value="أمان الله ناجي">
-                        </div>
-                        <div class="form-group">
-                            <label>البريد الإلكتروني</label>
-                            <input type="email" id="profileEmail" placeholder="example@domain.com" value="admin@marine-system.com">
-                        </div>
-                        <div class="form-group">
-                            <label>الدور</label>
-                            <input type="text" id="profileRole" value="مسؤول" disabled style="opacity:0.5;cursor:not-allowed;">
-                            <div class="help-text">لا يمكن تغيير الدور من هنا</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-image"></i> الصورة الشخصية</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                            <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-light));display:flex;align-items:center;justify-content:center;font-size:32px;color:#0a1628;font-weight:700;flex-shrink:0;">
-                                أ
-                            </div>
-                            <div>
-                                <button class="btn-settings primary" onclick="alert('📤 سيتم فتح نافذة اختيار الصورة')">
-                                    <i class="fas fa-upload"></i> تحميل صورة
-                                </button>
-                                <button class="btn-settings danger" onclick="alert('🗑️ تم حذف الصورة')">
-                                    <i class="fas fa-trash-alt"></i> حذف
-                                </button>
-                                <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">JPG, PNG • الحد الأقصى 2MB</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label>📏 حجم الشعار</label>
+                <select id="logoSize">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                </select>
             </div>
 
-            <!-- ===== PANEL: SECURITY ===== -->
-            <div class="settings-panel" id="panel-security">
-                <div class="panel-title">🔐 الأمان</div>
-                <div class="panel-subtitle">إعدادات الأمان وحماية الحساب</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-key"></i> تغيير كلمة المرور</h4>
-                        <span class="card-badge danger">🔒 مطلوب</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-group">
-                            <label>كلمة المرور الحالية</label>
-                            <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
-                        </div>
-                        <div class="form-group">
-                            <label>كلمة المرور الجديدة</label>
-                            <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
-                            <div class="help-text">يجب أن تكون 8 أحرف على الأقل</div>
-                        </div>
-                        <div class="form-group">
-                            <label>تأكيد كلمة المرور</label>
-                            <input type="password" id="confirmPassword" placeholder="أعد إدخال كلمة المرور الجديدة">
-                        </div>
-                        <button class="btn-settings primary" onclick="changePassword()">
-                            <i class="fas fa-sync-alt"></i> تغيير كلمة المرور
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-shield-alt"></i> المصادقة الثنائية</h4>
-                        <span class="card-badge warning">⚠️ غير مفعل</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل المصادقة الثنائية (2FA)</span>
-                                <span class="toggle-desc">طبقة إضافية من الأمان لحسابك</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px;">
-                            <button class="btn-settings secondary" onclick="alert('📱 سيتم إرسال رمز التأكيد إلى هاتفك')">
-                                <i class="fas fa-qrcode"></i> إعداد 2FA
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-history"></i> جلسات الدخول</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تسجيل الدخول التلقائي</span>
-                                <span class="toggle-desc">تذكرني عند تسجيل الدخول</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px;">
-                            <button class="btn-settings danger" onclick="terminateAllSessions()">
-                                <i class="fas fa-sign-out-alt"></i> إنهاء جميع الجلسات
-                            </button>
-                            <span style="font-size:11px;color:rgba(255,255,255,0.2);margin-right:10px;">سيتم تسجيل الخروج من جميع الأجهزة</span>
-                        </div>
-                    </div>
-                </div>
+            <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.04);margin-bottom:12px;">
+                <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">معاينة الشعار</div>
+                <div id="logoPreview" style="font-size:32px;color:#e6b31e;">⚓</div>
+                <div id="logoNamePreview" style="font-size:18px;font-weight:700;color:#fff;margin-top:4px;">منظومة الوسائل البحرية</div>
             </div>
 
-            <!-- ===== PANEL: NOTIFICATIONS ===== -->
-            <div class="settings-panel" id="panel-notifications">
-                <div class="panel-title">🔔 الإشعارات</div>
-                <div class="panel-subtitle">تخصيص إعدادات الإشعارات</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-bell"></i> أنواع الإشعارات</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات النظام</span>
-                                <span class="toggle-desc">إشعارات التحديثات والصيانة</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات المراكب</span>
-                                <span class="toggle-desc">تغييرات حالة المراكب والأعطال</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات الصيانة</span>
-                                <span class="toggle-desc">تذكيرات الصيانة الدورية</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">إشعارات البريد الإلكتروني</span>
-                                <span class="toggle-desc">استلام الإشعارات عبر البريد</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: APPEARANCE ===== -->
-            <div class="settings-panel" id="panel-appearance">
-                <div class="panel-title">🎨 المظهر</div>
-                <div class="panel-subtitle">تخصيص شكل واجهة المستخدم</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-moon"></i> الوضع الليلي</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل الوضع الليلي</span>
-                                <span class="toggle-desc">وضع مريح للعين في الإضاءة المنخفضة</span>
-                            </div>
-                            <div class="toggle active" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-palette"></i> ألوان الواجهة</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);cursor:pointer;border:3px solid #fff;transition:all 0.3s;" data-color="gold"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#e94560,#ff6b81);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="red"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#00b894,#55efc4);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="green"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0984e3,#74b9ff);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="blue"></div>
-                            <div onclick="selectColor(this)" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6c5ce7,#a29bfe);cursor:pointer;border:3px solid transparent;transition:all 0.3s;" data-color="purple"></div>
-                        </div>
-                        <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.2);">اختر اللون الرئيسي للواجهة</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: BACKUP ===== -->
-            <div class="settings-panel" id="panel-backup">
-                <div class="panel-title">💾 النسخ الاحتياطي</div>
-                <div class="panel-subtitle">إدارة نسخ احتياطية للبيانات</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-download"></i> تصدير البيانات</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.4);margin-bottom:12px;">قم بتصدير جميع بيانات النظام إلى ملف JSON</p>
-                        <button class="btn-settings primary" onclick="exportAllData()">
-                            <i class="fas fa-file-export"></i> تصدير البيانات
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-upload"></i> استيراد البيانات</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.4);margin-bottom:12px;">استيراد بيانات من ملف JSON احتياطي</p>
-                        <label style="display:inline-block;">
-                            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-                            <span class="btn-settings secondary" style="cursor:pointer;">
-                                <i class="fas fa-file-import"></i> اختيار ملف
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-clock"></i> النسخ الاحتياطي التلقائي</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="toggle-switch">
-                            <div class="toggle-info">
-                                <span class="toggle-label">تفعيل النسخ التلقائي</span>
-                                <span class="toggle-desc">إنشاء نسخة احتياطية يومية تلقائياً</span>
-                            </div>
-                            <div class="toggle" onclick="toggleSwitch(this)">
-                                <div class="toggle-dot"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:8px;">
-                            <button class="btn-settings success" onclick="alert('✅ تم إنشاء نسخة احتياطية')">
-                                <i class="fas fa-database"></i> إنشاء نسخة الآن
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PANEL: ABOUT ===== -->
-            <div class="settings-panel" id="panel-about">
-                <div class="panel-title">ℹ️ حول النظام</div>
-                <div class="panel-subtitle">معلومات عن منظومة الوسائل البحرية</div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-ship"></i> منظومة الوسائل البحرية</h4>
-                        <span class="card-badge success">✓ مستقر</span>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
-                            <div><strong style="color:#fff;">الإصدار:</strong> <span style="color:rgba(255,255,255,0.5);">v7.0.0</span></div>
-                            <div><strong style="color:#fff;">المطور:</strong> <span style="color:var(--gold-light);">أمان الله ناجي</span></div>
-                            <div><strong style="color:#fff;">التاريخ:</strong> <span style="color:rgba(255,255,255,0.5);">2025</span></div>
-                            <div><strong style="color:#fff;">الحالة:</strong> <span style="color:#4ade80;">🟢 نشط</span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-header">
-                        <h4><i class="fas fa-code"></i> التقنيات المستخدمة</h4>
-                    </div>
-                    <div class="card-body">
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Node.js</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Express</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">MongoDB</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Socket.io</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Chart.js</span>
-                            <span style="padding:4px 14px;border-radius:20px;background:rgba(255,255,255,0.04);font-size:12px;color:rgba(255,255,255,0.4);">Leaflet</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-card" style="border-color:rgba(239,68,68,0.1);">
-                    <div class="card-header">
-                        <h4 style="color:#f87171;"><i class="fas fa-exclamation-triangle"></i> منطقة خطرة</h4>
-                    </div>
-                    <div class="card-body">
-                        <p style="color:rgba(255,255,255,0.3);font-size:13px;">حذف جميع البيانات نهائياً. هذا الإجراء لا يمكن التراجع عنه.</p>
-                        <button class="btn-settings danger" onclick="deleteAllData()" style="margin-top:8px;">
-                            <i class="fas fa-trash-alt"></i> حذف جميع البيانات
-                        </button>
-                    </div>
-                </div>
-            </div>
-
+            <button class="btn-save" onclick="saveLogo()"><i class="fas fa-image"></i> تحديث الشعار</button>
         </div>
+
+        <!-- ===== CARD 3: LAYOUT & DISPLAY ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-layer-group"></i> التخطيط والعرض</div>
+            <div class="card-subtitle">تخصيص طريقة عرض التطبيق</div>
+
+            <div class="form-group">
+                <label>🌙 الوضع الليلي</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="darkMode" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل الوضع الليلي</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📱 حجم الخط</label>
+                <select id="fontSize">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>🔄 اتجاه القائمة الجانبية</label>
+                <select id="sidebarPosition">
+                    <option value="right" selected>يمين</option>
+                    <option value="left">يسار</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📊 عرض الإحصائيات</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="showStats" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">إظهار بطاقات الإحصائيات</span>
+                </div>
+            </div>
+
+            <button class="btn-save" onclick="saveLayout()"><i class="fas fa-save"></i> حفظ التخطيط</button>
+        </div>
+
+        <!-- ===== CARD 4: SECURITY ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-shield-alt"></i> الأمان والخصوصية</div>
+            <div class="card-subtitle">إعدادات الأمان والحماية</div>
+
+            <div class="form-group">
+                <label>🔐 المصادقة بخطوتين (2FA)</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="twoFactorAuth">
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل المصادقة بخطوتين</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📧 إشعارات البريد الإلكتروني</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="emailNotifications" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">استقبال إشعارات عبر البريد</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📱 إشعارات SMS</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="smsNotifications">
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">استقبال إشعارات عبر SMS</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🕐 مدة الجلسة (دقائق)</label>
+                <input type="number" id="sessionTimeout" value="60" min="5" max="480">
+            </div>
+
+            <button class="btn-save" onclick="saveSecurity()"><i class="fas fa-shield-alt"></i> حفظ إعدادات الأمان</button>
+        </div>
+
+        <!-- ===== CARD 5: NOTIFICATIONS ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-bell"></i> الإشعارات والتنبيهات</div>
+            <div class="card-subtitle">تخصيص إعدادات الإشعارات</div>
+
+            <div class="form-group">
+                <label>🚨 تنبيهات الطوارئ</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="emergencyAlerts" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل تنبيهات الطوارئ</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🔧 تنبيهات الصيانة</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="maintenanceAlerts" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل تنبيهات الصيانة</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📊 تقارير الأداء</label>
+                <select id="performanceReports">
+                    <option value="daily">يومية</option>
+                    <option value="weekly" selected>أسبوعية</option>
+                    <option value="monthly">شهرية</option>
+                    <option value="never">لا ترسل</option>
+                </select>
+            </div>
+
+            <button class="btn-save" onclick="saveNotifications()"><i class="fas fa-bell"></i> حفظ الإشعارات</button>
+        </div>
+
+        <!-- ===== CARD 6: ABOUT ===== -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-info-circle"></i> حول التطبيق</div>
+            <div class="card-subtitle">معلومات عن النظام والإصدار</div>
+
+            <div style="display:grid;gap:6px;font-size:14px;color:rgba(255,255,255,0.5);">
+                <div><strong style="color:#fff;">📦 اسم النظام:</strong> منظومة الوسائل البحرية</div>
+                <div><strong style="color:#fff;">📌 الإصدار:</strong> v7.0 Enterprise</div>
+                <div><strong style="color:#fff;">👨‍💻 المطور:</strong> أمان الله ناجي</div>
+                <div><strong style="color:#fff;">📧 البريد:</strong> nejiamanallah22@gmail.com</div>
+                <div><strong style="color:#fff;">📱 الهاتف:</strong> +216 29 659 945</div>
+                <div><strong style="color:#fff;">📅 تاريخ الإصدار:</strong> 2026</div>
+                <div><strong style="color:#fff;">🔒 الحالة:</strong> <span style="color:#4ade80;">✅ آمن ومحدث</span></div>
+            </div>
+
+            <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+                <div style="font-size:12px;color:rgba(255,255,255,0.3);">
+                    <i class="fas fa-copyright"></i> جميع الحقوق محفوظة - 2026
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
 
-<!-- ============================================================
-📦 JAVASCRIPT - SETTINGS PAGE
-============================================================ -->
-<script>
-// ============================================================
-// ⚙️ SETTINGS PAGE - v3.0
-// ============================================================
+    <!-- ============================================================
+    JAVASCRIPT
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
 
-// ============================================================
-// 1. TOKEN FUNCTIONS (موحدة)
-// ============================================================
+            console.log('⚙️ Settings Page - loading...');
 
-function getToken() {
-    return localStorage.getItem('marine_token') ||
-           localStorage.getItem('token') ||
-           localStorage.getItem('authToken') ||
-           localStorage.getItem('accessToken') ||
-           null;
-}
-
-function getAuthHeaders() {
-    const token = getToken();
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : ''
-    };
-}
-
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer') || document.body;
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-    
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${message}`;
-    container.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(30px)';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-// ============================================================
-// 2. SIDEBAR NAVIGATION
-// ============================================================
-
-document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', function() {
-        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-        
-        const panel = this.dataset.panel;
-        document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('panel-' + panel).classList.add('active');
-    });
-});
-
-// ============================================================
-// 3. TOGGLE SWITCH
-// ============================================================
-
-function toggleSwitch(el) {
-    el.classList.toggle('active');
-    const label = el.closest('.toggle-switch').querySelector('.toggle-label');
-    const isActive = el.classList.contains('active');
-    showToast(`${label.textContent}: ${isActive ? '✅ تم التفعيل' : '❌ تم الإيقاف'}`, isActive ? 'success' : 'warning');
-}
-
-// ============================================================
-// 4. COLOR SELECTOR
-// ============================================================
-
-function selectColor(el) {
-    document.querySelectorAll('[data-color]').forEach(c => {
-        c.style.borderColor = 'transparent';
-        c.style.transform = 'scale(1)';
-    });
-    el.style.borderColor = '#fff';
-    el.style.transform = 'scale(1.1)';
-    showToast('🎨 تم تغيير لون الواجهة', 'success');
-}
-
-// ============================================================
-// 5. SAVE SETTINGS
-// ============================================================
-
-function saveSettings() {
-    const btn = document.querySelector('.settings-header-actions .btn-action.primary');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span><span class="btn-text">جاري الحفظ...</span>';
-    
-    setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<i class="fas fa-save"></i> حفظ الإعدادات';
-        showToast('✅ تم حفظ الإعدادات بنجاح', 'success');
-    }, 1500);
-}
-
-// ============================================================
-// 6. RESET SETTINGS
-// ============================================================
-
-function resetSettings() {
-    if (!confirm('⚠️ هل أنت متأكد من إعادة ضبط جميع الإعدادات؟')) return;
-    
-    document.querySelectorAll('.toggle').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('[data-color]').forEach(c => {
-        c.style.borderColor = 'transparent';
-        c.style.transform = 'scale(1)';
-    });
-    
-    showToast('🔄 تم إعادة ضبط الإعدادات', 'warning');
-}
-
-// ============================================================
-// 7. CHANGE PASSWORD
-// ============================================================
-
-function changePassword() {
-    const current = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirm = document.getElementById('confirmPassword').value;
-    
-    if (!current || !newPass || !confirm) {
-        showToast('⚠️ يرجى ملء جميع الحقول', 'warning');
-        return;
-    }
-    
-    if (newPass.length < 8) {
-        showToast('⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل', 'warning');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showToast('⚠️ كلمة المرور غير متطابقة', 'warning');
-        return;
-    }
-    
-    const btn = document.querySelector('#panel-security .btn-settings.primary');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span><span class="btn-text">جاري التغيير...</span>';
-    
-    setTimeout(() => {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> تغيير كلمة المرور';
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('newPassword').value = '';
-        document.getElementById('confirmPassword').value = '';
-        showToast('✅ تم تغيير كلمة المرور بنجاح', 'success');
-    }, 1500);
-}
-
-// ============================================================
-// 8. TERMINATE ALL SESSIONS
-// ============================================================
-
-function terminateAllSessions() {
-    if (!confirm('⚠️ سيتم تسجيل الخروج من جميع الأجهزة. هل أنت متأكد؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    fetch('/api/sessions/terminate-all', {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast('✅ تم إنهاء جميع الجلسات', 'success');
-            localStorage.removeItem('marine_token');
-            localStorage.removeItem('token');
-            setTimeout(() => {
-                window.location.href = '/index.html';
-            }, 1000);
-        } else {
-            showToast('❌ ' + (data.error || 'فشل إنهاء الجلسات'), 'error');
-        }
-    })
-    .catch(err => {
-        showToast('❌ خطأ: ' + err.message, 'error');
-    });
-}
-
-// ============================================================
-// 9. EXPORT DATA
-// ============================================================
-
-function exportAllData() {
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    showToast('⏳ جاري تصدير البيانات...', 'info');
-    
-    fetch('/api/export-all', {
-        headers: getAuthHeaders()
-    })
-    .then(res => res.json())
-    .then(data => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `marine_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✅ تم تصدير البيانات بنجاح', 'success');
-    })
-    .catch(err => {
-        showToast('❌ خطأ في التصدير: ' + err.message, 'error');
-    });
-}
-
-// ============================================================
-// 10. IMPORT DATA
-// ============================================================
-
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            const token = getToken();
-            if (!token) {
-                showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                return;
+            // ============================================================
+            // TOAST
+            // ============================================================
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
             }
-            
-            showToast('⏳ جاري استيراد البيانات...', 'info');
-            
-            fetch('/api/import-all', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(result => {
-                if (result.success) {
-                    showToast('✅ تم استيراد البيانات بنجاح', 'success');
-                } else {
-                    showToast('❌ فشل استيراد البيانات', 'error');
-                }
-            })
-            .catch(err => {
-                showToast('❌ خطأ في الاستيراد: ' + err.message, 'error');
+            window.showToast = showToast;
+
+            // ============================================================
+            // COLOR PICKER
+            // ============================================================
+            document.querySelectorAll('.color-picker .color-option').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var parent = this.parentElement;
+                    parent.querySelectorAll('.color-option').forEach(function(c) {
+                        c.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Update preview
+                    var primary = this.dataset.primary;
+                    var secondary = this.dataset.secondary;
+                    var gold = this.dataset.gold;
+
+                    if (primary && secondary) {
+                        document.getElementById('previewPrimary').style.background = primary;
+                        document.getElementById('previewSecondary').style.background = secondary;
+                        document.getElementById('previewColors').innerHTML = 'الخلفية: <span>' + primary +
+                            '</span> | <span>' + secondary + '</span>';
+                    }
+
+                    if (gold) {
+                        document.getElementById('previewGold').style.background = gold;
+                        document.getElementById('previewColors').innerHTML = 'الذهب: <span>' + gold + '</span>';
+                    }
+                });
             });
-        } catch (err) {
-            showToast('❌ ملف غير صالح: ' + err.message, 'error');
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-}
 
-// ============================================================
-// 11. DELETE ALL DATA
-// ============================================================
+            // ============================================================
+            // LOGO PREVIEW
+            // ============================================================
+            document.getElementById('logoUpload').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        var img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.style.maxWidth = '100px';
+                        img.style.maxHeight = '60px';
+                        img.style.borderRadius = '8px';
+                        var preview = document.getElementById('logoPreview');
+                        preview.innerHTML = '';
+                        preview.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
 
-function deleteAllData() {
-    if (!confirm('🚨 تحذير: هذا الإجراء سيحذف جميع البيانات نهائياً. هل أنت متأكد؟')) return;
-    if (!confirm('تأكيد نهائي: هل أنت متأكد من حذف جميع البيانات؟')) return;
-    
-    const token = getToken();
-    if (!token) {
-        showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-        return;
-    }
-    
-    showToast('⏳ جاري حذف البيانات...', 'warning');
-    
-    fetch('/api/delete-all', {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast('🗑️ تم حذف جميع البيانات', 'warning');
-        } else {
-            showToast('❌ فشل حذف البيانات', 'error');
-        }
-    })
-    .catch(err => {
-        showToast('❌ خطأ: ' + err.message, 'error');
-    });
-}
+            document.getElementById('bgImageUpload').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        document.getElementById('page-settings').style.backgroundImage = 'url(' + event.target
+                            .result + ')';
+                        document.getElementById('page-settings').style.backgroundSize = 'cover';
+                        document.getElementById('page-settings').style.backgroundPosition = 'center';
+                        document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
+                        showToast('✅ تم تحميل صورة الخلفية', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
 
-// ============================================================
-// 12. INIT
-// ============================================================
+            // ============================================================
+            // SAVE FUNCTIONS
+            // ============================================================
+            window.saveTheme = function() {
+                var primary = document.querySelector('#colorPicker .color-option.active');
+                var gold = document.querySelector('#goldColorPicker .color-option.active');
 
-console.log('⚙️ صفحة الإعدادات جاهزة');
-</script>
+                var primaryColor = primary ? primary.dataset.primary : '#0a1628';
+                var secondaryColor = primary ? primary.dataset.secondary : '#1a2a4a';
+                var goldColor = gold ? gold.dataset.gold : '#e6b31e';
+
+                document.documentElement.style.setProperty('--primary-dark', primaryColor);
+                document.documentElement.style.setProperty('--primary', secondaryColor);
+                document.documentElement.style.setProperty('--gold', goldColor);
+
+                localStorage.setItem('theme_primary', primaryColor);
+                localStorage.setItem('theme_secondary', secondaryColor);
+                localStorage.setItem('theme_gold', goldColor);
+
+                showToast('✅ تم تطبيق المظهر الجديد', 'success');
+            };
+
+            window.saveLogo = function() {
+                var file = document.getElementById('logoUpload').files[0];
+                var size = document.getElementById('logoSize').value;
+
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        localStorage.setItem('app_logo', event.target.result);
+                        localStorage.setItem('app_logo_size', size);
+                        showToast('✅ تم تحديث الشعار بنجاح', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showToast('⚠️ يرجى اختيار صورة للشعار', 'error');
+                }
+            };
+
+            window.saveLayout = function() {
+                var darkMode = document.getElementById('darkMode').checked;
+                var fontSize = document.getElementById('fontSize').value;
+                var sidebarPosition = document.getElementById('sidebarPosition').value;
+                var showStats = document.getElementById('showStats').checked;
+
+                localStorage.setItem('layout_darkMode', darkMode);
+                localStorage.setItem('layout_fontSize', fontSize);
+                localStorage.setItem('layout_sidebarPosition', sidebarPosition);
+                localStorage.setItem('layout_showStats', showStats);
+
+                if (darkMode) {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+
+                showToast('✅ تم حفظ إعدادات التخطيط', 'success');
+            };
+
+            window.saveSecurity = function() {
+                var twoFactor = document.getElementById('twoFactorAuth').checked;
+                var emailNotif = document.getElementById('emailNotifications').checked;
+                var smsNotif = document.getElementById('smsNotifications').checked;
+                var sessionTimeout = document.getElementById('sessionTimeout').value;
+
+                localStorage.setItem('security_2fa', twoFactor);
+                localStorage.setItem('security_email', emailNotif);
+                localStorage.setItem('security_sms', smsNotif);
+                localStorage.setItem('security_sessionTimeout', sessionTimeout);
+
+                showToast('✅ تم حفظ إعدادات الأمان', 'success');
+            };
+
+            window.saveNotifications = function() {
+                var emergency = document.getElementById('emergencyAlerts').checked;
+                var maintenance = document.getElementById('maintenanceAlerts').checked;
+                var reports = document.getElementById('performanceReports').value;
+
+                localStorage.setItem('notif_emergency', emergency);
+                localStorage.setItem('notif_maintenance', maintenance);
+                localStorage.setItem('notif_reports', reports);
+
+                showToast('✅ تم حفظ إعدادات الإشعارات', 'success');
+            };
+
+            // ============================================================
+            // SAVE ALL
+            // ============================================================
+            document.getElementById('saveAllBtn').addEventListener('click', function() {
+                saveTheme();
+                saveLayout();
+                saveSecurity();
+                saveNotifications();
+                showToast('✅ تم حفظ جميع الإعدادات بنجاح', 'success');
+            });
+
+            // ============================================================
+            // LOAD SAVED SETTINGS
+            // ============================================================
+            function loadSettings() {
+                // Theme
+                var primary = localStorage.getItem('theme_primary');
+                var secondary = localStorage.getItem('theme_secondary');
+                var gold = localStorage.getItem('theme_gold');
+
+                if (primary) {
+                    document.documentElement.style.setProperty('--primary-dark', primary);
+                    document.documentElement.style.setProperty('--primary', secondary || '#1a2a4a');
+                }
+                if (gold) {
+                    document.documentElement.style.setProperty('--gold', gold);
+                }
+
+                // Logo
+                var logo = localStorage.getItem('app_logo');
+                if (logo) {
+                    var img = document.createElement('img');
+                    img.src = logo;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '60px';
+                    img.style.borderRadius = '8px';
+                    var preview = document.getElementById('logoPreview');
+                    preview.innerHTML = '';
+                    preview.appendChild(img);
+                }
+
+                // Layout
+                var darkMode = localStorage.getItem('layout_darkMode');
+                if (darkMode === 'true') {
+                    document.getElementById('darkMode').checked = true;
+                    document.body.classList.add('dark-mode');
+                }
+
+                var fontSize = localStorage.getItem('layout_fontSize');
+                if (fontSize) {
+                    document.getElementById('fontSize').value = fontSize;
+                }
+
+                var sidebarPosition = localStorage.getItem('layout_sidebarPosition');
+                if (sidebarPosition) {
+                    document.getElementById('sidebarPosition').value = sidebarPosition;
+                }
+
+                var showStats = localStorage.getItem('layout_showStats');
+                if (showStats === 'false') {
+                    document.getElementById('showStats').checked = false;
+                }
+
+                // Security
+                var twoFactor = localStorage.getItem('security_2fa');
+                if (twoFactor === 'true') {
+                    document.getElementById('twoFactorAuth').checked = true;
+                }
+
+                var emailNotif = localStorage.getItem('security_email');
+                if (emailNotif === 'false') {
+                    document.getElementById('emailNotifications').checked = false;
+                }
+
+                var smsNotif = localStorage.getItem('security_sms');
+                if (smsNotif === 'true') {
+                    document.getElementById('smsNotifications').checked = true;
+                }
+
+                var sessionTimeout = localStorage.getItem('security_sessionTimeout');
+                if (sessionTimeout) {
+                    document.getElementById('sessionTimeout').value = sessionTimeout;
+                }
+
+                // Notifications
+                var emergency = localStorage.getItem('notif_emergency');
+                if (emergency === 'false') {
+                    document.getElementById('emergencyAlerts').checked = false;
+                }
+
+                var maintenance = localStorage.getItem('notif_maintenance');
+                if (maintenance === 'false') {
+                    document.getElementById('maintenanceAlerts').checked = false;
+                }
+
+                var reports = localStorage.getItem('notif_reports');
+                if (reports) {
+                    document.getElementById('performanceReports').value = reports;
+                }
+
+                console.log('✅ تم تحميل الإعدادات المحفوظة');
+            }
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            loadSettings();
+            console.log('⚙️ Settings Page loaded successfully');
+
+        })();
+    </script>
 </div>
