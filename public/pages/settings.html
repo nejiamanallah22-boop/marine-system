@@ -1,14 +1,16 @@
-<!-- public/pages/efficiency.html -->
-<div id="page-efficiency">
+<!-- public/pages/settings.html -->
+<div id="page-settings">
     <style>
         /* ============================================================
-           📊 EFFICIENCY PAGE - FULLY FIXED
+           ⚙️ SETTINGS PAGE - PRODUCTION PRO v3.0
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
         :root {
+            --app-bg: #0a0e1a;
             --primary-dark: #0a1628;
             --primary: #0f3460;
+            --secondary: #1a2a4a;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --gold-dark: #c99a0e;
@@ -29,21 +31,20 @@
         }
 
         /* ===== FULL SCREEN RESET ===== */
-        #page-efficiency {
+        #page-settings {
             width: 100%;
             max-width: 100%;
-            padding: 0;
+            padding: 20px;
             margin: 0;
             font-family: var(--font);
-            background: #0a0e1a;
+            background: var(--app-bg);
             color: #e8edf5;
             min-height: 100vh;
             position: relative;
             z-index: 1;
         }
 
-        /* ===== BACKGROUND EFFECT ===== */
-        #page-efficiency::before {
+        #page-settings::before {
             content: '';
             position: fixed;
             top: -50%;
@@ -51,7 +52,7 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(0,184,148,0.03) 0%, transparent 60%);
+                radial-gradient(ellipse at 80% 50%, rgba(96,165,250,0.03) 0%, transparent 60%);
             z-index: -1;
             pointer-events: none;
             animation: bgPulse 15s ease-in-out infinite;
@@ -62,43 +63,36 @@
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        /* ============================================================
-           HEADER
-           ============================================================ */
-        .eff-header {
+        /* ===== HEADER ===== */
+        .settings-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 16px 24px;
-            flex-wrap: wrap;
-            gap: 12px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 64px;
-            z-index: 10;
-            margin: 0;
-            width: 100%;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
-        .eff-header-left {
+        .settings-header-left {
             display: flex;
             align-items: center;
             gap: 14px;
         }
 
-        .eff-header-left .header-icon {
+        .settings-header-left .icon {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold), var(--success));
+            background: linear-gradient(135deg, var(--gold), #60a5fa);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -113,28 +107,28 @@
             50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
         }
 
-        .eff-header-left h2 {
+        .settings-header-left h2 {
             font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--gold-light), #fff);
+            background: linear-gradient(135deg, var(--gold-light), #60a5fa, #fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
         }
 
-        .eff-header-left p {
+        .settings-header-left p {
             font-size: 12px;
             color: rgba(255,255,255,0.3);
             margin: 0;
         }
 
-        .eff-header-actions {
+        .settings-header-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
-        .eff-header-actions .btn-action {
+        .btn-action {
             padding: 8px 18px;
             border: none;
             border-radius: 30px;
@@ -148,1883 +142,1559 @@
             font-family: var(--font);
         }
 
-        .eff-header-actions .btn-action.primary {
+        .btn-action.primary {
             background: linear-gradient(135deg, var(--gold), var(--gold-light));
             color: #0a1628;
             box-shadow: var(--shadow-gold);
         }
 
-        .eff-header-actions .btn-action.primary:hover {
+        .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .eff-header-actions .btn-action.secondary {
+        .btn-action.secondary {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: rgba(255,255,255,0.5);
         }
 
-        .eff-header-actions .btn-action.secondary:hover {
+        .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
             transform: translateY(-2px);
         }
 
-        /* ============================================================
-           STATS CARDS
-           ============================================================ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            padding: 16px 24px;
-            margin: 0;
-            width: 100%;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 16px 18px;
-            text-align: center;
-            transition: all var(--transition);
-            cursor: default;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--gold), var(--success));
-            opacity: 0.6;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(230,179,30,0.15);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .stat-card .number {
-            font-size: 26px;
-            font-weight: 800;
-            color: #fff;
-            line-height: 1.2;
-        }
-
-        .stat-card .number.gold { color: var(--gold-light); }
-        .stat-card .number.green { color: var(--success-light); }
-        .stat-card .number.yellow { color: var(--warning); }
-        .stat-card .number.red { color: var(--danger); }
-
-        .stat-card .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-
-        .stat-card .icon-bg {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 50px;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        /* ============================================================
-           FILTER BAR
-           ============================================================ */
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 24px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid var(--glass-border);
-            border-bottom: 1px solid var(--glass-border);
-            margin: 0;
-            width: 100%;
-        }
-
-        .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .filter-bar select {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
-            font-family: var(--font);
-        }
-
-        .filter-bar select:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-
-        .filter-bar select option {
-            background: #0a1628;
-            color: #e2e8f0;
-        }
-
-        .filter-bar .btn-filter {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all var(--transition);
-            font-family: var(--font);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .filter-bar .btn-filter.primary {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: #0a1628;
-        }
-
-        .filter-bar .btn-filter.primary:hover {
-            transform: scale(1.04);
-            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
-        }
-
-        .filter-bar .btn-filter.outline {
-            background: transparent;
-            border: 1px solid var(--glass-border);
-            color: rgba(255,255,255,0.3);
-        }
-
-        .filter-bar .btn-filter.outline:hover {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        /* ============================================================
-           TABLE STYLES
-           ============================================================ */
-        .eff-section {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            margin: 0 24px 16px;
-            overflow: hidden;
-        }
-
-        .eff-section .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            background: rgba(255,255,255,0.02);
-        }
-
-        .eff-section .section-header h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .eff-section .section-header h3 i {
-            color: var(--gold);
-        }
-
-        .eff-section .section-header .badge {
-            font-size: 11px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .badge.success {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.warning {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .badge.danger {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: var(--gold-light);
-        }
-
-        .section-content {
-            padding: 16px 20px;
-        }
-
-        /* ===== TABLES ===== */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: var(--radius-sm);
-        }
-
-        .table-wrapper table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 650px;
-        }
-
-        thead {
-            background: rgba(15,52,96,0.3);
-            border-bottom: 2px solid rgba(230,179,30,0.08);
-        }
-
-        thead th {
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        thead th i {
-            margin-left: 4px;
-            color: var(--gold);
-            font-size: 0.7rem;
-        }
-
-        tbody td {
-            padding: 9px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.78rem;
-            text-align: center;
-        }
-
-        tbody tr {
-            transition: all var(--transition);
-        }
-
-        tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        /* ===== ROW CLASSES ===== */
-        .row-high {
-            background: rgba(34, 197, 94, 0.05) !important;
-            border-right: 3px solid #4ade80;
-        }
-
-        .row-high .eff-cell {
-            color: #4ade80 !important;
-            font-weight: 700;
-        }
-
-        .row-mid {
-            background: rgba(234, 179, 8, 0.05) !important;
-            border-right: 3px solid #fbbf24;
-        }
-
-        .row-mid .eff-cell {
-            color: #fbbf24 !important;
-            font-weight: 700;
-        }
-
-        .row-low {
-            background: rgba(239, 68, 68, 0.05) !important;
-            border-right: 3px solid #f87171;
-        }
-
-        .row-low .eff-cell {
-            color: #f87171 !important;
-            font-weight: 700;
-        }
-
-        /* ===== STATUS BADGES ===== */
-        .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .status-badge.excellent {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .status-badge.good {
-            background: rgba(74,222,128,0.08);
-            color: #4ade80;
-        }
-
-        .status-badge.medium {
-            background: rgba(234,179,8,0.12);
-            color: #fbbf24;
-        }
-
-        .status-badge.low {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
-
-        .status-badge.critical {
-            background: rgba(239,68,68,0.2);
-            color: #f87171;
-            animation: pulseDanger 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulseDanger {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        /* ===== PROGRESS BAR ===== */
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-            min-width: 80px;
-        }
-
-        .progress-bar .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-            width: 0%;
-        }
-
-        .progress-bar .progress-fill.high {
-            background: linear-gradient(90deg, #22c55e, #4ade80);
-        }
-
-        .progress-bar .progress-fill.mid {
-            background: linear-gradient(90deg, #eab308, #fbbf24);
-        }
-
-        .progress-bar .progress-fill.low {
-            background: linear-gradient(90deg, #ef4444, #f87171);
-        }
-
-        /* ============================================================
-           REGION TABLES
-           ============================================================ */
-        .region-card {
-            padding: 0;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .region-card:last-child {
-            border-bottom: none;
-        }
-
-        .region-card .region-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            background: rgba(255,255,255,0.02);
-            flex-wrap: wrap;
-            gap: 8px;
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-
-        .region-card .region-header:hover {
-            background: rgba(255,255,255,0.04);
-        }
-
-        .region-card .region-header .region-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .region-card .region-header .region-name i {
-            color: var(--gold);
-        }
-
-        .region-card .region-header .region-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 16px;
-            border-radius: 20px;
-        }
-
-        .region-badge.excellent {
-            background: rgba(34,197,94,0.15);
-            color: #4ade80;
-            border: 1px solid rgba(34,197,94,0.1);
-        }
-
-        .region-badge.good {
-            background: rgba(74,222,128,0.1);
-            color: #4ade80;
-            border: 1px solid rgba(74,222,128,0.05);
-        }
-
-        .region-badge.medium {
-            background: rgba(234,179,8,0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(234,179,8,0.1);
-        }
-
-        .region-badge.low {
+        .btn-action.danger {
             background: rgba(239,68,68,0.15);
             color: #f87171;
             border: 1px solid rgba(239,68,68,0.1);
         }
 
-        .region-badge.critical {
+        .btn-action.danger:hover {
             background: rgba(239,68,68,0.25);
-            color: #f87171;
-            border: 1px solid rgba(239,68,68,0.2);
-            animation: pulseDanger 1.5s ease-in-out infinite;
+            transform: translateY(-2px);
         }
 
-        .region-card .region-body {
-            padding: 0 20px 16px;
-        }
-
-        /* ============================================================
-           CHARTS
-           ============================================================ */
-        .chart-section {
-            margin: 0 24px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            background: var(--glass-bg);
-        }
-
-        .chart-switch {
-            display: flex;
-            gap: 10px;
-            padding: 12px 20px;
-            border-bottom: 1px solid var(--glass-border);
-            flex-wrap: wrap;
-            background: rgba(255,255,255,0.02);
-        }
-
-        .chart-btn {
-            padding: 6px 18px;
-            border: 2px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            background: transparent;
-            color: rgba(255,255,255,0.3);
-            cursor: pointer;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .chart-btn:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.1);
-            color: #fff;
-        }
-
-        .chart-btn.active {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            border-color: var(--gold);
-            color: #0a1628;
-        }
-
-        .chart-btn i {
-            margin-left: 6px;
-        }
-
-        .charts-container {
+        /* ===== SETTINGS GRID ===== */
+        .settings-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            padding: 20px;
         }
 
-        .chart-box {
-            background: rgba(255,255,255,0.02);
-            border-radius: var(--radius-sm);
-            padding: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
+        @media (max-width: 992px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .chart-box.full {
-            grid-column: 1 / -1;
+        .settings-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            transition: all var(--transition);
         }
 
-        .chart-box h4 {
-            font-size: 14px;
+        .settings-card:hover {
+            border-color: rgba(230,179,30,0.1);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .settings-card .card-title {
+            font-size: 16px;
             font-weight: 700;
-            color: rgba(255,255,255,0.5);
-            margin-bottom: 12px;
-            text-align: center;
+            color: #fff;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .chart-box canvas {
-            width: 100% !important;
-            max-height: 280px;
+        .settings-card .card-title i {
+            color: var(--gold);
         }
 
-        /* ============================================================
-           EMPTY STATE
-           ============================================================ */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.15);
+        .settings-card .card-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 16px;
         }
 
-        .empty-state .empty-icon {
-            font-size: 3rem;
-            color: rgba(255,255,255,0.04);
+        .settings-card .form-group {
+            margin-bottom: 14px;
+        }
+
+        .settings-card .form-group label {
             display: block;
-            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 4px;
         }
 
-        .empty-state .spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid rgba(255,255,255,0.04);
+        .settings-card .form-group input,
+        .settings-card .form-group select,
+        .settings-card .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 14px;
+            font-family: var(--font);
+            transition: all var(--transition);
+        }
+
+        .settings-card .form-group input:focus,
+        .settings-card .form-group select:focus,
+        .settings-card .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+        }
+
+        .settings-card .form-group input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .settings-card .form-group input[type="file"]::-webkit-file-upload-button {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+
+        .settings-card .form-group .color-picker {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .settings-card .form-group .color-picker .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .settings-card .form-group .color-picker .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .settings-card .form-group .color-picker .color-option.active {
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .settings-card .form-group .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .settings-card .form-group .toggle-switch input {
+            display: none;
+        }
+
+        .settings-card .form-group .toggle-switch .toggle-track {
+            width: 48px;
+            height: 26px;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.06);
+            transition: all var(--transition);
+            position: relative;
+        }
+
+        .settings-card .form-group .toggle-switch .toggle-track::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all var(--transition);
+        }
+
+        .settings-card .form-group .toggle-switch input:checked+.toggle-track {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+        }
+
+        .settings-card .form-group .toggle-switch input:checked+.toggle-track::after {
+            right: 25px;
+            background: #fff;
+        }
+
+        .settings-card .form-group .toggle-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .settings-card .btn-save {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .settings-card .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .settings-card .btn-save.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .settings-card .btn-save.danger:hover {
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
+        .settings-card .btn-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== THEME PREVIEW ===== */
+        .theme-preview {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 10px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .theme-preview .preview-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .theme-preview .preview-text {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .theme-preview .preview-text strong {
+            color: #fff;
+        }
+
+        .theme-preview .preview-text span {
+            color: var(--gold);
+        }
+
+        /* ===== LOGO UPLOAD AREA ===== */
+        .logo-upload-area {
+            border: 2px dashed rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .logo-upload-area:hover {
+            border-color: rgba(230,179,30,0.2);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .logo-upload-area .logo-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-upload-area .logo-preview img {
+            max-width: 120px;
+            max-height: 60px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .logo-upload-area .logo-preview .logo-name {
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.upload {
+            background: rgba(230,179,30,0.12);
+            color: var(--gold-light);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.upload:hover {
+            background: rgba(230,179,30,0.2);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.delete {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.delete:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .logo-upload-area .logo-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-icon {
+            font-size: 40px;
+            color: rgba(255,255,255,0.05);
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-hint {
+            font-size: 11px;
+            color: rgba(255,255,255,0.1);
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 13px;
+            z-index: 99999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-error {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .toast-info {
+            background: rgba(96,165,250,0.15);
+            border: 1px solid rgba(96,165,250,0.2);
+        }
+
+        .toast-warning {
+            background: rgba(245,200,66,0.15);
+            border: 1px solid rgba(245,200,66,0.2);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 99998;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-overlay .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255,255,255,0.04);
             border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .empty-state h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.2);
-            margin-bottom: 4px;
+        .loading-overlay p {
+            margin-top: 16px;
+            color: rgba(255,255,255,0.3);
+            font-size: 14px;
+            font-family: var(--font);
         }
 
-        .empty-state p {
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.1);
-        }
-
-        /* ============================================================
-           RESPONSIVE
-           ============================================================ */
-        @media (max-width: 992px) {
-            .eff-header { padding: 12px 16px; top: 60px; }
-            .eff-header-left h2 { font-size: 18px; }
-            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
-            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
-            .eff-section { margin: 0 16px 12px; }
-            .chart-section { margin: 0 16px 16px; }
-            .charts-container { grid-template-columns: 1fr; padding: 12px; }
-            .chart-box.full { grid-column: 1; }
-            .region-card .region-body { padding: 0 12px 12px; }
-        }
-
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
-            .eff-header {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 12px 16px;
-                top: 56px;
-            }
-            .eff-header-left { width: 100%; }
-            .eff-header-left h2 { font-size: 16px; }
-            .eff-header-actions { width: 100%; justify-content: flex-start; }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
-                padding: 10px 16px;
-            }
-            .stat-card { padding: 12px 14px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px 16px;
-                gap: 6px;
-            }
-            .filter-bar label { font-size: 0.65rem; }
-            .filter-bar select { min-width: 100%; }
-            .eff-section { margin: 0 12px 10px; }
-            .section-header { flex-direction: column; align-items: flex-start; gap: 4px; }
-            .section-content { padding: 12px 14px; }
-            .table-wrapper table { font-size: 0.7rem; min-width: 500px; }
-            thead th, tbody td { padding: 6px 8px; }
-            .chart-section { margin: 0 12px 12px; }
-            .charts-container { padding: 10px; gap: 12px; }
-            .chart-box { padding: 12px; }
-            .chart-box canvas { max-height: 200px; }
-            .eff-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
-            .chart-switch { padding: 10px 12px; justify-content: center; }
-            .chart-btn { font-size: 11px; padding: 4px 12px; }
-            .region-card .region-header { padding: 10px 14px; flex-direction: column; align-items: flex-start; }
-            .region-card .region-body { padding: 0 10px 10px; }
+            #page-settings { padding: 12px; }
+            .settings-header { flex-direction: column; align-items: flex-start; }
+            .settings-header-left { width: 100%; }
+            .settings-header-left h2 { font-size: 16px; }
+            .settings-header-actions { width: 100%; }
+            .settings-grid { gap: 12px; }
+            .settings-card { padding: 16px; }
+            .settings-card .card-title { font-size: 14px; }
+            .logo-upload-area { padding: 16px; }
         }
 
         @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px;
-            }
-            .stat-card { padding: 10px 12px; }
-            .stat-card .number { font-size: 18px; }
-            .stat-card .label { font-size: 9px; }
-            .eff-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
-            .eff-header-left h2 { font-size: 14px; }
-            .eff-header-left p { font-size: 10px; }
-            .section-header h3 { font-size: 13px; }
-            .section-content { padding: 10px 12px; }
-            thead th, tbody td { padding: 4px 6px; font-size: 0.65rem; }
+            .settings-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .settings-header-left h2 { font-size: 14px; }
+            .settings-card { padding: 12px; }
+            .settings-card .form-group input,
+            .settings-card .form-group select { font-size: 13px; }
+            .theme-preview { flex-direction: column; align-items: flex-start; }
+            .logo-upload-area .logo-preview img { max-width: 80px; }
         }
     </style>
 
-    <!-- ============================================================
-    HEADER
-    ============================================================ -->
-    <div class="eff-header">
-        <div class="eff-header-left">
-            <div class="header-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
+    <!-- ===== LOADING OVERLAY ===== -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+            <div class="spinner"></div>
+            <p>جاري حفظ الإعدادات...</p>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <div class="settings-header">
+        <div class="settings-header-left">
+            <div class="icon"><i class="fas fa-cog"></i></div>
             <div>
-                <h2>جاهزية الأسطول</h2>
-                <p>تحليل متقدم لنسب الجاهزية والأداء</p>
+                <h2>الإعدادات المتقدمة</h2>
+                <p>تخصيص النظام وتغيير المظهر والإعدادات العامة</p>
             </div>
         </div>
-        <div class="eff-header-actions">
-            <button class="btn-action primary" id="refreshBtn">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
-            <button class="btn-action secondary" onclick="window.print()">
-                <i class="fas fa-print"></i> طباعة
-            </button>
+        <div class="settings-header-actions">
+            <button class="btn-action primary" id="saveAllBtn"><i class="fas fa-save"></i> حفظ الكل</button>
+            <button class="btn-action secondary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
-    <!-- ============================================================
-    STATS CARDS
-    ============================================================ -->
-    <div class="stats-grid" id="statsCards">
-        <div class="stat-card">
-            <div class="number gold" id="totalVessels">0</div>
-            <div class="label">🚢 إجمالي المراكب</div>
-            <span class="icon-bg"><i class="fas fa-ship"></i></span>
+    <!-- ===== SETTINGS GRID ===== -->
+    <div class="settings-grid">
+
+        <!-- CARD 1: APP THEME -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-palette"></i> مظهر التطبيق (Theme)</div>
+            <div class="card-subtitle">تغيير ألوان واجهة التطبيق حسب رغبتك</div>
+
+            <div class="form-group">
+                <label>🎨 الألوان الأساسية</label>
+                <div class="color-picker" id="colorPicker">
+                    <div class="color-option active" style="background:linear-gradient(135deg,#0a1628,#1a2a4a);" data-primary="#0a1628" data-secondary="#1a2a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#1a0a28,#2a1a4a);" data-primary="#1a0a28" data-secondary="#2a1a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#001a2a,#002a4a);" data-primary="#001a2a" data-secondary="#002a4a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#2a1a0a,#4a2a1a);" data-primary="#2a1a0a" data-secondary="#4a2a1a"></div>
+                    <div class="color-option" style="background:linear-gradient(135deg,#0a2a1a,#1a4a2a);" data-primary="#0a2a1a" data-secondary="#1a4a2a"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🌟 لون الذهب الأساسي</label>
+                <div class="color-picker" id="goldColorPicker">
+                    <div class="color-option active" style="background:#e6b31e;" data-gold="#e6b31e"></div>
+                    <div class="color-option" style="background:#f5d76e;" data-gold="#f5d76e"></div>
+                    <div class="color-option" style="background:#c99a0e;" data-gold="#c99a0e"></div>
+                    <div class="color-option" style="background:#ff6b6b;" data-gold="#ff6b6b"></div>
+                    <div class="color-option" style="background:#00b894;" data-gold="#00b894"></div>
+                    <div class="color-option" style="background:#6c5ce7;" data-gold="#6c5ce7"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📷 صورة الخلفية (Background Image)</label>
+                <input type="file" id="bgImageUpload" accept="image/*">
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> يفضل استخدام صور بحجم 1920x1080 أو أكبر
+                </div>
+            </div>
+
+            <div class="theme-preview" id="themePreview">
+                <div class="preview-color" id="previewPrimary" style="background:var(--primary-dark);"></div>
+                <div class="preview-color" id="previewSecondary" style="background:var(--secondary);"></div>
+                <div class="preview-color" id="previewGold" style="background:var(--gold);"></div>
+                <div class="preview-text">
+                    <strong>معاينة المظهر</strong><br>
+                    <span id="previewColors">الخلفية: <span>#0a1628</span> | الذهب: <span>#e6b31e</span></span>
+                </div>
+            </div>
+
+            <button class="btn-save" id="saveThemeBtn"><i class="fas fa-palette"></i> تطبيق المظهر</button>
         </div>
-        <div class="stat-card">
-            <div class="number green" id="activeVessels">0</div>
-            <div class="label">✅ صالح للخدمة</div>
-            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+
+        <!-- CARD 2: APP LOGO -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-image"></i> شعار التطبيق (Logo)</div>
+            <div class="card-subtitle">تغيير شعار التطبيق الظاهر في أعلى الصفحة</div>
+
+            <div class="form-group">
+                <label>📷 تحميل شعار جديد</label>
+                <input type="file" id="logoUpload" accept="image/*" style="display:none;">
+                <div class="logo-upload-area" id="logoUploadArea">
+                    <div id="logoPreviewContainer"></div>
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> يفضل استخدام صورة PNG بخلفية شفافة - حجم 200x60 بكسل
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📏 حجم الشعار</label>
+                <select id="logoSize">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                </select>
+            </div>
+
+            <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.04);margin-bottom:12px;">
+                <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">معاينة الشعار في التطبيق</div>
+                <div id="appLogoPreview" style="font-size:32px;color:var(--gold);">⚓</div>
+                <div id="appLogoNamePreview" style="font-size:18px;font-weight:700;color:#fff;margin-top:4px;">منظومة الوسائل البحرية</div>
+            </div>
+
+            <button class="btn-save" id="saveLogoBtn"><i class="fas fa-image"></i> تحديث الشعار</button>
         </div>
-        <div class="stat-card">
-            <div class="number yellow" id="maintenanceVessels">0</div>
-            <div class="label">🔧 تحت الصيانة</div>
-            <span class="icon-bg"><i class="fas fa-tools"></i></span>
+
+        <!-- CARD 3: LAYOUT & DISPLAY -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-layer-group"></i> التخطيط والعرض</div>
+            <div class="card-subtitle">تخصيص طريقة عرض التطبيق</div>
+
+            <div class="form-group">
+                <label>🌙 الوضع الليلي</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="darkMode" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل الوضع الليلي</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📱 حجم الخط</label>
+                <select id="fontSize">
+                    <option value="small">صغير</option>
+                    <option value="medium" selected>متوسط</option>
+                    <option value="large">كبير</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>🔄 اتجاه القائمة الجانبية</label>
+                <select id="sidebarPosition">
+                    <option value="right" selected>يمين</option>
+                    <option value="left">يسار</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📊 عرض الإحصائيات</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="showStats" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">إظهار بطاقات الإحصائيات</span>
+                </div>
+            </div>
+
+            <button class="btn-save" id="saveLayoutBtn"><i class="fas fa-save"></i> حفظ التخطيط</button>
         </div>
-        <div class="stat-card">
-            <div class="number red" id="damagedVessels">0</div>
-            <div class="label">🟥 معطوبة</div>
-            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
+
+        <!-- CARD 4: SECURITY -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-shield-alt"></i> الأمان والخصوصية</div>
+            <div class="card-subtitle">إعدادات الأمان والحماية</div>
+
+            <div class="form-group">
+                <label>🔐 المصادقة بخطوتين (2FA)</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="twoFactorAuth">
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل المصادقة بخطوتين</span>
+                </div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> سيتم إرسال رمز التحقق إلى بريدك الإلكتروني
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📧 إشعارات البريد الإلكتروني</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="emailNotifications" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">استقبال إشعارات عبر البريد</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📱 إشعارات SMS</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="smsNotifications">
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">استقبال إشعارات عبر SMS</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🕐 مدة الجلسة (دقائق)</label>
+                <input type="number" id="sessionTimeout" value="60" min="5" max="480">
+                <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
+                    <i class="fas fa-info-circle"></i> سيتم تحديث مدة صلاحية الجلسة عند تسجيل الدخول التالي
+                </div>
+            </div>
+
+            <button class="btn-save" id="saveSecurityBtn"><i class="fas fa-shield-alt"></i> حفظ إعدادات الأمان</button>
         </div>
-        <div class="stat-card">
-            <div class="number" id="efficiencyPercent" style="color:var(--gold-light);">0%</div>
-            <div class="label">📈 نسبة النجاعة</div>
-            <span class="icon-bg"><i class="fas fa-chart-pie"></i></span>
+
+        <!-- CARD 5: NOTIFICATIONS -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-bell"></i> الإشعارات والتنبيهات</div>
+            <div class="card-subtitle">تخصيص إعدادات الإشعارات</div>
+
+            <div class="form-group">
+                <label>🚨 تنبيهات الطوارئ</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="emergencyAlerts" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل تنبيهات الطوارئ</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>🔧 تنبيهات الصيانة</label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="maintenanceAlerts" checked>
+                    <span class="toggle-track"></span>
+                    <span class="toggle-label">تفعيل تنبيهات الصيانة</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📊 تقارير الأداء</label>
+                <select id="performanceReports">
+                    <option value="daily">يومية</option>
+                    <option value="weekly" selected>أسبوعية</option>
+                    <option value="monthly">شهرية</option>
+                    <option value="never">لا ترسل</option>
+                </select>
+            </div>
+
+            <button class="btn-save" id="saveNotificationsBtn"><i class="fas fa-bell"></i> حفظ الإشعارات</button>
         </div>
+
+        <!-- CARD 6: ABOUT -->
+        <div class="settings-card">
+            <div class="card-title"><i class="fas fa-info-circle"></i> حول التطبيق</div>
+            <div class="card-subtitle">معلومات عن النظام والإصدار</div>
+
+            <div style="display:grid;gap:6px;font-size:14px;color:rgba(255,255,255,0.5);">
+                <div><strong style="color:#fff;">📦 اسم النظام:</strong> منظومة الوسائل البحرية</div>
+                <div><strong style="color:#fff;">📌 الإصدار:</strong> v7.0 Enterprise</div>
+                <div><strong style="color:#fff;">👨‍💻 المطور:</strong> أمان الله ناجي</div>
+                <div><strong style="color:#fff;">📧 البريد:</strong> nejiamanallah22@gmail.com</div>
+                <div><strong style="color:#fff;">📱 الهاتف:</strong> +216 29 659 945</div>
+                <div><strong style="color:#fff;">📅 تاريخ الإصدار:</strong> 2026</div>
+                <div><strong style="color:#fff;">🔒 الحالة:</strong> <span style="color:#4ade80;">✅ آمن ومحدث</span></div>
+            </div>
+
+            <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+                <div style="font-size:12px;color:rgba(255,255,255,0.3);">
+                    <i class="fas fa-copyright"></i> جميع الحقوق محفوظة - 2026
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ============================================================
-    FILTER BAR
-    ============================================================ -->
-    <div class="filter-bar">
-        <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
-        <select id="fRegEff">
-            <option value="الكل">🌍 جميع الأقاليم</option>
-            <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
-            <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
-            <option value="الوسط">🗺️ الحرس البحري بالوسط</option>
-            <option value="الجنوب">🗺️ الحرس البحري بالجنوب</option>
-            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
-            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
-            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
-            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
-            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
-        </select>
-
-        <label><i class="fas fa-filter"></i> الفئة</label>
-        <select id="fCatEff">
-            <option value="الكل">📦 جميع الفئات</option>
-            <option value="البروق">البروق</option>
-            <option value="صقور">صقور</option>
-            <option value="خوافر">خوافر</option>
-            <option value="زوارق مزدوجة">زوارق مزدوجة</option>
-            <option value="طوافات">طوافات</option>
-        </select>
-
-        <label><i class="fas fa-chart-bar"></i> الحالة</label>
-        <select id="fStatusEff">
-            <option value="الكل">📊 جميع الحالات</option>
-            <option value="صالح">✅ صالح</option>
-            <option value="صيانة">🔧 تحت الصيانة</option>
-            <option value="معطب">⚠️ معطب</option>
-        </select>
-
-        <button class="btn-filter primary" id="filterBtn">
-            <i class="fas fa-filter"></i> فلترة
-        </button>
-        <button class="btn-filter outline" id="resetBtn">
-            <i class="fas fa-undo-alt"></i> إلغاء
-        </button>
-    </div>
-
-    <!-- ============================================================
-    GENERAL EFFICIENCY TABLE
-    ============================================================ -->
-    <div class="eff-section">
-        <div class="section-header">
-            <h3><i class="fas fa-chart-line"></i> النجاعة العامة للأسطول</h3>
-            <span class="badge gold" id="generalBadge">📊 جاري التحميل...</span>
-        </div>
-        <div class="section-content">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                            <th><i class="fas fa-check-circle"></i> صالح %</th>
-                            <th><i class="fas fa-times-circle"></i> معطب %</th>
-                            <th><i class="fas fa-percent"></i> النجاعة</th>
-                            <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                            <th><i class="fas fa-circle"></i> الحالة</th>
-                        </tr>
-                    </thead>
-                    <tbody id="generalBody">
-                        <tr>
-                            <td colspan="6" class="empty-state">
-                                <div class="spinner"></div>
-                                <h3>جاري تحميل البيانات...</h3>
-                                <p>يرجى الانتظار</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    REGIONS TABLES
-    ============================================================ -->
-    <div class="eff-section">
-        <div class="section-header">
-            <h3><i class="fas fa-map-marked-alt"></i> تفاصيل الأقاليم ووحدات الصيانة</h3>
-            <span class="badge gold">📊 تحليل متقدم</span>
-        </div>
-        <div id="regionTables">
-
-            <!-- ===== REGION 1: الشمال ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالشمال</div>
-                    <span class="region-badge good">78% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>88.9%</td>
-                                    <td>11.1%</td>
-                                    <td class="eff-cell">88.9%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:89%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>66.7%</td>
-                                    <td>33.3%</td>
-                                    <td class="eff-cell">66.7%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 2: الساحل ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالساحل</div>
-                    <span class="region-badge excellent">92% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 3: الوسط ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالوسط</div>
-                    <span class="region-badge medium">65% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>80.0%</td>
-                                    <td>20.0%</td>
-                                    <td class="eff-cell">80.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:80%;"></div></div></td>
-                                    <td><span class="status-badge good">جيدة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>66.7%</td>
-                                    <td>33.3%</td>
-                                    <td class="eff-cell">66.7%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:67%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>33.3%</td>
-                                    <td>66.7%</td>
-                                    <td class="eff-cell">33.3%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
-                                    <td><span class="status-badge low">منخفضة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 4: الجنوب ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-map-pin"></i> الحرس البحري بالجنوب</div>
-                    <span class="region-badge critical">45% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>75.0%</td>
-                                    <td>25.0%</td>
-                                    <td class="eff-cell">75.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:75%;"></div></div></td>
-                                    <td><span class="status-badge good">جيدة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>33.3%</td>
-                                    <td>66.7%</td>
-                                    <td class="eff-cell">33.3%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:33%;"></div></div></td>
-                                    <td><span class="status-badge low">منخفضة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>0%</td>
-                                    <td>100%</td>
-                                    <td class="eff-cell">0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
-                                    <td><span class="status-badge critical">حرجة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 5: وحدة الصيانة تونس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري تونس</div>
-                    <span class="region-badge good">85% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 6: وحدة الصيانة المنستير ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري المنستير</div>
-                    <span class="region-badge excellent">95% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 7: وحدة الصيانة صفاقس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري صفاقس</div>
-                    <span class="region-badge medium">70% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-low">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>0%</td>
-                                    <td>100%</td>
-                                    <td class="eff-cell">0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill low" style="width:0%;"></div></div></td>
-                                    <td><span class="status-badge critical">حرجة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 8: وحدة الصيانة جرجيس ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-tools"></i> وحدة الصيانة والإسناد البحري جرجيس</div>
-                    <span class="region-badge good">88% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-mid">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">زوارق مزدوجة</td>
-                                    <td>50.0%</td>
-                                    <td>50.0%</td>
-                                    <td class="eff-cell">50.0%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill mid" style="width:50%;"></div></div></td>
-                                    <td><span class="status-badge medium">متوسطة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">طوافات</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== REGION 9: المجمع الأمني بقبيبة ===== -->
-            <div class="region-card">
-                <div class="region-header">
-                    <div class="region-name"><i class="fas fa-building"></i> المجمع الأمني بقبيبة</div>
-                    <span class="region-badge excellent">90% جاهزية</span>
-                </div>
-                <div class="region-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="text-align:right;"><i class="fas fa-tag"></i> الفئة</th>
-                                    <th><i class="fas fa-check-circle"></i> صالح %</th>
-                                    <th><i class="fas fa-times-circle"></i> معطب %</th>
-                                    <th><i class="fas fa-percent"></i> النجاعة</th>
-                                    <th><i class="fas fa-chart-bar"></i> التقدم</th>
-                                    <th><i class="fas fa-circle"></i> الحالة</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">البروق</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">صقور</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                                <tr class="row-high">
-                                    <td style="text-align:right;font-weight:600;color:#fff;">خوافر</td>
-                                    <td>100%</td>
-                                    <td>0%</td>
-                                    <td class="eff-cell">100%</td>
-                                    <td><div class="progress-bar"><div class="progress-fill high" style="width:100%;"></div></div></td>
-                                    <td><span class="status-badge excellent">ممتازة</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ============================================================
-    CHARTS SECTION
-    ============================================================ -->
-    <div class="chart-section">
-        <div class="chart-switch">
-            <button class="chart-btn active" onclick="switchChart('pie')">
-                <i class="fas fa-chart-pie"></i> دائري
-            </button>
-            <button class="chart-btn" onclick="switchChart('bar')">
-                <i class="fas fa-chart-bar"></i> أعمدة
-            </button>
-            <button class="chart-btn" onclick="switchChart('line')">
-                <i class="fas fa-chart-line"></i> خطي
-            </button>
-        </div>
-        <div class="charts-container">
-            <div class="chart-box full">
-                <h4>📊 توزيع الجاهزية حسب الإقليم</h4>
-                <canvas id="efficiencyChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    JAVASCRIPT - FULLY FIXED
+    JAVASCRIPT - PRODUCTION PRO v3.0
     ============================================================ -->
     <script>
-        // ============================================================
-        // ✅ FIX: Using var to avoid duplicate declaration
-        // ============================================================
+        (function() {
+            'use strict';
 
-        // ✅ Check if already defined to prevent errors
-        if (typeof window.efficiencyData === 'undefined') {
-            window.efficiencyData = {
-                general: [
-                    { category: 'البروق', active: 18, damaged: 4, total: 22, efficiency: 81.8 },
-                    { category: 'صقور', active: 12, damaged: 3, total: 15, efficiency: 80.0 },
-                    { category: 'خوافر', active: 8, damaged: 5, total: 13, efficiency: 61.5 },
-                    { category: 'زوارق مزدوجة', active: 6, damaged: 1, total: 7, efficiency: 85.7 },
-                    { category: 'طوافات', active: 4, damaged: 2, total: 6, efficiency: 66.7 }
-                ],
-                regions: {
-                    'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
-                    'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
-                    'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
-                    'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
-                    'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
-                    'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
-                    'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
-                    'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
-                    'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
-                }
-            };
-        }
+            console.log('⚙️ Settings Page - Production Pro v3.0 loading...');
 
-        // ✅ Use the global data
-        var efficiencyData = window.efficiencyData;
+            // ============================================================
+            // 1. TOKEN & AUTH
+            // ============================================================
 
-        // ============================================================
-        // RENDER FUNCTIONS
-        // ============================================================
-        function renderEfficiency() {
-            renderStats();
-            renderGeneralTable();
-            updateBadge();
-        }
-
-        function renderStats() {
-            var regionFilter = document.getElementById('fRegEff').value;
-            var total = 0,
-                active = 0,
-                maintenance = 0,
-                damaged = 0;
-
-            for (var name in efficiencyData.regions) {
-                var data = efficiencyData.regions[name];
-                if (regionFilter === 'الكل' || name === regionFilter) {
-                    total += data.vessels;
-                    active += data.active;
-                    maintenance += data.maintenance;
-                    damaged += data.damaged;
-                }
+            function getToken() {
+                return localStorage.getItem('marine_token') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('authToken') ||
+                    null;
             }
 
-            var efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
-
-            document.getElementById('totalVessels').textContent = total;
-            document.getElementById('activeVessels').textContent = active;
-            document.getElementById('maintenanceVessels').textContent = maintenance;
-            document.getElementById('damagedVessels').textContent = damaged;
-            document.getElementById('efficiencyPercent').textContent = efficiency + '%';
-        }
-
-        function renderGeneralTable() {
-            var tbody = document.getElementById('generalBody');
-            var categoryFilter = document.getElementById('fCatEff').value;
-            var statusFilter = document.getElementById('fStatusEff').value;
-
-            var filtered = efficiencyData.general;
-
-            if (categoryFilter !== 'الكل') {
-                filtered = filtered.filter(function(item) {
-                    return item.category === categoryFilter;
-                });
+            function getAuthHeaders() {
+                var token = getToken();
+                return {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? 'Bearer ' + token : ''
+                };
             }
 
-            if (statusFilter !== 'الكل') {
-                filtered = filtered.filter(function(item) {
-                    if (statusFilter === 'صالح') return item.efficiency >= 70;
-                    if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
-                    if (statusFilter === 'معطب') return item.efficiency < 50;
-                    return true;
-                });
+            // ============================================================
+            // 2. TOAST
+            // ============================================================
+
+            function showToast(msg, type) {
+                var old = document.querySelector('.toast');
+                if (old) old.remove();
+                var n = document.createElement('div');
+                n.className = 'toast toast-' + (type || 'info');
+                n.textContent = msg;
+                document.body.appendChild(n);
+                setTimeout(function() {
+                    n.style.opacity = '0';
+                    n.style.transform = 'translateY(20px)';
+                    n.style.transition = 'all 0.4s';
+                    setTimeout(function() { n.remove(); }, 400);
+                }, 2500);
             }
+            window.showToast = showToast;
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="empty-state">
-                            <span class="empty-icon"><i class="fas fa-search"></i></span>
-                            <h3>لا توجد بيانات</h3>
-                            <p>حاول تغيير معايير الفلترة</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+            // ============================================================
+            // 3. LOADING
+            // ============================================================
 
-            var html = '';
-            for (var i = 0; i < filtered.length; i++) {
-                var item = filtered[i];
-                var efficiency = item.efficiency;
-                var total = item.total || (item.active + item.damaged);
-                var activePercent = total > 0 ? ((item.active / total) * 100).toFixed(1) : 0;
-                var damagedPercent = total > 0 ? ((item.damaged / total) * 100).toFixed(1) : 0;
-
-                var rowClass = 'row-mid';
-                var statusClass = 'medium';
-                var statusText = 'متوسطة';
-
-                if (efficiency >= 80) {
-                    rowClass = 'row-high';
-                    statusClass = 'excellent';
-                    statusText = 'ممتازة';
-                } else if (efficiency >= 70) {
-                    rowClass = 'row-high';
-                    statusClass = 'good';
-                    statusText = 'جيدة';
-                } else if (efficiency >= 50) {
-                    rowClass = 'row-mid';
-                    statusClass = 'medium';
-                    statusText = 'متوسطة';
-                } else if (efficiency >= 30) {
-                    rowClass = 'row-low';
-                    statusClass = 'low';
-                    statusText = 'منخفضة';
+            function showLoading(show) {
+                var overlay = document.getElementById('loadingOverlay');
+                if (show) {
+                    overlay.classList.add('active');
                 } else {
-                    rowClass = 'row-low';
-                    statusClass = 'critical';
-                    statusText = 'حرجة';
+                    overlay.classList.remove('active');
                 }
+            }
 
-                var progressClass = efficiency >= 70 ? 'high' : (efficiency >= 50 ? 'mid' : 'low');
+            // ============================================================
+            // 4. COLOR PICKER
+            // ============================================================
 
-                html += `
-                    <tr class="${rowClass}">
-                        <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
-                        <td>${activePercent}%</td>
-                        <td>${damagedPercent}%</td>
-                        <td class="eff-cell">${efficiency.toFixed(1)}%</td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill ${progressClass}" style="width:${Math.min(efficiency, 100)}%;"></div>
+            document.querySelectorAll('.color-picker .color-option').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var parent = this.parentElement;
+                    parent.querySelectorAll('.color-option').forEach(function(c) {
+                        c.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    var primary = this.dataset.primary;
+                    var secondary = this.dataset.secondary;
+                    var gold = this.dataset.gold;
+
+                    if (primary && secondary) {
+                        document.getElementById('previewPrimary').style.background = primary;
+                        document.getElementById('previewSecondary').style.background = secondary;
+                        document.getElementById('previewColors').innerHTML = 'الخلفية: <span>' + primary +
+                            '</span> | <span>' + secondary + '</span>';
+                    }
+
+                    if (gold) {
+                        document.getElementById('previewGold').style.background = gold;
+                        document.getElementById('previewColors').innerHTML = 'الذهب: <span>' + gold + '</span>';
+                    }
+                });
+            });
+
+            // ============================================================
+            // 5. LOGO - ENHANCED
+            // ============================================================
+
+            function loadLogo() {
+                var savedLogo = localStorage.getItem('app_logo');
+                var container = document.getElementById('logoPreviewContainer');
+
+                if (savedLogo && savedLogo.startsWith('data:image')) {
+                    container.innerHTML = `
+                        <div class="logo-preview">
+                            <img src="${savedLogo}" alt="شعار التطبيق" id="logoImage">
+                            <div class="logo-name">${localStorage.getItem('app_logo_name') || 'شعار مخصص'}</div>
+                            <div class="logo-actions">
+                                <button class="btn-sm upload" onclick="document.getElementById('logoUpload').click()">
+                                    <i class="fas fa-upload"></i> تغيير
+                                </button>
+                                <button class="btn-sm delete" id="deleteLogoBtn">
+                                    <i class="fas fa-trash-alt"></i> حذف
+                                </button>
                             </div>
-                        </td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
+                        </div>
+                    `;
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML =
+                            `<img src="${savedLogo}" style="max-width:100px;max-height:50px;object-fit:contain;">`;
+                    }
+                    // Bind delete button
+                    document.getElementById('deleteLogoBtn').addEventListener('click', deleteLogo);
+                } else {
+                    container.innerHTML = `
+                        <div class="logo-placeholder" onclick="document.getElementById('logoUpload').click()">
+                            <div class="placeholder-icon"><i class="fas fa-image"></i></div>
+                            <div class="placeholder-text">اضغط هنا لتحميل شعار</div>
+                            <div class="placeholder-hint">PNG, JPG • الحد الأقصى 2MB</div>
+                        </div>
+                    `;
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML = '⚓';
+                    }
+                }
             }
 
-            tbody.innerHTML = html;
-        }
+            function deleteLogo() {
+                if (!confirm('⚠️ هل أنت متأكد من حذف الشعار؟')) return;
 
-        function updateBadge() {
-            var badge = document.getElementById('generalBadge');
-            var filtered = efficiencyData.general;
-            var sum = 0;
-            for (var i = 0; i < filtered.length; i++) {
-                sum += filtered[i].efficiency;
-            }
-            var avgEfficiency = sum / filtered.length;
+                // ✅ حذف من localStorage
+                localStorage.removeItem('app_logo');
+                localStorage.removeItem('app_logo_name');
+                loadLogo();
 
-            if (avgEfficiency >= 80) {
-                badge.textContent = '✅ أداء ممتاز';
-                badge.className = 'badge success';
-            } else if (avgEfficiency >= 70) {
-                badge.textContent = '📈 أداء جيد';
-                badge.className = 'badge gold';
-            } else if (avgEfficiency >= 50) {
-                badge.textContent = '⚠️ أداء متوسط';
-                badge.className = 'badge warning';
-            } else {
-                badge.textContent = '🚨 أداء منخفض';
-                badge.className = 'badge danger';
-            }
-        }
-
-        // ============================================================
-        // FILTER FUNCTIONS
-        // ============================================================
-        function resetEfficiencyFilters() {
-            document.getElementById('fRegEff').value = 'الكل';
-            document.getElementById('fCatEff').value = 'الكل';
-            document.getElementById('fStatusEff').value = 'الكل';
-            renderEfficiency();
-        }
-
-        function refreshEfficiency() {
-            var btn = document.getElementById('refreshBtn');
-            var originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            btn.disabled = true;
-
-            setTimeout(function() {
-                renderEfficiency();
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                showNotification('تم تحديث البيانات بنجاح ✅', 'success');
-            }, 800);
-        }
-
-        // ============================================================
-        // CHART FUNCTIONS
-        // ============================================================
-        var currentChart = 'pie';
-
-        function switchChart(type) {
-            currentChart = type;
-            var btns = document.querySelectorAll('.chart-btn');
-            for (var i = 0; i < btns.length; i++) {
-                btns[i].classList.remove('active');
-            }
-            var target = document.querySelector('.chart-btn[onclick="switchChart(\'' + type + '\')"]');
-            if (target) target.classList.add('active');
-            drawChart(type);
-        }
-
-        function drawChart(type) {
-            var canvas = document.getElementById('efficiencyChart');
-            var ctx = canvas.getContext('2d');
-            var width = canvas.parentElement.clientWidth - 32;
-            var height = 250;
-
-            canvas.width = width * 2;
-            canvas.height = height * 2;
-            canvas.style.width = width + 'px';
-            canvas.style.height = height + 'px';
-            ctx.scale(2, 2);
-
-            ctx.clearRect(0, 0, width, height);
-
-            var data = [];
-            var keys = Object.keys(efficiencyData.regions);
-            var colors = ['#e6b31e', '#4ade80', '#fbbf24', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#34d399', '#fb923c'];
-
-            for (var i = 0; i < keys.length; i++) {
-                var name = keys[i];
-                var d = efficiencyData.regions[name];
-                data.push({
-                    label: name,
-                    value: d.vessels > 0 ? ((d.active / d.vessels) * 100) : 0,
-                    color: colors[i % colors.length]
-                });
+                // ✅ حذف من السيرفر
+                var token = getToken();
+                if (token) {
+                    fetch('/api/settings/logo', {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل حذف الشعار من الخادم');
+                        return response.json();
+                    })
+                    .then(function() {
+                        var preview = document.getElementById('appLogoPreview');
+                        if (preview) {
+                            preview.innerHTML = '⚓';
+                        }
+                        showToast('🗑️ تم حذف الشعار بنجاح', 'success');
+                    })
+                    .catch(function(err) {
+                        console.warn('⚠️ خطأ في حذف الشعار من الخادم:', err);
+                        showToast('✅ تم حذف الشعار محلياً (خطأ في الخادم)', 'warning');
+                    });
+                } else {
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML = '⚓';
+                    }
+                    showToast('🗑️ تم حذف الشعار', 'success');
+                }
             }
 
-            if (type === 'pie') {
-                drawPieChart(ctx, data, width, height);
-            } else if (type === 'bar') {
-                drawBarChart(ctx, data, width, height);
-            } else if (type === 'line') {
-                drawLineChart(ctx, data, width, height);
-            }
-        }
+            // Logo upload handler
+            document.getElementById('logoUpload').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
 
-        function drawPieChart(ctx, data, width, height) {
-            var cx = width / 2;
-            var cy = height / 2;
-            var radius = Math.min(width, height) / 2 - 40;
-
-            var startAngle = -Math.PI / 2;
-            var total = 0;
-            for (var i = 0; i < data.length; i++) {
-                total += data[i].value;
-            }
-
-            if (total === 0) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.font = '14px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('لا توجد بيانات', cx, cy);
-                return;
-            }
-
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
-                var sliceAngle = (item.value / total) * 2 * Math.PI;
-                var endAngle = startAngle + sliceAngle;
-
-                ctx.beginPath();
-                ctx.moveTo(cx, cy);
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.closePath();
-
-                ctx.fillStyle = item.color;
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(10,14,26,0.8)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                var midAngle = startAngle + sliceAngle / 2;
-                var labelRadius = radius * 0.65;
-                var lx = cx + Math.cos(midAngle) * labelRadius;
-                var ly = cy + Math.sin(midAngle) * labelRadius;
-
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 10px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                if (sliceAngle > 0.3) {
-                    ctx.fillText(item.value.toFixed(0) + '%', lx, ly);
+                // Validate
+                if (!file.type.startsWith('image/')) {
+                    showToast('⚠️ يرجى اختيار ملف صورة صالح', 'error');
+                    return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    showToast('⚠️ حجم الصورة يجب أن يكون أقل من 2MB', 'error');
+                    return;
                 }
 
-                startAngle = endAngle;
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    var imageData = event.target.result;
+
+                    // ✅ حفظ محلياً
+                    localStorage.setItem('app_logo', imageData);
+                    localStorage.setItem('app_logo_name', file.name);
+                    loadLogo();
+
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML =
+                            `<img src="${imageData}" style="max-width:100px;max-height:50px;object-fit:contain;">`;
+                    }
+
+                    // ✅ رفع إلى السيرفر
+                    var token = getToken();
+                    if (token) {
+                        var formData = new FormData();
+                        formData.append('logo', file);
+
+                        fetch('/api/settings/logo', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: formData
+                        })
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('فشل رفع الشعار إلى الخادم');
+                            return response.json();
+                        })
+                        .then(function() {
+                            showToast('✅ تم رفع الشعار بنجاح', 'success');
+                        })
+                        .catch(function(err) {
+                            console.warn('⚠️ خطأ في رفع الشعار إلى الخادم:', err);
+                            showToast('✅ تم حفظ الشعار محلياً (خطأ في الخادم)', 'warning');
+                        });
+                    } else {
+                        showToast('✅ تم حفظ الشعار محلياً', 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // ============================================================
+            // 6. BACKGROUND IMAGE
+            // ============================================================
+
+            document.getElementById('bgImageUpload').addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    var imageData = event.target.result;
+                    document.getElementById('page-settings').style.backgroundImage = 'url(' + imageData + ')';
+                    document.getElementById('page-settings').style.backgroundSize = 'cover';
+                    document.getElementById('page-settings').style.backgroundPosition = 'center';
+                    document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
+                    localStorage.setItem('app_background', imageData);
+
+                    // ✅ رفع إلى السيرفر
+                    var token = getToken();
+                    if (token) {
+                        var formData = new FormData();
+                        formData.append('background', file);
+
+                        fetch('/api/settings/background', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + token
+                            },
+                            body: formData
+                        })
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('فشل رفع الخلفية');
+                            return response.json();
+                        })
+                        .then(function() {
+                            showToast('✅ تم رفع صورة الخلفية', 'success');
+                        })
+                        .catch(function(err) {
+                            console.warn('⚠️ خطأ في رفع الخلفية:', err);
+                            showToast('✅ تم حفظ الخلفية محلياً', 'warning');
+                        });
+                    } else {
+                        showToast('✅ تم حفظ الخلفية محلياً', 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // ============================================================
+            // 7. LOAD SAVED SETTINGS
+            // ============================================================
+
+            function loadSettings() {
+                // Theme
+                var primary = localStorage.getItem('theme_primary');
+                var secondary = localStorage.getItem('theme_secondary');
+                var gold = localStorage.getItem('theme_gold');
+
+                if (primary) {
+                    document.documentElement.style.setProperty('--primary-dark', primary);
+                    document.documentElement.style.setProperty('--primary', secondary || '#1a2a4a');
+                    document.documentElement.style.setProperty('--secondary', secondary || '#1a2a4a');
+                }
+                if (gold) {
+                    document.documentElement.style.setProperty('--gold', gold);
+                    document.documentElement.style.setProperty('--gold-light', gold);
+                }
+
+                // Logo
+                loadLogo();
+
+                // Background
+                var savedBg = localStorage.getItem('app_background');
+                if (savedBg) {
+                    document.getElementById('page-settings').style.backgroundImage = 'url(' + savedBg + ')';
+                    document.getElementById('page-settings').style.backgroundSize = 'cover';
+                    document.getElementById('page-settings').style.backgroundPosition = 'center';
+                    document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
+                }
+
+                // Layout
+                var darkMode = localStorage.getItem('layout_darkMode');
+                if (darkMode === 'true') {
+                    document.getElementById('darkMode').checked = true;
+                    document.body.classList.add('dark-mode');
+                }
+
+                var fontSize = localStorage.getItem('layout_fontSize');
+                if (fontSize) {
+                    document.getElementById('fontSize').value = fontSize;
+                }
+
+                var sidebarPosition = localStorage.getItem('layout_sidebarPosition');
+                if (sidebarPosition) {
+                    document.getElementById('sidebarPosition').value = sidebarPosition;
+                }
+
+                var showStats = localStorage.getItem('layout_showStats');
+                if (showStats === 'false') {
+                    document.getElementById('showStats').checked = false;
+                }
+
+                // Security
+                var twoFactor = localStorage.getItem('security_2fa');
+                if (twoFactor === 'true') {
+                    document.getElementById('twoFactorAuth').checked = true;
+                }
+
+                var emailNotif = localStorage.getItem('security_email');
+                if (emailNotif === 'false') {
+                    document.getElementById('emailNotifications').checked = false;
+                }
+
+                var smsNotif = localStorage.getItem('security_sms');
+                if (smsNotif === 'true') {
+                    document.getElementById('smsNotifications').checked = true;
+                }
+
+                var sessionTimeout = localStorage.getItem('security_sessionTimeout');
+                if (sessionTimeout) {
+                    document.getElementById('sessionTimeout').value = sessionTimeout;
+                }
+
+                // Notifications
+                var emergency = localStorage.getItem('notif_emergency');
+                if (emergency === 'false') {
+                    document.getElementById('emergencyAlerts').checked = false;
+                }
+
+                var maintenance = localStorage.getItem('notif_maintenance');
+                if (maintenance === 'false') {
+                    document.getElementById('maintenanceAlerts').checked = false;
+                }
+
+                var reports = localStorage.getItem('notif_reports');
+                if (reports) {
+                    document.getElementById('performanceReports').value = reports;
+                }
+
+                // ✅ جلب الإعدادات من السيرفر
+                var token = getToken();
+                if (token) {
+                    fetch('/api/settings', {
+                        headers: getAuthHeaders()
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل جلب الإعدادات');
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.settings) {
+                            applyServerSettings(data.settings);
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('⚠️ خطأ في جلب الإعدادات من الخادم:', err);
+                    });
+                }
+
+                console.log('✅ تم تحميل الإعدادات المحفوظة');
             }
 
-            // Legend
-            var legendY = 10;
-            var legendX = width - 120;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
+            function applyServerSettings(settings) {
+                // Theme
+                if (settings.theme) {
+                    if (settings.theme.primary) {
+                        document.documentElement.style.setProperty('--primary-dark', settings.theme.primary);
+                        document.documentElement.style.setProperty('--primary', settings.theme.secondary || '#1a2a4a');
+                        document.documentElement.style.setProperty('--secondary', settings.theme.secondary || '#1a2a4a');
+                    }
+                    if (settings.theme.gold) {
+                        document.documentElement.style.setProperty('--gold', settings.theme.gold);
+                        document.documentElement.style.setProperty('--gold-light', settings.theme.gold);
+                    }
+                }
 
-            var maxItems = Math.min(data.length, 6);
-            for (var i = 0; i < maxItems; i++) {
-                var item = data[i];
-                var y = legendY + i * 18;
-                ctx.fillStyle = item.color;
-                ctx.fillRect(legendX, y, 12, 12);
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '9px Cairo, sans-serif';
-                var label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
-                ctx.fillText(label, legendX + 16, y);
+                // Logo
+                if (settings.branding && settings.branding.logo) {
+                    var container = document.getElementById('logoPreviewContainer');
+                    container.innerHTML = `
+                        <div class="logo-preview">
+                            <img src="${settings.branding.logo}" alt="شعار التطبيق">
+                            <div class="logo-name">شعار من الخادم</div>
+                            <div class="logo-actions">
+                                <button class="btn-sm upload" onclick="document.getElementById('logoUpload').click()">
+                                    <i class="fas fa-upload"></i> تغيير
+                                </button>
+                                <button class="btn-sm delete" id="deleteLogoBtn">
+                                    <i class="fas fa-trash-alt"></i> حذف
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML =
+                            `<img src="${settings.branding.logo}" style="max-width:100px;max-height:50px;object-fit:contain;">`;
+                    }
+                    document.getElementById('deleteLogoBtn').addEventListener('click', deleteLogo);
+                }
+
+                // Layout
+                if (settings.layout) {
+                    if (settings.layout.darkMode !== undefined) {
+                        document.getElementById('darkMode').checked = settings.layout.darkMode;
+                    }
+                    if (settings.layout.fontSize) {
+                        document.getElementById('fontSize').value = settings.layout.fontSize;
+                    }
+                    if (settings.layout.sidebarPosition) {
+                        document.getElementById('sidebarPosition').value = settings.layout.sidebarPosition;
+                    }
+                    if (settings.layout.showStats !== undefined) {
+                        document.getElementById('showStats').checked = settings.layout.showStats;
+                    }
+                }
+
+                // Security
+                if (settings.security) {
+                    if (settings.security.twoFactorAuth !== undefined) {
+                        document.getElementById('twoFactorAuth').checked = settings.security.twoFactorAuth;
+                    }
+                    if (settings.security.emailNotifications !== undefined) {
+                        document.getElementById('emailNotifications').checked = settings.security.emailNotifications;
+                    }
+                    if (settings.security.smsNotifications !== undefined) {
+                        document.getElementById('smsNotifications').checked = settings.security.smsNotifications;
+                    }
+                    if (settings.security.sessionTimeout) {
+                        document.getElementById('sessionTimeout').value = settings.security.sessionTimeout;
+                    }
+                }
+
+                // Notifications
+                if (settings.notifications) {
+                    if (settings.notifications.emergencyAlerts !== undefined) {
+                        document.getElementById('emergencyAlerts').checked = settings.notifications.emergencyAlerts;
+                    }
+                    if (settings.notifications.maintenanceAlerts !== undefined) {
+                        document.getElementById('maintenanceAlerts').checked = settings.notifications.maintenanceAlerts;
+                    }
+                    if (settings.notifications.performanceReports) {
+                        document.getElementById('performanceReports').value = settings.notifications.performanceReports;
+                    }
+                }
+
+                console.log('✅ تم تطبيق الإعدادات من الخادم');
             }
-        }
 
-        function drawBarChart(ctx, data, width, height) {
-            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            var chartWidth = width - padding.left - padding.right;
-            var chartHeight = height - padding.top - padding.bottom;
+            // ============================================================
+            // 8. SAVE SETTINGS TO SERVER
+            // ============================================================
 
-            var maxVal = 100;
-            var barWidth = Math.min(chartWidth / data.length * 0.7, 50);
-            var gap = chartWidth / data.length;
+            function saveToServer(settings) {
+                var token = getToken();
+                if (!token) {
+                    // ✅ حفظ محلياً إذا لم يكن هناك توكن
+                    saveToLocal(settings);
+                    return Promise.resolve();
+                }
 
-            for (var i = 0; i <= 4; i++) {
-                var y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
+                showLoading(true);
 
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
-            }
-
-            for (var i = 0; i < data.length; i++) {
-                var item = data[i];
-                var x = padding.left + i * gap + (gap - barWidth) / 2;
-                var barHeight = (item.value / maxVal) * chartHeight;
-                var y = padding.top + chartHeight - barHeight;
-
-                var gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
-                gradient.addColorStop(0, item.color);
-                gradient.addColorStop(1, item.color + '33');
-                ctx.fillStyle = gradient;
-                ctx.shadowColor = item.color + '44';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(x, y, barWidth, barHeight);
-                ctx.shadowBlur = 0;
-
-                ctx.strokeStyle = item.color;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x, y, barWidth, barHeight);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                var label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
-                ctx.fillText(label, x + barWidth / 2, padding.top + chartHeight + 5);
-            }
-        }
-
-        function drawLineChart(ctx, data, width, height) {
-            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            var chartWidth = width - padding.left - padding.right;
-            var chartHeight = height - padding.top - padding.bottom;
-
-            var maxVal = 100;
-            var points = [];
-            for (var i = 0; i < data.length; i++) {
-                points.push({
-                    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
-                    y: padding.top + chartHeight - (data[i].value / maxVal) * chartHeight,
-                    value: data[i].value,
-                    label: data[i].label
+                return fetch('/api/settings', {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(settings)
+                })
+                .then(function(response) {
+                    if (!response.ok) throw new Error('فشل حفظ الإعدادات');
+                    return response.json();
+                })
+                .then(function(data) {
+                    showLoading(false);
+                    showToast('✅ تم حفظ الإعدادات في الخادم', 'success');
+                    return data;
+                })
+                .catch(function(error) {
+                    showLoading(false);
+                    console.warn('⚠️ خطأ في حفظ الإعدادات في الخادم:', error);
+                    saveToLocal(settings);
+                    showToast('⚠️ تم حفظ الإعدادات محلياً (خطأ في الخادم)', 'warning');
+                    return { success: true, local: true };
                 });
             }
 
-            for (var i = 0; i <= 4; i++) {
-                var y = padding.top + chartHeight - (i / 4) * chartHeight;
-                ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(padding.left, y);
-                ctx.lineTo(width - padding.right, y);
-                ctx.stroke();
+            function saveToLocal(settings) {
+                // Theme
+                if (settings.theme) {
+                    if (settings.theme.primary) {
+                        localStorage.setItem('theme_primary', settings.theme.primary);
+                    }
+                    if (settings.theme.secondary) {
+                        localStorage.setItem('theme_secondary', settings.theme.secondary);
+                    }
+                    if (settings.theme.gold) {
+                        localStorage.setItem('theme_gold', settings.theme.gold);
+                    }
+                }
 
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.font = '9px Cairo, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
+                // Layout
+                if (settings.layout) {
+                    if (settings.layout.darkMode !== undefined) {
+                        localStorage.setItem('layout_darkMode', settings.layout.darkMode);
+                    }
+                    if (settings.layout.fontSize) {
+                        localStorage.setItem('layout_fontSize', settings.layout.fontSize);
+                    }
+                    if (settings.layout.sidebarPosition) {
+                        localStorage.setItem('layout_sidebarPosition', settings.layout.sidebarPosition);
+                    }
+                    if (settings.layout.showStats !== undefined) {
+                        localStorage.setItem('layout_showStats', settings.layout.showStats);
+                    }
+                }
+
+                // Security
+                if (settings.security) {
+                    if (settings.security.twoFactorAuth !== undefined) {
+                        localStorage.setItem('security_2fa', settings.security.twoFactorAuth);
+                    }
+                    if (settings.security.emailNotifications !== undefined) {
+                        localStorage.setItem('security_email', settings.security.emailNotifications);
+                    }
+                    if (settings.security.smsNotifications !== undefined) {
+                        localStorage.setItem('security_sms', settings.security.smsNotifications);
+                    }
+                    if (settings.security.sessionTimeout) {
+                        localStorage.setItem('security_sessionTimeout', settings.security.sessionTimeout);
+                    }
+                }
+
+                // Notifications
+                if (settings.notifications) {
+                    if (settings.notifications.emergencyAlerts !== undefined) {
+                        localStorage.setItem('notif_emergency', settings.notifications.emergencyAlerts);
+                    }
+                    if (settings.notifications.maintenanceAlerts !== undefined) {
+                        localStorage.setItem('notif_maintenance', settings.notifications.maintenanceAlerts);
+                    }
+                    if (settings.notifications.performanceReports) {
+                        localStorage.setItem('notif_reports', settings.notifications.performanceReports);
+                    }
+                }
             }
 
-            ctx.strokeStyle = '#e6b31e';
-            ctx.lineWidth = 2;
-            ctx.shadowColor = '#e6b31e44';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            for (var i = 0; i < points.length; i++) {
-                if (i === 0) ctx.moveTo(points[i].x, points[i].y);
-                else ctx.lineTo(points[i].x, points[i].y);
+            // ============================================================
+            // 9. SAVE FUNCTIONS
+            // ============================================================
+
+            function collectSettings() {
+                var primary = document.querySelector('#colorPicker .color-option.active');
+                var gold = document.querySelector('#goldColorPicker .color-option.active');
+
+                return {
+                    theme: {
+                        primary: primary ? primary.dataset.primary : '#0a1628',
+                        secondary: primary ? primary.dataset.secondary : '#1a2a4a',
+                        gold: gold ? gold.dataset.gold : '#e6b31e'
+                    },
+                    layout: {
+                        darkMode: document.getElementById('darkMode').checked,
+                        fontSize: document.getElementById('fontSize').value,
+                        sidebarPosition: document.getElementById('sidebarPosition').value,
+                        showStats: document.getElementById('showStats').checked
+                    },
+                    security: {
+                        twoFactorAuth: document.getElementById('twoFactorAuth').checked,
+                        emailNotifications: document.getElementById('emailNotifications').checked,
+                        smsNotifications: document.getElementById('smsNotifications').checked,
+                        sessionTimeout: parseInt(document.getElementById('sessionTimeout').value) || 60
+                    },
+                    notifications: {
+                        emergencyAlerts: document.getElementById('emergencyAlerts').checked,
+                        maintenanceAlerts: document.getElementById('maintenanceAlerts').checked,
+                        performanceReports: document.getElementById('performanceReports').value
+                    }
+                };
             }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
 
-            var lastPoint = points[points.length - 1];
-            ctx.lineTo(lastPoint.x, padding.top + chartHeight);
-            ctx.lineTo(points[0].x, padding.top + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(230,179,30,0.08)';
-            ctx.fill();
+            function saveTheme() {
+                var settings = collectSettings();
+                saveToServer({ theme: settings.theme });
+                // تطبيق المظهر فوراً
+                var primary = settings.theme.primary;
+                var secondary = settings.theme.secondary;
+                var gold = settings.theme.gold;
 
-            for (var i = 0; i < points.length; i++) {
-                var p = points[i];
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
-                ctx.fillStyle = '#e6b31e';
-                ctx.fill();
-                ctx.strokeStyle = '#0a0e1a';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                document.documentElement.style.setProperty('--primary-dark', primary);
+                document.documentElement.style.setProperty('--primary', secondary);
+                document.documentElement.style.setProperty('--secondary', secondary);
+                document.documentElement.style.setProperty('--gold', gold);
+                document.documentElement.style.setProperty('--gold-light', gold);
 
-                ctx.fillStyle = 'rgba(255,255,255,0.6)';
-                ctx.font = 'bold 9px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(p.value.toFixed(0) + '%', p.x, p.y - 6);
-
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.font = '8px Cairo, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'top';
-                var label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
-                ctx.fillText(label, p.x, padding.top + chartHeight + 5);
+                showToast('✅ تم تطبيق المظهر الجديد', 'success');
             }
-        }
 
-        // ============================================================
-        // NOTIFICATION
-        // ============================================================
-        function showNotification(message, type) {
-            var old = document.querySelector('.eff-notification');
-            if (old) old.remove();
+            function saveLogo() {
+                var size = document.getElementById('logoSize').value;
+                var savedLogo = localStorage.getItem('app_logo');
 
-            var notif = document.createElement('div');
-            notif.className = 'eff-notification';
-            notif.style.cssText = `
-                position: fixed;
-                bottom: 24px;
-                right: 24px;
-                background: ${type === 'success' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'};
-                backdrop-filter: blur(12px);
-                border: 1px solid ${type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'};
-                padding: 12px 20px;
-                border-radius: 12px;
-                color: #fff;
-                font-family: Cairo, sans-serif;
-                font-size: 14px;
-                z-index: 9999;
-                animation: slideUp 0.4s ease-out;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            `;
-            notif.textContent = message;
-
-            document.body.appendChild(notif);
-
-            setTimeout(function() {
-                notif.style.opacity = '0';
-                notif.style.transform = 'translateY(20px)';
-                notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(function() { notif.remove(); }, 400);
-            }, 3000);
-        }
-
-        // ============================================================
-        // ADDITIONAL STYLES FOR NOTIFICATION
-        // ============================================================
-        var styleNotif = document.createElement('style');
-        styleNotif.textContent = `
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
+                if (savedLogo) {
+                    localStorage.setItem('app_logo_size', size);
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        var img = preview.querySelector('img');
+                        if (img) {
+                            if (size === 'small') { img.style.maxWidth = '60px';
+                                img.style.maxHeight = '30px'; } else if (size === 'medium') { img.style.maxWidth =
+                                    '100px';
+                                img.style.maxHeight = '50px'; } else { img.style.maxWidth = '140px';
+                                img.style.maxHeight = '70px'; }
+                        }
+                    }
+                    // ✅ حفظ في الخادم
+                    var settings = collectSettings();
+                    if (!settings.branding) settings.branding = {};
+                    settings.branding.logoSize = size;
+                    saveToServer({ branding: { logoSize: size } });
+                    showToast('✅ تم تحديث حجم الشعار', 'success');
+                } else {
+                    showToast('⚠️ يرجى تحميل شعار أولاً', 'error');
+                }
             }
-        `;
-        document.head.appendChild(styleNotif);
 
-        // ============================================================
-        // EVENT BINDING
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            // ✅ Bind buttons with addEventListener
-            document.getElementById('refreshBtn').addEventListener('click', refreshEfficiency);
-            document.getElementById('filterBtn').addEventListener('click', renderEfficiency);
-            document.getElementById('resetBtn').addEventListener('click', resetEfficiencyFilters);
+            function saveLayout() {
+                var settings = collectSettings();
+                saveToServer({ layout: settings.layout });
+                showToast('✅ تم حفظ إعدادات التخطيط', 'success');
+            }
 
-            document.getElementById('fRegEff').addEventListener('change', renderEfficiency);
-            document.getElementById('fCatEff').addEventListener('change', renderEfficiency);
-            document.getElementById('fStatusEff').addEventListener('change', renderEfficiency);
+            function saveSecurity() {
+                var settings = collectSettings();
 
-            renderEfficiency();
-            setTimeout(function() { drawChart('pie'); }, 100);
+                // ✅ تفعيل 2FA على السيرفر
+                var twoFactorEnabled = settings.security.twoFactorAuth;
+                if (twoFactorEnabled) {
+                    fetch('/api/auth/2fa/enable', {
+                        method: 'POST',
+                        headers: getAuthHeaders()
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل تفعيل 2FA');
+                        return response.json();
+                    })
+                    .then(function() {
+                        showToast('✅ تم تفعيل المصادقة بخطوتين', 'success');
+                    })
+                    .catch(function(err) {
+                        console.warn('⚠️ خطأ في تفعيل 2FA:', err);
+                        showToast('⚠️ فشل تفعيل 2FA على الخادم', 'error');
+                    });
+                } else {
+                    fetch('/api/auth/2fa/disable', {
+                        method: 'POST',
+                        headers: getAuthHeaders()
+                    })
+                    .catch(function() {});
+                }
 
-            console.log('📊 Efficiency Page loaded successfully!');
-            console.log('ℹ️ Use renderEfficiency() to refresh data.');
-        });
+                // ✅ تحديث مدة الجلسة
+                if (settings.security.sessionTimeout) {
+                    fetch('/api/auth/session-timeout', {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ timeout: settings.security.sessionTimeout })
+                    })
+                    .catch(function() {});
+                }
 
-        // ============================================================
-        // GLOBAL FUNCTIONS
-        // ============================================================
-        window.renderEfficiency = renderEfficiency;
-        window.refreshEfficiency = refreshEfficiency;
-        window.resetEfficiencyFilters = resetEfficiencyFilters;
-        window.switchChart = switchChart;
-        window.showNotification = showNotification;
+                saveToServer({ security: settings.security });
+                showToast('✅ تم حفظ إعدادات الأمان', 'success');
+            }
+
+            function saveNotifications() {
+                var settings = collectSettings();
+                saveToServer({ notifications: settings.notifications });
+                showToast('✅ تم حفظ إعدادات الإشعارات', 'success');
+            }
+
+            function saveAll() {
+                var settings = collectSettings();
+
+                // ✅ تطبيق كل الإعدادات دفعة واحدة
+                showLoading(true);
+
+                // Theme
+                var primary = settings.theme.primary;
+                var secondary = settings.theme.secondary;
+                var gold = settings.theme.gold;
+
+                document.documentElement.style.setProperty('--primary-dark', primary);
+                document.documentElement.style.setProperty('--primary', secondary);
+                document.documentElement.style.setProperty('--secondary', secondary);
+                document.documentElement.style.setProperty('--gold', gold);
+                document.documentElement.style.setProperty('--gold-light', gold);
+
+                // ✅ حفظ في الخادم
+                var token = getToken();
+                if (token) {
+                    fetch('/api/settings', {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(settings)
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل حفظ الإعدادات');
+                        return response.json();
+                    })
+                    .then(function() {
+                        saveToLocal(settings);
+                        showLoading(false);
+                        showToast('✅ تم حفظ جميع الإعدادات بنجاح', 'success');
+                    })
+                    .catch(function(err) {
+                        console.warn('⚠️ خطأ في حفظ الإعدادات:', err);
+                        saveToLocal(settings);
+                        showLoading(false);
+                        showToast('⚠️ تم حفظ الإعدادات محلياً (خطأ في الخادم)', 'warning');
+                    });
+                } else {
+                    saveToLocal(settings);
+                    showLoading(false);
+                    showToast('✅ تم حفظ جميع الإعدادات محلياً', 'success');
+                }
+            }
+
+            // ============================================================
+            // 10. REFRESH
+            // ============================================================
+
+            function refreshSettings() {
+                showToast('🔄 جاري تحديث الإعدادات...', 'info');
+                var token = getToken();
+                if (token) {
+                    fetch('/api/settings', {
+                        headers: getAuthHeaders()
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('فشل جلب الإعدادات');
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.settings) {
+                            applyServerSettings(data.settings);
+                            showToast('✅ تم تحديث الإعدادات', 'success');
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('⚠️ خطأ في جلب الإعدادات:', err);
+                        showToast('⚠️ خطأ في تحديث الإعدادات', 'error');
+                    });
+                } else {
+                    loadSettings();
+                    showToast('✅ تم تحديث الإعدادات المحلية', 'success');
+                }
+            }
+
+            // ============================================================
+            // 11. EVENT BINDING
+            // ============================================================
+
+            document.addEventListener('DOMContentLoaded', function() {
+                loadSettings();
+
+                document.getElementById('saveThemeBtn').addEventListener('click', saveTheme);
+                document.getElementById('saveLogoBtn').addEventListener('click', saveLogo);
+                document.getElementById('saveLayoutBtn').addEventListener('click', saveLayout);
+                document.getElementById('saveSecurityBtn').addEventListener('click', saveSecurity);
+                document.getElementById('saveNotificationsBtn').addEventListener('click', saveNotifications);
+                document.getElementById('saveAllBtn').addEventListener('click', saveAll);
+                document.getElementById('refreshBtn').addEventListener('click', refreshSettings);
+
+                console.log('⚙️ Settings Page - Production Pro v3.0 loaded successfully');
+            });
+
+            // ============================================================
+            // 12. GLOBAL EXPOSURE
+            // ============================================================
+
+            window.saveTheme = saveTheme;
+            window.saveLogo = saveLogo;
+            window.saveLayout = saveLayout;
+            window.saveSecurity = saveSecurity;
+            window.saveNotifications = saveNotifications;
+            window.saveAll = saveAll;
+            window.refreshSettings = refreshSettings;
+            window.deleteLogo = deleteLogo;
+            window.showToast = showToast;
+
+        })();
     </script>
 </div>
