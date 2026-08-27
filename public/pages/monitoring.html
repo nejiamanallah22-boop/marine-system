@@ -1,8 +1,701 @@
 <!-- public/pages/monitoring.html -->
 <div id="page-monitoring">
+    <style>
+        /* ============================================================
+           📊 MONITORING PAGE - WITH REAL MAP
+           ============================================================ */
+
+        #page-monitoring {
+            width: 100%;
+            max-width: 100%;
+            padding: 0;
+            margin: 0;
+            font-family: 'Cairo', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0e1a;
+            color: #e8edf5;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        #page-monitoring::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(167,139,250,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
+            animation: bgPulse 15s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: #e6b31e; border-radius: 10px; }
+
+        /* ===== HEADER ===== */
+        .mon-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            width: 100%;
+        }
+
+        .mon-header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .mon-header-left .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #0a1628;
+            animation: pulseGold 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGold {
+            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
+            50% { box-shadow: 0 0 40px rgba(230,179,30,0.25); }
+        }
+
+        .mon-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f5d76e, #a78bfa, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .mon-header-left p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+        }
+
+        .mon-header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            color: #0a1628;
+        }
+
+        .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
+        .btn-action.secondary {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        /* ===== STATS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 12px 24px;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 12px 14px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e6b31e, #a78bfa);
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(230,179,30,0.15);
+        }
+
+        .stat-card .number {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: #f5d76e; }
+        .stat-card .number.green { color: #55efc4; }
+        .stat-card .number.blue { color: #60a5fa; }
+        .stat-card .number.red { color: #f87171; }
+        .stat-card .number.pink { color: #f472b6; }
+        .stat-card .number.purple { color: #a78bfa; }
+
+        .stat-card .label {
+            font-size: 10px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        /* ===== MAP TYPE ===== */
+        .map-type-selector {
+            display: flex;
+            gap: 10px;
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .map-type-selector .label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .map-type-btn {
+            padding: 6px 16px;
+            border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 25px;
+            background: transparent;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .map-type-btn:hover {
+            border-color: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
+        .map-type-btn.active {
+            background: linear-gradient(135deg, #e6b31e, #f5d76e);
+            border-color: #e6b31e;
+            color: #0a1628;
+        }
+
+        /* ===== GRID ===== */
+        .monitoring-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px 24px;
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .monitoring-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== MAP ===== */
+        .map-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+            min-height: 450px;
+            position: relative;
+        }
+
+        .map-container .section-title {
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            z-index: 10;
+            position: relative;
+            background: rgba(10,14,26,0.6);
+        }
+
+        .map-container .section-title i {
+            color: #e6b31e;
+        }
+
+        .map-container .section-title .hint {
+            font-size: 10px;
+            color: rgba(255,255,255,0.15);
+            margin-right: auto;
+        }
+
+        #realMap {
+            width: 100%;
+            height: 450px;
+            min-height: 450px;
+            background: #0a1628;
+            border-radius: 0 0 14px 14px;
+        }
+
+        /* ===== SESSIONS ===== */
+        .sessions-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .sessions-container .section-title {
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .sessions-container .section-title i {
+            color: #a78bfa;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge.success {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .badge.purple {
+            background: rgba(167,139,250,0.12);
+            color: #a78bfa;
+        }
+
+        .sessions-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0 12px 12px;
+        }
+
+        .sessions-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sessions-scroll::-webkit-scrollbar-thumb {
+            background: #a78bfa;
+            border-radius: 10px;
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        .sessions-table thead {
+            background: rgba(167,139,250,0.06);
+        }
+
+        .sessions-table thead th {
+            padding: 8px 6px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.25);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: #0a0e1a;
+            z-index: 2;
+        }
+
+        .sessions-table tbody td {
+            padding: 6px 4px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.5);
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .sessions-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .sessions-table .user-name {
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .sessions-table .region-tag {
+            font-size: 0.55rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-badge.active {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.expired {
+            background: rgba(234,179,8,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.terminated {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        /* ===== USER PANEL ===== */
+        .user-panel {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #0a1628;
+            border: 1px solid rgba(230,179,30,0.2);
+            border-radius: 16px;
+            padding: 24px 28px;
+            max-width: 400px;
+            width: 90%;
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .user-panel.visible {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .user-panel .close-btn {
+            position: absolute;
+            top: 10px;
+            left: 14px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.3);
+            font-size: 1.3rem;
+            cursor: pointer;
+        }
+
+        .user-panel .close-btn:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .user-panel .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e6b31e, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #0a1628;
+            margin: 0 auto 12px;
+            font-weight: 700;
+        }
+
+        .user-panel .user-name {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .user-panel .user-role {
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .user-panel .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.8rem;
+        }
+
+        .user-panel .detail-row .label {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .user-panel .detail-row .value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .user-panel .detail-row .value.gold { color: #f5d76e; }
+        .user-panel .detail-row .value.green { color: #55efc4; }
+        .user-panel .detail-row .value.red { color: #f87171; }
+
+        .panel-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+        }
+
+        .panel-overlay.visible {
+            display: block;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            z-index: 9999;
+            animation: slideUp 0.4s ease-out;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 350px;
+            direction: rtl;
+        }
+
+        .toast-success {
+            background: rgba(34,197,94,0.15);
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+
+        .toast-info {
+            background: rgba(9,132,227,0.15);
+            border: 1px solid rgba(9,132,227,0.2);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .mon-header { padding: 12px 16px; flex-direction: column; align-items: flex-start; }
+            .mon-header-left { width: 100%; }
+            .mon-header-left h2 { font-size: 16px; }
+            .mon-header-actions { width: 100%; justify-content: flex-start; }
+            .stats-grid { padding: 10px 16px; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .stat-card { padding: 8px 10px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .map-type-selector { padding: 8px 16px; justify-content: center; }
+            .map-type-btn { font-size: 0.65rem; padding: 4px 12px; }
+            .monitoring-grid { padding: 10px 16px; gap: 12px; }
+            .map-container { min-height: 300px; }
+            #realMap { height: 300px; min-height: 300px; }
+            .sessions-scroll { max-height: 280px; }
+            .sessions-table { font-size: 0.65rem; }
+            .user-panel { padding: 16px 20px; max-width: 95%; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+            .stat-card { padding: 6px 8px; }
+            .stat-card .number { font-size: 16px; }
+            .map-container { min-height: 250px; }
+            #realMap { height: 250px; min-height: 250px; }
+            .sessions-scroll { max-height: 230px; }
+            .mon-header-left .icon { width: 36px; height: 36px; font-size: 16px; }
+            .mon-header-left h2 { font-size: 14px; }
+            .sessions-table { font-size: 0.6rem; }
+        }
+
+        /* ===== Leaflet Custom Styles ===== */
+        .leaflet-popup-content-wrapper {
+            background: #0a1628;
+            color: #e8edf5;
+            border: 1px solid rgba(230,179,30,0.2);
+            border-radius: 12px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .leaflet-popup-tip {
+            background: #0a1628;
+            border: 1px solid rgba(230,179,30,0.2);
+        }
+
+        .leaflet-popup-content {
+            font-family: 'Cairo', sans-serif;
+            color: #e8edf5;
+            min-width: 200px;
+        }
+
+        .popup-user-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f5d76e;
+            margin-bottom: 4px;
+        }
+
+        .popup-user-detail {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            padding: 2px 0;
+        }
+
+        .popup-user-detail i {
+            margin-left: 6px;
+            color: #e6b31e;
+        }
+
+        .popup-status {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .popup-status.online {
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .popup-status.offline {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+        }
+
+        .popup-readiness {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 4px;
+            margin-right: 6px;
+        }
+
+        .popup-readiness.ready {
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+        }
+
+        .popup-readiness.busy {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+        }
+
+        .popup-readiness.offline {
+            background: rgba(107,114,128,0.15);
+            color: #9ca3af;
+        }
+    </style>
+
     <!-- ===== CSS ===== -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <!-- ===== HEADER ===== -->
     <div class="mon-header">
         <div class="mon-header-left">
@@ -90,11 +783,8 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED
+    JAVASCRIPT
     ============================================================ -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
-
     <script>
         (function() {
             'use strict';
@@ -282,7 +972,7 @@
             }
 
             // ============================================================
-            // INIT MAP - REAL MAP WITH LEAFLET
+            // ✅ INIT MAP - WITH DYNAMIC LEAFLET LOADING
             // ============================================================
             function initMap() {
                 console.log('🗺️ Initializing map...');
@@ -294,7 +984,7 @@
                     return;
                 }
 
-                // ✅ Check if L is defined (Leaflet)
+                // ✅ Check if L (Leaflet) is defined
                 if (typeof L === 'undefined') {
                     console.warn('⚠️ Leaflet not loaded, loading now...');
                     // Load Leaflet dynamically
@@ -307,7 +997,9 @@
                         link.rel = 'stylesheet';
                         link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
                         document.head.appendChild(link);
-                        setTimeout(initMap, 200);
+                        setTimeout(function() {
+                            initMap();
+                        }, 300);
                     };
                     script.onerror = function() {
                         console.error('❌ Failed to load Leaflet');
@@ -317,49 +1009,55 @@
                     return;
                 }
 
-                // Create map centered on Tunisia
-                map = L.map('realMap').setView([34.5, 9.5], 7);
+                // ✅ Map is ready - create it
+                try {
+                    // Create map centered on Tunisia
+                    map = L.map('realMap').setView([34.5, 9.5], 7);
 
-                // ===== TILE LAYERS =====
-                var tileLayers = {
-                    satellite: L.tileLayer(
-                        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                            attribution: '&copy; Esri',
-                            maxZoom: 19
-                        }),
-                    standard: L.tileLayer(
-                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '&copy; OpenStreetMap',
-                            maxZoom: 19
-                        }),
-                    terrain: L.tileLayer(
-                        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                            attribution: '&copy; OpenTopoMap',
-                            maxZoom: 17
-                        })
-                };
+                    // ===== TILE LAYERS =====
+                    var tileLayers = {
+                        satellite: L.tileLayer(
+                            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                                attribution: '&copy; Esri',
+                                maxZoom: 19
+                            }),
+                        standard: L.tileLayer(
+                            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; OpenStreetMap',
+                                maxZoom: 19
+                            }),
+                        terrain: L.tileLayer(
+                            'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; OpenTopoMap',
+                                maxZoom: 17
+                            })
+                    };
 
-                // Add default layer
-                tileLayers.satellite.addTo(map);
+                    // Add default layer
+                    tileLayers.satellite.addTo(map);
 
-                // Store layers for switching
-                map._tileLayers = tileLayers;
-                map._currentLayer = 'satellite';
+                    // Store layers for switching
+                    map._tileLayers = tileLayers;
+                    map._currentLayer = 'satellite';
 
-                // ===== FIT BOUNDS =====
-                var bounds = L.latLngBounds(
-                    L.latLng(32.5, 8.0),
-                    L.latLng(37.5, 12.0)
-                );
-                map.fitBounds(bounds, { padding: [20, 20] });
+                    // ===== FIT BOUNDS =====
+                    var bounds = L.latLngBounds(
+                        L.latLng(32.5, 8.0),
+                        L.latLng(37.5, 12.0)
+                    );
+                    map.fitBounds(bounds, { padding: [20, 20] });
 
-                mapInitialized = true;
+                    mapInitialized = true;
 
-                // Add markers
-                addMarkers();
+                    // Add markers
+                    addMarkers();
 
-                console.log('✅ Real Map initialized with Satellite imagery');
-                console.log('📍 ' + usersData.length + ' users on map');
+                    console.log('✅ Real Map initialized with Satellite imagery');
+                    console.log('📍 ' + usersData.length + ' users on map');
+                } catch (error) {
+                    console.error('❌ Error initializing map:', error);
+                    showToast('❌ خطأ في تحميل الخريطة: ' + error.message, 'error');
+                }
             }
 
             // ============================================================
@@ -591,10 +1289,10 @@
                 updateStats();
                 renderSessions();
 
-                // ✅ Start map initialization with retry
+                // ✅ Start map initialization
                 setTimeout(function() {
                     initMap();
-                }, 500);
+                }, 300);
 
                 // ✅ Event listeners with null checks
                 var refreshBtn = document.getElementById('refreshBtn');
@@ -651,5 +1349,11 @@
             window.initMap = initMap;
 
         })();
+    </script>
+
+    <!-- ============================================================
+    ✅ LEAFTLET JS - LOADED HERE (BACKUP)
+    ============================================================ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
 </div>
