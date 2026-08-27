@@ -2,7 +2,7 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - ENTERPRISE PRO VERSION (FIXED)
+           👥 USERS PAGE - ENTERPRISE PRO VERSION WITH CAMERA
            ============================================================ */
 
         #page-users {
@@ -112,7 +112,6 @@
             background: linear-gradient(135deg, #60a5fa, #a78bfa);
             color: #fff;
         }
-
         .btn-action.primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(96,165,250,0.3);
@@ -122,10 +121,27 @@
             background: linear-gradient(135deg, #22c55e, #4ade80);
             color: #0a1628;
         }
-
         .btn-action.success:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(34,197,94,0.3);
+        }
+
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+        .btn-action.danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+        }
+
+        .btn-action.camera {
+            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            color: #fff;
+        }
+        .btn-action.camera:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139,92,246,0.3);
         }
 
         .btn-action.secondary {
@@ -133,7 +149,6 @@
             border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
-
         .btn-action.secondary:hover {
             background: rgba(255,255,255,0.06);
             color: #fff;
@@ -178,6 +193,7 @@
         .stat-card .number.gold { color: #f5d76e; }
         .stat-card .number.green { color: #4ade80; }
         .stat-card .number.red { color: #f87171; }
+        .stat-card .number.purple { color: #a78bfa; }
 
         .stat-card .label {
             font-size: 11px;
@@ -249,17 +265,13 @@
             background: linear-gradient(135deg, #60a5fa, #a78bfa);
             color: #fff;
         }
-
-        .btn-filter.primary:hover {
-            transform: scale(1.04);
-        }
+        .btn-filter.primary:hover { transform: scale(1.04); }
 
         .btn-filter.outline {
             background: transparent;
             border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.3);
         }
-
         .btn-filter.outline:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
@@ -306,25 +318,11 @@
             font-weight: 600;
         }
 
-        .badge.blue {
-            background: rgba(96,165,250,0.12);
-            color: #60a5fa;
-        }
-
-        .badge.gold {
-            background: rgba(230,179,30,0.12);
-            color: #f5d76e;
-        }
-
-        .badge.green {
-            background: rgba(34,197,94,0.12);
-            color: #4ade80;
-        }
-
-        .badge.red {
-            background: rgba(239,68,68,0.12);
-            color: #f87171;
-        }
+        .badge.blue { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .badge.gold { background: rgba(230,179,30,0.12); color: #f5d76e; }
+        .badge.green { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.red { background: rgba(239,68,68,0.12); color: #f87171; }
+        .badge.purple { background: rgba(167,139,250,0.12); color: #a78bfa; }
 
         .table-wrapper {
             overflow-x: auto;
@@ -335,7 +333,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.78rem;
-            min-width: 800px;
+            min-width: 1000px;
         }
 
         thead {
@@ -407,6 +405,11 @@
             color: #60a5fa;
         }
 
+        .status-badge.super_admin {
+            background: rgba(230,179,30,0.15);
+            color: #f5d76e;
+        }
+
         /* ===== ACTION BUTTONS ===== */
         .action-btn {
             padding: 4px 10px;
@@ -426,7 +429,6 @@
             background: rgba(230,179,30,0.1);
             color: #f5d76e;
         }
-
         .action-btn.edit:hover {
             background: rgba(230,179,30,0.2);
         }
@@ -435,7 +437,6 @@
             background: rgba(239,68,68,0.1);
             color: #f87171;
         }
-
         .action-btn.delete:hover {
             background: rgba(239,68,68,0.2);
         }
@@ -444,9 +445,30 @@
             background: rgba(96,165,250,0.1);
             color: #60a5fa;
         }
-
         .action-btn.password:hover {
             background: rgba(96,165,250,0.2);
+        }
+
+        .action-btn.camera {
+            background: rgba(167,139,250,0.1);
+            color: #a78bfa;
+        }
+        .action-btn.camera:hover {
+            background: rgba(167,139,250,0.2);
+        }
+
+        .action-btn.watch {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            animation: pulseWatch 2s infinite;
+        }
+        .action-btn.watch:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        @keyframes pulseWatch {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         /* ===== TOAST ===== */
@@ -467,27 +489,17 @@
             direction: rtl;
         }
 
-        .toast-success {
-            background: rgba(34,197,94,0.15);
-            border: 1px solid rgba(34,197,94,0.2);
-        }
-
-        .toast-error {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid rgba(239,68,68,0.2);
-        }
-
-        .toast-info {
-            background: rgba(96,165,250,0.15);
-            border: 1px solid rgba(96,165,250,0.2);
-        }
+        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
+        .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
+        .toast-info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.2); }
+        .toast-warning { background: rgba(230,179,30,0.15); border: 1px solid rgba(230,179,30,0.2); }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ===== MODAL ===== */
+        /* ===== MODALS ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -508,12 +520,21 @@
             background: #111e3a;
             border: 1px solid rgba(255,255,255,0.06);
             border-radius: 16px;
-            max-width: 520px;
+            max-width: 600px;
             width: 100%;
             max-height: 90vh;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             animation: modalFade 0.3s ease-out;
+        }
+
+        .modal-box.large {
+            max-width: 800px;
+        }
+
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .modal-header {
@@ -540,7 +561,6 @@
             border-radius: 8px;
             transition: all 0.3s;
         }
-
         .modal-close:hover {
             background: rgba(255,255,255,0.04);
             color: #fff;
@@ -589,52 +609,176 @@
             color: #e2e8f0;
         }
 
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.04);
+        .modal-body .form-group .helper-text {
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            margin-top: 4px;
         }
 
-        .btn {
-            padding: 8px 20px;
+        /* ===== Camera Preview ===== */
+        .camera-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0;
+            position: relative;
+            min-height: 240px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-container video {
+            width: 100%;
+            height: auto;
+            max-height: 350px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .camera-container .camera-placeholder {
+            color: rgba(255,255,255,0.2);
+            text-align: center;
+        }
+
+        .camera-container .camera-placeholder i {
+            font-size: 48px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .camera-controls .btn {
+            flex: 1;
+            padding: 10px;
             border: none;
             border-radius: 8px;
-            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             font-family: 'Cairo', sans-serif;
             transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            color: #fff;
+        .camera-controls .btn-success {
+            background: linear-gradient(135deg, #22c55e, #4ade80);
+            color: #0a1628;
         }
-
-        .btn-primary:hover {
-            box-shadow: 0 4px 20px rgba(96,165,250,0.3);
-        }
-
-        .btn-danger {
+        .camera-controls .btn-danger {
             background: linear-gradient(135deg, #ef4444, #f87171);
             color: #fff;
         }
-
-        .btn-danger:hover {
-            box-shadow: 0 4px 20px rgba(239,68,68,0.3);
+        .camera-controls .btn-primary {
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            color: #fff;
         }
-
-        .btn-secondary {
+        .camera-controls .btn-secondary {
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
             color: rgba(255,255,255,0.5);
         }
+        .camera-controls .btn:hover {
+            transform: translateY(-2px);
+        }
 
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.06);
+        .captured-image {
+            margin-top: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 300px;
+            border: 2px solid rgba(96,165,250,0.2);
+        }
+
+        .captured-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ===== Live Stream Modal ===== */
+        .live-stream-container {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .live-stream-container video {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+            object-fit: cover;
+            background: #000;
+        }
+
+        .live-stream-container .stream-status {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(239,68,68,0.8);
             color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-stream-container .stream-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f87171;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .live-stream-container .stream-status.active {
+            background: rgba(34,197,94,0.8);
+        }
+
+        .live-stream-container .stream-status.active .dot {
+            background: #4ade80;
+        }
+
+        /* ===== Verification Badge ===== */
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        .verified-badge.yes {
+            background: rgba(34,197,94,0.12);
+            color: #4ade80;
+        }
+
+        .verified-badge.no {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
         }
 
         /* ===== RESPONSIVE ===== */
@@ -652,6 +796,7 @@
             table { font-size: 0.7rem; min-width: 700px; }
             thead th, tbody td { padding: 6px 8px; }
             .modal-box { max-width: 95%; }
+            .camera-container video { max-height: 200px; }
         }
 
         @media (max-width: 480px) {
@@ -664,34 +809,43 @@
             .section-header h3 { font-size: 13px; }
             thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
             .action-btn { padding: 2px 6px; font-size: 0.55rem; }
+            .camera-controls .btn { font-size: 12px; padding: 8px; }
         }
     </style>
 
-    <!-- ===== HEADER ===== -->
+    <!-- ============================================================
+    HEADER
+    ============================================================ -->
     <div class="users-header">
         <div class="users-header-left">
             <div class="icon"><i class="fas fa-users"></i></div>
             <div>
                 <h2>إدارة المستخدمين</h2>
-                <p>إدارة حسابات المستخدمين والأقاليم والوحدات</p>
+                <p>إدارة حسابات المستخدمين مع نظام المصادقة بالكاميرا</p>
             </div>
         </div>
         <div class="users-header-actions">
-            <button class="btn-action success" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-            <button class="btn-action primary" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
+            <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
+            <button class="btn-action success" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
+            <button class="btn-action camera" id="cameraMonitorBtn"><i class="fas fa-video"></i> مراقبة الكاميرات</button>
             <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
-    <!-- ===== STATS ===== -->
+    <!-- ============================================================
+    STATS
+    ============================================================ -->
     <div class="users-stats" id="usersStats">
         <div class="stat-card"><div class="number" id="totalUsers">0</div><div class="label">👥 إجمالي المستخدمين</div></div>
         <div class="stat-card"><div class="number green" id="activeUsers">0</div><div class="label">🟢 نشط</div></div>
         <div class="stat-card"><div class="number red" id="inactiveUsers">0</div><div class="label">🔴 غير نشط</div></div>
         <div class="stat-card"><div class="number gold" id="adminUsers">0</div><div class="label">🛡️ مدراء</div></div>
+        <div class="stat-card"><div class="number purple" id="verifiedUsers">0</div><div class="label">✅ موثقو الوجه</div></div>
     </div>
 
-    <!-- ===== FILTER BAR ===== -->
+    <!-- ============================================================
+    FILTER BAR
+    ============================================================ -->
     <div class="filter-bar">
         <label><i class="fas fa-search"></i> بحث</label>
         <input type="text" id="searchUser" placeholder="اسم المستخدم، البريد..." />
@@ -720,17 +874,27 @@
         <label><i class="fas fa-user-tag"></i> الدور</label>
         <select id="fRoleUser">
             <option value="الكل">👤 جميع الأدوار</option>
+            <option value="super_admin">👑 سوبر أدمن</option>
             <option value="admin">🛡️ مدير</option>
             <option value="user">👤 مستخدم</option>
             <option value="operator">🔧 مشغل</option>
             <option value="viewer">📡 مشاهد</option>
         </select>
 
+        <label><i class="fas fa-camera"></i> توثيق الوجه</label>
+        <select id="fVerifiedUser">
+            <option value="الكل">📊 الجميع</option>
+            <option value="نعم">✅ موثق</option>
+            <option value="لا">❌ غير موثق</option>
+        </select>
+
         <button class="btn-filter primary" id="filterBtn"><i class="fas fa-filter"></i> فلترة</button>
         <button class="btn-filter outline" id="resetBtn"><i class="fas fa-undo-alt"></i> إلغاء</button>
     </div>
 
-    <!-- ===== TABLE ===== -->
+    <!-- ============================================================
+    TABLE
+    ============================================================ -->
     <div class="users-section">
         <div class="section-header">
             <h3><i class="fas fa-list-ul"></i> قائمة المستخدمين</h3>
@@ -742,16 +906,17 @@
                     <tr>
                         <th style="text-align:right;"><i class="fas fa-hashtag"></i> #</th>
                         <th style="text-align:right;"><i class="fas fa-user"></i> الاسم</th>
-                        <th><i class="fas fa-envelope"></i> البريد الإلكتروني</th>
+                        <th><i class="fas fa-envelope"></i> البريد</th>
                         <th><i class="fas fa-building"></i> الوحدة</th>
                         <th><i class="fas fa-user-tag"></i> الدور</th>
                         <th><i class="fas fa-circle"></i> الحالة</th>
+                        <th><i class="fas fa-camera"></i> الوجه</th>
                         <th><i class="fas fa-cogs"></i> الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersBody">
                     <tr>
-                        <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                        <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
                             <div style="font-size:2rem;margin-bottom:10px;">👥</div>
                             جاري تحميل المستخدمين...
                         </td>
@@ -761,7 +926,9 @@
         </div>
     </div>
 
-    <!-- ===== MODAL: إضافة / تعديل مستخدم ===== -->
+    <!-- ============================================================
+    MODAL: إضافة / تعديل مستخدم
+    ============================================================ -->
     <div class="modal-overlay" id="userModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -771,19 +938,20 @@
             <div class="modal-body">
                 <input type="hidden" id="editUserId">
                 <div class="form-group">
-                    <label>👤 الاسم الكامل</label>
+                    <label>👤 الاسم الكامل <span style="color:red;">*</span></label>
                     <input type="text" id="userName" placeholder="أحمد محمد">
                 </div>
                 <div class="form-group">
-                    <label>📧 البريد الإلكتروني</label>
+                    <label>📧 البريد الإلكتروني <span style="color:red;">*</span></label>
                     <input type="email" id="userEmail" placeholder="ahmed@marine.tn">
                 </div>
                 <div class="form-group">
-                    <label>🔑 كلمة المرور</label>
+                    <label>🔑 كلمة المرور <span style="color:red;">*</span></label>
                     <input type="password" id="userPassword" placeholder="********">
+                    <div class="helper-text">حد أدنى 8 أحرف</div>
                 </div>
                 <div class="form-group">
-                    <label>🏛️ الوحدة</label>
+                    <label>🏛️ الوحدة <span style="color:red;">*</span></label>
                     <select id="userUnit">
                         <option value="">-- اختر الوحدة --</option>
                         <option value="الحرس البحري بالشمال">🗺️ الحرس البحري بالشمال</option>
@@ -798,9 +966,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>🛡️ الدور</label>
+                    <label>🛡️ الدور <span style="color:red;">*</span></label>
                     <select id="userRole">
                         <option value="user">👤 مستخدم</option>
+                        <option value="super_admin">👑 سوبر أدمن</option>
                         <option value="admin">🛡️ مدير</option>
                         <option value="operator">🔧 مشغل</option>
                         <option value="viewer">📡 مشاهد</option>
@@ -813,6 +982,27 @@
                         <option value="غير نشط">🔴 غير نشط</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>📸 صورة الوجه</label>
+                    <div class="camera-container" id="faceCaptureContainer">
+                        <video id="faceCaptureVideo" autoplay muted playsinline style="display:none;"></video>
+                        <div class="camera-placeholder" id="facePlaceholder">
+                            <i class="fas fa-camera"></i>
+                            <p>اضغط "التقاط صورة" لالتقاط وجه المستخدم</p>
+                        </div>
+                        <canvas id="faceCaptureCanvas" style="display:none;"></canvas>
+                    </div>
+                    <div class="camera-controls">
+                        <button class="btn btn-primary" id="startCameraBtn"><i class="fas fa-video"></i> تشغيل الكاميرا</button>
+                        <button class="btn btn-success" id="captureFaceBtn" disabled><i class="fas fa-camera"></i> التقاط صورة</button>
+                        <button class="btn btn-danger" id="stopCameraBtn" style="display:none;"><i class="fas fa-stop"></i> إيقاف</button>
+                    </div>
+                    <input type="hidden" id="faceImageData" value="">
+                    <div id="capturedFacePreview" style="display:none;margin-top:10px;">
+                        <label style="font-size:12px;color:rgba(255,255,255,0.3);">📸 الصورة الملتقطة:</label>
+                        <div class="captured-image"><img id="facePreviewImage" src="" alt="صورة الوجه" /></div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="modalCancel">إلغاء</button>
@@ -821,7 +1011,9 @@
         </div>
     </div>
 
-    <!-- ===== MODAL: تغيير كلمة المرور ===== -->
+    <!-- ============================================================
+    MODAL: تغيير كلمة المرور
+    ============================================================ -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -837,6 +1029,7 @@
                 <div class="form-group">
                     <label>🔑 كلمة المرور الجديدة</label>
                     <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
+                    <div class="helper-text">حد أدنى 8 أحرف</div>
                 </div>
                 <div class="form-group">
                     <label>🔑 تأكيد كلمة المرور</label>
@@ -851,43 +1044,96 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED
+    MODAL: كاميرا المراقبة المباشرة (Super Admin Only)
+    ============================================================ -->
+    <div class="modal-overlay" id="cameraMonitorModal">
+        <div class="modal-box large">
+            <div class="modal-header">
+                <h3><i class="fas fa-video" style="color:#f87171;"></i> مراقبة الكاميرات - وضع المشاهدة المباشرة</h3>
+                <button class="modal-close" id="cameraMonitorClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>👤 اختر المستخدم للمراقبة</label>
+                    <select id="monitorUserSelect" style="width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#e2e8f0;font-size:14px;font-family:'Cairo',sans-serif;">
+                        <option value="">-- اختر مستخدم --</option>
+                    </select>
+                </div>
+                <div class="camera-container live-stream-container" id="liveStreamContainer">
+                    <video id="liveStreamVideo" autoplay muted playsinline style="display:none;width:100%;height:auto;"></video>
+                    <div class="camera-placeholder" id="liveStreamPlaceholder">
+                        <i class="fas fa-eye" style="font-size:48px;display:block;margin-bottom:8px;"></i>
+                        <p>اختر مستخدمًا لبدء المراقبة المباشرة</p>
+                    </div>
+                    <div class="stream-status" id="streamStatus" style="display:none;">
+                        <span class="dot"></span>
+                        <span id="streamStatusText">جاري البث المباشر</span>
+                    </div>
+                </div>
+                <div class="camera-controls">
+                    <button class="btn btn-success" id="startMonitorBtn"><i class="fas fa-play"></i> بدء المراقبة</button>
+                    <button class="btn btn-danger" id="stopMonitorBtn" disabled><i class="fas fa-stop"></i> إيقاف</button>
+                    <button class="btn btn-primary" id="captureMonitorBtn" disabled><i class="fas fa-camera"></i> التقاط صورة</button>
+                </div>
+                <div id="monitorCapturedPreview" style="display:none;margin-top:12px;">
+                    <div class="captured-image"><img id="monitorCapturedImage" src="" alt="صورة ملتقطة" style="max-width:200px;border-radius:8px;" /></div>
+                </div>
+                <div style="margin-top:12px;padding:10px;background:rgba(239,68,68,0.05);border-radius:8px;border:1px solid rgba(239,68,68,0.1);">
+                    <p style="font-size:12px;color:rgba(255,255,255,0.3);">
+                        <i class="fas fa-shield-alt" style="color:#f87171;"></i>
+                        🔒 هذه الميزة متاحة فقط للمدراء وسوبر أدمن لأغراض أمنية
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    JAVASCRIPT - ENTERPRISE PRO WITH CAMERA
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('👥 Users Page - loading...');
+            console.log('👥 Users Page with Camera - loading...');
 
             // ============================================================
             // DATA
             // ============================================================
             var usersData = [
-                { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.tn', unit: 'الحرس البحري بالشمال', role: 'admin',
-                    status: 'نشط' },
+                { id: 1, name: 'أحمد محمد', email: 'ahmed@marine.tn', unit: 'الحرس البحري بالشمال', role: 'super_admin',
+                    status: 'نشط', faceVerified: true },
                 { id: 2, name: 'سارة علي', email: 'sara@marine.tn', unit: 'الحرس البحري بالساحل', role: 'admin',
-                    status: 'نشط' },
+                    status: 'نشط', faceVerified: true },
                 { id: 3, name: 'محمد خالد', email: 'mohamed@marine.tn', unit: 'وحدة الصيانة والإسناد البحري تونس',
-                    role: 'user', status: 'نشط' },
+                    role: 'user', status: 'نشط', faceVerified: false },
                 { id: 4, name: 'فاطمة نور', email: 'fatma@marine.tn', unit: 'الحرس البحري بالوسط', role: 'operator',
-                    status: 'نشط' },
+                    status: 'نشط', faceVerified: false },
                 { id: 5, name: 'علي حسن', email: 'ali@marine.tn', unit: 'الحرس البحري بالجنوب', role: 'viewer',
-                    status: 'غير نشط' },
+                    status: 'غير نشط', faceVerified: false },
                 { id: 6, name: 'نورا سليم', email: 'nora@marine.tn', unit: 'وحدة الصيانة والإسناد البحري المنستير',
-                    role: 'user', status: 'نشط' },
+                    role: 'user', status: 'نشط', faceVerified: false },
                 { id: 7, name: 'ياسين عمر', email: 'yassin@marine.tn', unit: 'وحدة الصيانة والإسناد البحري جرجيس',
-                    role: 'operator', status: 'غير نشط' },
+                    role: 'operator', status: 'غير نشط', faceVerified: false },
                 { id: 8, name: 'ليلى منير', email: 'layla@marine.tn', unit: 'المجمع الأمني بقبيبة', role: 'admin',
-                    status: 'نشط' },
+                    status: 'نشط', faceVerified: true },
                 { id: 9, name: 'كريم سامي', email: 'karim@marine.tn', unit: 'الحرس البحري بالشمال', role: 'user',
-                    status: 'نشط' },
+                    status: 'نشط', faceVerified: false },
                 { id: 10, name: 'منى طارق', email: 'mona@marine.tn', unit: 'وحدة الصيانة والإسناد البحري صفاقس',
-                    role: 'viewer', status: 'نشط' }
+                    role: 'viewer', status: 'نشط', faceVerified: false }
             ];
 
             var nextId = 11;
             var filteredData = usersData.slice();
             var currentEditId = null;
+
+            // ============================================================
+            // CAMERA STATE
+            // ============================================================
+            var cameraStream = null;
+            var isCameraActive = false;
+            var monitorStream = null;
+            var isMonitorActive = false;
 
             // ============================================================
             // DOM REFS
@@ -898,12 +1144,14 @@
             // HELPERS
             // ============================================================
             function getRoleLabel(role) {
-                var map = { admin: '🛡️ مدير', user: '👤 مستخدم', operator: '🔧 مشغل', viewer: '📡 مشاهد' };
+                var map = { super_admin: '👑 سوبر أدمن', admin: '🛡️ مدير', user: '👤 مستخدم', operator: '🔧 مشغل',
+                    viewer: '📡 مشاهد' };
                 return map[role] || role;
             }
 
             function getRoleClass(role) {
-                var map = { admin: 'admin', user: 'user', operator: 'user', viewer: 'user' };
+                var map = { super_admin: 'super_admin', admin: 'admin', user: 'user', operator: 'user',
+                    viewer: 'user' };
                 return map[role] || 'user';
             }
 
@@ -937,12 +1185,15 @@
                 var total = usersData.length;
                 var active = usersData.filter(function(u) { return u.status === 'نشط'; }).length;
                 var inactive = usersData.filter(function(u) { return u.status === 'غير نشط'; }).length;
-                var admins = usersData.filter(function(u) { return u.role === 'admin'; }).length;
+                var admins = usersData.filter(function(u) { return u.role === 'admin' || u.role === 'super_admin'; })
+                .length;
+                var verified = usersData.filter(function(u) { return u.faceVerified === true; }).length;
 
                 $('totalUsers').textContent = total;
                 $('activeUsers').textContent = active;
                 $('inactiveUsers').textContent = inactive;
                 $('adminUsers').textContent = admins;
+                $('verifiedUsers').textContent = verified;
 
                 var badge = $('usersBadge');
                 badge.textContent = '👥 ' + total + ' مستخدم';
@@ -957,12 +1208,17 @@
                 var unitFilter = $('fUnitUser').value;
                 var statusFilter = $('fStatusUser').value;
                 var roleFilter = $('fRoleUser').value;
+                var verifiedFilter = $('fVerifiedUser').value;
 
                 filteredData = usersData.filter(function(u) {
                     if (search && !u.name.includes(search) && !u.email.includes(search)) return false;
                     if (unitFilter !== 'الكل' && u.unit !== unitFilter) return false;
                     if (statusFilter !== 'الكل' && u.status !== statusFilter) return false;
                     if (roleFilter !== 'الكل' && u.role !== roleFilter) return false;
+                    if (verifiedFilter !== 'الكل') {
+                        var isVerified = verifiedFilter === 'نعم' ? true : false;
+                        if (u.faceVerified !== isVerified) return false;
+                    }
                     return true;
                 });
 
@@ -971,7 +1227,7 @@
                 if (filteredData.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
                                 <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
                                 لا توجد نتائج مطابقة
                             </td>
@@ -982,6 +1238,22 @@
 
                 var html = '';
                 filteredData.forEach(function(u, index) {
+                    var verifiedHtml = u.faceVerified ?
+                        '<span class="verified-badge yes"><i class="fas fa-check-circle"></i> موثق</span>' :
+                        '<span class="verified-badge no"><i class="fas fa-times-circle"></i> غير موثق</span>';
+
+                    // Only show camera/watch buttons for super_admin and admin
+                    var userRole = localStorage.getItem('userRole') || 'user';
+                    var isAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+                    var cameraBtn = isAdmin ?
+                        `<button class="action-btn camera" onclick="captureUserFace(${u.id})"><i class="fas fa-camera"></i> وجه</button>` :
+                        '';
+
+                    var watchBtn = isAdmin ?
+                        `<button class="action-btn watch" onclick="watchUserLive(${u.id})"><i class="fas fa-eye"></i> مراقبة</button>` :
+                        '';
+
                     html += `
                         <tr>
                             <td style="font-weight:600;color:#60a5fa;">${index + 1}</td>
@@ -990,9 +1262,12 @@
                             <td style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${u.unit}</td>
                             <td><span class="status-badge ${getRoleClass(u.role)}">${getRoleLabel(u.role)}</span></td>
                             <td><span class="status-badge ${getStatusClass(u.status)}">${getStatusBadge(u.status)}</span></td>
+                            <td>${verifiedHtml}</td>
                             <td>
                                 <button class="action-btn edit" onclick="editUser(${u.id})"><i class="fas fa-edit"></i></button>
                                 <button class="action-btn password" onclick="changePassword(${u.id})"><i class="fas fa-key"></i></button>
+                                ${cameraBtn}
+                                ${watchBtn}
                                 <button class="action-btn delete" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
@@ -1006,7 +1281,6 @@
             // CRUD OPERATIONS
             // ============================================================
 
-            // --- Refresh ---
             function refreshUsers() {
                 var btn = $('refreshBtn');
                 var original = btn.innerHTML;
@@ -1022,7 +1296,6 @@
                 }, 600);
             }
 
-            // --- Open Add Modal ---
             function openAddModal() {
                 currentEditId = null;
                 $('modalTitle').textContent = '➕ إضافة مستخدم جديد';
@@ -1033,10 +1306,14 @@
                 $('userUnit').value = '';
                 $('userRole').value = 'user';
                 $('userStatus').value = 'نشط';
+                $('faceImageData').value = '';
+                $('capturedFacePreview').style.display = 'none';
+                $('faceCaptureVideo').style.display = 'none';
+                $('facePlaceholder').style.display = 'block';
+                stopCamera();
                 $('userModal').classList.add('visible');
             }
 
-            // --- Open Edit Modal ---
             window.editUser = function(id) {
                 var user = usersData.find(function(u) { return u.id === id; });
                 if (!user) return;
@@ -1050,10 +1327,14 @@
                 $('userUnit').value = user.unit;
                 $('userRole').value = user.role;
                 $('userStatus').value = user.status;
+                $('faceImageData').value = '';
+                $('capturedFacePreview').style.display = 'none';
+                $('faceCaptureVideo').style.display = 'none';
+                $('facePlaceholder').style.display = 'block';
+                stopCamera();
                 $('userModal').classList.add('visible');
             };
 
-            // --- Save User ---
             function saveUser() {
                 var name = $('userName').value.trim();
                 var email = $('userEmail').value.trim();
@@ -1061,26 +1342,29 @@
                 var unit = $('userUnit').value;
                 var role = $('userRole').value;
                 var status = $('userStatus').value;
+                var faceData = $('faceImageData').value;
 
                 if (!name) { showToast('⚠️ يرجى إدخال اسم المستخدم', 'error'); return; }
                 if (!email) { showToast('⚠️ يرجى إدخال البريد الإلكتروني', 'error'); return; }
                 if (!unit) { showToast('⚠️ يرجى اختيار الوحدة', 'error'); return; }
 
                 if (currentEditId === null) {
-                    // --- Add New ---
                     if (!password) { showToast('⚠️ يرجى إدخال كلمة المرور', 'error'); return; }
+                    if (password.length < 8) { showToast('⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error'); return; }
+
                     var newUser = {
                         id: nextId++,
                         name: name,
                         email: email,
                         unit: unit,
                         role: role,
-                        status: status
+                        status: status,
+                        faceVerified: !!faceData,
+                        faceImage: faceData || null
                     };
                     usersData.push(newUser);
                     showToast('✅ تم إضافة المستخدم ' + name + ' بنجاح', 'success');
                 } else {
-                    // --- Edit Existing ---
                     var user = usersData.find(function(u) { return u.id === currentEditId; });
                     if (user) {
                         user.name = name;
@@ -1088,16 +1372,22 @@
                         user.unit = unit;
                         user.role = role;
                         user.status = status;
-                        showToast('✅ تم تحديث بيانات ' + name + ' بنجاح', 'success');
+                        if (faceData) {
+                            user.faceImage = faceData;
+                            user.faceVerified = true;
+                            showToast('✅ تم تحديث بيانات ' + name + ' وصورة الوجه', 'success');
+                        } else {
+                            showToast('✅ تم تحديث بيانات ' + name + ' بنجاح', 'success');
+                        }
                     }
                 }
 
                 $('userModal').classList.remove('visible');
+                stopCamera();
                 updateStats();
                 renderTable();
             }
 
-            // --- Delete User ---
             window.deleteUser = function(id) {
                 var user = usersData.find(function(u) { return u.id === id; });
                 if (!user) return;
@@ -1110,7 +1400,6 @@
                 showToast('🗑️ تم حذف المستخدم ' + user.name + ' بنجاح', 'success');
             };
 
-            // --- Change Password ---
             window.changePassword = function(id) {
                 var user = usersData.find(function(u) { return u.id === id; });
                 if (!user) return;
@@ -1127,8 +1416,8 @@
                 var newPass = $('newPassword').value;
                 var confirmPass = $('confirmPassword').value;
 
-                if (!newPass || newPass.length < 4) {
-                    showToast('⚠️ كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+                if (!newPass || newPass.length < 8) {
+                    showToast('⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error');
                     return;
                 }
                 if (newPass !== confirmPass) {
@@ -1141,8 +1430,219 @@
             }
 
             // ============================================================
+            // CAMERA FUNCTIONS - CAPTURE FACE
+            // ============================================================
+
+            async function startCamera() {
+                try {
+                    if (cameraStream) {
+                        cameraStream.getTracks().forEach(t => t.stop());
+                    }
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                        audio: false
+                    });
+
+                    var video = $('faceCaptureVideo');
+                    video.srcObject = cameraStream;
+                    video.style.display = 'block';
+                    $('facePlaceholder').style.display = 'none';
+                    isCameraActive = true;
+
+                    $('startCameraBtn').disabled = true;
+                    $('captureFaceBtn').disabled = false;
+                    $('stopCameraBtn').style.display = 'inline-flex';
+
+                    showToast('📸 الكاميرا قيد التشغيل', 'info');
+                } catch (error) {
+                    console.error('Camera error:', error);
+                    showToast('⚠️ لا يمكن الوصول إلى الكاميرا. تأكد من الأذونات.', 'error');
+                }
+            }
+
+            function stopCamera() {
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                    cameraStream = null;
+                }
+                isCameraActive = false;
+                var video = $('faceCaptureVideo');
+                video.srcObject = null;
+                video.style.display = 'none';
+                $('facePlaceholder').style.display = 'block';
+
+                $('startCameraBtn').disabled = false;
+                $('captureFaceBtn').disabled = true;
+                $('stopCameraBtn').style.display = 'none';
+            }
+
+            function captureFace() {
+                var video = $('faceCaptureVideo');
+                var canvas = $('faceCaptureCanvas');
+                var context = canvas.getContext('2d');
+
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                var imageData = canvas.toDataURL('image/jpeg', 0.9);
+                $('faceImageData').value = imageData;
+
+                var preview = $('facePreviewImage');
+                preview.src = imageData;
+                $('capturedFacePreview').style.display = 'block';
+
+                showToast('✅ تم التقاط صورة الوجه بنجاح', 'success');
+                stopCamera();
+            }
+
+            // ============================================================
+            // CAMERA FUNCTIONS - CAPTURE USER FACE FROM TABLE
+            // ============================================================
+
+            window.captureUserFace = function(userId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                // Open modal and start camera
+                openAddModal();
+                currentEditId = userId;
+                $('modalTitle').textContent = '📸 التقاط وجه المستخدم: ' + user.name;
+                $('userName').value = user.name;
+                $('userEmail').value = user.email;
+                $('userUnit').value = user.unit;
+                $('userRole').value = user.role;
+                $('userStatus').value = user.status;
+                $('userPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور الحالية';
+                $('faceImageData').value = '';
+
+                // Start camera
+                setTimeout(function() {
+                    startCamera();
+                }, 500);
+
+                showToast('📸 قم بتوجيه الكاميرا نحو وجه ' + user.name, 'info');
+            };
+
+            // ============================================================
+            // LIVE MONITORING - Super Admin Only
+            // ============================================================
+
+            function openCameraMonitor() {
+                var userRole = localStorage.getItem('userRole') || 'user';
+                if (userRole !== 'super_admin' && userRole !== 'admin') {
+                    showToast('⚠️ هذه الميزة متاحة فقط للمدراء وسوبر أدمن', 'error');
+                    return;
+                }
+
+                // Populate user select
+                var select = $('monitorUserSelect');
+                select.innerHTML = '<option value="">-- اختر مستخدم --</option>';
+                usersData.filter(function(u) { return u.status === 'نشط'; }).forEach(function(u) {
+                    var opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.textContent = u.name + ' (' + u.email + ')';
+                    select.appendChild(opt);
+                });
+
+                $('cameraMonitorModal').classList.add('visible');
+                showToast('🎥 اختر مستخدمًا لبدء المراقبة المباشرة', 'info');
+            }
+
+            async function startMonitor() {
+                var userId = parseInt($('monitorUserSelect').value);
+                if (!userId) {
+                    showToast('⚠️ يرجى اختيار مستخدم أولاً', 'warning');
+                    return;
+                }
+
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                try {
+                    // In production, this would use WebRTC to stream from the user's device
+                    // For demo, we use the admin's camera as a simulation
+                    if (monitorStream) {
+                        monitorStream.getTracks().forEach(t => t.stop());
+                    }
+
+                    // Request camera access
+                    monitorStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+                        audio: false
+                    });
+
+                    var video = $('liveStreamVideo');
+                    video.srcObject = monitorStream;
+                    video.style.display = 'block';
+                    $('liveStreamPlaceholder').style.display = 'none';
+                    isMonitorActive = true;
+
+                    var status = $('streamStatus');
+                    status.style.display = 'flex';
+                    status.className = 'stream-status active';
+                    $('streamStatusText').textContent = 'مراقبة: ' + user.name;
+
+                    $('startMonitorBtn').disabled = true;
+                    $('stopMonitorBtn').disabled = false;
+                    $('captureMonitorBtn').disabled = false;
+
+                    // Simulate user verification
+                    if (user.faceVerified) {
+                        showToast('✅ تم التحقق من هوية ' + user.name + ' (الوجه مطابق)', 'success');
+                    } else {
+                        showToast('⚠️ ' + user.name + ' لم يوثق وجهه بعد', 'warning');
+                    }
+
+                } catch (error) {
+                    console.error('Monitor error:', error);
+                    showToast('⚠️ لا يمكن الوصول إلى كاميرا المراقبة', 'error');
+                }
+            }
+
+            function stopMonitor() {
+                if (monitorStream) {
+                    monitorStream.getTracks().forEach(t => t.stop());
+                    monitorStream = null;
+                }
+                isMonitorActive = false;
+
+                var video = $('liveStreamVideo');
+                video.srcObject = null;
+                video.style.display = 'none';
+                $('liveStreamPlaceholder').style.display = 'block';
+                $('streamStatus').style.display = 'none';
+
+                $('startMonitorBtn').disabled = false;
+                $('stopMonitorBtn').disabled = true;
+                $('captureMonitorBtn').disabled = true;
+
+                showToast('⏹️ تم إيقاف المراقبة', 'info');
+            }
+
+            function captureMonitor() {
+                var video = $('liveStreamVideo');
+                var canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                var context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                var imageData = canvas.toDataURL('image/jpeg', 0.9);
+                var preview = $('monitorCapturedImage');
+                preview.src = imageData;
+                $('monitorCapturedPreview').style.display = 'block';
+
+                showToast('📸 تم التقاط صورة من البث المباشر', 'success');
+
+                // In production, save this image to the server
+                console.log('📸 Captured monitor image:', imageData.substring(0, 100) + '...');
+            }
+
+            // ============================================================
             // FILTERS
             // ============================================================
+
             function applyFilters() {
                 renderTable();
                 showToast('✅ تم تطبيق الفلاتر', 'success');
@@ -1153,30 +1653,73 @@
                 $('fUnitUser').value = 'الكل';
                 $('fStatusUser').value = 'الكل';
                 $('fRoleUser').value = 'الكل';
+                $('fVerifiedUser').value = 'الكل';
                 renderTable();
                 showToast('✅ تم إلغاء جميع الفلاتر', 'success');
             }
 
             // ============================================================
+            // WATCH USER LIVE (Shortcut)
+            // ============================================================
+
+            window.watchUserLive = function(userId) {
+                var user = usersData.find(function(u) { return u.id === userId; });
+                if (!user) return;
+
+                var userRole = localStorage.getItem('userRole') || 'user';
+                if (userRole !== 'super_admin' && userRole !== 'admin') {
+                    showToast('⚠️ هذه الميزة متاحة فقط للمدراء وسوبر أدمن', 'error');
+                    return;
+                }
+
+                openCameraMonitor();
+                setTimeout(function() {
+                    $('monitorUserSelect').value = userId;
+                    startMonitor();
+                }, 600);
+
+                showToast('🎥 بدء مراقبة: ' + user.name, 'info');
+            };
+
+            // ============================================================
             // INIT
             // ============================================================
+
             function init() {
-                console.log('🚀 Initializing Users page...');
+                console.log('🚀 Initializing Users page with Camera...');
                 updateStats();
                 renderTable();
+
+                // Check user role for permissions
+                var userRole = localStorage.getItem('userRole') || 'user';
+                var isAdmin = userRole === 'super_admin' || userRole === 'admin';
+
+                if (!isAdmin) {
+                    // Hide admin-only buttons
+                    document.querySelectorAll('.action-btn.camera, .action-btn.watch').forEach(function(btn) {
+                        btn.style.display = 'none';
+                    });
+                }
 
                 // --- Events ---
                 $('refreshBtn').addEventListener('click', refreshUsers);
                 $('addUserBtn').addEventListener('click', openAddModal);
-                $('modalClose').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
-                $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
+
+                $('modalClose').addEventListener('click', function() { $('userModal').classList.remove('visible');
+                    stopCamera(); });
+                $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible');
+                    stopCamera(); });
                 $('modalSave').addEventListener('click', saveUser);
 
                 $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove(
-                    'visible'); });
+                        'visible'); });
                 $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove(
-                    'visible'); });
+                        'visible'); });
                 $('passwordModalSave').addEventListener('click', savePassword);
+
+                $('cameraMonitorClose').addEventListener('click', function() { $('cameraMonitorModal').classList.remove(
+                        'visible');
+                    stopMonitor(); });
 
                 $('filterBtn').addEventListener('click', applyFilters);
                 $('resetBtn').addEventListener('click', resetFilters);
@@ -1185,17 +1728,32 @@
                 $('fUnitUser').addEventListener('change', renderTable);
                 $('fStatusUser').addEventListener('change', renderTable);
                 $('fRoleUser').addEventListener('change', renderTable);
+                $('fVerifiedUser').addEventListener('change', renderTable);
+
+                // Camera buttons
+                $('startCameraBtn').addEventListener('click', startCamera);
+                $('stopCameraBtn').addEventListener('click', function() { stopCamera();
+                    showToast('⏹️ تم إيقاف الكاميرا', 'info'); });
+                $('captureFaceBtn').addEventListener('click', captureFace);
+
+                // Monitor buttons
+                $('cameraMonitorBtn').addEventListener('click', openCameraMonitor);
+                $('startMonitorBtn').addEventListener('click', startMonitor);
+                $('stopMonitorBtn').addEventListener('click', stopMonitor);
+                $('captureMonitorBtn').addEventListener('click', captureMonitor);
 
                 // Close modal on overlay click
                 document.querySelectorAll('.modal-overlay').forEach(function(m) {
                     m.addEventListener('click', function(e) {
                         if (e.target === this) {
                             this.classList.remove('visible');
+                            stopCamera();
+                            stopMonitor();
                         }
                     });
                 });
 
-                console.log('✅ Users Page loaded successfully');
+                console.log('✅ Users Page with Camera loaded successfully');
                 console.log('👥 ' + usersData.length + ' users loaded');
             }
 
@@ -1207,10 +1765,18 @@
             window.editUser = editUser;
             window.deleteUser = deleteUser;
             window.changePassword = changePassword;
+            window.captureUserFace = captureUserFace;
+            window.watchUserLive = watchUserLive;
             window.showToast = showToast;
             window.refreshUsers = refreshUsers;
             window.applyFilters = applyFilters;
             window.resetFilters = resetFilters;
+            window.startCamera = startCamera;
+            window.stopCamera = stopCamera;
+            window.captureFace = captureFace;
+            window.startMonitor = startMonitor;
+            window.stopMonitor = stopMonitor;
+            window.captureMonitor = captureMonitor;
 
         })();
     </script>
