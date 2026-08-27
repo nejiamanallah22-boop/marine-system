@@ -1,6 +1,10 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
+        /* ============================================================
+           👥 USERS PAGE - ENTERPRISE PRO VERSION (FIXED)
+           ============================================================ */
+
         #page-users {
             width: 100%;
             max-width: 100%;
@@ -1168,8 +1172,10 @@
                 $('modalCancel').addEventListener('click', function() { $('userModal').classList.remove('visible'); });
                 $('modalSave').addEventListener('click', saveUser);
 
-                $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove('visible'); });
-                $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove('visible'); });
+                $('passwordModalClose').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
+                $('passwordModalCancel').addEventListener('click', function() { $('passwordModal').classList.remove(
+                    'visible'); });
                 $('passwordModalSave').addEventListener('click', savePassword);
 
                 $('filterBtn').addEventListener('click', applyFilters);
@@ -1203,6 +1209,8 @@
             window.changePassword = changePassword;
             window.showToast = showToast;
             window.refreshUsers = refreshUsers;
+            window.applyFilters = applyFilters;
+            window.resetFilters = resetFilters;
 
         })();
     </script>
