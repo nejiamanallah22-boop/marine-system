@@ -2,7 +2,7 @@
 <div id="page-efficiency">
     <style>
         /* ============================================================
-           📊 EFFICIENCY PAGE - ENTERPRISE PRO VERSION
+           📊 EFFICIENCY PAGE - FIXED (No duplicate declaration)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -836,7 +836,7 @@
             </div>
         </div>
         <div class="eff-header-actions">
-            <button class="btn-action primary" onclick="refreshEfficiency()">
+            <button class="btn-action primary" id="refreshBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
             <button class="btn-action secondary" onclick="window.print()">
@@ -881,7 +881,7 @@
     ============================================================ -->
     <div class="filter-bar">
         <label><i class="fas fa-map-marker-alt"></i> الإقليم</label>
-        <select id="fRegEff" onchange="renderEfficiency()">
+        <select id="fRegEff">
             <option value="الكل">🌍 جميع الأقاليم</option>
             <option value="الشمال">🗺️ الحرس البحري بالشمال</option>
             <option value="الساحل">🗺️ الحرس البحري بالساحل</option>
@@ -895,7 +895,7 @@
         </select>
 
         <label><i class="fas fa-filter"></i> الفئة</label>
-        <select id="fCatEff" onchange="renderEfficiency()">
+        <select id="fCatEff">
             <option value="الكل">📦 جميع الفئات</option>
             <option value="البروق">البروق</option>
             <option value="صقور">صقور</option>
@@ -905,23 +905,23 @@
         </select>
 
         <label><i class="fas fa-chart-bar"></i> الحالة</label>
-        <select id="fStatusEff" onchange="renderEfficiency()">
+        <select id="fStatusEff">
             <option value="الكل">📊 جميع الحالات</option>
             <option value="صالح">✅ صالح</option>
             <option value="صيانة">🔧 تحت الصيانة</option>
             <option value="معطب">⚠️ معطب</option>
         </select>
 
-        <button class="btn-filter primary" onclick="renderEfficiency()">
+        <button class="btn-filter primary" id="filterBtn">
             <i class="fas fa-filter"></i> فلترة
         </button>
-        <button class="btn-filter outline" onclick="resetEfficiencyFilters()">
+        <button class="btn-filter outline" id="resetBtn">
             <i class="fas fa-undo-alt"></i> إلغاء
         </button>
     </div>
 
     <!-- ============================================================
-    GENERAL EFFICIENCY TABLE - WITH PERCENTAGES
+    GENERAL EFFICIENCY TABLE
     ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
@@ -956,7 +956,7 @@
     </div>
 
     <!-- ============================================================
-    REGIONS TABLES - WITH PERCENTAGES
+    REGIONS TABLES
     ============================================================ -->
     <div class="eff-section">
         <div class="section-header">
@@ -1490,32 +1490,39 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT
+    JAVASCRIPT - FIXED (using var instead of const)
     ============================================================ -->
     <script>
         // ============================================================
-        // DATA
+        // ✅ FIX: Using var to avoid duplicate declaration
         // ============================================================
-        const efficiencyData = {
-            general: [
-                { category: 'البروق', active: 18, damaged: 4, total: 22, efficiency: 81.8 },
-                { category: 'صقور', active: 12, damaged: 3, total: 15, efficiency: 80.0 },
-                { category: 'خوافر', active: 8, damaged: 5, total: 13, efficiency: 61.5 },
-                { category: 'زوارق مزدوجة', active: 6, damaged: 1, total: 7, efficiency: 85.7 },
-                { category: 'طوافات', active: 4, damaged: 2, total: 6, efficiency: 66.7 }
-            ],
-            regions: {
-                'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
-                'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
-                'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
-                'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
-                'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
-                'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
-                'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
-                'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
-                'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
-            }
-        };
+
+        // ✅ Check if already defined to prevent errors
+        if (typeof window.efficiencyData === 'undefined') {
+            window.efficiencyData = {
+                general: [
+                    { category: 'البروق', active: 18, damaged: 4, total: 22, efficiency: 81.8 },
+                    { category: 'صقور', active: 12, damaged: 3, total: 15, efficiency: 80.0 },
+                    { category: 'خوافر', active: 8, damaged: 5, total: 13, efficiency: 61.5 },
+                    { category: 'زوارق مزدوجة', active: 6, damaged: 1, total: 7, efficiency: 85.7 },
+                    { category: 'طوافات', active: 4, damaged: 2, total: 6, efficiency: 66.7 }
+                ],
+                regions: {
+                    'الشمال': { vessels: 12, active: 8, maintenance: 3, damaged: 1 },
+                    'الساحل': { vessels: 15, active: 10, maintenance: 4, damaged: 1 },
+                    'الوسط': { vessels: 10, active: 5, maintenance: 3, damaged: 2 },
+                    'الجنوب': { vessels: 8, active: 3, maintenance: 2, damaged: 3 },
+                    'وحدة الصيانة والإسناد البحري تونس': { vessels: 6, active: 5, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري المنستير': { vessels: 8, active: 7, maintenance: 1, damaged: 0 },
+                    'وحدة الصيانة والإسناد البحري صفاقس': { vessels: 5, active: 3, maintenance: 1, damaged: 1 },
+                    'وحدة الصيانة والإسناد البحري جرجيس': { vessels: 7, active: 6, maintenance: 1, damaged: 0 },
+                    'المجمع الأمني بقبيبة': { vessels: 4, active: 4, maintenance: 0, damaged: 0 }
+                }
+            };
+        }
+
+        // ✅ Use the global data
+        var efficiencyData = window.efficiencyData;
 
         // ============================================================
         // RENDER FUNCTIONS
@@ -1527,22 +1534,23 @@
         }
 
         function renderStats() {
-            const regionFilter = document.getElementById('fRegEff').value;
-            let total = 0,
+            var regionFilter = document.getElementById('fRegEff').value;
+            var total = 0,
                 active = 0,
                 maintenance = 0,
                 damaged = 0;
 
-            Object.entries(efficiencyData.regions).forEach(([name, data]) => {
+            for (var name in efficiencyData.regions) {
+                var data = efficiencyData.regions[name];
                 if (regionFilter === 'الكل' || name === regionFilter) {
                     total += data.vessels;
                     active += data.active;
                     maintenance += data.maintenance;
                     damaged += data.damaged;
                 }
-            });
+            }
 
-            const efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
+            var efficiency = total > 0 ? ((active / total) * 100).toFixed(1) : 0;
 
             document.getElementById('totalVessels').textContent = total;
             document.getElementById('activeVessels').textContent = active;
@@ -1552,18 +1560,20 @@
         }
 
         function renderGeneralTable() {
-            const tbody = document.getElementById('generalBody');
-            const categoryFilter = document.getElementById('fCatEff').value;
-            const statusFilter = document.getElementById('fStatusEff').value;
+            var tbody = document.getElementById('generalBody');
+            var categoryFilter = document.getElementById('fCatEff').value;
+            var statusFilter = document.getElementById('fStatusEff').value;
 
-            let filtered = efficiencyData.general;
+            var filtered = efficiencyData.general;
 
             if (categoryFilter !== 'الكل') {
-                filtered = filtered.filter(item => item.category === categoryFilter);
+                filtered = filtered.filter(function(item) {
+                    return item.category === categoryFilter;
+                });
             }
 
             if (statusFilter !== 'الكل') {
-                filtered = filtered.filter(item => {
+                filtered = filtered.filter(function(item) {
                     if (statusFilter === 'صالح') return item.efficiency >= 70;
                     if (statusFilter === 'صيانة') return item.efficiency >= 50 && item.efficiency < 70;
                     if (statusFilter === 'معطب') return item.efficiency < 50;
@@ -1584,15 +1594,17 @@
                 return;
             }
 
-            tbody.innerHTML = filtered.map(item => {
-                const efficiency = item.efficiency;
-                const total = item.total || (item.active + item.damaged);
-                const activePercent = total > 0 ? ((item.active / total) * 100).toFixed(1) : 0;
-                const damagedPercent = total > 0 ? ((item.damaged / total) * 100).toFixed(1) : 0;
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var item = filtered[i];
+                var efficiency = item.efficiency;
+                var total = item.total || (item.active + item.damaged);
+                var activePercent = total > 0 ? ((item.active / total) * 100).toFixed(1) : 0;
+                var damagedPercent = total > 0 ? ((item.damaged / total) * 100).toFixed(1) : 0;
 
-                let rowClass = 'row-mid';
-                let statusClass = 'medium';
-                let statusText = 'متوسطة';
+                var rowClass = 'row-mid';
+                var statusClass = 'medium';
+                var statusText = 'متوسطة';
 
                 if (efficiency >= 80) {
                     rowClass = 'row-high';
@@ -1616,9 +1628,9 @@
                     statusText = 'حرجة';
                 }
 
-                const progressClass = efficiency >= 70 ? 'high' : (efficiency >= 50 ? 'mid' : 'low');
+                var progressClass = efficiency >= 70 ? 'high' : (efficiency >= 50 ? 'mid' : 'low');
 
-                return `
+                html += `
                     <tr class="${rowClass}">
                         <td style="text-align:right;font-weight:600;color:#fff;">${item.category}</td>
                         <td>${activePercent}%</td>
@@ -1632,13 +1644,19 @@
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                     </tr>
                 `;
-            }).join('');
+            }
+
+            tbody.innerHTML = html;
         }
 
         function updateBadge() {
-            const badge = document.getElementById('generalBadge');
-            const filtered = efficiencyData.general;
-            const avgEfficiency = filtered.reduce((sum, item) => sum + item.efficiency, 0) / filtered.length;
+            var badge = document.getElementById('generalBadge');
+            var filtered = efficiencyData.general;
+            var sum = 0;
+            for (var i = 0; i < filtered.length; i++) {
+                sum += filtered[i].efficiency;
+            }
+            var avgEfficiency = sum / filtered.length;
 
             if (avgEfficiency >= 80) {
                 badge.textContent = '✅ أداء ممتاز';
@@ -1666,13 +1684,14 @@
         }
 
         function refreshEfficiency() {
-            const btn = document.querySelector('.btn-action.primary');
+            var btn = document.querySelector('.btn-action.primary');
+            var originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
             btn.disabled = true;
 
-            setTimeout(() => {
+            setTimeout(function() {
                 renderEfficiency();
-                btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
+                btn.innerHTML = originalText;
                 btn.disabled = false;
                 showNotification('تم تحديث البيانات بنجاح ✅', 'success');
             }, 800);
@@ -1681,20 +1700,24 @@
         // ============================================================
         // CHART FUNCTIONS
         // ============================================================
-        let currentChart = 'pie';
+        var currentChart = 'pie';
 
         function switchChart(type) {
             currentChart = type;
-            document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.chart-btn[onclick="switchChart('${type}')"]`).classList.add('active');
+            var btns = document.querySelectorAll('.chart-btn');
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.remove('active');
+            }
+            var target = document.querySelector('.chart-btn[onclick="switchChart(\'' + type + '\')"]');
+            if (target) target.classList.add('active');
             drawChart(type);
         }
 
         function drawChart(type) {
-            const canvas = document.getElementById('efficiencyChart');
-            const ctx = canvas.getContext('2d');
-            const width = canvas.parentElement.clientWidth - 32;
-            const height = 250;
+            var canvas = document.getElementById('efficiencyChart');
+            var ctx = canvas.getContext('2d');
+            var width = canvas.parentElement.clientWidth - 32;
+            var height = 250;
 
             canvas.width = width * 2;
             canvas.height = height * 2;
@@ -1704,11 +1727,19 @@
 
             ctx.clearRect(0, 0, width, height);
 
-            const data = Object.entries(efficiencyData.regions).map(([name, data]) => ({
-                label: name,
-                value: data.vessels > 0 ? ((data.active / data.vessels) * 100) : 0,
-                color: getColor(name)
-            }));
+            var data = [];
+            var keys = Object.keys(efficiencyData.regions);
+            var colors = ['#e6b31e', '#4ade80', '#fbbf24', '#f87171', '#60a5fa', '#a78bfa', '#f472b6', '#34d399', '#fb923c'];
+
+            for (var i = 0; i < keys.length; i++) {
+                var name = keys[i];
+                var d = efficiencyData.regions[name];
+                data.push({
+                    label: name,
+                    value: d.vessels > 0 ? ((d.active / d.vessels) * 100) : 0,
+                    color: colors[i % colors.length]
+                });
+            }
 
             if (type === 'pie') {
                 drawPieChart(ctx, data, width, height);
@@ -1719,25 +1750,16 @@
             }
         }
 
-        function getColor(name) {
-            const colors = [
-                '#e6b31e', '#4ade80', '#fbbf24', '#f87171', '#60a5fa',
-                '#a78bfa', '#f472b6', '#34d399', '#fb923c', '#818cf8'
-            ];
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            return colors[Math.abs(hash) % colors.length];
-        }
-
         function drawPieChart(ctx, data, width, height) {
-            const cx = width / 2;
-            const cy = height / 2;
-            const radius = Math.min(width, height) / 2 - 40;
+            var cx = width / 2;
+            var cy = height / 2;
+            var radius = Math.min(width, height) / 2 - 40;
 
-            let startAngle = -Math.PI / 2;
-            const total = data.reduce((sum, d) => sum + d.value, 0);
+            var startAngle = -Math.PI / 2;
+            var total = 0;
+            for (var i = 0; i < data.length; i++) {
+                total += data[i].value;
+            }
 
             if (total === 0) {
                 ctx.fillStyle = 'rgba(255,255,255,0.05)';
@@ -1747,9 +1769,10 @@
                 return;
             }
 
-            data.forEach((item, i) => {
-                const sliceAngle = (item.value / total) * 2 * Math.PI;
-                const endAngle = startAngle + sliceAngle;
+            for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                var sliceAngle = (item.value / total) * 2 * Math.PI;
+                var endAngle = startAngle + sliceAngle;
 
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
@@ -1762,49 +1785,52 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                const midAngle = startAngle + sliceAngle / 2;
-                const labelRadius = radius * 0.65;
-                const lx = cx + Math.cos(midAngle) * labelRadius;
-                const ly = cy + Math.sin(midAngle) * labelRadius;
+                var midAngle = startAngle + sliceAngle / 2;
+                var labelRadius = radius * 0.65;
+                var lx = cx + Math.cos(midAngle) * labelRadius;
+                var ly = cy + Math.sin(midAngle) * labelRadius;
 
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 10px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 if (sliceAngle > 0.3) {
-                    ctx.fillText(`${item.value.toFixed(0)}%`, lx, ly);
+                    ctx.fillText(item.value.toFixed(0) + '%', lx, ly);
                 }
 
                 startAngle = endAngle;
-            });
+            }
 
-            let legendY = 10;
-            const legendX = width - 120;
+            // Legend
+            var legendY = 10;
+            var legendX = width - 120;
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
 
-            data.slice(0, 6).forEach((item, i) => {
-                const y = legendY + i * 18;
+            var maxItems = Math.min(data.length, 6);
+            for (var i = 0; i < maxItems; i++) {
+                var item = data[i];
+                var y = legendY + i * 18;
                 ctx.fillStyle = item.color;
                 ctx.fillRect(legendX, y, 12, 12);
                 ctx.fillStyle = 'rgba(255,255,255,0.5)';
                 ctx.font = '9px Cairo, sans-serif';
-                const label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
+                var label = item.label.length > 15 ? item.label.slice(0, 15) + '...' : item.label;
                 ctx.fillText(label, legendX + 16, y);
-            });
+            }
         }
 
         function drawBarChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
+            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
+            var chartWidth = width - padding.left - padding.right;
+            var chartHeight = height - padding.top - padding.bottom;
 
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const barWidth = Math.min(chartWidth / data.length * 0.7, 50);
-            const gap = chartWidth / data.length;
+            var maxVal = 100;
+            var barWidth = Math.min(chartWidth / data.length * 0.7, 50);
+            var gap = chartWidth / data.length;
 
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
+            for (var i = 0; i <= 4; i++) {
+                var y = padding.top + chartHeight - (i / 4) * chartHeight;
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -1816,15 +1842,16 @@
                 ctx.font = '9px Cairo, sans-serif';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
             }
 
-            data.forEach((item, i) => {
-                const x = padding.left + i * gap + (gap - barWidth) / 2;
-                const barHeight = (item.value / maxVal) * chartHeight;
-                const y = padding.top + chartHeight - barHeight;
+            for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                var x = padding.left + i * gap + (gap - barWidth) / 2;
+                var barHeight = (item.value / maxVal) * chartHeight;
+                var y = padding.top + chartHeight - barHeight;
 
-                const gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
+                var gradient = ctx.createLinearGradient(x, y, x, padding.top + chartHeight);
                 gradient.addColorStop(0, item.color);
                 gradient.addColorStop(1, item.color + '33');
                 ctx.fillStyle = gradient;
@@ -1841,26 +1868,29 @@
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
+                var label = item.label.length > 10 ? item.label.slice(0, 10) + '..' : item.label;
                 ctx.fillText(label, x + barWidth / 2, padding.top + chartHeight + 5);
-            });
+            }
         }
 
         function drawLineChart(ctx, data, width, height) {
-            const padding = { top: 20, bottom: 30, left: 40, right: 20 };
-            const chartWidth = width - padding.left - padding.right;
-            const chartHeight = height - padding.top - padding.bottom;
+            var padding = { top: 20, bottom: 30, left: 40, right: 20 };
+            var chartWidth = width - padding.left - padding.right;
+            var chartHeight = height - padding.top - padding.bottom;
 
-            const maxVal = Math.max(...data.map(d => d.value), 100);
-            const points = data.map((d, i) => ({
-                x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
-                y: padding.top + chartHeight - (d.value / maxVal) * chartHeight,
-                value: d.value,
-                label: d.label
-            }));
+            var maxVal = 100;
+            var points = [];
+            for (var i = 0; i < data.length; i++) {
+                points.push({
+                    x: padding.left + (i / (data.length - 1 || 1)) * chartWidth,
+                    y: padding.top + chartHeight - (data[i].value / maxVal) * chartHeight,
+                    value: data[i].value,
+                    label: data[i].label
+                });
+            }
 
-            for (let i = 0; i <= 4; i++) {
-                const y = padding.top + chartHeight - (i / 4) * chartHeight;
+            for (var i = 0; i <= 4; i++) {
+                var y = padding.top + chartHeight - (i / 4) * chartHeight;
                 ctx.strokeStyle = 'rgba(255,255,255,0.05)';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -1872,7 +1902,7 @@
                 ctx.font = '9px Cairo, sans-serif';
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(`${Math.round((i / 4) * maxVal)}%`, padding.left - 5, y);
+                ctx.fillText(Math.round((i / 4) * maxVal) + '%', padding.left - 5, y);
             }
 
             ctx.strokeStyle = '#e6b31e';
@@ -1880,21 +1910,22 @@
             ctx.shadowColor = '#e6b31e44';
             ctx.shadowBlur = 10;
             ctx.beginPath();
-            points.forEach((p, i) => {
-                if (i === 0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
-            });
+            for (var i = 0; i < points.length; i++) {
+                if (i === 0) ctx.moveTo(points[i].x, points[i].y);
+                else ctx.lineTo(points[i].x, points[i].y);
+            }
             ctx.stroke();
             ctx.shadowBlur = 0;
 
-            const lastPoint = points[points.length - 1];
+            var lastPoint = points[points.length - 1];
             ctx.lineTo(lastPoint.x, padding.top + chartHeight);
             ctx.lineTo(points[0].x, padding.top + chartHeight);
             ctx.closePath();
             ctx.fillStyle = 'rgba(230,179,30,0.08)';
             ctx.fill();
 
-            points.forEach(p => {
+            for (var i = 0; i < points.length; i++) {
+                var p = points[i];
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
                 ctx.fillStyle = '#e6b31e';
@@ -1907,27 +1938,25 @@
                 ctx.font = 'bold 9px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
-                ctx.fillText(`${p.value.toFixed(0)}%`, p.x, p.y - 6);
-            });
+                ctx.fillText(p.value.toFixed(0) + '%', p.x, p.y - 6);
 
-            points.forEach(p => {
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.font = '8px Cairo, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'top';
-                const label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
+                var label = p.label.length > 12 ? p.label.slice(0, 12) + '..' : p.label;
                 ctx.fillText(label, p.x, padding.top + chartHeight + 5);
-            });
+            }
         }
 
         // ============================================================
         // NOTIFICATION
         // ============================================================
         function showNotification(message, type) {
-            const old = document.querySelector('.eff-notification');
+            var old = document.querySelector('.eff-notification');
             if (old) old.remove();
 
-            const notif = document.createElement('div');
+            var notif = document.createElement('div');
             notif.className = 'eff-notification';
             notif.style.cssText = `
                 position: fixed;
@@ -1949,26 +1978,18 @@
 
             document.body.appendChild(notif);
 
-            setTimeout(() => {
+            setTimeout(function() {
                 notif.style.opacity = '0';
                 notif.style.transform = 'translateY(20px)';
                 notif.style.transition = 'all 0.4s ease-out';
-                setTimeout(() => notif.remove(), 400);
+                setTimeout(function() { notif.remove(); }, 400);
             }, 3000);
         }
 
         // ============================================================
-        // INIT
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            renderEfficiency();
-            setTimeout(() => drawChart('pie'), 100);
-        });
-
-        // ============================================================
         // ADDITIONAL STYLES FOR NOTIFICATION
         // ============================================================
-        const styleNotif = document.createElement('style');
+        var styleNotif = document.createElement('style');
         styleNotif.textContent = `
             @keyframes slideUp {
                 from { opacity: 0; transform: translateY(20px); }
@@ -1977,7 +1998,33 @@
         `;
         document.head.appendChild(styleNotif);
 
-        console.log('📊 Efficiency Page loaded successfully!');
-        console.log('ℹ️ Use renderEfficiency() to refresh data.');
+        // ============================================================
+        // EVENT BINDING
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // ✅ Bind buttons with addEventListener
+            document.getElementById('refreshBtn').addEventListener('click', refreshEfficiency);
+            document.getElementById('filterBtn').addEventListener('click', renderEfficiency);
+            document.getElementById('resetBtn').addEventListener('click', resetEfficiencyFilters);
+
+            document.getElementById('fRegEff').addEventListener('change', renderEfficiency);
+            document.getElementById('fCatEff').addEventListener('change', renderEfficiency);
+            document.getElementById('fStatusEff').addEventListener('change', renderEfficiency);
+
+            renderEfficiency();
+            setTimeout(function() { drawChart('pie'); }, 100);
+
+            console.log('📊 Efficiency Page loaded successfully!');
+            console.log('ℹ️ Use renderEfficiency() to refresh data.');
+        });
+
+        // ============================================================
+        // GLOBAL FUNCTIONS
+        // ============================================================
+        window.renderEfficiency = renderEfficiency;
+        window.refreshEfficiency = refreshEfficiency;
+        window.resetEfficiencyFilters = resetEfficiencyFilters;
+        window.switchChart = switchChart;
+        window.showNotification = showNotification;
     </script>
 </div>
