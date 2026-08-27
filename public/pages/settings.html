@@ -360,6 +360,99 @@
             color: #e6b31e;
         }
 
+        /* ===== LOGO PREVIEW WITH DELETE BUTTON ===== */
+        .logo-upload-area {
+            border: 2px dashed rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .logo-upload-area:hover {
+            border-color: rgba(230,179,30,0.2);
+            background: rgba(255,255,255,0.02);
+        }
+
+        .logo-upload-area .logo-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-upload-area .logo-preview img {
+            max-width: 120px;
+            max-height: 60px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .logo-upload-area .logo-preview .logo-name {
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.upload {
+            background: rgba(230,179,30,0.12);
+            color: #f5d76e;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.upload:hover {
+            background: rgba(230,179,30,0.2);
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.delete {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+        }
+
+        .logo-upload-area .logo-preview .logo-actions .btn-sm.delete:hover {
+            background: rgba(239,68,68,0.2);
+        }
+
+        .logo-upload-area .logo-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-icon {
+            font-size: 40px;
+            color: rgba(255,255,255,0.05);
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .logo-upload-area .logo-placeholder .placeholder-hint {
+            font-size: 11px;
+            color: rgba(255,255,255,0.1);
+        }
+
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -408,6 +501,7 @@
             .settings-grid { gap: 12px; }
             .settings-card { padding: 16px; }
             .settings-card .card-title { font-size: 14px; }
+            .logo-upload-area { padding: 16px; }
         }
 
         @media (max-width: 480px) {
@@ -417,6 +511,7 @@
             .settings-card .form-group input,
             .settings-card .form-group select { font-size: 13px; }
             .theme-preview { flex-direction: column; align-items: flex-start; }
+            .logo-upload-area .logo-preview img { max-width: 80px; }
         }
     </style>
 
@@ -488,14 +583,19 @@
             <button class="btn-save" onclick="saveTheme()"><i class="fas fa-palette"></i> تطبيق المظهر</button>
         </div>
 
-        <!-- CARD 2: APP LOGO -->
+        <!-- CARD 2: APP LOGO - ENHANCED -->
         <div class="settings-card">
             <div class="card-title"><i class="fas fa-image"></i> شعار التطبيق (Logo)</div>
             <div class="card-subtitle">تغيير شعار التطبيق الظاهر في أعلى الصفحة</div>
 
             <div class="form-group">
                 <label>📷 تحميل شعار جديد</label>
-                <input type="file" id="logoUpload" accept="image/*">
+                <input type="file" id="logoUpload" accept="image/*" style="display:none;">
+                <div class="logo-upload-area" id="logoUploadArea">
+                    <div id="logoPreviewContainer">
+                        <!-- سيتم عرض المعاينة هنا -->
+                    </div>
+                </div>
                 <div style="font-size:11px;color:rgba(255,255,255,0.15);margin-top:4px;">
                     <i class="fas fa-info-circle"></i> يفضل استخدام صورة PNG بخلفية شفافة - حجم 200x60 بكسل
                 </div>
@@ -503,7 +603,7 @@
 
             <div class="form-group">
                 <label>📏 حجم الشعار</label>
-                <select id="logoSize">
+                <select id="logoSize" onchange="updateLogoSize()">
                     <option value="small">صغير</option>
                     <option value="medium" selected>متوسط</option>
                     <option value="large">كبير</option>
@@ -511,9 +611,9 @@
             </div>
 
             <div style="background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;text-align:center;border:1px solid rgba(255,255,255,0.04);margin-bottom:12px;">
-                <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">معاينة الشعار</div>
-                <div id="logoPreview" style="font-size:32px;color:#e6b31e;">⚓</div>
-                <div id="logoNamePreview" style="font-size:18px;font-weight:700;color:#fff;margin-top:4px;">منظومة الوسائل البحرية</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">معاينة الشعار في التطبيق</div>
+                <div id="appLogoPreview" style="font-size:32px;color:#e6b31e;">⚓</div>
+                <div id="appLogoNamePreview" style="font-size:18px;font-weight:700;color:#fff;margin-top:4px;">منظومة الوسائل البحرية</div>
             </div>
 
             <button class="btn-save" onclick="saveLogo()"><i class="fas fa-image"></i> تحديث الشعار</button>
@@ -701,7 +801,6 @@
                     });
                     this.classList.add('active');
 
-                    // Update preview
                     var primary = this.dataset.primary;
                     var secondary = this.dataset.secondary;
                     var gold = this.dataset.gold;
@@ -721,54 +820,116 @@
             });
 
             // ============================================================
-            // LOGO PREVIEW - FIXED: Save and display logo
+            // LOGO - ENHANCED WITH DELETE BUTTON
             // ============================================================
+
+            // Load saved logo on page start
+            function loadLogo() {
+                var savedLogo = localStorage.getItem('app_logo');
+                var container = document.getElementById('logoPreviewContainer');
+
+                if (savedLogo) {
+                    container.innerHTML = `
+                        <div class="logo-preview">
+                            <img src="${savedLogo}" alt="شعار التطبيق" id="logoImage">
+                            <div class="logo-name">${localStorage.getItem('app_logo_name') || 'شعار مخصص'}</div>
+                            <div class="logo-actions">
+                                <button class="btn-sm upload" onclick="document.getElementById('logoUpload').click()">
+                                    <i class="fas fa-upload"></i> تغيير
+                                </button>
+                                <button class="btn-sm delete" onclick="deleteLogo()">
+                                    <i class="fas fa-trash-alt"></i> حذف
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    // Update app preview
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML = `<img src="${savedLogo}" style="max-width:100px;max-height:50px;object-fit:contain;">`;
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div class="logo-placeholder" onclick="document.getElementById('logoUpload').click()">
+                            <div class="placeholder-icon"><i class="fas fa-image"></i></div>
+                            <div class="placeholder-text">اضغط هنا لتحميل شعار</div>
+                            <div class="placeholder-hint">PNG, JPG • الحد الأقصى 2MB</div>
+                        </div>
+                    `;
+                    var preview = document.getElementById('appLogoPreview');
+                    if (preview) {
+                        preview.innerHTML = '⚓';
+                    }
+                }
+            }
+
+            // Delete logo
+            window.deleteLogo = function() {
+                if (!confirm('⚠️ هل أنت متأكد من حذف الشعار؟')) return;
+                localStorage.removeItem('app_logo');
+                localStorage.removeItem('app_logo_name');
+                loadLogo();
+                // Reset app preview
+                var preview = document.getElementById('appLogoPreview');
+                if (preview) {
+                    preview.innerHTML = '⚓';
+                }
+                showToast('🗑️ تم حذف الشعار', 'success');
+            };
+
+            // Logo upload handler
             document.getElementById('logoUpload').addEventListener('change', function(e) {
                 var file = e.target.files[0];
                 if (file) {
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                        showToast('⚠️ يرجى اختيار ملف صورة صالح', 'error');
+                        return;
+                    }
+
+                    // Validate file size (max 2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        showToast('⚠️ حجم الصورة يجب أن يكون أقل من 2MB', 'error');
+                        return;
+                    }
+
                     var reader = new FileReader();
                     reader.onload = function(event) {
                         var imageData = event.target.result;
-                        var preview = document.getElementById('logoPreview');
-                        var img = document.createElement('img');
-                        img.src = imageData;
-                        img.style.maxWidth = '100px';
-                        img.style.maxHeight = '60px';
-                        img.style.borderRadius = '8px';
-                        preview.innerHTML = '';
-                        preview.appendChild(img);
-                        document.getElementById('logoNamePreview').style.display = 'none';
-
-                        // ✅ Save to localStorage
                         localStorage.setItem('app_logo', imageData);
                         localStorage.setItem('app_logo_name', file.name);
+                        loadLogo();
+                        // Update app preview
+                        var preview = document.getElementById('appLogoPreview');
+                        if (preview) {
+                            preview.innerHTML = `<img src="${imageData}" style="max-width:100px;max-height:50px;object-fit:contain;">`;
+                        }
                         showToast('✅ تم تحميل الشعار بنجاح', 'success');
                     };
                     reader.readAsDataURL(file);
                 }
             });
 
-            // ============================================================
-            // LOAD LOGO ON PAGE START
-            // ============================================================
-            function loadLogo() {
-                var savedLogo = localStorage.getItem('app_logo');
-                if (savedLogo) {
-                    var preview = document.getElementById('logoPreview');
-                    var img = document.createElement('img');
-                    img.src = savedLogo;
-                    img.style.maxWidth = '100px';
-                    img.style.maxHeight = '60px';
-                    img.style.borderRadius = '8px';
-                    preview.innerHTML = '';
-                    preview.appendChild(img);
-                    document.getElementById('logoNamePreview').style.display = 'none';
-                    console.log('✅ تم تحميل الشعار المحفوظ');
+            // Update logo size
+            window.updateLogoSize = function() {
+                var size = document.getElementById('logoSize').value;
+                localStorage.setItem('app_logo_size', size);
+                var preview = document.getElementById('appLogoPreview');
+                if (preview) {
+                    var img = preview.querySelector('img');
+                    if (img) {
+                        if (size === 'small') { img.style.maxWidth = '60px';
+                            img.style.maxHeight = '30px'; } else if (size === 'medium') { img.style.maxWidth =
+                                '100px';
+                            img.style.maxHeight = '50px'; } else { img.style.maxWidth = '140px';
+                            img.style.maxHeight = '70px'; }
+                    }
                 }
-            }
+                showToast('✅ تم تحديث حجم الشعار', 'success');
+            };
 
             // ============================================================
-            // BACKGROUND IMAGE - FIXED
+            // BACKGROUND IMAGE
             // ============================================================
             document.getElementById('bgImageUpload').addEventListener('change', function(e) {
                 var file = e.target.files[0];
@@ -781,8 +942,6 @@
                         document.getElementById('page-settings').style.backgroundSize = 'cover';
                         document.getElementById('page-settings').style.backgroundPosition = 'center';
                         document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
-
-                        // ✅ Save to localStorage
                         localStorage.setItem('app_background', imageData);
                         showToast('✅ تم تحميل صورة الخلفية', 'success');
                     };
@@ -791,7 +950,7 @@
             });
 
             // ============================================================
-            // LOAD BACKGROUND ON PAGE START
+            // LOAD BACKGROUND
             // ============================================================
             function loadBackground() {
                 var savedBg = localStorage.getItem('app_background');
@@ -800,7 +959,6 @@
                     document.getElementById('page-settings').style.backgroundSize = 'cover';
                     document.getElementById('page-settings').style.backgroundPosition = 'center';
                     document.getElementById('page-settings').style.backgroundAttachment = 'fixed';
-                    console.log('✅ تم تحميل الخلفية المحفوظة');
                 }
             }
 
@@ -827,26 +985,14 @@
             };
 
             window.saveLogo = function() {
-                var file = document.getElementById('logoUpload').files[0];
                 var size = document.getElementById('logoSize').value;
+                var savedLogo = localStorage.getItem('app_logo');
 
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(event) {
-                        var imageData = event.target.result;
-                        localStorage.setItem('app_logo', imageData);
-                        localStorage.setItem('app_logo_size', size);
-                        showToast('✅ تم تحديث الشعار بنجاح', 'success');
-                    };
-                    reader.readAsDataURL(file);
+                if (savedLogo) {
+                    localStorage.setItem('app_logo_size', size);
+                    showToast('✅ تم تحديث حجم الشعار', 'success');
                 } else {
-                    var savedLogo = localStorage.getItem('app_logo');
-                    if (savedLogo) {
-                        localStorage.setItem('app_logo_size', size);
-                        showToast('✅ تم تحديث حجم الشعار', 'success');
-                    } else {
-                        showToast('⚠️ يرجى اختيار صورة للشعار', 'error');
-                    }
+                    showToast('⚠️ يرجى تحميل شعار أولاً', 'error');
                 }
             };
 
