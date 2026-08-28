@@ -1,11 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.5 (RENDER LOGIN FIXED)
+ * 🚢 MARINE SYSTEM - SERVER v38.7 (READS FROM RENDER ENV)
  * ============================================================
- * ✅ FIXED: Login with ADMIN_PASSWORD from Render
- * ✅ FIXED: Admin creation on first run
- * ✅ FIXED: Proper error messages
- * ✅ FIXED: Token generation
+ * ✅ FIXED: Reads ADMIN_PASSWORD from Render environment
+ * ✅ FIXED: Uses your existing credentials
+ * ✅ FIXED: Admin creation with Render variables
  * ============================================================
  */
 
@@ -28,7 +27,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 
 // ============================================================
-// ⚙️ CONFIGURATION - ✅ استخدام متغيرات Render
+// ⚙️ CONFIGURATION - 📌 تقرأ من متغيرات Render
 // ============================================================
 
 const PORT = process.env.PORT || 3000;
@@ -38,32 +37,34 @@ const MONGODB_URI = process.env.MONGODB_URI;
 // ✅ JWT_SECRET - من Render
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
-    console.error('❌ JWT_SECRET is missing or too short (must be at least 32 characters)');
-    console.error('   Please add JWT_SECRET to your Render environment variables');
+    console.error('❌ JWT_SECRET is missing or too short');
     process.exit(1);
 }
 
-// ✅ ADMIN_PASSWORD - من Render
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) {
-    console.error('❌ ADMIN_PASSWORD is missing from Render environment variables');
-    console.error('   Please add ADMIN_PASSWORD to your Render environment variables');
-    process.exit(1);
-}
-
-const ADMIN_USERNAME = 'admin';
-const ADMIN_EMAIL = 'admin@marine-system.com';
+// ✅ ADMIN CREDENTIALS - من متغيرات Render
+// 🔥 هذه هي المتغيرات التي كنت تخزن فيها كلمة المرور
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; // <-- هذا هو المتغير المهم
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
+// ✅ التحقق من وجود كلمة المرور
+if (!ADMIN_PASSWORD) {
+    console.error('❌ ADMIN_PASSWORD is missing from Render environment variables!');
+    console.error('   Please add ADMIN_PASSWORD to your Render environment variables.');
+    process.exit(1);
+}
+
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.5 - RENDER LOGIN FIXED');
+console.log('🚢 MARINE SYSTEM v38.7 - RENDER ENV');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
-console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓' : '✗'}`);
+console.log(`✅ ADMIN_USERNAME: ${ADMIN_USERNAME}`);
 console.log(`✅ ADMIN_PASSWORD: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-console.log(`👤 Admin Username: ${ADMIN_USERNAME}`);
+console.log(`✅ ADMIN_EMAIL: ${ADMIN_EMAIL}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -134,7 +135,6 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -158,7 +158,6 @@ const VesselSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// 📊 LOGS MODEL
 const LogSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     username: { type: String },
@@ -243,7 +242,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 app.use(cookieParser());
 
-// ✅ خدمة الملفات الثابتة
 app.use(express.static(publicPath, { index: false, maxAge: 0, etag: false }));
 app.use('/css', express.static(cssPath));
 app.use('/js', express.static(jsPath));
@@ -267,7 +265,6 @@ app.use('/api', limiter);
 async function connectDB() {
     if (!MONGODB_URI) {
         console.error('❌ MONGODB_URI is required');
-        console.error('   Please add MONGODB_URI to your Render environment variables');
         process.exit(1);
     }
 
@@ -280,7 +277,6 @@ async function connectDB() {
             minPoolSize: 2
         });
         console.log('✅ MongoDB Connected');
-        console.log(`📚 Database: ${mongoose.connection.name}`);
         return true;
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
@@ -289,23 +285,23 @@ async function connectDB() {
 }
 
 // ============================================================
-// 🔐 CREATE ADMIN - ✅ يستخدم ADMIN_PASSWORD من Render
+// 🔐 CREATE ADMIN - 🔥 يستخدم ADMIN_PASSWORD من Render
 // ============================================================
 
 async function createAdmin() {
     try {
-        console.log('🔐 Checking/creating admin user...');
-        
+        console.log('🔐 Creating/updating admin user...');
+
         const existing = await User.findOne({
             $or: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }]
         }).select('+password');
 
         if (existing) {
-            // ✅ تحديث كلمة المرور إذا تغيرت في Render
+            // ✅ التحقق من كلمة المرور
             const passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existing.password);
             
             if (!passwordMatches) {
-                console.log('🔄 Admin password changed, updating...');
+                console.log('🔄 Updating admin password...');
                 existing.password = ADMIN_PASSWORD;
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
                 await existing.save();
@@ -315,10 +311,11 @@ async function createAdmin() {
             }
             
             console.log(`👤 Username: ${ADMIN_USERNAME}`);
+            console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
             return;
         }
 
-        // ✅ إنشاء admin جديد
+        // ✅ إنشاء Admin جديد
         const admin = new User({
             name: ADMIN_NAME,
             username: ADMIN_USERNAME,
@@ -410,7 +407,7 @@ async function authenticate(req, res, next) {
 }
 
 // ============================================================
-// 🔐 LOGIN - ✅ يستخدم ADMIN_PASSWORD من Render
+// 🔐 LOGIN - 🔥 يستخدم ADMIN_PASSWORD من Render
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
@@ -479,7 +476,6 @@ app.post('/api/auth/login', async (req, res) => {
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
-        // ✅ تسجيل النشاط
         await Log.create({
             userId: user._id,
             username: user.username,
@@ -489,7 +485,6 @@ app.post('/api/auth/login', async (req, res) => {
             userAgent: req.headers['user-agent']
         });
 
-        // ✅ توليد التوكن
         const token = generateToken(user);
         console.log(`✅ [LOGIN] Success: ${user.username}`);
 
@@ -606,57 +601,6 @@ app.get('/api/logs', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CONFIG
-// ============================================================
-
-app.get('/api/config', (req, res) => {
-    res.json({
-        success: true,
-        GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-        GEMINI_MODEL: 'gemini-2.0-flash'
-    });
-});
-
-// ============================================================
-// 🤖 AI - ASK
-// ============================================================
-
-app.post('/api/ai/ask', authenticate, async (req, res) => {
-    console.log(`🤖 [AI] Ask - User: ${req.user.username}`);
-    try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-        }
-
-        const total = await Vessel.countDocuments();
-        const valid = await Vessel.countDocuments({ stat: 'صالح' });
-        const damaged = await Vessel.countDocuments({ stat: 'معطب' });
-        const maintenance = await Vessel.countDocuments({ stat: 'صيانة' });
-        const efficiency = total ? Math.round((valid / total) * 100) : 0;
-
-        const msg = message.toLowerCase();
-        let reply = '';
-
-        if (msg.includes('مرحبا') || msg.includes('السلام')) {
-            reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
-        } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
-            reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${valid} من ${total})`;
-        } else if (msg.includes('معطب') || msg.includes('عطل')) {
-            reply = `⚠️ عدد المراكب المعطوبة: ${damaged}`;
-        } else if (msg.includes('صيانة')) {
-            reply = `🔧 عدد المراكب تحت الصيانة: ${maintenance}`;
-        } else {
-            reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة`;
-        }
-
-        res.json({ success: true, response: reply, model: 'Local' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
 // 🏠 HOME
 // ============================================================
 
@@ -703,7 +647,7 @@ async function startServer() {
     app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.5 - LOGIN FIXED');
+        console.log('🚢 MARINE SYSTEM v38.7 - RENDER ENV');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
@@ -711,7 +655,7 @@ async function startServer() {
         console.log('🗄️ MongoDB: Connected ✅');
         console.log('🔐 JWT: Enabled');
         console.log('='.repeat(60));
-        console.log('🔑 LOGIN:');
+        console.log('🔑 LOGIN CREDENTIALS:');
         console.log(`   👤 Username: ${ADMIN_USERNAME}`);
         console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
         console.log('='.repeat(60));
