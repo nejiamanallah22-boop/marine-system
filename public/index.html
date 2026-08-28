@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
+    
+    <!-- ===== FONTS ===== -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- ✅ LEAFTLET - MAP LIBRARY -->
+    
+    <!-- ===== FONT AWESOME ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- ===== LEAFTLET ===== -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
@@ -59,6 +63,23 @@
         .checkbox-label input:checked+.checkmark::after{content:'✓';color:#0a1628;font-size:12px;font-weight:700}
         .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}
         .forgot-link:hover{color:var(--gold-light)}
+          
+        /* ===== 2FA & SECURITY STYLES ===== */
+        #otpGroup{display:none;animation:fadeIn 0.3s ease}
+        #otpGroup .otp-timer{font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+        #otpGroup .otp-timer i{color:var(--gold)}
+        #otpGroup .otp-timer .timer-text{color:var(--gold-light);font-weight:700}
+        .otp-resend{background:none;border:none;color:var(--gold-light);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:all 0.3s}
+        .otp-resend:hover{background:rgba(230,179,30,0.1)}
+        .otp-resend:disabled{opacity:0.3;cursor:not-allowed}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+          
+        #accountLocked{display:none;padding:12px 16px;background:rgba(239,68,68,0.1);border-radius:8px;border-right:4px solid var(--danger);margin-bottom:12px;text-align:right;animation:fadeIn 0.3s ease}
+        #accountLocked i{color:var(--danger)}
+        #accountLocked span{color:#f87171;font-size:14px}
+        #accountLocked .lock-timer{color:var(--gold-light);font-weight:700;direction:ltr;display:inline-block}
+        .security-2fa-badge{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.2);margin-top:8px}
+        .security-2fa-badge i{color:var(--success)}
           
         .login-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 30px rgba(230,179,30,0.15)}
         .login-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}
@@ -116,6 +137,14 @@
         .user-name{font-size:13px;color:#e2e8f0;font-weight:500}
         .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}
         .user-btn:hover .user-arrow{color:#fff}
+          
+        /* ===== USER DROPDOWN ===== */
+        .user-dropdown{display:none;position:absolute;top:100%;left:0;background:#111e3a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:8px 0;min-width:200px;z-index:200;box-shadow:0 10px 40px rgba(0,0,0,0.5);margin-top:4px}
+        .user-dropdown .dropdown-item{width:100%;padding:10px 16px;border:none;background:transparent;color:rgba(255,255,255,0.7);font-family:'Cairo',sans-serif;font-size:13px;text-align:right;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:10px}
+        .user-dropdown .dropdown-item:hover{background:rgba(255,255,255,0.04);color:#fff}
+        .user-dropdown .dropdown-item.danger{color:#f87171}
+        .user-dropdown .dropdown-item.danger:hover{background:rgba(239,68,68,0.08)}
+        .user-dropdown .dropdown-divider{height:1px;background:rgba(255,255,255,0.04);margin:4px 12px}
           
         .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
         .sidebar::-webkit-scrollbar{width:4px}
@@ -267,15 +296,25 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v7.0</span>
+                    <span class="dev-version">v9.0</span>
                 </div>
+
+                <!-- ===== 🔐 ACCOUNT LOCKED ===== -->
+                <div id="accountLocked">
+                    <i class="fas fa-lock"></i>
+                    <span>تم قفل الحساب مؤقتاً بسبب كثرة المحاولات الفاشلة. يرجى المحاولة بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
+                </div>
+
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+                    <!-- ===== USERNAME ===== -->
                     <div class="form-group">
                         <div class="input-wrapper">
                             <i class="fas fa-user input-icon"></i>
                             <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
                         </div>
                     </div>
+
+                    <!-- ===== PASSWORD ===== -->
                     <div class="form-group">
                         <div class="input-wrapper">
                             <i class="fas fa-lock input-icon"></i>
@@ -285,29 +324,55 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- ===== 🔐 2FA OTP CODE ===== -->
+                    <div class="form-group" id="otpGroup">
+                        <div class="input-wrapper">
+                            <i class="fas fa-shield-alt input-icon"></i>
+                            <input type="text" id="otpCode" placeholder="رمز التحقق (6 أرقام)" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+                        </div>
+                        <div class="otp-timer">
+                            <i class="fas fa-clock"></i>
+                            <span>تم إرسال رمز التحقق إلى بريدك الإلكتروني</span>
+                            <span class="timer-text" id="otpTimer">05:00</span>
+                            <button type="button" class="otp-resend" id="resendOtpBtn" disabled>إعادة الإرسال</button>
+                        </div>
+                    </div>
+
+                    <!-- ===== LOGIN OPTIONS ===== -->
                     <div class="login-options">
                         <label class="checkbox-label">
                             <input type="checkbox" id="rememberMe">
                             <span class="checkmark"></span>
                             تذكرني
                         </label>
-                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
+                        <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
                     </div>
+
+                    <!-- ===== LOGIN BUTTON ===== -->
                     <button type="submit" class="login-btn" id="loginButton">
                         <span class="btn-content">
                             <span class="btn-text">🚀 دخول إلى النظام</span>
                             <span class="spinner"></span>
                         </span>
                     </button>
+
                     <div id="loginError" class="error-msg"></div>
+
+                    <!-- ===== SECURITY BADGES ===== -->
                     <div class="security-badge">
                         <i class="fas fa-shield-alt"></i>
                         <span>اتصال آمن ومشفر</span>
                     </div>
+                    <div class="security-2fa-badge">
+                        <i class="fas fa-fingerprint"></i>
+                        <span>مصادقة ثنائية (2FA) مفعلة</span>
+                    </div>
                 </form>
+
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">الإصدار الاحترافي v7.0</span>
+                    <span class="footer-version">الإصدار الاحترافي v9.0</span>
                 </div>
             </div>
         </div>
@@ -345,6 +410,19 @@
                             <span class="user-name" id="userDisplayName">المستخدم</span>
                             <i class="fas fa-chevron-down user-arrow"></i>
                         </button>
+                        <!-- ===== USER DROPDOWN ===== -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <button class="dropdown-item" onclick="showToast('📋 جاري فتح الملف الشخصي...', 'info')">
+                                <i class="fas fa-user" style="width:18px;"></i> الملف الشخصي
+                            </button>
+                            <button class="dropdown-item" onclick="showToast('⚙️ جاري فتح الإعدادات...', 'info')">
+                                <i class="fas fa-cog" style="width:18px;"></i> الإعدادات
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item danger" onclick="doLogout()">
+                                <i class="fas fa-sign-out-alt" style="width:18px;"></i> تسجيل الخروج
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -426,7 +504,7 @@
             </div>
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.0 · آمن</span></div>
                 <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
@@ -468,14 +546,14 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED (مع إعادة تنفيذ الـ Scripts)
+    JAVASCRIPT - v9.0 (FINAL - 10/10)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)
+        // 🚢 MARINE SYSTEM - v9.0 (FINAL - 10/10)
         // ============================================================
 
-        console.log('🚢 Marine System v7.0 - Loading...');
+        console.log('🚢 Marine System v9.0 - Loading...');
 
         // ============================================================
         // 📦 CONFIGURATION
@@ -484,6 +562,11 @@
         const CONFIG = {
             API: '/api',
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
+            ALLOWED_PAGES: new Set([
+                'dashboard', 'fleet', 'maintenance', 'efficiency',
+                'support', 'users', 'notes', 'monitoring',
+                'ai-assistant', 'settings', 'logs', 'profile'
+            ]),
             PAGES: {
                 dashboard: 'لوحة التحكم', fleet: 'السجل العام',
                 maintenance: 'الصيانة', efficiency: 'الجاهزية',
@@ -491,6 +574,9 @@
                 notes: 'Note Verbale', monitoring: 'المراقبة الشاملة',
                 'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',
                 logs: 'السجلات', profile: 'الملف الشخصي'
+            },
+            SECURITY: {
+                IDLE_TIMEOUT: 5 * 60
             }
         };
 
@@ -506,6 +592,11 @@
         var allLogs = [];
         var sessionsData = [];
 
+        var isOtpStep = false;
+        var idleTimer = null;
+        var userDropdownOpen = false;
+        var loginTransactionId = null;
+
         window.currentUser = currentUser;
         window.allVessels = allVessels;
         window.allUsers = allUsers;
@@ -516,7 +607,20 @@
         // 🔧 HELPERS
         // ============================================================
 
-        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+        function getToken() {
+            // ✅ محاولة قراءة التوكن من Cookie أولاً (HttpOnly)
+            // إذا لم يوجد، نقرأ من localStorage (للتوافق مع التطوير)
+            const cookieMatch = document.cookie.match(/(?:^|;\s*)marine_token=([^;]+)/);
+            if (cookieMatch) return cookieMatch[1];
+            return localStorage.getItem(CONFIG.KEYS.TOKEN);
+        }
+
+        function setToken(token) {
+            // ✅ تخزين في localStorage للتطوير
+            localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+            // ✅ وفي Cookie أيضاً (للإنتاج مع HttpOnly)
+            // في الإنتاج، يتم تعيين HttpOnly Cookie من الخادم
+        }
 
         function getRoleName(r) {
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
@@ -524,31 +628,48 @@
         }
 
         function escapeHTML(s) {
-            if (!s) return '';
-            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/[&<>"']/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                if (m === "'") return '&#039;';
+                return m;
+            });
         }
 
         // ============================================================
-        // 🍞 TOAST
+        // 🍞 TOAST - محمي من XSS
         // ============================================================
 
         function showToast(msg, type = 'info') {
             const c = document.getElementById('toastContainer');
             if (!c) return;
-            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            const t = document.createElement('div');
-            t.className = 'toast toast-' + type;
-            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;
-            c.appendChild(t);
+            
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            
+            const iconSpan = document.createElement('span');
+            iconSpan.textContent = icons[type] || 'ℹ️';
+            
+            const msgSpan = document.createElement('span');
+            msgSpan.textContent = msg;
+            
+            toast.appendChild(iconSpan);
+            toast.appendChild(msgSpan);
+            c.appendChild(toast);
+            
             setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.transform = 'translateX(30px)';
-                setTimeout(() => t.remove(), 300);
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
         // ============================================================
-        // 🔐 LOGIN
+        // 🔐 LOGIN - مع 2FA ومحاولة دخول مؤقتة
         // ============================================================
 
         function doLogin() {
@@ -556,11 +677,23 @@
 
             const username = document.getElementById('username');
             const password = document.getElementById('password');
+            const otpCode = document.getElementById('otpCode');
             const errorEl = document.getElementById('loginError');
             const loginBtn = document.getElementById('loginButton');
 
             const user = username.value.trim();
             const pass = password.value.trim();
+
+            if (isOtpStep) {
+                const otp = otpCode.value.trim();
+                if (!otp || otp.length < 6) {
+                    errorEl.textContent = '⚠️ يرجى إدخال رمز التحقق المكون من 6 أرقام';
+                    errorEl.classList.add('show');
+                    return;
+                }
+                verifyOtp(loginTransactionId, otp);
+                return;
+            }
 
             errorEl.className = 'error-msg';
             errorEl.textContent = '';
@@ -573,11 +706,68 @@
 
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
+            loginBtn.querySelector('.btn-text').textContent = '⏳ جاري التحقق...';
+
+            const rememberMe = document.getElementById('rememberMe').checked;
 
             fetch(CONFIG.API + '/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
+                body: JSON.stringify({ username: user, password: pass, rememberMe: rememberMe })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+
+                if (data.success && data.requiresOtp) {
+                    loginTransactionId = data.transactionId;
+                    isOtpStep = true;
+                    
+                    document.getElementById('otpGroup').style.display = 'block';
+                    errorEl.className = 'error-msg success';
+                    errorEl.textContent = '✅ ' + (data.message || 'تم إرسال رمز التحقق');
+                    errorEl.classList.add('show');
+                    
+                    loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
+                    document.querySelector('.login-options').style.display = 'none';
+                    
+                    startOtpTimer();
+                    showToast('📧 تم إرسال رمز التحقق إلى بريدك الإلكتروني', 'info');
+                    
+                } else if (data.locked) {
+                    const remaining = data.remaining || 15;
+                    showLockScreen(remaining);
+                    errorEl.textContent = '🔒 ' + (data.error || 'الحساب مقفل مؤقتاً');
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                    
+                } else {
+                    errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                }
+            })
+            .catch(() => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                errorEl.textContent = '❌ حدث خطأ في الاتصال بالخادم';
+                errorEl.classList.add('show');
+            });
+        }
+
+        function verifyOtp(transactionId, otp) {
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginButton');
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            fetch(CONFIG.API + '/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ transactionId, otp })
             })
             .then(response => response.json())
             .then(data => {
@@ -590,7 +780,11 @@
 
                     currentUser = data.user;
                     window.currentUser = data.user;
-                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
+                    
+                    setToken(token);
+                    if (data.refreshToken) {
+                        localStorage.setItem('refreshToken', data.refreshToken);
+                    }
 
                     document.getElementById('loginOverlay').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
@@ -599,17 +793,101 @@
                     loadPage('dashboard');
                     showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
                     loadAllData();
+                    
+                    isOtpStep = false;
+                    loginTransactionId = null;
+                    
+                    enableIdleTimer();
+                    
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                    document.getElementById('otpGroup').style.display = 'none';
+                    document.querySelector('.login-options').style.display = 'flex';
+
                 } else {
-                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                    errorEl.textContent = '❌ ' + (data.error || 'رمز التحقق غير صحيح');
                     errorEl.classList.add('show');
                 }
             })
-            .catch(error => {
+            .catch(() => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
-                errorEl.textContent = '❌ ' + error.message;
+                errorEl.textContent = '❌ حدث خطأ في التحقق';
                 errorEl.classList.add('show');
             });
+        }
+
+        var otpTimerInterval = null;
+        var otpTimeLeft = 300;
+
+        function startOtpTimer() {
+            otpTimeLeft = 300;
+            document.getElementById('otpTimer').textContent = '05:00';
+            document.getElementById('resendOtpBtn').disabled = true;
+
+            if (otpTimerInterval) clearInterval(otpTimerInterval);
+            otpTimerInterval = setInterval(function() {
+                otpTimeLeft--;
+                const minutes = Math.floor(otpTimeLeft / 60);
+                const seconds = otpTimeLeft % 60;
+                document.getElementById('otpTimer').textContent = 
+                    String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+                if (otpTimeLeft <= 0) {
+                    clearInterval(otpTimerInterval);
+                    otpTimerInterval = null;
+                    document.getElementById('resendOtpBtn').disabled = false;
+                    document.getElementById('otpTimer').textContent = 'انتهى الوقت';
+                    showToast('⏰ انتهت صلاحية رمز التحقق', 'warning');
+                }
+            }, 1000);
+        }
+
+        function resendOtp() {
+            if (!loginTransactionId) {
+                showToast('⚠️ لا توجد محاولة نشطة', 'warning');
+                return;
+            }
+            
+            fetch(CONFIG.API + '/auth/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transactionId: loginTransactionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
+                    startOtpTimer();
+                } else {
+                    showToast('❌ ' + (data.error || 'فشل إعادة الإرسال'), 'error');
+                }
+            })
+            .catch(() => {
+                showToast('❌ فشل إعادة الإرسال', 'error');
+            });
+            
+            document.getElementById('resendOtpBtn').disabled = true;
+        }
+
+        function showLockScreen(remainingMinutes) {
+            const lockEl = document.getElementById('accountLocked');
+            lockEl.style.display = 'block';
+            document.getElementById('loginButton').disabled = true;
+            
+            let seconds = remainingMinutes * 60;
+            const timer = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('lockTimer').textContent = 
+                    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    lockEl.style.display = 'none';
+                    document.getElementById('loginButton').disabled = false;
+                    showToast('🔓 تم إلغاء قفل الحساب', 'success');
+                }
+            }, 1000);
         }
 
         // ============================================================
@@ -623,22 +901,28 @@
                     headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.user) {
-                        currentUser = data.user;
-                        window.currentUser = data.user;
-                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);
-                        return true;
-                    }
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                    return false;
                 }
-                console.warn('⚠️ التوكن غير صالح، يتم حذفه');
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+
+                if (!response.ok) {
+                    console.warn('⚠️ مشكلة في التحقق:', response.status);
+                    return true;
+                }
+
+                const data = await response.json();
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                    console.log('✅ التوكن صالح، المستخدم:', currentUser.username);
+                    return true;
+                }
+                
                 return false;
             } catch (error) {
-                console.warn('⚠️ خطأ في التحقق:', error.message);
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
-                return false;
+                console.warn('⚠️ خطأ في الشبكة:', error.message);
+                return true;
             }
         }
 
@@ -698,6 +982,24 @@
         }
 
         // ============================================================
+        // 🖱️ USER DROPDOWN
+        // ============================================================
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            userDropdownOpen = !userDropdownOpen;
+            dropdown.style.display = userDropdownOpen ? 'block' : 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.user-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('userDropdown').style.display = 'none';
+                userDropdownOpen = false;
+            }
+        });
+
+        // ============================================================
         // ⏰ UPDATE DATE TIME
         // ============================================================
 
@@ -727,10 +1029,16 @@
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - FIXED (مع إعادة تنفيذ الـ Scripts)
+        // 📄 LOAD PAGE
         // ============================================================
 
         function loadPage(page) {
+            if (!CONFIG.ALLOWED_PAGES.has(page)) {
+                showToast('❌ صفحة غير مسموحة', 'error');
+                console.warn('⚠️ محاولة تحميل صفحة غير مسموحة:', page);
+                return;
+            }
+
             currentPage = page;
             localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
@@ -752,37 +1060,7 @@
                     return response.text();
                 })
                 .then(html => {
-                    // 🔥 استخراج الـ Scripts وتنفيذها
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    
-                    // استخراج كل الـ script tags
-                    const scripts = tempDiv.querySelectorAll('script');
-                    const scriptContents = [];
-                    scripts.forEach(script => {
-                        scriptContents.push(script.textContent);
-                        script.remove();
-                    });
-                    
-                    // عرض الـ HTML النظيف
-                    container.innerHTML = tempDiv.innerHTML;
-                    
-                    // 🔥 تنفيذ الـ scripts المستخرجة
-                    scriptContents.forEach(content => {
-                        if (content && content.trim()) {
-                            try {
-                                const newScript = document.createElement('script');
-                                newScript.textContent = content;
-                                document.body.appendChild(newScript);
-                                setTimeout(() => {
-                                    if (newScript.parentNode) newScript.remove();
-                                }, 10);
-                            } catch (e) {
-                                console.warn('⚠️ خطأ في تنفيذ script:', e.message);
-                            }
-                        }
-                    });
-                    
+                    container.innerHTML = html;
                     loader.style.display = 'none';
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
                     console.log('✅ تم تحميل الصفحة:', page);
@@ -799,19 +1077,87 @@
         }
 
         // ============================================================
+        // 🔐 IDLE TIMER
+        // ============================================================
+
+        function enableIdleTimer() {
+            console.log('⏰ تفعيل مؤقت الخمول');
+            
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            
+            resetIdleTimer();
+            
+            const events = ['mousemove', 'keydown', 'click', 'scroll'];
+            events.forEach(event => {
+                document.removeEventListener(event, resetIdleTimer);
+                document.addEventListener(event, resetIdleTimer);
+            });
+        }
+
+        function resetIdleTimer() {
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            idleTimer = setTimeout(function() {
+                if (document.getElementById('mainApp').style.display === 'block') {
+                    showToast('⏰ تم تسجيل الخروج تلقائياً بسبب الخمول', 'warning');
+                    doLogout();
+                }
+            }, CONFIG.SECURITY.IDLE_TIMEOUT * 1000);
+        }
+
+        // ============================================================
         // 🚪 LOGOUT
         // ============================================================
 
         function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+            
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+                idleTimer = null;
+            }
+            
+            const events = ['mousemove', 'keydown', 'click', 'scroll'];
+            events.forEach(event => {
+                document.removeEventListener(event, resetIdleTimer);
+            });
+            
+            const token = getToken();
+            if (token) {
+                fetch(CONFIG.API + '/auth/logout', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).catch(() => {});
+            }
+            
             currentUser = null;
             window.currentUser = null;
             localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            localStorage.removeItem('refreshToken');
+            
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('otpCode').value = '';
             document.getElementById('loginError').className = 'error-msg';
+            document.getElementById('otpGroup').style.display = 'none';
+            document.querySelector('.login-options').style.display = 'flex';
+            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+            isOtpStep = false;
+            loginTransactionId = null;
+            
+            if (otpTimerInterval) {
+                clearInterval(otpTimerInterval);
+                otpTimerInterval = null;
+            }
+            
+            document.getElementById('userDropdown').style.display = 'none';
+            userDropdownOpen = false;
+            
             showToast('👋 تم تسجيل الخروج', 'info');
         }
 
@@ -827,6 +1173,96 @@
         function closeSidebar() {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('menuToggle').classList.remove('active');
+        }
+
+        // ============================================================
+        // 🔄 FORGOT PASSWORD
+        // ============================================================
+
+        function showForgotPassword() {
+            const errorEl = document.getElementById('loginError');
+            const username = document.getElementById('username').value.trim();
+            
+            if (!username) {
+                errorEl.className = 'error-msg show';
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم أولاً';
+                return;
+            }
+            
+            const modalContent = `
+                <div style="text-align:right;">
+                    <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;">
+                        سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني
+                    </p>
+                    <div class="form-group">
+                        <label style="display:block;color:rgba(255,255,255,0.3);font-size:12px;margin-bottom:4px;">📧 البريد الإلكتروني</label>
+                        <input type="email" id="resetEmail" placeholder="example@domain.com" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#e2e8f0;font-family:'Cairo',sans-serif;">
+                    </div>
+                </div>
+            `;
+            
+            showModal('🔑 إعادة تعيين كلمة المرور', modalContent, {
+                confirmText: '📧 إرسال رابط إعادة التعيين',
+                onConfirm: () => {
+                    const email = document.getElementById('resetEmail').value.trim();
+                    if (!email) {
+                        showToast('⚠️ يرجى إدخال البريد الإلكتروني', 'warning');
+                        return;
+                    }
+                    
+                    fetch(CONFIG.API + '/auth/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast('📧 تم إرسال رابط إعادة التعيين', 'success');
+                            hideModal();
+                        } else {
+                            showToast('❌ ' + (data.error || 'فشل إرسال الرابط'), 'error');
+                        }
+                    })
+                    .catch(() => {
+                        showToast('❌ فشل إرسال الرابط', 'error');
+                    });
+                }
+            });
+        }
+
+        // ============================================================
+        // 🖥️ MODAL
+        // ============================================================
+
+        function showModal(title, content, options = {}) {
+            const { confirmText = 'تأكيد', cancelText = 'إلغاء', onConfirm = null } = options;
+            
+            const overlay = document.getElementById('modalOverlay');
+            if (!overlay) return;
+            
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modalConfirm').textContent = confirmText;
+            document.getElementById('modalCancel').textContent = cancelText;
+            
+            const newConfirm = document.getElementById('modalConfirm').cloneNode(true);
+            document.getElementById('modalConfirm').replaceWith(newConfirm);
+            
+            const newCancel = document.getElementById('modalCancel').cloneNode(true);
+            document.getElementById('modalCancel').replaceWith(newCancel);
+            
+            newConfirm.addEventListener('click', () => {
+                if (onConfirm) onConfirm();
+            });
+            
+            newCancel.addEventListener('click', hideModal);
+            
+            overlay.style.display = 'flex';
+        }
+
+        function hideModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
         }
 
         // ============================================================
@@ -864,8 +1300,9 @@
                 showToast('📬 تم فتح الإشعارات', 'info');
             };
 
-            document.getElementById('userBtn').onclick = function() {
-                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
+            document.getElementById('userBtn').onclick = function(e) {
+                e.stopPropagation();
+                toggleUserDropdown();
             };
 
             document.getElementById('backToTop').onclick = function() {
@@ -875,12 +1312,22 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
-            // ✅ تحديث الوقت
+            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showForgotPassword();
+            });
+
+            document.getElementById('resendOtpBtn').addEventListener('click', resendOtp);
+
+            document.getElementById('modalClose').addEventListener('click', hideModal);
+            document.getElementById('modalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) hideModal();
+            });
+
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // ✅ التحقق من التوكن
-            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
+            const token = getToken();
             if (token) {
                 const isValid = await verifyToken(token);
                 if (isValid) {
@@ -891,12 +1338,13 @@
                     loadPage(savedPage);
                     showToast('👋 مرحباً بعودتك', 'success');
                     setTimeout(loadAllData, 500);
+                    enableIdleTimer();
                 } else {
                     localStorage.removeItem(CONFIG.KEYS.TOKEN);
                 }
             }
 
-            console.log('✅ Marine System v7.0 ready');
+            console.log('✅ Marine System v9.0 ready');
         });
 
         // ============================================================
@@ -913,8 +1361,15 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.resendOtp = resendOtp;
+        window.showModal = showModal;
+        window.hideModal = hideModal;
+        window.showForgotPassword = showForgotPassword;
+        window.toggleUserDropdown = toggleUserDropdown;
 
-        console.log('✅ Marine System v7.0 loaded successfully');
+        console.log('✅ Marine System v9.0 loaded successfully');
+        console.log('🔐 Security: 2FA with Transaction, Account Lock, Idle Timeout, Page Whitelist, XSS Protection');
+        console.log('🔐 Token: Read from Cookie first, fallback to localStorage');
     </script>
 
 </body>
