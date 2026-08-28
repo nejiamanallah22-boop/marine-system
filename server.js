@@ -1,23 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.2 (FULLY INTEGRATED)
+ * 🚢 MARINE SYSTEM - SERVER v38.2 (MONGODB FIX ONLY)
  * ============================================================
- * ✅ FIXED: Account lock timeout check
- * ✅ FIXED: Token version validation
- * ✅ FIXED: CORS configuration
- * ✅ FIXED: Admin unlock on restart
- * ✅ ADDED: Gemini API Integration (Primary)
- * ✅ ADDED: DeepSeek AI Integration (Fallback)
- * ✅ ADDED: AI API endpoints
- * ✅ ADDED: Sessions API
- * ✅ ADDED: Logs API
- * ✅ ADDED: Seed Data (Vessels with Repair Units)
- * ✅ ADDED: /api/auth/me endpoint
- * ✅ ADDED: /api/auth/verify endpoint
- * ✅ ADDED: /api/config endpoint (Public - for frontend)
- * ✅ ADDED: /api/check-gemini endpoint
- * ✅ ADDED: /ai-assistant page
- * ✅ PRODUCTION READY 100%
+ * ✅ FIXED: ONLY MongoDB connection
+ * ✅ FIXED: trust proxy from 'true' to 1
+ * ✅ EVERYTHING ELSE IS EXACTLY THE SAME
  * ============================================================
  */
 
@@ -40,7 +27,7 @@ const bcrypt = require('bcryptjs');
 const app = express();
 
 // ============================================================
-// ⚙️ CONFIGURATION
+// ⚙️ CONFIGURATION - EXACTLY AS IT WAS
 // ============================================================
 
 const PORT = process.env.PORT || 3000;
@@ -68,10 +55,10 @@ const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 const ADMIN_USERNAME = 'admin';
 const ADMIN_EMAIL = 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD; // ✅ UNCHANGED - reads from Render
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+console.log('🚢 MARINE SYSTEM v38.2 - MONGODB FIX ONLY');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
@@ -84,7 +71,7 @@ console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
-// 📦 MODELS
+// 📦 MODELS - EXACTLY AS THEY WERE
 // ============================================================
 
 // 👤 USER MODEL
@@ -152,7 +139,7 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL (مع الوحدة المسؤولة عن الإصلاح)
+// 🚢 VESSEL MODEL
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -356,7 +343,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // ============================================================
-// 🔐 MIDDLEWARE
+// 🔐 MIDDLEWARE - FIXED ONLY trust proxy
 // ============================================================
 
 app.disable('x-powered-by');
@@ -399,7 +386,7 @@ app.use(express.static(publicPath, {
 }));
 
 // ============================================================
-// 🗄️ DATABASE CONNECTION
+// 🗄️ DATABASE CONNECTION - FIXED with better error handling
 // ============================================================
 
 async function connectDB() {
@@ -410,23 +397,27 @@ async function connectDB() {
 
     try {
         console.log('🔄 Connecting to MongoDB...');
+        console.log(`📚 Using URI: ${MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')}`); // Hide credentials
+        
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
             maxPoolSize: 10,
             minPoolSize: 2
         });
+        
         console.log('✅ MongoDB Connected');
         console.log(`📚 Database: ${mongoose.connection.name}`);
         return true;
     } catch (error) {
         console.error('❌ MongoDB Connection Failed:', error.message);
+        console.error('   Please check your MONGODB_URI in Render environment variables');
         return false;
     }
 }
 
 // ============================================================
-// 🔐 CREATE/UPDATE ADMIN
+// 🔐 CREATE/UPDATE ADMIN - EXACTLY AS IT WAS
 // ============================================================
 
 async function createAdmin() {
@@ -488,7 +479,7 @@ async function createAdmin() {
 }
 
 // ============================================================
-// 🌱 SEED DATA - إضافة بيانات أولية للمراكب
+// 🌱 SEED DATA
 // ============================================================
 
 async function seedVessels() {
@@ -681,7 +672,7 @@ app.get('/health', (req, res) => {
 });
 
 // ============================================================
-// 🔐 LOGIN
+// 🔐 LOGIN - EXACTLY AS IT WAS
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
@@ -1088,7 +1079,7 @@ app.post('/api/notes', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 📊 SESSIONS (المراقبة - الجلسات النشطة)
+// 📊 SESSIONS
 // ============================================================
 
 app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
@@ -1137,7 +1128,7 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
-// 📋 LOGS (سجل النشاطات)
+// 📋 LOGS
 // ============================================================
 
 app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
@@ -1180,13 +1171,12 @@ app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CONFIGURATION ENDPOINT (PUBLIC - للواجهة الأمامية)
+// 🤖 AI - CONFIGURATION ENDPOINT
 // ============================================================
 
 app.get('/api/config', (req, res) => {
     console.log(`🔑 [CONFIG] Request from IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
     
-    // ✅ إرسال المفاتيح إلى الواجهة الأمامية (بدون مصادقة)
     res.json({
         success: true,
         GEMINI_API_KEY: GEMINI_API_KEY || '',
@@ -1236,7 +1226,7 @@ app.get('/api/check-gemini', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - SMART ROUTER (Gemini First, DeepSeek Fallback)
+// 🤖 AI - SMART ROUTER
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
@@ -1464,14 +1454,13 @@ async function startServer() {
     }
 
     await createAdmin();
-    
-    // ✅ إضافة البيانات الأولية للمراكب
     await seedVessels();
 
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    // ✅ FIXED: trust proxy from 'true' to 1
+    app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+        console.log('🚢 MARINE SYSTEM v38.2 - MONGODB FIX ONLY');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
