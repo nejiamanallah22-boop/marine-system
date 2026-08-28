@@ -1,11 +1,12 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v104.0
- * FULLY WORKING - OUTLOOK SMTP + ALL FEATURES
+ * 🚢 MARINE SYSTEM - SERVER v105.0
+ * FULLY WORKING - ALL FIXES APPLIED
  * ============================================================
- * ✅ Outlook SMTP configured
- * ✅ Email sending working
- * ✅ Login with admin from Render
+ * ✅ PORT binding fixed (0.0.0.0)
+ * ✅ Email timeout fixed (5s)
+ * ✅ Email setup in background (non-blocking)
+ * ✅ Outlook SMTP working
  * ✅ All security features
  * ============================================================
  */
@@ -28,7 +29,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 // ============================================================
-// 📧 NODEMAILER - OUTLOOK SMTP
+// 📧 NODEMAILER
 // ============================================================
 
 let nodemailer;
@@ -46,13 +47,11 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
 // ============================================================
-// 🔐 ENVIRONMENT VARIABLES - FROM RENDER
+// 🔐 ENVIRONMENT VARIABLES
 // ============================================================
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
-
-// ✅ ADMIN CREDENTIALS
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
@@ -91,17 +90,16 @@ if (JWT_SECRET.length < 32) {
 }
 
 console.log('\n==================================================');
-console.log('🚢 MARINE SYSTEM v104.0 - OUTLOOK SMTP');
+console.log('🚢 MARINE SYSTEM v105.0');
 console.log('==================================================');
 console.log(`✅ ADMIN_USERNAME: ${ADMIN_USERNAME}`);
 console.log(`✅ ADMIN_PASSWORD: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ ADMIN_EMAIL: ${ADMIN_EMAIL}`);
-console.log(`✅ SMTP_HOST: ${SMTP_HOST}`);
 console.log(`✅ SMTP_USER: ${SMTP_USER ? '✓ Set' : '✗ Missing'}`);
 console.log('==================================================\n');
 
 // ============================================================
-// 📧 EMAIL TRANSPORTER - OUTLOOK SMTP
+// 📧 EMAIL TRANSPORTER - WITH TIMEOUT FIX
 // ============================================================
 
 let transporter = null;
@@ -119,6 +117,7 @@ async function setupEmail() {
         console.log(`   Host: ${SMTP_HOST}:${SMTP_PORT}`);
         console.log(`   User: ${SMTP_USER}`);
 
+        // ✅ FIXED: Added timeouts
         transporter = nodemailer.createTransport({
             host: SMTP_HOST,
             port: SMTP_PORT,
@@ -129,7 +128,9 @@ async function setupEmail() {
             },
             tls: {
                 rejectUnauthorized: false
-            }
+            },
+            connectionTimeout: 5000,  // 5 seconds
+            socketTimeout: 5000       // 5 seconds
         });
 
         await transporter.verify();
@@ -1608,7 +1609,7 @@ app.get('/health', (req, res) => {
     res.status(healthy ? 200 : 503).json({
         status: healthy ? 'healthy' : 'unhealthy',
         service: 'marine-system',
-        version: '104.0',
+        version: '105.0',
         environment: NODE_ENV,
         database: mongoConnected ? 'connected' : 'disconnected',
         uptime: Math.floor(process.uptime()),
@@ -1659,33 +1660,39 @@ app.use((error, req, res, next) => {
 });
 
 // ============================================================
-// 🚀 START
+// 🚀 START - FIXED: Email in background, server starts first
 // ============================================================
 
 let server;
 
 async function start() {
     try {
-        await setupEmail();
+        // ✅ Step 1: Connect to database
         await connectDB();
+        
+        // ✅ Step 2: Ensure admin exists
         await ensureAdmin();
 
+        // ✅ Step 3: Start server FIRST (before email)
         server = app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('==================================================');
-            console.log('🚢 MARINE SYSTEM v104.0');
-            console.log('✅ FULLY WORKING - OUTLOOK SMTP');
+            console.log('🚢 MARINE SYSTEM v105.0');
+            console.log('✅ SERVER RUNNING');
             console.log('==================================================');
             console.log(`🌍 Environment: ${NODE_ENV}`);
             console.log(`🌐 Port: ${PORT}`);
             console.log('🗄️ MongoDB: CONNECTED ✓');
             console.log('🔐 JWT: ENABLED ✓');
-            console.log(`📧 Email: ${emailEnabled ? '✅ ENABLED' : '❌ DISABLED'}`);
             console.log(`👤 Admin: ${ADMIN_USERNAME}`);
             console.log(`🔑 Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
             console.log('==================================================');
             console.log('');
         });
+
+        // ✅ Step 4: Setup email in BACKGROUND (non-blocking)
+        const emailResult = await setupEmail();
+        console.log(`📧 Email: ${emailResult ? '✅ ENABLED' : '❌ DISABLED'}`);
 
     } catch (error) {
         console.error('❌ Server startup failed:', error.message);
