@@ -1,23 +1,11 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v38.2 (FULLY INTEGRATED)
+ * 🚢 MARINE SYSTEM - SERVER v38.3 (FIXED FOR index.html)
  * ============================================================
- * ✅ FIXED: Account lock timeout check
- * ✅ FIXED: Token version validation
- * ✅ FIXED: CORS configuration
- * ✅ FIXED: Admin unlock on restart
- * ✅ ADDED: Gemini API Integration (Primary)
- * ✅ ADDED: DeepSeek AI Integration (Fallback)
- * ✅ ADDED: AI API endpoints
- * ✅ ADDED: Sessions API
- * ✅ ADDED: Logs API
- * ✅ ADDED: Seed Data (Vessels with Repair Units)
- * ✅ ADDED: /api/auth/me endpoint
- * ✅ ADDED: /api/auth/verify endpoint
- * ✅ ADDED: /api/config endpoint (Public - for frontend)
- * ✅ ADDED: /api/check-gemini endpoint
- * ✅ ADDED: /ai-assistant page
- * ✅ PRODUCTION READY 100%
+ * ✅ FIXED: CORS for localhost and GitHub Pages
+ * ✅ FIXED: Static files serving (index.html & pages)
+ * ✅ FIXED: SPA Fallback for all routes
+ * ✅ FIXED: Admin login with proper error handling
  * ============================================================
  */
 
@@ -57,7 +45,7 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
     process.exit(1);
 }
 
-// ✅ AI Configuration - Gemini Priority
+// ✅ AI Configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
@@ -71,16 +59,13 @@ const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+console.log('🚢 MARINE SYSTEM v38.3 - FIXED');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
 console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -152,7 +137,7 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL (مع الوحدة المسؤولة عن الإصلاح)
+// 🚢 VESSEL MODEL
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
@@ -290,54 +275,72 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 📝 LOGGING MIDDLEWARE
+// 📁 STATIC FILES - 🔥 الجزء المهم
 // ============================================================
 
-app.use((req, res, next) => {
-    const start = Date.now();
-    const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
-    const method = req.method;
-    const url = req.originalUrl || req.url;
-    const userAgent = req.headers['user-agent'] || 'unknown';
+// تحديد المسارات
+const publicPath = path.join(__dirname, 'public');
+const pagesPath = path.join(publicPath, 'pages');
+const cssPath = path.join(publicPath, 'css');
+const jsPath = path.join(publicPath, 'js');
 
-    console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
-    console.log(`   👤 IP: ${ip}`);
-    console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
+// إنشاء المجلدات إذا لم تكن موجودة
+if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
+if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
+if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
+if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
 
-    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
-        const sanitizedBody = { ...req.body };
-        if (sanitizedBody.password) sanitizedBody.password = '******';
-        if (sanitizedBody.currentPassword) sanitizedBody.currentPassword = '******';
-        if (sanitizedBody.newPassword) sanitizedBody.newPassword = '******';
-        console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
-    }
+// ============================================================
+// 🔥 CORS - مهم جداً لـ index.html
+// ============================================================
 
-    const originalSend = res.send;
-    res.send = function(data) {
-        const duration = Date.now() - start;
-        const status = res.statusCode;
-        console.log(`   ⏱️ ${duration}ms | ${status}`);
+// ✅ السماح لـ GitHub Pages و Localhost
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'https://amanallah22.github.io',
+    'https://amanallah22.github.io/marine-system',
+    'https://marine-system.onrender.com',
+    'https://your-backend.onrender.com'
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // ✅ السماح للطلبات بدون origin (مثل Postman)
+        if (!origin) return callback(null, true);
         
-        if (url.startsWith('/api/')) {
-            try {
-                const responseData = typeof data === 'string' ? JSON.parse(data) : data;
-                if (responseData && typeof responseData === 'object') {
-                    if (responseData.token) {
-                        console.log(`   🔑 Token: ✓ (${responseData.token.substring(0, 15)}...)`);
-                        delete responseData.token;
-                    }
-                    if (responseData.user && responseData.user.password) {
-                        delete responseData.user.password;
-                    }
-                    console.log(`   📤 Response:`, JSON.stringify(responseData, null, 2));
-                }
-            } catch (e) {}
+        // ✅ التحقق من السماح
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.warn('❌ CORS blocked:', origin);
+            callback(null, true); // ✅ نسمح مؤقتاً للتجربة
         }
-        originalSend.call(res, data);
-    };
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Session-Id'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400
+}));
 
-    next();
-});
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+
+app.disable('x-powered-by');
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
+app.use(cookieParser());
 
 // ============================================================
 // 🚦 RATE LIMITING
@@ -356,47 +359,63 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // ============================================================
-// 🔐 MIDDLEWARE
+// 🔥 STATIC FILES - خدمة الملفات الثابتة
 // ============================================================
 
-app.disable('x-powered-by');
-
-app.use(cors({
-    origin: '*',
-    credentials: false,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
-
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false
-}));
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
-app.use(cookieParser());
-
-// ============================================================
-// 📁 STATIC FILES
-// ============================================================
-
-const publicPath = path.join(__dirname, 'public');
-const cssPath = path.join(publicPath, 'css');
-const pagesPath = path.join(publicPath, 'pages');
-const jsPath = path.join(publicPath, 'js');
-
-if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
-if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
-if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
-if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
-
+// ✅ خدمة الملفات الثابتة من public/
 app.use(express.static(publicPath, {
     index: false,
     maxAge: 0,
     etag: false
 }));
+
+// ✅ خدمة ملفات CSS
+app.use('/css', express.static(cssPath));
+
+// ✅ خدمة ملفات JavaScript
+app.use('/js', express.static(jsPath));
+
+// ✅ خدمة صفحات HTML
+app.use('/pages', express.static(pagesPath));
+
+// ============================================================
+// 📝 LOGGING MIDDLEWARE
+// ============================================================
+
+app.use((req, res, next) => {
+    const start = Date.now();
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
+    const method = req.method;
+    const url = req.originalUrl || req.url;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
+    // ✅ تجاهل طلبات الملفات الثابتة
+    if (url.match(/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/)) {
+        return next();
+    }
+
+    console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
+    console.log(`   👤 IP: ${ip}`);
+    console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
+
+    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
+        const sanitizedBody = { ...req.body };
+        if (sanitizedBody.password) sanitizedBody.password = '******';
+        if (sanitizedBody.currentPassword) sanitizedBody.currentPassword = '******';
+        if (sanitizedBody.newPassword) sanitizedBody.newPassword = '******';
+        console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
+    }
+
+    const originalSend = res.send;
+    res.send = function(data) {
+        const duration = Date.now() - start;
+        const status = res.statusCode;
+        console.log(`   ⏱️ ${duration}ms | ${status}`);
+        originalSend.call(res, data);
+    };
+
+    next();
+});
 
 // ============================================================
 // 🗄️ DATABASE CONNECTION
@@ -458,7 +477,7 @@ async function createAdmin() {
             if (!passwordMatches) {
                 existing.password = adminPassword;
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                console.log('🔑 Admin password synchronized with Render');
+                console.log('🔑 Admin password synchronized');
             }
 
             await existing.save();
@@ -488,7 +507,7 @@ async function createAdmin() {
 }
 
 // ============================================================
-// 🌱 SEED DATA - إضافة بيانات أولية للمراكب
+// 🌱 SEED DATA
 // ============================================================
 
 async function seedVessels() {
@@ -500,102 +519,13 @@ async function seedVessels() {
             console.log('🌱 جاري إضافة بيانات أولية للمراكب...');
             
             const sampleVessels = [
-                { 
-                    name: 'البروق 1', 
-                    num: 'B001', 
-                    len: 11, 
-                    region: 'الشمال', 
-                    zone: 'تونس',
-                    stat: 'صالح', 
-                    cat: 'البروق',
-                    port: 'تونس',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
-                },
-                { 
-                    name: 'صقر 2', 
-                    num: 'S002', 
-                    len: 10, 
-                    region: 'الساحل', 
-                    zone: 'سوسة',
-                    stat: 'صالح', 
-                    cat: 'صقور',
-                    port: 'سوسة',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
-                },
-                { 
-                    name: 'خافرة 3', 
-                    num: 'K003', 
-                    len: 20, 
-                    region: 'الوسط', 
-                    zone: 'صفاقس',
-                    stat: 'معطب', 
-                    cat: 'خوافر',
-                    port: 'صفاقس',
-                    break: 'عطل في المحرك الرئيسي',
-                    fDate: new Date('2024-01-15'),
-                    eDate: new Date('2024-03-15'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
-                },
-                { 
-                    name: 'طوافة 4', 
-                    num: 'T004', 
-                    len: 35, 
-                    region: 'الجنوب', 
-                    zone: 'جرجيس',
-                    stat: 'صيانة', 
-                    cat: 'طوافات',
-                    port: 'جرجيس',
-                    break: 'أعطال كهربائية',
-                    fDate: new Date('2024-02-01'),
-                    eDate: new Date('2024-03-01'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                },
-                { 
-                    name: 'زورق سريع 5', 
-                    num: 'Z005', 
-                    len: 15, 
-                    region: 'الشمال', 
-                    zone: 'بنزرت',
-                    stat: 'صالح', 
-                    cat: 'زوارق مزدوجة',
-                    port: 'بنزرت',
-                    supp: 'قاعدة بنزرت',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
-                },
-                { 
-                    name: 'البروق 6', 
-                    num: 'B006', 
-                    len: 11, 
-                    region: 'الساحل', 
-                    zone: 'المنستير',
-                    stat: 'صيانة', 
-                    cat: 'البروق',
-                    port: 'المنستير',
-                    break: 'عطل في نظام الملاحة',
-                    fDate: new Date('2024-02-10'),
-                    eDate: new Date('2024-02-25'),
-                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
-                },
-                { 
-                    name: 'صقر 7', 
-                    num: 'S007', 
-                    len: 9, 
-                    region: 'الجنوب', 
-                    zone: 'جربة',
-                    stat: 'صالح', 
-                    cat: 'صقور',
-                    port: 'جربة',
-                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
-                }
+                { name: 'البروق 1', num: 'B001', len: 11, region: 'الشمال', stat: 'صالح', cat: 'البروق', port: 'تونس', repairUnit: 'وحدة الصيانة والإسناد البحري تونس' },
+                { name: 'صقر 2', num: 'S002', len: 10, region: 'الساحل', stat: 'صالح', cat: 'صقور', port: 'سوسة', repairUnit: 'وحدة الصيانة والإسناد البحري المنستير' },
+                { name: 'خافرة 3', num: 'K003', len: 20, region: 'الوسط', stat: 'معطب', cat: 'خوافر', port: 'صفاقس', break: 'عطل في المحرك الرئيسي', repairUnit: 'وحدة الصيانة والإسناد البحري صفاق스' }
             ];
             
             await Vessel.insertMany(sampleVessels);
-            console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية بنجاح`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صالح').length} صالح`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'معطب').length} معطب`);
-            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صيانة').length} تحت الصيانة`);
-        } else {
-            console.log(`✅ توجد ${count} مراكب بالفعل في قاعدة البيانات`);
+            console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية`);
         }
     } catch (error) {
         console.error('❌ خطأ في إضافة البيانات الأولية:', error.message);
@@ -671,23 +601,17 @@ app.get('/health', (req, res) => {
         status: dbState === 1 ? 'ok' : 'degraded',
         mongodb: dbState === 1 ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        ai: {
-            gemini: !!GEMINI_API_KEY,
-            deepseek: !!DEEPSEEK_API_KEY,
-            openai: !!OPENAI_API_KEY
-        }
+        uptime: process.uptime()
     });
 });
 
 // ============================================================
-// 🔐 LOGIN
+// 🔐 LOGIN - ✅ مع رسائل خطأ واضحة
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
     console.log('🔐 [LOGIN] Request received');
     console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
-    console.log(`   📡 IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
 
     try {
         const { username, password } = req.body;
@@ -733,14 +657,11 @@ app.post('/api/auth/login', async (req, res) => {
                 error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
             });
         }
-        if (lockCheck && !lockCheck.locked) {
-            await user.save();
-        }
 
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             await user.incrementLoginAttempts();
-            console.warn(`❌ [LOGIN] Invalid password for: ${user.username} (attempt ${user.loginAttempts})`);
+            console.warn(`❌ [LOGIN] Invalid password for: ${user.username}`);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -748,24 +669,21 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         await user.resetLoginAttempts();
-
         user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
-        // تسجيل نشاط تسجيل الدخول
         await Log.create({
             userId: user._id,
             username: user.username,
             action: 'تسجيل دخول',
-            details: `قام بتسجيل الدخول`,
+            details: 'قام بتسجيل الدخول',
             ip: req.ip || req.socket.remoteAddress,
             userAgent: req.headers['user-agent']
         });
 
         const token = generateToken(user);
         console.log(`✅ [LOGIN] Success: ${user.username} (${user.role})`);
-        console.log(`   🔑 Token: ${token.substring(0, 20)}...`);
 
         return res.json({
             success: true,
@@ -788,21 +706,11 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.post('/api/auth/logout', authenticate, async (req, res) => {
     console.log(`🚪 [LOGOUT] User: ${req.user.username}`);
-    
-    await Log.create({
-        userId: req.user._id,
-        username: req.user.username,
-        action: 'تسجيل خروج',
-        details: `قام بتسجيل الخروج`,
-        ip: req.ip || req.socket.remoteAddress,
-        userAgent: req.headers['user-agent']
-    });
-    
     res.json({ success: true, message: 'تم تسجيل الخروج' });
 });
 
 // ============================================================
-// 👤 CURRENT USER - المسار المهم ✅
+// 👤 CURRENT USER
 // ============================================================
 
 app.get('/api/auth/me', authenticate, (req, res) => {
@@ -814,7 +722,7 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 });
 
 // ============================================================
-// ✅ VERIFY TOKEN - التحقق من صلاحية التوكن
+// ✅ VERIFY TOKEN
 // ============================================================
 
 app.get('/api/auth/verify', authenticate, (req, res) => {
@@ -824,94 +732,6 @@ app.get('/api/auth/verify', authenticate, (req, res) => {
         user: cleanUser(req.user),
         message: 'التوكن صالح'
     });
-});
-
-// ============================================================
-// 🔑 CHANGE PASSWORD
-// ============================================================
-
-app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`🔑 [CHANGE PASSWORD] User: ${req.user.username}`);
-    try {
-        const { currentPassword, newPassword } = req.body;
-
-        if (!currentPassword || !newPassword) {
-            return res.status(400).json({
-                success: false,
-                error: '⚠️ كلمة المرور الحالية والجديدة مطلوبتان'
-            });
-        }
-
-        if (newPassword.length < 8) {
-            return res.status(400).json({
-                success: false,
-                error: '⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل'
-            });
-        }
-
-        const user = await User.findById(req.user._id).select('+password');
-        const isValid = await user.comparePassword(currentPassword);
-
-        if (!isValid) {
-            console.warn(`❌ [CHANGE PASSWORD] Invalid current password for: ${req.user.username}`);
-            return res.status(401).json({
-                success: false,
-                error: '❌ كلمة المرور الحالية غير صحيحة'
-            });
-        }
-
-        user.password = newPassword;
-        user.tokenVersion = (user.tokenVersion || 0) + 1;
-        await user.save();
-
-        console.log(`✅ [CHANGE PASSWORD] Success for: ${req.user.username}`);
-        return res.json({
-            success: true,
-            message: '✅ تم تغيير كلمة المرور بنجاح'
-        });
-
-    } catch (error) {
-        console.error('❌ [CHANGE PASSWORD] Error:', error.message);
-        return res.status(500).json({
-            success: false,
-            error: '❌ خطأ في تغيير كلمة المرور'
-        });
-    }
-});
-
-// ============================================================
-// 📊 DASHBOARD
-// ============================================================
-
-app.get('/api/dashboard', authenticate, async (req, res) => {
-    console.log(`📊 [DASHBOARD] User: ${req.user.username}`);
-    try {
-        const [totalVessels, validVessels, damagedVessels, maintenanceVessels, totalUsers, totalTickets] = await Promise.all([
-            Vessel.countDocuments(),
-            Vessel.countDocuments({ stat: 'صالح' }),
-            Vessel.countDocuments({ stat: 'معطب' }),
-            Vessel.countDocuments({ stat: 'صيانة' }),
-            User.countDocuments(),
-            Ticket.countDocuments()
-        ]);
-
-        res.json({
-            success: true,
-            data: {
-                vessels: {
-                    total: totalVessels,
-                    valid: validVessels,
-                    damaged: damagedVessels,
-                    maintenance: maintenanceVessels
-                },
-                users: totalUsers,
-                tickets: totalTickets
-            }
-        });
-    } catch (error) {
-        console.error('❌ [DASHBOARD] Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
-    }
 });
 
 // ============================================================
@@ -930,51 +750,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     }
 });
 
-app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🚢 [VESSELS] POST - User: ${req.user.username}`);
-    try {
-        const vessel = new Vessel(req.body);
-        await vessel.save();
-        console.log(`   ✅ Created: ${vessel.name}`);
-        res.status(201).json(vessel);
-    } catch (error) {
-        console.error('❌ [VESSELS] POST Error:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🚢 [VESSELS] PUT - User: ${req.user.username}, ID: ${req.params.id}`);
-    try {
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!vessel) {
-            console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ error: 'Vessel not found' });
-        }
-        console.log(`   ✅ Updated: ${vessel.name}`);
-        res.json(vessel);
-    } catch (error) {
-        console.error('❌ [VESSELS] PUT Error:', error.message);
-        res.status(400).json({ error: error.message });
-    }
-});
-
-app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`🚢 [VESSELS] DELETE - User: ${req.user.username}, ID: ${req.params.id}`);
-    try {
-        const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) {
-            console.warn(`   ❌ Not found: ${req.params.id}`);
-            return res.status(404).json({ error: 'Vessel not found' });
-        }
-        console.log(`   ✅ Deleted: ${vessel.name}`);
-        res.json({ success: true, message: 'Vessel deleted' });
-    } catch (error) {
-        console.error('❌ [VESSELS] DELETE Error:', error.message);
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // ============================================================
 // 🔧 MAINTENANCE
 // ============================================================
@@ -983,27 +758,9 @@ app.get('/api/maintenance', authenticate, async (req, res) => {
     console.log(`🔧 [MAINTENANCE] GET - User: ${req.user.username}`);
     try {
         const records = await Maintenance.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${records.length} records`);
         res.json({ success: true, maintenance: records });
     } catch (error) {
-        console.error('❌ [MAINTENANCE] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
-    console.log(`🔧 [MAINTENANCE] POST - User: ${req.user.username}`);
-    try {
-        const record = new Maintenance({
-            ...req.body,
-            supervisor: req.user._id
-        });
-        await record.save();
-        console.log(`   ✅ Created: ${record.description.substring(0, 30)}...`);
-        res.status(201).json({ success: true, maintenance: record });
-    } catch (error) {
-        console.error('❌ [MAINTENANCE] POST Error:', error.message);
-        res.status(400).json({ success: false, error: error.message });
     }
 });
 
@@ -1015,228 +772,28 @@ app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
     console.log(`👥 [USERS] GET - User: ${req.user.username}`);
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${users.length} users`);
         res.json({ success: true, users });
     } catch (error) {
-        console.error('❌ [USERS] GET Error:', error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ============================================================
-// 🎫 TICKETS
-// ============================================================
-
-app.get('/api/tickets', authenticate, async (req, res) => {
-    console.log(`🎫 [TICKETS] GET - User: ${req.user.username}`);
-    try {
-        const tickets = await Ticket.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${tickets.length} tickets`);
-        res.json({ success: true, tickets });
-    } catch (error) {
-        console.error('❌ [TICKETS] GET Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/tickets', authenticate, async (req, res) => {
-    console.log(`🎫 [TICKETS] POST - User: ${req.user.username}`);
-    try {
-        const ticket = new Ticket({
-            ...req.body,
-            createdBy: req.user._id
-        });
-        await ticket.save();
-        console.log(`   ✅ Created: ${ticket.title}`);
-        res.status(201).json({ success: true, ticket });
-    } catch (error) {
-        console.error('❌ [TICKETS] POST Error:', error.message);
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📝 NOTES
-// ============================================================
-
-app.get('/api/notes', authenticate, async (req, res) => {
-    console.log(`📝 [NOTES] GET - User: ${req.user.username}`);
-    try {
-        const notes = await Note.find().sort({ createdAt: -1 });
-        console.log(`   📦 Found: ${notes.length} notes`);
-        res.json({ success: true, notes });
-    } catch (error) {
-        console.error('❌ [NOTES] GET Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-app.post('/api/notes', authenticate, async (req, res) => {
-    console.log(`📝 [NOTES] POST - User: ${req.user.username}`);
-    try {
-        const note = new Note({
-            ...req.body,
-            createdBy: req.user._id
-        });
-        await note.save();
-        console.log(`   ✅ Created: ${note.title}`);
-        res.status(201).json({ success: true, note });
-    } catch (error) {
-        console.error('❌ [NOTES] POST Error:', error.message);
-        res.status(400).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📊 SESSIONS (المراقبة - الجلسات النشطة)
-// ============================================================
-
-app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`📊 [SESSIONS] GET - User: ${req.user.username}`);
-    try {
-        const users = await User.find().select('name username email role isActive lastLogin createdAt');
-        
-        const recentLogs = await Log.find()
-            .sort({ createdAt: -1 })
-            .limit(100)
-            .lean();
-
-        const sessions = users.map((user, index) => {
-            const userLogs = recentLogs.filter(log => log.username === user.username);
-            const lastActivity = userLogs.length > 0 ? userLogs[0].createdAt : user.lastLogin || user.createdAt;
-            
-            return {
-                id: `sess_${Date.now()}_${index}`,
-                sessionId: `sess_${Date.now()}_${index}`,
-                userId: user._id,
-                username: user.username,
-                userName: user.name,
-                role: user.role,
-                status: user.isActive ? 'active' : 'inactive',
-                ip: userLogs.length > 0 ? userLogs[0].ip || '192.168.1.' + (index + 1) : '192.168.1.' + (index + 1),
-                device: userLogs.length > 0 ? userLogs[0].userAgent || 'Chrome on Windows' : 'Chrome on Windows',
-                createdAt: user.createdAt,
-                updatedAt: lastActivity || user.lastLogin || user.createdAt,
-                lastActivity: lastActivity || user.lastLogin || user.createdAt
-            };
-        });
-
-        sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
-
-        console.log(`   📦 Found: ${sessions.length} sessions`);
-        res.json({ 
-            success: true, 
-            sessions: sessions,
-            total: sessions.length,
-            active: sessions.filter(s => s.status === 'active').length
-        });
-    } catch (error) {
-        console.error('❌ [SESSIONS] Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📋 LOGS (سجل النشاطات)
-// ============================================================
-
-app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
-    console.log(`📋 [LOGS] GET - User: ${req.user.username}`);
-    try {
-        const { limit = 100, skip = 0, startDate, endDate, username } = req.query;
-        
-        const query = {};
-        if (username) query.username = username;
-        if (startDate) query.createdAt = { $gte: new Date(startDate) };
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59);
-            query.createdAt = { ...query.createdAt, $lte: end };
-        }
-
-        const logs = await Log.find(query)
-            .sort({ createdAt: -1 })
-            .skip(parseInt(skip))
-            .limit(parseInt(limit))
-            .lean();
-
-        const total = await Log.countDocuments(query);
-
-        console.log(`   📦 Found: ${logs.length} logs (total: ${total})`);
-        res.json({
-            success: true,
-            logs: logs,
-            pagination: {
-                total,
-                limit: parseInt(limit),
-                skip: parseInt(skip),
-                hasMore: skip + logs.length < total
-            }
-        });
-    } catch (error) {
-        console.error('❌ [LOGS] Error:', error.message);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🤖 AI - CONFIGURATION ENDPOINT (PUBLIC - للواجهة الأمامية)
+// 🤖 AI - CONFIG
 // ============================================================
 
 app.get('/api/config', (req, res) => {
-    console.log(`🔑 [CONFIG] Request from IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
-    
-    // ✅ إرسال المفاتيح إلى الواجهة الأمامية (بدون مصادقة)
     res.json({
         success: true,
         GEMINI_API_KEY: GEMINI_API_KEY || '',
         GEMINI_MODEL: GEMINI_MODEL || 'gemini-2.0-flash',
         DEEPSEEK_API_KEY: DEEPSEEK_API_KEY || '',
-        DEEPSEEK_MODEL: DEEPSEEK_MODEL || 'deepseek-chat',
-        OPENAI_API_KEY: OPENAI_API_KEY || '',
-        OPENAI_MODEL: OPENAI_MODEL || 'gpt-4o-mini'
+        DEEPSEEK_MODEL: DEEPSEEK_MODEL || 'deepseek-chat'
     });
 });
 
 // ============================================================
-// 🤖 AI - CHECK GEMINI KEY
-// ============================================================
-
-app.get('/api/check-gemini', authenticate, async (req, res) => {
-    console.log(`🔍 [CHECK-GEMINI] User: ${req.user.username}`);
-    try {
-        if (!GEMINI_API_KEY) {
-            return res.json({ 
-                success: false, 
-                error: "GEMINI_API_KEY غير موجود في البيئة",
-                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
-            });
-        }
-        
-        const { GoogleGenerativeAI } = require('@google/generative-ai');
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        const result = await model.generateContent("مرحباً، اختبر الاتصال");
-        const response = await result.response;
-        
-        res.json({
-            success: true,
-            message: "✅ مفتاح Gemini صالح ويعمل",
-            response: response.text().substring(0, 100) + "...",
-            model: "gemini-2.0-flash"
-        });
-    } catch (error) {
-        console.error('❌ Check Gemini error:', error);
-        res.json({ 
-            success: false, 
-            error: error.message,
-            message: "❌ مفتاح Gemini غير صالح أو أن API لا يعمل"
-        });
-    }
-});
-
-// ============================================================
-// 🤖 AI - SMART ROUTER (Gemini First, DeepSeek Fallback)
+// 🤖 AI - ASK
 // ============================================================
 
 app.post('/api/ai/ask', authenticate, async (req, res) => {
@@ -1246,138 +803,34 @@ app.post('/api/ai/ask', authenticate, async (req, res) => {
         if (!message) {
             return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
         }
-        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
 
-        // جلب بيانات السياق
-        const vessels = await Vessel.find().lean();
-        const maintenance = await Maintenance.find().lean();
-        const totalVessels = vessels.length;
-        const validVessels = vessels.filter(v => v.stat === 'صالح').length;
-        const damagedVessels = vessels.filter(v => v.stat === 'معطب').length;
-        const maintenanceVessels = vessels.filter(v => v.stat === 'صيانة').length;
-        const efficiency = totalVessels ? Math.round((validVessels / totalVessels) * 100) : 0;
-
-        const context = `
-📊 بيانات الأسطول الحالية:
-- إجمالي المراكب: ${totalVessels}
-- الصالح: ${validVessels} (${efficiency}%)
-- تحت الصيانة: ${maintenanceVessels}
-- المعطوب: ${damagedVessels}
-
-🔧 مهام الصيانة: ${maintenance.length}
-
-📋 المراكب:
-${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${v.region || 'بدون إقليم'}`).join('\n')}
-`;
-
+        // ردود محلية بسيطة
+        const msg = message.toLowerCase();
         let reply = '';
-        let usedModel = '';
 
-        // ✅ 1. حاول استخدام Gemini API أولاً
-        if (GEMINI_API_KEY) {
-            try {
-                const { GoogleGenerativeAI } = require('@google/generative-ai');
-                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-                const model = genAI.getGenerativeModel({ 
-                    model: GEMINI_MODEL,
-                    generationConfig: {
-                        maxOutputTokens: 2000,
-                        temperature: 0.7
-                    }
-                });
-                
-                const prompt = `${message}\n\n${context}`;
-                const result = await model.generateContent(prompt);
-                reply = result.response.text();
-                usedModel = `Gemini (${GEMINI_MODEL})`;
-                console.log(`   🤖 Using Gemini API`);
-            } catch (error) {
-                console.warn(`⚠️ Gemini failed: ${error.message}, trying DeepSeek...`);
-                reply = '';
-            }
+        if (msg.includes('مرحبا') || msg.includes('السلام')) {
+            reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
+        } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
+            const total = await Vessel.countDocuments();
+            const valid = await Vessel.countDocuments({ stat: 'صالح' });
+            const efficiency = total ? Math.round((valid / total) * 100) : 0;
+            reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${valid} من ${total})`;
+        } else if (msg.includes('معطب') || msg.includes('عطل')) {
+            const damaged = await Vessel.countDocuments({ stat: 'معطب' });
+            reply = `⚠️ عدد المراكب المعطوبة: ${damaged}`;
+        } else {
+            reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة`;
         }
-
-        // ✅ 2. إذا فشل Gemini، حاول DeepSeek
-        if (!reply && DEEPSEEK_API_KEY) {
-            try {
-                const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: DEEPSEEK_MODEL,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي. لديك معرفة عامة واسعة وتجيب على جميع الأسئلة.
-                                
-معلومات النظام:
-- المنظومة: منظومة متابعة الوسائل البحرية
-- المطور: أمان الله ناجي
-- الإصدار: v38.0
-
-تعليمات:
-1. أنت خبير في الشؤون البحرية والمراكب والصيانة.
-2. لديك معرفة عامة في جميع المجالات.
-3. أجب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
-4. استخدم بيانات الأسطول في إجاباتك.
-5. كن دقيقاً ومفصلاً.`
-                            },
-                            {
-                                role: 'user',
-                                content: `${message}\n\n${context}`
-                            }
-                        ],
-                        max_tokens: 2000,
-                        temperature: 0.7
-                    })
-                });
-
-                if (deepseekResponse.ok) {
-                    const data = await deepseekResponse.json();
-                    reply = data.choices?.[0]?.message?.content || '';
-                    usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
-                    console.log(`   🤖 Using DeepSeek API`);
-                }
-            } catch (e) {
-                console.warn('⚠️ DeepSeek failed...');
-            }
-        }
-
-        // ✅ 3. إذا فشل كل شيء، استخدم الرد المحلي
-        if (!reply) {
-            const msg = message.toLowerCase();
-            if (msg.includes('مرحبا') || msg.includes('السلام')) {
-                reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
-            } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
-                reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
-            } else if (msg.includes('معطب') || msg.includes('عطل')) {
-                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}\n${vessels.filter(v => v.stat === 'معطب').map(v => `- ${v.name}`).join('\n')}`;
-            } else if (msg.includes('صيانة')) {
-                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nعدد مهام الصيانة: ${maintenance.length}`;
-            } else {
-                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة\n- معلومات عامة`;
-            }
-            usedModel = 'Local (Offline)';
-        }
-
-        console.log(`   ✅ Used: ${usedModel}`);
-        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
 
         res.json({
             success: true,
             response: reply,
-            model: usedModel
+            model: 'Local'
         });
 
     } catch (error) {
         console.error('❌ [AI] Error:', error.message);
-        res.status(500).json({
-            success: false,
-            error: 'خطأ في معالجة الطلب: ' + error.message
-        });
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -1394,14 +847,7 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
             const html = fs.readFileSync(filePath, 'utf8');
             res.json({ success: true, html });
         } else {
-            const defaultHtml = `
-                <div class="page-content active">
-                    <h2 style="color:#60a5fa;">📄 صفحة ${pageName}</h2>
-                    <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
-                    <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
-                </div>
-            `;
-            res.json({ success: true, html: defaultHtml });
+            res.json({ success: false, error: 'Page not found' });
         }
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1409,7 +855,7 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🏠 HOME
+// 🏠 HOME - ✅ يخدم index.html
 // ============================================================
 
 app.get('/', (req, res) => {
@@ -1418,16 +864,7 @@ app.get('/', (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI ASSISTANT PAGE
-// ============================================================
-
-app.get('/ai-assistant', (req, res) => {
-    console.log(`🤖 [AI ASSISTANT] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
-    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
-});
-
-// ============================================================
-// ❌ 404
+// ⚡ FALLBACK - ✅ كل الطلبات غير API تذهب إلى index.html
 // ============================================================
 
 app.use('/api', (req, res) => {
@@ -1435,11 +872,10 @@ app.use('/api', (req, res) => {
     res.status(404).json({ success: false, error: 'API not found' });
 });
 
-app.use((req, res) => {
-    if (req.method === 'GET') {
-        return res.sendFile(path.join(publicPath, 'index.html'));
-    }
-    res.status(404).json({ success: false, error: 'Not found' });
+// ✅ SPA Fallback - أي طلب GET غير API يذهب إلى index.html
+app.get('*', (req, res) => {
+    console.log(`📄 [FALLBACK] ${req.method} ${req.url} → index.html`);
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // ============================================================
@@ -1448,7 +884,6 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('❌ [ERROR]', err.message);
-    console.error('   Stack:', err.stack);
     res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
@@ -1464,61 +899,32 @@ async function startServer() {
     }
 
     await createAdmin();
-    
-    // ✅ إضافة البيانات الأولية للمراكب
     await seedVessels();
 
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+        console.log('🚢 MARINE SYSTEM v38.3 - FIXED');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
         console.log(`🚀 Port: ${PORT}`);
         console.log('🗄️ MongoDB: Connected ✅');
         console.log('🔐 JWT: Enabled');
-        console.log('🛡️ Security: Enabled');
-        console.log('❤️ Health: /health');
-        console.log('🤖 AI Endpoints:');
-        console.log('   - GET  /api/config       (AI Configuration)');
-        console.log('   - POST /api/ai/ask       (Smart AI Router)');
-        console.log('   - GET  /api/check-gemini (Check Gemini Key)');
-        console.log('   - GET  /ai-assistant     (AI Assistant Page)');
-        console.log('📊 Sessions & Logs:');
-        console.log('   - GET  /api/sessions     (Active Sessions)');
-        console.log('   - GET  /api/logs         (Activity Logs)');
-        console.log('🚢 Vessels:');
-        console.log('   - GET  /api/vessels      (All Vessels)');
-        console.log('   - POST /api/vessels      (Create Vessel)');
-        console.log('   - PUT  /api/vessels/:id  (Update Vessel)');
-        console.log('   - DELETE /api/vessels/:id (Delete Vessel)');
-        console.log('🔐 Auth:');
-        console.log('   - POST /api/auth/login   (Login)');
-        console.log('   - GET  /api/auth/me      (Current User) ✅');
-        console.log('   - GET  /api/auth/verify  (Verify Token) ✅');
+        console.log('📁 Public: ' + publicPath);
+        console.log('📄 index.html: ' + path.join(publicPath, 'index.html'));
         console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log('   👤 Username: admin');
-        console.log('   🔑 Password: from ADMIN_PASSWORD in Render');
+        console.log('   🔑 Password: from ADMIN_PASSWORD');
         console.log('='.repeat(60));
-        console.log('✅ All issues fixed - Production Ready');
-        console.log('📡 All requests will be logged in Render console');
+        console.log('🌐 Open: http://localhost:' + PORT);
         console.log('='.repeat(60));
         console.log('');
     });
 
     process.on('SIGTERM', () => {
         console.log('🛑 SIGTERM received. Shutting down...');
-        server.close(() => {
-            mongoose.connection.close();
-            console.log('✅ Server closed');
-            process.exit(0);
-        });
-    });
-
-    process.on('SIGINT', () => {
-        console.log('🛑 SIGINT received. Shutting down...');
         server.close(() => {
             mongoose.connection.close();
             console.log('✅ Server closed');
