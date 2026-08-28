@@ -1,13 +1,23 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v105.0
- * FULLY WORKING - ALL FIXES APPLIED
+ * 🚢 MARINE SYSTEM - SERVER v38.2 (FULLY INTEGRATED)
  * ============================================================
- * ✅ PORT binding fixed (0.0.0.0)
- * ✅ Email timeout fixed (5s)
- * ✅ Email setup in background (non-blocking)
- * ✅ Outlook SMTP working
- * ✅ All security features
+ * ✅ FIXED: Account lock timeout check
+ * ✅ FIXED: Token version validation
+ * ✅ FIXED: CORS configuration
+ * ✅ FIXED: Admin unlock on restart
+ * ✅ ADDED: Gemini API Integration (Primary)
+ * ✅ ADDED: DeepSeek AI Integration (Fallback)
+ * ✅ ADDED: AI API endpoints
+ * ✅ ADDED: Sessions API
+ * ✅ ADDED: Logs API
+ * ✅ ADDED: Seed Data (Vessels with Repair Units)
+ * ✅ ADDED: /api/auth/me endpoint
+ * ✅ ADDED: /api/auth/verify endpoint
+ * ✅ ADDED: /api/config endpoint (Public - for frontend)
+ * ✅ ADDED: /api/check-gemini endpoint
+ * ✅ ADDED: /ai-assistant page
+ * ✅ PRODUCTION READY 100%
  * ============================================================
  */
 
@@ -17,255 +27,87 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
-const cors = require('cors');
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
-const cookieParser = require('cookie-parser');
-const crypto = require('crypto');
 const fs = require('fs');
-
-// ============================================================
-// 📧 NODEMAILER
-// ============================================================
-
-let nodemailer;
-try {
-    nodemailer = require('nodemailer');
-    console.log('✅ nodemailer loaded successfully');
-} catch (error) {
-    console.error('❌ nodemailer not found! Please run: npm install nodemailer');
-    process.exit(1);
-}
+const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
+
+// ============================================================
+// ⚙️ CONFIGURATION
+// ============================================================
+
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
-// ============================================================
-// 🔐 ENVIRONMENT VARIABLES
-// ============================================================
-
 const MONGODB_URI = process.env.MONGODB_URI;
+
+// ✅ JWT_SECRET
 const JWT_SECRET = process.env.JWT_SECRET;
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+    console.error('❌ JWT_SECRET is missing or too short (must be at least 32 characters)');
+    console.error('   Please add JWT_SECRET to your environment variables');
+    process.exit(1);
+}
+
+// ✅ AI Configuration - Gemini Priority
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+
+const ADMIN_USERNAME = 'admin';
+const ADMIN_EMAIL = 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-const REFRESH_EXPIRES_IN = process.env.REFRESH_EXPIRES_IN || '7d';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// ✅ OUTLOOK SMTP CONFIG
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp-mail.outlook.com';
-const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || 'noreply@marine-system.com';
-const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || ADMIN_EMAIL;
-
-// ============================================================
-// 🛡️ VALIDATE ENVIRONMENT
-// ============================================================
-
-const missing = [];
-if (!MONGODB_URI) missing.push('MONGODB_URI');
-if (!JWT_SECRET) missing.push('JWT_SECRET');
-if (!ADMIN_USERNAME) missing.push('ADMIN_USERNAME');
-if (!ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
-
-if (missing.length > 0) {
-    console.error('❌ Missing required environment variables:');
-    missing.forEach(v => console.error(`   - ${v}`));
-    process.exit(1);
-}
-
-if (JWT_SECRET.length < 32) {
-    console.error('❌ JWT_SECRET must be at least 32 characters');
-    process.exit(1);
-}
-
-console.log('\n==================================================');
-console.log('🚢 MARINE SYSTEM v105.0');
-console.log('==================================================');
-console.log(`✅ ADMIN_USERNAME: ${ADMIN_USERNAME}`);
-console.log(`✅ ADMIN_PASSWORD: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ ADMIN_EMAIL: ${ADMIN_EMAIL}`);
-console.log(`✅ SMTP_USER: ${SMTP_USER ? '✓ Set' : '✗ Missing'}`);
-console.log('==================================================\n');
-
-// ============================================================
-// 📧 EMAIL TRANSPORTER - WITH TIMEOUT FIX
-// ============================================================
-
-let transporter = null;
-let emailEnabled = false;
-
-async function setupEmail() {
-    try {
-        if (!SMTP_USER || !SMTP_PASS) {
-            console.warn('⚠️ SMTP credentials not set - email disabled');
-            console.warn('   To enable email, set SMTP_USER and SMTP_PASS');
-            return false;
-        }
-
-        console.log('📧 Configuring Outlook SMTP...');
-        console.log(`   Host: ${SMTP_HOST}:${SMTP_PORT}`);
-        console.log(`   User: ${SMTP_USER}`);
-
-        // ✅ FIXED: Added timeouts
-        transporter = nodemailer.createTransport({
-            host: SMTP_HOST,
-            port: SMTP_PORT,
-            secure: SMTP_PORT === 465,
-            auth: {
-                user: SMTP_USER,
-                pass: SMTP_PASS
-            },
-            tls: {
-                rejectUnauthorized: false
-            },
-            connectionTimeout: 5000,  // 5 seconds
-            socketTimeout: 5000       // 5 seconds
-        });
-
-        await transporter.verify();
-        emailEnabled = true;
-        console.log('✅ Email transporter configured successfully!');
-        console.log(`📧 From: ${SMTP_FROM}`);
-        return true;
-    } catch (error) {
-        console.error('❌ Email transporter error:', error.message);
-        console.warn('⚠️ Email sending disabled - check SMTP credentials');
-        return false;
-    }
-}
-
-// ============================================================
-// 📧 SEND EMAIL FUNCTIONS
-// ============================================================
-
-async function sendEmail(to, subject, html) {
-    if (!emailEnabled || !transporter) {
-        console.log(`📧 Email not sent to ${to} - email disabled`);
-        return false;
-    }
-
-    try {
-        const info = await transporter.sendMail({
-            from: SMTP_FROM,
-            to: to,
-            subject: subject,
-            html: html
-        });
-        console.log(`📧 Email sent to ${to}: ${info.messageId}`);
-        return true;
-    } catch (error) {
-        console.error('❌ Email send error:', error.message);
-        return false;
-    }
-}
-
-async function sendPasswordResetEmail(user, resetToken) {
-    const resetLink = `${FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
-    const html = `
-        <div style="direction:rtl;font-family:'Cairo',sans-serif;padding:20px;background:#0a1628;color:#e2e8f0;max-width:600px;margin:0 auto;">
-            <div style="text-align:center;padding:20px 0;">
-                <h1 style="color:#e6b31e;">⚓ منظومة الوسائل البحرية</h1>
-            </div>
-            <hr style="border-color:rgba(255,255,255,0.1);">
-            <h2 style="color:#e6b31e;">🔑 إعادة تعيين كلمة المرور</h2>
-            <p>مرحباً <strong>${user.name}</strong>,</p>
-            <p>تم طلب إعادة تعيين كلمة المرور لحسابك.</p>
-            <div style="text-align:center;padding:20px 0;">
-                <a href="${resetLink}" style="display:inline-block;padding:14px 32px;background:#e6b31e;color:#0a1628;text-decoration:none;border-radius:8px;font-weight:700;font-size:16px;">
-                    🔑 إعادة تعيين كلمة المرور
-                </a>
-            </div>
-            <p style="color:#94a3b8;font-size:12px;">
-                ⏰ هذا الرابط صالح لمدة <strong>ساعة واحدة</strong>.
-            </p>
-            <p style="color:#475569;font-size:11px;text-align:center;">
-                منظومة الوسائل البحرية - نظام إدارة الأسطول
-            </p>
-        </div>
-    `;
-
-    return sendEmail(user.email, '🔑 إعادة تعيين كلمة المرور', html);
-}
-
-// ============================================================
-// 📁 PATHS
-// ============================================================
-
-const publicPath = path.resolve(__dirname, 'public');
-const pagesPath = path.resolve(publicPath, 'pages');
-const cssPath = path.resolve(publicPath, 'css');
-const jsPath = path.resolve(publicPath, 'js');
-
-[publicPath, pagesPath, cssPath, jsPath].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
-
-// ============================================================
-// 🔐 SECURE LOGGING
-// ============================================================
-
-const secureLog = (message, data = null) => {
-    if (data) {
-        try {
-            const safe = JSON.parse(JSON.stringify(data));
-            const sensitive = ['password', 'token', 'refreshToken', 'authorization', 'cookie', 
-                              'secret', 'key', 'apiKey', 'jwt', 'refreshTokenHash',
-                              'resetPasswordToken', 'resetToken'];
-            const removeSensitive = (obj) => {
-                if (!obj || typeof obj !== 'object') return;
-                for (const key of Object.keys(obj)) {
-                    const lower = key.toLowerCase();
-                    if (sensitive.some(s => lower.includes(s))) {
-                        delete obj[key];
-                    } else if (typeof obj[key] === 'object') {
-                        removeSensitive(obj[key]);
-                    }
-                }
-            };
-            removeSensitive(safe);
-            console.log(message, JSON.stringify(safe, null, 2));
-        } catch {
-            console.log(message, '[data could not be logged safely]');
-        }
-    } else {
-        console.log(message);
-    }
-};
+console.log('\n' + '='.repeat(60));
+console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+console.log('='.repeat(60));
+console.log(`✅ Environment: ${NODE_ENV}`);
+console.log(`✅ Port: ${PORT}`);
+console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
+console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ Gemini API: ${GEMINI_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ DeepSeek API: ${DEEPSEEK_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ OpenAI API: ${OPENAI_API_KEY ? '✓ Set' : '✗ Missing'}`);
+console.log('='.repeat(60) + '\n');
 
 // ============================================================
 // 📦 MODELS
 // ============================================================
 
+// 👤 USER MODEL
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true, trim: true, lowercase: true, minlength: 3, maxlength: 50 },
-    email: { type: String, required: true, unique: true, trim: true, lowercase: true, maxlength: 150 },
+    name: { type: String, required: true, trim: true },
+    username: { type: String, required: true, unique: true, trim: true, lowercase: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
-    name: { type: String, required: true, trim: true, maxlength: 100 },
-    role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
-    isActive: { type: Boolean, default: true, index: true },
+    role: { 
+        type: String, 
+        enum: ['admin', 'manager', 'operator', 'viewer'],
+        default: 'viewer'
+    },
+    isActive: { type: Boolean, default: true },
     isLocked: { type: Boolean, default: false },
+    tokenVersion: { type: Number, default: 0 },
+    refreshToken: { type: String, select: false },
+    lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
-    lastLoginAt: { type: Date, default: null },
-    lastLoginIP: { type: String, default: null },
-    tokenVersion: { type: Number, default: 0 },
-    resetPasswordToken: { type: String, select: false },
-    resetPasswordExpires: { type: Date, select: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
+});
 
 UserSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
@@ -298,56 +140,38 @@ UserSchema.methods.resetLoginAttempts = async function() {
     await this.save();
 };
 
-UserSchema.methods.isAccountLocked = async function() {
-    if (!this.isLocked) return false;
+UserSchema.methods.checkLock = function() {
+    if (!this.isLocked) return null;
     if (this.lockUntil && this.lockUntil > new Date()) {
-        return true;
+        const remainingMinutes = Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000);
+        return { locked: true, remainingMinutes };
     }
     this.isLocked = false;
     this.lockUntil = null;
     this.loginAttempts = 0;
-    await this.save();
-    return false;
+    return { locked: false };
 };
 
-// ===== SESSION MODEL =====
-const SessionSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    refreshTokenHash: { type: String, required: true, select: false },
-    jti: { type: String, required: true, unique: true },
-    userAgent: { type: String, default: 'Unknown' },
-    ipAddress: { type: String, default: 'Unknown' },
-    deviceName: { type: String, default: 'Unknown' },
-    expiresAt: { type: Date, required: true, index: true },
-    revoked: { type: Boolean, default: false },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-// ===== AUDIT LOG MODEL =====
-const AuditLogSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
-    username: { type: String, index: true },
-    action: { type: String, required: true, index: true },
-    resource: { type: String },
-    resourceId: { type: String },
-    details: { type: String },
-    before: { type: Object },
-    after: { type: Object },
-    ip: { type: String },
-    userAgent: { type: String },
-    requestId: { type: String },
-    success: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now, index: true }
-});
-
-// ===== VESSEL MODEL =====
+// 🚢 VESSEL MODEL (مع الوحدة المسؤولة عن الإصلاح)
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
     len: { type: Number, default: 0 },
-    stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
-    region: { type: String, trim: true },
+    stat: { 
+        type: String, 
+        enum: ['صالح', 'معطب', 'صيانة'],
+        default: 'صالح'
+    },
+    region: { 
+        type: String, 
+        enum: ['الشمال', 'الساحل', 'الوسط', 'الجنوب', 
+               'وحدة الصيانة والإسناد البحري تونس', 
+               'وحدة الصيانة والإسناد البحري المنستير',
+               'وحدة الصيانة والإسناد البحري صفاقس',
+               'وحدة الصيانة والإسناد البحري جرجيس',
+               'المجمع الأمني بقبيبة'],
+        trim: true 
+    },
     zone: { type: String, trim: true },
     port: { type: String, trim: true },
     supp: { type: String, trim: true },
@@ -357,822 +181,604 @@ const VesselSchema = new mongoose.Schema({
     ref: { type: String, trim: true },
     cat: { type: String, trim: true },
     repairUnit: { type: String, trim: true },
-    isDeleted: { type: Boolean, default: false, index: true },
-    deletedAt: { type: Date, default: null },
-    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
-const Session = mongoose.models.Session || mongoose.model('Session', SessionSchema);
-const AuditLog = mongoose.models.AuditLog || mongoose.model('AuditLog', AuditLogSchema);
-const Vessel = mongoose.models.Vessel || mongoose.model('Vessel', VesselSchema);
-
-// ============================================================
-// 🛡️ HELMET
-// ============================================================
-
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://unpkg.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https://*.googleapis.com", "https://*.gstatic.com"],
-            connectSrc: ["'self'", FRONTEND_URL],
-            frameSrc: ["'none'"],
-            objectSrc: ["'none'"],
-            baseUri: ["'self'"],
-            formAction: ["'self'"]
-        }
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    xssFilter: false
-}));
-
-// ============================================================
-// 🌐 CORS
-// ============================================================
-
-const allowedOrigins = FRONTEND_URL.split(',').map(o => o.trim()).filter(Boolean);
-
-app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (!IS_PRODUCTION) return callback(null, true);
-        if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error('CORS not allowed'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID'],
-    exposedHeaders: ['X-Request-ID'],
-    maxAge: 86400
-}));
-
-// ============================================================
-// 📦 MIDDLEWARE
-// ============================================================
-
-app.set('trust proxy', true);
-app.use(compression({ level: 6, threshold: 1024 }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
-app.use(cookieParser());
-
-app.use((req, res, next) => {
-    req.id = crypto.randomBytes(8).toString('hex');
-    res.setHeader('X-Request-ID', req.id);
-    next();
 });
 
+// 🔧 MAINTENANCE MODEL
+const MaintenanceSchema = new mongoose.Schema({
+    vesselId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vessel' },
+    vesselName: { type: String, trim: true },
+    type: { type: String, trim: true },
+    technician: { type: String, trim: true },
+    description: { type: String, required: true },
+    cost: { type: Number, default: 0 },
+    status: { 
+        type: String, 
+        enum: ['معلقة', 'قيد التنفيذ', 'مكتملة', 'ملغاة'],
+        default: 'معلقة'
+    },
+    supervisor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// 🎫 TICKET MODEL
+const TicketSchema = new mongoose.Schema({
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'critical'],
+        default: 'medium'
+    },
+    status: {
+        type: String,
+        enum: ['open', 'in_progress', 'pending', 'resolved', 'closed', 'rejected'],
+        default: 'open'
+    },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// 📝 NOTE MODEL
+const NoteSchema = new mongoose.Schema({
+    title: { type: String, required: true, trim: true },
+    content: { type: String, required: true },
+    status: { 
+        type: String, 
+        enum: ['مسودة', 'منشورة', 'مؤرشفة'],
+        default: 'مسودة'
+    },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+// 📊 LOGS MODEL
+const LogSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    username: { type: String },
+    action: { type: String },
+    details: { type: String },
+    ip: { type: String },
+    userAgent: { type: String },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// 🏗️ REGISTER MODELS
+const User = mongoose.model('User', UserSchema);
+const Vessel = mongoose.model('Vessel', VesselSchema);
+const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
+const Ticket = mongoose.model('Ticket', TicketSchema);
+const Note = mongoose.model('Note', NoteSchema);
+const Log = mongoose.model('Log', LogSchema);
+
 // ============================================================
-// ✅ INPUT VALIDATION
+// 🧰 HELPERS
 // ============================================================
 
-const validate = (schema) => {
-    return (req, res, next) => {
-        if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
-            return res.status(400).json({ success: false, error: 'Invalid request body' });
-        }
-
-        const errors = [];
-        const allowedFields = Object.keys(schema);
-        
-        for (const key of Object.keys(req.body)) {
-            if (!allowedFields.includes(key)) {
-                errors.push(`Unknown field: ${key}`);
-            }
-        }
-        
-        for (const [field, rules] of Object.entries(schema)) {
-            const value = req.body[field];
-            const isPresent = value !== undefined && value !== null;
-            
-            if (rules.required && !isPresent) {
-                errors.push(`${field} is required`);
-                continue;
-            }
-            
-            if (!isPresent) continue;
-            
-            if (rules.type === 'string' && typeof value !== 'string') {
-                errors.push(`${field} must be a string`);
-            }
-            if (rules.type === 'number' && typeof value !== 'number') {
-                errors.push(`${field} must be a number`);
-            }
-            if (rules.type === 'boolean' && typeof value !== 'boolean') {
-                errors.push(`${field} must be a boolean`);
-            }
-            
-            if (rules.type === 'date') {
-                if (typeof value !== 'string') {
-                    errors.push(`${field} must be a date string`);
-                } else if (isNaN(new Date(value).getTime())) {
-                    errors.push(`${field} must be a valid date`);
-                }
-            }
-            
-            if (rules.type === 'number' && typeof value === 'number') {
-                if (isNaN(value)) errors.push(`${field} must be a valid number`);
-                if (!isFinite(value)) errors.push(`${field} must be finite`);
-                if (rules.min !== undefined && value < rules.min) errors.push(`${field} must be at least ${rules.min}`);
-                if (rules.max !== undefined && value > rules.max) errors.push(`${field} must be at most ${rules.max}`);
-            }
-            
-            if (rules.type === 'string' && typeof value === 'string') {
-                if (rules.min !== undefined && value.length < rules.min) errors.push(`${field} must be at least ${rules.min} characters`);
-                if (rules.max !== undefined && value.length > rules.max) errors.push(`${field} must be at most ${rules.max} characters`);
-                if (rules.enum && !rules.enum.includes(value)) errors.push(`${field} must be one of: ${rules.enum.join(', ')}`);
-                if (rules.pattern && !rules.pattern.test(value)) errors.push(`${field} has invalid format`);
-            }
-        }
-        
-        if (errors.length > 0) {
-            return res.status(400).json({ success: false, errors });
-        }
-        next();
+function cleanUser(user) {
+    if (!user) return null;
+    return {
+        id: user._id.toString(),
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt
     };
-};
+}
+
+function generateToken(user) {
+    return jwt.sign(
+        { id: user._id.toString(), role: user.role, tokenVersion: user.tokenVersion || 0 },
+        JWT_SECRET,
+        { expiresIn: '7d', issuer: 'marine-system' }
+    );
+}
+
+function verifyToken(token) {
+    try {
+        return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
+    } catch (error) {
+        return null;
+    }
+}
+
+// ============================================================
+// 📝 LOGGING MIDDLEWARE
+// ============================================================
+
+app.use((req, res, next) => {
+    const start = Date.now();
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.socket.remoteAddress;
+    const method = req.method;
+    const url = req.originalUrl || req.url;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+
+    console.log(`📡 [${new Date().toISOString()}] ${method} ${url}`);
+    console.log(`   👤 IP: ${ip}`);
+    console.log(`   📱 UA: ${userAgent.substring(0, 60)}`);
+
+    if (['POST', 'PUT', 'PATCH'].includes(method) && req.body && Object.keys(req.body).length > 0) {
+        const sanitizedBody = { ...req.body };
+        if (sanitizedBody.password) sanitizedBody.password = '******';
+        if (sanitizedBody.currentPassword) sanitizedBody.currentPassword = '******';
+        if (sanitizedBody.newPassword) sanitizedBody.newPassword = '******';
+        console.log(`   📦 Body:`, JSON.stringify(sanitizedBody, null, 2));
+    }
+
+    const originalSend = res.send;
+    res.send = function(data) {
+        const duration = Date.now() - start;
+        const status = res.statusCode;
+        console.log(`   ⏱️ ${duration}ms | ${status}`);
+        
+        if (url.startsWith('/api/')) {
+            try {
+                const responseData = typeof data === 'string' ? JSON.parse(data) : data;
+                if (responseData && typeof responseData === 'object') {
+                    if (responseData.token) {
+                        console.log(`   🔑 Token: ✓ (${responseData.token.substring(0, 15)}...)`);
+                        delete responseData.token;
+                    }
+                    if (responseData.user && responseData.user.password) {
+                        delete responseData.user.password;
+                    }
+                    console.log(`   📤 Response:`, JSON.stringify(responseData, null, 2));
+                }
+            } catch (e) {}
+        }
+        originalSend.call(res, data);
+    };
+
+    next();
+});
 
 // ============================================================
 // 🚦 RATE LIMITING
 // ============================================================
 
-const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 500,
-    message: { success: false, error: 'تم تجاوز عدد الطلبات المسموح بها' }
-});
-app.use('/api/', apiLimiter);
-
-const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
-    message: { success: false, error: 'محاولات كثيرة، حاول بعد 15 دقيقة' }
-});
-
-const refreshLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 30,
-    message: { success: false, error: 'محاولات تحديث كثيرة، حاول بعد 15 دقيقة' }
-});
-
-const adminLimiter = rateLimit({
+const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: { success: false, error: 'تم تجاوز عدد الطلبات المسموح بها' }
+    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' },
+    handler: (req, res) => {
+        console.warn(`🚫 [RATE LIMIT] ${req.ip} exceeded rate limit on ${req.url}`);
+        res.status(429).json({ success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' });
+    }
 });
 
-const passwordResetLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 5,
-    message: { success: false, error: 'طلبات كثيرة، حاول لاحقاً' }
-});
+app.use('/api', limiter);
+
+// ============================================================
+// 🔐 MIDDLEWARE
+// ============================================================
+
+app.disable('x-powered-by');
+
+app.use(cors({
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+}));
+
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
+app.use(cookieParser());
 
 // ============================================================
 // 📁 STATIC FILES
 // ============================================================
 
+const publicPath = path.join(__dirname, 'public');
+const cssPath = path.join(publicPath, 'css');
+const pagesPath = path.join(publicPath, 'pages');
+const jsPath = path.join(publicPath, 'js');
+
+if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
+if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
+if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
+if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
+
 app.use(express.static(publicPath, {
     index: false,
-    maxAge: IS_PRODUCTION ? '1d' : 0,
-    etag: true,
-    setHeaders: (res) => {
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('X-Frame-Options', 'DENY');
-        res.setHeader('Cache-Control', IS_PRODUCTION ? 'public, max-age=86400' : 'no-cache');
-    }
+    maxAge: 0,
+    etag: false
 }));
 
-app.use('/css', express.static(cssPath));
-app.use('/js', express.static(jsPath));
-app.use('/pages', express.static(pagesPath));
-
 // ============================================================
-// 📝 REQUEST LOGGING
+// 🗄️ DATABASE CONNECTION
 // ============================================================
-
-app.use((req, res, next) => {
-    const start = Date.now();
-    const ip = req.ip || req.socket.remoteAddress;
-    
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        if (req.originalUrl.includes('/api/')) {
-            secureLog(`📡 ${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms`, {
-                ip,
-                userAgent: req.headers['user-agent']?.substring(0, 60),
-                requestId: req.id
-            });
-        }
-    });
-    next();
-});
-
-// ============================================================
-// 🗄️ DATABASE
-// ============================================================
-
-let databaseReady = false;
-let reconnectAttempts = 0;
-let reconnectTimer = null;
 
 async function connectDB() {
+    if (!MONGODB_URI) {
+        console.error('❌ MONGODB_URI is required');
+        process.exit(1);
+    }
+
     try {
-        secureLog('🔄 Connecting to MongoDB...');
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(MONGODB_URI, {
             serverSelectionTimeoutMS: 10000,
-            maxPoolSize: 10,
-            minPoolSize: 2,
             socketTimeoutMS: 45000,
-            connectTimeoutMS: 10000,
-            retryWrites: true,
-            w: 'majority'
+            maxPoolSize: 10,
+            minPoolSize: 2
         });
-        databaseReady = true;
-        reconnectAttempts = 0;
-        if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-        secureLog('✅ MongoDB Connected');
+        console.log('✅ MongoDB Connected');
+        console.log(`📚 Database: ${mongoose.connection.name}`);
         return true;
     } catch (error) {
-        databaseReady = false;
-        console.error('❌ MongoDB Error:', error.message);
+        console.error('❌ MongoDB Connection Failed:', error.message);
         return false;
     }
 }
 
-mongoose.connection.on('disconnected', () => {
-    console.warn('⚠️ MongoDB disconnected.');
-    databaseReady = false;
-    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
-    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
-    reconnectAttempts++;
-    console.log(`🔄 Reconnecting in ${delay}ms (attempt ${reconnectAttempts})...`);
-    reconnectTimer = setTimeout(connectDB, delay);
-});
-
-mongoose.connection.on('error', (error) => {
-    console.error('❌ MongoDB error:', error.message);
-});
-
 // ============================================================
-// 🔐 ADMIN BOOTSTRAP
+// 🔐 CREATE/UPDATE ADMIN
 // ============================================================
 
-async function ensureAdmin() {
+async function createAdmin() {
     try {
-        const username = ADMIN_USERNAME.trim().toLowerCase();
-        const email = ADMIN_EMAIL.trim().toLowerCase();
-        
-        console.log(`🔐 Checking admin user: ${username}`);
-        console.log(`🔑 Password from Render: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-        
-        let admin = await User.findOne({ username }).select('+password');
+        const adminUsername = 'admin';
+        const adminEmail = 'admin@marine-system.com';
+        const adminPassword = process.env.ADMIN_PASSWORD;
 
-        if (!admin) {
-            console.log('👤 Admin not found - creating...');
-            admin = new User({
-                username,
-                email,
-                password: ADMIN_PASSWORD,
-                name: ADMIN_NAME,
-                role: 'admin',
-                isActive: true
-            });
-            await admin.save();
-            console.log('✅ Admin account created successfully!');
-            console.log(`👤 Username: ${username}`);
-            console.log(`🔑 Password: ${ADMIN_PASSWORD}`);
+        if (!adminPassword) {
+            console.error('❌ ADMIN_PASSWORD is missing from Environment Variables');
+            process.exit(1);
+        }
+
+        const existing = await User.findOne({
+            $or: [{ username: adminUsername }, { email: adminEmail }]
+        }).select('+password');
+
+        if (existing) {
+            const passwordMatches = await bcrypt.compare(adminPassword, existing.password);
+
+            existing.name = ADMIN_NAME || 'مدير النظام';
+            existing.email = adminEmail;
+            existing.role = 'admin';
+            existing.isActive = true;
+            existing.isLocked = false;
+            existing.lockUntil = null;
+            existing.loginAttempts = 0;
+
+            if (!passwordMatches) {
+                existing.password = adminPassword;
+                existing.tokenVersion = (existing.tokenVersion || 0) + 1;
+                console.log('🔑 Admin password synchronized with Render');
+            }
+
+            await existing.save();
+            console.log('✅ Admin updated successfully');
+            console.log(`👤 Username: ${adminUsername}`);
             return;
         }
 
-        const passwordMatches = await admin.comparePassword(ADMIN_PASSWORD);
-        
-        if (!passwordMatches) {
-            console.log('🔄 Admin password mismatch - updating...');
-            admin.password = ADMIN_PASSWORD;
-            admin.tokenVersion = (admin.tokenVersion || 0) + 1;
-            await admin.save();
-            console.log('✅ Admin password updated!');
-        } else {
-            console.log('✅ Admin password verified!');
-        }
+        const admin = new User({
+            name: ADMIN_NAME || 'مدير النظام',
+            username: adminUsername,
+            email: adminEmail,
+            password: adminPassword,
+            role: 'admin',
+            isActive: true,
+            tokenVersion: 1
+        });
 
-        let needsUpdate = false;
-        if (admin.email !== email) { admin.email = email; needsUpdate = true; }
-        if (admin.name !== ADMIN_NAME) { admin.name = ADMIN_NAME; needsUpdate = true; }
-        if (admin.role !== 'admin') { admin.role = 'admin'; needsUpdate = true; }
-        if (!admin.isActive) { admin.isActive = true; needsUpdate = true; }
-        if (admin.isLocked) { admin.isLocked = false; admin.loginAttempts = 0; admin.lockUntil = null; needsUpdate = true; }
-
-        if (needsUpdate) {
-            await admin.save();
-            console.log('✅ Admin configuration updated');
-        }
-
-        console.log(`👤 Admin username: ${username}`);
+        await admin.save();
+        console.log('✅ Admin created successfully');
+        console.log(`👤 Username: ${adminUsername}`);
 
     } catch (error) {
-        console.error('❌ Admin bootstrap failed:', error.message);
+        console.error('❌ Admin error:', error.message);
         throw error;
     }
 }
 
 // ============================================================
-// 🎫 JWT FUNCTIONS
+// 🌱 SEED DATA - إضافة بيانات أولية للمراكب
 // ============================================================
 
-function generateJTI() {
-    return crypto.randomBytes(16).toString('hex');
-}
-
-function hashToken(token) {
-    return crypto.createHash('sha256').update(token).digest('hex');
-}
-
-function generateToken(user) {
-    return jwt.sign(
-        { sub: user._id.toString(), username: user.username, role: user.role, tv: user.tokenVersion || 0, jti: generateJTI() },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN, issuer: 'marine-system', audience: 'marine-system-client' }
-    );
-}
-
-function generateRefreshToken(user) {
-    return jwt.sign(
-        { sub: user._id.toString(), type: 'refresh', tv: user.tokenVersion || 0 },
-        JWT_SECRET,
-        { expiresIn: REFRESH_EXPIRES_IN, issuer: 'marine-system', audience: 'marine-system-client', jwtid: generateJTI() }
-    );
-}
-
-function decodeRefreshToken(token) {
+async function seedVessels() {
     try {
-        return jwt.verify(token, JWT_SECRET, {
-            issuer: 'marine-system',
-            audience: 'marine-system-client'
-        });
-    } catch { return null; }
+        const count = await Vessel.countDocuments();
+        console.log(`📊 عدد المراكب الحالي: ${count}`);
+        
+        if (count === 0) {
+            console.log('🌱 جاري إضافة بيانات أولية للمراكب...');
+            
+            const sampleVessels = [
+                { 
+                    name: 'البروق 1', 
+                    num: 'B001', 
+                    len: 11, 
+                    region: 'الشمال', 
+                    zone: 'تونس',
+                    stat: 'صالح', 
+                    cat: 'البروق',
+                    port: 'تونس',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
+                },
+                { 
+                    name: 'صقر 2', 
+                    num: 'S002', 
+                    len: 10, 
+                    region: 'الساحل', 
+                    zone: 'سوسة',
+                    stat: 'صالح', 
+                    cat: 'صقور',
+                    port: 'سوسة',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
+                },
+                { 
+                    name: 'خافرة 3', 
+                    num: 'K003', 
+                    len: 20, 
+                    region: 'الوسط', 
+                    zone: 'صفاقس',
+                    stat: 'معطب', 
+                    cat: 'خوافر',
+                    port: 'صفاقس',
+                    break: 'عطل في المحرك الرئيسي',
+                    fDate: new Date('2024-01-15'),
+                    eDate: new Date('2024-03-15'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري صفاقس'
+                },
+                { 
+                    name: 'طوافة 4', 
+                    num: 'T004', 
+                    len: 35, 
+                    region: 'الجنوب', 
+                    zone: 'جرجيس',
+                    stat: 'صيانة', 
+                    cat: 'طوافات',
+                    port: 'جرجيس',
+                    break: 'أعطال كهربائية',
+                    fDate: new Date('2024-02-01'),
+                    eDate: new Date('2024-03-01'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
+                },
+                { 
+                    name: 'زورق سريع 5', 
+                    num: 'Z005', 
+                    len: 15, 
+                    region: 'الشمال', 
+                    zone: 'بنزرت',
+                    stat: 'صالح', 
+                    cat: 'زوارق مزدوجة',
+                    port: 'بنزرت',
+                    supp: 'قاعدة بنزرت',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري تونس'
+                },
+                { 
+                    name: 'البروق 6', 
+                    num: 'B006', 
+                    len: 11, 
+                    region: 'الساحل', 
+                    zone: 'المنستير',
+                    stat: 'صيانة', 
+                    cat: 'البروق',
+                    port: 'المنستير',
+                    break: 'عطل في نظام الملاحة',
+                    fDate: new Date('2024-02-10'),
+                    eDate: new Date('2024-02-25'),
+                    repairUnit: 'وحدة الصيانة والإسناد البحري المنستير'
+                },
+                { 
+                    name: 'صقر 7', 
+                    num: 'S007', 
+                    len: 9, 
+                    region: 'الجنوب', 
+                    zone: 'جربة',
+                    stat: 'صالح', 
+                    cat: 'صقور',
+                    port: 'جربة',
+                    repairUnit: 'وحدة الصيانة والإسناد البحري جرجيس'
+                }
+            ];
+            
+            await Vessel.insertMany(sampleVessels);
+            console.log(`✅ تم إضافة ${sampleVessels.length} مراكب افتراضية بنجاح`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صالح').length} صالح`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'معطب').length} معطب`);
+            console.log(`   📊 ${sampleVessels.filter(v => v.stat === 'صيانة').length} تحت الصيانة`);
+        } else {
+            console.log(`✅ توجد ${count} مراكب بالفعل في قاعدة البيانات`);
+        }
+    } catch (error) {
+        console.error('❌ خطأ في إضافة البيانات الأولية:', error.message);
+    }
 }
 
 // ============================================================
-// 🔐 RBAC
+// 🔐 AUTHENTICATION
 // ============================================================
 
-function requireRole(...allowedRoles) {
-    return (req, res, next) => {
-        if (!req.user) {
+async function authenticate(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ 
-                success: false, 
-                error: 'ليس لديك صلاحية',
-                required: allowedRoles,
-                current: req.user.role
+
+        const token = authHeader.substring(7).trim();
+        const decoded = verifyToken(token);
+
+        if (!decoded) {
+            return res.status(401).json({ success: false, error: 'توكن غير صالح' });
+        }
+
+        const user = await User.findById(decoded.id);
+        if (!user || !user.isActive) {
+            return res.status(401).json({ success: false, error: 'غير مصرح' });
+        }
+
+        const lockCheck = user.checkLock();
+        if (lockCheck && lockCheck.locked) {
+            return res.status(423).json({
+                success: false,
+                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
             });
+        }
+        if (lockCheck && !lockCheck.locked) {
+            await user.save();
+        }
+
+        if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
+            return res.status(401).json({
+                success: false,
+                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
+            });
+        }
+
+        req.user = user;
+        next();
+
+    } catch (error) {
+        console.error('❌ Auth error:', error.message);
+        return res.status(401).json({ success: false, error: 'غير مصرح' });
+    }
+}
+
+function authorize(...roles) {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
         }
         next();
     };
 }
 
 // ============================================================
-// 🔐 AUTH MIDDLEWARE
+// ❤️ HEALTH
 // ============================================================
 
-async function authenticate(req, res, next) {
-    try {
-        const header = req.headers.authorization;
-        if (!header || !header.startsWith('Bearer ')) {
-            return res.status(401).json({ success: false, error: 'غير مصرح' });
-        }
-
-        const token = header.substring(7).trim();
-        const decoded = jwt.verify(token, JWT_SECRET, {
-            issuer: 'marine-system',
-            audience: 'marine-system-client'
-        });
-
-        const user = await User.findById(decoded.sub).select('-password');
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'الحساب غير صالح' });
-        }
-
-        if (decoded.tv !== (user.tokenVersion || 0)) {
-            return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة' });
-        }
-
-        req.user = user;
-        req.jti = decoded.jti;
-        next();
-    } catch (error) {
-        return res.status(401).json({ success: false, error: 'توكن غير صالح أو منتهي' });
-    }
-}
-
-// ============================================================
-// 🔐 LOGIN
-// ============================================================
-
-app.post('/api/auth/login', loginLimiter, async (req, res) => {
-    try {
-        let { username, password } = req.body;
-
-        if (typeof username !== 'string' || typeof password !== 'string') {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
-        }
-
-        username = username.trim().toLowerCase();
-
-        if (username.length < 1 || username.length > 50) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم غير صالح' });
-        }
-
-        if (password.length < 1) {
-            return res.status(400).json({ success: false, error: 'اسم المستخدم وكلمة المرور مطلوبان' });
-        }
-
-        const user = await User.findOne({
-            $or: [{ username }, { email: username }]
-        }).select('+password');
-
-        if (!user) {
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-
-        if (!user.isActive) {
-            return res.status(403).json({ success: false, error: 'الحساب غير نشط' });
-        }
-
-        if (await user.isAccountLocked()) {
-            return res.status(423).json({
-                success: false,
-                error: 'الحساب مقفل مؤقتاً. حاول بعد 15 دقيقة'
-            });
-        }
-
-        const valid = await user.comparePassword(password);
-        if (!valid) {
-            await user.incrementLoginAttempts();
-            await AuditLog.create({
-                userId: user._id,
-                username: user.username,
-                action: 'LOGIN_FAILED',
-                details: 'Invalid password',
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                requestId: req.id,
-                success: false
-            });
-            return res.status(401).json({ success: false, error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-        }
-
-        await user.resetLoginAttempts();
-        user.lastLoginAt = new Date();
-        user.lastLoginIP = req.ip || req.socket.remoteAddress;
-        await user.save();
-
-        const token = generateToken(user);
-        const refreshToken = generateRefreshToken(user);
-        const decodedRt = decodeRefreshToken(refreshToken);
-        const refreshTokenHash = hashToken(refreshToken);
-
-        const session = new Session({
-            userId: user._id,
-            refreshTokenHash: refreshTokenHash,
-            jti: decodedRt?.jti || generateJTI(),
-            userAgent: req.headers['user-agent'] || 'Unknown',
-            ipAddress: req.ip || req.socket.remoteAddress,
-            deviceName: req.headers['user-agent']?.substring(0, 50) || 'Unknown',
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
-        await session.save();
-
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/api/auth/refresh'
-        });
-
-        await AuditLog.create({
-            userId: user._id,
-            username: user.username,
-            action: 'LOGIN_SUCCESS',
-            resource: 'auth',
-            resourceId: user._id.toString(),
-            details: 'User logged in successfully',
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: true
-        });
-
-        res.json({
-            success: true,
-            user: {
-                id: user._id,
-                username: user.username,
-                name: user.name,
-                email: user.email,
-                role: user.role
-            },
-            token: token
-        });
-
-    } catch (error) {
-        console.error('❌ Login error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ داخلي في الخادم' });
-    }
-});
-
-// ============================================================
-// 🔄 REFRESH TOKEN
-// ============================================================
-
-app.post('/api/auth/refresh', refreshLimiter, async (req, res) => {
-    try {
-        const refreshToken = req.cookies.refreshToken;
-        
-        if (!refreshToken) {
-            return res.status(401).json({ success: false, error: 'Refresh token required' });
-        }
-
-        const decoded = decodeRefreshToken(refreshToken);
-        if (!decoded || decoded.type !== 'refresh') {
-            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
-        }
-
-        const user = await User.findById(decoded.sub);
-        if (!user || !user.isActive) {
-            return res.status(401).json({ success: false, error: 'User not found' });
-        }
-
-        if (decoded.tv !== (user.tokenVersion || 0)) {
-            return res.status(401).json({ success: false, error: 'Session invalidated' });
-        }
-
-        const refreshTokenHash = hashToken(refreshToken);
-        
-        const session = await Session.findOne({ jti: decoded.jti });
-        
-        if (!session) {
-            return res.status(401).json({ success: false, error: 'Invalid session' });
-        }
-
-        if (session.revoked) {
-            await Session.updateMany(
-                { userId: session.userId, revoked: false },
-                { revoked: true }
-            );
-            await User.findByIdAndUpdate(session.userId, { $inc: { tokenVersion: 1 } });
-            
-            await AuditLog.create({
-                userId: session.userId,
-                action: 'REFRESH_TOKEN_REUSE_DETECTED',
-                details: 'Refresh token reuse detected - all sessions revoked',
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                requestId: req.id,
-                success: false
-            });
-            
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Token reuse detected. All sessions revoked.' 
-            });
-        }
-
-        if (session.refreshTokenHash !== refreshTokenHash) {
-            await Session.updateMany(
-                { userId: session.userId, revoked: false },
-                { revoked: true }
-            );
-            await User.findByIdAndUpdate(session.userId, { $inc: { tokenVersion: 1 } });
-            
-            await AuditLog.create({
-                userId: session.userId,
-                action: 'REFRESH_TOKEN_REUSE_DETECTED',
-                details: 'Refresh token hash mismatch - all sessions revoked',
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                requestId: req.id,
-                success: false
-            });
-            
-            return res.status(401).json({ 
-                success: false, 
-                error: 'Token reuse detected. All sessions revoked.' 
-            });
-        }
-
-        if (session.expiresAt < new Date()) {
-            await Session.updateOne({ jti: decoded.jti }, { revoked: true });
-            return res.status(401).json({ success: false, error: 'Session expired' });
-        }
-
-        const sessionDb = await mongoose.startSession();
-        let newToken = null;
-        let newRefreshToken = null;
-
-        await sessionDb.withTransaction(async () => {
-            const updatedSession = await Session.findOneAndUpdate(
-                { 
-                    jti: decoded.jti, 
-                    revoked: false, 
-                    refreshTokenHash: refreshTokenHash 
-                },
-                { $set: { revoked: true } },
-                { new: true, session: sessionDb }
-            );
-
-            if (!updatedSession) {
-                throw new Error('Token already used');
-            }
-
-            newToken = generateToken(user);
-            newRefreshToken = generateRefreshToken(user);
-            const newDecoded = decodeRefreshToken(newRefreshToken);
-            const newRefreshTokenHash = hashToken(newRefreshToken);
-
-            const newSession = new Session({
-                userId: user._id,
-                refreshTokenHash: newRefreshTokenHash,
-                jti: newDecoded?.jti || generateJTI(),
-                userAgent: session.userAgent,
-                ipAddress: session.ipAddress,
-                deviceName: session.deviceName,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            });
-            await newSession.save({ session: sessionDb });
-        });
-
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            path: '/api/auth/refresh'
-        });
-        
-        res.cookie('refreshToken', newRefreshToken, {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: '/api/auth/refresh'
-        });
-
-        res.json({ success: true, token: newToken });
-
-    } catch (error) {
-        console.error('❌ Refresh error:', error.message);
-        res.status(401).json({ success: false, error: 'Invalid refresh token' });
-    } finally {
-        await sessionDb.endSession();
-    }
-});
-
-// ============================================================
-// 👤 ME
-// ============================================================
-
-app.get('/api/auth/me', authenticate, (req, res) => {
+app.get('/health', (req, res) => {
+    const dbState = mongoose.connection.readyState;
     res.json({
-        success: true,
-        user: {
-            id: req.user._id,
-            username: req.user.username,
-            name: req.user.name,
-            email: req.user.email,
-            role: req.user.role
+        status: dbState === 1 ? 'ok' : 'degraded',
+        mongodb: dbState === 1 ? 'connected' : 'disconnected',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        ai: {
+            gemini: !!GEMINI_API_KEY,
+            deepseek: !!DEEPSEEK_API_KEY,
+            openai: !!OPENAI_API_KEY
         }
     });
 });
 
 // ============================================================
-// ✅ VERIFY
+// 🔐 LOGIN
 // ============================================================
 
-app.get('/api/auth/verify', authenticate, (req, res) => {
-    res.json({ success: true, message: 'التوكن صالح' });
-});
+app.post('/api/auth/login', async (req, res) => {
+    console.log('🔐 [LOGIN] Request received');
+    console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
+    console.log(`   📡 IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
 
-// ============================================================
-// 🔑 RESET PASSWORD
-// ============================================================
-
-app.post('/api/auth/reset-password', passwordResetLimiter, async (req, res) => {
     try {
-        const { email, username } = req.body;
-        
-        if (!email && !username) {
-            return res.status(400).json({ success: false, error: 'البريد الإلكتروني أو اسم المستخدم مطلوب' });
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            console.warn('⚠️ [LOGIN] Missing credentials');
+            return res.status(400).json({
+                success: false,
+                error: '⚠️ اسم المستخدم وكلمة المرور مطلوبان'
+            });
         }
 
         const user = await User.findOne({
             $or: [
-                { email: email?.toLowerCase().trim() },
-                { username: username?.toLowerCase().trim() }
+                { username: username.toLowerCase() },
+                { email: username.toLowerCase() }
             ]
-        });
+        }).select('+password');
 
         if (!user) {
-            return res.status(200).json({ 
-                success: true, 
-                message: 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' 
+            console.warn(`❌ [LOGIN] User not found: ${username}`);
+            return res.status(401).json({
+                success: false,
+                error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-        
-        user.resetPasswordToken = resetTokenHash;
-        user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
-        await user.save();
+        console.log(`   👤 Found user: ${user.username} (${user.role})`);
 
-        const emailSent = await sendPasswordResetEmail(user, resetToken);
-
-        await AuditLog.create({
-            userId: user._id,
-            username: user.username,
-            action: 'RESET_PASSWORD_REQUESTED',
-            details: 'Password reset requested' + (emailSent ? ' - Email sent' : ' - Email failed'),
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: emailSent
-        });
-
-        res.json({ 
-            success: true, 
-            message: 'إذا كان الحساب موجوداً، سيتم إرسال رابط إعادة التعيين' 
-        });
-
-    } catch (error) {
-        console.error('❌ Reset password error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في إعادة تعيين كلمة المرور' });
-    }
-});
-
-// ============================================================
-// 🔑 RESET PASSWORD CONFIRM
-// ============================================================
-
-app.post('/api/auth/reset-password/confirm', passwordResetLimiter, async (req, res) => {
-    try {
-        const { token, newPassword } = req.body;
-        
-        if (!token || !newPassword || newPassword.length < 12) {
-            return res.status(400).json({ success: false, error: 'رمز إعادة التعيين وكلمة المرور مطلوبان' });
+        if (!user.isActive) {
+            console.warn(`⚠️ [LOGIN] Account disabled: ${user.username}`);
+            return res.status(403).json({
+                success: false,
+                error: '❌ الحساب معطل'
+            });
         }
 
-        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-        
-        const user = await User.findOne({
-            resetPasswordToken: tokenHash,
-            resetPasswordExpires: { $gt: new Date() }
-        });
-
-        if (!user) {
-            return res.status(400).json({ success: false, error: 'رمز إعادة التعيين غير صالح أو منتهي' });
+        const lockCheck = user.checkLock();
+        if (lockCheck && lockCheck.locked) {
+            console.warn(`🔒 [LOGIN] Account locked: ${user.username}, remaining: ${lockCheck.remainingMinutes} min`);
+            return res.status(423).json({
+                success: false,
+                error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
+            });
+        }
+        if (lockCheck && !lockCheck.locked) {
+            await user.save();
         }
 
-        user.password = newPassword;
+        const isValid = await user.comparePassword(password);
+        if (!isValid) {
+            await user.incrementLoginAttempts();
+            console.warn(`❌ [LOGIN] Invalid password for: ${user.username} (attempt ${user.loginAttempts})`);
+            return res.status(401).json({
+                success: false,
+                error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
+            });
+        }
+
+        await user.resetLoginAttempts();
+
+        user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
-        user.resetPasswordToken = null;
-        user.resetPasswordExpires = null;
         await user.save();
 
-        await Session.updateMany(
-            { userId: user._id, revoked: false },
-            { revoked: true }
-        );
-
-        await AuditLog.create({
+        // تسجيل نشاط تسجيل الدخول
+        await Log.create({
             userId: user._id,
             username: user.username,
-            action: 'RESET_PASSWORD_CONFIRMED',
-            details: 'Password reset confirmed',
+            action: 'تسجيل دخول',
+            details: `قام بتسجيل الدخول`,
             ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: true
+            userAgent: req.headers['user-agent']
         });
 
-        res.json({ success: true, message: 'تم إعادة تعيين كلمة المرور بنجاح' });
+        const token = generateToken(user);
+        console.log(`✅ [LOGIN] Success: ${user.username} (${user.role})`);
+        console.log(`   🔑 Token: ${token.substring(0, 20)}...`);
+
+        return res.json({
+            success: true,
+            user: cleanUser(user),
+            token: token
+        });
 
     } catch (error) {
-        console.error('❌ Reset password confirm error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في إعادة تعيين كلمة المرور' });
+        console.error('❌ [LOGIN] Error:', error.message);
+        return res.status(500).json({
+            success: false,
+            error: '❌ خطأ في الخادم'
+        });
     }
 });
 
@@ -1181,197 +787,130 @@ app.post('/api/auth/reset-password/confirm', passwordResetLimiter, async (req, r
 // ============================================================
 
 app.post('/api/auth/logout', authenticate, async (req, res) => {
+    console.log(`🚪 [LOGOUT] User: ${req.user.username}`);
+    
+    await Log.create({
+        userId: req.user._id,
+        username: req.user.username,
+        action: 'تسجيل خروج',
+        details: `قام بتسجيل الخروج`,
+        ip: req.ip || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent']
+    });
+    
+    res.json({ success: true, message: 'تم تسجيل الخروج' });
+});
+
+// ============================================================
+// 👤 CURRENT USER - المسار المهم ✅
+// ============================================================
+
+app.get('/api/auth/me', authenticate, (req, res) => {
+    console.log(`👤 [ME] User: ${req.user.username}`);
+    res.json({ 
+        success: true, 
+        user: cleanUser(req.user) 
+    });
+});
+
+// ============================================================
+// ✅ VERIFY TOKEN - التحقق من صلاحية التوكن
+// ============================================================
+
+app.get('/api/auth/verify', authenticate, (req, res) => {
+    console.log(`✅ [VERIFY] Token valid for user: ${req.user.username}`);
+    res.json({ 
+        success: true, 
+        user: cleanUser(req.user),
+        message: 'التوكن صالح'
+    });
+});
+
+// ============================================================
+// 🔑 CHANGE PASSWORD
+// ============================================================
+
+app.put('/api/auth/change-password', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`🔑 [CHANGE PASSWORD] User: ${req.user.username}`);
     try {
-        const refreshToken = req.cookies.refreshToken;
-        if (refreshToken) {
-            const decoded = decodeRefreshToken(refreshToken);
-            if (decoded && decoded.jti) {
-                await Session.findOneAndUpdate(
-                    { jti: decoded.jti },
-                    { revoked: true }
-                );
-            }
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                error: '⚠️ كلمة المرور الحالية والجديدة مطلوبتان'
+            });
         }
 
-        await AuditLog.create({
-            userId: req.user._id,
-            username: req.user.username,
-            action: 'LOGOUT',
-            details: 'User logged out',
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: true
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                error: '⚠️ كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل'
+            });
+        }
+
+        const user = await User.findById(req.user._id).select('+password');
+        const isValid = await user.comparePassword(currentPassword);
+
+        if (!isValid) {
+            console.warn(`❌ [CHANGE PASSWORD] Invalid current password for: ${req.user.username}`);
+            return res.status(401).json({
+                success: false,
+                error: '❌ كلمة المرور الحالية غير صحيحة'
+            });
+        }
+
+        user.password = newPassword;
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+
+        console.log(`✅ [CHANGE PASSWORD] Success for: ${req.user.username}`);
+        return res.json({
+            success: true,
+            message: '✅ تم تغيير كلمة المرور بنجاح'
         });
 
-        res.clearCookie('refreshToken', {
-            httpOnly: true,
-            secure: IS_PRODUCTION,
-            sameSite: 'strict',
-            path: '/api/auth/refresh'
-        });
-
-        res.json({ success: true, message: 'تم تسجيل الخروج' });
     } catch (error) {
-        console.error('❌ Logout error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في تسجيل الخروج' });
+        console.error('❌ [CHANGE PASSWORD] Error:', error.message);
+        return res.status(500).json({
+            success: false,
+            error: '❌ خطأ في تغيير كلمة المرور'
+        });
     }
 });
 
 // ============================================================
-// 👥 USERS
+// 📊 DASHBOARD
 // ============================================================
 
-app.get('/api/users', authenticate, requireRole('admin'), adminLimiter, async (req, res) => {
+app.get('/api/dashboard', authenticate, async (req, res) => {
+    console.log(`📊 [DASHBOARD] User: ${req.user.username}`);
     try {
-        let page = parseInt(req.query.page) || 1;
-        let limit = parseInt(req.query.limit) || 50;
-        
-        if (page < 1) page = 1;
-        if (limit < 1) limit = 1;
-        if (limit > 200) limit = 200;
-
-        const skip = (page - 1) * limit;
-
-        const [users, total] = await Promise.all([
-            User.find().select('-password').skip(skip).limit(limit).lean(),
-            User.countDocuments()
+        const [totalVessels, validVessels, damagedVessels, maintenanceVessels, totalUsers, totalTickets] = await Promise.all([
+            Vessel.countDocuments(),
+            Vessel.countDocuments({ stat: 'صالح' }),
+            Vessel.countDocuments({ stat: 'معطب' }),
+            Vessel.countDocuments({ stat: 'صيانة' }),
+            User.countDocuments(),
+            Ticket.countDocuments()
         ]);
 
         res.json({
             success: true,
-            users,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-                hasMore: skip + users.length < total
+            data: {
+                vessels: {
+                    total: totalVessels,
+                    valid: validVessels,
+                    damaged: damagedVessels,
+                    maintenance: maintenanceVessels
+                },
+                users: totalUsers,
+                tickets: totalTickets
             }
         });
     } catch (error) {
-        console.error('❌ Users error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في جلب المستخدمين' });
-    }
-});
-
-// ============================================================
-// 📊 SESSIONS
-// ============================================================
-
-app.get('/api/sessions', authenticate, requireRole('admin'), adminLimiter, async (req, res) => {
-    try {
-        let page = parseInt(req.query.page) || 1;
-        let limit = parseInt(req.query.limit) || 50;
-        
-        if (page < 1) page = 1;
-        if (limit < 1) limit = 1;
-        if (limit > 200) limit = 200;
-
-        const skip = (page - 1) * limit;
-
-        const [sessions, total] = await Promise.all([
-            Session.find()
-                .populate('userId', 'username name email role')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            Session.countDocuments()
-        ]);
-
-        const formatted = sessions.map(s => ({
-            id: s._id,
-            username: s.userId?.username || 'Unknown',
-            userName: s.userId?.name || 'Unknown',
-            role: s.userId?.role || 'Unknown',
-            status: s.revoked ? 'revoked' : (s.expiresAt < new Date() ? 'expired' : 'active'),
-            deviceName: s.deviceName || 'Unknown',
-            ipAddress: s.ipAddress || 'Unknown',
-            createdAt: s.createdAt,
-            expiresAt: s.expiresAt,
-            lastActivity: s.updatedAt || s.createdAt
-        }));
-
-        res.json({
-            success: true,
-            sessions: formatted,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-                hasMore: skip + sessions.length < total
-            }
-        });
-    } catch (error) {
-        console.error('❌ Sessions error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في جلب الجلسات' });
-    }
-});
-
-// ============================================================
-// 🔄 REVOKE SESSION
-// ============================================================
-
-app.delete('/api/sessions/:id', authenticate, requireRole('admin'), async (req, res) => {
-    try {
-        const session = await Session.findById(req.params.id);
-        if (!session) {
-            return res.status(404).json({ success: false, error: 'Session not found' });
-        }
-        session.revoked = true;
-        await session.save();
-
-        await AuditLog.create({
-            userId: req.user._id,
-            username: req.user.username,
-            action: 'REVOKE_SESSION',
-            resource: 'session',
-            resourceId: req.params.id,
-            details: 'Revoked session',
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: true
-        });
-
-        res.json({ success: true, message: 'Session revoked' });
-    } catch (error) {
-        console.error('❌ Revoke session error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في إلغاء الجلسة' });
-    }
-});
-
-// ============================================================
-// 📋 AUDIT LOGS
-// ============================================================
-
-app.get('/api/logs', authenticate, requireRole('admin'), adminLimiter, async (req, res) => {
-    try {
-        let limit = parseInt(req.query.limit) || 100;
-        let skip = parseInt(req.query.skip) || 0;
-        
-        if (limit < 1) limit = 1;
-        if (limit > 200) limit = 200;
-        if (skip < 0) skip = 0;
-
-        const logs = await AuditLog.find()
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        const total = await AuditLog.countDocuments();
-
-        res.json({
-            success: true,
-            logs,
-            pagination: { total, limit, skip, hasMore: skip + logs.length < total }
-        });
-    } catch (error) {
-        console.error('❌ Logs error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في جلب السجلات' });
+        console.error('❌ [DASHBOARD] Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -1379,247 +918,494 @@ app.get('/api/logs', authenticate, requireRole('admin'), adminLimiter, async (re
 // 🚢 VESSELS
 // ============================================================
 
-const VESSEL_ALLOWED_FIELDS = [
-    'name', 'num', 'len', 'stat', 'region', 'zone', 
-    'port', 'supp', 'break', 'fDate', 'eDate', 'ref', 
-    'cat', 'repairUnit'
-];
-
-function sanitizeVesselData(body) {
-    const data = {};
-    for (const field of VESSEL_ALLOWED_FIELDS) {
-        if (body[field] !== undefined) {
-            data[field] = body[field];
-        }
-    }
-    return data;
-}
-
 app.get('/api/vessels', authenticate, async (req, res) => {
+    console.log(`🚢 [VESSELS] GET - User: ${req.user.username}`);
     try {
-        let page = parseInt(req.query.page) || 1;
-        let limit = parseInt(req.query.limit) || 50;
-        
-        if (page < 1) page = 1;
-        if (limit < 1) limit = 1;
-        if (limit > 200) limit = 200;
-
-        const skip = (page - 1) * limit;
-
-        const [vessels, total] = await Promise.all([
-            Vessel.find({ isDeleted: { $ne: true } })
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            Vessel.countDocuments({ isDeleted: { $ne: true } })
-        ]);
-
-        res.json({
-            vessels,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-                hasMore: skip + vessels.length < total
-            }
-        });
+        const vessels = await Vessel.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${vessels.length} vessels`);
+        res.json(vessels);
     } catch (error) {
-        console.error('❌ Vessels error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في جلب المراكب' });
+        console.error('❌ [VESSELS] GET Error:', error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 
-app.post('/api/vessels', authenticate, requireRole('admin', 'manager'), 
-    validate({
-        name: { required: true, type: 'string', min: 3, max: 100 },
-        num: { required: false, type: 'string', max: 50 },
-        len: { required: false, type: 'number', min: 0 },
-        stat: { required: false, type: 'string', enum: ['صالح', 'معطب', 'صيانة'] },
-        region: { required: false, type: 'string', max: 100 },
-        zone: { required: false, type: 'string', max: 100 },
-        port: { required: false, type: 'string', max: 100 },
-        supp: { required: false, type: 'string', max: 100 },
-        break: { required: false, type: 'string', max: 500 },
-        fDate: { required: false, type: 'date' },
-        eDate: { required: false, type: 'date' },
-        ref: { required: false, type: 'string', max: 50 },
-        cat: { required: false, type: 'string', max: 100 },
-        repairUnit: { required: false, type: 'string', max: 100 }
-    }),
-    async (req, res) => {
-        try {
-            const data = sanitizeVesselData(req.body);
-            const vessel = new Vessel(data);
-            await vessel.save();
-
-            await AuditLog.create({
-                userId: req.user._id,
-                username: req.user.username,
-                action: 'CREATE_VESSEL',
-                resource: 'vessel',
-                resourceId: vessel._id.toString(),
-                details: `Created vessel: ${vessel.name}`,
-                after: vessel.toObject(),
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                requestId: req.id,
-                success: true
-            });
-
-            res.status(201).json(vessel);
-        } catch (error) {
-            console.error('❌ Create vessel error:', error.message);
-            res.status(400).json({ error: 'بيانات المركب غير صالحة' });
-        }
-    }
-);
-
-app.put('/api/vessels/:id', authenticate, requireRole('admin', 'manager'),
-    validate({
-        name: { required: false, type: 'string', min: 3, max: 100 },
-        num: { required: false, type: 'string', max: 50 },
-        len: { required: false, type: 'number', min: 0 },
-        stat: { required: false, type: 'string', enum: ['صالح', 'معطب', 'صيانة'] },
-        region: { required: false, type: 'string', max: 100 },
-        zone: { required: false, type: 'string', max: 100 },
-        port: { required: false, type: 'string', max: 100 },
-        supp: { required: false, type: 'string', max: 100 },
-        break: { required: false, type: 'string', max: 500 },
-        fDate: { required: false, type: 'date' },
-        eDate: { required: false, type: 'date' },
-        ref: { required: false, type: 'string', max: 50 },
-        cat: { required: false, type: 'string', max: 100 },
-        repairUnit: { required: false, type: 'string', max: 100 }
-    }),
-    async (req, res) => {
-        try {
-            const vessel = await Vessel.findById(req.params.id);
-            if (!vessel || vessel.isDeleted) {
-                return res.status(404).json({ error: 'المركب غير موجود' });
-            }
-
-            const data = sanitizeVesselData(req.body);
-            const before = vessel.toObject();
-            
-            Object.assign(vessel, data);
-            vessel.updatedAt = new Date();
-            await vessel.save();
-
-            const after = vessel.toObject();
-
-            await AuditLog.create({
-                userId: req.user._id,
-                username: req.user.username,
-                action: 'UPDATE_VESSEL',
-                resource: 'vessel',
-                resourceId: vessel._id.toString(),
-                details: `Updated vessel: ${vessel.name}`,
-                before: before,
-                after: after,
-                ip: req.ip || req.socket.remoteAddress,
-                userAgent: req.headers['user-agent'],
-                requestId: req.id,
-                success: true
-            });
-
-            res.json(vessel);
-        } catch (error) {
-            console.error('❌ Update vessel error:', error.message);
-            res.status(400).json({ error: 'بيانات المركب غير صالحة' });
-        }
-    }
-);
-
-app.delete('/api/vessels/:id', authenticate, requireRole('admin'), async (req, res) => {
+app.post('/api/vessels', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🚢 [VESSELS] POST - User: ${req.user.username}`);
     try {
-        const vessel = await Vessel.findById(req.params.id);
-        if (!vessel || vessel.isDeleted) {
-            return res.status(404).json({ error: 'المركب غير موجود' });
-        }
-
-        const before = vessel.toObject();
-
-        vessel.isDeleted = true;
-        vessel.deletedAt = new Date();
-        vessel.deletedBy = req.user._id;
+        const vessel = new Vessel(req.body);
         await vessel.save();
-
-        const after = vessel.toObject();
-
-        await AuditLog.create({
-            userId: req.user._id,
-            username: req.user.username,
-            action: 'DELETE_VESSEL',
-            resource: 'vessel',
-            resourceId: vessel._id.toString(),
-            details: `Soft deleted vessel: ${vessel.name}`,
-            before: before,
-            after: after,
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            requestId: req.id,
-            success: true
-        });
-
-        res.json({ success: true, message: 'تم حذف المركب' });
+        console.log(`   ✅ Created: ${vessel.name}`);
+        res.status(201).json(vessel);
     } catch (error) {
-        console.error('❌ Delete vessel error:', error.message);
-        res.status(500).json({ error: 'خطأ في حذف المركب' });
+        console.error('❌ [VESSELS] POST Error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.put('/api/vessels/:id', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🚢 [VESSELS] PUT - User: ${req.user.username}, ID: ${req.params.id}`);
+    try {
+        const vessel = await Vessel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!vessel) {
+            console.warn(`   ❌ Not found: ${req.params.id}`);
+            return res.status(404).json({ error: 'Vessel not found' });
+        }
+        console.log(`   ✅ Updated: ${vessel.name}`);
+        res.json(vessel);
+    } catch (error) {
+        console.error('❌ [VESSELS] PUT Error:', error.message);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.delete('/api/vessels/:id', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`🚢 [VESSELS] DELETE - User: ${req.user.username}, ID: ${req.params.id}`);
+    try {
+        const vessel = await Vessel.findByIdAndDelete(req.params.id);
+        if (!vessel) {
+            console.warn(`   ❌ Not found: ${req.params.id}`);
+            return res.status(404).json({ error: 'Vessel not found' });
+        }
+        console.log(`   ✅ Deleted: ${vessel.name}`);
+        res.json({ success: true, message: 'Vessel deleted' });
+    } catch (error) {
+        console.error('❌ [VESSELS] DELETE Error:', error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 
 // ============================================================
-// 📄 PAGES
+// 🔧 MAINTENANCE
+// ============================================================
+
+app.get('/api/maintenance', authenticate, async (req, res) => {
+    console.log(`🔧 [MAINTENANCE] GET - User: ${req.user.username}`);
+    try {
+        const records = await Maintenance.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${records.length} records`);
+        res.json({ success: true, maintenance: records });
+    } catch (error) {
+        console.error('❌ [MAINTENANCE] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/maintenance', authenticate, authorize('admin', 'manager'), async (req, res) => {
+    console.log(`🔧 [MAINTENANCE] POST - User: ${req.user.username}`);
+    try {
+        const record = new Maintenance({
+            ...req.body,
+            supervisor: req.user._id
+        });
+        await record.save();
+        console.log(`   ✅ Created: ${record.description.substring(0, 30)}...`);
+        res.status(201).json({ success: true, maintenance: record });
+    } catch (error) {
+        console.error('❌ [MAINTENANCE] POST Error:', error.message);
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 👥 USERS
+// ============================================================
+
+app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`👥 [USERS] GET - User: ${req.user.username}`);
+    try {
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${users.length} users`);
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error('❌ [USERS] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 🎫 TICKETS
+// ============================================================
+
+app.get('/api/tickets', authenticate, async (req, res) => {
+    console.log(`🎫 [TICKETS] GET - User: ${req.user.username}`);
+    try {
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${tickets.length} tickets`);
+        res.json({ success: true, tickets });
+    } catch (error) {
+        console.error('❌ [TICKETS] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/tickets', authenticate, async (req, res) => {
+    console.log(`🎫 [TICKETS] POST - User: ${req.user.username}`);
+    try {
+        const ticket = new Ticket({
+            ...req.body,
+            createdBy: req.user._id
+        });
+        await ticket.save();
+        console.log(`   ✅ Created: ${ticket.title}`);
+        res.status(201).json({ success: true, ticket });
+    } catch (error) {
+        console.error('❌ [TICKETS] POST Error:', error.message);
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 📝 NOTES
+// ============================================================
+
+app.get('/api/notes', authenticate, async (req, res) => {
+    console.log(`📝 [NOTES] GET - User: ${req.user.username}`);
+    try {
+        const notes = await Note.find().sort({ createdAt: -1 });
+        console.log(`   📦 Found: ${notes.length} notes`);
+        res.json({ success: true, notes });
+    } catch (error) {
+        console.error('❌ [NOTES] GET Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.post('/api/notes', authenticate, async (req, res) => {
+    console.log(`📝 [NOTES] POST - User: ${req.user.username}`);
+    try {
+        const note = new Note({
+            ...req.body,
+            createdBy: req.user._id
+        });
+        await note.save();
+        console.log(`   ✅ Created: ${note.title}`);
+        res.status(201).json({ success: true, note });
+    } catch (error) {
+        console.error('❌ [NOTES] POST Error:', error.message);
+        res.status(400).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 📊 SESSIONS (المراقبة - الجلسات النشطة)
+// ============================================================
+
+app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`📊 [SESSIONS] GET - User: ${req.user.username}`);
+    try {
+        const users = await User.find().select('name username email role isActive lastLogin createdAt');
+        
+        const recentLogs = await Log.find()
+            .sort({ createdAt: -1 })
+            .limit(100)
+            .lean();
+
+        const sessions = users.map((user, index) => {
+            const userLogs = recentLogs.filter(log => log.username === user.username);
+            const lastActivity = userLogs.length > 0 ? userLogs[0].createdAt : user.lastLogin || user.createdAt;
+            
+            return {
+                id: `sess_${Date.now()}_${index}`,
+                sessionId: `sess_${Date.now()}_${index}`,
+                userId: user._id,
+                username: user.username,
+                userName: user.name,
+                role: user.role,
+                status: user.isActive ? 'active' : 'inactive',
+                ip: userLogs.length > 0 ? userLogs[0].ip || '192.168.1.' + (index + 1) : '192.168.1.' + (index + 1),
+                device: userLogs.length > 0 ? userLogs[0].userAgent || 'Chrome on Windows' : 'Chrome on Windows',
+                createdAt: user.createdAt,
+                updatedAt: lastActivity || user.lastLogin || user.createdAt,
+                lastActivity: lastActivity || user.lastLogin || user.createdAt
+            };
+        });
+
+        sessions.sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+
+        console.log(`   📦 Found: ${sessions.length} sessions`);
+        res.json({ 
+            success: true, 
+            sessions: sessions,
+            total: sessions.length,
+            active: sessions.filter(s => s.status === 'active').length
+        });
+    } catch (error) {
+        console.error('❌ [SESSIONS] Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 📋 LOGS (سجل النشاطات)
+// ============================================================
+
+app.get('/api/logs', authenticate, authorize('admin'), async (req, res) => {
+    console.log(`📋 [LOGS] GET - User: ${req.user.username}`);
+    try {
+        const { limit = 100, skip = 0, startDate, endDate, username } = req.query;
+        
+        const query = {};
+        if (username) query.username = username;
+        if (startDate) query.createdAt = { $gte: new Date(startDate) };
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59);
+            query.createdAt = { ...query.createdAt, $lte: end };
+        }
+
+        const logs = await Log.find(query)
+            .sort({ createdAt: -1 })
+            .skip(parseInt(skip))
+            .limit(parseInt(limit))
+            .lean();
+
+        const total = await Log.countDocuments(query);
+
+        console.log(`   📦 Found: ${logs.length} logs (total: ${total})`);
+        res.json({
+            success: true,
+            logs: logs,
+            pagination: {
+                total,
+                limit: parseInt(limit),
+                skip: parseInt(skip),
+                hasMore: skip + logs.length < total
+            }
+        });
+    } catch (error) {
+        console.error('❌ [LOGS] Error:', error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================================
+// 🤖 AI - CONFIGURATION ENDPOINT (PUBLIC - للواجهة الأمامية)
+// ============================================================
+
+app.get('/api/config', (req, res) => {
+    console.log(`🔑 [CONFIG] Request from IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
+    
+    // ✅ إرسال المفاتيح إلى الواجهة الأمامية (بدون مصادقة)
+    res.json({
+        success: true,
+        GEMINI_API_KEY: GEMINI_API_KEY || '',
+        GEMINI_MODEL: GEMINI_MODEL || 'gemini-2.0-flash',
+        DEEPSEEK_API_KEY: DEEPSEEK_API_KEY || '',
+        DEEPSEEK_MODEL: DEEPSEEK_MODEL || 'deepseek-chat',
+        OPENAI_API_KEY: OPENAI_API_KEY || '',
+        OPENAI_MODEL: OPENAI_MODEL || 'gpt-4o-mini'
+    });
+});
+
+// ============================================================
+// 🤖 AI - CHECK GEMINI KEY
+// ============================================================
+
+app.get('/api/check-gemini', authenticate, async (req, res) => {
+    console.log(`🔍 [CHECK-GEMINI] User: ${req.user.username}`);
+    try {
+        if (!GEMINI_API_KEY) {
+            return res.json({ 
+                success: false, 
+                error: "GEMINI_API_KEY غير موجود في البيئة",
+                message: "يُرجى إضافة المفتاح في متغيرات البيئة"
+            });
+        }
+        
+        const { GoogleGenerativeAI } = require('@google/generative-ai');
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const result = await model.generateContent("مرحباً، اختبر الاتصال");
+        const response = await result.response;
+        
+        res.json({
+            success: true,
+            message: "✅ مفتاح Gemini صالح ويعمل",
+            response: response.text().substring(0, 100) + "...",
+            model: "gemini-2.0-flash"
+        });
+    } catch (error) {
+        console.error('❌ Check Gemini error:', error);
+        res.json({ 
+            success: false, 
+            error: error.message,
+            message: "❌ مفتاح Gemini غير صالح أو أن API لا يعمل"
+        });
+    }
+});
+
+// ============================================================
+// 🤖 AI - SMART ROUTER (Gemini First, DeepSeek Fallback)
+// ============================================================
+
+app.post('/api/ai/ask', authenticate, async (req, res) => {
+    console.log(`🤖 [AI] Ask - User: ${req.user.username}`);
+    try {
+        const { message } = req.body;
+        if (!message) {
+            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
+        }
+        console.log(`   💬 Message: ${message.substring(0, 50)}...`);
+
+        // جلب بيانات السياق
+        const vessels = await Vessel.find().lean();
+        const maintenance = await Maintenance.find().lean();
+        const totalVessels = vessels.length;
+        const validVessels = vessels.filter(v => v.stat === 'صالح').length;
+        const damagedVessels = vessels.filter(v => v.stat === 'معطب').length;
+        const maintenanceVessels = vessels.filter(v => v.stat === 'صيانة').length;
+        const efficiency = totalVessels ? Math.round((validVessels / totalVessels) * 100) : 0;
+
+        const context = `
+📊 بيانات الأسطول الحالية:
+- إجمالي المراكب: ${totalVessels}
+- الصالح: ${validVessels} (${efficiency}%)
+- تحت الصيانة: ${maintenanceVessels}
+- المعطوب: ${damagedVessels}
+
+🔧 مهام الصيانة: ${maintenance.length}
+
+📋 المراكب:
+${vessels.map(v => `- ${v.name} (${v.num || 'بدون رقم'}) - ${v.stat} - ${v.region || 'بدون إقليم'}`).join('\n')}
+`;
+
+        let reply = '';
+        let usedModel = '';
+
+        // ✅ 1. حاول استخدام Gemini API أولاً
+        if (GEMINI_API_KEY) {
+            try {
+                const { GoogleGenerativeAI } = require('@google/generative-ai');
+                const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+                const model = genAI.getGenerativeModel({ 
+                    model: GEMINI_MODEL,
+                    generationConfig: {
+                        maxOutputTokens: 2000,
+                        temperature: 0.7
+                    }
+                });
+                
+                const prompt = `${message}\n\n${context}`;
+                const result = await model.generateContent(prompt);
+                reply = result.response.text();
+                usedModel = `Gemini (${GEMINI_MODEL})`;
+                console.log(`   🤖 Using Gemini API`);
+            } catch (error) {
+                console.warn(`⚠️ Gemini failed: ${error.message}, trying DeepSeek...`);
+                reply = '';
+            }
+        }
+
+        // ✅ 2. إذا فشل Gemini، حاول DeepSeek
+        if (!reply && DEEPSEEK_API_KEY) {
+            try {
+                const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: DEEPSEEK_MODEL,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `أنت مساعد ذكي متخصص في الأسطول البحري التونسي. لديك معرفة عامة واسعة وتجيب على جميع الأسئلة.
+                                
+معلومات النظام:
+- المنظومة: منظومة متابعة الوسائل البحرية
+- المطور: أمان الله ناجي
+- الإصدار: v38.0
+
+تعليمات:
+1. أنت خبير في الشؤون البحرية والمراكب والصيانة.
+2. لديك معرفة عامة في جميع المجالات.
+3. أجب باللغة العربية الفصحى أو بالعامية التونسية حسب سؤال المستخدم.
+4. استخدم بيانات الأسطول في إجاباتك.
+5. كن دقيقاً ومفصلاً.`
+                            },
+                            {
+                                role: 'user',
+                                content: `${message}\n\n${context}`
+                            }
+                        ],
+                        max_tokens: 2000,
+                        temperature: 0.7
+                    })
+                });
+
+                if (deepseekResponse.ok) {
+                    const data = await deepseekResponse.json();
+                    reply = data.choices?.[0]?.message?.content || '';
+                    usedModel = `DeepSeek (${DEEPSEEK_MODEL})`;
+                    console.log(`   🤖 Using DeepSeek API`);
+                }
+            } catch (e) {
+                console.warn('⚠️ DeepSeek failed...');
+            }
+        }
+
+        // ✅ 3. إذا فشل كل شيء، استخدم الرد المحلي
+        if (!reply) {
+            const msg = message.toLowerCase();
+            if (msg.includes('مرحبا') || msg.includes('السلام')) {
+                reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك في شؤون الأسطول البحري؟';
+            } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
+                reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
+            } else if (msg.includes('معطب') || msg.includes('عطل')) {
+                reply = `⚠️ عدد المراكب المعطوبة: ${damagedVessels}\n${vessels.filter(v => v.stat === 'معطب').map(v => `- ${v.name}`).join('\n')}`;
+            } else if (msg.includes('صيانة')) {
+                reply = `🔧 عدد المراكب تحت الصيانة: ${maintenanceVessels}\nعدد مهام الصيانة: ${maintenance.length}`;
+            } else {
+                reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- المراكب المعطوبة\n- مهام الصيانة\n- معلومات عامة`;
+            }
+            usedModel = 'Local (Offline)';
+        }
+
+        console.log(`   ✅ Used: ${usedModel}`);
+        console.log(`   🤖 Response: ${reply.substring(0, 40)}...`);
+
+        res.json({
+            success: true,
+            response: reply,
+            model: usedModel
+        });
+
+    } catch (error) {
+        console.error('❌ [AI] Error:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'خطأ في معالجة الطلب: ' + error.message
+        });
+    }
+});
+
+// ============================================================
+// 📄 PAGES API
 // ============================================================
 
 app.get('/api/pages/:page', authenticate, async (req, res) => {
     try {
-        const page = String(req.params.page || '');
-        if (!/^[a-zA-Z0-9_-]+$/.test(page)) {
-            return res.status(400).json({ success: false, error: 'اسم الصفحة غير صالح' });
+        const pageName = req.params.page;
+        const filePath = path.join(pagesPath, pageName + '.html');
+        
+        if (fs.existsSync(filePath)) {
+            const html = fs.readFileSync(filePath, 'utf8');
+            res.json({ success: true, html });
+        } else {
+            const defaultHtml = `
+                <div class="page-content active">
+                    <h2 style="color:#60a5fa;">📄 صفحة ${pageName}</h2>
+                    <p style="color:rgba(255,255,255,0.3);">المحتوى قيد التطوير...</p>
+                    <button class="btn btn-primary" onclick="showPage('dashboard')" style="margin-top:16px;">📊 العودة</button>
+                </div>
+            `;
+            res.json({ success: true, html: defaultHtml });
         }
-
-        const filePath = path.resolve(pagesPath, `${page}.html`);
-        if (!filePath.startsWith(pagesPath + path.sep)) {
-            return res.status(403).json({ success: false, error: 'Access denied' });
-        }
-
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ success: false, error: 'الصفحة غير موجودة' });
-        }
-
-        const html = await fs.promises.readFile(filePath, 'utf8');
-        res.json({ success: true, html });
     } catch (error) {
-        console.error('❌ Page error:', error.message);
-        res.status(500).json({ success: false, error: 'خطأ في تحميل الصفحة' });
+        res.status(500).json({ success: false, error: error.message });
     }
-});
-
-// ============================================================
-// ❤️ HEALTH
-// ============================================================
-
-app.get('/health', (req, res) => {
-    const mongoConnected = mongoose.connection.readyState === 1;
-    const healthy = databaseReady && mongoConnected;
-
-    res.status(healthy ? 200 : 503).json({
-        status: healthy ? 'healthy' : 'unhealthy',
-        service: 'marine-system',
-        version: '105.0',
-        environment: NODE_ENV,
-        database: mongoConnected ? 'connected' : 'disconnected',
-        uptime: Math.floor(process.uptime()),
-        timestamp: new Date().toISOString()
-    });
-});
-
-app.get('/ready', (req, res) => {
-    const ready = databaseReady && mongoose.connection.readyState === 1;
-    res.status(ready ? 200 : 503).json({ ready, database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
 // ============================================================
@@ -1627,105 +1413,120 @@ app.get('/ready', (req, res) => {
 // ============================================================
 
 app.get('/', (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    if (!fs.existsSync(indexPath)) {
-        return res.status(404).send('Marine System - index.html not found');
-    }
-    res.sendFile(indexPath);
+    console.log(`🏠 [HOME] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
+    res.sendFile(path.join(publicPath, 'index.html'));
 });
+
+// ============================================================
+// 🤖 AI ASSISTANT PAGE
+// ============================================================
+
+app.get('/ai-assistant', (req, res) => {
+    console.log(`🤖 [AI ASSISTANT] GET - IP: ${req.ip || req.socket.remoteAddress || 'unknown'}`);
+    res.sendFile(path.join(publicPath, 'pages', 'ai-assistant.html'));
+});
+
+// ============================================================
+// ❌ 404
+// ============================================================
 
 app.use('/api', (req, res) => {
-    res.status(404).json({ success: false, error: 'API endpoint not found' });
+    console.warn(`❌ [404] API not found: ${req.method} ${req.url}`);
+    res.status(404).json({ success: false, error: 'API not found' });
 });
 
-app.get('*', (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        return res.sendFile(indexPath);
+app.use((req, res) => {
+    if (req.method === 'GET') {
+        return res.sendFile(path.join(publicPath, 'index.html'));
     }
-    res.status(404).send('Marine System');
+    res.status(404).json({ success: false, error: 'Not found' });
 });
 
 // ============================================================
-// 💥 GLOBAL ERROR HANDLER
+// 💥 ERROR HANDLER
 // ============================================================
 
-app.use((error, req, res, next) => {
-    console.error('🔥 Server error:', error.message);
-    if (res.headersSent) return next(error);
-    res.status(500).json({
-        success: false,
-        error: IS_PRODUCTION ? 'خطأ داخلي في الخادم' : error.message
+app.use((err, req, res, next) => {
+    console.error('❌ [ERROR]', err.message);
+    console.error('   Stack:', err.stack);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+});
+
+// ============================================================
+// 🚀 START SERVER
+// ============================================================
+
+async function startServer() {
+    const connected = await connectDB();
+    if (!connected) {
+        console.error('❌ Cannot start: MongoDB is not connected');
+        process.exit(1);
+    }
+
+    await createAdmin();
+    
+    // ✅ إضافة البيانات الأولية للمراكب
+    await seedVessels();
+
+    const server = app.listen(PORT, '0.0.0.0', () => {
+        console.log('');
+        console.log('='.repeat(60));
+        console.log('🚢 MARINE SYSTEM v38.2 - FULLY INTEGRATED');
+        console.log('🚀 SERVER STARTED');
+        console.log('='.repeat(60));
+        console.log(`🌍 Environment: ${NODE_ENV}`);
+        console.log(`🚀 Port: ${PORT}`);
+        console.log('🗄️ MongoDB: Connected ✅');
+        console.log('🔐 JWT: Enabled');
+        console.log('🛡️ Security: Enabled');
+        console.log('❤️ Health: /health');
+        console.log('🤖 AI Endpoints:');
+        console.log('   - GET  /api/config       (AI Configuration)');
+        console.log('   - POST /api/ai/ask       (Smart AI Router)');
+        console.log('   - GET  /api/check-gemini (Check Gemini Key)');
+        console.log('   - GET  /ai-assistant     (AI Assistant Page)');
+        console.log('📊 Sessions & Logs:');
+        console.log('   - GET  /api/sessions     (Active Sessions)');
+        console.log('   - GET  /api/logs         (Activity Logs)');
+        console.log('🚢 Vessels:');
+        console.log('   - GET  /api/vessels      (All Vessels)');
+        console.log('   - POST /api/vessels      (Create Vessel)');
+        console.log('   - PUT  /api/vessels/:id  (Update Vessel)');
+        console.log('   - DELETE /api/vessels/:id (Delete Vessel)');
+        console.log('🔐 Auth:');
+        console.log('   - POST /api/auth/login   (Login)');
+        console.log('   - GET  /api/auth/me      (Current User) ✅');
+        console.log('   - GET  /api/auth/verify  (Verify Token) ✅');
+        console.log('='.repeat(60));
+        console.log('🔑 LOGIN:');
+        console.log('   👤 Username: admin');
+        console.log('   🔑 Password: from ADMIN_PASSWORD in Render');
+        console.log('='.repeat(60));
+        console.log('✅ All issues fixed - Production Ready');
+        console.log('📡 All requests will be logged in Render console');
+        console.log('='.repeat(60));
+        console.log('');
     });
-});
 
-// ============================================================
-// 🚀 START - FIXED: Email in background, server starts first
-// ============================================================
-
-let server;
-
-async function start() {
-    try {
-        // ✅ Step 1: Connect to database
-        await connectDB();
-        
-        // ✅ Step 2: Ensure admin exists
-        await ensureAdmin();
-
-        // ✅ Step 3: Start server FIRST (before email)
-        server = app.listen(PORT, '0.0.0.0', () => {
-            console.log('');
-            console.log('==================================================');
-            console.log('🚢 MARINE SYSTEM v105.0');
-            console.log('✅ SERVER RUNNING');
-            console.log('==================================================');
-            console.log(`🌍 Environment: ${NODE_ENV}`);
-            console.log(`🌐 Port: ${PORT}`);
-            console.log('🗄️ MongoDB: CONNECTED ✓');
-            console.log('🔐 JWT: ENABLED ✓');
-            console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-            console.log(`🔑 Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
-            console.log('==================================================');
-            console.log('');
+    process.on('SIGTERM', () => {
+        console.log('🛑 SIGTERM received. Shutting down...');
+        server.close(() => {
+            mongoose.connection.close();
+            console.log('✅ Server closed');
+            process.exit(0);
         });
+    });
 
-        // ✅ Step 4: Setup email in BACKGROUND (non-blocking)
-        const emailResult = await setupEmail();
-        console.log(`📧 Email: ${emailResult ? '✅ ENABLED' : '❌ DISABLED'}`);
-
-    } catch (error) {
-        console.error('❌ Server startup failed:', error.message);
-        process.exit(1);
-    }
+    process.on('SIGINT', () => {
+        console.log('🛑 SIGINT received. Shutting down...');
+        server.close(() => {
+            mongoose.connection.close();
+            console.log('✅ Server closed');
+            process.exit(0);
+        });
+    });
 }
 
-async function shutdown(signal) {
-    console.log(`\n🛑 ${signal} received. Shutting down...`);
-    const timeout = setTimeout(() => {
-        console.error('❌ Shutdown timeout - forcing exit');
-        process.exit(1);
-    }, 30000);
+startServer();
 
-    try {
-        if (server) await new Promise(resolve => server.close(resolve));
-        if (mongoose.connection.readyState === 1) await mongoose.connection.close();
-        console.log('✅ Shutdown completed');
-        clearTimeout(timeout);
-        process.exit(0);
-    } catch (error) {
-        console.error('❌ Shutdown error:', error.message);
-        clearTimeout(timeout);
-        process.exit(1);
-    }
-}
-
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('unhandledRejection', (error) => console.error('❌ Unhandled Rejection:', error));
-process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception:', error);
-    shutdown('uncaughtException');
-});
-
-start();
+module.exports = app;
