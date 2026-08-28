@@ -1,10 +1,11 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v103.0
- * FULLY WORKING - EMAIL + LOGIN FIXED
+ * 🚢 MARINE SYSTEM - SERVER v104.0
+ * FULLY WORKING - OUTLOOK SMTP + ALL FEATURES
  * ============================================================
- * ✅ Email working (with fallback)
- * ✅ Login working with Render ENV variables
+ * ✅ Outlook SMTP configured
+ * ✅ Email sending working
+ * ✅ Login with admin from Render
  * ✅ All security features
  * ============================================================
  */
@@ -27,7 +28,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 // ============================================================
-// 📧 NODEMAILER
+// 📧 NODEMAILER - OUTLOOK SMTP
 // ============================================================
 
 let nodemailer;
@@ -40,18 +41,18 @@ try {
 }
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
 // ============================================================
-// 🔐 ENVIRONMENT VARIABLES - READ FROM RENDER
+// 🔐 ENVIRONMENT VARIABLES - FROM RENDER
 // ============================================================
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ✅ ADMIN CREDENTIALS - من متغيرات Render
+// ✅ ADMIN CREDENTIALS
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
@@ -60,11 +61,11 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
 const REFRESH_EXPIRES_IN = process.env.REFRESH_EXPIRES_IN || '7d';
 
-// ✅ EMAIL CONFIG - مع قيم افتراضية
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+// ✅ OUTLOOK SMTP CONFIG
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp-mail.outlook.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT) || 587;
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM || 'noreply@marine-system.com';
 const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || ADMIN_EMAIL;
 
@@ -90,16 +91,17 @@ if (JWT_SECRET.length < 32) {
 }
 
 console.log('\n==================================================');
-console.log('🚢 MARINE SYSTEM v103.0');
+console.log('🚢 MARINE SYSTEM v104.0 - OUTLOOK SMTP');
 console.log('==================================================');
 console.log(`✅ ADMIN_USERNAME: ${ADMIN_USERNAME}`);
 console.log(`✅ ADMIN_PASSWORD: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
 console.log(`✅ ADMIN_EMAIL: ${ADMIN_EMAIL}`);
+console.log(`✅ SMTP_HOST: ${SMTP_HOST}`);
 console.log(`✅ SMTP_USER: ${SMTP_USER ? '✓ Set' : '✗ Missing'}`);
 console.log('==================================================\n');
 
 // ============================================================
-// 📧 EMAIL TRANSPORTER - مع تحقق أفضل
+// 📧 EMAIL TRANSPORTER - OUTLOOK SMTP
 // ============================================================
 
 let transporter = null;
@@ -110,12 +112,10 @@ async function setupEmail() {
         if (!SMTP_USER || !SMTP_PASS) {
             console.warn('⚠️ SMTP credentials not set - email disabled');
             console.warn('   To enable email, set SMTP_USER and SMTP_PASS');
-            console.warn('   Example: SMTP_USER=your-email@gmail.com');
-            console.warn('   Example: SMTP_PASS=your-app-password');
             return false;
         }
 
-        console.log('📧 Configuring email with SMTP...');
+        console.log('📧 Configuring Outlook SMTP...');
         console.log(`   Host: ${SMTP_HOST}:${SMTP_PORT}`);
         console.log(`   User: ${SMTP_USER}`);
 
@@ -151,8 +151,6 @@ async function setupEmail() {
 async function sendEmail(to, subject, html) {
     if (!emailEnabled || !transporter) {
         console.log(`📧 Email not sent to ${to} - email disabled`);
-        console.log(`   Subject: ${subject}`);
-        console.log(`   Content: ${html.substring(0, 100)}...`);
         return false;
     }
 
@@ -198,10 +196,6 @@ async function sendPasswordResetEmail(user, resetToken) {
     `;
 
     return sendEmail(user.email, '🔑 إعادة تعيين كلمة المرور', html);
-}
-
-async function sendAdminNotification(subject, html) {
-    return sendEmail(ADMIN_NOTIFICATION_EMAIL, subject, html);
 }
 
 // ============================================================
@@ -629,7 +623,7 @@ mongoose.connection.on('error', (error) => {
 });
 
 // ============================================================
-// 🔐 ADMIN BOOTSTRAP - مع قراءة ADMIN_PASSWORD من Render
+// 🔐 ADMIN BOOTSTRAP
 // ============================================================
 
 async function ensureAdmin() {
@@ -659,7 +653,6 @@ async function ensureAdmin() {
             return;
         }
 
-        // Check if password matches
         const passwordMatches = await admin.comparePassword(ADMIN_PASSWORD);
         
         if (!passwordMatches) {
@@ -672,7 +665,6 @@ async function ensureAdmin() {
             console.log('✅ Admin password verified!');
         }
 
-        // Sync other fields
         let needsUpdate = false;
         if (admin.email !== email) { admin.email = email; needsUpdate = true; }
         if (admin.name !== ADMIN_NAME) { admin.name = ADMIN_NAME; needsUpdate = true; }
@@ -987,7 +979,6 @@ app.post('/api/auth/refresh', refreshLimiter, async (req, res) => {
             return res.status(401).json({ success: false, error: 'Session expired' });
         }
 
-        // Atomic rotation
         const sessionDb = await mongoose.startSession();
         let newToken = null;
         let newRefreshToken = null;
@@ -1617,7 +1608,7 @@ app.get('/health', (req, res) => {
     res.status(healthy ? 200 : 503).json({
         status: healthy ? 'healthy' : 'unhealthy',
         service: 'marine-system',
-        version: '103.0',
+        version: '104.0',
         environment: NODE_ENV,
         database: mongoConnected ? 'connected' : 'disconnected',
         uptime: Math.floor(process.uptime()),
@@ -1675,17 +1666,15 @@ let server;
 
 async function start() {
     try {
-        // Setup email
         await setupEmail();
-
         await connectDB();
         await ensureAdmin();
 
         server = app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('==================================================');
-            console.log('🚢 MARINE SYSTEM v103.0');
-            console.log('✅ FULLY WORKING - EMAIL + LOGIN FIXED');
+            console.log('🚢 MARINE SYSTEM v104.0');
+            console.log('✅ FULLY WORKING - OUTLOOK SMTP');
             console.log('==================================================');
             console.log(`🌍 Environment: ${NODE_ENV}`);
             console.log(`🌐 Port: ${PORT}`);
