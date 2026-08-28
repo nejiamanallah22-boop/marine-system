@@ -1,20 +1,17 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - APP.JS v7.0 PRO MAX
+ * 🚢 MARINE SYSTEM - APP.JS v7.1 PRO MAX (FULLY FIXED)
  * ============================================================
  * ✅ نظام متكامل لإدارة الأسطول البحري
  * ✅ مصادقة متقدمة مع توكن
  * ✅ إدارة الحالة المركزية
  * ✅ توجيه ديناميكي للصفحات
- * ✅ تخزين آمن مع تشفير
- * ✅ نظام إشعارات متطور
- * ✅ مراقبة الأداء
- * ✅ دعم وضع عدم الاتصال
- * ✅ PWA جاهز
+ * ✅ إعادة تنفيذ الـ JavaScript بعد تحميل الصفحة
+ * ✅ زر التحديث يعمل بشكل صحيح
  * ============================================================
  */
 
-console.log('🚢 Marine System v7.0 Pro Max - Loading...');
+console.log('🚢 Marine System v7.1 Pro Max - Loading...');
 
 // ============================================================
 // 📦 CONFIGURATION
@@ -22,7 +19,7 @@ console.log('🚢 Marine System v7.0 Pro Max - Loading...');
 
 const CONFIG = {
     API_BASE: '/api',
-    VERSION: '7.0.0',
+    VERSION: '7.1.0',
     APP_NAME: 'منظومة الوسائل البحرية',
     
     // مفاتيح التخزين
@@ -616,7 +613,7 @@ class MarineAPI {
 }
 
 // ============================================================
-// 🖥️ UI MANAGER - مدير الواجهة
+// 🖥️ UI MANAGER - مدير الواجهة (مع إصلاح تحميل الصفحات)
 // ============================================================
 
 class MarineUI {
@@ -636,7 +633,7 @@ class MarineUI {
             toastContainer: document.getElementById('toastContainer'),
             modalOverlay: document.getElementById('modalOverlay'),
             modalBody: document.getElementById('modalBody'),
-            userDisplay: document.getElementById('userRoleDisplay'),
+            userDisplay: document.getElementById('userDisplay'),
             userAvatar: document.getElementById('userAvatar'),
             notifBadge: document.getElementById('notifBadge'),
             backToTop: document.getElementById('backToTop')
@@ -689,7 +686,7 @@ class MarineUI {
     }
     
     // ============================================================
-    // PAGE LOADING - تحميل الصفحات
+    // 📄 PAGE LOADING - تحميل الصفحات (FIXED)
     // ============================================================
     
     async loadPage(pageName) {
@@ -717,14 +714,56 @@ class MarineUI {
                 this.pageCache[pageName] = html;
             }
             
-            // عرض الصفحة
-            this.renderPage(html);
+            // ============================================================
+            // 🔥 FIX: استخراج HTML و Scripts بشكل منفصل
+            // ============================================================
+            
+            // إنشاء عنصر مؤقت
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // استخراج جميع الـ script tags
+            const scripts = tempDiv.querySelectorAll('script');
+            const scriptContents = [];
+            
+            scripts.forEach(script => {
+                // حفظ محتوى الـ script
+                scriptContents.push(script.textContent);
+                // إزالة الـ script من الـ HTML
+                script.remove();
+            });
+            
+            // 🔥 عرض الـ HTML النظيف (بدون scripts)
+            this.renderPage(tempDiv.innerHTML);
+            
+            // 🔥 تنفيذ الـ scripts المستخرجة
+            scriptContents.forEach(content => {
+                if (content && content.trim()) {
+                    try {
+                        // إنشاء عنصر script جديد
+                        const newScript = document.createElement('script');
+                        newScript.textContent = content;
+                        // إضافته إلى body لتنفيذه
+                        document.body.appendChild(newScript);
+                        // إزالته بعد التنفيذ
+                        setTimeout(() => {
+                            if (newScript.parentNode) {
+                                newScript.remove();
+                            }
+                        }, 10);
+                    } catch (e) {
+                        console.warn('⚠️ [UI] خطأ في تنفيذ script:', e.message);
+                    }
+                }
+            });
             
             // تحديث القائمة النشطة
             this.updateActiveNav(pageName);
             
             // تسجيل في التحليلات
             this.logPageView(pageName);
+            
+            console.log('✅ [UI] تم تحميل الصفحة:', pageName);
             
         } catch (error) {
             console.error('❌ [UI] خطأ في تحميل الصفحة:', error);
@@ -734,18 +773,13 @@ class MarineUI {
         }
     }
     
+    // ============================================================
+    // RENDER PAGE
+    // ============================================================
+    
     renderPage(html) {
         if (this.elements.pageContainer) {
             this.elements.pageContainer.innerHTML = html;
-            
-            // تنفيذ أي سكريبتات في الصفحة
-            const scripts = this.elements.pageContainer.querySelectorAll('script');
-            scripts.forEach(script => {
-                const newScript = document.createElement('script');
-                newScript.textContent = script.textContent;
-                document.body.appendChild(newScript);
-                document.body.removeChild(newScript);
-            });
         }
     }
     
@@ -897,16 +931,18 @@ class MarineUI {
     showErrorPage(error) {
         if (this.elements.pageContainer) {
             this.elements.pageContainer.innerHTML = `
-                <div class="error-page">
-                    <div class="error-icon">⚠️</div>
-                    <h2>حدث خطأ</h2>
-                    <p>${error.message || 'عذراً، حدث خطأ غير متوقع'}</p>
-                    <button onclick="window.loadPage('dashboard')" class="btn-primary">
-                        العودة للوحة التحكم
-                    </button>
-                    <button onclick="location.reload()" class="btn-secondary">
-                        تحديث الصفحة
-                    </button>
+                <div style="text-align:center;padding:60px 20px;">
+                    <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
+                    <h2 style="color:#f87171;">حدث خطأ</h2>
+                    <p style="color:#94a3b8;">${error.message || 'عذراً، حدث خطأ غير متوقع'}</p>
+                    <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
+                        <button onclick="window.loadPage('dashboard')" class="btn-primary" style="padding:8px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;cursor:pointer;font-family:inherit;">
+                            📊 العودة للوحة التحكم
+                        </button>
+                        <button onclick="location.reload()" class="btn-secondary" style="padding:8px 20px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:transparent;color:#94a3b8;cursor:pointer;font-family:inherit;">
+                            🔄 تحديث الصفحة
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -946,6 +982,9 @@ class MarineUI {
                 const page = btn.dataset.page;
                 if (page) {
                     window.loadPage(page);
+                }
+                if (window.innerWidth <= 992) {
+                    this.toggleSidebar();
                 }
             });
         });
