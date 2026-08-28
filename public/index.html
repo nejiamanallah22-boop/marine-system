@@ -468,11 +468,11 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED (مع إعادة تنفيذ Scripts)
+    JAVASCRIPT - FIXED (مع إعادة تنفيذ الـ Scripts)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v7.0 (FULLY FIXED)
+        // 🚢 MARINE SYSTEM - v7.0 (FIXED)
         // ============================================================
 
         console.log('🚢 Marine System v7.0 - Loading...');
@@ -506,7 +506,6 @@
         var allLogs = [];
         var sessionsData = [];
 
-        // ✅ ربط المتغيرات بـ window
         window.currentUser = currentUser;
         window.allVessels = allVessels;
         window.allUsers = allUsers;
@@ -753,7 +752,7 @@
                     return response.text();
                 })
                 .then(html => {
-                    // 🔥 استخراج الـ HTML والـ Scripts بشكل منفصل
+                    // 🔥 استخراج الـ Scripts وتنفيذها
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
                     
@@ -762,21 +761,19 @@
                     const scriptContents = [];
                     scripts.forEach(script => {
                         scriptContents.push(script.textContent);
-                        script.remove(); // إزالة الـ script من الـ HTML
+                        script.remove();
                     });
                     
-                    // إدراج الـ HTML النظيف
+                    // عرض الـ HTML النظيف
                     container.innerHTML = tempDiv.innerHTML;
                     
                     // 🔥 تنفيذ الـ scripts المستخرجة
                     scriptContents.forEach(content => {
-                        if (content.trim()) {
+                        if (content && content.trim()) {
                             try {
-                                // إنشاء script جديد وتنفيذه
                                 const newScript = document.createElement('script');
                                 newScript.textContent = content;
                                 document.body.appendChild(newScript);
-                                // إزالة الـ script بعد التنفيذ
                                 setTimeout(() => {
                                     if (newScript.parentNode) newScript.remove();
                                 }, 10);
@@ -788,7 +785,6 @@
                     
                     loader.style.display = 'none';
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
-                    
                     console.log('✅ تم تحميل الصفحة:', page);
                 })
                 .catch(error => {
