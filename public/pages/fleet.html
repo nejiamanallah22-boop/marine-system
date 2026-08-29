@@ -2,7 +2,7 @@
 <div id="page-fleet">
     <style>
         /* ============================================================
-           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION
+           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION (FIXED)
            ============================================================ */
 
         /* ===== CSS VARIABLES ===== */
@@ -866,7 +866,7 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION (FIXED)
+    // 🚢 FLEET PAGE - GOLD EDITION (FULLY FIXED)
     // ============================================================
 
     // ============================================================
@@ -1341,23 +1341,11 @@
         // إعادة تحميل البيانات
         renderMain();
         
-        // تحديث الإحصائيات
-        updateStats();
-        
         showToast('✅ تم تحديث السجل العام بنجاح', 'success');
     };
 
     // ============================================================
-    // 15. UPDATE STATS
-    // ============================================================
-
-    function updateStats() {
-        // يتم التحديث تلقائياً داخل renderMain()
-        // هذه الدالة للاستدعاء المباشر إذا لزم الأمر
-    }
-
-    // ============================================================
-    // 16. SHOW TOAST
+    // 15. SHOW TOAST
     // ============================================================
 
     function showToast(message, type) {
@@ -1385,11 +1373,18 @@
     }
 
     // ============================================================
-    // 17. INIT
+    // 16. INIT - ✅ يتم استدعاؤها مباشرة (بدون انتظار DOMContentLoaded)
     // ============================================================
 
-    document.addEventListener('DOMContentLoaded', async function() {
+    function initFleet() {
         console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
+
+        // التأكد من وجود العناصر
+        if (!document.getElementById('mainBody')) {
+            console.warn('⚠️ عناصر الصفحة غير موجودة، إعادة المحاولة...');
+            setTimeout(initFleet, 200);
+            return;
+        }
 
         const token = getToken();
         if (!token) {
@@ -1398,30 +1393,31 @@
             return;
         }
 
-        try {
-            const response = await fetch('/api/auth/me', {
-                headers: getAuthHeaders()
-            });
-
+        // التحقق من المستخدم
+        fetch('/api/auth/me', {
+            headers: getAuthHeaders()
+        })
+        .then(response => {
             if (!response.ok) {
-                console.warn('⚠️ جلسة غير صالحة');
-                localStorage.removeItem('marine_token');
-                window.location.href = '/index.html';
-                return;
+                throw new Error('جلسة غير صالحة');
             }
-
-            const data = await response.json();
+            return response.json();
+        })
+        .then(data => {
             if (data.success && data.user) {
                 window.currentUser = data.user;
                 console.log('✅ المستخدم الحالي:', window.currentUser);
                 console.log('👤 الدور:', window.currentUser.role);
             }
-        } catch (error) {
+        })
+        .catch(error => {
             console.error('❌ خطأ:', error);
+            localStorage.removeItem('marine_token');
             window.location.href = '/index.html';
             return;
-        }
+        });
 
+        // إظهار/إخفاء زر الحفظ حسب الصلاحية
         const addBtn = document.getElementById('saveVesselBtn');
         if (addBtn) {
             addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
@@ -1430,19 +1426,31 @@
         // ✅ ربط زر التحديث بالحدث onclick
         const refreshBtn = document.getElementById('refreshFleetBtn');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', function(e) {
+            refreshBtn.onclick = function(e) {
                 e.preventDefault();
                 window.refreshFleet();
-            });
+            };
             console.log('✅ زر التحديث مرتبط بنجاح');
         }
 
         initFilters();
         updateZones();
-        await renderMain();
+        
+        // تحميل البيانات
+        renderMain();
 
         console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
-    });
+    }
+
+    // ============================================================
+    // 17. تشغيل الصفحة فوراً
+    // ============================================================
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        initFleet();
+    } else {
+        document.addEventListener('DOMContentLoaded', initFleet);
+    }
 
     // ============================================================
     // 18. GLOBAL EXPOSURE
@@ -1459,5 +1467,6 @@
     window.getToken = getToken;
     window.getAuthHeaders = getAuthHeaders;
     window.showToast = showToast;
+    window.initFleet = initFleet;
 </script>
 </div>
