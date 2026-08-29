@@ -1,49 +1,76 @@
+/**
+ * 🚢 مسارات الوسائل البحرية
+ * @module routes/vesselRoutes
+ */
+
 const express = require('express');
+const { body, param } = require('express-validator');
+const {
+    getVessels,
+    getVessel,
+    createVessel,
+    updateVessel,
+    deleteVessel
+} = require('../controllers/vesselController');
+const { authorize } = require('../middleware/auth');
 const router = express.Router();
-const Vessel = require('../models/Vessel');
-const { authenticate, authorize } = require('../middleware/auth');
 
-router.get('/', authenticate, async (req, res) => {
-    try {
-        const vessels = await Vessel.find().sort({ createdAt: -1 });
-        res.json(vessels);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+/**
+ * التحقق من صحة معرف الوسيلة
+ */
+const validateVesselId = [
+    param('id').isString().notEmpty().withMessage('معرف الوسيلة مطلوب')
+];
 
-router.post('/', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
-    try {
-        const data = req.body;
-        data.cat = new Vessel(data).calculateCategory();
-        const vessel = new Vessel(data);
-        await vessel.save();
-        res.status(201).json(vessel);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+/**
+ * التحقق من صحة بيانات الوسيلة
+ */
+const validateVessel = [
+    body('name').trim().isLength({ min: 2, max: 100 })
+        .withMessage('اسم الوسيلة يجب أن يكون بين 2 و 100 حرف'),
+    body('type').trim().notEmpty()
+        .withMessage('نوع الوسيلة مطلوب'),
+    body('status').optional().isIn(['active', 'inactive', 'maintenance', 'reserve'])
+        .withMessage('حالة غير صالحة'),
+    body('location').trim().notEmpty()
+        .withMessage('الموقع مطلوب'),
+    body('specifications').optional().isObject()
+        .withMessage('المواصفات يجب أن تكون كائناً')
+];
 
-router.put('/:id', authenticate, authorize('مسؤول', 'محرر'), async (req, res) => {
-    try {
-        const data = req.body;
-        data.cat = new Vessel(data).calculateCategory();
-        const vessel = await Vessel.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
-        if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-        res.json(vessel);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+/**
+ * @route GET /api/vessels
+ * @desc الحصول على جميع الوسائل
+ * @access Private
+ */
+router.get('/', getVessels);
 
-router.delete('/:id', authenticate, authorize('مسؤول'), async (req, res) => {
-    try {
-        const vessel = await Vessel.findByIdAndDelete(req.params.id);
-        if (!vessel) return res.status(404).json({ error: 'المركب غير موجود' });
-        res.json({ message: 'تم حذف المركب بنجاح' });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+/**
+ * @route GET /api/vessels/:id
+ * @desc الحصول على وسيلة واحدة
+ * @access Private
+ */
+router.get('/:id', validateVesselId, getVessel);
+
+/**
+ * @route POST /api/vessels
+ * @desc إنشاء وسيلة جديدة
+ * @access Private (Admin, Manager)
+ */
+router.post('/', authorize('admin', 'manager'), validateVessel, createVessel);
+
+/**
+ * @route PUT /api/vessels/:id
+ * @desc تحديث وسيلة
+ * @access Private (Admin, Manager)
+ */
+router.put('/:id', authorize('admin', 'manager'), validateVesselId, validateVessel, updateVessel);
+
+/**
+ * @route DELETE /api/vessels/:id
+ * @desc حذف وسيلة
+ * @access Private (Admin فقط)
+ */
+router.delete('/:id', authorize('admin'), validateVesselId, deleteVessel);
 
 module.exports = router;
