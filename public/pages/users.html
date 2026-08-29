@@ -2,7 +2,7 @@
 <div id="page-users">
     <style>
         /* ============================================================
-           👥 USERS PAGE - WITH CAMERA & MONITORING (FIXED)
+           👥 USERS PAGE - ENTERPRISE EDITION
            ============================================================ */
 
         #page-users {
@@ -124,15 +124,6 @@
         .btn-action.success:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(34,197,94,0.3);
-        }
-
-        .btn-action.camera {
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-            color: #fff;
-        }
-        .btn-action.camera:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(139,92,246,0.3);
         }
 
         .btn-action.secondary {
@@ -449,29 +440,6 @@
             background: rgba(96,165,250,0.2);
         }
 
-        .action-btn.camera {
-            background: rgba(167,139,250,0.1);
-            color: #a78bfa;
-        }
-        .action-btn.camera:hover {
-            background: rgba(167,139,250,0.2);
-        }
-
-        .action-btn.watch {
-            background: rgba(239,68,68,0.1);
-            color: #f87171;
-            animation: pulseWatch 2s infinite;
-        }
-        .action-btn.watch:hover {
-            background: rgba(239,68,68,0.2);
-        }
-
-        @keyframes pulseWatch {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* ===== VERIFIED BADGE ===== */
         .verified-badge {
             display: inline-flex;
             align-items: center;
@@ -546,10 +514,6 @@
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             animation: modalFade 0.3s ease-out;
-        }
-
-        .modal-box.large {
-            max-width: 800px;
         }
 
         @keyframes modalFade {
@@ -666,72 +630,35 @@
             color: #fff;
         }
 
-        /* ===== CAMERA ===== */
-        .camera-container {
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            margin: 12px 0;
-            position: relative;
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .btn-danger {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.15);
+        }
+        .btn-danger:hover {
+            background: rgba(239,68,68,0.2);
         }
 
-        .camera-container video {
-            width: 100%;
-            height: auto;
-            max-height: 300px;
-            object-fit: cover;
-            background: #000;
-        }
-
-        .camera-container .camera-placeholder {
-            color: rgba(255,255,255,0.2);
+        /* ===== CONFIRM MODAL ===== */
+        .confirm-modal-content {
             text-align: center;
+            padding: 10px 0;
         }
 
-        .camera-container .camera-placeholder i {
+        .confirm-modal-content .icon {
             font-size: 48px;
-            margin-bottom: 8px;
-            display: block;
+            margin-bottom: 12px;
         }
 
-        .camera-controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .camera-controls .btn {
-            flex: 1;
-            padding: 10px;
-            justify-content: center;
-        }
-
-        .camera-controls .btn-success {
-            background: linear-gradient(135deg, #22c55e, #4ade80);
-            color: #0a1628;
-        }
-        .camera-controls .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
+        .confirm-modal-content .message {
+            font-size: 16px;
             color: #fff;
+            margin-bottom: 4px;
         }
 
-        .captured-image {
-            margin-top: 12px;
-            border-radius: 12px;
-            overflow: hidden;
-            max-width: 200px;
-            border: 2px solid rgba(96,165,250,0.2);
-        }
-
-        .captured-image img {
-            width: 100%;
-            height: auto;
-            display: block;
+        .confirm-modal-content .sub-message {
+            font-size: 13px;
+            color: rgba(255,255,255,0.3);
         }
 
         /* ===== RESPONSIVE ===== */
@@ -749,7 +676,6 @@
             table { font-size: 0.7rem; min-width: 700px; }
             thead th, tbody td { padding: 6px 8px; }
             .modal-box { max-width: 95%; }
-            .camera-container video { max-height: 200px; }
         }
 
         @media (max-width: 480px) {
@@ -762,7 +688,6 @@
             .section-header h3 { font-size: 13px; }
             thead th, tbody td { padding: 4px 6px; font-size: 0.6rem; }
             .action-btn { padding: 2px 6px; font-size: 0.55rem; }
-            .camera-controls .btn { font-size: 12px; padding: 8px; }
         }
     </style>
 
@@ -772,19 +697,18 @@
             <div class="icon"><i class="fas fa-users"></i></div>
             <div>
                 <h2>إدارة المستخدمين</h2>
-                <p>إدارة حسابات المستخدمين مع نظام المصادقة بالكاميرا</p>
+                <p>إدارة حسابات المستخدمين والصلاحيات</p>
             </div>
         </div>
         <div class="users-header-actions">
             <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
             <button class="btn-action success" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
-            <button class="btn-action camera" id="cameraMonitorBtn"><i class="fas fa-video"></i> مراقبة الكاميرات</button>
             <button class="btn-action secondary" onclick="window.print()"><i class="fas fa-print"></i> طباعة</button>
         </div>
     </div>
 
     <!-- ===== STATS ===== -->
-    <div class="users-stats" id="usersStats">
+    <div class="users-stats">
         <div class="stat-card"><div class="number" id="totalUsers">0</div><div class="label">👥 إجمالي المستخدمين</div></div>
         <div class="stat-card"><div class="number green" id="activeUsers">0</div><div class="label">🟢 نشط</div></div>
         <div class="stat-card"><div class="number red" id="inactiveUsers">0</div><div class="label">🔴 غير نشط</div></div>
@@ -871,9 +795,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    MODAL: إضافة / تعديل مستخدم
-    ============================================================ -->
+    <!-- ===== MODAL: إضافة / تعديل مستخدم ===== -->
     <div class="modal-overlay" id="userModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -935,9 +857,7 @@
         </div>
     </div>
 
-    <!-- ============================================================
-    MODAL: تغيير كلمة المرور
-    ============================================================ -->
+    <!-- ===== MODAL: تغيير كلمة المرور ===== -->
     <div class="modal-overlay" id="passwordModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -967,21 +887,42 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: تأكيد الحذف ===== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box" style="max-width:420px;">
+            <div class="modal-header">
+                <h3>⚠️ تأكيد الحذف</h3>
+                <button class="modal-close" id="confirmModalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-modal-content">
+                    <div class="icon">🗑️</div>
+                    <div class="message" id="confirmMessage">هل أنت متأكد من حذف هذا المستخدم؟</div>
+                    <div class="sub-message" id="confirmSubMessage">لا يمكن التراجع عن هذا الإجراء</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="confirmCancel">إلغاء</button>
+                <button class="btn-danger" id="confirmDelete">🗑️ حذف نهائي</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ============================================================
-    JAVASCRIPT - متصل بالخادم (FULLY FIXED)
+    JAVASCRIPT - ENTERPRISE EDITION (FULLY FIXED)
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
-            console.log('👥 Users Page - Connecting to Server...');
+            console.log('👥 Users Page - Enterprise Edition...');
 
             // ============================================================
             // 📡 API CONFIG
             // ============================================================
 
-            // استخدام الرابط الصحيح للخادم
-            var API_BASE = window.location.origin + '/api';
+            var API_BASE = '/api';
+            var pendingDeleteId = null;
 
             // ============================================================
             // 🔧 HELPERS
@@ -1003,8 +944,49 @@
                 return headers;
             }
 
+            // ============================================================
+            // 🌐 API CLIENT - موحد
+            // ============================================================
+
+            function apiFetch(url, options) {
+                options = options || {};
+                var method = options.method || 'GET';
+                var body = options.body;
+
+                return fetch(API_BASE + url, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: body ? JSON.stringify(body) : undefined
+                })
+                .then(function(response) {
+                    return response.json().then(function(data) {
+                        if (!response.ok) {
+                            var error = new Error(data.error || 'فشل الطلب');
+                            error.status = response.status;
+                            error.data = data;
+                            throw error;
+                        }
+                        return data;
+                    });
+                })
+                .catch(function(error) {
+                    if (error.status === 401) {
+                        showToast('⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً', 'error');
+                        // ✅ لا نخرج من التطبيق، فقط نعرض رسالة
+                    } else if (error.status === 403) {
+                        showToast('⛔ ليس لديك صلاحية لهذه العملية', 'error');
+                    } else if (error.status === 422) {
+                        showToast('⚠️ ' + (error.data.error || 'بيانات غير صالحة'), 'error');
+                    } else if (error.status === 429) {
+                        showToast('⏳ محاولات كثيرة جداً، يرجى الانتظار', 'error');
+                    } else {
+                        showToast('❌ ' + (error.message || 'حدث خطأ'), 'error');
+                    }
+                    throw error;
+                });
+            }
+
             function showToast(msg, type) {
-                type = type || 'info';
                 var old = document.querySelector('.toast');
                 if (old) old.remove();
                 var n = document.createElement('div');
@@ -1031,20 +1013,11 @@
                 return map[role] || 'user';
             }
 
-            function getStatusClass(status) {
-                return status === 'نشط' ? 'active' : 'inactive';
-            }
-
-            function getStatusBadge(status) {
-                return status === 'نشط' ? '🟢 نشط' : '🔴 غير نشط';
-            }
-
             // ============================================================
             // 📦 STATE
             // ============================================================
 
             var usersData = [];
-            var filteredData = [];
             var currentEditId = null;
             var isInitialized = false;
 
@@ -1080,78 +1053,6 @@
             }
 
             // ============================================================
-            // 📡 LOAD USERS FROM SERVER
-            // ============================================================
-
-            function loadUsers() {
-                console.log('📡 [Users] جلب المستخدمين من الخادم...');
-
-                var tbody = document.getElementById('usersBody');
-                if (tbody) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
-                                <div style="font-size:2rem;margin-bottom:10px;">⏳</div>
-                                جاري التحميل من الخادم...
-                            </td>
-                        </tr>
-                    `;
-                }
-
-                var token = getToken();
-                if (!token) {
-                    showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                    return;
-                }
-
-                fetch(API_BASE + '/users', {
-                    headers: getAuthHeaders()
-                })
-                .then(function(response) {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('accessToken');
-                            window.location.href = '/index.html';
-                            return;
-                        }
-                        throw new Error('HTTP ' + response.status);
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success && data.users) {
-                        usersData = data.users;
-                        filteredData = usersData.slice();
-                        updateStats();
-                        renderTable();
-                        console.log('✅ تم تحميل ' + usersData.length + ' مستخدم من الخادم');
-                        showToast('✅ تم تحميل ' + usersData.length + ' مستخدم', 'success');
-                    } else {
-                        throw new Error(data.error || 'فشل تحميل البيانات');
-                    }
-                })
-                .catch(function(error) {
-                    console.error('❌ خطأ:', error);
-                    showToast('❌ ' + error.message, 'error');
-                    if (tbody) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="8" style="text-align:center;padding:40px;color:#f87171;">
-                                    <div style="font-size:2rem;margin-bottom:10px;">❌</div>
-                                    فشل تحميل المستخدمين
-                                    <br>
-                                    <button onclick="loadUsers()" style="margin-top:10px;padding:6px 16px;background:#60a5fa;border:none;border-radius:6px;color:#fff;cursor:pointer;">
-                                        إعادة المحاولة
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    }
-                });
-            }
-
-            // ============================================================
             // 📋 RENDER TABLE
             // ============================================================
 
@@ -1160,13 +1061,15 @@
                 var unitFilter = document.getElementById('fUnitUser');
                 var statusFilter = document.getElementById('fStatusUser');
                 var roleFilter = document.getElementById('fRoleUser');
+                var verifiedFilter = document.getElementById('fVerifiedUser');
 
                 var searchVal = search ? search.value.toLowerCase() : '';
                 var unitVal = unitFilter ? unitFilter.value : 'الكل';
                 var statusVal = statusFilter ? statusFilter.value : 'الكل';
                 var roleVal = roleFilter ? roleFilter.value : 'الكل';
+                var verifiedVal = verifiedFilter ? verifiedFilter.value : 'الكل';
 
-                filteredData = usersData.filter(function(u) {
+                var filtered = usersData.filter(function(u) {
                     if (searchVal) {
                         var nameMatch = (u.name || '').toLowerCase().includes(searchVal);
                         var emailMatch = (u.email || '').toLowerCase().includes(searchVal);
@@ -1179,113 +1082,123 @@
                         if (statusVal === 'غير نشط' && isActive) return false;
                     }
                     if (roleVal !== 'الكل' && u.role !== roleVal) return false;
+                    if (verifiedVal !== 'الكل') {
+                        var isVerified = verifiedVal === 'نعم' ? true : false;
+                        if (u.faceVerified !== isVerified) return false;
+                    }
                     return true;
                 });
 
                 var tbody = document.getElementById('usersBody');
                 if (!tbody) return;
 
-                // مسح المحتوى السابق
                 tbody.innerHTML = '';
 
-                if (filteredData.length === 0) {
-                    var emptyRow = document.createElement('tr');
-                    var emptyCell = document.createElement('td');
-                    emptyCell.colSpan = 8;
-                    emptyCell.style.textAlign = 'center';
-                    emptyCell.style.padding = '40px';
-                    emptyCell.style.color = 'rgba(255,255,255,0.15)';
-                    emptyCell.innerHTML = '<div style="font-size:2rem;margin-bottom:10px;">🔍</div>لا توجد نتائج مطابقة';
-                    emptyRow.appendChild(emptyCell);
-                    tbody.appendChild(emptyRow);
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                                <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
+                                لا توجد نتائج مطابقة
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
-                filteredData.forEach(function(u, index) {
-                    var row = document.createElement('tr');
+                var html = '';
+                filtered.forEach(function(u, index) {
+                    var verifiedHtml = u.faceVerified ?
+                        '<span class="verified-badge yes"><i class="fas fa-check-circle"></i> موثق</span>' :
+                        '<span class="verified-badge no"><i class="fas fa-times-circle"></i> غير موثق</span>';
 
-                    // # العمود
-                    var tdNum = document.createElement('td');
-                    tdNum.style.fontWeight = '600';
-                    tdNum.style.color = '#60a5fa';
-                    tdNum.textContent = index + 1;
-                    row.appendChild(tdNum);
+                    html += `
+                        <tr>
+                            <td style="font-weight:600;color:#60a5fa;">${index + 1}</td>
+                            <td class="user-name" style="text-align:right;">${u.name || '-'}</td>
+                            <td style="color:rgba(255,255,255,0.4);font-size:0.7rem;">${u.email || '-'}</td>
+                            <td style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${u.unit || '-'}</td>
+                            <td><span class="status-badge ${getRoleClass(u.role)}">${getRoleLabel(u.role)}</span></td>
+                            <td><span class="status-badge ${u.isActive !== false ? 'active' : 'inactive'}">${u.isActive !== false ? '🟢 نشط' : '🔴 غير نشط'}</span></td>
+                            <td>${verifiedHtml}</td>
+                            <td>
+                                <button class="action-btn edit" onclick="editUser('${u._id}')"><i class="fas fa-edit"></i></button>
+                                <button class="action-btn password" onclick="changePassword('${u._id}')"><i class="fas fa-key"></i></button>
+                                <button class="action-btn delete" onclick="showConfirmModal('${u._id}','${u.name}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
 
-                    // الاسم
-                    var tdName = document.createElement('td');
-                    tdName.className = 'user-name';
-                    tdName.style.textAlign = 'right';
-                    tdName.textContent = u.name || '-';
-                    row.appendChild(tdName);
+                tbody.innerHTML = html;
+            }
 
-                    // البريد
-                    var tdEmail = document.createElement('td');
-                    tdEmail.style.color = 'rgba(255,255,255,0.4)';
-                    tdEmail.style.fontSize = '0.7rem';
-                    tdEmail.textContent = u.email || '-';
-                    row.appendChild(tdEmail);
+            // ============================================================
+            // 📡 LOAD USERS
+            // ============================================================
 
-                    // الوحدة
-                    var tdUnit = document.createElement('td');
-                    tdUnit.style.fontSize = '0.7rem';
-                    tdUnit.style.color = 'rgba(255,255,255,0.3)';
-                    tdUnit.textContent = u.unit || '-';
-                    row.appendChild(tdUnit);
+            function loadUsers() {
+                console.log('📡 [Users] جلب المستخدمين...');
 
-                    // الدور
-                    var tdRole = document.createElement('td');
-                    var roleSpan = document.createElement('span');
-                    roleSpan.className = 'status-badge ' + getRoleClass(u.role);
-                    roleSpan.textContent = getRoleLabel(u.role);
-                    tdRole.appendChild(roleSpan);
-                    row.appendChild(tdRole);
+                var tbody = document.getElementById('usersBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
+                                <div style="font-size:2rem;margin-bottom:10px;">⏳</div>
+                                جاري التحميل...
+                            </td>
+                        </tr>
+                    `;
+                }
 
-                    // الحالة
-                    var tdStatus = document.createElement('td');
-                    var statusSpan = document.createElement('span');
-                    statusSpan.className = 'status-badge ' + (u.isActive !== false ? 'active' : 'inactive');
-                    statusSpan.textContent = u.isActive !== false ? '🟢 نشط' : '🔴 غير نشط';
-                    tdStatus.appendChild(statusSpan);
-                    row.appendChild(tdStatus);
+                var token = getToken();
+                if (!token) {
+                    showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
+                    if (tbody) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="8" style="text-align:center;padding:40px;color:#fbbf24;">
+                                    <div style="font-size:2rem;margin-bottom:10px;">🔑</div>
+                                    يرجى تسجيل الدخول لعرض المستخدمين
+                                </td>
+                            </tr>
+                        `;
+                    }
+                    return;
+                }
 
-                    // الوجه
-                    var tdFace = document.createElement('td');
-                    var faceSpan = document.createElement('span');
-                    faceSpan.className = 'verified-badge ' + (u.faceVerified ? 'yes' : 'no');
-                    faceSpan.innerHTML = u.faceVerified ?
-                        '<i class="fas fa-check-circle"></i> موثق' :
-                        '<i class="fas fa-times-circle"></i> غير موثق';
-                    tdFace.appendChild(faceSpan);
-                    row.appendChild(tdFace);
-
-                    // الإجراءات
-                    var tdActions = document.createElement('td');
-
-                    var editBtn = document.createElement('button');
-                    editBtn.className = 'action-btn edit';
-                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-                    editBtn.onclick = function() { editUser(u._id); };
-                    tdActions.appendChild(editBtn);
-
-                    var passBtn = document.createElement('button');
-                    passBtn.className = 'action-btn password';
-                    passBtn.innerHTML = '<i class="fas fa-key"></i>';
-                    passBtn.onclick = function() { changePassword(u._id); };
-                    tdActions.appendChild(passBtn);
-
-                    var deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'action-btn delete';
-                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-                    deleteBtn.onclick = function() { deleteUser(u._id); };
-                    tdActions.appendChild(deleteBtn);
-
-                    row.appendChild(tdActions);
-                    tbody.appendChild(row);
+                apiFetch('/users')
+                .then(function(data) {
+                    if (data.success && data.users) {
+                        usersData = data.users;
+                        updateStats();
+                        renderTable();
+                        console.log('✅ تم تحميل ' + usersData.length + ' مستخدم');
+                        showToast('✅ تم تحميل ' + usersData.length + ' مستخدم', 'success');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('❌ خطأ:', error);
+                    if (tbody) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="8" style="text-align:center;padding:40px;color:#f87171;">
+                                    <div style="font-size:2rem;margin-bottom:10px;">❌</div>
+                                    ${error.message || 'فشل تحميل المستخدمين'}
+                                    <br>
+                                    <button onclick="loadUsers()" style="margin-top:10px;padding:6px 16px;background:#60a5fa;border:none;border-radius:6px;color:#fff;cursor:pointer;">
+                                        إعادة المحاولة
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 });
             }
 
             // ============================================================
-            // ➕ ADD USER
+            // ➕ ADD / EDIT USER
             // ============================================================
 
             function openAddModal() {
@@ -1332,15 +1245,8 @@
                 if (!email) { showToast('⚠️ يرجى إدخال البريد الإلكتروني', 'error'); return; }
                 if (!unit) { showToast('⚠️ يرجى اختيار الوحدة', 'error'); return; }
 
-                // التحقق من كلمة المرور للإضافة الجديدة
                 if (!editId && (!password || password.length < 8)) {
                     showToast('⚠️ كلمة المرور مطلوبة (8 أحرف على الأقل)', 'error');
-                    return;
-                }
-
-                var token = getToken();
-                if (!token) {
-                    showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
                     return;
                 }
 
@@ -1348,7 +1254,7 @@
                 saveBtn.disabled = true;
                 saveBtn.textContent = '⏳ جاري الحفظ...';
 
-                var url = API_BASE + '/users';
+                var url = '/users';
                 var method = 'POST';
                 var body = {
                     name: name,
@@ -1361,7 +1267,7 @@
                 };
 
                 if (editId) {
-                    url = API_BASE + '/users/' + editId;
+                    url = '/users/' + editId;
                     method = 'PUT';
                     body = {
                         name: name,
@@ -1375,24 +1281,16 @@
                     }
                 }
 
-                fetch(url, {
-                    method: method,
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(body)
-                })
-                .then(function(response) { return response.json(); })
+                apiFetch(url, { method: method, body: body })
                 .then(function(data) {
                     if (data.success) {
                         showToast(editId ? '✅ تم تحديث المستخدم' : '✅ تم إضافة المستخدم', 'success');
                         document.getElementById('userModal').classList.remove('visible');
-                        loadUsers(); // إعادة تحميل القائمة
-                    } else {
-                        throw new Error(data.error || 'فشل الحفظ');
+                        loadUsers();
                     }
                 })
                 .catch(function(error) {
                     console.error('❌ خطأ:', error);
-                    showToast('❌ ' + error.message, 'error');
                 })
                 .finally(function() {
                     saveBtn.disabled = false;
@@ -1401,38 +1299,34 @@
             }
 
             // ============================================================
-            // 🗑️ DELETE USER
+            // 🗑️ DELETE USER - مع Modal تأكيد
             // ============================================================
 
-            window.deleteUser = function(id) {
-                var user = usersData.find(function(u) { return u._id === id || u.id === id; });
-                if (!user) return;
+            window.showConfirmModal = function(id, name) {
+                pendingDeleteId = id;
+                document.getElementById('confirmMessage').textContent = 'هل أنت متأكد من حذف المستخدم "' + name + '"؟';
+                document.getElementById('confirmSubMessage').textContent = 'لا يمكن التراجع عن هذا الإجراء';
+                document.getElementById('confirmModal').classList.add('visible');
+            };
 
-                if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم ' + user.name + '؟')) return;
+            function confirmDelete() {
+                if (!pendingDeleteId) return;
 
-                var token = getToken();
-                if (!token) {
-                    showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                    return;
-                }
+                var id = pendingDeleteId;
+                pendingDeleteId = null;
 
-                fetch(API_BASE + '/users/' + id, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders()
-                })
-                .then(function(response) { return response.json(); })
+                apiFetch('/users/' + id, { method: 'DELETE' })
                 .then(function(data) {
                     if (data.success) {
-                        showToast('🗑️ تم حذف المستخدم ' + user.name, 'success');
+                        showToast('🗑️ تم حذف المستخدم بنجاح', 'success');
+                        document.getElementById('confirmModal').classList.remove('visible');
                         loadUsers();
-                    } else {
-                        throw new Error(data.error || 'فشل الحذف');
                     }
                 })
                 .catch(function(error) {
-                    showToast('❌ ' + error.message, 'error');
+                    console.error('❌ خطأ:', error);
                 });
-            };
+            }
 
             // ============================================================
             // 🔑 CHANGE PASSWORD
@@ -1463,28 +1357,18 @@
                     return;
                 }
 
-                var token = getToken();
-                if (!token) {
-                    showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
-                    return;
-                }
-
-                fetch(API_BASE + '/users/' + id + '/password', {
+                apiFetch('/users/' + id + '/password', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ password: newPass })
+                    body: { password: newPass }
                 })
-                .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (data.success) {
                         showToast('✅ تم تغيير كلمة المرور', 'success');
                         document.getElementById('passwordModal').classList.remove('visible');
-                    } else {
-                        throw new Error(data.error || 'فشل التغيير');
                     }
                 })
                 .catch(function(error) {
-                    showToast('❌ ' + error.message, 'error');
+                    console.error('❌ خطأ:', error);
                 });
             }
 
@@ -1502,6 +1386,7 @@
                 document.getElementById('fUnitUser').value = 'الكل';
                 document.getElementById('fStatusUser').value = 'الكل';
                 document.getElementById('fRoleUser').value = 'الكل';
+                document.getElementById('fVerifiedUser').value = 'الكل';
                 renderTable();
                 showToast('✅ تم إلغاء جميع الفلاتر', 'success');
             }
@@ -1519,7 +1404,6 @@
 
                 console.log('👥 تهيئة صفحة المستخدمين...');
 
-                // تحميل البيانات من الخادم
                 loadUsers();
 
                 // ربط الأحداث
@@ -1544,25 +1428,35 @@
                 });
                 document.getElementById('passwordModalSave').addEventListener('click', savePassword);
 
+                document.getElementById('confirmModalClose').addEventListener('click', function() {
+                    document.getElementById('confirmModal').classList.remove('visible');
+                    pendingDeleteId = null;
+                });
+                document.getElementById('confirmCancel').addEventListener('click', function() {
+                    document.getElementById('confirmModal').classList.remove('visible');
+                    pendingDeleteId = null;
+                });
+                document.getElementById('confirmDelete').addEventListener('click', confirmDelete);
+
                 document.getElementById('searchUser').addEventListener('keyup', renderTable);
                 document.getElementById('fUnitUser').addEventListener('change', renderTable);
                 document.getElementById('fStatusUser').addEventListener('change', renderTable);
                 document.getElementById('fRoleUser').addEventListener('change', renderTable);
+                document.getElementById('fVerifiedUser').addEventListener('change', renderTable);
 
-                // إغلاق المودال عند الضغط خارجها
                 document.querySelectorAll('.modal-overlay').forEach(function(m) {
                     m.addEventListener('click', function(e) {
                         if (e.target === this) {
                             this.classList.remove('visible');
+                            pendingDeleteId = null;
                         }
                     });
                 });
 
-                // ✅ تصدير loadUsers كدالة عامة للتحديث
                 window.loadUsers = loadUsers;
                 window.refreshUsersData = loadUsers;
 
-                console.log('✅ صفحة المستخدمين متصلة بالخادم');
+                console.log('✅ صفحة المستخدمين جاهزة');
             }
 
             // ============================================================
@@ -1582,8 +1476,8 @@
             // ============================================================
 
             window.editUser = editUser;
-            window.deleteUser = deleteUser;
             window.changePassword = changePassword;
+            window.showConfirmModal = showConfirmModal;
             window.showToast = showToast;
             window.loadUsers = loadUsers;
             window.refreshUsersData = loadUsers;
