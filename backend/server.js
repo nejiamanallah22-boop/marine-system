@@ -2,7 +2,6 @@
  * ============================================================
  * 🚢 MARINE SYSTEM - ENTERPRISE BACKEND
  * @version 8.0.0
- * @description نظام إدارة الأسطول البحري - الخادم الخلفي
  * ============================================================
  */
 
@@ -24,23 +23,19 @@ const PORT = process.env.PORT || 5000;
 // 🔐 MIDDLEWARE
 // ============================================================
 
-app.use(helmet({
-    contentSecurityPolicy: false
-}));
-
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://marine-system-71eo.onrender.com',
+    origin: process.env.FRONTEND_URL || '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ============================================================
-// 📊 RATE LIMITING
+// ⏱️ RATE LIMITING
 // ============================================================
 
 const limiter = rateLimit({
@@ -118,7 +113,7 @@ const MaintenanceSchema = new mongoose.Schema({
 const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
 
 // ============================================================
-// 🔐 MIDDLEWARE - المصادقة
+// 🔐 AUTH MIDDLEWARE
 // ============================================================
 
 const authenticate = async (req, res, next) => {
@@ -168,7 +163,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================
-// 🔐 AUTH ROUTES - المصادقة
+// 🔐 AUTH ROUTES
 // ============================================================
 
 // تسجيل الدخول
@@ -204,7 +199,7 @@ app.post('/api/auth/login', [
             { expiresIn: '7d' }
         );
 
-        // محاكاة 2FA (في الإنتاج استخدم TOTP)
+        // 2FA للمدراء فقط (محاكاة)
         if (user.role === 'super_admin' || user.role === 'admin') {
             return res.json({
                 success: true,
@@ -246,7 +241,6 @@ app.post('/api/auth/verify-otp', [
     }
 
     try {
-        // في الإنتاج، ابحث عن المستخدم من transactionId
         const user = await User.findOne({ email: 'admin@marine.tn' });
         if (!user) {
             return res.status(404).json({ success: false, error: 'مستخدم غير موجود' });
@@ -299,7 +293,7 @@ app.post('/api/auth/logout', authenticate, (req, res) => {
 });
 
 // ============================================================
-// 👤 USERS ROUTES - إدارة المستخدمين
+// 👤 USERS ROUTES - إدارة المستخدمين (مع المصادقة)
 // ============================================================
 
 // 📋 جلب جميع المستخدمين
@@ -312,7 +306,7 @@ app.get('/api/users', authenticate, authorize('super_admin', 'admin'), async (re
     }
 });
 
-// ➕ إضافة مستخدم
+// ➕ إضافة مستخدم جديد
 app.post('/api/users', authenticate, authorize('super_admin', 'admin'), [
     body('name').notEmpty().withMessage('الاسم مطلوب'),
     body('email').isEmail().withMessage('بريد غير صالح'),
@@ -326,6 +320,7 @@ app.post('/api/users', authenticate, authorize('super_admin', 'admin'), [
     try {
         const { name, email, password, role, unit, status } = req.body;
 
+        // التحقق من عدم وجود البريد
         const existing = await User.findOne({ email });
         if (existing) {
             return res.status(400).json({ success: false, error: 'البريد موجود مسبقاً' });
@@ -436,10 +431,9 @@ app.post('/api/users/:id/password', authenticate, authorize('super_admin', 'admi
 });
 
 // ============================================================
-// 🚢 VESSELS ROUTES - إدارة المراكب
+// 🚢 VESSELS ROUTES
 // ============================================================
 
-// 📋 جلب جميع المراكب
 app.get('/api/vessels', authenticate, async (req, res) => {
     try {
         const vessels = await Vessel.find({}).sort({ createdAt: -1 });
@@ -449,7 +443,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     }
 });
 
-// ➕ إضافة مركب
 app.post('/api/vessels', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         const vessel = new Vessel(req.body);
@@ -460,7 +453,6 @@ app.post('/api/vessels', authenticate, authorize('super_admin', 'admin'), async 
     }
 });
 
-// ✏️ تحديث مركب
 app.put('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndUpdate(
@@ -477,7 +469,6 @@ app.put('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), asy
     }
 });
 
-// 🗑️ حذف مركب
 app.delete('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         await Vessel.findByIdAndDelete(req.params.id);
@@ -488,10 +479,9 @@ app.delete('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), 
 });
 
 // ============================================================
-// 🔧 MAINTENANCE ROUTES - إدارة الصيانة
+// 🔧 MAINTENANCE ROUTES
 // ============================================================
 
-// 📋 جلب سجلات الصيانة
 app.get('/api/maintenance', authenticate, async (req, res) => {
     try {
         const records = await Maintenance.find({}).sort({ createdAt: -1 });
@@ -501,7 +491,6 @@ app.get('/api/maintenance', authenticate, async (req, res) => {
     }
 });
 
-// ➕ إضافة سجل صيانة
 app.post('/api/maintenance', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         const record = new Maintenance(req.body);
@@ -512,7 +501,6 @@ app.post('/api/maintenance', authenticate, authorize('super_admin', 'admin'), as
     }
 });
 
-// ✏️ تحديث سجل صيانة
 app.put('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         const record = await Maintenance.findByIdAndUpdate(
@@ -529,7 +517,6 @@ app.put('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'),
     }
 });
 
-// 🗑️ حذف سجل صيانة
 app.delete('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
     try {
         await Maintenance.findByIdAndDelete(req.params.id);
@@ -540,12 +527,11 @@ app.delete('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin
 });
 
 // ============================================================
-// 🚀 SEED DATABASE - إدخال بيانات أولية (مرة واحدة)
+// 🌱 SEED DATABASE - إنشاء المستخدم الأول
 // ============================================================
 
 app.post('/api/seed', async (req, res) => {
     try {
-        // إنشاء مستخدم مسؤول إذا لم يوجد
         const adminExists = await User.findOne({ email: 'admin@marine.tn' });
         if (!adminExists) {
             const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -561,17 +547,15 @@ app.post('/api/seed', async (req, res) => {
             console.log('✅ تم إنشاء المستخدم admin@marine.tn');
         }
 
-        // إنشاء مراكب افتراضية
         const vesselsCount = await Vessel.countDocuments();
         if (vesselsCount === 0) {
-            const vessels = [
+            await Vessel.insertMany([
                 { name: 'الوحدة 101', num: '101', len: 11, region: 'الشمال', zone: 'تونس', port: 'الميناء', supp: 'القاعدة', stat: 'صالح' },
                 { name: 'الوحدة 202', num: '202', len: 25, region: 'الساحل', zone: 'سوسة', port: 'الميناء', supp: 'القاعدة', stat: 'معطب', break: 'محرك', fDate: '2026-01-15' },
                 { name: 'الوحدة 303', num: '303', len: 8, region: 'الوسط', zone: 'صفاقس', port: 'الميناء', supp: 'القاعدة', stat: 'صالح' },
                 { name: 'الوحدة 404', num: '404', len: 30, region: 'الجنوب', zone: 'قابس', port: 'الميناء', supp: 'القاعدة', stat: 'صيانة', break: 'هيكل', fDate: '2026-01-10', eDate: '2026-02-10' },
                 { name: 'الوحدة 505', num: '505', len: 12, region: 'الشمال', zone: 'بنزرت', port: 'الميناء', supp: 'القاعدة', stat: 'معطب', break: 'كهرباء', fDate: '2026-01-20' }
-            ];
-            await Vessel.insertMany(vessels);
+            ]);
             console.log('✅ تم إنشاء 5 مراكب افتراضية');
         }
 
@@ -593,7 +577,6 @@ app.listen(PORT, async () => {
     console.log('========================================');
     console.log(`📡 الخادم يعمل على: http://localhost:${PORT}`);
     console.log(`🔐 البيئة: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📊 قاعدة البيانات: ${MONGODB_URI}`);
     console.log('========================================');
     
     // تشغيل التهيئة التلقائية
