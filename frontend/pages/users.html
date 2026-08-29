@@ -1,9 +1,6 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
-        /* ============================================================
-           👥 USERS PAGE - FULLY FIXED
-           ============================================================ */
         #page-users{width:100%;max-width:100%;padding:20px;margin:0;font-family:'Cairo',sans-serif;background:#0a0e1a;color:#e8edf5;min-height:100vh;position:relative;z-index:1}
         #page-users::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 50%,rgba(96,165,250,0.04)0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(167,139,250,0.03)0%,transparent 60%);z-index:-1;pointer-events:none;animation:bgPulse 15s ease-in-out infinite}
         @keyframes bgPulse{0%,100%{transform:scale(1)rotate(0)}50%{transform:scale(1.05)rotate(2deg)}}
@@ -112,7 +109,7 @@
             <div class="icon"><i class="fas fa-users"></i></div>
             <div>
                 <h2>إدارة المستخدمين</h2>
-                <p>إدارة حسابات المستخدمين</p>
+                <p>إدارة حسابات المستخدمين والصلاحيات</p>
             </div>
         </div>
         <div class="users-header-actions">
@@ -218,8 +215,8 @@
                 </div>
                 <div class="form-group">
                     <label>🔑 كلمة المرور <span style="color:red;">*</span></label>
-                    <input type="password" id="userPassword" placeholder="********">
-                    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">6 أحرف على الأقل</div>
+                    <input type="password" id="userPassword" placeholder="********" minlength="12">
+                    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">12 حرفاً على الأقل</div>
                 </div>
                 <div class="form-group">
                     <label>🏛️ الوحدة <span style="color:red;">*</span></label>
@@ -240,10 +237,10 @@
                     <label>🛡️ الدور <span style="color:red;">*</span></label>
                     <select id="userRole">
                         <option value="user">👤 مستخدم</option>
-                        <option value="super_admin">👑 سوبر أدمن</option>
-                        <option value="admin">🛡️ مدير</option>
                         <option value="operator">🔧 مشغل</option>
                         <option value="viewer">📡 مشاهد</option>
+                        <option value="admin">🛡️ مدير</option>
+                        <!-- super_admin لا يظهر في الواجهة -->
                     </select>
                 </div>
                 <div class="form-group">
@@ -276,8 +273,8 @@
                 </div>
                 <div class="form-group">
                     <label>🔑 كلمة المرور الجديدة</label>
-                    <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة">
-                    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">حد أدنى 6 أحرف</div>
+                    <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" minlength="12">
+                    <div style="font-size:11px;color:rgba(255,255,255,0.2);margin-top:4px;">12 حرفاً على الأقل</div>
                 </div>
                 <div class="form-group">
                     <label>🔑 تأكيد كلمة المرور</label>
@@ -292,7 +289,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FULLY FIXED
+    JAVASCRIPT - متصل بالخادم مع أمان محسّن
     ============================================================ -->
     <script>
         (function() {
@@ -301,7 +298,7 @@
             console.log('👥 Users Page - Loading...');
 
             // ============================================================
-            // 🔧 HELPERS
+            // 🔧 HELPERS - دوال مساعدة
             // ============================================================
 
             function getToken() {
@@ -310,10 +307,27 @@
 
             function getAuthHeaders() {
                 var token = getToken();
-                return {
-                    'Content-Type': 'application/json',
-                    'Authorization': token ? 'Bearer ' + token : ''
-                };
+                var headers = { 'Content-Type': 'application/json' };
+                if (token) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
+                return headers;
+            }
+
+            // 🛡️ دالة آمنة لعرض النص (تستخدم textContent بدلاً من innerHTML)
+            function createSafeElement(tag, text, className) {
+                var el = document.createElement(tag);
+                if (text) el.textContent = text;
+                if (className) el.className = className;
+                return el;
+            }
+
+            // 🛡️ تنقية النص من HTML
+            function escapeHtml(str) {
+                if (!str) return '';
+                var div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
             }
 
             function showToast(msg, type) {
@@ -349,13 +363,15 @@
             }
 
             // ============================================================
-            // 📦 STATE - البيانات
+            // 📦 STATE - الحالة
             // ============================================================
 
             var usersData = [];
+            var currentEditId = null;
+            var isInitialized = false;
 
             // ============================================================
-            // 📊 STATS
+            // 📊 STATS - الإحصائيات
             // ============================================================
 
             function updateStats() {
@@ -380,7 +396,136 @@
             }
 
             // ============================================================
-            // 📋 LOAD USERS
+            // 📋 RENDER TABLE - عرض الجدول (بطريقة آمنة)
+            // ============================================================
+
+            function renderTable() {
+                var search = document.getElementById('searchUser');
+                var unitFilter = document.getElementById('fUnitUser');
+                var statusFilter = document.getElementById('fStatusUser');
+                var roleFilter = document.getElementById('fRoleUser');
+
+                var searchVal = search ? search.value.toLowerCase() : '';
+                var unitVal = unitFilter ? unitFilter.value : 'الكل';
+                var statusVal = statusFilter ? statusFilter.value : 'الكل';
+                var roleVal = roleFilter ? roleFilter.value : 'الكل';
+
+                var filtered = usersData.filter(function(u) {
+                    if (searchVal) {
+                        var nameMatch = (u.name || '').toLowerCase().includes(searchVal);
+                        var emailMatch = (u.email || '').toLowerCase().includes(searchVal);
+                        if (!nameMatch && !emailMatch) return false;
+                    }
+                    if (unitVal !== 'الكل' && u.unit !== unitVal) return false;
+                    if (statusVal !== 'الكل' && u.status !== statusVal) return false;
+                    if (roleVal !== 'الكل' && u.role !== roleVal) return false;
+                    return true;
+                });
+
+                var tbody = document.getElementById('usersBody');
+                if (!tbody) return;
+
+                // مسح المحتوى السابق
+                tbody.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    var emptyRow = document.createElement('tr');
+                    var emptyCell = document.createElement('td');
+                    emptyCell.colSpan = 8;
+                    emptyCell.style.textAlign = 'center';
+                    emptyCell.style.padding = '40px';
+                    emptyCell.style.color = 'rgba(255,255,255,0.15)';
+                    emptyCell.innerHTML = '<div style="font-size:2rem;margin-bottom:10px;">🔍</div>لا توجد نتائج مطابقة';
+                    emptyRow.appendChild(emptyCell);
+                    tbody.appendChild(emptyRow);
+                    return;
+                }
+
+                filtered.forEach(function(u, index) {
+                    var row = document.createElement('tr');
+
+                    // # العمود
+                    var tdNum = document.createElement('td');
+                    tdNum.style.fontWeight = '600';
+                    tdNum.style.color = '#60a5fa';
+                    tdNum.textContent = index + 1;
+                    row.appendChild(tdNum);
+
+                    // الاسم
+                    var tdName = document.createElement('td');
+                    tdName.className = 'user-name';
+                    tdName.style.textAlign = 'right';
+                    tdName.textContent = u.name || '-';
+                    row.appendChild(tdName);
+
+                    // البريد
+                    var tdEmail = document.createElement('td');
+                    tdEmail.style.color = 'rgba(255,255,255,0.4)';
+                    tdEmail.style.fontSize = '0.7rem';
+                    tdEmail.textContent = u.email || '-';
+                    row.appendChild(tdEmail);
+
+                    // الوحدة
+                    var tdUnit = document.createElement('td');
+                    tdUnit.style.fontSize = '0.7rem';
+                    tdUnit.style.color = 'rgba(255,255,255,0.3)';
+                    tdUnit.textContent = u.unit || '-';
+                    row.appendChild(tdUnit);
+
+                    // الدور
+                    var tdRole = document.createElement('td');
+                    var roleSpan = document.createElement('span');
+                    roleSpan.className = 'status-badge ' + getRoleClass(u.role);
+                    roleSpan.textContent = getRoleLabel(u.role);
+                    tdRole.appendChild(roleSpan);
+                    row.appendChild(tdRole);
+
+                    // الحالة
+                    var tdStatus = document.createElement('td');
+                    var statusSpan = document.createElement('span');
+                    statusSpan.className = 'status-badge ' + getStatusClass(u.status);
+                    statusSpan.textContent = u.status === 'نشط' ? '🟢 نشط' : '🔴 غير نشط';
+                    tdStatus.appendChild(statusSpan);
+                    row.appendChild(tdStatus);
+
+                    // الوجه
+                    var tdFace = document.createElement('td');
+                    var faceSpan = document.createElement('span');
+                    faceSpan.className = 'verified-badge ' + (u.faceVerified ? 'yes' : 'no');
+                    faceSpan.innerHTML = u.faceVerified ?
+                        '<i class="fas fa-check-circle"></i> موثق' :
+                        '<i class="fas fa-times-circle"></i> غير موثق';
+                    tdFace.appendChild(faceSpan);
+                    row.appendChild(tdFace);
+
+                    // الإجراءات
+                    var tdActions = document.createElement('td');
+                    
+                    var editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editBtn.onclick = function() { editUser(u._id); };
+                    tdActions.appendChild(editBtn);
+
+                    var passBtn = document.createElement('button');
+                    passBtn.className = 'action-btn password';
+                    passBtn.innerHTML = '<i class="fas fa-key"></i>';
+                    passBtn.onclick = function() { changePassword(u._id); };
+                    tdActions.appendChild(passBtn);
+
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'action-btn delete';
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                    deleteBtn.onclick = function() { deleteUser(u._id); };
+                    tdActions.appendChild(deleteBtn);
+
+                    row.appendChild(tdActions);
+                    tbody.appendChild(row);
+                });
+            }
+
+            // ============================================================
+            // 📡 LOAD USERS - جلب المستخدمين من الخادم
             // ============================================================
 
             async function loadUsers() {
@@ -413,10 +558,12 @@
                         if (response.status === 401) {
                             localStorage.removeItem('token');
                             localStorage.removeItem('accessToken');
+                            showToast('⚠️ انتهت الجلسة، يرجى تسجيل الدخول مجدداً', 'error');
                             window.location.href = '/index.html';
                             return;
                         }
-                        throw new Error('فشل تحميل البيانات');
+                        var errData = await response.json();
+                        throw new Error(errData.error || 'فشل تحميل البيانات');
                     }
 
                     var data = await response.json();
@@ -434,75 +581,11 @@
             }
 
             // ============================================================
-            // 📋 RENDER TABLE
-            // ============================================================
-
-            function renderTable() {
-                var search = document.getElementById('searchUser');
-                var unitFilter = document.getElementById('fUnitUser');
-                var statusFilter = document.getElementById('fStatusUser');
-                var roleFilter = document.getElementById('fRoleUser');
-
-                var searchVal = search ? search.value.toLowerCase() : '';
-                var unitVal = unitFilter ? unitFilter.value : 'الكل';
-                var statusVal = statusFilter ? statusFilter.value : 'الكل';
-                var roleVal = roleFilter ? roleFilter.value : 'الكل';
-
-                var filtered = usersData.filter(function(u) {
-                    if (searchVal && !u.name.includes(searchVal) && !u.email.includes(searchVal)) return false;
-                    if (unitVal !== 'الكل' && u.unit !== unitVal) return false;
-                    if (statusVal !== 'الكل' && u.status !== statusVal) return false;
-                    if (roleVal !== 'الكل' && u.role !== roleVal) return false;
-                    return true;
-                });
-
-                var tbody = document.getElementById('usersBody');
-                if (!tbody) return;
-
-                if (filtered.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">
-                                <div style="font-size:2rem;margin-bottom:10px;">🔍</div>
-                                لا توجد نتائج مطابقة
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-
-                var html = '';
-                filtered.forEach(function(u, index) {
-                    var verifiedHtml = u.faceVerified ?
-                        '<span class="verified-badge yes"><i class="fas fa-check-circle"></i> موثق</span>' :
-                        '<span class="verified-badge no"><i class="fas fa-times-circle"></i> غير موثق</span>';
-
-                    html += `
-                        <tr>
-                            <td style="font-weight:600;color:#60a5fa;">${index + 1}</td>
-                            <td class="user-name" style="text-align:right;">${u.name}</td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.7rem;">${u.email}</td>
-                            <td style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${u.unit}</td>
-                            <td><span class="status-badge ${getRoleClass(u.role)}">${getRoleLabel(u.role)}</span></td>
-                            <td><span class="status-badge ${getStatusClass(u.status)}">${u.status === 'نشط' ? '🟢 نشط' : '🔴 غير نشط'}</span></td>
-                            <td>${verifiedHtml}</td>
-                            <td>
-                                <button class="action-btn edit" onclick="editUser('${u._id}')"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn password" onclick="changePassword('${u._id}')"><i class="fas fa-key"></i></button>
-                                <button class="action-btn delete" onclick="deleteUser('${u._id}')"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                tbody.innerHTML = html;
-            }
-
-            // ============================================================
-            // ➕ ADD USER - ✅ يتم الحفظ في الخادم
+            // ➕ ADD USER - إضافة مستخدم
             // ============================================================
 
             function openAddModal() {
+                currentEditId = null;
                 document.getElementById('editUserId').value = '';
                 document.getElementById('modalTitle').textContent = '➕ إضافة مستخدم جديد';
                 document.getElementById('userName').value = '';
@@ -519,15 +602,16 @@
                 var user = usersData.find(function(u) { return u._id === id || u.id === id; });
                 if (!user) return;
 
+                currentEditId = id;
                 document.getElementById('editUserId').value = id;
                 document.getElementById('modalTitle').textContent = '✏️ تعديل المستخدم: ' + user.name;
-                document.getElementById('userName').value = user.name;
-                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userName').value = user.name || '';
+                document.getElementById('userEmail').value = user.email || '';
                 document.getElementById('userPassword').value = '';
                 document.getElementById('userPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
                 document.getElementById('userUnit').value = user.unit || '';
-                document.getElementById('userRole').value = user.role;
-                document.getElementById('userStatus').value = user.status;
+                document.getElementById('userRole').value = user.role || 'user';
+                document.getElementById('userStatus').value = user.status || 'نشط';
                 document.getElementById('userModal').classList.add('visible');
             };
 
@@ -546,8 +630,8 @@
                 if (!unit) { showToast('⚠️ يرجى اختيار الوحدة', 'error'); return; }
 
                 // ✅ التحقق من كلمة المرور للإضافة الجديدة
-                if (!editId && (!password || password.length < 6)) {
-                    showToast('⚠️ كلمة المرور مطلوبة (6 أحرف على الأقل)', 'error');
+                if (!editId && (!password || password.length < 12)) {
+                    showToast('⚠️ كلمة المرور مطلوبة (12 حرفاً على الأقل)', 'error');
                     return;
                 }
 
@@ -571,12 +655,13 @@
                         url = '/api/users/' + editId;
                         method = 'PUT';
                         body = { name, email, unit, role, status };
-                        if (password && password.length >= 6) {
+                        if (password && password.length >= 12) {
                             body.password = password;
                         }
                     }
 
-                    console.log('📤 إرسال طلب:', method, url, body);
+                    // ✅ لا نرسل password في console.log
+                    console.log('📤 إرسال طلب:', method, url);
 
                     var response = await fetch(url, {
                         method: method,
@@ -586,36 +671,38 @@
 
                     var data = await response.json();
 
-                    console.log('📥 استجابة الخادم:', data);
-
                     if (!response.ok) {
                         throw new Error(data.error || 'فشل الحفظ');
                     }
 
-                    // ✅ نجاح الحفظ
-                    showToast('✅ تم حفظ المستخدم في الخادم', 'success');
+                    showToast('✅ تم حفظ المستخدم بنجاح', 'success');
                     document.getElementById('userModal').classList.remove('visible');
 
-                    // ✅ إعادة تحميل البيانات من الخادم
+                    // ✅ إعادة تحميل البيانات
                     await loadUsers();
 
                 } catch (error) {
                     console.error('❌ خطأ:', error);
                     showToast('❌ ' + error.message, 'error');
                 } finally {
-                    // ✅ إعادة تمكين الزر
                     saveBtn.disabled = false;
                     saveBtn.textContent = '💾 حفظ';
                 }
             }
 
             // ============================================================
-            // 🗑️ DELETE USER
+            // 🗑️ DELETE USER - حذف مستخدم
             // ============================================================
 
             window.deleteUser = function(id) {
                 var user = usersData.find(function(u) { return u._id === id || u.id === id; });
                 if (!user) return;
+
+                // منع حذف super_admin
+                if (user.role === 'super_admin') {
+                    showToast('⚠️ لا يمكن حذف السوبر أدمن', 'warning');
+                    return;
+                }
 
                 if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم ' + user.name + '؟')) return;
 
@@ -644,7 +731,7 @@
             };
 
             // ============================================================
-            // 🔑 CHANGE PASSWORD
+            // 🔑 CHANGE PASSWORD - تغيير كلمة المرور
             // ============================================================
 
             window.changePassword = function(id) {
@@ -663,8 +750,8 @@
                 var newPass = document.getElementById('newPassword').value;
                 var confirmPass = document.getElementById('confirmPassword').value;
 
-                if (!newPass || newPass.length < 6) {
-                    showToast('⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+                if (!newPass || newPass.length < 12) {
+                    showToast('⚠️ كلمة المرور يجب أن تكون 12 حرفاً على الأقل', 'error');
                     return;
                 }
                 if (newPass !== confirmPass) {
@@ -698,7 +785,7 @@
             }
 
             // ============================================================
-            // 🔍 FILTERS
+            // 🔍 FILTERS - الفلاتر
             // ============================================================
 
             function applyFilters() {
@@ -716,13 +803,20 @@
             }
 
             // ============================================================
-            // 🚀 INIT
+            // 🚀 INIT - تهيئة الصفحة
             // ============================================================
 
             function initUsers() {
+                // منع التهيئة المتكررة
+                if (isInitialized) {
+                    console.log('⚠️ الصفحة مهيأة بالفعل');
+                    return;
+                }
+                isInitialized = true;
+
                 console.log('👥 تهيئة صفحة المستخدمين...');
 
-                // ✅ تحميل البيانات فوراً
+                // ✅ تحميل البيانات
                 loadUsers();
 
                 // ✅ ربط الأحداث
@@ -731,7 +825,6 @@
                 document.getElementById('filterBtn').addEventListener('click', applyFilters);
                 document.getElementById('resetBtn').addEventListener('click', resetFilters);
 
-                // ✅ مودال المستخدمين
                 document.getElementById('modalClose').addEventListener('click', function() {
                     document.getElementById('userModal').classList.remove('visible');
                 });
@@ -740,7 +833,6 @@
                 });
                 document.getElementById('modalSave').addEventListener('click', saveUser);
 
-                // ✅ مودال كلمة المرور
                 document.getElementById('passwordModalClose').addEventListener('click', function() {
                     document.getElementById('passwordModal').classList.remove('visible');
                 });
@@ -749,7 +841,6 @@
                 });
                 document.getElementById('passwordModalSave').addEventListener('click', savePassword);
 
-                // ✅ الفلاتر
                 document.getElementById('searchUser').addEventListener('keyup', renderTable);
                 document.getElementById('fUnitUser').addEventListener('change', renderTable);
                 document.getElementById('fStatusUser').addEventListener('change', renderTable);
@@ -764,21 +855,30 @@
                     });
                 });
 
+                // ✅ وضع علامة على الصفحة بأنها مهيأة
+                var pageEl = document.getElementById('page-users');
+                if (pageEl) {
+                    pageEl.dataset.initialized = 'true';
+                }
+
                 console.log('✅ صفحة المستخدمين جاهزة');
             }
 
             // ============================================================
-            // START
+            // 🚀 START
             // ============================================================
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
-                initUsers();
+                // تأخير بسيط لضمان تحميل جميع العناصر
+                setTimeout(initUsers, 100);
             } else {
-                document.addEventListener('DOMContentLoaded', initUsers);
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(initUsers, 100);
+                });
             }
 
             // ============================================================
-            // EXPOSE
+            // 🌐 EXPOSE
             // ============================================================
 
             window.editUser = editUser;
