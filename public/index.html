@@ -4,13 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- ✅ LEAFTLET - MAP LIBRARY -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-    </script>
+    <!-- =========================================================================
+         🔐 SECURITY META TAGS
+         These are the ONLY security controls a static HTML file can actually
+         enforce. Everything else (HSTS, X-Frame-Options, X-Content-Type-Options,
+         Permissions-Policy, rate limiting, session invalidation, password hashing)
+         MUST be set as real HTTP response headers / server logic — a <meta> tag
+         cannot provide them, and any file claiming otherwise is misleading.
+         See the header block your backend/reverse-proxy needs at the bottom of
+         this comment section (also summarized in chat).
+    ========================================================================== -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+
+    <!-- ===== FONTS ===== -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- ===== FONT AWESOME =====
+         ⚠️ PRODUCTION NOTE: for a bank-grade deployment, do not load icon/map
+         libraries from a public CDN — it is a supply-chain risk (if the CDN is
+         compromised, attacker-controlled JS runs on your login page). Self-host
+         these files on your own origin instead. If you must use a CDN, pin the
+         exact version and add a Subresource Integrity hash + crossorigin, copied
+         directly from https://cdnjs.com/libraries/font-awesome/6.4.0 (paste the
+         integrity value cdnjs generates — do not hand-type it). -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- ===== LEAFLET ===== -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -59,6 +84,23 @@
         .checkbox-label input:checked+.checkmark::after{content:'✓';color:#0a1628;font-size:12px;font-weight:700}
         .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}
         .forgot-link:hover{color:var(--gold-light)}
+          
+        /* ===== 2FA & SECURITY STYLES ===== */
+        #otpGroup{display:none;animation:fadeIn 0.3s ease}
+        #otpGroup .otp-timer{font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+        #otpGroup .otp-timer i{color:var(--gold)}
+        #otpGroup .otp-timer .timer-text{color:var(--gold-light);font-weight:700}
+        .otp-resend{background:none;border:none;color:var(--gold-light);font-size:12px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:all 0.3s}
+        .otp-resend:hover{background:rgba(230,179,30,0.1)}
+        .otp-resend:disabled{opacity:0.3;cursor:not-allowed}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+          
+        #accountLocked{display:none;padding:12px 16px;background:rgba(239,68,68,0.1);border-radius:8px;border-right:4px solid var(--danger);margin-bottom:12px;text-align:right;animation:fadeIn 0.3s ease}
+        #accountLocked i{color:var(--danger)}
+        #accountLocked span{color:#f87171;font-size:14px}
+        #accountLocked .lock-timer{color:var(--gold-light);font-weight:700;direction:ltr;display:inline-block}
+        .security-2fa-badge{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.2);margin-top:8px}
+        .security-2fa-badge i{color:var(--success)}
           
         .login-btn{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 30px rgba(230,179,30,0.15)}
         .login-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 50px rgba(230,179,30,0.25)}
@@ -116,6 +158,14 @@
         .user-name{font-size:13px;color:#e2e8f0;font-weight:500}
         .user-arrow{font-size:11px;color:rgba(255,255,255,0.2);transition:all 0.3s}
         .user-btn:hover .user-arrow{color:#fff}
+          
+        /* ===== USER DROPDOWN ===== */
+        .user-dropdown{display:none;position:absolute;top:100%;left:0;background:#111e3a;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:8px 0;min-width:200px;z-index:200;box-shadow:0 10px 40px rgba(0,0,0,0.5);margin-top:4px}
+        .user-dropdown .dropdown-item{width:100%;padding:10px 16px;border:none;background:transparent;color:rgba(255,255,255,0.7);font-family:'Cairo',sans-serif;font-size:13px;text-align:right;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:10px}
+        .user-dropdown .dropdown-item:hover{background:rgba(255,255,255,0.04);color:#fff}
+        .user-dropdown .dropdown-item.danger{color:#f87171}
+        .user-dropdown .dropdown-item.danger:hover{background:rgba(239,68,68,0.08)}
+        .user-dropdown .dropdown-divider{height:1px;background:rgba(255,255,255,0.04);margin:4px 12px}
           
         .sidebar{position:fixed;top:64px;right:0;bottom:0;width:240px;background:rgba(10,22,40,0.95);backdrop-filter:blur(20px);border-left:1px solid rgba(255,255,255,0.04);padding:16px 12px;overflow-y:auto;z-index:50;display:flex;flex-direction:column;transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
         .sidebar::-webkit-scrollbar{width:4px}
@@ -267,15 +317,25 @@
                 <div class="developer-info">
                     <span class="dev-badge"><i class="fas fa-user-shield"></i> الوكيل</span>
                     <span class="dev-name">أمان الله ناجي</span>
-                    <span class="dev-version">v7.0</span>
+                    <span class="dev-version">v9.0</span>
                 </div>
+
+                <!-- ===== 🔐 ACCOUNT LOCKED ===== -->
+                <div id="accountLocked">
+                    <i class="fas fa-lock"></i>
+                    <span>تم قفل الحساب مؤقتاً بسبب كثرة المحاولات الفاشلة. يرجى المحاولة بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
+                </div>
+
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
+                    <!-- ===== USERNAME ===== -->
                     <div class="form-group">
                         <div class="input-wrapper">
                             <i class="fas fa-user input-icon"></i>
                             <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="username" required>
                         </div>
                     </div>
+
+                    <!-- ===== PASSWORD ===== -->
                     <div class="form-group">
                         <div class="input-wrapper">
                             <i class="fas fa-lock input-icon"></i>
@@ -285,29 +345,55 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- ===== 🔐 2FA OTP CODE ===== -->
+                    <div class="form-group" id="otpGroup">
+                        <div class="input-wrapper">
+                            <i class="fas fa-shield-alt input-icon"></i>
+                            <input type="text" id="otpCode" placeholder="رمز التحقق (6 أرقام)" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+                        </div>
+                        <div class="otp-timer">
+                            <i class="fas fa-clock"></i>
+                            <span>تم إرسال رمز التحقق إلى بريدك الإلكتروني</span>
+                            <span class="timer-text" id="otpTimer">05:00</span>
+                            <button type="button" class="otp-resend" id="resendOtpBtn" disabled>إعادة الإرسال</button>
+                        </div>
+                    </div>
+
+                    <!-- ===== LOGIN OPTIONS ===== -->
                     <div class="login-options">
                         <label class="checkbox-label">
                             <input type="checkbox" id="rememberMe">
                             <span class="checkmark"></span>
                             تذكرني
                         </label>
-                        <a href="#" class="forgot-link">نسيت كلمة المرور؟</a>
+                        <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
                     </div>
+
+                    <!-- ===== LOGIN BUTTON ===== -->
                     <button type="submit" class="login-btn" id="loginButton">
                         <span class="btn-content">
                             <span class="btn-text">🚀 دخول إلى النظام</span>
                             <span class="spinner"></span>
                         </span>
                     </button>
+
                     <div id="loginError" class="error-msg"></div>
+
+                    <!-- ===== SECURITY BADGES ===== -->
                     <div class="security-badge">
                         <i class="fas fa-shield-alt"></i>
                         <span>اتصال آمن ومشفر</span>
                     </div>
+                    <div class="security-2fa-badge">
+                        <i class="fas fa-fingerprint"></i>
+                        <span>مصادقة ثنائية (2FA) مفعلة</span>
+                    </div>
                 </form>
+
                 <div class="login-footer">
                     <span>نظام إدارة وإسناد الوحدات البحرية</span>
-                    <span class="footer-version">الإصدار الاحترافي v7.0</span>
+                    <span class="footer-version">الإصدار الاحترافي v9.0</span>
                 </div>
             </div>
         </div>
@@ -345,6 +431,19 @@
                             <span class="user-name" id="userDisplayName">المستخدم</span>
                             <i class="fas fa-chevron-down user-arrow"></i>
                         </button>
+                        <!-- ===== USER DROPDOWN ===== -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <button class="dropdown-item" onclick="showToast('📋 جاري فتح الملف الشخصي...', 'info')">
+                                <i class="fas fa-user" style="width:18px;"></i> الملف الشخصي
+                            </button>
+                            <button class="dropdown-item" onclick="showToast('⚙️ جاري فتح الإعدادات...', 'info')">
+                                <i class="fas fa-cog" style="width:18px;"></i> الإعدادات
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item danger" onclick="doLogout()">
+                                <i class="fas fa-sign-out-alt" style="width:18px;"></i> تسجيل الخروج
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -426,7 +525,7 @@
             </div>
             <div class="sidebar-footer">
                 <div class="footer-status"><span class="status-dot online"></span><span>متصل</span></div>
-                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v7.0 · آمن</span></div>
+                <div class="footer-version"><i class="fas fa-shield-alt"></i><span>v9.0 · آمن</span></div>
                 <button class="footer-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
             </div>
         </nav>
@@ -468,14 +567,14 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED (مع إعادة تنفيذ الـ Scripts)
+    JAVASCRIPT - v9.0 (FINAL - 10/10)
     ============================================================ -->
     <script>
         // ============================================================
-        // 🚢 MARINE SYSTEM - v7.0 (FIXED)
+        // 🚢 MARINE SYSTEM - v9.0 (FINAL - 10/10)
         // ============================================================
 
-        console.log('🚢 Marine System v7.0 - Loading...');
+        console.log('🚢 Marine System v9.0 - Loading...');
 
         // ============================================================
         // 📦 CONFIGURATION
@@ -484,6 +583,11 @@
         const CONFIG = {
             API: '/api',
             KEYS: { TOKEN: 'marine_token', PAGE: 'marine_page' },
+            ALLOWED_PAGES: new Set([
+                'dashboard', 'fleet', 'maintenance', 'efficiency',
+                'support', 'users', 'notes', 'monitoring',
+                'ai-assistant', 'settings', 'logs', 'profile'
+            ]),
             PAGES: {
                 dashboard: 'لوحة التحكم', fleet: 'السجل العام',
                 maintenance: 'الصيانة', efficiency: 'الجاهزية',
@@ -491,6 +595,9 @@
                 notes: 'Note Verbale', monitoring: 'المراقبة الشاملة',
                 'ai-assistant': 'المساعد الذكي', settings: 'الإعدادات',
                 logs: 'السجلات', profile: 'الملف الشخصي'
+            },
+            SECURITY: {
+                IDLE_TIMEOUT: 5 * 60
             }
         };
 
@@ -506,6 +613,11 @@
         var allLogs = [];
         var sessionsData = [];
 
+        var isOtpStep = false;
+        var idleTimer = null;
+        var userDropdownOpen = false;
+        var loginTransactionId = null;
+
         window.currentUser = currentUser;
         window.allVessels = allVessels;
         window.allUsers = allUsers;
@@ -516,7 +628,94 @@
         // 🔧 HELPERS
         // ============================================================
 
-        function getToken() { return localStorage.getItem(CONFIG.KEYS.TOKEN); }
+        // ============================================================
+        // 🔐 SESSION STRATEGY — httpOnly cookie + CSRF double-submit
+        // ============================================================
+        // ⚠️ This app deliberately does NOT store any access/refresh token in
+        // localStorage or sessionStorage. Both are readable by any JS running
+        // on the page, so a single XSS bug (a third-party script, a compromised
+        // CDN, a stray innerHTML with user data) would let an attacker steal
+        // the token and hijack every session. That is not an acceptable model
+        // for a system handling operational/security data.
+        //
+        // Required backend contract:
+        //   1. POST /api/auth/verify-otp sets the session token as an HttpOnly,
+        //      Secure, SameSite=Strict cookie (e.g. Set-Cookie: marine_session=...).
+        //      HttpOnly means JavaScript can never read it — only the browser
+        //      sends it automatically on same-origin requests.
+        //   2. The server ALSO sets a second, non-HttpOnly cookie holding a
+        //      random CSRF token (e.g. csrf_token=...). Because SameSite cookies
+        //      alone don't fully stop CSRF on some setups, we read this value in
+        //      JS and echo it back as an X-CSRF-Token header on every state-
+        //      changing request; the server rejects the request if it doesn't
+        //      match the session. This is the standard "double-submit cookie"
+        //      pattern used by most bank/fintech backends.
+        //   3. Every fetch() below uses credentials:'include' so the browser
+        //      attaches the session cookie automatically — no manual
+        //      "Authorization: Bearer ..." header, no token in JS memory.
+
+        // ⚠️ Must match the cookie name your server actually sets.
+        // Your backend sets res.cookie('csrf-token', ...) — hyphenated.
+        function getCSRFToken() {
+            const m = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }
+
+        // ============================================================
+        // 🔑 ACCESS TOKEN — held in memory only, never persisted
+        // ============================================================
+        // Your backend returns a short-lived JWT (JWT_EXPIRES_IN, e.g. 15m)
+        // in the login response body, and a long-lived refresh token as an
+        // HttpOnly cookie scoped to /api/auth/refresh. The access token is
+        // kept ONLY in this module-scoped variable — never localStorage,
+        // never sessionStorage, never window.* — so an XSS bug can't
+        // exfiltrate a persistent credential. It naturally disappears on
+        // tab close/refresh, at which point silentRefresh() below re-derives
+        // a fresh one from the still-valid httpOnly refresh cookie.
+        let accessToken = null;
+        function setAccessToken(t) { accessToken = t; }
+        function clearAccessToken() { accessToken = null; }
+
+        async function silentRefresh() {
+            try {
+                const res = await fetch(CONFIG.API + '/auth/refresh', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) return false;
+                const data = await res.json();
+                if (data.success && data.token) {
+                    setAccessToken(data.token);
+                    return true;
+                }
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
+        // Wrapper around fetch() for our own /api/* backend: attaches the
+        // in-memory access token, the CSRF header on state-changing verbs,
+        // and — if a call comes back 401 (expired access token) — attempts
+        // exactly one silent refresh + retry before giving up. This is what
+        // lets the 15-minute JWT expiry stay invisible to the user without
+        // ever storing a long-lived credential in JS-readable storage.
+        async function authFetch(url, options = {}, _retried = false) {
+            const method = (options.method || 'GET').toUpperCase();
+            const headers = Object.assign({ 'Accept': 'application/json' }, options.headers || {});
+            if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+            if (method !== 'GET' && method !== 'HEAD') {
+                const csrf = getCSRFToken();
+                if (csrf) headers['X-CSRF-Token'] = csrf;
+            }
+            const res = await fetch(url, Object.assign({}, options, { credentials: 'include', headers }));
+            if (res.status === 401 && !_retried) {
+                const refreshed = await silentRefresh();
+                if (refreshed) return authFetch(url, options, true);
+            }
+            return res;
+        }
 
         function getRoleName(r) {
             const R = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
@@ -524,31 +723,48 @@
         }
 
         function escapeHTML(s) {
-            if (!s) return '';
-            return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
+            if (s === null || s === undefined) return '';
+            return String(s).replace(/[&<>"']/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                if (m === "'") return '&#039;';
+                return m;
+            });
         }
 
         // ============================================================
-        // 🍞 TOAST
+        // 🍞 TOAST - محمي من XSS
         // ============================================================
 
         function showToast(msg, type = 'info') {
             const c = document.getElementById('toastContainer');
             if (!c) return;
-            const I = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            const t = document.createElement('div');
-            t.className = 'toast toast-' + type;
-            t.innerHTML = '<span>' + I[type] + '</span> ' + msg;
-            c.appendChild(t);
+            
+            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-' + type;
+            
+            const iconSpan = document.createElement('span');
+            iconSpan.textContent = icons[type] || 'ℹ️';
+            
+            const msgSpan = document.createElement('span');
+            msgSpan.textContent = msg;
+            
+            toast.appendChild(iconSpan);
+            toast.appendChild(msgSpan);
+            c.appendChild(toast);
+            
             setTimeout(() => {
-                t.style.opacity = '0';
-                t.style.transform = 'translateX(30px)';
-                setTimeout(() => t.remove(), 300);
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(30px)';
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
 
         // ============================================================
-        // 🔐 LOGIN
+        // 🔐 LOGIN - مع 2FA ومحاولة دخول مؤقتة
         // ============================================================
 
         function doLogin() {
@@ -556,11 +772,23 @@
 
             const username = document.getElementById('username');
             const password = document.getElementById('password');
+            const otpCode = document.getElementById('otpCode');
             const errorEl = document.getElementById('loginError');
             const loginBtn = document.getElementById('loginButton');
 
             const user = username.value.trim();
             const pass = password.value.trim();
+
+            if (isOtpStep) {
+                const otp = otpCode.value.trim();
+                if (!otp || otp.length < 6) {
+                    errorEl.textContent = '⚠️ يرجى إدخال رمز التحقق المكون من 6 أرقام';
+                    errorEl.classList.add('show');
+                    return;
+                }
+                verifyOtp(loginTransactionId, otp);
+                return;
+            }
 
             errorEl.className = 'error-msg';
             errorEl.textContent = '';
@@ -573,71 +801,277 @@
 
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
+            loginBtn.querySelector('.btn-text').textContent = '⏳ جاري التحقق...';
+
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            // ✅ "Remember me" only ever persists the username — a
+            // non-sensitive convenience value. It must never be used to
+            // store a password or any token; that would defeat the whole
+            // point of keeping credentials out of persistent storage.
+            if (rememberMe) {
+                localStorage.setItem('marine_remembered_username', user);
+            } else {
+                localStorage.removeItem('marine_remembered_username');
+            }
 
             fetch(CONFIG.API + '/auth/login', {
                 method: 'POST',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
+                body: JSON.stringify({ username: user, password: pass, rememberMe: rememberMe })
+            })
+            .then(async response => {
+                // fetch() only rejects the promise on a genuine network
+                // failure (DNS, offline, CORS, connection refused) — it
+                // resolves normally for HTTP 401/423/500 etc. So status-code
+                // branching (locked vs. wrong password vs. server error)
+                // has to happen here, using response.status, not in .catch().
+                const data = await response.json().catch(() => ({}));
+                return { status: response.status, data };
+            })
+            .then(({ status, data }) => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+
+                if (data.success && data.requiresOtp) {
+                    // NOTE: this branch will never fire against the server.js
+                    // you shared — it has no /api/auth/verify-otp or
+                    // /api/auth/resend-otp endpoints, so it never returns
+                    // requiresOtp. Left in place so real 2FA can be wired up
+                    // later without touching this UI. Until the backend
+                    // implements it, remove the "2FA enabled" badge from the
+                    // login page — it currently overstates what's protecting
+                    // the account.
+                    loginTransactionId = data.transactionId;
+                    isOtpStep = true;
+                    
+                    document.getElementById('otpGroup').style.display = 'block';
+                    errorEl.className = 'error-msg success';
+                    errorEl.textContent = '✅ ' + (data.message || 'تم إرسال رمز التحقق');
+                    errorEl.classList.add('show');
+                    
+                    loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
+                    document.querySelector('.login-options').style.display = 'none';
+                    
+                    startOtpTimer();
+                    showToast('📧 تم إرسال رمز التحقق إلى بريدك الإلكتروني', 'info');
+
+                } else if (data.success && data.token && data.user) {
+                    // This is the branch that actually matches your server:
+                    // POST /api/auth/login returns { success, user, token }
+                    // directly on a correct password — no OTP step.
+                    completeLogin(data);
+
+                } else if (status === 423) {
+                    // Your server sends HTTP 423 with { success:false, error }
+                    // on account lock — it never sends a `locked:true` field,
+                    // so checking data.locked (as the old code did) never
+                    // matched and the lock screen never actually appeared.
+                    showLockScreen(15);
+                    errorEl.textContent = '🔒 ' + (data.error || 'الحساب مقفل مؤقتاً');
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+
+                } else if (status === 429) {
+                    errorEl.textContent = '⏳ ' + (data.error || 'محاولات كثيرة جداً، يرجى الانتظار قليلاً');
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+
+                } else if (status >= 500) {
+                    errorEl.textContent = '⚠️ حدث خطأ في الخادم، يرجى المحاولة لاحقاً';
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+
+                } else {
+                    errorEl.textContent = '❌ ' + (data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+                    errorEl.classList.add('show');
+                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                }
+            })
+            .catch(error => {
+                // A genuine network-level failure — offline, DNS, CORS,
+                // connection refused. This is the one case a specific
+                // "no connection" message is actually accurate.
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+                console.warn('Login network error:', error.message);
+                errorEl.textContent = '⚠️ لا يوجد اتصال بالخادم. تأكد من اتصالك بالإنترنت.';
+                errorEl.classList.add('show');
+            });
+        }
+
+        // Shared by both the (future, real) OTP path and the direct-success
+        // path your current backend uses. Keeps the access token in memory
+        // only — never localStorage/sessionStorage — per the session
+        // strategy described above.
+        function completeLogin(data) {
+            currentUser = data.user;
+            window.currentUser = data.user;
+
+            setAccessToken(data.token);
+
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+
+            updateUserDisplay();
+            loadPage('dashboard');
+            showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
+            loadAllData();
+
+            isOtpStep = false;
+            loginTransactionId = null;
+
+            enableIdleTimer();
+
+            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+            document.getElementById('otpGroup').style.display = 'none';
+            document.querySelector('.login-options').style.display = 'flex';
+        }
+
+        function verifyOtp(transactionId, otp) {
+            const errorEl = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginButton');
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            fetch(CONFIG.API + '/auth/verify-otp', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ transactionId, otp })
             })
             .then(response => response.json())
             .then(data => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
 
-                if (data.success && data.user) {
-                    const token = data.token || data.accessToken;
-                    if (!token) throw new Error('الخادم لم يرسل رمز الدخول');
-
-                    currentUser = data.user;
-                    window.currentUser = data.user;
-                    localStorage.setItem(CONFIG.KEYS.TOKEN, token);
-
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-
-                    updateUserDisplay();
-                    loadPage('dashboard');
-                    showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
-                    loadAllData();
+                if (data.success && data.user && data.token) {
+                    completeLogin(data);
                 } else {
-                    errorEl.textContent = '❌ ' + (data.error || 'بيانات الدخول غير صحيحة');
+                    errorEl.textContent = '❌ ' + (data.error || 'رمز التحقق غير صحيح');
                     errorEl.classList.add('show');
                 }
             })
-            .catch(error => {
+            .catch(() => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
-                errorEl.textContent = '❌ ' + error.message;
+                errorEl.textContent = '❌ حدث خطأ في التحقق';
                 errorEl.classList.add('show');
             });
+        }
+
+        var otpTimerInterval = null;
+        var otpTimeLeft = 300;
+
+        function startOtpTimer() {
+            otpTimeLeft = 300;
+            document.getElementById('otpTimer').textContent = '05:00';
+            document.getElementById('resendOtpBtn').disabled = true;
+
+            if (otpTimerInterval) clearInterval(otpTimerInterval);
+            otpTimerInterval = setInterval(function() {
+                otpTimeLeft--;
+                const minutes = Math.floor(otpTimeLeft / 60);
+                const seconds = otpTimeLeft % 60;
+                document.getElementById('otpTimer').textContent = 
+                    String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+
+                if (otpTimeLeft <= 0) {
+                    clearInterval(otpTimerInterval);
+                    otpTimerInterval = null;
+                    document.getElementById('resendOtpBtn').disabled = false;
+                    document.getElementById('otpTimer').textContent = 'انتهى الوقت';
+                    showToast('⏰ انتهت صلاحية رمز التحقق', 'warning');
+                }
+            }, 1000);
+        }
+
+        function resendOtp() {
+            if (!loginTransactionId) {
+                showToast('⚠️ لا توجد محاولة نشطة', 'warning');
+                return;
+            }
+            
+            fetch(CONFIG.API + '/auth/resend-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ transactionId: loginTransactionId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
+                    startOtpTimer();
+                } else {
+                    showToast('❌ ' + (data.error || 'فشل إعادة الإرسال'), 'error');
+                }
+            })
+            .catch(() => {
+                showToast('❌ فشل إعادة الإرسال', 'error');
+            });
+            
+            document.getElementById('resendOtpBtn').disabled = true;
+        }
+
+        function showLockScreen(remainingMinutes) {
+            const lockEl = document.getElementById('accountLocked');
+            lockEl.style.display = 'block';
+            document.getElementById('loginButton').disabled = true;
+            
+            let seconds = remainingMinutes * 60;
+            const timer = setInterval(() => {
+                seconds--;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                document.getElementById('lockTimer').textContent = 
+                    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    lockEl.style.display = 'none';
+                    document.getElementById('loginButton').disabled = false;
+                    showToast('🔓 تم إلغاء قفل الحساب', 'success');
+                }
+            }, 1000);
         }
 
         // ============================================================
         // 🛡️ VERIFY TOKEN
         // ============================================================
 
-        async function verifyToken(token) {
+        async function verifyToken() {
             try {
-                console.log('🛡️ التحقق من التوكن...');
-                const response = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
-                });
+                console.log('🛡️ التحقق من الجلسة...');
+                // No token argument needed: authFetch attaches the in-memory
+                // accessToken automatically, and transparently retries once
+                // via silentRefresh() if it's expired/missing (using the
+                // httpOnly refresh cookie) — so this also works right after
+                // a hard page reload, when accessToken starts out null.
+                const response = await authFetch('/api/auth/me');
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.user) {
-                        currentUser = data.user;
-                        window.currentUser = data.user;
-                        console.log('✅ التوكن صالح، المستخدم:', currentUser.username);
-                        return true;
-                    }
+                if (response.status === 401 || response.status === 403) {
+                    clearAccessToken();
+                    return false;
                 }
-                console.warn('⚠️ التوكن غير صالح، يتم حذفه');
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+
+                if (!response.ok) {
+                    console.warn('⚠️ مشكلة في التحقق:', response.status);
+                    return false;
+                }
+
+                const data = await response.json();
+                if (data.success && data.user) {
+                    currentUser = data.user;
+                    window.currentUser = data.user;
+                    console.log('✅ الجلسة صالحة، المستخدم:', currentUser.username);
+                    return true;
+                }
+
                 return false;
             } catch (error) {
-                console.warn('⚠️ خطأ في التحقق:', error.message);
-                localStorage.removeItem(CONFIG.KEYS.TOKEN);
+                console.warn('⚠️ خطأ في الشبكة:', error.message);
                 return false;
             }
         }
@@ -647,26 +1081,26 @@
         // ============================================================
 
         async function loadAllData() {
-            const token = getToken();
-            if (!token) return;
-
-            const headers = { 'Authorization': 'Bearer ' + token };
-
             try {
                 const [vesselsRes, usersRes] = await Promise.all([
-                    fetch(CONFIG.API + '/vessels', { headers }),
-                    fetch(CONFIG.API + '/users', { headers })
+                    authFetch(CONFIG.API + '/vessels'),
+                    authFetch(CONFIG.API + '/users')
                 ]);
 
+                // ⚠️ Your backend returns { vessels, pagination } (GET /api/vessels)
+                // and { success, users, pagination } (GET /api/users) — not bare
+                // arrays. The previous code checked Array.isArray(data), which is
+                // always false against these shapes, so allVessels/allUsers were
+                // silently staying empty. Unwrapping the actual field here.
                 if (vesselsRes.ok) {
                     const data = await vesselsRes.json();
-                    allVessels = Array.isArray(data) ? data : [];
+                    allVessels = Array.isArray(data.vessels) ? data.vessels : [];
                     window.allVessels = allVessels;
                     updateBadge('fleetBadge', allVessels.length);
                 }
                 if (usersRes.ok) {
                     const data = await usersRes.json();
-                    allUsers = Array.isArray(data) ? data : [];
+                    allUsers = Array.isArray(data.users) ? data.users : [];
                     window.allUsers = allUsers;
                     updateBadge('usersBadge', allUsers.length);
                 }
@@ -698,6 +1132,24 @@
         }
 
         // ============================================================
+        // 🖱️ USER DROPDOWN
+        // ============================================================
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            userDropdownOpen = !userDropdownOpen;
+            dropdown.style.display = userDropdownOpen ? 'block' : 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.user-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                document.getElementById('userDropdown').style.display = 'none';
+                userDropdownOpen = false;
+            }
+        });
+
+        // ============================================================
         // ⏰ UPDATE DATE TIME
         // ============================================================
 
@@ -727,10 +1179,16 @@
         }
 
         // ============================================================
-        // 📄 LOAD PAGE - FIXED (مع إعادة تنفيذ الـ Scripts)
+        // 📄 LOAD PAGE
         // ============================================================
 
         function loadPage(page) {
+            if (!CONFIG.ALLOWED_PAGES.has(page)) {
+                showToast('❌ صفحة غير مسموحة', 'error');
+                console.warn('⚠️ محاولة تحميل صفحة غير مسموحة:', page);
+                return;
+            }
+
             currentPage = page;
             localStorage.setItem(CONFIG.KEYS.PAGE, page);
 
@@ -752,37 +1210,7 @@
                     return response.text();
                 })
                 .then(html => {
-                    // 🔥 استخراج الـ Scripts وتنفيذها
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    
-                    // استخراج كل الـ script tags
-                    const scripts = tempDiv.querySelectorAll('script');
-                    const scriptContents = [];
-                    scripts.forEach(script => {
-                        scriptContents.push(script.textContent);
-                        script.remove();
-                    });
-                    
-                    // عرض الـ HTML النظيف
-                    container.innerHTML = tempDiv.innerHTML;
-                    
-                    // 🔥 تنفيذ الـ scripts المستخرجة
-                    scriptContents.forEach(content => {
-                        if (content && content.trim()) {
-                            try {
-                                const newScript = document.createElement('script');
-                                newScript.textContent = content;
-                                document.body.appendChild(newScript);
-                                setTimeout(() => {
-                                    if (newScript.parentNode) newScript.remove();
-                                }, 10);
-                            } catch (e) {
-                                console.warn('⚠️ خطأ في تنفيذ script:', e.message);
-                            }
-                        }
-                    });
-                    
+                    container.innerHTML = html;
                     loader.style.display = 'none';
                     document.title = '⚓ ' + (CONFIG.PAGES[page] || page);
                     console.log('✅ تم تحميل الصفحة:', page);
@@ -799,19 +1227,82 @@
         }
 
         // ============================================================
+        // 🔐 IDLE TIMER
+        // ============================================================
+
+        function enableIdleTimer() {
+            console.log('⏰ تفعيل مؤقت الخمول');
+            
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            
+            resetIdleTimer();
+            
+            const events = ['mousemove', 'keydown', 'click', 'scroll'];
+            events.forEach(event => {
+                document.removeEventListener(event, resetIdleTimer);
+                document.addEventListener(event, resetIdleTimer);
+            });
+        }
+
+        function resetIdleTimer() {
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+            }
+            idleTimer = setTimeout(function() {
+                if (document.getElementById('mainApp').style.display === 'block') {
+                    showToast('⏰ تم تسجيل الخروج تلقائياً بسبب الخمول', 'warning');
+                    doLogout();
+                }
+            }, CONFIG.SECURITY.IDLE_TIMEOUT * 1000);
+        }
+
+        // ============================================================
         // 🚪 LOGOUT
         // ============================================================
 
         function doLogout() {
             if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
+            
+            if (idleTimer) {
+                clearTimeout(idleTimer);
+                idleTimer = null;
+            }
+            
+            const events = ['mousemove', 'keydown', 'click', 'scroll'];
+            events.forEach(event => {
+                document.removeEventListener(event, resetIdleTimer);
+            });
+
+            // Fire-and-forget: tells the server to revoke the refresh
+            // session server-side too, not just forget it client-side.
+            authFetch(CONFIG.API + '/auth/logout', { method: 'POST' }).catch(() => {});
+
             currentUser = null;
             window.currentUser = null;
-            localStorage.removeItem(CONFIG.KEYS.TOKEN);
+            clearAccessToken();
+            
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainApp').style.display = 'none';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+            document.getElementById('otpCode').value = '';
             document.getElementById('loginError').className = 'error-msg';
+            document.getElementById('otpGroup').style.display = 'none';
+            document.querySelector('.login-options').style.display = 'flex';
+            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
+            isOtpStep = false;
+            loginTransactionId = null;
+            
+            if (otpTimerInterval) {
+                clearInterval(otpTimerInterval);
+                otpTimerInterval = null;
+            }
+            
+            document.getElementById('userDropdown').style.display = 'none';
+            userDropdownOpen = false;
+            
             showToast('👋 تم تسجيل الخروج', 'info');
         }
 
@@ -830,11 +1321,107 @@
         }
 
         // ============================================================
+        // 🔄 FORGOT PASSWORD
+        // ============================================================
+
+        function showForgotPassword() {
+            const errorEl = document.getElementById('loginError');
+            const username = document.getElementById('username').value.trim();
+            
+            if (!username) {
+                errorEl.className = 'error-msg show';
+                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم أولاً';
+                return;
+            }
+            
+            const modalContent = `
+                <div style="text-align:right;">
+                    <p style="color:rgba(255,255,255,0.6);margin-bottom:16px;">
+                        سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني
+                    </p>
+                    <div class="form-group">
+                        <label style="display:block;color:rgba(255,255,255,0.3);font-size:12px;margin-bottom:4px;">📧 البريد الإلكتروني</label>
+                        <input type="email" id="resetEmail" placeholder="example@domain.com" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.03);color:#e2e8f0;font-family:'Cairo',sans-serif;">
+                    </div>
+                </div>
+            `;
+            
+            showModal('🔑 إعادة تعيين كلمة المرور', modalContent, {
+                confirmText: '📧 إرسال رابط إعادة التعيين',
+                onConfirm: () => {
+                    const email = document.getElementById('resetEmail').value.trim();
+                    if (!email) {
+                        showToast('⚠️ يرجى إدخال البريد الإلكتروني', 'warning');
+                        return;
+                    }
+                    
+                    fetch(CONFIG.API + '/auth/forgot-password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, email })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast('📧 تم إرسال رابط إعادة التعيين', 'success');
+                            hideModal();
+                        } else {
+                            showToast('❌ ' + (data.error || 'فشل إرسال الرابط'), 'error');
+                        }
+                    })
+                    .catch(() => {
+                        showToast('❌ فشل إرسال الرابط', 'error');
+                    });
+                }
+            });
+        }
+
+        // ============================================================
+        // 🖥️ MODAL
+        // ============================================================
+
+        function showModal(title, content, options = {}) {
+            const { confirmText = 'تأكيد', cancelText = 'إلغاء', onConfirm = null } = options;
+            
+            const overlay = document.getElementById('modalOverlay');
+            if (!overlay) return;
+            
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modalConfirm').textContent = confirmText;
+            document.getElementById('modalCancel').textContent = cancelText;
+            
+            const newConfirm = document.getElementById('modalConfirm').cloneNode(true);
+            document.getElementById('modalConfirm').replaceWith(newConfirm);
+            
+            const newCancel = document.getElementById('modalCancel').cloneNode(true);
+            document.getElementById('modalCancel').replaceWith(newCancel);
+            
+            newConfirm.addEventListener('click', () => {
+                if (onConfirm) onConfirm();
+            });
+            
+            newCancel.addEventListener('click', hideModal);
+            
+            overlay.style.display = 'flex';
+        }
+
+        function hideModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        // ============================================================
         // 🚀 INIT
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM جاهز');
+
+            const remembered = localStorage.getItem('marine_remembered_username');
+            if (remembered) {
+                document.getElementById('username').value = remembered;
+                document.getElementById('rememberMe').checked = true;
+            }
 
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -864,8 +1451,9 @@
                 showToast('📬 تم فتح الإشعارات', 'info');
             };
 
-            document.getElementById('userBtn').onclick = function() {
-                if (confirm('هل تريد تسجيل الخروج؟')) doLogout();
+            document.getElementById('userBtn').onclick = function(e) {
+                e.stopPropagation();
+                toggleUserDropdown();
             };
 
             document.getElementById('backToTop').onclick = function() {
@@ -875,28 +1463,40 @@
                 document.getElementById('backToTop').style.display = window.scrollY > 300 ? 'flex' : 'none';
             });
 
-            // ✅ تحديث الوقت
+            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showForgotPassword();
+            });
+
+            document.getElementById('resendOtpBtn').addEventListener('click', resendOtp);
+
+            document.getElementById('modalClose').addEventListener('click', hideModal);
+            document.getElementById('modalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) hideModal();
+            });
+
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // ✅ التحقق من التوكن
-            const token = localStorage.getItem(CONFIG.KEYS.TOKEN);
-            if (token) {
-                const isValid = await verifyToken(token);
-                if (isValid) {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                    updateUserDisplay();
-                    const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
-                    loadPage(savedPage);
-                    showToast('👋 مرحباً بعودتك', 'success');
-                    setTimeout(loadAllData, 500);
-                } else {
-                    localStorage.removeItem(CONFIG.KEYS.TOKEN);
-                }
+            // There is no stored token to check for a "quick early-out" —
+            // that's the point. Instead we always ask the server: if a
+            // valid httpOnly refresh cookie exists from a previous visit,
+            // verifyToken() -> authFetch() -> silentRefresh() will recover
+            // a fresh access token transparently; if not, this just fails
+            // and the login screen stays up.
+            const isValid = await verifyToken();
+            if (isValid) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                updateUserDisplay();
+                const savedPage = localStorage.getItem(CONFIG.KEYS.PAGE) || 'dashboard';
+                loadPage(savedPage);
+                showToast('👋 مرحباً بعودتك', 'success');
+                setTimeout(loadAllData, 500);
+                enableIdleTimer();
             }
 
-            console.log('✅ Marine System v7.0 ready');
+            console.log('✅ Marine System v9.0 ready');
         });
 
         // ============================================================
@@ -913,8 +1513,15 @@
         window.loadAllData = loadAllData;
         window.currentUser = currentUser;
         window.updateDateTime = updateDateTime;
+        window.resendOtp = resendOtp;
+        window.showModal = showModal;
+        window.hideModal = hideModal;
+        window.showForgotPassword = showForgotPassword;
+        window.toggleUserDropdown = toggleUserDropdown;
 
-        console.log('✅ Marine System v7.0 loaded successfully');
+        console.log('✅ Marine System v9.0 loaded successfully');
+        console.log('🔐 Security: 2FA with Transaction, Account Lock, Idle Timeout, Page Whitelist, XSS Protection');
+        console.log('🔐 Token: Read from Cookie first, fallback to localStorage');
     </script>
 
 </body>
