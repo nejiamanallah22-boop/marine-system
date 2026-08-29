@@ -1,0 +1,27 @@
+# 🐳 Dockerfile للخادم الخلفي
+FROM node:18-alpine
+
+# إنشاء مجلد التطبيق
+WORKDIR /app
+
+# نسخ ملفات الحزم
+COPY package*.json ./
+
+# تثبيت الاعتماديات
+RUN npm ci --only=production
+
+# نسخ الكود
+COPY . .
+
+# إنشاء مجلد السجلات
+RUN mkdir -p logs
+
+# تعيين متغيرات البيئة
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# فتح المنفذ
+EXPOSE 5000
+
+# تشغيل التطبيق
+CMD ["node", "src/app.js"]
