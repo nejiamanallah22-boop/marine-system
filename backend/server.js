@@ -67,15 +67,32 @@ const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['super_admin', 'admin', 'user', 'operator', 'viewer'], default: 'user' },
+    role: { 
+        type: String, 
+        enum: ['super_admin', 'admin', 'user', 'operator', 'viewer'], 
+        default: 'user' 
+    },
     unit: { type: String, default: 'غير محدد' },
     status: { type: String, enum: ['نشط', 'غير نشط'], default: 'نشط' },
     faceVerified: { type: Boolean, default: false },
     faceImage: { type: String, default: null },
+    refreshToken: { type: String, default: null },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
+
+// 📝 نموذج سجل التدقيق
+const AuditLogSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    action: { type: String, required: true },
+    target: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    details: { type: Object, default: {} },
+    ip: { type: String, default: '' },
+    userAgent: { type: String, default: '' },
+    timestamp: { type: Date, default: Date.now }
+});
+const AuditLog = mongoose.model('AuditLog', AuditLogSchema);
 
 // 🚢 نموذج المركب
 const VesselSchema = new mongoose.Schema({
@@ -113,6 +130,43 @@ const MaintenanceSchema = new mongoose.Schema({
 const Maintenance = mongoose.model('Maintenance', MaintenanceSchema);
 
 // ============================================================
+// 🔐 RBAC - صلاحيات المستخدمين
+// ============================================================
+
+const PERMISSIONS = {
+    'super_admin': ['*'],
+    'admin': [
+        'users.read',
+        'users.create',
+        'users.update',
+        'users.delete',
+        'users.password.change',
+        'users.status.change'
+    ],
+    'operator': ['users.read'],
+    'viewer': ['users.read'],
+    'user': []
+};
+
+const hasPermission = (user, permission) => {
+    if (!user) return false;
+    const userPerms = PERMISSIONS[user.role] || [];
+    return userPerms.includes('*') || userPerms.includes(permission);
+};
+
+const requirePermission = (permission) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ success: false, error: 'غير مسجل الدخول' });
+        }
+        if (!hasPermission(req.user, permission)) {
+            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
+        }
+        next();
+    };
+};
+
+// ============================================================
 // 🔐 AUTH MIDDLEWARE
 // ============================================================
 
@@ -133,20 +187,30 @@ const authenticate = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة', code: 'TOKEN_EXPIRED' });
+        }
         return res.status(401).json({ success: false, error: 'جلسة غير صالحة' });
     }
 };
 
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({ success: false, error: 'غير مصدق' });
-        }
-        if (roles.length > 0 && !roles.includes(req.user.role)) {
-            return res.status(403).json({ success: false, error: 'ليس لديك صلاحية' });
-        }
-        next();
-    };
+// ============================================================
+// 📝 Audit Log - تسجيل العمليات
+// ============================================================
+
+const auditLog = async (userId, action, details = {}, target = null) => {
+    try {
+        await AuditLog.create({
+            userId,
+            action,
+            target,
+            details,
+            ip: '0.0.0.0',
+            userAgent: 'System'
+        });
+    } catch (error) {
+        console.error('❌ Audit log error:', error);
+    }
 };
 
 // ============================================================
@@ -181,15 +245,18 @@ app.post('/api/auth/login', [
     try {
         const user = await User.findOne({ email: username });
         if (!user) {
+            await auditLog(null, 'LOGIN_FAILED', { username, reason: 'user_not_found' });
             return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
         }
 
         if (user.status === 'غير نشط') {
+            await auditLog(user._id, 'LOGIN_FAILED', { reason: 'account_disabled' });
             return res.status(403).json({ success: false, error: 'الحساب معطل' });
         }
 
         const isValid = await bcrypt.compare(password, user.password);
         if (!isValid) {
+            await auditLog(user._id, 'LOGIN_FAILED', { reason: 'invalid_password' });
             return res.status(401).json({ success: false, error: 'بيانات غير صحيحة' });
         }
 
@@ -199,8 +266,9 @@ app.post('/api/auth/login', [
             { expiresIn: '7d' }
         );
 
-        // 2FA للمدراء فقط (محاكاة)
+        // 2FA للمدراء فقط
         if (user.role === 'super_admin' || user.role === 'admin') {
+            await auditLog(user._id, 'LOGIN_2FA_REQUIRED');
             return res.json({
                 success: true,
                 requiresOtp: true,
@@ -208,6 +276,12 @@ app.post('/api/auth/login', [
                 message: 'تم إرسال رمز التحقق (استخدم 123456)'
             });
         }
+
+        await auditLog(user._id, 'LOGIN_SUCCESS');
+        
+        // تحديث آخر تسجيل دخول
+        user.updatedAt = new Date();
+        await user.save();
 
         res.json({
             success: true,
@@ -252,6 +326,8 @@ app.post('/api/auth/verify-otp', [
             { expiresIn: '7d' }
         );
 
+        await auditLog(user._id, 'LOGIN_2FA_SUCCESS');
+
         res.json({
             success: true,
             token: token,
@@ -288,18 +364,20 @@ app.get('/api/auth/me', authenticate, async (req, res) => {
 });
 
 // تسجيل الخروج
-app.post('/api/auth/logout', authenticate, (req, res) => {
+app.post('/api/auth/logout', authenticate, async (req, res) => {
+    await auditLog(req.user._id, 'LOGOUT');
     res.json({ success: true, message: 'تم تسجيل الخروج' });
 });
 
 // ============================================================
-// 👤 USERS ROUTES - إدارة المستخدمين (مع المصادقة)
+// 👤 USERS ROUTES - مع RBAC
 // ============================================================
 
 // 📋 جلب جميع المستخدمين
-app.get('/api/users', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.get('/api/users', authenticate, requirePermission('users.read'), async (req, res) => {
     try {
-        const users = await User.find({}).select('-password');
+        const users = await User.find({}).select('-password -refreshToken').sort({ createdAt: -1 });
+        await auditLog(req.user._id, 'READ_USERS', { count: users.length });
         res.json({ success: true, users });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -307,10 +385,11 @@ app.get('/api/users', authenticate, authorize('super_admin', 'admin'), async (re
 });
 
 // ➕ إضافة مستخدم جديد
-app.post('/api/users', authenticate, authorize('super_admin', 'admin'), [
+app.post('/api/users', authenticate, requirePermission('users.create'), [
     body('name').notEmpty().withMessage('الاسم مطلوب'),
     body('email').isEmail().withMessage('بريد غير صالح'),
-    body('password').isLength({ min: 6 }).withMessage('كلمة المرور 6 أحرف على الأقل')
+    body('password').isLength({ min: 12 }).withMessage('كلمة المرور 12 حرفاً على الأقل'),
+    body('unit').notEmpty().withMessage('الوحدة مطلوبة')
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -320,23 +399,59 @@ app.post('/api/users', authenticate, authorize('super_admin', 'admin'), [
     try {
         const { name, email, password, role, unit, status } = req.body;
 
+        // 🔐 التحقق من صلاحية إنشاء super_admin أو admin
+        let finalRole = role || 'user';
+        
+        if (finalRole === 'super_admin') {
+            // فقط super_admin يمكنه إنشاء super_admin
+            if (req.user.role !== 'super_admin') {
+                return res.status(403).json({ 
+                    success: false, 
+                    error: 'ليس لديك صلاحية لإنشاء مسؤول كامل' 
+                });
+            }
+            // التأكد من عدم وجود super_admin آخر
+            const existingSuperAdmin = await User.findOne({ role: 'super_admin' });
+            if (existingSuperAdmin) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'يوجد سوبر أدمن بالفعل'
+                });
+            }
+        }
+
+        if (finalRole === 'admin') {
+            if (!hasPermission(req.user, 'users.create.admin')) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'ليس لديك صلاحية لإنشاء مدير'
+                });
+            }
+        }
+
         // التحقق من عدم وجود البريد
         const existing = await User.findOne({ email });
         if (existing) {
             return res.status(400).json({ success: false, error: 'البريد موجود مسبقاً' });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 12);
         const user = new User({
             name,
             email,
             password: hashedPassword,
-            role: role || 'user',
+            role: finalRole,
             unit: unit || 'غير محدد',
             status: status || 'نشط'
         });
 
         await user.save();
+
+        await auditLog(req.user._id, 'CREATE_USER', { 
+            userId: user._id, 
+            email: user.email, 
+            role: user.role 
+        }, user._id);
 
         res.json({
             success: true,
@@ -352,18 +467,64 @@ app.post('/api/users', authenticate, authorize('super_admin', 'admin'), [
         });
 
     } catch (error) {
+        console.error('❌ Error creating user:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // ✏️ تحديث مستخدم
-app.put('/api/users/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.put('/api/users/:id', authenticate, requirePermission('users.update'), [
+    body('name').optional().notEmpty().withMessage('الاسم مطلوب'),
+    body('email').optional().isEmail().withMessage('بريد غير صالح'),
+    body('role').optional().isIn(['user', 'operator', 'viewer', 'admin']).withMessage('دور غير صالح')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, error: errors.array()[0].msg });
+    }
+
     try {
         const { name, email, role, unit, status } = req.body;
         
         const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ success: false, error: 'مستخدم غير موجود' });
+        }
+
+        // 🔐 منع تعديل super_admin
+        if (user.role === 'super_admin' && req.user.role !== 'super_admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكن تعديل حساب المسؤول الكامل' 
+            });
+        }
+
+        // 🔐 منع تغيير الدور إلى super_admin
+        if (role === 'super_admin') {
+            if (req.user.role !== 'super_admin') {
+                return res.status(403).json({
+                    success: false,
+                    error: 'ليس لديك صلاحية لترقية المستخدم إلى سوبر أدمن'
+                });
+            }
+        }
+
+        // 🔐 منع رفع إلى admin لغير المسموح
+        if (role === 'admin' && user.role !== 'admin') {
+            if (!hasPermission(req.user, 'users.create.admin')) {
+                return res.status(403).json({
+                    success: false,
+                    error: 'ليس لديك صلاحية لترقية المستخدم إلى مدير'
+                });
+            }
+        }
+
+        // 🔐 منع المستخدم من تغيير دوره بنفسه
+        if (req.params.id === req.user._id.toString() && role && role !== user.role) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكنك تغيير دورك بنفسك' 
+            });
         }
 
         if (name) user.name = name;
@@ -374,6 +535,12 @@ app.put('/api/users/:id', authenticate, authorize('super_admin', 'admin'), async
         user.updatedAt = new Date();
 
         await user.save();
+
+        await auditLog(req.user._id, 'UPDATE_USER', { 
+            userId: user._id, 
+            email: user.email, 
+            changes: { name, email, role, unit, status } 
+        }, user._id);
 
         res.json({
             success: true,
@@ -394,18 +561,47 @@ app.put('/api/users/:id', authenticate, authorize('super_admin', 'admin'), async
 });
 
 // 🗑️ حذف مستخدم
-app.delete('/api/users/:id', authenticate, authorize('super_admin'), async (req, res) => {
+app.delete('/api/users/:id', authenticate, requirePermission('users.delete'), async (req, res) => {
     try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'مستخدم غير موجود' });
+        }
+
+        // 🔐 منع حذف super_admin
+        if (user.role === 'super_admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكن حذف المسؤول الكامل' 
+            });
+        }
+
+        // 🔐 منع المستخدم من حذف نفسه
+        if (req.params.id === req.user._id.toString()) {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'لا يمكنك حذف حسابك بنفسك' 
+            });
+        }
+
         await User.findByIdAndDelete(req.params.id);
+
+        await auditLog(req.user._id, 'DELETE_USER', { 
+            userId: user._id, 
+            email: user.email, 
+            role: user.role 
+        }, user._id);
+
         res.json({ success: true, message: 'تم الحذف' });
+
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
 // 🔑 تغيير كلمة المرور
-app.post('/api/users/:id/password', authenticate, authorize('super_admin', 'admin'), [
-    body('password').isLength({ min: 6 }).withMessage('كلمة المرور 6 أحرف على الأقل')
+app.post('/api/users/:id/password', authenticate, requirePermission('users.password.change'), [
+    body('password').isLength({ min: 12 }).withMessage('كلمة المرور 12 حرفاً على الأقل')
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -419,9 +615,22 @@ app.post('/api/users/:id/password', authenticate, authorize('super_admin', 'admi
             return res.status(404).json({ success: false, error: 'مستخدم غير موجود' });
         }
 
-        user.password = await bcrypt.hash(password, 10);
+        // 🔐 منع تغيير كلمة مرور super_admin
+        if (user.role === 'super_admin' && req.user.role !== 'super_admin') {
+            return res.status(403).json({ 
+                success: false, 
+                error: 'ليس لديك صلاحية لتغيير كلمة مرور المسؤول الكامل' 
+            });
+        }
+
+        user.password = await bcrypt.hash(password, 12);
         user.updatedAt = new Date();
         await user.save();
+
+        await auditLog(req.user._id, 'CHANGE_PASSWORD', { 
+            userId: user._id, 
+            email: user.email 
+        }, user._id);
 
         res.json({ success: true, message: 'تم تغيير كلمة المرور' });
 
@@ -443,17 +652,18 @@ app.get('/api/vessels', authenticate, async (req, res) => {
     }
 });
 
-app.post('/api/vessels', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.post('/api/vessels', authenticate, requirePermission('vessels.create'), async (req, res) => {
     try {
         const vessel = new Vessel(req.body);
         await vessel.save();
+        await auditLog(req.user._id, 'CREATE_VESSEL', { vesselId: vessel._id, name: vessel.name });
         res.json({ success: true, vessel });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-app.put('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.put('/api/vessels/:id', authenticate, requirePermission('vessels.update'), async (req, res) => {
     try {
         const vessel = await Vessel.findByIdAndUpdate(
             req.params.id,
@@ -463,15 +673,17 @@ app.put('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), asy
         if (!vessel) {
             return res.status(404).json({ success: false, error: 'مركب غير موجود' });
         }
+        await auditLog(req.user._id, 'UPDATE_VESSEL', { vesselId: vessel._id, name: vessel.name });
         res.json({ success: true, vessel });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-app.delete('/api/vessels/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.delete('/api/vessels/:id', authenticate, requirePermission('vessels.delete'), async (req, res) => {
     try {
         await Vessel.findByIdAndDelete(req.params.id);
+        await auditLog(req.user._id, 'DELETE_VESSEL', { vesselId: req.params.id });
         res.json({ success: true, message: 'تم الحذف' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -491,17 +703,18 @@ app.get('/api/maintenance', authenticate, async (req, res) => {
     }
 });
 
-app.post('/api/maintenance', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.post('/api/maintenance', authenticate, requirePermission('maintenance.create'), async (req, res) => {
     try {
         const record = new Maintenance(req.body);
         await record.save();
+        await auditLog(req.user._id, 'CREATE_MAINTENANCE', { recordId: record._id });
         res.json({ success: true, record });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-app.put('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.put('/api/maintenance/:id', authenticate, requirePermission('maintenance.update'), async (req, res) => {
     try {
         const record = await Maintenance.findByIdAndUpdate(
             req.params.id,
@@ -511,15 +724,17 @@ app.put('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'),
         if (!record) {
             return res.status(404).json({ success: false, error: 'سجل غير موجود' });
         }
+        await auditLog(req.user._id, 'UPDATE_MAINTENANCE', { recordId: record._id });
         res.json({ success: true, record });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-app.delete('/api/maintenance/:id', authenticate, authorize('super_admin', 'admin'), async (req, res) => {
+app.delete('/api/maintenance/:id', authenticate, requirePermission('maintenance.delete'), async (req, res) => {
     try {
         await Maintenance.findByIdAndDelete(req.params.id);
+        await auditLog(req.user._id, 'DELETE_MAINTENANCE', { recordId: req.params.id });
         res.json({ success: true, message: 'تم الحذف' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -534,7 +749,7 @@ app.post('/api/seed', async (req, res) => {
     try {
         const adminExists = await User.findOne({ email: 'admin@marine.tn' });
         if (!adminExists) {
-            const hashedPassword = await bcrypt.hash('admin123', 10);
+            const hashedPassword = await bcrypt.hash('Admin123!@#', 12);
             await User.create({
                 name: 'أمان الله ناجي',
                 email: 'admin@marine.tn',
@@ -579,7 +794,6 @@ app.listen(PORT, async () => {
     console.log(`🔐 البيئة: ${process.env.NODE_ENV || 'development'}`);
     console.log('========================================');
     
-    // تشغيل التهيئة التلقائية
     try {
         await fetch(`http://localhost:${PORT}/api/seed`, { method: 'POST' });
     } catch (e) {
