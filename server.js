@@ -1,9 +1,9 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v42.0 (FULLY FIXED)
+ * 🚢 MARINE SYSTEM - SERVER v43.0 (FULL CRUD)
  * ============================================================
  * ✅ يعمل على Render.com
- * ✅ لا يخرج من التطبيق
+ * ✅ جميع مسارات CRUD للمستخدمين
  * ✅ ربط صحيح على 0.0.0.0
  * ✅ PORT من البيئة
  * ============================================================
@@ -50,7 +50,7 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v42.0');
+console.log('🚢 MARINE SYSTEM v43.0');
 console.log('='.repeat(60));
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
@@ -191,13 +191,12 @@ if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
 if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
 
 // ============================================================
-// 🔐 MIDDLEWARE - مهم جداً
+// 🔐 MIDDLEWARE
 // ============================================================
 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-// ✅ CORS - يسمح للواجهة بالاتصال
 app.use(cors({
     origin: '*',
     credentials: true,
@@ -205,7 +204,6 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID']
 }));
 
-// ✅ Body parsers - مهم لقراءة JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
@@ -303,7 +301,7 @@ async function seedVessels() {
 }
 
 // ============================================================
-// 🔐 AUTH
+// 🔐 AUTH MIDDLEWARE
 // ============================================================
 
 async function authenticate(req, res, next) {
@@ -348,12 +346,11 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// 🔐 LOGIN
+// 🔐 AUTH ROUTES
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
     console.log('🔐 [LOGIN] Request received');
-    console.log('   Body:', req.body);
 
     try {
         const { username, password } = req.body;
@@ -415,13 +412,8 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// ============================================================
-// 🚪 LOGOUT
-// ============================================================
-
 app.post('/api/auth/logout', authenticate, async (req, res) => {
     try {
-        // زيادة tokenVersion لإبطال التوكن الحالي
         req.user.tokenVersion = (req.user.tokenVersion || 0) + 1;
         await req.user.save();
         res.json({ success: true, message: 'تم تسجيل الخروج بنجاح' });
@@ -430,20 +422,205 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
     }
 });
 
-// ============================================================
-// 👤 ME
-// ============================================================
-
 app.get('/api/auth/me', authenticate, (req, res) => {
     res.json({ success: true, user: cleanUser(req.user) });
 });
 
-// ============================================================
-// ✅ VERIFY
-// ============================================================
-
 app.get('/api/auth/verify', authenticate, (req, res) => {
     res.json({ success: true, user: cleanUser(req.user), message: 'التوكن صالح' });
+});
+
+// ============================================================
+// 👥 USERS - CRUD OPERATIONS (FULL)
+// ============================================================
+
+// 📋 GET - جلب المستخدمين
+app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+        res.json({ success: true, users });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ➕ POST - إضافة مستخدم جديد
+app.post('/api/users', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { name, username, email, password, role, unit } = req.body;
+
+        if (!name || !username || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'جميع الحقول مطلوبة: name, username, email, password'
+            });
+        }
+
+        const existing = await User.findOne({
+            $or: [{ email }, { username: username.toLowerCase() }]
+        });
+        if (existing) {
+            return res.status(400).json({
+                success: false,
+                error: 'البريد الإلكتروني أو اسم المستخدم موجود مسبقاً'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const user = new User({
+            name,
+            username: username.toLowerCase(),
+            email: email.toLowerCase(),
+            password: hashedPassword,
+            role: role || 'viewer',
+            unit: unit || 'غير محدد',
+            isActive: true
+        });
+
+        await user.save();
+
+        await Log.create({
+            userId: req.user._id,
+            username: req.user.username,
+            action: 'CREATE_USER',
+            details: `تم إنشاء المستخدم: ${username}`
+        });
+
+        res.status(201).json({
+            success: true,
+            user: cleanUser(user),
+            message: 'تم إضافة المستخدم بنجاح'
+        });
+
+    } catch (error) {
+        console.error('❌ POST /api/users error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ✏️ PUT - تحديث مستخدم
+app.put('/api/users/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, username, email, role, unit, isActive } = req.body;
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        if (name) user.name = name;
+        if (username) user.username = username.toLowerCase();
+        if (email) user.email = email.toLowerCase();
+        if (role) user.role = role;
+        if (unit) user.unit = unit;
+        if (isActive !== undefined) user.isActive = isActive;
+
+        await user.save();
+
+        await Log.create({
+            userId: req.user._id,
+            username: req.user.username,
+            action: 'UPDATE_USER',
+            details: `تم تحديث المستخدم: ${user.username}`
+        });
+
+        res.json({
+            success: true,
+            user: cleanUser(user),
+            message: 'تم تحديث المستخدم بنجاح'
+        });
+
+    } catch (error) {
+        console.error('❌ PUT /api/users/:id error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 🗑️ DELETE - حذف مستخدم
+app.delete('/api/users/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (id === req.user._id.toString()) {
+            return res.status(403).json({
+                success: false,
+                error: 'لا يمكنك حذف حسابك بنفسك'
+            });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        // منع حذف admin
+        if (user.role === 'admin' && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                error: 'ليس لديك صلاحية لحذف مسؤول'
+            });
+        }
+
+        await user.deleteOne();
+
+        await Log.create({
+            userId: req.user._id,
+            username: req.user.username,
+            action: 'DELETE_USER',
+            details: `تم حذف المستخدم: ${user.username}`
+        });
+
+        res.json({
+            success: true,
+            message: 'تم حذف المستخدم بنجاح'
+        });
+
+    } catch (error) {
+        console.error('❌ DELETE /api/users/:id error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 🔑 POST - تغيير كلمة المرور
+app.post('/api/users/:id/password', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+
+        if (!password || password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                error: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'
+            });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'المستخدم غير موجود' });
+        }
+
+        user.password = await bcrypt.hash(password, 12);
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+
+        await user.save();
+
+        await Log.create({
+            userId: req.user._id,
+            username: req.user.username,
+            action: 'CHANGE_PASSWORD',
+            details: `تم تغيير كلمة مرور المستخدم: ${user.username}`
+        });
+
+        res.json({
+            success: true,
+            message: 'تم تغيير كلمة المرور بنجاح'
+        });
+
+    } catch (error) {
+        console.error('❌ POST /api/users/:id/password error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // ============================================================
@@ -456,19 +633,6 @@ app.get('/api/vessels', authenticate, async (req, res) => {
         res.json(vessels);
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-});
-
-// ============================================================
-// 👥 USERS
-// ============================================================
-
-app.get('/api/users', authenticate, authorize('admin'), async (req, res) => {
-    try {
-        const users = await User.find().select('-password').sort({ createdAt: -1 });
-        res.json({ success: true, users });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -516,10 +680,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
 
 app.use(express.static(publicPath, { index: false, maxAge: 0 }));
 
-// ============================================================
-// 🏠 HOME
-// ============================================================
-
 app.get('/', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -548,7 +708,7 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================================
-// 🚀 START - مع binding صحيح لـ Render
+// 🚀 START
 // ============================================================
 
 async function startServer() {
@@ -557,11 +717,10 @@ async function startServer() {
         await createAdmin();
         await seedVessels();
 
-        // ✅ ✅ ✅ المفتاح: استخدام 0.0.0.0 و PORT من البيئة
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v42.0');
+            console.log('🚢 MARINE SYSTEM v43.0');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
@@ -571,6 +730,14 @@ async function startServer() {
             console.log('🔑 LOGIN:');
             console.log(`   👤 Username: ${ADMIN_USERNAME}`);
             console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
+            console.log('='.repeat(60));
+            console.log('');
+            console.log('📋 USERS API:');
+            console.log('   GET    /api/users');
+            console.log('   POST   /api/users');
+            console.log('   PUT    /api/users/:id');
+            console.log('   DELETE /api/users/:id');
+            console.log('   POST   /api/users/:id/password');
             console.log('='.repeat(60));
             console.log('');
         });
