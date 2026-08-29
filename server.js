@@ -1,12 +1,6 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v40.0
- * FULLY WORKING WITH STATIC FILES
- * ============================================================
- * ✅ FIXED: Static files serving
- * ✅ FIXED: SPA fallback
- * ✅ FIXED: All routes
- * ✅ PRODUCTION READY
+ * 🚢 MARINE SYSTEM - SERVER v41.0 (FIXED)
  * ============================================================
  */
 
@@ -40,56 +34,45 @@ const MONGODB_URI = process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
-    console.error('❌ JWT_SECRET is missing or too short (must be at least 32 characters)');
+    console.error('❌ JWT_SECRET is missing or too short');
     process.exit(1);
 }
 
-// ✅ Admin credentials - ONLY from environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
 if (!ADMIN_PASSWORD) {
-    console.error('❌ ADMIN_PASSWORD is missing from Environment Variables');
-    console.error('   Please add ADMIN_PASSWORD to your Render environment variables');
+    console.error('❌ ADMIN_PASSWORD is missing');
     process.exit(1);
 }
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v40.0 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v41.0');
 console.log('='.repeat(60));
-console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ MongoDB: ${MONGODB_URI ? '✓' : '✗'}`);
-console.log(`✅ JWT_SECRET: ${JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ Admin Password: ${ADMIN_PASSWORD ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ Admin: ${ADMIN_USERNAME}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
 // 📦 MODELS
 // ============================================================
 
-// 👤 USER MODEL
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     username: { type: String, required: true, unique: true, trim: true, lowercase: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
-    role: { 
-        type: String, 
-        enum: ['admin', 'manager', 'operator', 'viewer'],
-        default: 'viewer'
-    },
+    role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
     isActive: { type: Boolean, default: true },
     isLocked: { type: Boolean, default: false },
     tokenVersion: { type: Number, default: 0 },
-    refreshToken: { type: String, select: false },
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now }
 });
 
 UserSchema.pre('save', async function(next) {
@@ -98,9 +81,7 @@ UserSchema.pre('save', async function(next) {
         const salt = await bcrypt.genSalt(12);
         this.password = await bcrypt.hash(this.password, salt);
         next();
-    } catch (error) {
-        next(error);
-    }
+    } catch (error) { next(error); }
 });
 
 UserSchema.methods.comparePassword = async function(candidatePassword) {
@@ -126,8 +107,7 @@ UserSchema.methods.resetLoginAttempts = async function() {
 UserSchema.methods.checkLock = function() {
     if (!this.isLocked) return null;
     if (this.lockUntil && this.lockUntil > new Date()) {
-        const remainingMinutes = Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000);
-        return { locked: true, remainingMinutes };
+        return { locked: true, remainingMinutes: Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000) };
     }
     this.isLocked = false;
     this.lockUntil = null;
@@ -135,16 +115,11 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// 🚢 VESSEL MODEL
 const VesselSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
     num: { type: String, trim: true },
     len: { type: Number, default: 0 },
-    stat: { 
-        type: String, 
-        enum: ['صالح', 'معطب', 'صيانة'],
-        default: 'صالح'
-    },
+    stat: { type: String, enum: ['صالح', 'معطب', 'صيانة'], default: 'صالح' },
     region: { type: String, trim: true },
     zone: { type: String, trim: true },
     port: { type: String, trim: true },
@@ -155,11 +130,9 @@ const VesselSchema = new mongoose.Schema({
     ref: { type: String, trim: true },
     cat: { type: String, trim: true },
     repairUnit: { type: String, trim: true },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now }
 });
 
-// 📊 LOGS MODEL
 const LogSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     username: { type: String },
@@ -203,9 +176,7 @@ function generateToken(user) {
 function verifyToken(token) {
     try {
         return jwt.verify(token, JWT_SECRET, { issuer: 'marine-system' });
-    } catch (error) {
-        return null;
-    }
+    } catch { return null; }
 }
 
 // ============================================================
@@ -214,81 +185,43 @@ function verifyToken(token) {
 
 const publicPath = path.join(__dirname, 'public');
 const pagesPath = path.join(publicPath, 'pages');
-const cssPath = path.join(publicPath, 'css');
-const jsPath = path.join(publicPath, 'js');
 
-// ✅ Create directories if they don't exist
 if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
 if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
-if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
-if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
 
 // ============================================================
-// 🔐 MIDDLEWARE - PRODUCTION READY
+// 🔐 MIDDLEWARE - مهم جداً
 // ============================================================
 
 app.disable('x-powered-by');
-
-// ✅ trust proxy = 1 (not true)
 app.set('trust proxy', 1);
 
-// ✅ CORS with credentials support
+// ✅ CORS - يسمح للواجهة بالاتصال
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (!IS_PRODUCTION) return callback(null, true);
-        return callback(null, true);
-    },
+    origin: '*',
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-CSRF-Token', 'X-Request-ID'],
-    exposedHeaders: ['X-Request-ID']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID']
 }));
 
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-    contentSecurityPolicy: false
-}));
-
+// ✅ Body parsers - مهم لقراءة JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
 app.use(cookieParser());
+app.use(compression());
 
 // ============================================================
 // 🚦 RATE LIMITING
 // ============================================================
 
-const limiter = rateLimit({
+app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' }
-});
-
-app.use('/api', limiter);
-
-// ============================================================
-// 📁 STATIC FILES - FIXED ✅
-// ============================================================
-
-// ✅ Serve static files from public directory
-app.use(express.static(publicPath, {
-    index: false,
-    maxAge: 0,
-    etag: false
+    message: { success: false, error: 'طلبات كثيرة جداً' }
 }));
 
-// ✅ Serve CSS
-app.use('/css', express.static(cssPath));
-
-// ✅ Serve JS
-app.use('/js', express.static(jsPath));
-
-// ✅ Serve Pages
-app.use('/pages', express.static(pagesPath));
-
 // ============================================================
-// 🗄️ DATABASE CONNECTION
+// 🗄️ DATABASE
 // ============================================================
 
 async function connectDB() {
@@ -296,7 +229,6 @@ async function connectDB() {
         console.error('❌ MONGODB_URI is required');
         process.exit(1);
     }
-
     try {
         console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(MONGODB_URI, {
@@ -306,73 +238,45 @@ async function connectDB() {
             minPoolSize: 2
         });
         console.log('✅ MongoDB Connected');
-        console.log(`📚 Database: ${mongoose.connection.name}`);
         return true;
     } catch (error) {
-        console.error('❌ MongoDB Connection Failed:', error.message);
+        console.error('❌ MongoDB Error:', error.message);
         return false;
     }
 }
 
 // ============================================================
-// 🔐 CREATE/UPDATE ADMIN
+// 🔐 CREATE ADMIN
 // ============================================================
 
 async function createAdmin() {
     try {
-        const adminUsername = ADMIN_USERNAME;
-        const adminEmail = ADMIN_EMAIL;
-        const adminPassword = ADMIN_PASSWORD;
-
-        if (!adminPassword) {
-            console.error('❌ ADMIN_PASSWORD is missing');
-            process.exit(1);
-        }
-
-        const existing = await User.findOne({
-            $or: [{ username: adminUsername }, { email: adminEmail }]
-        }).select('+password');
-
+        const existing = await User.findOne({ username: ADMIN_USERNAME }).select('+password');
         if (existing) {
-            const passwordMatches = await bcrypt.compare(adminPassword, existing.password);
-
-            existing.name = ADMIN_NAME;
-            existing.email = adminEmail;
-            existing.role = 'admin';
-            existing.isActive = true;
-            existing.isLocked = false;
-            existing.lockUntil = null;
-            existing.loginAttempts = 0;
-
+            const passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existing.password);
             if (!passwordMatches) {
-                existing.password = adminPassword;
+                existing.password = ADMIN_PASSWORD;
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
-                console.log('🔑 Admin password synchronized');
+                await existing.save();
+                console.log('✅ Admin password updated');
             }
-
-            await existing.save();
-            console.log('✅ Admin updated successfully');
-            console.log(`👤 Username: ${adminUsername}`);
+            console.log(`✅ Admin exists: ${ADMIN_USERNAME}`);
             return;
         }
 
         const admin = new User({
             name: ADMIN_NAME,
-            username: adminUsername,
-            email: adminEmail,
-            password: adminPassword,
+            username: ADMIN_USERNAME,
+            email: ADMIN_EMAIL,
+            password: ADMIN_PASSWORD,
             role: 'admin',
             isActive: true,
             tokenVersion: 1
         });
-
         await admin.save();
-        console.log('✅ Admin created successfully');
-        console.log(`👤 Username: ${adminUsername}`);
-
+        console.log(`✅ Admin created: ${ADMIN_USERNAME}`);
     } catch (error) {
         console.error('❌ Admin error:', error.message);
-        throw error;
     }
 }
 
@@ -384,14 +288,13 @@ async function seedVessels() {
     try {
         const count = await Vessel.countDocuments();
         if (count === 0) {
-            console.log('🌱 Adding sample vessels...');
-            const sampleVessels = [
+            const vessels = [
                 { name: 'البروق 1', num: 'B001', len: 11, region: 'الشمال', stat: 'صالح', cat: 'البروق', port: 'تونس' },
                 { name: 'صقر 2', num: 'S002', len: 10, region: 'الساحل', stat: 'صالح', cat: 'صقور', port: 'سوسة' },
                 { name: 'خافرة 3', num: 'K003', len: 20, region: 'الوسط', stat: 'معطب', cat: 'خوافر', port: 'صفاقس' }
             ];
-            await Vessel.insertMany(sampleVessels);
-            console.log(`✅ Added ${sampleVessels.length} sample vessels`);
+            await Vessel.insertMany(vessels);
+            console.log(`✅ Added ${vessels.length} vessels`);
         }
     } catch (error) {
         console.error('❌ Seed error:', error.message);
@@ -399,7 +302,7 @@ async function seedVessels() {
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION
+// 🔐 AUTH
 // ============================================================
 
 async function authenticate(req, res, next) {
@@ -408,39 +311,28 @@ async function authenticate(req, res, next) {
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
         const token = authHeader.substring(7).trim();
         const decoded = verifyToken(token);
-
         if (!decoded) {
             return res.status(401).json({ success: false, error: 'توكن غير صالح' });
         }
-
         const user = await User.findById(decoded.id);
         if (!user || !user.isActive) {
             return res.status(401).json({ success: false, error: 'غير مصرح' });
         }
-
         const lockCheck = user.checkLock();
         if (lockCheck && lockCheck.locked) {
             return res.status(423).json({
                 success: false,
-                error: `الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
+                error: `الحساب مقفل، حاول بعد ${lockCheck.remainingMinutes} دقيقة`
             });
         }
-
         if (decoded.tokenVersion !== (user.tokenVersion || 0)) {
-            return res.status(401).json({
-                success: false,
-                error: 'انتهت صلاحية الجلسة، يرجى تسجيل الدخول مرة أخرى'
-            });
+            return res.status(401).json({ success: false, error: 'انتهت صلاحية الجلسة' });
         }
-
         req.user = user;
         next();
-
     } catch (error) {
-        console.error('❌ Auth error:', error.message);
         return res.status(401).json({ success: false, error: 'غير مصرح' });
     }
 }
@@ -455,12 +347,12 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// 🔐 LOGIN
+// 🔐 LOGIN - مسار مهم جداً
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
     console.log('🔐 [LOGIN] Request received');
-    console.log(`   👤 Username: ${req.body.username || 'not provided'}`);
+    console.log('   Body:', req.body);
 
     try {
         const { username, password } = req.body;
@@ -480,34 +372,19 @@ app.post('/api/auth/login', async (req, res) => {
         }).select('+password');
 
         if (!user) {
-            console.warn(`❌ [LOGIN] User not found: ${username}`);
+            console.log('❌ User not found:', username);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
             });
         }
 
-        console.log(`   👤 Found user: ${user.username} (${user.role})`);
-
-        if (!user.isActive) {
-            return res.status(403).json({
-                success: false,
-                error: '❌ الحساب معطل'
-            });
-        }
-
-        const lockCheck = user.checkLock();
-        if (lockCheck && lockCheck.locked) {
-            return res.status(423).json({
-                success: false,
-                error: `❌ الحساب مقفل مؤقتاً. حاول بعد ${lockCheck.remainingMinutes} دقيقة`
-            });
-        }
+        console.log('✅ Found user:', user.username);
 
         const isValid = await user.comparePassword(password);
         if (!isValid) {
             await user.incrementLoginAttempts();
-            console.warn(`❌ [LOGIN] Invalid password for: ${user.username}`);
+            console.log('❌ Invalid password for:', user.username);
             return res.status(401).json({
                 success: false,
                 error: '❌ اسم المستخدم أو كلمة المرور غير صحيحة'
@@ -515,22 +392,12 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         await user.resetLoginAttempts();
-
         user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
 
-        await Log.create({
-            userId: user._id,
-            username: user.username,
-            action: 'تسجيل دخول',
-            details: 'قام بتسجيل الدخول',
-            ip: req.ip || req.socket.remoteAddress,
-            userAgent: req.headers['user-agent']
-        });
-
         const token = generateToken(user);
-        console.log(`✅ [LOGIN] Success: ${user.username}`);
+        console.log('✅ Login success:', user.username);
 
         return res.json({
             success: true,
@@ -539,7 +406,7 @@ app.post('/api/auth/login', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ [LOGIN] Error:', error.message);
+        console.error('❌ Login error:', error.message);
         return res.status(500).json({
             success: false,
             error: '❌ خطأ في الخادم'
@@ -552,7 +419,6 @@ app.post('/api/auth/login', async (req, res) => {
 // ============================================================
 
 app.post('/api/auth/logout', authenticate, async (req, res) => {
-    console.log(`🚪 [LOGOUT] User: ${req.user.username}`);
     res.json({ success: true, message: 'تم تسجيل الخروج' });
 });
 
@@ -561,7 +427,6 @@ app.post('/api/auth/logout', authenticate, async (req, res) => {
 // ============================================================
 
 app.get('/api/auth/me', authenticate, (req, res) => {
-    console.log(`👤 [ME] User: ${req.user.username}`);
     res.json({ success: true, user: cleanUser(req.user) });
 });
 
@@ -570,7 +435,6 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 // ============================================================
 
 app.get('/api/auth/verify', authenticate, (req, res) => {
-    console.log(`✅ [VERIFY] Token valid for user: ${req.user.username}`);
     res.json({ success: true, user: cleanUser(req.user), message: 'التوكن صالح' });
 });
 
@@ -621,7 +485,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
     try {
         const users = await User.find().select('name username email role isActive lastLogin createdAt');
         const logs = await Log.find().sort({ createdAt: -1 }).limit(50);
-        
         const sessions = users.map((user, index) => {
             const userLogs = logs.filter(log => log.username === user.username);
             return {
@@ -633,7 +496,6 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
                 lastActivity: userLogs.length > 0 ? userLogs[0].createdAt : user.lastLogin || user.createdAt
             };
         });
-        
         res.json({ success: true, sessions });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -641,103 +503,29 @@ app.get('/api/sessions', authenticate, authorize('admin'), async (req, res) => {
 });
 
 // ============================================================
-// 🤖 AI - CONFIG
+// 📁 STATIC FILES - بعد الـ API
 // ============================================================
 
-app.get('/api/config', (req, res) => {
-    res.json({
-        success: true,
-        GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
-        GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-        DEEPSEEK_API_KEY: process.env.DEEPSEEK_API_KEY || '',
-        DEEPSEEK_MODEL: process.env.DEEPSEEK_MODEL || 'deepseek-chat'
-    });
-});
+app.use(express.static(publicPath, { index: false, maxAge: 0 }));
 
 // ============================================================
-// 🤖 AI - ASK
+// 🏠 HOME
 // ============================================================
 
-app.post('/api/ai/ask', authenticate, async (req, res) => {
-    try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ success: false, error: 'الرسالة مطلوبة' });
-        }
-
-        const vessels = await Vessel.find().lean();
-        const totalVessels = vessels.length;
-        const validVessels = vessels.filter(v => v.stat === 'صالح').length;
-        const efficiency = totalVessels ? Math.round((validVessels / totalVessels) * 100) : 0;
-
-        const msg = message.toLowerCase();
-        let reply = '';
-
-        if (msg.includes('مرحبا') || msg.includes('السلام')) {
-            reply = '👋 وعليكم السلام! كيف يمكنني مساعدتك؟';
-        } else if (msg.includes('الجاهزية') || msg.includes('نسبة')) {
-            reply = `📈 نسبة جاهزية الأسطول: ${efficiency}% (${validVessels} من ${totalVessels})`;
-        } else {
-            reply = `📌 يمكنني مساعدتك في:\n- عرض إحصائيات الأسطول\n- نسبة الجاهزية\n- معلومات عامة`;
-        }
-
-        res.json({ success: true, response: reply, model: 'Local' });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 📄 PAGES
-// ============================================================
-
-app.get('/api/pages/:page', authenticate, async (req, res) => {
-    try {
-        const pageName = req.params.page;
-        const filePath = path.join(pagesPath, pageName + '.html');
-        
-        if (fs.existsSync(filePath)) {
-            const html = fs.readFileSync(filePath, 'utf8');
-            res.json({ success: true, html });
-        } else {
-            res.json({ success: false, error: 'Page not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================================
-// 🏠 HOME - SPA FALLBACK ✅
-// ============================================================
-
-// ✅ Serve index.html at root
 app.get('/', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
-    console.log(`🏠 [HOME] GET - Serving: ${indexPath}`);
-    
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        console.error('❌ index.html not found at:', indexPath);
-        res.status(404).send('index.html not found. Please make sure the file exists in the public directory.');
+        res.status(404).send('index.html not found');
     }
 });
 
-// ✅ API 404
-app.use('/api', (req, res) => {
-    res.status(404).json({ success: false, error: 'API not found' });
-});
-
-// ✅ SPA Fallback - any other GET request serves index.html
 app.get('*', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
-    console.log(`📄 [FALLBACK] ${req.method} ${req.url} → index.html`);
-    
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        console.error('❌ index.html not found at:', indexPath);
         res.status(404).send('index.html not found');
     }
 });
@@ -747,65 +535,34 @@ app.get('*', (req, res) => {
 // ============================================================
 
 app.use((err, req, res, next) => {
-    console.error('❌ [ERROR]', err.message);
-    console.error('   Stack:', err.stack);
+    console.error('❌ Error:', err.message);
     res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
 // ============================================================
-// 🚀 START SERVER
+// 🚀 START
 // ============================================================
 
 async function startServer() {
-    const connected = await connectDB();
-    if (!connected) {
-        console.error('❌ Cannot start: MongoDB is not connected');
-        process.exit(1);
-    }
-
+    await connectDB();
     await createAdmin();
     await seedVessels();
 
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v40.0 - PRODUCTION');
-        console.log('🚀 SERVER STARTED');
+        console.log('🚢 MARINE SYSTEM v41.0');
+        console.log('🚀 SERVER RUNNING');
         console.log('='.repeat(60));
-        console.log(`🌍 Environment: ${NODE_ENV}`);
-        console.log(`🚀 Port: ${PORT}`);
+        console.log(`🌍 Port: ${PORT}`);
         console.log('🗄️ MongoDB: Connected ✅');
         console.log('🔐 JWT: Enabled');
-        console.log('🛡️ Security: Enabled');
-        console.log('📁 Public Path: ' + publicPath);
-        console.log('📄 index.html: ' + path.join(publicPath, 'index.html'));
-        console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log(`   👤 Username: ${ADMIN_USERNAME}`);
         console.log(`   🔑 Password: from ADMIN_PASSWORD in Render`);
         console.log('='.repeat(60));
         console.log('');
     });
-
-    process.on('SIGTERM', () => {
-        console.log('🛑 SIGTERM received. Shutting down...');
-        server.close(() => {
-            mongoose.connection.close();
-            console.log('✅ Server closed');
-            process.exit(0);
-        });
-    });
-
-    process.on('SIGINT', () => {
-        console.log('🛑 SIGINT received. Shutting down...');
-        server.close(() => {
-            mongoose.connection.close();
-            console.log('✅ Server closed');
-            process.exit(0);
-        });
-    });
 }
 
 startServer();
-
-module.exports = app;
