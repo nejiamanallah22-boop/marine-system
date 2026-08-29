@@ -1457,13 +1457,12 @@
 <body>
 
     <!-- ============================================================
-         🏦 LOGIN - ENTERPRISE GRADE
+         🏦 LOGIN
          ============================================================ -->
     <div id="loginOverlay">
         <div class="login-container">
             <div class="login-box">
 
-                <!-- LOGO -->
                 <div class="login-logo">
                     <span class="logo-icon">⚓</span>
                     <h1 class="logo-text">منظومة الوسائل البحرية</h1>
@@ -1474,7 +1473,6 @@
                     <span>تسجيل الدخول الآمن</span>
                 </div>
 
-                <!-- 🔒 LOCKED -->
                 <div id="accountLocked">
                     <i class="fas fa-lock"></i>
                     <span>تم قفل الحساب مؤقتاً. حاول بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
@@ -1482,31 +1480,28 @@
 
                 <form id="loginForm" class="login-form" autocomplete="off" novalidate>
 
-                    <!-- USERNAME -->
                     <div class="form-group">
                         <label class="form-label" for="username">اسم المستخدم</label>
-                        <div class="input-wrapper" id="usernameWrapper">
+                        <div class="input-wrapper">
                             <i class="fas fa-user input-icon"></i>
                             <input type="text" id="username" placeholder="أدخل اسم المستخدم" autocomplete="username" required>
                         </div>
                     </div>
 
-                    <!-- PASSWORD -->
                     <div class="form-group">
                         <label class="form-label" for="password">كلمة المرور</label>
-                        <div class="input-wrapper" id="passwordWrapper">
+                        <div class="input-wrapper">
                             <i class="fas fa-lock input-icon"></i>
                             <input type="password" id="password" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
-                            <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار/إخفاء كلمة المرور">
+                            <button type="button" class="toggle-password" id="togglePassword">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 🔐 2FA -->
                     <div class="form-group" id="otpGroup">
                         <label class="form-label" for="otpCode">رمز التحقق الثنائي (2FA)</label>
-                        <div class="input-wrapper" id="otpWrapper">
+                        <div class="input-wrapper">
                             <i class="fas fa-shield-alt input-icon"></i>
                             <input type="text" id="otpCode" placeholder="أدخل رمز 6 أرقام" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
                         </div>
@@ -1518,7 +1513,6 @@
                         </div>
                     </div>
 
-                    <!-- OPTIONS -->
                     <div class="login-options">
                         <label class="checkbox-label">
                             <input type="checkbox" id="rememberMe">
@@ -1528,7 +1522,6 @@
                         <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
                     </div>
 
-                    <!-- SUBMIT -->
                     <button type="submit" class="login-btn" id="loginButton">
                         <span class="btn-content">
                             <span class="btn-text">🚀 دخول إلى النظام</span>
@@ -1538,7 +1531,6 @@
 
                     <div id="loginError" class="error-msg"></div>
 
-                    <!-- SECURITY BADGES -->
                     <div class="security-badges">
                         <span class="security-badge"><i class="fas fa-shield-alt"></i> تشفير شامل</span>
                         <span class="security-badge"><i class="fas fa-fingerprint"></i> 2FA مفعل</span>
@@ -1563,7 +1555,7 @@
         <header class="main-header">
             <div class="header-container">
                 <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle" aria-label="القائمة">
+                    <button class="menu-toggle" id="menuToggle">
                         <span></span><span></span><span></span>
                     </button>
                     <div class="brand">
@@ -1579,30 +1571,27 @@
                         <kbd class="search-shortcut">⌘K</kbd>
                     </div>
                     <div class="notification-wrapper">
-                        <button class="notif-btn" id="notifBtn" aria-label="الإشعارات">
+                        <button class="notif-btn" id="notifBtn">
                             <i class="fas fa-bell"></i>
                             <span class="notif-badge" id="notifBadge">0</span>
                         </button>
                     </div>
                     <div class="user-wrapper">
-                        <button class="user-btn" id="userBtn" aria-label="القائمة الشخصية">
+                        <button class="user-btn" id="userBtn">
                             <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>
                             <span class="user-name" id="userDisplayName">المستخدم</span>
                             <i class="fas fa-chevron-down user-arrow"></i>
                         </button>
                         <div class="user-dropdown" id="userDropdown">
                             <button class="dropdown-item" onclick="showToast('📋 جاري فتح الملف الشخصي...', 'info')">
-                                <i class="fas fa-user" style="width:18px;"></i> الملف الشخصي
+                                <i class="fas fa-user"></i> الملف الشخصي
                             </button>
                             <button class="dropdown-item" onclick="showToast('⚙️ جاري فتح الإعدادات...', 'info')">
-                                <i class="fas fa-cog" style="width:18px;"></i> الإعدادات
-                            </button>
-                            <button class="dropdown-item" onclick="showToast('📊 سجل النشاطات', 'info')">
-                                <i class="fas fa-clipboard-list" style="width:18px;"></i> سجل النشاطات
+                                <i class="fas fa-cog"></i> الإعدادات
                             </button>
                             <div class="dropdown-divider"></div>
                             <button class="dropdown-item danger" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt" style="width:18px;"></i> تسجيل الخروج
+                                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                             </button>
                         </div>
                     </div>
@@ -1611,7 +1600,7 @@
         </header>
 
         <!-- SIDEBAR -->
-        <nav class="sidebar" id="sidebar" role="navigation">
+        <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-brand">
                     <span class="brand-icon">⚓</span>
@@ -1620,7 +1609,7 @@
                         <div class="brand-subtitle">نظام إدارة متقدم</div>
                     </div>
                 </div>
-                <button class="sidebar-close" id="sidebarClose" aria-label="إغلاق القائمة">✕</button>
+                <button class="sidebar-close" id="sidebarClose">✕</button>
             </div>
 
             <div class="sidebar-user">
@@ -1692,7 +1681,6 @@
                 <div class="footer-status">
                     <span class="status-dot online"></span>
                     <span>متصل</span>
-                    <span style="margin-right:auto;font-size:10px;color:var(--text-dim);" id="sessionTime"></span>
                 </div>
                 <div class="footer-version">
                     <i class="fas fa-shield-alt"></i>
@@ -1705,17 +1693,19 @@
         </nav>
 
         <!-- MAIN CONTENT -->
-        <main class="main-content" id="mainContent">
+        <main class="main-content">
             <div class="page-container">
                 <div class="page-loader" id="pageLoader" style="display:none;">
                     <div class="loader-spinner"></div>
                     <p>جاري التحميل...</p>
                 </div>
-                <div id="pageContainer"></div>
+                <div id="pageContainer">
+                    <!-- المحتوى سيظهر هنا تلقائياً -->
+                </div>
             </div>
         </main>
 
-        <button class="back-to-top" id="backToTop" aria-label="العودة للأعلى">
+        <button class="back-to-top" id="backToTop">
             <i class="fas fa-chevron-up"></i>
         </button>
 
@@ -1743,58 +1733,54 @@
     </div>
 
     <!-- ============================================================
-    🚀 JAVASCRIPT - FULL APPLICATION
+    🚀 JAVASCRIPT - التطبيق الكامل
     ============================================================ -->
     <script>
         /**
          * ============================================================
-         * 🚢 MARINE SYSTEM - FULL APPLICATION v8.0
+         * 🚢 MARINE SYSTEM - التطبيق الكامل
          * ============================================================
-         * ✅ جميع الصفحات تعمل بدون ملفات خارجية
+         * ✅ يعمل بدون أي ملفات خارجية
+         * ✅ روابط الصفحات تلقائية
          * ✅ بيانات تجريبية مدمجة
          * ✅ مصادقة كاملة
-         * ✅ واجهة تفاعلية
          * ============================================================
          */
 
         console.log('🚢 Marine System v8.0 - Loading...');
 
         // ============================================================
-        // 📦 DATA - بيانات تجريبية
+        // 📦 DATA - البيانات (يمكن استبدالها من API)
         // ============================================================
 
-        // بيانات المراكب
-        const mockVessels = [
-            { id: 1, name: 'الوحدة 101', type: 'زورق دورية', status: 'active', location: 'القاعدة البحرية' },
-            { id: 2, name: 'الوحدة 202', type: 'سفينة إنزال', status: 'inactive', location: 'ميناء الشرقي' },
-            { id: 3, name: 'الوحدة 303', type: 'زورق إنقاذ', status: 'active', location: 'القاعدة الغربية' },
-            { id: 4, name: 'الوحدة 404', type: 'سفينة دعم', status: 'active', location: 'الميناء الرئيسي' },
-            { id: 5, name: 'الوحدة 505', type: 'زورق استطلاع', status: 'inactive', location: 'قيد الصيانة' },
-            { id: 6, name: 'الوحدة 606', type: 'زورق دورية', status: 'maintenance', location: 'ورشة الصيانة' },
-            { id: 7, name: 'الوحدة 707', type: 'سفينة إنزال', status: 'active', location: 'القاعدة الجنوبية' },
-            { id: 8, name: 'الوحدة 808', type: 'زورق إنقاذ', status: 'inactive', location: 'ميناء الغربي' }
-        ];
+        const DATA = {
+            vessels: [
+                { id: 1, name: 'الوحدة 101', type: 'زورق دورية', status: 'active', location: 'القاعدة البحرية' },
+                { id: 2, name: 'الوحدة 202', type: 'سفينة إنزال', status: 'inactive', location: 'ميناء الشرقي' },
+                { id: 3, name: 'الوحدة 303', type: 'زورق إنقاذ', status: 'active', location: 'القاعدة الغربية' },
+                { id: 4, name: 'الوحدة 404', type: 'سفينة دعم', status: 'active', location: 'الميناء الرئيسي' },
+                { id: 5, name: 'الوحدة 505', type: 'زورق استطلاع', status: 'maintenance', location: 'ورشة الصيانة' },
+                { id: 6, name: 'الوحدة 606', type: 'زورق دورية', status: 'active', location: 'القاعدة الجنوبية' },
+                { id: 7, name: 'الوحدة 707', type: 'سفينة إنزال', status: 'inactive', location: 'ميناء الغربي' },
+                { id: 8, name: 'الوحدة 808', type: 'زورق إنقاذ', status: 'active', location: 'القاعدة الشرقية' }
+            ],
+            users: [
+                { id: 1, name: 'أمان الله ناجي', username: 'admin', role: 'admin' },
+                { id: 2, name: 'مدير الأسطول', username: 'manager', role: 'manager' },
+                { id: 3, name: 'مشغل', username: 'operator', role: 'operator' }
+            ],
+            maintenance: [
+                { id: 1, vesselId: 1, type: 'دورية', status: 'مكتملة', cost: 1500, date: '2026-01-15', technician: 'أحمد' },
+                { id: 2, vesselId: 2, type: 'طارئة', status: 'قيد التنفيذ', cost: 2500, date: '2026-01-20',
+                technician: 'محمد' },
+                { id: 3, vesselId: 5, type: 'إصلاح شامل', status: 'قيد التنفيذ', cost: 5000, date: '2026-01-18',
+                    technician: 'حسن' }
+            ]
+        };
 
-        // بيانات المستخدمين
-        const mockUsers = [
-            { id: 1, name: 'أمان الله ناجي', username: 'admin', role: 'admin' },
-            { id: 2, name: 'مدير الأسطول', username: 'manager', role: 'manager' },
-            { id: 3, name: 'مشغل', username: 'operator', role: 'operator' },
-            { id: 4, name: 'مشاهد', username: 'viewer', role: 'viewer' }
-        ];
-
-        // بيانات الصيانة
-        const mockMaintenance = [
-            { id: 1, vesselId: 1, type: 'دورية', status: 'مكتملة', cost: 1500, date: '2026-01-15', technician: 'أحمد' },
-            { id: 2, vesselId: 2, type: 'طارئة', status: 'قيد التنفيذ', cost: 2500, date: '2026-01-20', technician: 'محمد' },
-            { id: 3, vesselId: 3, type: 'وقائية', status: 'مجدولة', cost: 800, date: '2026-01-25', technician: 'علي' },
-            { id: 4, vesselId: 5, type: 'إصلاح شامل', status: 'قيد التنفيذ', cost: 5000, date: '2026-01-18', technician: 'حسن' }
-        ];
-
-        // تخزين البيانات في window
-        window.allVessels = mockVessels;
-        window.allUsers = mockUsers;
-        window.allMaintenance = mockMaintenance;
+        window.allVessels = DATA.vessels;
+        window.allUsers = DATA.users;
+        window.allMaintenance = DATA.maintenance;
 
         // ============================================================
         // 🔧 HELPERS
@@ -1808,15 +1794,7 @@
             const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
             const toast = document.createElement('div');
             toast.className = 'toast toast-' + type;
-
-            const iconSpan = document.createElement('span');
-            iconSpan.textContent = icons[type] || 'ℹ️';
-
-            const msgSpan = document.createElement('span');
-            msgSpan.textContent = message;
-
-            toast.appendChild(iconSpan);
-            toast.appendChild(msgSpan);
+            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
             container.appendChild(toast);
 
             setTimeout(function() {
@@ -1828,40 +1806,46 @@
 
         function escapeHTML(text) {
             if (!text) return '';
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+            return String(text).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
         }
 
         function formatDate(date) {
             if (!date) return '-';
             try {
-                const d = new Date(date);
+                var d = new Date(date);
                 if (isNaN(d.getTime())) return '-';
                 return d.toLocaleDateString('ar-TN');
             } catch { return '-'; }
         }
 
+        function getRoleName(role) {
+            var roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
+            return roles[role] || role || 'مستخدم';
+        }
+
         // ============================================================
-        // 🔐 LOGIN
+        // 🔐 AUTH
         // ============================================================
 
-        let currentUser = null;
-        let isOtpStep = false;
+        var currentUser = null;
+        var isOtpStep = false;
 
         function doLogin() {
             console.log('🔐 محاولة تسجيل الدخول');
 
-            const username = document.getElementById('username');
-            const password = document.getElementById('password');
-            const otpCode = document.getElementById('otpCode');
-            const errorEl = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginButton');
+            var username = document.getElementById('username');
+            var password = document.getElementById('password');
+            var otpCode = document.getElementById('otpCode');
+            var errorEl = document.getElementById('loginError');
+            var loginBtn = document.getElementById('loginButton');
 
-            const user = username.value.trim();
-            const pass = password.value.trim();
+            var user = username.value.trim();
+            var pass = password.value.trim();
 
             if (isOtpStep) {
-                const otp = otpCode.value.trim();
+                var otp = otpCode.value.trim();
                 if (!otp || otp.length < 6) {
                     errorEl.textContent = '⚠️ يرجى إدخال رمز التحقق المكون من 6 أرقام';
                     errorEl.classList.add('show');
@@ -1893,7 +1877,6 @@
                 loginBtn.classList.remove('loading');
 
                 if (user === 'admin' && pass === 'admin123') {
-                    // محاكاة 2FA
                     isOtpStep = true;
                     document.getElementById('otpGroup').style.display = 'block';
                     errorEl.className = 'error-msg success';
@@ -1901,7 +1884,7 @@
                     errorEl.classList.add('show');
                     loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
                     document.querySelector('.login-options').style.display = 'none';
-                    showToast('📧 تم إرسال رمز التحقق (123456)', 'info');
+                    showToast('📧 تم إرسال رمز التحقق', 'info');
                 } else {
                     errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
                     errorEl.classList.add('show');
@@ -1941,7 +1924,7 @@
 
         function updateUserDisplay() {
             if (!currentUser) return;
-            const n = currentUser.name || currentUser.username;
+            var n = currentUser.name || currentUser.username;
             document.getElementById('userDisplayName').textContent = n;
             document.getElementById('userInitial').textContent = n.charAt(0);
             document.getElementById('sidebarUserName').textContent = n;
@@ -1949,492 +1932,424 @@
             document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
         }
 
-        function getRoleName(role) {
-            const roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
-            return roles[role] || role || 'مستخدم';
-        }
-
         // ============================================================
-        // 📄 PAGE RENDERERS
+        // 🗺️ PAGE SYSTEM - نظام الصفحات التلقائي
         // ============================================================
 
-        function loadPage(page) {
-            console.log('📄 تحميل الصفحة:', page);
+        /**
+         * تعريف جميع الصفحات مع دوال العرض الخاصة بها
+         * يمكنك إضافة أي صفحة جديدة هنا فقط
+         */
+        var PAGES = {
+
+            // ===== لوحة التحكم =====
+            dashboard: {
+                title: 'لوحة التحكم',
+                icon: 'fa-chart-pie',
+                render: function() {
+                    var vessels = window.allVessels || [];
+                    var total = vessels.length;
+                    var active = vessels.filter(function(v) { return v.status === 'active'; }).length;
+                    var maintenance = vessels.filter(function(v) { return v.status === 'maintenance'; }).length;
+                    var inactive = vessels.filter(function(v) { return v.status === 'inactive'; }).length;
+                    var efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
+                    var users = window.allUsers || [];
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <h2 style="color:var(--gold-light);font-size:22px;">📊 لوحة التحكم</h2>
+                                <p style="color:rgba(255,255,255,0.3);font-size:14px;">نظرة عامة على حالة الأسطول</p>
+                            </div>
+                            <button class="btn btn-gold" onclick="loadPage('fleet')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">
+                                <i class="fas fa-ship"></i> عرض الأسطول
+                            </button>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:32px;color:var(--gold-light);">${total}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">🚢 إجمالي الوسائل</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:32px;color:#22c55e;">${active}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">✅ نشطة</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:32px;color:${efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444'};">${efficiency}%</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">📊 الجاهزية</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:32px;color:#3b82f6;">${users.length}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">👤 المستخدمين</div>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">
+                                <h3 style="color:rgba(255,255,255,0.6);font-size:15px;margin-bottom:12px;">
+                                    <i class="fas fa-chart-pie" style="color:var(--gold);"></i> توزيع الحالة
+                                </h3>
+                                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                                    <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;"></span> نشط: ${active}</div>
+                                    <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#eab308;"></span> صيانة: ${maintenance}</div>
+                                    <div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef4444;"></span> غير نشط: ${inactive}</div>
+                                </div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">
+                                <h3 style="color:rgba(255,255,255,0.6);font-size:15px;margin-bottom:12px;">
+                                    <i class="fas fa-clock" style="color:var(--gold);"></i> آخر النشاطات
+                                </h3>
+                                <div style="color:rgba(255,255,255,0.3);font-size:13px;">
+                                    <div style="padding:4px 0;">✅ تم تحديث البيانات: ${new Date().toLocaleString('ar-TN')}</div>
+                                    <div style="padding:4px 0;">📊 نظام الأسطول يعمل بكفاءة</div>
+                                    <div style="padding:4px 0;">🔐 جلسة آمنة</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ===== السجل العام =====
+            fleet: {
+                title: 'السجل العام',
+                icon: 'fa-ship',
+                render: function() {
+                    var vessels = window.allVessels || [];
+                    var rows = '';
+                    vessels.forEach(function(v, i) {
+                        var statusColor = v.status === 'active' ? '#22c55e' : v.status === 'maintenance' ? '#eab308' :
+                            '#ef4444';
+                        var statusLabel = v.status === 'active' ? '✅ نشط' : v.status === 'maintenance' ? '🟡 صيانة' :
+                            '❌ غير نشط';
+                        rows +=
+                            `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                                <td style="padding:10px 12px;">${i + 1}</td>
+                                <td style="padding:10px 12px;font-weight:500;">${escapeHTML(v.name)}</td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${escapeHTML(v.type)}</td>
+                                <td style="padding:10px 12px;">
+                                    <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${statusColor}22;color:${statusColor};font-size:12px;">${statusLabel}</span>
+                                </td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${escapeHTML(v.location)}</td>
+                            </tr>`;
+                    });
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">⚓ السجل العام للأسطول</h2>
+                            <button class="btn btn-gold" onclick="loadPage('fleet')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">
+                                <i class="fas fa-sync-alt"></i> تحديث
+                            </button>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">#</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الاسم</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">النوع</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الحالة</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الموقع</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${rows || '<tr><td colspan="5" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-ship" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا توجد وسائل بحرية مسجلة</td></tr>'}</tbody>
+                                </table>
+                            </div>
+                            <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;color:rgba(255,255,255,0.3);font-size:12px;">
+                                <span>إجمالي الوسائل: ${vessels.length}</span>
+                                <span>آخر تحديث: ${new Date().toLocaleString('ar-TN')}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ===== الصيانة =====
+            maintenance: {
+                title: 'الصيانة',
+                icon: 'fa-wrench',
+                render: function() {
+                    var records = window.allMaintenance || [];
+                    var rows = '';
+                    records.forEach(function(r, i) {
+                        var vessel = window.allVessels.find(function(v) { return v.id === r.vesselId; });
+                        var vesselName = vessel ? vessel.name : 'غير معروف';
+                        var statusColor = r.status === 'مكتملة' ? '#22c55e' : r.status === 'قيد التنفيذ' ? '#eab308' :
+                            '#60a5fa';
+                        rows +=
+                            `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+                                <td style="padding:10px 12px;">${i + 1}</td>
+                                <td style="padding:10px 12px;font-weight:500;">${escapeHTML(vesselName)}</td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${escapeHTML(r.type)}</td>
+                                <td style="padding:10px 12px;">
+                                    <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${statusColor}22;color:${statusColor};font-size:12px;">${escapeHTML(r.status)}</span>
+                                </td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${r.cost ? r.cost.toLocaleString() + ' د.ت' : '-'}</td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${formatDate(r.date)}</td>
+                                <td style="padding:10px 12px;color:rgba(255,255,255,0.4);">${escapeHTML(r.technician)}</td>
+                            </tr>`;
+                    });
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">🔧 إدارة الصيانة</h2>
+                            <button class="btn btn-gold" onclick="showToast('🔧 جاري فتح نموذج الصيانة','info')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">
+                                <i class="fas fa-plus"></i> إضافة صيانة
+                            </button>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">
+                            <div style="overflow-x:auto;">
+                                <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                                    <thead>
+                                        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">#</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">المركب</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">النوع</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الحالة</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">التكلفة</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">التاريخ</th>
+                                            <th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الفني</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${rows || '<tr><td colspan="7" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-wrench" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا توجد سجلات صيانة</td></tr>'}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ===== الجاهزية =====
+            efficiency: {
+                title: 'الجاهزية',
+                icon: 'fa-chart-line',
+                render: function() {
+                    var vessels = window.allVessels || [];
+                    var total = vessels.length;
+                    var active = vessels.filter(function(v) { return v.status === 'active'; }).length;
+                    var maintenance = vessels.filter(function(v) { return v.status === 'maintenance'; }).length;
+                    var inactive = vessels.filter(function(v) { return v.status === 'inactive'; }).length;
+                    var efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">📊 مؤشرات الجاهزية</h2>
+                            <button class="btn btn-gold" onclick="loadPage('efficiency')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">
+                                <i class="fas fa-sync-alt"></i> تحديث
+                            </button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:28px;color:var(--gold-light);">${total}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;">إجمالي الوسائل</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:28px;color:#22c55e;">${active}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;">وسائل نشطة</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:28px;color:${efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444'};">${efficiency}%</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;">نسبة الجاهزية</div>
+                            </div>
+                            <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                                <div style="font-size:28px;color:#eab308;">${maintenance}</div>
+                                <div style="color:rgba(255,255,255,0.4);font-size:13px;">قيد الصيانة</div>
+                            </div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">
+                            <div style="margin-bottom:12px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.3);font-size:13px;">
+                                <span>مستوى الجاهزية</span>
+                                <span>${efficiency}%</span>
+                            </div>
+                            <div style="width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">
+                                <div style="width:${efficiency}%;height:100%;background:${efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444'};border-radius:4px;transition:width 1s ease;"></div>
+                            </div>
+                            <div style="margin-top:16px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.2);font-size:11px;">
+                                <span>آخر تحديث: ${new Date().toLocaleString('ar-TN')}</span>
+                                <span>${efficiency >= 70 ? '🟢 جاهزية جيدة' : efficiency >= 40 ? '🟡 جاهزية متوسطة' : '🔴 جاهزية منخفضة'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            },
+
+            // ===== المستخدمين =====
+            users: {
+                title: 'المستخدمين',
+                icon: 'fa-users',
+                render: function() {
+                    var users = window.allUsers || [];
+                    var html = '';
+                    users.forEach(function(u) {
+                        var roleColor = u.role === 'admin' ? '#fbbf24' : u.role === 'manager' ? '#60a5fa' :
+                            '#94a3b8';
+                        var roleName = u.role === 'admin' ? 'مسؤول' : u.role === 'manager' ? 'مدير' : u.role ===
+                            'operator' ? 'مشغل' : 'مشاهد';
+                        html +=
+                            `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a1628;">${(u.name || u.username).charAt(0)}</div>
+                                    <div>
+                                        <div style="color:#fff;font-size:14px;">${escapeHTML(u.name)}</div>
+                                        <div style="color:rgba(255,255,255,0.3);font-size:12px;">${escapeHTML(u.username)}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span style="display:inline-block;padding:2px 12px;border-radius:12px;background:${roleColor}22;color:${roleColor};font-size:12px;">${roleName}</span>
+                                </div>
+                            </div>`;
+                    });
+
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">👤 إدارة المستخدمين</h2>
+                            <span style="color:rgba(255,255,255,0.3);font-size:13px;">إجمالي: ${users.length}</span>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:4px 0;border:1px solid rgba(255,255,255,0.06);">
+                            ${html || '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا يوجد مستخدمين</div>'}
+                        </div>
+                    `;
+                }
+            },
+
+            // ===== الصفحات الأخرى (تلقائية) =====
+            support: {
+                title: 'الدعم',
+                icon: 'fa-headset',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">🛡️ الدعم الفني</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-headset" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">الدعم الفني</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            },
+
+            notes: {
+                title: 'Note Verbale',
+                icon: 'fa-sticky-note',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">📝 Note Verbale</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-sticky-note" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">Note Verbale</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            },
+
+            monitoring: {
+                title: 'المراقبة',
+                icon: 'fa-map-marked-alt',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">🗺️ المراقبة الشاملة</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-map-marked-alt" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">المراقبة الشاملة</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            },
+
+            'ai-assistant': {
+                title: 'المساعد الذكي',
+                icon: 'fa-robot',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">🤖 المساعد الذكي</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-robot" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">المساعد الذكي</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            },
+
+            settings: {
+                title: 'الإعدادات',
+                icon: 'fa-cog',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">⚙️ الإعدادات</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-cog" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">الإعدادات</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            },
+
+            logs: {
+                title: 'السجلات',
+                icon: 'fa-history',
+                render: function() {
+                    return `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                            <h2 style="color:var(--gold-light);font-size:22px;">📋 سجلات النظام</h2>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">
+                            <i class="fas fa-history" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>
+                            <h3 style="color:rgba(255,255,255,0.5);">سجلات النظام</h3>
+                            <p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        // ============================================================
+        // 🗺️ PAGE LOADER - تحميل الصفحات
+        // ============================================================
+
+        function loadPage(pageName) {
+            console.log('📄 تحميل الصفحة:', pageName);
+
+            var page = PAGES[pageName];
+            if (!page) {
+                showToast('⚠️ الصفحة غير موجودة', 'warning');
+                return;
+            }
 
             // تحديث القائمة النشطة
             document.querySelectorAll('.nav-btn').forEach(function(btn) {
                 btn.classList.remove('active');
-                if (btn.dataset.page === page) {
+                if (btn.dataset.page === pageName) {
                     btn.classList.add('active');
                 }
             });
 
-            // عرض الصفحة
-            switch (page) {
-                case 'dashboard':
-                    renderDashboard();
-                    break;
-                case 'fleet':
-                    renderFleet();
-                    break;
-                case 'maintenance':
-                    renderMaintenance();
-                    break;
-                case 'efficiency':
-                    renderEfficiency();
-                    break;
-                case 'users':
-                    renderUsers();
-                    break;
-                case 'support':
-                    renderSupport();
-                    break;
-                case 'notes':
-                    renderNotes();
-                    break;
-                case 'monitoring':
-                    renderMonitoring();
-                    break;
-                case 'ai-assistant':
-                    renderAIAssistant();
-                    break;
-                case 'settings':
-                    renderSettings();
-                    break;
-                case 'logs':
-                    renderLogs();
-                    break;
-                default:
-                    renderDefaultPage(page);
+            // عرض المحتوى
+            var container = document.getElementById('pageContainer');
+            if (container) {
+                container.innerHTML = '<div class="page-content" style="padding:20px;">' + page.render() + '</div>';
             }
 
-            document.title = '⚓ ' + (page.charAt(0).toUpperCase() + page.slice(1));
+            document.title = '⚓ ' + page.title;
         }
 
         // ============================================================
-        // 📊 DASHBOARD
-        // ============================================================
-
-        function renderDashboard() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const vessels = window.allVessels || [];
-            const total = vessels.length;
-            const active = vessels.filter(function(v) { return v.status === 'active'; }).length;
-            const maintenance = vessels.filter(function(v) { return v.status === 'maintenance'; }).length;
-            const inactive = vessels.filter(function(v) { return v.status === 'inactive'; }).length;
-            const efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:10px;">' +
-                '<div>' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">📊 لوحة التحكم</h2>' +
-                '<p style="color:rgba(255,255,255,0.3);font-size:14px;">نظرة عامة على حالة الأسطول</p>' +
-                '</div>' +
-                '<button class="btn btn-gold" onclick="loadPage(\'fleet\')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">' +
-                '<i class="fas fa-ship"></i> عرض الأسطول' +
-                '</button>' +
-                '</div>' +
-
-                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:32px;color:var(--gold-light);">' + total + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">🚢 إجمالي الوسائل</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:32px;color:#22c55e;">' + active + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">✅ نشطة</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:32px;color:' + (efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444') + ';">' + efficiency + '%</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">📊 الجاهزية</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:32px;color:#3b82f6;">' + (window.allUsers ? window.allUsers.length : 0) + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;margin-top:4px;">👤 المستخدمين</div>' +
-                '</div>' +
-                '</div>' +
-
-                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<h3 style="color:rgba(255,255,255,0.6);font-size:15px;margin-bottom:12px;">' +
-                '<i class="fas fa-chart-pie" style="color:var(--gold);"></i> توزيع الحالة' +
-                '</h3>' +
-                '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
-                '<div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;"></span> نشط: ' + active + '</div>' +
-                '<div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#eab308;"></span> صيانة: ' + maintenance + '</div>' +
-                '<div><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef4444;"></span> غير نشط: ' + inactive + '</div>' +
-                '</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<h3 style="color:rgba(255,255,255,0.6);font-size:15px;margin-bottom:12px;">' +
-                '<i class="fas fa-clock" style="color:var(--gold);"></i> آخر النشاطات' +
-                '</h3>' +
-                '<div style="color:rgba(255,255,255,0.3);font-size:13px;">' +
-                '<div style="padding:4px 0;">✅ تم تحديث البيانات: ' + new Date().toLocaleString('ar-TN') + '</div>' +
-                '<div style="padding:4px 0;">📊 نظام الأسطول يعمل بكفاءة</div>' +
-                '<div style="padding:4px 0;">🔐 جلسة آمنة</div>' +
-                '</div>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // ⚓ FLEET
-        // ============================================================
-
-        function renderFleet() {
-            const container = document.getElementById('pageContainer');
-            if (!container) return;
-
-            const vessels = window.allVessels || [];
-
-            let rows = '';
-            vessels.forEach(function(v, i) {
-                const statusColor = v.status === 'active' ? '#22c55e' : v.status === 'maintenance' ? '#eab308' : '#ef4444';
-                const statusLabel = v.status === 'active' ? '✅ نشط' : v.status === 'maintenance' ? '🟡 صيانة' : '❌ غير نشط';
-                rows +=
-                    '<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<td style="padding:10px 12px;">' + (i + 1) + '</td>' +
-                    '<td style="padding:10px 12px;font-weight:500;">' + escapeHTML(v.name) + '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + escapeHTML(v.type) + '</td>' +
-                    '<td style="padding:10px 12px;">' +
-                    '<span style="display:inline-block;padding:2px 12px;border-radius:12px;background:' + statusColor + '22;color:' + statusColor + ';font-size:12px;">' + statusLabel +
-                    '</span>' +
-                    '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + escapeHTML(v.location) + '</td>' +
-                    '</tr>';
-            });
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">⚓ السجل العام للأسطول</h2>' +
-                '<button class="btn btn-gold" onclick="loadPage(\'fleet\')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">' +
-                '<i class="fas fa-sync-alt"></i> تحديث' +
-                '</button>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="overflow-x:auto;">' +
-                '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
-                '<thead>' +
-                '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">#</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الاسم</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">النوع</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الحالة</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الموقع</th>' +
-                '</tr>' +
-                '</thead>' +
-                '<tbody>' + (rows ||
-                    '<tr><td colspan="5" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-ship" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا توجد وسائل بحرية مسجلة</td></tr>') +
-                '</tbody>' +
-                '</table>' +
-                '</div>' +
-                '<div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;color:rgba(255,255,255,0.3);font-size:12px;">' +
-                '<span>إجمالي الوسائل: ' + vessels.length + '</span>' +
-                '<span>آخر تحديث: ' + new Date().toLocaleString('ar-TN') + '</span>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // 🔧 MAINTENANCE
-        // ============================================================
-
-        function renderMaintenance() {
-            const container = document.getElementById('pageContainer');
-            const records = window.allMaintenance || [];
-
-            let rows = '';
-            records.forEach(function(r, i) {
-                const vessel = window.allVessels.find(function(v) { return v.id === r.vesselId; });
-                const vesselName = vessel ? vessel.name : 'غير معروف';
-                const statusColor = r.status === 'مكتملة' ? '#22c55e' : r.status === 'قيد التنفيذ' ? '#eab308' : '#60a5fa';
-                rows +=
-                    '<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<td style="padding:10px 12px;">' + (i + 1) + '</td>' +
-                    '<td style="padding:10px 12px;font-weight:500;">' + escapeHTML(vesselName) + '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + escapeHTML(r.type) + '</td>' +
-                    '<td style="padding:10px 12px;">' +
-                    '<span style="display:inline-block;padding:2px 12px;border-radius:12px;background:' + statusColor + '22;color:' + statusColor + ';font-size:12px;">' + escapeHTML(r
-                        .status) + '</span>' +
-                    '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + (r.cost ? r.cost.toLocaleString() +
-                        ' د.ت' : '-') + '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + formatDate(r.date) + '</td>' +
-                    '<td style="padding:10px 12px;color:rgba(255,255,255,0.4);">' + escapeHTML(r.technician) + '</td>' +
-                    '</tr>';
-            });
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">🔧 إدارة الصيانة</h2>' +
-                '<button class="btn btn-gold" onclick="showToast(\'🔧 جاري فتح نموذج الصيانة\',\'info\')" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">' +
-                '<i class="fas fa-plus"></i> إضافة صيانة' +
-                '</button>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="overflow-x:auto;">' +
-                '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
-                '<thead>' +
-                '<tr style="border-bottom:1px solid rgba(255,255,255,0.06);">' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">#</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">المركب</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">النوع</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الحالة</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">التكلفة</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">التاريخ</th>' +
-                '<th style="padding:12px;text-align:right;color:rgba(255,255,255,0.4);">الفني</th>' +
-                '</tr>' +
-                '</thead>' +
-                '<tbody>' + (rows ||
-                    '<tr><td colspan="7" style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-wrench" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا توجد سجلات صيانة</td></tr>') +
-                '</tbody>' +
-                '</table>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // 📈 EFFICIENCY
-        // ============================================================
-
-        function renderEfficiency() {
-            const container = document.getElementById('pageContainer');
-            const vessels = window.allVessels || [];
-            const total = vessels.length;
-            const active = vessels.filter(function(v) { return v.status === 'active'; }).length;
-            const maintenance = vessels.filter(function(v) { return v.status === 'maintenance'; }).length;
-            const inactive = vessels.filter(function(v) { return v.status === 'inactive'; }).length;
-            const efficiency = total > 0 ? Math.round((active / total) * 100) : 0;
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">📊 مؤشرات الجاهزية</h2>' +
-                '<button class="btn btn-gold" onclick="renderEfficiency()" style="padding:8px 16px;border:none;border-radius:8px;background:linear-gradient(135deg,#e6b31e,#f5d76e);color:#0a1628;cursor:pointer;font-weight:600;">' +
-                '<i class="fas fa-sync-alt"></i> تحديث' +
-                '</button>' +
-                '</div>' +
-                '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:28px;color:var(--gold-light);">' + total + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;">إجمالي الوسائل</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:28px;color:#22c55e;">' + active + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;">وسائل نشطة</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:28px;color:' + (efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444') + ';">' + efficiency + '%</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;">نسبة الجاهزية</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="font-size:28px;color:#eab308;">' + maintenance + '</div>' +
-                '<div style="color:rgba(255,255,255,0.4);font-size:13px;">قيد الصيانة</div>' +
-                '</div>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.06);">' +
-                '<div style="margin-bottom:12px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.3);font-size:13px;">' +
-                '<span>مستوى الجاهزية</span>' +
-                '<span>' + efficiency + '%</span>' +
-                '</div>' +
-                '<div style="width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">' +
-                '<div style="width:' + efficiency + '%;height:100%;background:' + (efficiency >= 70 ? '#22c55e' : efficiency >= 40 ? '#eab308' : '#ef4444') + ';border-radius:4px;transition:width 1s ease;"></div>' +
-                '</div>' +
-                '<div style="margin-top:16px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.2);font-size:11px;">' +
-                '<span>آخر تحديث: ' + new Date().toLocaleString('ar-TN') + '</span>' +
-                '<span>' + (efficiency >= 70 ? '🟢 جاهزية جيدة' : efficiency >= 40 ? '🟡 جاهزية متوسطة' : '🔴 جاهزية منخفضة') +
-                '</span>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // 👤 USERS
-        // ============================================================
-
-        function renderUsers() {
-            const container = document.getElementById('pageContainer');
-            const users = window.allUsers || [];
-
-            let usersHTML = '';
-            users.forEach(function(u) {
-                const roleColor = u.role === 'admin' ? '#fbbf24' : u.role === 'manager' ? '#60a5fa' : '#94a3b8';
-                const roleName = u.role === 'admin' ? 'مسؤول' : u.role === 'manager' ? 'مدير' : u.role === 'operator' ?
-                    'مشغل' : 'مشاهد';
-                usersHTML +=
-                    '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<div style="display:flex;align-items:center;gap:12px;">' +
-                    '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e6b31e,#f5d76e);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a1628;">' +
-                    (u.name || u.username).charAt(0) +
-                    '</div>' +
-                    '<div>' +
-                    '<div style="color:#fff;font-size:14px;">' + escapeHTML(u.name) + '</div>' +
-                    '<div style="color:rgba(255,255,255,0.3);font-size:12px;">' + escapeHTML(u.username) + '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<div>' +
-                    '<span style="display:inline-block;padding:2px 12px;border-radius:12px;background:' + roleColor +
-                    '22;color:' + roleColor + ';font-size:12px;">' + roleName + '</span>' +
-                    '</div>' +
-                    '</div>';
-            });
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">👤 إدارة المستخدمين</h2>' +
-                '<span style="color:rgba(255,255,255,0.3);font-size:13px;">إجمالي: ' + users.length + '</span>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:4px 0;border:1px solid rgba(255,255,255,0.06);">' +
-                (usersHTML ||
-                    '<div style="padding:40px;text-align:center;color:rgba(255,255,255,0.3);"><i class="fas fa-users" style="font-size:32px;display:block;margin-bottom:12px;"></i>لا يوجد مستخدمين</div>') +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // 📄 OTHER PAGES
-        // ============================================================
-
-        function renderSupport() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">🛡️ الدعم الفني</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-headset" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">الدعم الفني</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderNotes() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">📝 Note Verbale</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-sticky-note" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">Note Verbale</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderMonitoring() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">🗺️ المراقبة الشاملة</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-map-marked-alt" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">المراقبة الشاملة</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderAIAssistant() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">🤖 المساعد الذكي</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-robot" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">المساعد الذكي</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderSettings() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">⚙️ الإعدادات</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-cog" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">الإعدادات</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderLogs() {
-            const container = document.getElementById('pageContainer');
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">📋 سجلات النظام</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-history" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">سجلات النظام</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        function renderDefaultPage(page) {
-            const container = document.getElementById('pageContainer');
-            const pageNames = {
-                'support': 'الدعم',
-                'notes': 'Note Verbale',
-                'monitoring': 'المراقبة',
-                'ai-assistant': 'المساعد الذكي',
-                'settings': 'الإعدادات',
-                'logs': 'السجلات',
-                'profile': 'الملف الشخصي'
-            };
-            const name = pageNames[page] || page;
-            const icons = {
-                'support': 'headset',
-                'notes': 'sticky-note',
-                'monitoring': 'map-marked-alt',
-                'ai-assistant': 'robot',
-                'settings': 'cog',
-                'logs': 'history',
-                'profile': 'user'
-            };
-            const icon = icons[page] || 'cog';
-
-            container.innerHTML =
-                '<div class="page-content" style="padding:20px;">' +
-                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
-                '<h2 style="color:var(--gold-light);font-size:22px;">📄 ' + name + '</h2>' +
-                '</div>' +
-                '<div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:60px 20px;text-align:center;border:1px solid rgba(255,255,255,0.06);">' +
-                '<i class="fas fa-' + icon +
-                '" style="font-size:48px;color:var(--gold);display:block;margin-bottom:16px;"></i>' +
-                '<h3 style="color:rgba(255,255,255,0.5);">' + name + '</h3>' +
-                '<p style="color:rgba(255,255,255,0.2);font-size:14px;margin-top:8px;">جاري تطوير هذه الصفحة</p>' +
-                '</div>' +
-                '</div>';
-        }
-
-        // ============================================================
-        // 🚀 INIT - تهيئة التطبيق
+        // 🚀 INIT - تشغيل التطبيق
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -2449,18 +2364,17 @@
             document.getElementById('togglePassword').onclick = function() {
                 var input = document.getElementById('password');
                 var icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'fas fa-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'fas fa-eye';
-                }
+                input.type = input.type === 'password' ? 'text' : 'password';
+                icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
             };
 
             document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
                 e.preventDefault();
                 showToast('📧 سيتم إرسال رابط إعادة التعيين', 'info');
+            });
+
+            document.getElementById('resendOtpBtn').addEventListener('click', function() {
+                showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
             });
 
             // ===== SIDEBAR =====
@@ -2535,18 +2449,14 @@
                 }
             });
 
-            // ===== RESEND OTP =====
-            document.getElementById('resendOtpBtn').addEventListener('click', function() {
-                showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
-            });
-
             console.log('✅ Marine System v8.0 ready');
             console.log('🔑 بيانات الدخول: admin / admin123');
             console.log('🔐 رمز 2FA: 123456');
+            console.log('📄 عدد الصفحات: ' + Object.keys(PAGES).length);
         });
 
         // ============================================================
-        // 🌐 GLOBAL EXPOSURE
+        // 🌐 GLOBAL
         // ============================================================
 
         window.doLogin = doLogin;
@@ -2556,7 +2466,9 @@
         window.currentUser = currentUser;
 
         console.log('✅ Marine System v8.0 loaded successfully');
-        console.log('📊 جميع الصفحات تعمل بدون ملفات خارجية');
+        console.log('📊 جميع الصفحات تعمل بشكل تلقائي');
+        console.log('📄 لإضافة صفحة جديدة: أضفها في كائن PAGES');
     </script>
+
 </body>
 </html>
