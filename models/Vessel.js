@@ -1,155 +1,124 @@
-// ============================================================
-// 🚢 models/Vessel.js - نموذج القطع البحرية (معدل - بدون unique)
-// ============================================================
+/**
+ * 🚢 نموذج الوسيلة البحرية
+ * @module models/Vessel
+ */
 
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
+/**
+ * مخطط الوسيلة
+ */
 const VesselSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
-        required: [true, 'اسم القطعة مطلوب'], 
-        trim: true
-        // ❌ تم إزالة unique: true
-    },
-    num: { 
-        type: String, 
-        trim: true
-        // ❌ تم إزالة unique: true
-        // ❌ تم إزالة sparse: true
-    },
-    len: { 
-        type: Number, 
-        default: 0,
-        min: [0, 'الطول يجب أن يكون موجباً']
-    },
-    cat: { 
-        type: String, 
-        default: 'زوارق مزدوجة',
-        enum: ['زوارق مزدوجة', 'البروق', 'صقور', 'خوافر', 'طوافات']
-    },
-    reg: { type: String, trim: true },
-    zone: { type: String, trim: true },
-    port: { type: String, trim: true },
-    supp: { type: String, trim: true },
-    stat: { 
-        type: String, 
-        enum: ['صالح', 'معطب', 'صيانة'], 
-        default: 'صالح' 
-    },
-    break: { type: String, trim: true },
-    fDate: { 
+    id: {
         type: String,
-        match: [/^\d{4}-\d{2}-\d{2}$/, 'تاريخ غير صالح (استخدم YYYY-MM-DD)']
+        default: uuidv4,
+        unique: true,
+        index: true
     },
-    eDate: { 
+    name: {
         type: String,
-        match: [/^\d{4}-\d{2}-\d{2}$/, 'تاريخ غير صالح (استخدم YYYY-MM-DD)']
+        required: [true, 'اسم الوسيلة مطلوب'],
+        trim: true,
+        minlength: [2, 'الاسم يجب أن يكون حرفين على الأقل'],
+        maxlength: [100, 'الاسم يجب أن يكون 100 حرف كحد أقصى']
     },
-    ref: { type: String, trim: true }
-}, { 
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-});
-
-// ============================================================
-// 🔍 الفهارس (بدون unique)
-// ============================================================
-
-VesselSchema.index({ name: 1 });        // ✅ فهرس عادي
-VesselSchema.index({ num: 1 });         // ✅ فهرس عادي (بدون unique)
-VesselSchema.index({ stat: 1 });
-VesselSchema.index({ cat: 1 });
-
-// ============================================================
-// 🌀 Virtuals
-// ============================================================
-
-VesselSchema.virtual('isActive').get(function() {
-    return this.stat === 'صالح';
-});
-
-VesselSchema.virtual('needsMaintenance').get(function() {
-    return this.stat === 'صيانة' || this.stat === 'معطب';
-});
-
-VesselSchema.virtual('categoryLabel').get(function() {
-    return this.cat || this.calculateCategory();
-});
-
-// ============================================================
-// 🛠️ دوال النموذج (Methods)
-// ============================================================
-
-VesselSchema.methods.calculateCategory = function() {
-    const n = parseFloat(this.len);
-    
-    if (!n || isNaN(n)) return this.cat || 'غير معروف';
-    
-    if (n === 11) return 'البروق';
-    if (n >= 8 && n <= 12) return 'صقور';
-    if (n > 12 && n <= 25) return 'خوافر';
-    if (n > 30) return 'طوافات';
-    
-    return 'زوارق مزدوجة';
-};
-
-VesselSchema.methods.updateCategory = function() {
-    this.cat = this.calculateCategory();
-    return this;
-};
-
-// ============================================================
-// 📌 دوال ثابتة (Statics)
-// ============================================================
-
-VesselSchema.statics.findByCategory = function(category) {
-    return this.find({ cat: category });
-};
-
-VesselSchema.statics.findActive = function() {
-    return this.find({ stat: 'صالح' });
-};
-
-VesselSchema.statics.findMaintenance = function() {
-    return this.find({ stat: { $in: ['صيانة', 'معطب'] } });
-};
-
-VesselSchema.statics.getStats = async function() {
-    return await this.aggregate([
-        {
-            $group: {
-                _id: '$stat',
-                count: { $sum: 1 }
-            }
-        }
-    ]);
-};
-
-VesselSchema.statics.getCategoryStats = async function() {
-    return await this.aggregate([
-        {
-            $group: {
-                _id: '$cat',
-                count: { $sum: 1 }
-            }
-        }
-    ]);
-};
-
-// ============================================================
-// 🔄 Middleware
-// ============================================================
-
-VesselSchema.pre('save', function(next) {
-    if (this.isModified('len')) {
-        this.cat = this.calculateCategory();
+    type: {
+        type: String,
+        required: [true, 'نوع الوسيلة مطلوب'],
+        trim: true,
+        enum: ['زورق دورية', 'سفينة إنزال', 'زورق إنقاذ', 'سفينة دعم', 'زورق استطلاع', 'أخرى']
+    },
+    status: {
+        type: String,
+        enum: ['active', 'inactive', 'maintenance', 'reserve'],
+        default: 'active'
+    },
+    location: {
+        type: String,
+        required: [true, 'الموقع مطلوب'],
+        trim: true
+    },
+    specifications: {
+        length: { type: Number, default: null },
+        width: { type: Number, default: null },
+        draft: { type: Number, default: null },
+        speed: { type: Number, default: null },
+        capacity: { type: Number, default: null }
+    },
+    maintenanceHistory: [{
+        date: { type: Date, default: Date.now },
+        type: { type: String, enum: ['routine', 'emergency', 'preventive', 'overhaul'] },
+        description: { type: String, required: true },
+        cost: { type: Number, default: 0 },
+        performedBy: { type: String }
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    },
+    createdBy: {
+        type: String,
+        required: true
     }
+}, {
+    timestamps: true
+});
+
+/**
+ * تحديث وقت التعديل
+ */
+VesselSchema.pre('save', function(next) {
+    this.updatedAt = new Date();
     next();
 });
 
-// ============================================================
-// 🚀 تصدير النموذج
-// ============================================================
+/**
+ * الحصول على الوسائل النشطة
+ * @returns {Query} - استعلام الوسائل النشطة
+ */
+VesselSchema.statics.findActive = function() {
+    return this.find({ status: 'active' });
+};
 
-module.exports = mongoose.model('Vessel', VesselSchema);
+/**
+ * الحصول على الوسائل حسب النوع
+ * @param {string} type - نوع الوسيلة
+ * @returns {Query} - استعلام الوسائل حسب النوع
+ */
+VesselSchema.statics.findByType = function(type) {
+    return this.find({ type: type });
+};
+
+/**
+ * إضافة سجل صيانة
+ * @param {Object} maintenanceData - بيانات الصيانة
+ * @returns {Promise<Vessel>} - الوسيلة المحدثة
+ */
+VesselSchema.methods.addMaintenance = async function(maintenanceData) {
+    this.maintenanceHistory.push({
+        ...maintenanceData,
+        date: new Date()
+    });
+    await this.save();
+    return this;
+};
+
+/**
+ * تغيير حالة الوسيلة
+ * @param {string} newStatus - الحالة الجديدة
+ * @returns {Promise<Vessel>} - الوسيلة المحدثة
+ */
+VesselSchema.methods.changeStatus = async function(newStatus) {
+    this.status = newStatus;
+    await this.save();
+    return this;
+};
+
+const Vessel = mongoose.model('Vessel', VesselSchema);
+
+module.exports = Vessel;
