@@ -1,92 +1,63 @@
-const rateLimit = require('express-rate-limit');
-const Redis = require('ioredis');
-const { logger } = require('../utils/logger');
+/**
+ * ⏱️ تحديد معدل الطلبات - حماية من الهجمات
+ * @module middleware/rateLimiter
+ */
 
-// تخزين مؤقت في Redis لتحديد المعدل
-const redisClient = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD || '',
-    db: 1
+const rateLimit = require('express-rate-limit');
+const logger = require('../utils/logger');
+
+/**
+ * معدل الطلبات لتسجيل الدخول
+ */
+const loginLimiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000 || 15 * 60 * 1000, // 15 دقيقة
+    max: parseInt(process.env.RATE_LIMIT_MAX) || 5, // 5 محاولات
+    message: {
+        success: false,
+        error: 'محاولات كثيرة جداً، يرجى الانتظار 15 دقيقة'
+    },
+    keyGenerator: (req) => {
+        // استخدام IP + اسم المستخدم إذا وجد
+        const username = req.body?.username || 'anonymous';
+        return `${req.ip}:${username}`;
+    },
+    handler: (req, res) => {
+        logger.warn('⚠️ تجاوز معدل الطلبات المسموح', {
+            ip: req.ip,
+            username: req.body?.username || 'unknown'
+        });
+        res.status(429).json({
+            success: false,
+            error: 'محاولات كثيرة جداً، يرجى الانتظار 15 دقيقة'
+        });
+    },
+    skipSuccessfulRequests: true, // لا تحسب الطلبات الناجحة
+    standardHeaders: true,
+    legacyHeaders: false
 });
 
-// Rate Limiter متقدم
-class AdvancedRateLimiter {
-    constructor() {
-        this.limiters = new Map();
-        this.initLimiters();
-    }
+/**
+ * معدل الطلبات العامة
+ */
+const generalLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 دقيقة
+    max: 100, // 100 طلب في الدقيقة
+    message: {
+        success: false,
+        error: 'طلبات كثيرة جداً، يرجى الانتظار قليلاً'
+    },
+    handler: (req, res) => {
+        logger.warn('⚠️ تجاوز معدل الطلبات العامة', { ip: req.ip });
+        res.status(429).json({
+            success: false,
+            error: 'طلبات كثيرة جداً، يرجى الانتظار قليلاً'
+        });
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
 
-    initLimiters() {
-        // 1. عام - للمستخدمين العاديين
-        this.limiters.set('default', rateLimit({
-            windowMs: 15 * 60 * 1000, // 15 دقيقة
-            max: 100,
-            message: '⚠️ تجاوزت الحد الأقصى للطلبات (100 طلب / 15 دقيقة)',
-            standardHeaders: true,
-            legacyHeaders: false,
-            handler: (req, res) => {
-                logger.warn(`Rate limit exceeded: ${req.ip}`);
-                res.status(429).json({
-                    error: 'Too Many Requests',
-                    message: '⚠️ تجاوزت الحد الأقصى للطلبات، حاول لاحقاً'
-                });
-            }
-        }));
-
-        // 2. مكثف - للمستخدمين المميزين
-        this.limiters.set('premium', rateLimit({
-            windowMs: 15 * 60 * 1000,
-            max: 500,
-            message: '⚠️ تجاوزت الحد الأقصى للطلبات المميزة',
-            standardHeaders: true,
-            legacyHeaders: false
-        }));
-
-        // 3. للواجهة البرمجية (API) - حسب المفتاح
-        this.limiters.set('api', rateLimit({
-            windowMs: 60 * 1000, // 1 دقيقة
-            max: 30,
-            message: '⚠️ تجاوزت الحد الأقصى لطلبات API',
-            keyGenerator: (req) => {
-                return req.headers['x-api-key'] || req.ip;
-            },
-            standardHeaders: true,
-            legacyHeaders: false
-        }));
-    }
-
-    getLimiter(type = 'default') {
-        return this.limiters.get(type) || this.limiters.get('default');
-    }
-
-    // تحديد المعدل حسب نوع المستخدم
-    async checkRateLimit(userId, action) {
-        const key = `rate:${userId}:${action}`;
-        const limit = await redisClient.get(key);
-        
-        if (limit) {
-            const count = parseInt(limit);
-            if (count >= this.getMaxLimit(action)) {
-                return { allowed: false, remaining: 0 };
-            }
-            await redisClient.incr(key);
-            return { allowed: true, remaining: this.getMaxLimit(action) - count - 1 };
-        }
-
-        await redisClient.setex(key, 60, '1');
-        return { allowed: true, remaining: this.getMaxLimit(action) - 1 };
-    }
-
-    getMaxLimit(action) {
-        const limits = {
-            'chat': 30,        // 30 محادثة في الدقيقة
-            'predict': 10,     // 10 توقعات في الدقيقة
-            'report': 5,       // 5 تقارير في الدقيقة
-            'admin': 50        // 50 طلب إداري في الدقيقة
-        };
-        return limits[action] || 30;
-    }
-}
-
-module.exports = new AdvancedRateLimiter();
+module.exports = {
+    loginLimiter,
+    generalLimiter
+};
