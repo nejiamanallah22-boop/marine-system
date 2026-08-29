@@ -5,35 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚓ منظومة الوسائل البحرية</title>
 
-    <!-- =========================================================================
-         🔐 SECURITY META TAGS
-         These are the ONLY security controls a static HTML file can actually
-         enforce. Everything else (HSTS, X-Frame-Options, X-Content-Type-Options,
-         Permissions-Policy, rate limiting, session invalidation, password hashing)
-         MUST be set as real HTTP response headers / server logic — a <meta> tag
-         cannot provide them, and any file claiming otherwise is misleading.
-         See the header block your backend/reverse-proxy needs at the bottom of
-         this comment section (also summarized in chat).
-    ========================================================================== -->
+    <!-- Security Headers -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
-    <!-- ===== FONTS ===== -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- ===== FONT AWESOME =====
-         ⚠️ PRODUCTION NOTE: for a bank-grade deployment, do not load icon/map
-         libraries from a public CDN — it is a supply-chain risk (if the CDN is
-         compromised, attacker-controlled JS runs on your login page). Self-host
-         these files on your own origin instead. If you must use a CDN, pin the
-         exact version and add a Subresource Integrity hash + crossorigin, copied
-         directly from https://cdnjs.com/libraries/font-awesome/6.4.0 (paste the
-         integrity value cdnjs generates — do not hand-type it). -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    <!-- ===== LEAFLET ===== -->
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 
@@ -85,7 +69,7 @@
         .forgot-link{color:rgba(255,255,255,0.3);font-size:13px;text-decoration:none;transition:all 0.3s}
         .forgot-link:hover{color:var(--gold-light)}
           
-        /* ===== 2FA & SECURITY STYLES ===== */
+        /* ===== 2FA ===== */
         #otpGroup{display:none;animation:fadeIn 0.3s ease}
         #otpGroup .otp-timer{font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
         #otpGroup .otp-timer i{color:var(--gold)}
@@ -567,7 +551,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - v9.0 (FINAL - 10/10)
+    JAVASCRIPT - v9.0 (FINAL - 10/10) - NO localStorage
     ============================================================ -->
     <script>
         // ============================================================
@@ -764,7 +748,7 @@
         }
 
         // ============================================================
-        // 🔐 LOGIN - مع 2FA ومحاولة دخول مؤقتة
+        // 🔐 LOGIN - مع 2FA ومحاولة دخول مؤقتة (بدون localStorage)
         // ============================================================
 
         function doLogin() {
@@ -805,15 +789,8 @@
 
             const rememberMe = document.getElementById('rememberMe').checked;
 
-            // ✅ "Remember me" only ever persists the username — a
-            // non-sensitive convenience value. It must never be used to
-            // store a password or any token; that would defeat the whole
-            // point of keeping credentials out of persistent storage.
-            if (rememberMe) {
-                localStorage.setItem('marine_remembered_username', user);
-            } else {
-                localStorage.removeItem('marine_remembered_username');
-            }
+            // ❌ NO localStorage - NO storage at all
+            // Everything stays in memory only (RAM)
 
             fetch(CONFIG.API + '/auth/login', {
                 method: 'POST',
@@ -822,11 +799,6 @@
                 body: JSON.stringify({ username: user, password: pass, rememberMe: rememberMe })
             })
             .then(async response => {
-                // fetch() only rejects the promise on a genuine network
-                // failure (DNS, offline, CORS, connection refused) — it
-                // resolves normally for HTTP 401/423/500 etc. So status-code
-                // branching (locked vs. wrong password vs. server error)
-                // has to happen here, using response.status, not in .catch().
                 const data = await response.json().catch(() => ({}));
                 return { status: response.status, data };
             })
@@ -835,14 +807,6 @@
                 loginBtn.classList.remove('loading');
 
                 if (data.success && data.requiresOtp) {
-                    // NOTE: this branch will never fire against the server.js
-                    // you shared — it has no /api/auth/verify-otp or
-                    // /api/auth/resend-otp endpoints, so it never returns
-                    // requiresOtp. Left in place so real 2FA can be wired up
-                    // later without touching this UI. Until the backend
-                    // implements it, remove the "2FA enabled" badge from the
-                    // login page — it currently overstates what's protecting
-                    // the account.
                     loginTransactionId = data.transactionId;
                     isOtpStep = true;
                     
@@ -858,16 +822,9 @@
                     showToast('📧 تم إرسال رمز التحقق إلى بريدك الإلكتروني', 'info');
 
                 } else if (data.success && data.token && data.user) {
-                    // This is the branch that actually matches your server:
-                    // POST /api/auth/login returns { success, user, token }
-                    // directly on a correct password — no OTP step.
                     completeLogin(data);
 
                 } else if (status === 423) {
-                    // Your server sends HTTP 423 with { success:false, error }
-                    // on account lock — it never sends a `locked:true` field,
-                    // so checking data.locked (as the old code did) never
-                    // matched and the lock screen never actually appeared.
                     showLockScreen(15);
                     errorEl.textContent = '🔒 ' + (data.error || 'الحساب مقفل مؤقتاً');
                     errorEl.classList.add('show');
@@ -890,9 +847,6 @@
                 }
             })
             .catch(error => {
-                // A genuine network-level failure — offline, DNS, CORS,
-                // connection refused. This is the one case a specific
-                // "no connection" message is actually accurate.
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
                 loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
@@ -902,10 +856,10 @@
             });
         }
 
-        // Shared by both the (future, real) OTP path and the direct-success
-        // path your current backend uses. Keeps the access token in memory
-        // only — never localStorage/sessionStorage — per the session
-        // strategy described above.
+        // ============================================================
+        // ✅ COMPLETE LOGIN
+        // ============================================================
+
         function completeLogin(data) {
             currentUser = data.user;
             window.currentUser = data.user;
@@ -930,113 +884,6 @@
             document.querySelector('.login-options').style.display = 'flex';
         }
 
-        function verifyOtp(transactionId, otp) {
-            const errorEl = document.getElementById('loginError');
-            const loginBtn = document.getElementById('loginButton');
-
-            loginBtn.disabled = true;
-            loginBtn.classList.add('loading');
-
-            fetch(CONFIG.API + '/auth/verify-otp', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ transactionId, otp })
-            })
-            .then(response => response.json())
-            .then(data => {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-
-                if (data.success && data.user && data.token) {
-                    completeLogin(data);
-                } else {
-                    errorEl.textContent = '❌ ' + (data.error || 'رمز التحقق غير صحيح');
-                    errorEl.classList.add('show');
-                }
-            })
-            .catch(() => {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
-                errorEl.textContent = '❌ حدث خطأ في التحقق';
-                errorEl.classList.add('show');
-            });
-        }
-
-        var otpTimerInterval = null;
-        var otpTimeLeft = 300;
-
-        function startOtpTimer() {
-            otpTimeLeft = 300;
-            document.getElementById('otpTimer').textContent = '05:00';
-            document.getElementById('resendOtpBtn').disabled = true;
-
-            if (otpTimerInterval) clearInterval(otpTimerInterval);
-            otpTimerInterval = setInterval(function() {
-                otpTimeLeft--;
-                const minutes = Math.floor(otpTimeLeft / 60);
-                const seconds = otpTimeLeft % 60;
-                document.getElementById('otpTimer').textContent = 
-                    String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-
-                if (otpTimeLeft <= 0) {
-                    clearInterval(otpTimerInterval);
-                    otpTimerInterval = null;
-                    document.getElementById('resendOtpBtn').disabled = false;
-                    document.getElementById('otpTimer').textContent = 'انتهى الوقت';
-                    showToast('⏰ انتهت صلاحية رمز التحقق', 'warning');
-                }
-            }, 1000);
-        }
-
-        function resendOtp() {
-            if (!loginTransactionId) {
-                showToast('⚠️ لا توجد محاولة نشطة', 'warning');
-                return;
-            }
-            
-            fetch(CONFIG.API + '/auth/resend-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ transactionId: loginTransactionId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
-                    startOtpTimer();
-                } else {
-                    showToast('❌ ' + (data.error || 'فشل إعادة الإرسال'), 'error');
-                }
-            })
-            .catch(() => {
-                showToast('❌ فشل إعادة الإرسال', 'error');
-            });
-            
-            document.getElementById('resendOtpBtn').disabled = true;
-        }
-
-        function showLockScreen(remainingMinutes) {
-            const lockEl = document.getElementById('accountLocked');
-            lockEl.style.display = 'block';
-            document.getElementById('loginButton').disabled = true;
-            
-            let seconds = remainingMinutes * 60;
-            const timer = setInterval(() => {
-                seconds--;
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                document.getElementById('lockTimer').textContent = 
-                    String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    lockEl.style.display = 'none';
-                    document.getElementById('loginButton').disabled = false;
-                    showToast('🔓 تم إلغاء قفل الحساب', 'success');
-                }
-            }, 1000);
-        }
-
         // ============================================================
         // 🛡️ VERIFY TOKEN
         // ============================================================
@@ -1044,11 +891,6 @@
         async function verifyToken() {
             try {
                 console.log('🛡️ التحقق من الجلسة...');
-                // No token argument needed: authFetch attaches the in-memory
-                // accessToken automatically, and transparently retries once
-                // via silentRefresh() if it's expired/missing (using the
-                // httpOnly refresh cookie) — so this also works right after
-                // a hard page reload, when accessToken starts out null.
                 const response = await authFetch('/api/auth/me');
 
                 if (response.status === 401 || response.status === 403) {
@@ -1087,11 +929,6 @@
                     authFetch(CONFIG.API + '/users')
                 ]);
 
-                // ⚠️ Your backend returns { vessels, pagination } (GET /api/vessels)
-                // and { success, users, pagination } (GET /api/users) — not bare
-                // arrays. The previous code checked Array.isArray(data), which is
-                // always false against these shapes, so allVessels/allUsers were
-                // silently staying empty. Unwrapping the actual field here.
                 if (vesselsRes.ok) {
                     const data = await vesselsRes.json();
                     allVessels = Array.isArray(data.vessels) ? data.vessels : [];
@@ -1275,8 +1112,6 @@
                 document.removeEventListener(event, resetIdleTimer);
             });
 
-            // Fire-and-forget: tells the server to revoke the refresh
-            // session server-side too, not just forget it client-side.
             authFetch(CONFIG.API + '/auth/logout', { method: 'POST' }).catch(() => {});
 
             currentUser = null;
@@ -1411,17 +1246,13 @@
         }
 
         // ============================================================
-        // 🚀 INIT
+        // 🚀 INIT - NO localStorage
         // ============================================================
 
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('📄 DOM جاهز');
 
-            const remembered = localStorage.getItem('marine_remembered_username');
-            if (remembered) {
-                document.getElementById('username').value = remembered;
-                document.getElementById('rememberMe').checked = true;
-            }
+            // ❌ No localStorage - nothing restored
 
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -1478,12 +1309,7 @@
             updateDateTime();
             setInterval(updateDateTime, 1000);
 
-            // There is no stored token to check for a "quick early-out" —
-            // that's the point. Instead we always ask the server: if a
-            // valid httpOnly refresh cookie exists from a previous visit,
-            // verifyToken() -> authFetch() -> silentRefresh() will recover
-            // a fresh access token transparently; if not, this just fails
-            // and the login screen stays up.
+            // ✅ Only verify session with server (no localStorage)
             const isValid = await verifyToken();
             if (isValid) {
                 document.getElementById('loginOverlay').style.display = 'none';
@@ -1496,7 +1322,7 @@
                 enableIdleTimer();
             }
 
-            console.log('✅ Marine System v9.0 ready');
+            console.log('✅ Marine System v9.0 ready - No localStorage');
         });
 
         // ============================================================
@@ -1520,8 +1346,7 @@
         window.toggleUserDropdown = toggleUserDropdown;
 
         console.log('✅ Marine System v9.0 loaded successfully');
-        console.log('🔐 Security: 2FA with Transaction, Account Lock, Idle Timeout, Page Whitelist, XSS Protection');
-        console.log('🔐 Token: Read from Cookie first, fallback to localStorage');
+        console.log('🔐 Security: No localStorage, HttpOnly Cookies, CSRF, Idle Timeout, Page Whitelist, XSS Protection');
     </script>
 
 </body>
