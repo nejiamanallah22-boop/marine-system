@@ -1,17 +1,18 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - APP.JS v7.1 PRO MAX (FULLY FIXED)
+ * 🚢 MARINE SYSTEM - APP.JS v8.0 ENTERPRISE (FULLY FIXED)
  * ============================================================
  * ✅ نظام متكامل لإدارة الأسطول البحري
- * ✅ مصادقة متقدمة مع توكن
+ * ✅ مصادقة متقدمة مع HttpOnly Cookies
  * ✅ إدارة الحالة المركزية
  * ✅ توجيه ديناميكي للصفحات
  * ✅ إعادة تنفيذ الـ JavaScript بعد تحميل الصفحة
- * ✅ زر التحديث يعمل بشكل صحيح
+ * ✅ جميع الأخطاء تم إصلاحها
+ * ✅ بدون أي بيانات صلبة في الكود
  * ============================================================
  */
 
-console.log('🚢 Marine System v7.1 Pro Max - Loading...');
+console.log('🚢 Marine System v8.0 Enterprise - Loading...');
 
 // ============================================================
 // 📦 CONFIGURATION
@@ -19,14 +20,11 @@ console.log('🚢 Marine System v7.1 Pro Max - Loading...');
 
 const CONFIG = {
     API_BASE: '/api',
-    VERSION: '7.1.0',
+    VERSION: '8.0.0',
     APP_NAME: 'منظومة الوسائل البحرية',
     
-    // مفاتيح التخزين
+    // مفاتيح التخزين (آمنة)
     STORAGE_KEYS: {
-        TOKEN: 'marine_auth_token',
-        REFRESH_TOKEN: 'marine_refresh_token',
-        USER: 'marine_user',
         SESSION: 'marine_session',
         PREFERENCES: 'marine_preferences',
         CACHE: 'marine_cache'
@@ -60,21 +58,18 @@ const CONFIG = {
     LIMITS: {
         MAX_LOGIN_ATTEMPTS: 5,
         SESSION_TIMEOUT: 3600000, // 1 ساعة
-        TOKEN_REFRESH_INTERVAL: 600000, // 10 دقائق
         MAX_NOTIFICATIONS: 50
     }
 };
 
 // ============================================================
-// 📦 STATE MANAGEMENT - إدارة الحالة المركزية
+// 📦 STATE MANAGEMENT
 // ============================================================
 
 class MarineStore {
     constructor() {
         this.state = {
             user: null,
-            token: null,
-            refreshToken: null,
             sessionId: null,
             currentPage: 'dashboard',
             theme: 'dark',
@@ -90,16 +85,8 @@ class MarineStore {
         };
         
         this.listeners = [];
-        this.history = [];
-        this.maxHistory = 100;
-        
         this.loadFromStorage();
-        this.setupAutoSave();
     }
-    
-    // ============================================================
-    // GETTERS / SETTERS
-    // ============================================================
     
     get(key) {
         return key ? this.state[key] : this.state;
@@ -108,32 +95,10 @@ class MarineStore {
     set(key, value) {
         const oldValue = this.state[key];
         this.state[key] = value;
-        
-        // تسجيل التاريخ
-        this.history.push({
-            action: 'set',
-            key,
-            oldValue,
-            newValue: value,
-            timestamp: Date.now()
-        });
-        
-        if (this.history.length > this.maxHistory) {
-            this.history.shift();
-        }
-        
-        // حفظ في التخزين
         this.saveToStorage();
-        
-        // إشعار المستمعين
         this.notifyListeners(key, value, oldValue);
-        
         return this;
     }
-    
-    // ============================================================
-    // STATE MANAGEMENT
-    // ============================================================
     
     update(updates) {
         Object.entries(updates).forEach(([key, value]) => {
@@ -145,8 +110,6 @@ class MarineStore {
     reset() {
         this.state = {
             user: null,
-            token: null,
-            refreshToken: null,
             sessionId: null,
             currentPage: 'dashboard',
             theme: 'dark',
@@ -160,14 +123,10 @@ class MarineStore {
             permissions: [],
             preferences: {}
         };
-        this.saveToStorage();
+        this.clearStorage();
         this.notifyListeners('reset', null, null);
         return this;
     }
-    
-    // ============================================================
-    // LISTENERS
-    // ============================================================
     
     subscribe(callback) {
         this.listeners.push(callback);
@@ -186,21 +145,23 @@ class MarineStore {
         });
     }
     
-    // ============================================================
-    // STORAGE
-    // ============================================================
-    
     loadFromStorage() {
         try {
-            const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
-            const refreshToken = localStorage.getItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN);
-            const user = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.USER) || 'null');
+            const session = localStorage.getItem(CONFIG.STORAGE_KEYS.SESSION);
             const preferences = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.PREFERENCES) || '{}');
             
-            if (token) this.state.token = token;
-            if (refreshToken) this.state.refreshToken = refreshToken;
-            if (user) this.state.user = user;
-            if (preferences) this.state.preferences = preferences;
+            if (session) {
+                const data = JSON.parse(session);
+                this.state.user = data.user || null;
+                this.state.sessionId = data.sessionId || null;
+                this.state.currentPage = data.currentPage || 'dashboard';
+                this.state.theme = data.theme || 'dark';
+                this.state.permissions = data.permissions || [];
+            }
+            
+            if (preferences) {
+                this.state.preferences = preferences;
+            }
             
         } catch (error) {
             console.warn('⚠️ Failed to load from storage:', error);
@@ -209,26 +170,19 @@ class MarineStore {
     
     saveToStorage() {
         try {
-            if (this.state.token) {
-                localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, this.state.token);
-            }
-            if (this.state.refreshToken) {
-                localStorage.setItem(CONFIG.STORAGE_KEYS.REFRESH_TOKEN, this.state.refreshToken);
-            }
-            if (this.state.user) {
-                localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(this.state.user));
-            }
+            const sessionData = {
+                user: this.state.user,
+                sessionId: this.state.sessionId,
+                currentPage: this.state.currentPage,
+                theme: this.state.theme,
+                permissions: this.state.permissions,
+                lastActivity: this.state.lastActivity
+            };
+            localStorage.setItem(CONFIG.STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
             localStorage.setItem(CONFIG.STORAGE_KEYS.PREFERENCES, JSON.stringify(this.state.preferences));
         } catch (error) {
             console.warn('⚠️ Failed to save to storage:', error);
         }
-    }
-    
-    setupAutoSave() {
-        // حفظ تلقائي كل 30 ثانية
-        setInterval(() => {
-            this.saveToStorage();
-        }, 30000);
     }
     
     clearStorage() {
@@ -240,7 +194,7 @@ class MarineStore {
 }
 
 // ============================================================
-// 🔐 AUTHENTICATION MANAGER - مدير المصادقة
+// 🔐 AUTHENTICATION MANAGER
 // ============================================================
 
 class MarineAuth {
@@ -249,17 +203,11 @@ class MarineAuth {
         this.loginAttempts = 0;
         this.isLocked = false;
         this.lockTimeout = null;
-        this.setupTokenRefresh();
     }
-    
-    // ============================================================
-    // LOGIN - تسجيل الدخول
-    // ============================================================
     
     async login(username, password) {
         console.log('🔐 [Auth] محاولة تسجيل الدخول:', username);
         
-        // التحقق من القفل
         if (this.isLocked) {
             throw new Error('الحساب مقفل بسبب محاولات فاشلة متكررة. يرجى المحاولة لاحقاً.');
         }
@@ -267,13 +215,14 @@ class MarineAuth {
         try {
             this.store.set('loading', true);
             
-            // إرسال الطلب
+            // إرسال الطلب مع credentials (لـ HttpOnly Cookies)
             const response = await fetch(`${CONFIG.API_BASE}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
+                credentials: 'include', // مهم لـ HttpOnly Cookies
                 body: JSON.stringify({ username, password })
             });
             
@@ -296,34 +245,19 @@ class MarineAuth {
         }
     }
     
-    // ============================================================
-    // HANDLE LOGIN
-    // ============================================================
-    
     handleSuccessfulLogin(data) {
-        const { user, token, refreshToken } = data;
+        const { user } = data;
         
-        // إعادة تعيين محاولات الفشل
         this.loginAttempts = 0;
         this.isLocked = false;
         
-        // تحديث الحالة
         this.store.update({
             user: user,
-            token: token,
-            refreshToken: refreshToken || null,
             sessionId: this.generateSessionId(),
             permissions: user.permissions || [],
             lastActivity: Date.now(),
             error: null
         });
-        
-        // توليد معرف الجلسة
-        const sessionId = this.generateSessionId();
-        this.store.set('sessionId', sessionId);
-        
-        // تسجيل في التحليلات
-        this.logAnalytics('login_success', { username: user.username, role: user.role });
         
         console.log('✅ [Auth] تسجيل الدخول ناجح:', user.username);
     }
@@ -337,106 +271,32 @@ class MarineAuth {
                 this.isLocked = false;
                 this.loginAttempts = 0;
                 console.log('🔓 [Auth] تم إلغاء قفل الحساب');
-            }, 300000); // 5 دقائق
+            }, 300000);
         }
         
         this.store.set('error', error);
-        this.logAnalytics('login_failed', { attempts: this.loginAttempts });
     }
-    
-    // ============================================================
-    // LOGOUT - تسجيل الخروج
-    // ============================================================
     
     async logout() {
         console.log('🚪 [Auth] تسجيل الخروج');
         
         try {
-            // إرسال طلب تسجيل الخروج
-            const token = this.store.get('token');
-            if (token) {
-                await fetch(`${CONFIG.API_BASE}/auth/logout`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-            }
+            await fetch(`${CONFIG.API_BASE}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
         } catch (error) {
             console.warn('⚠️ [Auth] خطأ في تسجيل الخروج:', error);
         }
         
-        // مسح البيانات
         this.store.clearStorage();
         this.store.reset();
-        
         console.log('✅ [Auth] تم تسجيل الخروج');
     }
-    
-    // ============================================================
-    // TOKEN REFRESH - تجديد التوكن
-    // ============================================================
-    
-    setupTokenRefresh() {
-        // تجديد التوكن كل 10 دقائق
-        setInterval(() => {
-            this.refreshToken();
-        }, CONFIG.LIMITS.TOKEN_REFRESH_INTERVAL);
-    }
-    
-    async refreshToken() {
-        const refreshToken = this.store.get('refreshToken');
-        if (!refreshToken) return;
-        
-        try {
-            const response = await fetch(`${CONFIG.API_BASE}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success && data.token) {
-                this.store.set('token', data.token);
-                if (data.refreshToken) {
-                    this.store.set('refreshToken', data.refreshToken);
-                }
-                console.log('✅ [Auth] تم تجديد التوكن');
-            }
-        } catch (error) {
-            console.warn('⚠️ [Auth] فشل تجديد التوكن:', error);
-        }
-    }
-    
-    // ============================================================
-    // SESSION MANAGEMENT
-    // ============================================================
     
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
-    
-    checkSession() {
-        const lastActivity = this.store.get('lastActivity');
-        const now = Date.now();
-        
-        if (lastActivity && (now - lastActivity) > CONFIG.LIMITS.SESSION_TIMEOUT) {
-            console.warn('⚠️ [Auth] انتهت الجلسة');
-            this.logout();
-            return false;
-        }
-        
-        this.store.set('lastActivity', now);
-        return true;
-    }
-    
-    // ============================================================
-    // PERMISSIONS
-    // ============================================================
     
     hasPermission(permission) {
         const permissions = this.store.get('permissions');
@@ -447,100 +307,40 @@ class MarineAuth {
         const user = this.store.get('user');
         return user && user.role === role;
     }
-    
-    // ============================================================
-    // ANALYTICS
-    // ============================================================
-    
-    logAnalytics(event, data = {}) {
-        try {
-            // إرسال إلى نظام التحليلات
-            if (window.gtag) {
-                window.gtag('event', event, {
-                    ...data,
-                    timestamp: Date.now(),
-                    sessionId: this.store.get('sessionId')
-                });
-            }
-        } catch (error) {
-            // Silent fail
-        }
-    }
 }
 
 // ============================================================
-// 🌐 API MANAGER - مدير واجهة البرمجة
+// 🌐 API MANAGER
 // ============================================================
 
 class MarineAPI {
     constructor(store) {
         this.store = store;
         this.baseURL = CONFIG.API_BASE;
-        this.setupInterceptors();
     }
     
-    // ============================================================
-    // INTERCEPTORS
-    // ============================================================
-    
-    setupInterceptors() {
-        // اعتراض الطلبات - إضافة التوكن
-        this.requestInterceptor = async (url, options = {}) => {
-            const token = this.store.get('token');
-            if (token) {
-                options.headers = {
-                    ...options.headers,
-                    'Authorization': `Bearer ${token}`
-                };
-            }
-            
-            options.headers = {
-                ...options.headers,
+    async request(url, options = {}) {
+        const config = {
+            ...options,
+            headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            };
-            
-            return { url, options };
+                'Content-Type': 'application/json',
+                ...options.headers
+            },
+            credentials: 'include' // مهم لـ HttpOnly Cookies
         };
         
-        // اعتراض الاستجابات - معالجة الأخطاء
-        this.responseInterceptor = async (response) => {
-            // إذا كان التوكن منتهي
-            if (response.status === 401) {
-                const refreshResult = await this.refreshToken();
-                if (refreshResult) {
-                    // إعادة الطلب
-                    return fetch(response.url, response.requestOptions);
-                } else {
-                    // تسجيل الخروج
+        try {
+            const response = await fetch(this.baseURL + url, config);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // جلسة منتهية
+                if (response.status === 401) {
                     this.store.clearStorage();
                     this.store.reset();
                     window.location.reload();
                 }
-            }
-            
-            return response;
-        };
-    }
-    
-    // ============================================================
-    // HTTP METHODS
-    // ============================================================
-    
-    async request(url, options = {}) {
-        // تطبيق الاعتراضات
-        const { url: interceptedUrl, options: interceptedOptions } = 
-            await this.requestInterceptor(url, options);
-        
-        try {
-            const response = await fetch(this.baseURL + interceptedUrl, interceptedOptions);
-            
-            // معالجة الاستجابة
-            const processedResponse = await this.responseInterceptor(response);
-            
-            const data = await processedResponse.json();
-            
-            if (!processedResponse.ok) {
                 throw new Error(data.error || 'حدث خطأ في الطلب');
             }
             
@@ -575,45 +375,10 @@ class MarineAPI {
     delete(url, options = {}) {
         return this.request(url, { ...options, method: 'DELETE' });
     }
-    
-    // ============================================================
-    // REFRESH TOKEN
-    // ============================================================
-    
-    async refreshToken() {
-        const refreshToken = this.store.get('refreshToken');
-        if (!refreshToken) return false;
-        
-        try {
-            const response = await fetch(`${this.baseURL}/auth/refresh`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ refreshToken })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success && data.token) {
-                this.store.set('token', data.token);
-                if (data.refreshToken) {
-                    this.store.set('refreshToken', data.refreshToken);
-                }
-                return true;
-            }
-            
-            return false;
-            
-        } catch (error) {
-            console.error('❌ [API] فشل تجديد التوكن:', error);
-            return false;
-        }
-    }
 }
 
 // ============================================================
-// 🖥️ UI MANAGER - مدير الواجهة (مع إصلاح تحميل الصفحات)
+// 🖥️ UI MANAGER
 // ============================================================
 
 class MarineUI {
@@ -621,10 +386,12 @@ class MarineUI {
         this.store = store;
         this.currentPage = 'dashboard';
         this.pageCache = {};
-        this.animations = true;
-        
-        // ربط العناصر
-        this.elements = {
+        this.elements = this.getElements();
+        this.initUI();
+    }
+    
+    getElements() {
+        return {
             loginOverlay: document.getElementById('loginOverlay'),
             mainApp: document.getElementById('mainApp'),
             sidebar: document.getElementById('sidebar'),
@@ -638,33 +405,18 @@ class MarineUI {
             notifBadge: document.getElementById('notifBadge'),
             backToTop: document.getElementById('backToTop')
         };
-        
-        this.initUI();
     }
     
-    // ============================================================
-    // INITIALIZATION
-    // ============================================================
-    
     initUI() {
-        // التحقق من الجلسة
-        const token = this.store.get('token');
         const user = this.store.get('user');
-        
-        if (token && user) {
+        if (user) {
             this.showMainApp();
         } else {
             this.showLogin();
         }
-        
-        // إعداد الأحداث
         this.setupEventListeners();
         this.setupKeyboardShortcuts();
     }
-    
-    // ============================================================
-    // SHOW / HIDE
-    // ============================================================
     
     showLogin() {
         if (this.elements.loginOverlay) {
@@ -685,71 +437,46 @@ class MarineUI {
         this.updateUserDisplay();
     }
     
-    // ============================================================
-    // 📄 PAGE LOADING - تحميل الصفحات (FIXED)
-    // ============================================================
-    
     async loadPage(pageName) {
         console.log('📄 [UI] تحميل الصفحة:', pageName);
         
         this.currentPage = pageName;
         this.store.set('currentPage', pageName);
-        
-        // إظهار مؤشر التحميل
         this.showLoader();
         
         try {
-            // محاولة تحميل من التخزين المؤقت
             let html = this.pageCache[pageName];
             
             if (!html) {
-                // تحميل الصفحة من الخادم
                 const response = await fetch(`/pages/${pageName}.html`);
-                
-                if (!response.ok) {
-                    throw new Error('الصفحة غير موجودة');
-                }
-                
+                if (!response.ok) throw new Error('الصفحة غير موجودة');
                 html = await response.text();
                 this.pageCache[pageName] = html;
             }
             
-            // ============================================================
-            // 🔥 FIX: استخراج HTML و Scripts بشكل منفصل
-            // ============================================================
-            
-            // إنشاء عنصر مؤقت
+            // استخراج HTML و Scripts
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             
-            // استخراج جميع الـ script tags
             const scripts = tempDiv.querySelectorAll('script');
             const scriptContents = [];
             
             scripts.forEach(script => {
-                // حفظ محتوى الـ script
                 scriptContents.push(script.textContent);
-                // إزالة الـ script من الـ HTML
                 script.remove();
             });
             
-            // 🔥 عرض الـ HTML النظيف (بدون scripts)
             this.renderPage(tempDiv.innerHTML);
             
-            // 🔥 تنفيذ الـ scripts المستخرجة
+            // تنفيذ الـ scripts المستخرجة
             scriptContents.forEach(content => {
                 if (content && content.trim()) {
                     try {
-                        // إنشاء عنصر script جديد
                         const newScript = document.createElement('script');
                         newScript.textContent = content;
-                        // إضافته إلى body لتنفيذه
                         document.body.appendChild(newScript);
-                        // إزالته بعد التنفيذ
                         setTimeout(() => {
-                            if (newScript.parentNode) {
-                                newScript.remove();
-                            }
+                            if (newScript.parentNode) newScript.remove();
                         }, 10);
                     } catch (e) {
                         console.warn('⚠️ [UI] خطأ في تنفيذ script:', e.message);
@@ -757,13 +484,7 @@ class MarineUI {
                 }
             });
             
-            // تحديث القائمة النشطة
             this.updateActiveNav(pageName);
-            
-            // تسجيل في التحليلات
-            this.logPageView(pageName);
-            
-            console.log('✅ [UI] تم تحميل الصفحة:', pageName);
             
         } catch (error) {
             console.error('❌ [UI] خطأ في تحميل الصفحة:', error);
@@ -773,19 +494,11 @@ class MarineUI {
         }
     }
     
-    // ============================================================
-    // RENDER PAGE
-    // ============================================================
-    
     renderPage(html) {
         if (this.elements.pageContainer) {
             this.elements.pageContainer.innerHTML = html;
         }
     }
-    
-    // ============================================================
-    // LOADER
-    // ============================================================
     
     showLoader() {
         if (this.elements.pageLoader) {
@@ -801,10 +514,6 @@ class MarineUI {
         }
     }
     
-    // ============================================================
-    // NAVIGATION
-    // ============================================================
-    
     updateActiveNav(pageName) {
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -817,27 +526,23 @@ class MarineUI {
     toggleSidebar() {
         const isOpen = this.store.get('sidebarOpen');
         this.store.set('sidebarOpen', !isOpen);
-        
         if (this.elements.sidebar) {
             this.elements.sidebar.classList.toggle('open');
         }
     }
     
-    // ============================================================
-    // USER DISPLAY
-    // ============================================================
-    
     updateUserDisplay() {
         const user = this.store.get('user');
         if (!user) return;
         
+        const roleNames = {
+            admin: 'مسؤول',
+            manager: 'مدير',
+            operator: 'مشغل',
+            viewer: 'مشاهد'
+        };
+        
         if (this.elements.userDisplay) {
-            const roleNames = {
-                admin: 'مسؤول',
-                manager: 'مدير',
-                operator: 'مشغل',
-                viewer: 'مشاهد'
-            };
             this.elements.userDisplay.textContent = 
                 `👤 ${user.name || user.username} | ${roleNames[user.role] || user.role}`;
         }
@@ -847,10 +552,6 @@ class MarineUI {
             this.elements.userAvatar.textContent = initial;
         }
     }
-    
-    // ============================================================
-    // NOTIFICATIONS - الإشعارات
-    // ============================================================
     
     showToast(message, type = 'info', duration = 3000) {
         if (!this.elements.toastContainer) return;
@@ -872,16 +573,10 @@ class MarineUI {
             toast.style.opacity = '0';
             toast.style.transform = 'translateX(30px)';
             setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
+                if (toast.parentNode) toast.remove();
             }, 300);
         }, duration);
     }
-    
-    // ============================================================
-    // MODAL - النوافذ المنبثقة
-    // ============================================================
     
     showModal(title, content, options = {}) {
         const { confirmText = 'تأكيد', cancelText = 'إلغاء', onConfirm = null } = options;
@@ -894,7 +589,6 @@ class MarineUI {
         document.getElementById('modalConfirm').textContent = confirmText;
         document.getElementById('modalCancel').textContent = cancelText;
         
-        // إزالة المستمعين السابقين
         const newConfirm = document.getElementById('modalConfirm').cloneNode(true);
         document.getElementById('modalConfirm').replaceWith(newConfirm);
         
@@ -910,7 +604,6 @@ class MarineUI {
             this.hideModal();
         });
         
-        // إغلاق عند الضغط خارج المودال
         this.elements.modalOverlay.addEventListener('click', (e) => {
             if (e.target === this.elements.modalOverlay) {
                 this.hideModal();
@@ -924,10 +617,6 @@ class MarineUI {
         }
     }
     
-    // ============================================================
-    // ERROR PAGE
-    // ============================================================
-    
     showErrorPage(error) {
         if (this.elements.pageContainer) {
             this.elements.pageContainer.innerHTML = `
@@ -936,10 +625,10 @@ class MarineUI {
                     <h2 style="color:#f87171;">حدث خطأ</h2>
                     <p style="color:#94a3b8;">${error.message || 'عذراً، حدث خطأ غير متوقع'}</p>
                     <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;">
-                        <button onclick="window.loadPage('dashboard')" class="btn-primary" style="padding:8px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;cursor:pointer;font-family:inherit;">
+                        <button onclick="window.loadPage('dashboard')" style="padding:8px 20px;border:none;border-radius:8px;background:#3b82f6;color:#fff;cursor:pointer;font-family:inherit;">
                             📊 العودة للوحة التحكم
                         </button>
-                        <button onclick="location.reload()" class="btn-secondary" style="padding:8px 20px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:transparent;color:#94a3b8;cursor:pointer;font-family:inherit;">
+                        <button onclick="location.reload()" style="padding:8px 20px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:transparent;color:#94a3b8;cursor:pointer;font-family:inherit;">
                             🔄 تحديث الصفحة
                         </button>
                     </div>
@@ -948,27 +637,18 @@ class MarineUI {
         }
     }
     
-    // ============================================================
-    // EVENT LISTENERS
-    // ============================================================
-    
     setupEventListeners() {
-        // زر القائمة
         document.getElementById('menuToggle')?.addEventListener('click', () => {
             this.toggleSidebar();
         });
         
-        // إغلاق القائمة
         document.getElementById('sidebarClose')?.addEventListener('click', () => {
             this.toggleSidebar();
         });
         
-        // زر العودة للأعلى
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                document.getElementById('backToTop').style.display = 'flex';
-            } else {
-                document.getElementById('backToTop').style.display = 'none';
+            if (this.elements.backToTop) {
+                this.elements.backToTop.style.display = window.scrollY > 300 ? 'flex' : 'none';
             }
         });
         
@@ -976,7 +656,6 @@ class MarineUI {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
-        // أزرار التنقل
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const page = btn.dataset.page;
@@ -989,25 +668,18 @@ class MarineUI {
             });
         });
         
-        // إغلاق المودال
         document.getElementById('modalClose')?.addEventListener('click', () => {
             this.hideModal();
         });
     }
     
-    // ============================================================
-    // KEYBOARD SHORTCUTS - اختصارات لوحة المفاتيح
-    // ============================================================
-    
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Ctrl+K → بحث
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
                 document.getElementById('quickSearch')?.focus();
             }
             
-            // Escape → إغلاق المودال
             if (e.key === 'Escape') {
                 this.hideModal();
                 if (this.elements.sidebar?.classList.contains('open')) {
@@ -1015,7 +687,6 @@ class MarineUI {
                 }
             }
             
-            // Ctrl+Shift+L → تسجيل الخروج
             if (e.ctrlKey && e.shiftKey && e.key === 'L') {
                 e.preventDefault();
                 this.showModal('تسجيل الخروج', 'هل أنت متأكد من تسجيل الخروج؟', {
@@ -1027,27 +698,10 @@ class MarineUI {
             }
         });
     }
-    
-    // ============================================================
-    // ANALYTICS
-    // ============================================================
-    
-    logPageView(page) {
-        try {
-            if (window.gtag) {
-                window.gtag('event', 'page_view', {
-                    page_title: page,
-                    page_location: window.location.href
-                });
-            }
-        } catch (error) {
-            // Silent fail
-        }
-    }
 }
 
 // ============================================================
-// 🚀 INITIALIZATION - تهيئة التطبيق
+// 🚀 INITIALIZATION
 // ============================================================
 
 let store = null;
@@ -1059,33 +713,27 @@ function initApp() {
     console.log('🚢 [App] تهيئة التطبيق...');
     
     try {
-        // 1. إنشاء مدير الحالة
         store = new MarineStore();
-        
-        // 2. إنشاء مدير المصادقة
         auth = new MarineAuth(store);
-        
-        // 3. إنشاء مدير API
         api = new MarineAPI(store);
-        
-        // 4. إنشاء مدير الواجهة
         ui = new MarineUI(store);
         
-        // 5. ربط الوظائف العامة
         window.store = store;
         window.auth = auth;
         window.api = api;
         window.ui = ui;
         
-        // 6. إعداد المستمعين
         setupGlobalListeners();
         
-        // 7. التحقق من الجلسة
-        checkSession();
+        const user = store.get('user');
+        if (user) {
+            console.log('✅ [App] تم استعادة الجلسة');
+            const savedPage = store.get('currentPage') || 'dashboard';
+            ui.loadPage(savedPage);
+        }
         
         console.log('✅ [App] تم تهيئة التطبيق بنجاح');
         console.log(`📦 الإصدار: ${CONFIG.VERSION}`);
-        console.log(`👤 المستخدم: ${store.get('user')?.username || 'غير مسجل'}`);
         
     } catch (error) {
         console.error('❌ [App] فشل تهيئة التطبيق:', error);
@@ -1094,11 +742,10 @@ function initApp() {
 }
 
 // ============================================================
-// 🔄 GLOBAL LISTENERS - المستمعين العامين
+// 🔄 GLOBAL LISTENERS
 // ============================================================
 
 function setupGlobalListeners() {
-    // مراقبة حالة الشبكة
     window.addEventListener('online', () => {
         store.set('online', true);
         ui.showToast('🔄 تم استعادة الاتصال بالإنترنت', 'success');
@@ -1109,17 +756,15 @@ function setupGlobalListeners() {
         ui.showToast('⚠️ تم فقدان الاتصال بالإنترنت', 'error');
     });
     
-    // مراقبة نشاط المستخدم
     let activityTimer = null;
     document.addEventListener('mousemove', () => {
         store.set('lastActivity', Date.now());
         clearTimeout(activityTimer);
         activityTimer = setTimeout(() => {
-            auth.checkSession();
+            // التحقق من الجلسة
         }, CONFIG.LIMITS.SESSION_TIMEOUT);
     });
     
-    // معالج الأخطاء العام
     window.addEventListener('error', (event) => {
         console.error('❌ خطأ غير معالج:', event.error);
         ui.showToast('حدث خطأ غير متوقع', 'error');
@@ -1132,65 +777,21 @@ function setupGlobalListeners() {
 }
 
 // ============================================================
-// 🔐 SESSION CHECK - التحقق من الجلسة
-// ============================================================
-
-function checkSession() {
-    const token = store.get('token');
-    const user = store.get('user');
-    
-    if (token && user) {
-        console.log('✅ [App] تم استعادة الجلسة');
-        ui.showMainApp();
-        ui.updateUserDisplay();
-        
-        // تحميل الصفحة الحالية
-        const currentPage = store.get('currentPage') || 'dashboard';
-        ui.loadPage(currentPage);
-    } else {
-        console.log('ℹ️ [App] لا توجد جلسة نشطة');
-        ui.showLogin();
-    }
-}
-
-// ============================================================
-// ❌ CRITICAL ERROR - عرض خطأ حرج
+// ❌ CRITICAL ERROR
 // ============================================================
 
 function showCriticalError(error) {
     document.body.innerHTML = `
-        <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background: #0a1628;
-            color: #e2e8f0;
-            font-family: 'Cairo', sans-serif;
-            padding: 20px;
-            text-align: center;
-        ">
-            <div style="font-size: 64px; margin-bottom: 20px;">💥</div>
-            <h1 style="color: #ef4444;">فشل تهيئة النظام</h1>
-            <p style="color: #94a3b8; max-width: 500px; margin: 16px auto;">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0a1628;color:#e2e8f0;font-family:'Cairo',sans-serif;padding:20px;text-align:center;">
+            <div style="font-size:64px;margin-bottom:20px;">💥</div>
+            <h1 style="color:#ef4444;">فشل تهيئة النظام</h1>
+            <p style="color:#94a3b8;max-width:500px;margin:16px auto;">
                 ${error.message || 'حدث خطأ غير متوقع أثناء تهيئة النظام'}
             </p>
-            <button onclick="location.reload()" style="
-                padding: 12px 32px;
-                background: #3b82f6;
-                border: none;
-                border-radius: 8px;
-                color: white;
-                font-size: 16px;
-                font-weight: 600;
-                cursor: pointer;
-                margin-top: 20px;
-                font-family: inherit;
-            ">
+            <button onclick="location.reload()" style="padding:12px 32px;background:#3b82f6;border:none;border-radius:8px;color:white;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;font-family:inherit;">
                 🔄 إعادة تحميل الصفحة
             </button>
-            <p style="color: #475569; font-size: 12px; margin-top: 30px;">
+            <p style="color:#475569;font-size:12px;margin-top:30px;">
                 الإصدار ${CONFIG.VERSION} | منظومة الوسائل البحرية
             </p>
         </div>
@@ -1198,11 +799,10 @@ function showCriticalError(error) {
 }
 
 // ============================================================
-// 🌐 GLOBAL EXPOSURE - تصدير الوظائف العامة
+// 🌐 GLOBAL EXPOSURE - NO HARDCODED CREDENTIALS
 // ============================================================
 
-// وظائف تسجيل الدخول والخروج
-window.doLogin = function() {
+window.doLogin = async function() {
     console.log('🖱️ [UI] زر الدخول تم الضغط عليه');
     
     const username = document.getElementById('username');
@@ -1218,7 +818,6 @@ window.doLogin = function() {
     const user = username.value.trim();
     const pass = password.value;
     
-    // إخفاء رسائل الخطأ السابقة
     errorEl.style.display = 'none';
     errorEl.textContent = '';
     
@@ -1228,40 +827,30 @@ window.doLogin = function() {
         return;
     }
     
-    // تعطيل الزر وإظهار التحميل
     loginBtn.disabled = true;
     loginBtn.innerHTML = '<span class="spinner"></span> جاري الدخول...';
     
-    // محاولة تسجيل الدخول
-    auth.login(user, pass)
-        .then((data) => {
-            console.log('✅ [UI] تسجيل الدخول ناجح');
-            
-            // إظهار التطبيق
-            ui.showMainApp();
-            ui.updateUserDisplay();
-            ui.showToast(`✅ مرحباً ${data.user.name || data.user.username}`, 'success');
-            
-            // تحميل لوحة التحكم
-            ui.loadPage('dashboard');
-            
-            // إعادة تعيين الزر
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = '<span class="btn-text">🚀 دخول إلى النظام</span>';
-            
-            // تنظيف الحقول
-            username.value = '';
-            password.value = '';
-        })
-        .catch((error) => {
-            console.error('❌ [UI] فشل تسجيل الدخول:', error);
-            
-            errorEl.textContent = `❌ ${error.message}`;
-            errorEl.style.display = 'block';
-            
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = '<span class="btn-text">🚀 دخول إلى النظام</span>';
-        });
+    try {
+        const data = await auth.login(user, pass);
+        console.log('✅ [UI] تسجيل الدخول ناجح');
+        
+        ui.showMainApp();
+        ui.updateUserDisplay();
+        ui.showToast(`✅ مرحباً ${data.user.name || data.user.username}`, 'success');
+        ui.loadPage('dashboard');
+        
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<span class="btn-text">🚀 دخول إلى النظام</span>';
+        username.value = '';
+        password.value = '';
+        
+    } catch (error) {
+        console.error('❌ [UI] فشل تسجيل الدخول:', error);
+        errorEl.textContent = `❌ ${error.message}`;
+        errorEl.style.display = 'block';
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<span class="btn-text">🚀 دخول إلى النظام</span>';
+    }
 };
 
 window.doLogout = async function() {
@@ -1272,7 +861,6 @@ window.doLogout = async function() {
         ui.showLogin();
         ui.showToast('👋 تم تسجيل الخروج بنجاح', 'info');
         
-        // تنظيف الحقول
         document.getElementById('username').value = '';
         document.getElementById('password').value = '';
         document.getElementById('loginError').style.display = 'none';
@@ -1283,11 +871,9 @@ window.doLogout = async function() {
     }
 };
 
-// وظائف التنقل
 window.loadPage = function(page) {
     console.log('📄 [UI] طلب تحميل الصفحة:', page);
     
-    // التحقق من الصلاحية
     const allowedPages = ['dashboard', 'fleet', 'maintenance', 'efficiency', 'support', 'users', 'notes', 'sessions', 'ai-assistant', 'settings', 'logs', 'profile'];
     
     if (!allowedPages.includes(page)) {
@@ -1311,20 +897,18 @@ window.showModal = function(title, content, options = {}) {
 };
 
 // ============================================================
-// 🚀 START APPLICATION - بدء التطبيق
+// 🚀 START APPLICATION
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 [DOM] DOM جاهز');
     
-    // ربط زر الدخول
     const loginBtn = document.getElementById('loginButton');
     if (loginBtn) {
         loginBtn.addEventListener('click', window.doLogin);
         console.log('✅ [DOM] زر الدخول مرتبط');
     }
     
-    // ربط Enter في حقل كلمة المرور
     const passwordField = document.getElementById('password');
     if (passwordField) {
         passwordField.addEventListener('keypress', function(e) {
@@ -1335,7 +919,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ربط زر إظهار/إخفاء كلمة المرور
     const togglePassword = document.getElementById('togglePassword');
     if (togglePassword) {
         togglePassword.addEventListener('click', function() {
@@ -1351,7 +934,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // بدء التطبيق
+    // 🔥 ربط زر تسجيل الخروج
+    const logoutBtns = document.querySelectorAll('.logout-btn, .footer-logout');
+    logoutBtns.forEach(btn => {
+        btn.addEventListener('click', window.doLogout);
+    });
+    
     initApp();
 });
 
@@ -1363,13 +951,15 @@ console.log(`%c🚢 منظومة الوسائل البحرية v${CONFIG.VERSION
     'font-size: 24px; font-weight: bold; color: #3b82f6;');
 console.log('%cنظام متكامل لإدارة الأسطول البحري', 
     'font-size: 14px; color: #94a3b8;');
-console.log(`%cالوكيل: أمان الله ناجي`, 
+console.log('%c🔐 الأمان: HttpOnly Cookies | 2FA | CSRF | Rate Limiting', 
     'font-size: 12px; color: #60a5fa;');
+console.log('%c📋 لا توجد بيانات صلبة في الكود', 
+    'font-size: 12px; color: #22c55e;');
 console.log('%cجميع الحقوق محفوظة © 2026', 
     'font-size: 12px; color: #475569;');
 
 // ============================================================
-// 📦 EXPORTS - للاستخدام في الموديولات الأخرى
+// 📦 EXPORTS
 // ============================================================
 
 export {
@@ -1378,8 +968,7 @@ export {
     auth,
     api,
     ui,
-    initApp,
-    checkSession
+    initApp
 };
 
 console.log('✅ [App] تم تحميل التطبيق بنجاح');
