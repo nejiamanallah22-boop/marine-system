@@ -525,6 +525,11 @@
             <option value="صقر 03">صقر 03</option>
             <option value="خافرة 07">خافرة 07</option>
             <option value="زورق مزدوج 12">زورق مزدوج 12</option>
+            <option value="البروق 05">البروق 05</option>
+            <option value="صقر 08">صقر 08</option>
+            <option value="خافرة 11">خافرة 11</option>
+            <option value="طوافة 14">طوافة 14</option>
+            <option value="البروق 09">البروق 09</option>
         </select>
 
         <label><i class="fas fa-circle"></i> الحالة</label>
@@ -578,7 +583,7 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - FIXED
+    JAVASCRIPT - FIXED (يعمل فوراً)
     ============================================================ -->
     <script>
         (function() {
@@ -671,22 +676,30 @@
                 var overdue = logsData.filter(function(l) { return l.status === 'متأخرة'; }).length;
                 var inProgress = logsData.filter(function(l) { return l.status === 'قيد التنفيذ'; }).length;
 
-                $('totalLogs').textContent = total;
-                $('completedLogs').textContent = completed;
-                $('pendingLogs').textContent = pending;
-                $('overdueLogs').textContent = overdue;
-                $('inProgressLogs').textContent = inProgress;
+                var totalEl = $('totalLogs');
+                var completedEl = $('completedLogs');
+                var pendingEl = $('pendingLogs');
+                var overdueEl = $('overdueLogs');
+                var inProgressEl = $('inProgressLogs');
+
+                if (totalEl) totalEl.textContent = total;
+                if (completedEl) completedEl.textContent = completed;
+                if (pendingEl) pendingEl.textContent = pending;
+                if (overdueEl) overdueEl.textContent = overdue;
+                if (inProgressEl) inProgressEl.textContent = inProgress;
 
                 var badge = $('logsBadge');
-                if (overdue > 0) {
-                    badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
-                    badge.className = 'badge red';
-                } else if (pending > 0) {
-                    badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
-                    badge.className = 'badge blue';
-                } else {
-                    badge.textContent = '✅ ' + completed + ' سجل مكتمل';
-                    badge.className = 'badge green';
+                if (badge) {
+                    if (overdue > 0) {
+                        badge.textContent = '🚨 ' + overdue + ' سجل متأخر';
+                        badge.className = 'badge red';
+                    } else if (pending > 0) {
+                        badge.textContent = '⏳ ' + pending + ' سجل قيد الانتظار';
+                        badge.className = 'badge blue';
+                    } else {
+                        badge.textContent = '✅ ' + completed + ' سجل مكتمل';
+                        badge.className = 'badge green';
+                    }
                 }
             }
 
@@ -694,22 +707,29 @@
             // RENDER TABLE
             // ============================================================
             function renderTable() {
-                var search = $('searchLog').value.toLowerCase();
-                var vesselFilter = $('fVesselLog').value;
-                var statusFilter = $('fStatusLog').value;
-                var dateFrom = $('fDateFrom').value;
-                var dateTo = $('fDateTo').value;
+                var search = $('searchLog');
+                var vesselFilter = $('fVesselLog');
+                var statusFilter = $('fStatusLog');
+                var dateFrom = $('fDateFrom');
+                var dateTo = $('fDateTo');
+
+                var searchVal = search ? search.value.toLowerCase() : '';
+                var vesselVal = vesselFilter ? vesselFilter.value : 'الكل';
+                var statusVal = statusFilter ? statusFilter.value : 'الكل';
+                var dateFromVal = dateFrom ? dateFrom.value : '';
+                var dateToVal = dateTo ? dateTo.value : '';
 
                 var filtered = logsData.filter(function(l) {
-                    if (search && !l.vessel.includes(search) && !l.type.includes(search)) return false;
-                    if (vesselFilter !== 'الكل' && l.vessel !== vesselFilter) return false;
-                    if (statusFilter !== 'الكل' && l.status !== statusFilter) return false;
-                    if (dateFrom && l.startDate < dateFrom) return false;
-                    if (dateTo && l.startDate > dateTo) return false;
+                    if (searchVal && !l.vessel.includes(searchVal) && !l.type.includes(searchVal)) return false;
+                    if (vesselVal !== 'الكل' && l.vessel !== vesselVal) return false;
+                    if (statusVal !== 'الكل' && l.status !== statusVal) return false;
+                    if (dateFromVal && l.startDate < dateFromVal) return false;
+                    if (dateToVal && l.startDate > dateToVal) return false;
                     return true;
                 });
 
                 var tbody = $('logsBody');
+                if (!tbody) return;
 
                 if (filtered.length === 0) {
                     tbody.innerHTML = `
@@ -750,6 +770,7 @@
             // ============================================================
             function refreshLogs() {
                 var btn = $('refreshBtn');
+                if (!btn) return;
                 var original = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
                 btn.disabled = true;
@@ -776,40 +797,72 @@
             }
 
             function resetFilters() {
-                $('searchLog').value = '';
-                $('fVesselLog').value = 'الكل';
-                $('fStatusLog').value = 'الكل';
-                $('fDateFrom').value = '';
-                $('fDateTo').value = '';
+                var search = $('searchLog');
+                var vessel = $('fVesselLog');
+                var status = $('fStatusLog');
+                var dateFrom = $('fDateFrom');
+                var dateTo = $('fDateTo');
+
+                if (search) search.value = '';
+                if (vessel) vessel.value = 'الكل';
+                if (status) status.value = 'الكل';
+                if (dateFrom) dateFrom.value = '';
+                if (dateTo) dateTo.value = '';
                 renderTable();
                 showToast('✅ تم إلغاء جميع الفلاتر', 'success');
             }
 
             // ============================================================
-            // INIT
+            // INIT - يتم استدعاؤها مباشرة
             // ============================================================
-            function init() {
+            function initLogs() {
                 console.log('🚀 Initializing Logs page...');
+
+                // التأكد من وجود العناصر
+                if (!$('logsBody')) {
+                    console.warn('⚠️ عناصر الصفحة غير موجودة، إعادة المحاولة...');
+                    setTimeout(initLogs, 200);
+                    return;
+                }
+
                 updateStats();
                 renderTable();
 
-                // Events
-                $('refreshBtn').addEventListener('click', refreshLogs);
-                $('exportBtn').addEventListener('click', exportLogs);
-                $('filterBtn').addEventListener('click', applyFilters);
-                $('resetBtn').addEventListener('click', resetFilters);
+                // ربط الأحداث
+                var refreshBtn = $('refreshBtn');
+                var exportBtn = $('exportBtn');
+                var filterBtn = $('filterBtn');
+                var resetBtn = $('resetBtn');
+                var searchLog = $('searchLog');
+                var vesselFilter = $('fVesselLog');
+                var statusFilter = $('fStatusLog');
+                var dateFrom = $('fDateFrom');
+                var dateTo = $('fDateTo');
 
-                $('searchLog').addEventListener('keyup', renderTable);
-                $('fVesselLog').addEventListener('change', renderTable);
-                $('fStatusLog').addEventListener('change', renderTable);
-                $('fDateFrom').addEventListener('change', renderTable);
-                $('fDateTo').addEventListener('change', renderTable);
+                if (refreshBtn) refreshBtn.addEventListener('click', refreshLogs);
+                if (exportBtn) exportBtn.addEventListener('click', exportLogs);
+                if (filterBtn) filterBtn.addEventListener('click', applyFilters);
+                if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+
+                if (searchLog) searchLog.addEventListener('keyup', renderTable);
+                if (vesselFilter) vesselFilter.addEventListener('change', renderTable);
+                if (statusFilter) statusFilter.addEventListener('change', renderTable);
+                if (dateFrom) dateFrom.addEventListener('change', renderTable);
+                if (dateTo) dateTo.addEventListener('change', renderTable);
 
                 console.log('✅ Logs Page loaded successfully');
                 console.log('📋 ' + logsData.length + ' logs loaded');
             }
 
-            document.addEventListener('DOMContentLoaded', init);
+            // ============================================================
+            // تشغيل الصفحة فوراً
+            // ============================================================
+            // إذا كانت الصفحة محملة عبر loadPage، ننفذ التهيئة مباشرة
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                initLogs();
+            } else {
+                document.addEventListener('DOMContentLoaded', initLogs);
+            }
 
             // ============================================================
             // EXPOSE GLOBALS
@@ -819,6 +872,7 @@
             window.applyFilters = applyFilters;
             window.resetFilters = resetFilters;
             window.showToast = showToast;
+            window.initLogs = initLogs;
 
         })();
     </script>
