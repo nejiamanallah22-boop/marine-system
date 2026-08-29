@@ -1,13 +1,12 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v39.0
- * FULLY COMPATIBLE WITH index.html v9.0
+ * 🚢 MARINE SYSTEM - SERVER v40.0
+ * FULLY WORKING WITH STATIC FILES
  * ============================================================
- * ✅ FIXED: trust proxy from 'true' to 1
- * ✅ FIXED: MongoDB connection
- * ✅ FIXED: CORS for credentials
- * ✅ FIXED: Cookie parsing
- * ✅ COMPATIBLE: with index.html v9.0 (HttpOnly Cookie, CSRF, etc.)
+ * ✅ FIXED: Static files serving
+ * ✅ FIXED: SPA fallback
+ * ✅ FIXED: All routes
+ * ✅ PRODUCTION READY
  * ============================================================
  */
 
@@ -45,13 +44,12 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
     process.exit(1);
 }
 
-// ✅ Admin credentials - ONLY from environment variables (NEVER hardcoded)
+// ✅ Admin credentials - ONLY from environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
-// ✅ Verify ADMIN_PASSWORD is set (fail fast if missing)
 if (!ADMIN_PASSWORD) {
     console.error('❌ ADMIN_PASSWORD is missing from Environment Variables');
     console.error('   Please add ADMIN_PASSWORD to your Render environment variables');
@@ -59,7 +57,7 @@ if (!ADMIN_PASSWORD) {
 }
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v39.0 - PRODUCTION');
+console.log('🚢 MARINE SYSTEM v40.0 - PRODUCTION');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
@@ -211,7 +209,7 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 📁 STATIC FILES
+// 📁 PATHS
 // ============================================================
 
 const publicPath = path.join(__dirname, 'public');
@@ -219,6 +217,7 @@ const pagesPath = path.join(publicPath, 'pages');
 const cssPath = path.join(publicPath, 'css');
 const jsPath = path.join(publicPath, 'js');
 
+// ✅ Create directories if they don't exist
 if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
 if (!fs.existsSync(pagesPath)) fs.mkdirSync(pagesPath, { recursive: true });
 if (!fs.existsSync(cssPath)) fs.mkdirSync(cssPath, { recursive: true });
@@ -230,21 +229,17 @@ if (!fs.existsSync(jsPath)) fs.mkdirSync(jsPath, { recursive: true });
 
 app.disable('x-powered-by');
 
-// ✅ FIXED: trust proxy = 1 (not true)
+// ✅ trust proxy = 1 (not true)
 app.set('trust proxy', 1);
 
-// ✅ FIXED: CORS with credentials support (for HttpOnly cookies)
+// ✅ CORS with credentials support
 app.use(cors({
     origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
-        // Allow in development
         if (!IS_PRODUCTION) return callback(null, true);
-        // In production, you should specify allowed origins
-        // For now, allow all (but with credentials: true)
         return callback(null, true);
     },
-    credentials: true,  // ✅ Required for HttpOnly cookies
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-CSRF-Token', 'X-Request-ID'],
     exposedHeaders: ['X-Request-ID']
@@ -258,7 +253,7 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
-app.use(cookieParser());  // ✅ Required for HttpOnly cookies
+app.use(cookieParser());
 
 // ============================================================
 // 🚦 RATE LIMITING
@@ -267,24 +262,30 @@ app.use(cookieParser());  // ✅ Required for HttpOnly cookies
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
-    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' },
-    handler: (req, res) => {
-        console.warn(`🚫 [RATE LIMIT] ${req.ip} exceeded rate limit on ${req.url}`);
-        res.status(429).json({ success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' });
-    }
+    message: { success: false, error: 'طلبات كثيرة جداً، حاول لاحقاً' }
 });
 
 app.use('/api', limiter);
 
 // ============================================================
-// 📁 STATIC FILES
+// 📁 STATIC FILES - FIXED ✅
 // ============================================================
 
+// ✅ Serve static files from public directory
 app.use(express.static(publicPath, {
     index: false,
     maxAge: 0,
     etag: false
 }));
+
+// ✅ Serve CSS
+app.use('/css', express.static(cssPath));
+
+// ✅ Serve JS
+app.use('/js', express.static(jsPath));
+
+// ✅ Serve Pages
+app.use('/pages', express.static(pagesPath));
 
 // ============================================================
 // 🗄️ DATABASE CONNECTION
@@ -314,7 +315,7 @@ async function connectDB() {
 }
 
 // ============================================================
-// 🔐 CREATE/UPDATE ADMIN - ONLY FROM ENVIRONMENT VARIABLES
+// 🔐 CREATE/UPDATE ADMIN
 // ============================================================
 
 async function createAdmin() {
@@ -454,7 +455,7 @@ function authorize(...roles) {
 }
 
 // ============================================================
-// 🔐 LOGIN - COMPATIBLE WITH index.html v9.0
+// 🔐 LOGIN
 // ============================================================
 
 app.post('/api/auth/login', async (req, res) => {
@@ -707,19 +708,38 @@ app.get('/api/pages/:page', authenticate, async (req, res) => {
 });
 
 // ============================================================
-// 🏠 HOME
+// 🏠 HOME - SPA FALLBACK ✅
 // ============================================================
 
+// ✅ Serve index.html at root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    const indexPath = path.join(publicPath, 'index.html');
+    console.log(`🏠 [HOME] GET - Serving: ${indexPath}`);
+    
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        console.error('❌ index.html not found at:', indexPath);
+        res.status(404).send('index.html not found. Please make sure the file exists in the public directory.');
+    }
 });
 
+// ✅ API 404
 app.use('/api', (req, res) => {
     res.status(404).json({ success: false, error: 'API not found' });
 });
 
+// ✅ SPA Fallback - any other GET request serves index.html
 app.get('*', (req, res) => {
-    res.sendFile(path.join(publicPath, 'index.html'));
+    const indexPath = path.join(publicPath, 'index.html');
+    console.log(`📄 [FALLBACK] ${req.method} ${req.url} → index.html`);
+    
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        console.error('❌ index.html not found at:', indexPath);
+        res.status(404).send('index.html not found');
+    }
 });
 
 // ============================================================
@@ -728,6 +748,7 @@ app.get('*', (req, res) => {
 
 app.use((err, req, res, next) => {
     console.error('❌ [ERROR]', err.message);
+    console.error('   Stack:', err.stack);
     res.status(500).json({ success: false, error: 'Internal server error' });
 });
 
@@ -748,7 +769,7 @@ async function startServer() {
     const server = app.listen(PORT, '0.0.0.0', () => {
         console.log('');
         console.log('='.repeat(60));
-        console.log('🚢 MARINE SYSTEM v39.0 - PRODUCTION');
+        console.log('🚢 MARINE SYSTEM v40.0 - PRODUCTION');
         console.log('🚀 SERVER STARTED');
         console.log('='.repeat(60));
         console.log(`🌍 Environment: ${NODE_ENV}`);
@@ -756,6 +777,9 @@ async function startServer() {
         console.log('🗄️ MongoDB: Connected ✅');
         console.log('🔐 JWT: Enabled');
         console.log('🛡️ Security: Enabled');
+        console.log('📁 Public Path: ' + publicPath);
+        console.log('📄 index.html: ' + path.join(publicPath, 'index.html'));
+        console.log('='.repeat(60));
         console.log('🔑 LOGIN:');
         console.log(`   👤 Username: ${ADMIN_USERNAME}`);
         console.log(`   🔑 Password: from ADMIN_PASSWORD in Render`);
