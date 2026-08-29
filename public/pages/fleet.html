@@ -715,7 +715,7 @@
             </div>
         </div>
         <div class="fleet-header-actions">
-            <button class="btn-action primary" onclick="refreshFleet()">
+            <button class="btn-action primary" id="refreshFleetBtn">
                 <i class="fas fa-sync-alt"></i> تحديث
             </button>
         </div>
@@ -866,7 +866,7 @@
 
 <script>
     // ============================================================
-    // 🚢 FLEET PAGE - GOLD EDITION
+    // 🚢 FLEET PAGE - GOLD EDITION (FIXED)
     // ============================================================
 
     // ============================================================
@@ -1329,15 +1329,63 @@
     }
 
     // ============================================================
-    // 14. REFRESH
+    // 14. REFRESH - ✅ تم الإصلاح (الزر يعمل ولا يخرج من التطبيق)
     // ============================================================
 
     window.refreshFleet = function() {
+        console.log('🔄 [Fleet] تحديث السجل العام...');
+        
+        // عرض رسالة للمستخدم
+        showToast('🔄 جاري تحديث البيانات...', 'info');
+        
+        // إعادة تحميل البيانات
         renderMain();
+        
+        // تحديث الإحصائيات
+        updateStats();
+        
+        showToast('✅ تم تحديث السجل العام بنجاح', 'success');
     };
 
     // ============================================================
-    // 15. INIT
+    // 15. UPDATE STATS
+    // ============================================================
+
+    function updateStats() {
+        // يتم التحديث تلقائياً داخل renderMain()
+        // هذه الدالة للاستدعاء المباشر إذا لزم الأمر
+    }
+
+    // ============================================================
+    // 16. SHOW TOAST
+    // ============================================================
+
+    function showToast(message, type) {
+        type = type || 'info';
+        var container = document.getElementById('toastContainer');
+        if (!container) {
+            // إنشاء container إذا لم يكن موجوداً
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        var toast = document.createElement('div');
+        toast.className = 'toast toast-' + type;
+        toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
+        container.appendChild(toast);
+
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(30px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
+
+    // ============================================================
+    // 17. INIT
     // ============================================================
 
     document.addEventListener('DOMContentLoaded', async function() {
@@ -1379,6 +1427,16 @@
             addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
         }
 
+        // ✅ ربط زر التحديث بالحدث onclick
+        const refreshBtn = document.getElementById('refreshFleetBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                window.refreshFleet();
+            });
+            console.log('✅ زر التحديث مرتبط بنجاح');
+        }
+
         initFilters();
         updateZones();
         await renderMain();
@@ -1387,7 +1445,7 @@
     });
 
     // ============================================================
-    // 16. GLOBAL EXPOSURE
+    // 18. GLOBAL EXPOSURE
     // ============================================================
 
     window.renderMain = renderMain;
@@ -1400,5 +1458,6 @@
     window.refreshFleet = refreshFleet;
     window.getToken = getToken;
     window.getAuthHeaders = getAuthHeaders;
+    window.showToast = showToast;
 </script>
 </div>
