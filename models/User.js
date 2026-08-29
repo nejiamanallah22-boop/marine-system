@@ -1,181 +1,173 @@
+/**
+ * 👤 نموذج المستخدم
+ * @module models/User
+ */
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { config } = require('../config/env');
+const { v4: uuidv4 } = require('uuid');
 
+/**
+ * مخطط المستخدم
+ */
 const UserSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'الاسم مطلوب'],
-    trim: true,
-    minlength: [2, 'الاسم يجب أن يكون على الأقل حرفين'],
-    maxlength: [50, 'الاسم طويل جداً']
-  },
-  email: {
-    type: String,
-    required: [true, 'البريد الإلكتروني مطلوب'],
-    unique: true,
-    trim: true,
-    lowercase: true,
-    match: [/^\S+@\S+\.\S+$/, 'بريد إلكتروني غير صالح']
-  },
-  password: {
-    type: String,
-    required: [true, 'كلمة المرور مطلوبة'],
-    minlength: [6, 'كلمة المرور يجب أن تكون على الأقل 6 أحرف'],
-    select: false // لا تعيد كلمة المرور في الاستعلامات
-  },
-  role: {
-    type: String,
-    enum: {
-      values: ['مسؤول', 'محرر', 'مستخدم'],
-      message: 'دور غير صالح'
+    id: {
+        type: String,
+        default: uuidv4,
+        unique: true,
+        index: true
     },
-    default: 'مستخدم'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  },
-  lastLogin: {
-    type: Date,
-    default: null
-  },
-  loginAttempts: {
-    type: Number,
-    default: 0
-  },
-  lockUntil: {
-    type: Date,
-    default: null
-  },
-  refreshToken: {
-    type: String,
-    select: false
-  },
-  passwordChangedAt: {
-    type: Date,
-    default: Date.now
-  },
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-  preferences: {
-    language: {
-      type: String,
-      enum: ['ar', 'en'],
-      default: 'ar'
+    username: {
+        type: String,
+        required: [true, 'اسم المستخدم مطلوب'],
+        unique: true,
+        trim: true,
+        minlength: [3, 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل'],
+        maxlength: [50, 'اسم المستخدم يجب أن يكون 50 حرفاً كحد أقصى'],
+        match: [/^[a-zA-Z0-9_\u0600-\u06FF]+$/, 'اسم المستخدم يحتوي على أحرف غير مسموحة']
     },
-    theme: {
-      type: String,
-      enum: ['light', 'dark'],
-      default: 'light'
+    email: {
+        type: String,
+        required: [true, 'البريد الإلكتروني مطلوب'],
+        unique: true,
+        trim: true,
+        lowercase: true,
+        match: [/^\S+@\S+\.\S+$/, 'البريد الإلكتروني غير صالح']
     },
-    notifications: {
-      type: Boolean,
-      default: true
+    password: {
+        type: String,
+        required: [true, 'كلمة المرور مطلوبة'],
+        minlength: [12, 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل']
+    },
+    name: {
+        type: String,
+        required: [true, 'الاسم مطلوب'],
+        trim: true,
+        minlength: [2, 'الاسم يجب أن يكون حرفين على الأقل']
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'manager', 'operator', 'viewer'],
+        default: 'viewer'
+    },
+    permissions: {
+        type: [String],
+        default: []
+    },
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: true
+    },
+    twoFactorSecret: {
+        type: String,
+        default: null
+    },
+    lastLogin: {
+        type: Date,
+        default: null
+    },
+    loginAttempts: {
+        type: Number,
+        default: 0
+    },
+    lockedUntil: {
+        type: Date,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
-  }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
-// الفهارس
-UserSchema.index({ email: 1 });
-UserSchema.index({ role: 1 });
-UserSchema.index({ isActive: 1 });
-
-// دوال مساعدة (Virtuals)
-UserSchema.virtual('isLocked').get(function() {
-  return this.lockUntil && this.lockUntil > Date.now();
-});
-
-// Middleware قبل الحفظ
+/**
+ * تشفير كلمة المرور قبل الحفظ
+ */
 UserSchema.pre('save', async function(next) {
-  // تشفير كلمة المرور فقط إذا تم تعديلها
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-    this.passwordChangedAt = new Date();
-    next();
-  } catch (error) {
-    next(error);
-  }
+    if (!this.isModified('password')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_ROUNDS) || 12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
-// دوال النموذج
+/**
+ * تحديث وقت التعديل
+ */
+UserSchema.pre('save', function(next) {
+    this.updatedAt = new Date();
+    next();
+});
+
+/**
+ * مقارنة كلمة المرور
+ * @param {string} candidatePassword - كلمة المرور المدخلة
+ * @returns {Promise<boolean>} - هل هي صحيحة
+ */
 UserSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+    return bcrypt.compare(candidatePassword, this.password);
 };
 
-UserSchema.methods.generateAuthToken = function() {
-  return jwt.sign(
-    { 
-      id: this._id,
-      name: this.name,
-      role: this.role,
-      email: this.email
-    },
-    config.jwtSecret,
-    { expiresIn: '24h' }
-  );
+/**
+ * التحقق من قفل الحساب
+ * @returns {boolean} - هل الحساب مقفل
+ */
+UserSchema.methods.isLocked = function() {
+    if (!this.lockedUntil) return false;
+    return new Date() < this.lockedUntil;
 };
 
-UserSchema.methods.generateRefreshToken = function() {
-  return jwt.sign(
-    { id: this._id },
-    config.jwtSecret + '_refresh',
-    { expiresIn: '7d' }
-  );
-};
-
+/**
+ * زيادة عدد محاولات الدخول الفاشلة
+ */
 UserSchema.methods.incrementLoginAttempts = async function() {
-  this.loginAttempts += 1;
-  
-  if (this.loginAttempts >= 5) {
-    this.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // قفل 30 دقيقة
-  }
-  
-  await this.save();
+    this.loginAttempts += 1;
+    
+    const maxAttempts = parseInt(process.env.MAX_LOGIN_ATTEMPTS) || 5;
+    const lockoutMinutes = parseInt(process.env.LOCKOUT_MINUTES) || 15;
+    
+    if (this.loginAttempts >= maxAttempts) {
+        this.lockedUntil = new Date(Date.now() + lockoutMinutes * 60 * 1000);
+    }
+    
+    await this.save();
 };
 
+/**
+ * إعادة تعيين محاولات الدخول
+ */
 UserSchema.methods.resetLoginAttempts = async function() {
-  this.loginAttempts = 0;
-  this.lockUntil = null;
-  await this.save();
+    this.loginAttempts = 0;
+    this.lockedUntil = null;
+    await this.save();
 };
 
-UserSchema.methods.updateLastLogin = async function() {
-  this.lastLogin = new Date();
-  await this.save();
-};
-
-UserSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
-  if (this.passwordChangedAt) {
-    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
-    return JWTTimestamp < changedTimestamp;
-  }
-  return false;
-};
-
-// دوال ثابتة
-UserSchema.statics.findByCredentials = async function(email, password) {
-  const user = await this.findOne({ email }).select('+password');
-  if (!user) throw new Error('Invalid credentials');
-  
-  if (user.isLocked) throw new Error('Account locked');
-  
-  const isMatch = await user.comparePassword(password);
-  if (!isMatch) {
-    await user.incrementLoginAttempts();
-    throw new Error('Invalid credentials');
-  }
-  
-  await user.resetLoginAttempts();
-  return user;
+/**
+ * الحصول على المستخدم بدون بيانات حساسة
+ * @returns {Object} - بيانات المستخدم الآمنة
+ */
+UserSchema.methods.toSafeObject = function() {
+    const obj = this.toObject();
+    delete obj.password;
+    delete obj.twoFactorSecret;
+    delete obj.__v;
+    return obj;
 };
 
 const User = mongoose.model('User', UserSchema);
