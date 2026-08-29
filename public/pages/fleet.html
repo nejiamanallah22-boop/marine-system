@@ -1,2222 +1,1404 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚓ منظومة الوسائل البحرية</title>
-
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+<!-- public/pages/fleet.html -->
+<div id="page-fleet">
     <style>
         /* ============================================================
-           🎨 ENTERPRISE DESIGN SYSTEM
+           🚢 FLEET PAGE - PROFESSIONAL GOLD EDITION
            ============================================================ */
+
+        /* ===== CSS VARIABLES ===== */
         :root {
-            --primary: #0f172a;
-            --primary-light: #1e293b;
-            --secondary: #1a2a4a;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #eab308;
-            --info: #8b5cf6;
+            --primary-dark: #0a1628;
+            --primary: #0f3460;
+            --primary-light: #1a4f8a;
+            --secondary: #e94560;
+            --secondary-light: #ff6b81;
             --gold: #e6b31e;
             --gold-light: #f5d76e;
             --gold-dark: #c99a0e;
-            --text: #e2e8f0;
-            --text-muted: #94a3b8;
-            --text-dim: #475569;
-            --border: rgba(255, 255, 255, 0.06);
-            --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            --radius: 16px;
+            --success: #00b894;
+            --success-light: #55efc4;
+            --danger: #e17055;
+            --warning: #fdcb6e;
+            --info: #0984e3;
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.06);
+            --shadow-gold: 0 0 40px rgba(230,179,30,0.08);
+            --shadow-card: 0 8px 32px rgba(0,0,0,0.15);
+            --shadow-hover: 0 12px 48px rgba(0,0,0,0.25);
+            --radius: 14px;
             --radius-sm: 8px;
-            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Cairo', 'Segoe UI', system-ui, sans-serif;
         }
 
-        * {
-            margin: 0;
+        /* ===== FULL SCREEN RESET ===== */
+        #page-fleet {
+            width: 100%;
+            max-width: 100%;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: var(--primary);
-            color: var(--text);
+            margin: 0;
+            font-family: var(--font);
+            background: #0a0e1a;
+            color: #e8edf5;
             min-height: 100vh;
-            direction: rtl;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            position: relative;
+            z-index: 1;
         }
 
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
-        }
-
-        /* ============================================================
-           🏦 LOGIN - BANK GRADE
-           ============================================================ */
-        #loginOverlay {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--primary);
-            overflow: hidden;
-        }
-
-        #loginOverlay::before {
+        /* ===== BACKGROUND EFFECT ===== */
+        #page-fleet::before {
             content: '';
-            position: absolute;
-            inset: -50%;
-            background:
-                radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 50%, rgba(139, 92, 246, 0.03) 0%, transparent 60%);
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 20% 50%, rgba(230,179,30,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(233,69,96,0.03) 0%, transparent 60%);
+            z-index: -1;
+            pointer-events: none;
             animation: bgPulse 15s ease-in-out infinite;
         }
 
         @keyframes bgPulse {
-            0%, 100% { transform: scale(1) rotate(0); }
+            0%, 100% { transform: scale(1) rotate(0deg); }
             50% { transform: scale(1.05) rotate(2deg); }
         }
 
-        .login-container {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            max-width: 420px;
-            padding: 20px;
-        }
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--gold-light); }
 
-        .login-box {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 48px 36px 32px;
-            text-align: center;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: var(--shadow);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .login-logo .logo-icon {
-            display: inline-block;
-            font-size: 48px;
-            animation: logoFloat 4s ease-in-out infinite;
-        }
-
-        @keyframes logoFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
-        }
-
-        .login-logo .logo-text {
-            display: block;
-            font-size: 24px;
-            font-weight: 900;
-            margin-top: 8px;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .login-logo .logo-sub {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-top: 4px;
-            -webkit-text-fill-color: var(--text-dim);
-        }
-
-        .login-divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 20px 0 24px;
-            color: var(--text-dim);
-            font-size: 12px;
-        }
-
-        .login-divider::before,
-        .login-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-            text-align: right;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-            letter-spacing: 0.3px;
-        }
-
-        .input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1.5px solid var(--border);
-            border-radius: var(--radius-sm);
-            transition: all var(--transition);
-        }
-
-        .input-wrapper:focus-within {
-            border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
-        }
-
-        .input-wrapper .input-icon {
-            position: absolute;
-            right: 14px;
-            color: var(--text-dim);
-            font-size: 14px;
-            pointer-events: none;
-        }
-
-        .input-wrapper input {
-            width: 100%;
-            padding: 12px 44px 12px 14px;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
-            direction: rtl;
-        }
-
-        .input-wrapper input::placeholder {
-            color: var(--text-dim);
-            font-size: 13px;
-        }
-
-        .toggle-password {
-            position: absolute;
-            left: 12px;
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 6px;
-            transition: all var(--transition);
-        }
-
-        .toggle-password:hover {
-            color: var(--text);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .login-options {
+        /* ============================================================
+           HEADER
+           ============================================================ */
+        .fleet-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 16px 0 20px;
+            padding: 16px 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 64px;
+            z-index: 10;
+            margin: 0;
+            width: 100%;
         }
 
-        .checkbox-label {
+        .fleet-header-left {
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-            font-size: 13px;
-            cursor: pointer;
-            user-select: none;
+            gap: 14px;
         }
 
-        .checkbox-label input[type="checkbox"] {
-            display: none;
-        }
-
-        .checkbox-label .checkmark {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--text-dim);
-            border-radius: 4px;
+        .fleet-header-left .header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--transition);
-            flex-shrink: 0;
+            font-size: 20px;
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+            animation: pulseGold 2s ease-in-out infinite;
         }
 
-        .checkbox-label input:checked+.checkmark {
-            background: var(--accent);
-            border-color: var(--accent);
+        @keyframes pulseGold {
+            0%, 100% { box-shadow: 0 0 20px rgba(230,179,30,0.1); }
+            50% { box-shadow: 0 0 40px rgba(230,179,30,0.2); }
         }
 
-        .checkbox-label input:checked+.checkmark::after {
-            content: '✓';
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
+        .fleet-header-left h2 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--gold-light), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
         }
 
-        .forgot-link {
-            color: var(--text-dim);
-            font-size: 13px;
-            text-decoration: none;
-            transition: all var(--transition);
-        }
-
-        .forgot-link:hover {
-            color: var(--accent);
-        }
-
-        #otpGroup {
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        #otpGroup .otp-timer {
+        .fleet-header-left p {
             font-size: 12px;
-            color: var(--text-dim);
-            margin-top: 8px;
+            color: rgba(255,255,255,0.3);
+            margin: 0;
+            -webkit-text-fill-color: rgba(255,255,255,0.3);
+        }
+
+        .fleet-header-actions {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            gap: 10px;
             flex-wrap: wrap;
         }
 
-        #otpGroup .otp-timer .timer-text {
-            color: var(--accent);
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .otp-resend {
-            background: none;
+        .fleet-header-actions .btn-action {
+            padding: 8px 18px;
             border: none;
-            color: var(--accent);
-            font-size: 12px;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 4px;
-            transition: all var(--transition);
+            border-radius: 30px;
             font-weight: 600;
-        }
-
-        .otp-resend:hover:not(:disabled) {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .otp-resend:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        #accountLocked {
-            display: none;
-            padding: 12px 16px;
-            background: rgba(239, 68, 68, 0.08);
-            border-radius: var(--radius-sm);
-            border-right: 3px solid var(--danger);
-            margin-bottom: 12px;
-            text-align: right;
-            animation: fadeIn 0.3s ease;
-        }
-
-        #accountLocked i {
-            color: var(--danger);
-        }
-        #accountLocked span {
-            color: var(--danger-light);
-            font-size: 13px;
-        }
-        #accountLocked .lock-timer {
-            color: var(--warning);
-            font-weight: 700;
-            direction: ltr;
-            display: inline-block;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: var(--radius-sm);
-            background: linear-gradient(135deg, var(--accent), var(--info));
-            color: #fff;
-            font-size: 16px;
-            font-weight: 700;
-            font-family: inherit;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all var(--transition);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font);
+        }
+
+        .fleet-header-actions .btn-action.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
+        }
+
+        .fleet-header-actions .btn-action.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
+        }
+
+        .fleet-header-actions .btn-action.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.5);
+        }
+
+        .fleet-header-actions .btn-action.secondary:hover {
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* ============================================================
+           STATS CARDS - GOLD THEME
+           ============================================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 16px 24px;
+            margin: 0;
+            width: 100%;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            text-align: center;
+            transition: all var(--transition);
+            cursor: default;
             position: relative;
             overflow: hidden;
         }
 
-        .login-btn::before {
+        .stat-card::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--accent-hover), var(--info-dark));
-            opacity: 0;
-            transition: opacity var(--transition);
-        }
-
-        .login-btn:hover:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        .login-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .login-btn:disabled {
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
             opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
         }
 
-        .login-btn .btn-content {
-            position: relative;
-            z-index: 1;
-            display: flex;
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-card .number.gold { color: var(--gold-light); }
+        .stat-card .number.green { color: var(--success-light); }
+        .stat-card .number.yellow { color: var(--warning); }
+        .stat-card .number.red { color: var(--danger); }
+
+        .stat-card .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .stat-card .icon-bg {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 50px;
+            opacity: 0.04;
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           INPUT FORM - GOLD THEME
+           ============================================================ */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin: 0 24px 16px;
+            transition: all var(--transition);
+        }
+
+        .input-grid:hover {
+            border-color: rgba(230,179,30,0.15);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .input-grid input,
+        .input-grid select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .input-grid input:focus,
+        .input-grid select:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .input-grid input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .input-grid select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .input-grid .btn-save {
+            grid-column: span 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
+            font-family: var(--font);
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            box-shadow: var(--shadow-gold);
         }
 
-        .login-btn .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 2.5px solid rgba(255, 255, 255, 0.2);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
+        .input-grid .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(230,179,30,0.3);
         }
 
-        .login-btn.loading .spinner {
+        /* ============================================================
+           FILTER BAR - GOLD THEME
+           ============================================================ */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 14px;
+            padding: 10px 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            margin: 0;
+            width: 100%;
+        }
+
+        .filter-bar .search-input {
+            flex: 2 1 200px;
+            min-width: 150px;
+            position: relative;
+        }
+
+        .filter-bar .search-input input {
+            width: 100%;
+            padding: 8px 16px 8px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.8rem;
+            transition: all var(--transition);
+            font-family: var(--font);
+        }
+
+        .filter-bar .search-input input:focus {
+            border-color: var(--gold);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(230,179,30,0.06);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .filter-bar .search-input input::placeholder {
+            color: rgba(255,255,255,0.15);
+        }
+
+        .filter-bar .search-input .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.1);
+            font-size: 0.8rem;
+        }
+
+        .filter-bar label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.3);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-bar select {
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            min-width: 100px;
+            cursor: pointer;
+            font-family: var(--font);
+        }
+
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .filter-bar select option {
+            background: #0a1628;
+            color: #e2e8f0;
+        }
+
+        .filter-bar .btn-filter {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-bar .btn-filter.primary {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+        }
+
+        .filter-bar .btn-filter.primary:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 20px rgba(230,179,30,0.2);
+        }
+
+        .filter-bar .btn-filter.outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .filter-bar .btn-filter.outline:hover {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        /* ============================================================
+           TABLE - GOLD THEME
+           ============================================================ */
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 24px 24px;
+            width: 100%;
+        }
+
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 900px;
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        thead {
+            background: rgba(15,52,96,0.4);
+            backdrop-filter: blur(12px);
+            border-bottom: 2px solid rgba(230,179,30,0.15);
+        }
+
+        thead th {
+            padding: 12px 10px;
+            text-align: right;
+            font-weight: 700;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        thead th i {
+            margin-left: 6px;
+            color: var(--gold);
+            font-size: 0.7rem;
+        }
+
+        tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            vertical-align: middle;
+            color: rgba(255,255,255,0.6);
+            font-size: 0.78rem;
+        }
+
+        tbody tr {
+            transition: all var(--transition);
+            border-radius: 4px;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tbody tr.damaged {
+            border-right: 3px solid var(--danger);
+            background: rgba(225,112,85,0.04);
+        }
+
+        tbody tr.damaged:hover {
+            background: rgba(225,112,85,0.08);
+        }
+
+        .vessel-name {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* ===== STATUS BADGES ===== */
+        .status-badge {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
             display: inline-block;
+            white-space: nowrap;
         }
-        .login-btn.loading .btn-text {
-            display: none;
+
+        .status-badge.active {
+            background: rgba(74,222,128,0.12);
+            color: #4ade80;
+        }
+
+        .status-badge.pending {
+            background: rgba(251,191,36,0.12);
+            color: #fbbf24;
+        }
+
+        .status-badge.completed {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+        }
+
+        .status-badge.cancelled {
+            background: rgba(248,113,113,0.12);
+            color: #f87171;
+        }
+
+        .status-badge.damaged {
+            background: rgba(225,112,85,0.12);
+            color: #e17055;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-btns {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: var(--font);
+        }
+
+        .btn-sm i {
+            font-size: 0.55rem;
+        }
+
+        .btn-sm.edit {
+            background: rgba(230,179,30,0.12);
+            color: var(--gold);
+        }
+
+        .btn-sm.edit:hover {
+            background: var(--gold);
+            color: #0a1628;
+            transform: scale(1.05);
+        }
+
+        .btn-sm.delete {
+            background: rgba(225,112,85,0.12);
+            color: var(--danger);
+        }
+
+        .btn-sm.delete:hover {
+            background: var(--danger);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.04);
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .empty-state .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255,255,255,0.04);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .error-msg {
-            color: var(--danger);
-            font-size: 13px;
+        .empty-state h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 4px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.1);
+        }
+
+        .empty-state .retry-btn {
             margin-top: 12px;
-            padding: 10px 14px;
-            background: rgba(239, 68, 68, 0.06);
-            border-radius: var(--radius-sm);
-            border-right: 3px solid var(--danger);
-            display: none;
-            text-align: right;
+            padding: 8px 24px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: #0a1628;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition);
+            font-family: var(--font);
         }
 
-        .error-msg.show {
-            display: block;
-            animation: shake 0.4s ease;
-        }
-
-        .error-msg.success {
-            color: var(--success);
-            border-right-color: var(--success);
-            background: rgba(34, 197, 94, 0.06);
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px); }
-            40% { transform: translateX(6px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-
-        .security-badges {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 16px;
-            flex-wrap: wrap;
-        }
-
-        .security-badge {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-dim);
-            font-size: 11px;
-        }
-
-        .security-badge i {
-            font-size: 12px;
-        }
-        .security-badge i.fa-shield-alt {
-            color: var(--success);
-        }
-        .security-badge i.fa-fingerprint {
-            color: var(--accent);
-        }
-        .security-badge i.fa-lock {
-            color: var(--warning);
-        }
-
-        .login-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-            color: var(--text-dim);
-            font-size: 11px;
-        }
-
-        .login-footer .footer-version {
-            background: rgba(255, 255, 255, 0.03);
-            padding: 2px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
+        .empty-state .retry-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 4px 24px rgba(230,179,30,0.2);
         }
 
         /* ============================================================
-           📱 MAIN APP
-           ============================================================ */
-        #mainApp {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .main-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            height: 60px;
-            display: flex;
-            align-items: center;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 20px;
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition);
-        }
-
-        .menu-toggle:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .menu-toggle span {
-            display: block;
-            width: 22px;
-            height: 2px;
-            background: var(--text);
-            border-radius: 2px;
-            transition: all var(--transition);
-        }
-
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(4px, 4px);
-        }
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(4px, -4px);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand .brand-icon {
-            font-size: 22px;
-        }
-
-        .brand h1 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .brand .brand-tag {
-            font-size: 10px;
-            font-weight: 400;
-            color: var(--accent);
-            background: rgba(59, 130, 246, 0.1);
-            padding: 2px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(59, 130, 246, 0.1);
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .search-wrapper {
-            display: flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 0 14px;
-            transition: all var(--transition);
-        }
-
-        .search-wrapper:focus-within {
-            border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .search-wrapper input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text);
-            padding: 6px 0;
-            font-size: 13px;
-            font-family: inherit;
-            width: 140px;
-        }
-
-        .search-wrapper input:focus {
-            width: 200px;
-        }
-
-        .search-wrapper input::placeholder {
-            color: var(--text-dim);
-            font-size: 12px;
-        }
-
-        .search-wrapper .search-icon {
-            color: var(--text-dim);
-            font-size: 13px;
-            margin-left: 8px;
-        }
-
-        .search-wrapper .search-shortcut {
-            font-size: 9px;
-            color: var(--text-dim);
-            background: rgba(255, 255, 255, 0.04);
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid var(--border);
-            margin-right: 6px;
-        }
-
-        .notification-wrapper {
-            position: relative;
-        }
-
-        .notif-btn {
-            position: relative;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 50%;
-            transition: all var(--transition);
-        }
-
-        .notif-btn:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .notif-badge {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: var(--danger);
-            color: #fff;
-            font-size: 8px;
-            font-weight: 700;
-            padding: 1px 5px;
-            border-radius: 50%;
-            min-width: 16px;
-            text-align: center;
-            border: 2px solid var(--primary);
-            display: none;
-        }
-
-        .user-wrapper {
-            position: relative;
-        }
-
-        .user-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 20px;
-            transition: all var(--transition);
-        }
-
-        .user-btn:hover {
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .user-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--info));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 13px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .user-name {
-            font-size: 13px;
-            color: var(--text);
-            font-weight: 500;
-        }
-
-        .user-arrow {
-            font-size: 10px;
-            color: var(--text-dim);
-            transition: all var(--transition);
-        }
-
-        .user-btn:hover .user-arrow {
-            color: #fff;
-        }
-
-        .user-dropdown {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--primary-light);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 6px 0;
-            min-width: 200px;
-            z-index: 200;
-            box-shadow: var(--shadow);
-            margin-top: 8px;
-        }
-
-        .user-dropdown .dropdown-item {
-            width: 100%;
-            padding: 8px 16px;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            text-align: right;
-            cursor: pointer;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-dropdown .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: #fff;
-        }
-
-        .user-dropdown .dropdown-item.danger {
-            color: var(--danger);
-        }
-
-        .user-dropdown .dropdown-item.danger:hover {
-            background: rgba(239, 68, 68, 0.08);
-        }
-
-        .user-dropdown .dropdown-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 4px 12px;
-        }
-
-        /* ============================================================
-           📂 SIDEBAR
-           ============================================================ */
-        .sidebar {
-            position: fixed;
-            top: 60px;
-            right: 0;
-            bottom: 0;
-            width: 240px;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid var(--border);
-            padding: 16px 12px;
-            overflow-y: auto;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar::-webkit-scrollbar {
-            width: 3px;
-        }
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
-        }
-
-        .sidebar-header {
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sidebar-brand .brand-icon {
-            font-size: 22px;
-        }
-
-        .sidebar-brand .brand-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .sidebar-brand .brand-subtitle {
-            font-size: 10px;
-            color: var(--text-dim);
-        }
-
-        .sidebar-close {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition);
-        }
-
-        .sidebar-close:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: #fff;
-        }
-
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-
-        .sidebar-user .user-avatar {
-            width: 36px;
-            height: 36px;
-            font-size: 16px;
-        }
-
-        .sidebar-user .user-info {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .sidebar-user .user-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .sidebar-user .user-role {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .nav-group {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            margin-bottom: 6px;
-        }
-
-        .nav-group-title {
-            font-size: 9px;
-            font-weight: 700;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 6px 12px 2px;
-        }
-
-        .nav-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: var(--radius-sm);
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 13px;
-            font-weight: 500;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all var(--transition);
-            text-align: right;
-            width: 100%;
-            position: relative;
-        }
-
-        .nav-btn i {
-            width: 18px;
-            text-align: center;
-            font-size: 14px;
-            flex-shrink: 0;
-        }
-
-        .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: #fff;
-        }
-
-        .nav-btn.active {
-            background: rgba(59, 130, 246, 0.08);
-            color: var(--accent);
-        }
-
-        .nav-btn.active::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 20%;
-            height: 60%;
-            width: 3px;
-            background: var(--accent);
-            border-radius: 0 3px 3px 0;
-        }
-
-        .nav-btn .nav-badge {
-            margin-right: auto;
-            font-size: 9px;
-            padding: 1px 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-dim);
-            min-width: 18px;
-            text-align: center;
-            display: none;
-        }
-
-        .nav-btn .nav-badge.warning {
-            background: rgba(239, 68, 68, 0.12);
-            color: var(--danger);
-        }
-
-        .nav-btn .nav-badge.success {
-            background: rgba(34, 197, 94, 0.12);
-            color: var(--success);
-        }
-
-        .nav-btn .nav-badge.info {
-            background: rgba(59, 130, 246, 0.12);
-            color: var(--accent);
-        }
-
-        .sidebar-footer {
-            border-top: 1px solid var(--border);
-            padding-top: 12px;
-            margin-top: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .footer-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
-        .footer-status .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .footer-status .status-dot.online {
-            background: var(--success);
-            animation: pulseDot 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseDot {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.3); }
-        }
-
-        .footer-version {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 10px;
-            color: var(--text-dim);
-        }
-
-        .footer-version i {
-            color: var(--accent);
-        }
-
-        .footer-logout {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 6px 14px;
-            border: none;
-            border-radius: var(--radius-sm);
-            background: rgba(239, 68, 68, 0.06);
-            color: var(--danger);
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all var(--transition);
-            width: 100%;
-        }
-
-        .footer-logout:hover {
-            background: rgba(239, 68, 68, 0.12);
-        }
-
-        .footer-logout i {
-            font-size: 13px;
-        }
-
-        /* ============================================================
-           📄 MAIN CONTENT
-           ============================================================ */
-        .main-content {
-            margin-right: 240px;
-            min-height: calc(100vh - 60px);
-            padding: 20px 24px;
-        }
-
-        .page-container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-
-        .page-loader {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            min-height: 200px;
-        }
-
-        .loader-spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(255, 255, 255, 0.04);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        .page-loader p {
-            margin-top: 12px;
-            color: var(--text-dim);
-            font-size: 14px;
-        }
-
-        .page-content {
-            animation: fadePage 0.4s ease-out;
-        }
-
-        @keyframes fadePage {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        #pageContainer {
-            min-height: 200px;
-        }
-
-        .back-to-top {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: none;
-            color: #fff;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
-            transition: all var(--transition);
-            z-index: 40;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .back-to-top:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
-        }
-
-        .connection-status {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(239, 68, 68, 0.9);
-            color: #fff;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-            display: none;
-            align-items: center;
-            gap: 8px;
-            z-index: 999;
-            backdrop-filter: blur(10px);
-        }
-
-        .toast-container {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-width: 400px;
-            width: 90%;
-            pointer-events: none;
-        }
-
-        .toast {
-            padding: 10px 16px;
-            border-radius: var(--radius-sm);
-            color: #fff;
-            font-size: 13px;
-            font-weight: 500;
-            animation: toastSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-            pointer-events: auto;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .toast-success {
-            background: rgba(16, 185, 129, 0.92);
-        }
-        .toast-error {
-            background: rgba(239, 68, 68, 0.92);
-        }
-        .toast-warning {
-            background: rgba(245, 158, 11, 0.92);
-        }
-        .toast-info {
-            background: rgba(59, 130, 246, 0.92);
-        }
-
-        @keyframes toastSlide {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9998;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-box {
-            background: var(--primary-light);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            max-width: 520px;
-            width: 100%;
-            max-height: 80vh;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            animation: modalFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalFade {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .modal-header h3 {
-            font-size: 17px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-dim);
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: var(--radius-sm);
-            transition: all var(--transition);
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: #fff;
-        }
-
-        .modal-body {
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            color: var(--text);
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 14px 20px;
-            border-top: 1px solid var(--border);
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 6px 16px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all var(--transition);
-            text-decoration: none;
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn-sm {
-            padding: 4px 12px;
-            font-size: 12px;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: #fff;
-        }
-
-        .btn-success:hover {
-            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.25);
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: var(--primary);
-        }
-
-        .btn-warning:hover {
-            box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25);
-        }
-
-        .btn-gold {
-            background: linear-gradient(135deg, #e6b31e, #f5d76e);
-            color: var(--primary);
-        }
-
-        .btn-gold:hover {
-            box-shadow: 0 4px 20px rgba(230, 179, 30, 0.25);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-        }
-
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(255, 255, 255, 0.12);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        /* ============================================================
-           📱 RESPONSIVE
+           RESPONSIVE
            ============================================================ */
         @media (max-width: 992px) {
-            .search-wrapper input { width: 100px; }
-            .search-wrapper input:focus { width: 140px; }
-            .brand .brand-tag { display: none; }
-            .main-content { margin-right: 0; padding: 14px 16px; }
-            .menu-toggle { display: flex; }
-            .sidebar {
-                transform: translateX(calc(100% + 10px));
-                width: 280px;
-                padding: 12px;
-            }
-            .sidebar.open { transform: translateX(0); }
-            .sidebar-header { display: flex; }
-            .sidebar-close { display: block; }
+            .fleet-header { padding: 12px 16px; top: 60px; }
+            .fleet-header-left h2 { font-size: 18px; }
+            .stats-grid { padding: 12px 16px; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+            .input-grid { padding: 12px 16px; margin: 0 16px 12px; }
+            .filter-bar { padding: 8px 16px; gap: 6px 10px; }
+            .table-wrapper { padding: 0 16px 16px; }
         }
 
         @media (max-width: 768px) {
-            .login-box { padding: 32px 20px 24px; }
-            .login-logo .logo-icon { font-size: 38px; }
-            .login-logo .logo-text { font-size: 20px; }
-            .brand h1 { font-size: 14px; }
-            .brand .brand-tag { display: none; }
-            .search-wrapper { display: none; }
-            .user-name { display: none; }
-            .main-content { padding: 10px 12px; }
+            .fleet-header { flex-direction: column; align-items: flex-start; padding: 12px 16px; top: 56px; }
+            .fleet-header-left { width: 100%; }
+            .fleet-header-left h2 { font-size: 16px; }
+            .fleet-header-actions { width: 100%; justify-content: flex-start; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 16px; }
+            .stat-card { padding: 12px 14px; }
+            .stat-card .number { font-size: 20px; }
+            .input-grid { grid-template-columns: 1fr 1fr; padding: 10px 12px; margin: 0 12px 10px; gap: 8px; }
+            .input-grid .btn-save { grid-column: span 2; }
+            .filter-bar { flex-direction: column; align-items: stretch; padding: 10px 16px; gap: 6px; }
+            .filter-bar .search-input { flex: 1; }
+            .filter-bar label { font-size: 0.65rem; }
+            .filter-bar select { min-width: 100%; }
+            .table-wrapper { padding: 0 12px 12px; }
+            .table-wrapper table { font-size: 0.7rem; min-width: 700px; }
+            thead th, tbody td { padding: 6px 4px; }
+            .fleet-header-actions .btn-action { padding: 6px 12px; font-size: 0.7rem; }
         }
 
         @media (max-width: 480px) {
-            .login-box { padding: 24px 16px 20px; }
-            .login-logo .logo-icon { font-size: 32px; }
-            .login-logo .logo-text { font-size: 17px; }
-            .login-logo .logo-sub { font-size: 11px; }
-            .input-wrapper input { padding: 10px 40px 10px 12px; font-size: 13px; }
-            .login-btn { padding: 12px; font-size: 14px; }
-            .brand h1 { font-size: 12px; }
-            .brand .brand-icon { font-size: 18px; }
-            .header-right { gap: 6px; }
-            .notif-btn { font-size: 16px; padding: 4px; }
-            .user-avatar { width: 26px; height: 26px; font-size: 11px; }
-            .sidebar { width: 260px; padding: 10px; }
-            .sidebar-user .user-avatar { width: 32px; height: 32px; font-size: 13px; }
-            .nav-btn { padding: 6px 10px; font-size: 12px; }
-            .nav-btn i { font-size: 12px; width: 16px; }
-        }
-
-        @media print {
-            .main-header, .sidebar, .back-to-top, .toast-container, .modal-overlay, .no-print {
-                display: none !important;
-            }
-            .main-content { margin-right: 0 !important; padding: 0 !important; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+            .stat-card { padding: 10px 12px; }
+            .stat-card .number { font-size: 18px; }
+            .stat-card .label { font-size: 9px; }
+            .fleet-header-left .header-icon { width: 36px; height: 36px; font-size: 16px; }
+            .fleet-header-left h2 { font-size: 14px; }
+            .fleet-header-left p { font-size: 10px; }
+            .input-grid { grid-template-columns: 1fr; }
+            .input-grid .btn-save { grid-column: span 1; }
         }
     </style>
-</head>
-<body>
 
     <!-- ============================================================
-         🏦 LOGIN - ENTERPRISE GRADE
-         ============================================================ -->
-    <div id="loginOverlay">
-        <div class="login-container">
-            <div class="login-box">
-
-                <div class="login-logo">
-                    <span class="logo-icon">⚓</span>
-                    <h1 class="logo-text">منظومة الوسائل البحرية</h1>
-                    <p class="logo-sub">نظام إدارة الأسطول المتقدم</p>
-                </div>
-
-                <div class="login-divider">
-                    <span>تسجيل الدخول الآمن</span>
-                </div>
-
-                <div id="accountLocked">
-                    <i class="fas fa-lock"></i>
-                    <span>تم قفل الحساب مؤقتاً. حاول بعد <span class="lock-timer" id="lockTimer">15:00</span></span>
-                </div>
-
-                <form id="loginForm" class="login-form" autocomplete="off" novalidate>
-
-                    <div class="form-group">
-                        <label class="form-label" for="username">اسم المستخدم</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" id="username" placeholder="أدخل اسم المستخدم" autocomplete="username" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label" for="password">كلمة المرور</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="password" id="password" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
-                            <button type="button" class="toggle-password" id="togglePassword">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="form-group" id="otpGroup">
-                        <label class="form-label" for="otpCode">رمز التحقق الثنائي (2FA)</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-shield-alt input-icon"></i>
-                            <input type="text" id="otpCode" placeholder="أدخل رمز 6 أرقام" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-                        </div>
-                        <div class="otp-timer">
-                            <i class="fas fa-clock"></i>
-                            <span>الرمز صالح لمدة</span>
-                            <span class="timer-text" id="otpTimer">05:00</span>
-                            <button type="button" class="otp-resend" id="resendOtpBtn" disabled>إعادة الإرسال</button>
-                        </div>
-                    </div>
-
-                    <div class="login-options">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="rememberMe">
-                            <span class="checkmark"></span>
-                            تذكر الجهاز
-                        </label>
-                        <a href="#" class="forgot-link" id="forgotPasswordLink">نسيت كلمة المرور؟</a>
-                    </div>
-
-                    <button type="submit" class="login-btn" id="loginButton">
-                        <span class="btn-content">
-                            <span class="btn-text">🚀 دخول إلى النظام</span>
-                            <span class="spinner"></span>
-                        </span>
-                    </button>
-
-                    <div id="loginError" class="error-msg"></div>
-
-                    <div class="security-badges">
-                        <span class="security-badge"><i class="fas fa-shield-alt"></i> تشفير شامل</span>
-                        <span class="security-badge"><i class="fas fa-fingerprint"></i> 2FA مفعل</span>
-                        <span class="security-badge"><i class="fas fa-lock"></i> جلسة آمنة</span>
-                    </div>
-                </form>
-
-                <div class="login-footer">
-                    <span>نظام إدارة الأسطول البحري</span>
-                    <span class="footer-version">Enterprise v8.0</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-         📱 MAIN APP
-         ============================================================ -->
-    <div id="mainApp" style="display:none;">
-
-        <!-- HEADER -->
-        <header class="main-header">
-            <div class="header-container">
-                <div class="header-left">
-                    <button class="menu-toggle" id="menuToggle">
-                        <span></span><span></span><span></span>
-                    </button>
-                    <div class="brand">
-                        <span class="brand-icon">⚓</span>
-                        <h1>منظومة الوسائل البحرية</h1>
-                        <span class="brand-tag">Enterprise</span>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="search-wrapper">
-                        <input type="text" id="quickSearch" placeholder="بحث سريع...">
-                        <i class="fas fa-search search-icon"></i>
-                        <kbd class="search-shortcut">⌘K</kbd>
-                    </div>
-                    <div class="notification-wrapper">
-                        <button class="notif-btn" id="notifBtn">
-                            <i class="fas fa-bell"></i>
-                            <span class="notif-badge" id="notifBadge">0</span>
-                        </button>
-                    </div>
-                    <div class="user-wrapper">
-                        <button class="user-btn" id="userBtn">
-                            <div class="user-avatar" id="userAvatar"><span id="userInitial">م</span></div>
-                            <span class="user-name" id="userDisplayName">المستخدم</span>
-                            <i class="fas fa-chevron-down user-arrow"></i>
-                        </button>
-                        <div class="user-dropdown" id="userDropdown">
-                            <button class="dropdown-item" onclick="showToast('📋 جاري فتح الملف الشخصي...', 'info')">
-                                <i class="fas fa-user"></i> الملف الشخصي
-                            </button>
-                            <button class="dropdown-item" onclick="showToast('⚙️ جاري فتح الإعدادات...', 'info')">
-                                <i class="fas fa-cog"></i> الإعدادات
-                            </button>
-                            <div class="dropdown-divider"></div>
-                            <button class="dropdown-item danger" id="logoutBtn">
-                                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- SIDEBAR -->
-        <nav class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-brand">
-                    <span class="brand-icon">⚓</span>
-                    <div>
-                        <div class="brand-title">الأسطول البحري</div>
-                        <div class="brand-subtitle">نظام إدارة متقدم</div>
-                    </div>
-                </div>
-                <button class="sidebar-close" id="sidebarClose">✕</button>
-            </div>
-
-            <div class="sidebar-user">
-                <div class="user-avatar" id="sidebarUserAvatar">م</div>
-                <div class="user-info">
-                    <span class="user-name" id="sidebarUserName">المستخدم</span>
-                    <span class="user-role" id="sidebarUserRole">مسؤول</span>
-                </div>
-            </div>
-
-            <div class="sidebar-nav">
-                <div class="nav-group">
-                    <span class="nav-group-title">الرئيسية</span>
-                    <button class="nav-btn active" data-page="dashboard">
-                        <i class="fas fa-chart-pie"></i> لوحة التحكم
-                    </button>
-                    <button class="nav-btn" data-page="fleet">
-                        <i class="fas fa-ship"></i> السجل العام
-                        <span class="nav-badge" id="fleetBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">إدارة الأسطول</span>
-                    <button class="nav-btn" data-page="maintenance">
-                        <i class="fas fa-wrench"></i> الصيانة
-                        <span class="nav-badge warning" id="maintenanceBadge">0</span>
-                    </button>
-                    <button class="nav-btn" data-page="efficiency">
-                        <i class="fas fa-chart-line"></i> الجاهزية
-                    </button>
-                    <button class="nav-btn" data-page="support">
-                        <i class="fas fa-headset"></i> الدعم
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">العمليات</span>
-                    <button class="nav-btn" data-page="notes">
-                        <i class="fas fa-sticky-note"></i> Note Verbale
-                    </button>
-                    <button class="nav-btn" data-page="monitoring">
-                        <i class="fas fa-map-marked-alt"></i> المراقبة
-                        <span class="nav-badge success" id="sessionsBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">الإدارة</span>
-                    <button class="nav-btn" data-page="users">
-                        <i class="fas fa-users"></i> المستخدمين
-                        <span class="nav-badge" id="usersBadge">0</span>
-                    </button>
-                    <button class="nav-btn" data-page="logs">
-                        <i class="fas fa-history"></i> السجلات
-                        <span class="nav-badge" id="logsBadge">0</span>
-                    </button>
-                </div>
-                <div class="nav-group">
-                    <span class="nav-group-title">متقدم</span>
-                    <button class="nav-btn" data-page="ai-assistant">
-                        <i class="fas fa-robot"></i> المساعد الذكي
-                        <span class="nav-badge success">AI</span>
-                    </button>
-                    <button class="nav-btn" data-page="settings">
-                        <i class="fas fa-cog"></i> الإعدادات
-                    </button>
-                </div>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="footer-status">
-                    <span class="status-dot online"></span>
-                    <span>متصل</span>
-                </div>
-                <div class="footer-version">
-                    <i class="fas fa-shield-alt"></i>
-                    <span>Enterprise v8.0 · آمن</span>
-                </div>
-                <button class="footer-logout" id="sidebarLogoutBtn">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </button>
-            </div>
-        </nav>
-
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
-            <div class="page-container">
-                <div class="page-loader" id="pageLoader" style="display:none;">
-                    <div class="loader-spinner"></div>
-                    <p>جاري التحميل...</p>
-                </div>
-                <div id="pageContainer"></div>
-            </div>
-        </main>
-
-        <button class="back-to-top" id="backToTop">
-            <i class="fas fa-chevron-up"></i>
-        </button>
-
-        <div class="connection-status" id="connectionStatus">
-            <i class="fas fa-wifi"></i><span>غير متصل</span>
-        </div>
-    </div>
-
-    <!-- TOAST -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- MODAL -->
-    <div class="modal-overlay" id="modalOverlay" style="display:none;">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="modalTitle">عنوان</h3>
-                <button class="modal-close" id="modalClose">✕</button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="modalCancel">إلغاء</button>
-                <button class="btn-primary" id="modalConfirm">تأكيد</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============================================================
-    🚀 JAVASCRIPT - PAGE LOADER + LOGIN
+    HEADER - GOLD THEME
     ============================================================ -->
-    <script>
-        /**
-         * ============================================================
-         * 🚢 MARINE SYSTEM v8.0 - PAGE LOADER
-         * ============================================================
-         * ✅ تحميل الصفحات من المسارات الصحيحة
-         * ✅ استخراج وتنفيذ JavaScript المضمن
-         * ✅ معالجة الأخطاء
-         * ✅ مصادقة كاملة
-         * ============================================================
-         */
+    <div class="fleet-header">
+        <div class="fleet-header-left">
+            <div class="header-icon">
+                <i class="fas fa-ship"></i>
+            </div>
+            <div>
+                <h2>السجل العام للأسطول</h2>
+                <p>إدارة ومتابعة جميع المراكب البحرية</p>
+            </div>
+        </div>
+        <div class="fleet-header-actions">
+            <button class="btn-action primary" onclick="refreshFleet()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+        </div>
+    </div>
 
-        console.log('🚢 Marine System v8.0 - Loading...');
+    <!-- ============================================================
+    STATS CARDS - GOLD THEME
+    ============================================================ -->
+    <div class="stats-grid" id="fleetStats">
+        <div class="stat-card">
+            <div class="number gold" id="totalVessels">0</div>
+            <div class="label">🚢 إجمالي المراكب</div>
+            <span class="icon-bg"><i class="fas fa-ship"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number green" id="activeVessels">0</div>
+            <div class="label">✅ الصالح</div>
+            <span class="icon-bg"><i class="fas fa-check-circle"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number yellow" id="maintenanceVessels">0</div>
+            <div class="label">🔧 تحت الصيانة</div>
+            <span class="icon-bg"><i class="fas fa-tools"></i></span>
+        </div>
+        <div class="stat-card">
+            <div class="number red" id="damagedVessels">0</div>
+            <div class="label">🟥 المعطوبة</div>
+            <span class="icon-bg"><i class="fas fa-exclamation-triangle"></i></span>
+        </div>
+    </div>
 
-        // ============================================================
-        // 📦 CONFIGURATION - مسارات الصفحات
-        // ============================================================
+    <!-- ============================================================
+    INPUT FORM - GOLD THEME
+    ============================================================ -->
+    <div id="inputArea" class="input-grid">
+        <input type="text" id="iName" placeholder="اسم المركب">
+        <input type="text" id="iNum" placeholder="الرقم">
+        <input type="number" id="iLen" placeholder="الطول (م)" step="0.1">
+        
+        <select id="iReg" onchange="updateZones()">
+            <option value="">الإقليم</option>
+            <option value="الشمال">🗺️ الشمال</option>
+            <option value="الساحل">🗺️ الساحل</option>
+            <option value="الوسط">🗺️ الوسط</option>
+            <option value="الجنوب">🗺️ الجنوب</option>
+            <option value="وحدة الصيانة والإسناد البحري تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة والإسناد البحري المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة والإسناد البحري صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة والإسناد البحري جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+        </select>
+        
+        <select id="iZone">
+            <option value="">المنطقة</option>
+        </select>
+        
+        <input type="text" id="iPort" placeholder="الميناء">
+        <input type="text" id="iSupp" placeholder="مكان التعزيز">
+        
+        <select id="iStat">
+            <option value="صالح">✅ صالح</option>
+            <option value="معطب">❌ معطب</option>
+            <option value="صيانة">🔧 صيانة</option>
+        </select>
+        
+        <input type="text" id="iBreak" placeholder="نوع العطب">
+        <input type="date" id="iDate">
+        <input type="date" id="iEnd">
+        <input type="text" id="iRef" placeholder="المرجع">
+        
+        <select id="iRepairUnit">
+            <option value="">الوحدة المسؤولة عن الإصلاح</option>
+            <option value="وحدة الصيانة تونس">🛠️ وحدة الصيانة تونس</option>
+            <option value="وحدة الصيانة المنستير">🛠️ وحدة الصيانة المنستير</option>
+            <option value="وحدة الصيانة صفاقس">🛠️ وحدة الصيانة صفاقس</option>
+            <option value="وحدة الصيانة جرجيس">🛠️ وحدة الصيانة جرجيس</option>
+            <option value="المجمع الأمني بقبيبة">🏛️ المجمع الأمني بقبيبة</option>
+            <option value="خارجي">🔧 خارجي</option>
+        </select>
+        
+        <button id="saveVesselBtn" class="btn-save" onclick="addItem()">
+            <i class="fas fa-save"></i> حفظ المركب
+        </button>
+    </div>
 
-        const PAGES_CONFIG = {
-            paths: {
-                dashboard: '/pages/dashboard.html',
-                fleet: '/pages/fleet.html',
-                maintenance: '/pages/maintenance.html',
-                efficiency: '/pages/efficiency.html',
-                support: '/pages/support.html',
-                users: '/pages/users.html',
-                notes: '/pages/notes.html',
-                monitoring: '/pages/monitoring.html',
-                'ai-assistant': '/pages/ai-assistant.html',
-                settings: '/pages/settings.html',
-                logs: '/pages/logs.html',
-                profile: '/pages/profile.html'
-            },
-            titles: {
-                dashboard: 'لوحة التحكم',
-                fleet: 'السجل العام',
-                maintenance: 'الصيانة',
-                efficiency: 'الجاهزية',
-                support: 'الدعم',
-                users: 'المستخدمين',
-                notes: 'Note Verbale',
-                monitoring: 'المراقبة الشاملة',
-                'ai-assistant': 'المساعد الذكي',
-                settings: 'الإعدادات',
-                logs: 'السجلات',
-                profile: 'الملف الشخصي'
-            },
-            allowed: [
-                'dashboard', 'fleet', 'maintenance', 'efficiency',
-                'support', 'users', 'notes', 'monitoring',
-                'ai-assistant', 'settings', 'logs', 'profile'
-            ]
+    <!-- ============================================================
+    FILTER BAR - GOLD THEME
+    ============================================================ -->
+    <div class="filter-bar">
+        <div class="search-input">
+            <input type="text" id="searchMain" placeholder="بحث في السجل..." onkeyup="renderMain()">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+        </div>
+
+        <label><i class="fas fa-tag"></i> الفئة:</label>
+        <select id="fCatMain" onchange="renderMain()">
+            <option value="الكل">الكل</option>
+        </select>
+
+        <label><i class="fas fa-map"></i> الإقليم:</label>
+        <select id="fRegMain" onchange="renderMain()">
+            <option value="الكل">الكل</option>
+        </select>
+
+        <button class="btn-filter primary" onclick="renderMain()">
+            <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-filter outline" onclick="clearMainSearch()">
+            <i class="fas fa-undo-alt"></i> مسح
+        </button>
+    </div>
+
+    <!-- ============================================================
+    TABLE - GOLD THEME
+    ============================================================ -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th><i class="fas fa-ship"></i> الاسم</th>
+                    <th><i class="fas fa-hashtag"></i> الرقم</th>
+                    <th><i class="fas fa-ruler"></i> الطول</th>
+                    <th><i class="fas fa-tag"></i> الفئة</th>
+                    <th><i class="fas fa-map"></i> الإقليم</th>
+                    <th><i class="fas fa-location-dot"></i> المنطقة</th>
+                    <th><i class="fas fa-flag"></i> الميناء</th>
+                    <th><i class="fas fa-handshake"></i> التعزيز</th>
+                    <th><i class="fas fa-circle"></i> الحالة</th>
+                    <th><i class="fas fa-wrench"></i> العطب</th>
+                    <th><i class="fas fa-calendar"></i> التاريخ</th>
+                    <th><i class="fas fa-calendar-check"></i> الانتهاء</th>
+                    <th><i class="fas fa-tools"></i> الوحدة المسؤولة</th>
+                    <th><i class="fas fa-cog"></i> إجراء</th>
+                </tr>
+            </thead>
+            <tbody id="mainBody">
+                <tr>
+                    <td colspan="14" class="empty-state">
+                        <div class="spinner"></div>
+                        <h3>جاري التحميل...</h3>
+                        <p>يرجى الانتظار</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // 🚢 FLEET PAGE - GOLD EDITION
+    // ============================================================
+
+    // ============================================================
+    // 1. DATA
+    // ============================================================
+
+    if (typeof ZONES_DATA === 'undefined') {
+        var ZONES_DATA = {
+            "الشمال": ["تونس", "بنزرت", "طبرقة"],
+            "الساحل": ["سوسة", "المنستير", "نابل"],
+            "الوسط": ["صفاقس", "المهدية", "قرقنة"],
+            "الجنوب": ["جرجيس", "جربة", "قابس"],
+            "وحدة الصيانة والإسناد البحري تونس": ["تونس"],
+            "وحدة الصيانة والإسناد البحري المنستير": ["المنستير"],
+            "وحدة الصيانة والإسناد البحري صفاقس": ["صفاقس"],
+            "وحدة الصيانة والإسناد البحري جرجيس": ["جرجيس"],
+            "المجمع الأمني بقبيبة": ["قبيبة"]
         };
+    }
 
-        // ============================================================
-        // 📦 STATE
-        // ============================================================
+    if (typeof CATS_LIST === 'undefined') {
+        var CATS_LIST = ['البروق', 'صقور', 'خوافر', 'زوارق مزدوجة', 'طوافات'];
+    }
 
-        let currentUser = null;
-        let isOtpStep = false;
+    // ============================================================
+    // 2. TOKEN FUNCTIONS
+    // ============================================================
 
-        // ============================================================
-        // 🔧 HELPERS
-        // ============================================================
+    function getToken() {
+        return localStorage.getItem('marine_token') ||
+               localStorage.getItem('token') ||
+               localStorage.getItem('authToken') ||
+               localStorage.getItem('accessToken') ||
+               null;
+    }
 
-        function showToast(message, type) {
-            type = type || 'info';
-            const container = document.getElementById('toastContainer');
-            if (!container) return;
+    function getAuthHeaders() {
+        const token = getToken();
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': token ? 'Bearer ' + token : ''
+        };
+    }
 
-            const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-            const toast = document.createElement('div');
-            toast.className = 'toast toast-' + type;
-            toast.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span> ' + message;
-            container.appendChild(toast);
+    // ============================================================
+    // 3. PERMISSIONS
+    // ============================================================
 
-            setTimeout(function() {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(30px)';
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 3000);
-        }
+    function getUser() {
+        return window.currentUser || null;
+    }
 
-        function escapeHTML(text) {
-            if (!text) return '';
-            return String(text).replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    function canEdit() {
+        const user = getUser();
+        if (!user) return false;
+        const role = user.role;
+        return role === 'مسؤول' || role === 'محرر' || role === 'admin' || role === 'مدير';
+    }
+
+    function canDelete() {
+        const user = getUser();
+        if (!user) return false;
+        return user.role === 'مسؤول' || user.role === 'admin' || user.role === 'مدير';
+    }
+
+    // ============================================================
+    // 4. HELPERS
+    // ============================================================
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+    }
+
+    function formatDate(val) {
+        if (!val) return '-';
+        try {
+            const d = new Date(val);
+            if (isNaN(d.getTime())) return escapeHtml(val);
+            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        } catch (_) { return escapeHtml(val); }
+    }
+
+    function getCategory(len) {
+        const n = parseFloat(len);
+        if (isNaN(n)) return 'زوارق مزدوجة';
+        if (n === 11) return 'البروق';
+        if (n >= 8 && n <= 12) return 'صقور';
+        if (n > 12 && n <= 25) return 'خوافر';
+        if (n >= 30) return 'طوافات';
+        return 'زوارق مزدوجة';
+    }
+
+    // ============================================================
+    // 5. UPDATE ZONES
+    // ============================================================
+
+    function updateZones() {
+        const reg = document.getElementById('iReg').value;
+        const zoneSel = document.getElementById('iZone');
+        zoneSel.innerHTML = '<option value="">المنطقة</option>';
+        if (ZONES_DATA[reg]) {
+            ZONES_DATA[reg].forEach(z => {
+                zoneSel.innerHTML += `<option value="${z}">${z}</option>`;
             });
         }
+    }
 
-        function getToken() {
-            return localStorage.getItem('marine_token') ||
-                   localStorage.getItem('token') ||
-                   localStorage.getItem('accessToken') ||
-                   null;
-        }
+    // ============================================================
+    // 6. RENDER MAIN
+    // ============================================================
 
-        function setToken(token) {
-            if (token) {
-                localStorage.setItem('marine_token', token);
-                localStorage.setItem('token', token);
-            } else {
-                localStorage.removeItem('marine_token');
-                localStorage.removeItem('token');
-                localStorage.removeItem('accessToken');
+    async function renderMain() {
+        const mainBody = document.getElementById('mainBody');
+
+        mainBody.innerHTML = `
+            <tr><td colspan="14" class="empty-state">
+                <div class="spinner"></div>
+                <h3>جاري التحميل...</h3>
+                <p>يرجى الانتظار</p>
+            </td></tr>
+        `;
+
+        try {
+            const token = getToken();
+            if (!token) {
+                console.warn('⚠️ لا يوجد توكن');
+                window.location.href = '/index.html';
+                return;
             }
-        }
 
-        function getRoleName(role) {
-            var roles = { admin: 'مسؤول', manager: 'مدير', operator: 'مشغل', viewer: 'مشاهد' };
-            return roles[role] || role || 'مستخدم';
-        }
+            console.log('📡 جلب بيانات المراكب...');
+            const response = await fetch('/api/vessels', {
+                headers: getAuthHeaders()
+            });
 
-        // ============================================================
-        // 🔐 LOGIN - مصادقة كاملة
-        // ============================================================
-
-        function doLogin() {
-            console.log('🔐 محاولة تسجيل الدخول');
-
-            var username = document.getElementById('username');
-            var password = document.getElementById('password');
-            var otpCode = document.getElementById('otpCode');
-            var errorEl = document.getElementById('loginError');
-            var loginBtn = document.getElementById('loginButton');
-
-            var user = username.value.trim();
-            var pass = password.value.trim();
-
-            if (isOtpStep) {
-                var otp = otpCode.value.trim();
-                if (!otp || otp.length < 6) {
-                    errorEl.textContent = '⚠️ يرجى إدخال رمز التحقق المكون من 6 أرقام';
-                    errorEl.classList.add('show');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('marine_token');
+                    window.location.href = '/index.html';
                     return;
                 }
-                if (otp === '123456') {
-                    completeLogin({ user: { id: 1, name: 'أمان الله ناجي', username: 'admin', role: 'admin' } });
-                } else {
-                    errorEl.textContent = '❌ رمز التحقق غير صحيح';
-                    errorEl.classList.add('show');
-                }
-                return;
+                throw new Error('فشل تحميل البيانات (Status: ' + response.status + ')');
             }
 
-            errorEl.className = 'error-msg';
-            errorEl.textContent = '';
+            const vessels = await response.json();
+            console.log('✅ تم تحميل', vessels.length, 'مركب');
 
-            if (!user || !pass) {
-                errorEl.textContent = '⚠️ يرجى إدخال اسم المستخدم وكلمة المرور';
-                errorEl.classList.add('show');
-                return;
-            }
+            // ✅ تحديث الإحصائيات
+            const total = vessels.length;
+            const active = vessels.filter(v => v.stat === 'صالح' || v.status === 'صالح').length;
+            const maintenance = vessels.filter(v => v.stat === 'صيانة' || v.status === 'صيانة').length;
+            const damaged = vessels.filter(v => v.stat === 'معطب' || v.status === 'معطب').length;
 
-            loginBtn.disabled = true;
-            loginBtn.classList.add('loading');
+            document.getElementById('totalVessels').textContent = total;
+            document.getElementById('activeVessels').textContent = active;
+            document.getElementById('maintenanceVessels').textContent = maintenance;
+            document.getElementById('damagedVessels').textContent = damaged;
 
-            // محاكاة تسجيل الدخول (في الإنتاج يتم الاتصال بالخادم)
-            setTimeout(function() {
-                loginBtn.disabled = false;
-                loginBtn.classList.remove('loading');
+            // ✅ تطبيق الفلاتر
+            const fCatMain = document.getElementById('fCatMain');
+            const fRegMain = document.getElementById('fRegMain');
+            const searchMain = document.getElementById('searchMain');
 
-                if (user === 'admin' && pass === 'admin123') {
-                    // محاكاة 2FA
-                    isOtpStep = true;
-                    document.getElementById('otpGroup').style.display = 'block';
-                    errorEl.className = 'error-msg success';
-                    errorEl.textContent = '✅ تم إرسال رمز التحقق (استخدم 123456)';
-                    errorEl.classList.add('show');
-                    loginBtn.querySelector('.btn-text').textContent = '🔐 تأكيد الرمز';
-                    document.querySelector('.login-options').style.display = 'none';
-                    showToast('📧 تم إرسال رمز التحقق', 'info');
-                } else {
-                    errorEl.textContent = '❌ اسم المستخدم أو كلمة المرور غير صحيحة';
-                    errorEl.classList.add('show');
-                    loginBtn.querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
-                }
-            }, 1000);
-        }
+            const catFilter = fCatMain.value || 'الكل';
+            const regFilter = fRegMain.value || 'الكل';
+            const search = searchMain.value.trim().toLowerCase();
 
-        function completeLogin(data) {
-            currentUser = data.user;
-            window.currentUser = data.user;
-            setToken('mock_token_' + Date.now());
-
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-
-            updateUserDisplay();
-            loadPage('dashboard');
-            showToast('✅ مرحباً ' + (currentUser.name || currentUser.username), 'success');
-
-            isOtpStep = false;
-            document.getElementById('loginButton').querySelector('.btn-text').textContent = '🚀 دخول إلى النظام';
-            document.getElementById('otpGroup').style.display = 'none';
-            document.querySelector('.login-options').style.display = 'flex';
-        }
-
-        function doLogout() {
-            if (!confirm('⚠️ هل أنت متأكد من تسجيل الخروج؟')) return;
-            currentUser = null;
-            window.currentUser = null;
-            setToken(null);
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('username').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('loginError').className = 'error-msg';
-            showToast('👋 تم تسجيل الخروج', 'info');
-        }
-
-        function updateUserDisplay() {
-            if (!currentUser) return;
-            var n = currentUser.name || currentUser.username;
-            document.getElementById('userDisplayName').textContent = n;
-            document.getElementById('userInitial').textContent = n.charAt(0);
-            document.getElementById('sidebarUserName').textContent = n;
-            document.getElementById('sidebarUserRole').textContent = getRoleName(currentUser.role);
-            document.getElementById('sidebarUserAvatar').textContent = n.charAt(0);
-        }
-
-        // ============================================================
-        // 🗺️ PAGE LOADER - تحميل الصفحات
-        // ============================================================
-
-        async function loadPage(pageName) {
-            console.log('📄 [PageLoader] تحميل الصفحة:', pageName);
-
-            // التحقق من الصلاحية
-            if (!PAGES_CONFIG.allowed.includes(pageName)) {
-                console.error('❌ [PageLoader] الصفحة غير مسموحة:', pageName);
-                showToast('⚠️ الصفحة غير موجودة', 'warning');
-                return;
-            }
-
-            // تحديث القائمة النشطة
-            document.querySelectorAll('.nav-btn').forEach(function(btn) {
-                btn.classList.remove('active');
-                if (btn.dataset.page === pageName) {
-                    btn.classList.add('active');
-                }
+            let filtered = vessels.filter(v => {
+                const vCat = v.cat || getCategory(v.len);
+                const vReg = v.region || v.reg || '';
+                const catMatch = (catFilter === 'الكل' || vCat === catFilter);
+                const regMatch = (regFilter === 'الكل' || vReg === regFilter);
+                return catMatch && regMatch;
             });
 
-            var container = document.getElementById('pageContainer');
-            var loader = document.getElementById('pageLoader');
-
-            if (!container) {
-                console.error('❌ [PageLoader] container غير موجود');
-                return;
+            if (search) {
+                filtered = filtered.filter(v => {
+                    const text = [v.name, v.num, v.region || v.reg, v.zone, v.port, v.status || v.stat, v.cat, v.repairUnit]
+                        .filter(Boolean).join(' ').toLowerCase();
+                    return text.includes(search);
+                });
             }
 
-            // إظهار مؤشر التحميل
-            if (loader) loader.style.display = 'flex';
-            container.innerHTML = '';
-
-            try {
-                var path = PAGES_CONFIG.paths[pageName];
-                if (!path) {
-                    throw new Error('مسار الصفحة غير موجود');
-                }
-
-                console.log('📡 [PageLoader] جلب من:', path);
-
-                var response = await fetch(path, {
-                    cache: 'no-store',
-                    headers: {
-                        'Accept': 'text/html',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('HTTP ' + response.status + ' - ' + response.statusText);
-                }
-
-                var html = await response.text();
-
-                // ============================================================
-                // 🔥 استخراج HTML و Scripts بشكل منفصل
-                // ============================================================
-
-                var tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-
-                // استخراج جميع الـ script tags
-                var scripts = tempDiv.querySelectorAll('script');
-                var scriptContents = [];
-
-                scripts.forEach(function(script) {
-                    scriptContents.push(script.textContent);
-                    script.remove();
-                });
-
-                // عرض الـ HTML النظيف
-                container.innerHTML = tempDiv.innerHTML;
-
-                // 🔥 تنفيذ الـ scripts المستخرجة
-                scriptContents.forEach(function(content) {
-                    if (content && content.trim()) {
-                        try {
-                            var newScript = document.createElement('script');
-                            newScript.textContent = content;
-                            document.body.appendChild(newScript);
-                            setTimeout(function() {
-                                if (newScript.parentNode) {
-                                    newScript.remove();
-                                }
-                            }, 10);
-                        } catch (e) {
-                            console.warn('⚠️ [PageLoader] خطأ في تنفيذ script:', e.message);
-                        }
-                    }
-                });
-
-                // تحديث عنوان الصفحة
-                document.title = '⚓ ' + (PAGES_CONFIG.titles[pageName] || pageName);
-
-                console.log('✅ [PageLoader] تم تحميل الصفحة:', pageName);
-
-            } catch (error) {
-                console.error('❌ [PageLoader] خطأ في تحميل الصفحة:', error);
-
-                // عرض صفحة الخطأ
-                container.innerHTML = `
-                    <div style="text-align:center;padding:60px 20px;direction:rtl;">
-                        <div style="font-size:48px;margin-bottom:16px;">⚠️</div>
-                        <h2 style="color:#f87171;">فشل تحميل الصفحة</h2>
-                        <p style="color:rgba(255,255,255,0.3);margin:12px 0;">
-                            ${escapeHTML(error.message)}
-                        </p>
-                        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;">
-                            <button onclick="loadPage('dashboard')" style="padding:8px 20px;border:none;border-radius:8px;background:var(--gold);color:#0a1628;cursor:pointer;font-weight:600;font-family:inherit;">
-                                📊 العودة للرئيسية
-                            </button>
-                            <button onclick="loadPage('${pageName}')" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:transparent;color:#e2e8f0;cursor:pointer;font-family:inherit;">
-                                🔄 إعادة المحاولة
-                            </button>
-                        </div>
-                    </div>
+            if (filtered.length === 0) {
+                mainBody.innerHTML = `
+                    <tr><td colspan="14" class="empty-state">
+                        <span class="empty-icon"><i class="fas fa-inbox"></i></span>
+                        <h3>لا توجد مراكب</h3>
+                        <p>لم يتم العثور على أي مراكب مطابقة</p>
+                    </td></tr>
                 `;
-
-                showToast('❌ ' + error.message, 'error');
-
-            } finally {
-                if (loader) loader.style.display = 'none';
+                return;
             }
+
+            let html = '';
+            for (const v of filtered) {
+                const id = v._id || v.id;
+                const name = v.name || '-';
+                const number = v.num || '-';
+                const length = v.len || '-';
+                const category = v.cat || getCategory(length);
+                const region = v.region || v.reg || '-';
+                const zone = v.zone || '-';
+                const port = v.port || '-';
+                const supp = v.supp || '-';
+                const status = v.status || v.stat || '-';
+                const breakType = v.break || '-';
+                const fDate = v.fDate;
+                const eDate = v.eDate;
+                const repairUnit = v.repairUnit || '-';
+
+                const statusColor = status === 'صالح' ? '#4ade80' : (status === 'معطب' ? '#e17055' : '#fbbf24');
+                const isDamaged = status === 'معطب';
+
+                const editBtn = canEdit() ?
+                    `<button class="btn-sm edit" onclick="editItem('${id}')"><i class="fas fa-edit"></i></button>` : '';
+                const delBtn = canDelete() ?
+                    `<button class="btn-sm delete" onclick="deleteItem('${id}','${escapeHtml(name)}')"><i class="fas fa-trash-alt"></i></button>` : '';
+
+                html += `<tr class="${isDamaged ? 'damaged' : ''}">
+                    <td class="vessel-name">${escapeHtml(name)}</td>
+                    <td>${escapeHtml(number)}</td>
+                    <td>${escapeHtml(length)}</td>
+                    <td>${escapeHtml(category)}</td>
+                    <td>${escapeHtml(region)}</td>
+                    <td>${escapeHtml(zone)}</td>
+                    <td>${escapeHtml(port)}</td>
+                    <td>${escapeHtml(supp)}</td>
+                    <td style="color:${statusColor}; font-weight:700;">${escapeHtml(status)}</td>
+                    <td>${escapeHtml(breakType)}</td>
+                    <td>${formatDate(fDate)}</td>
+                    <td>${formatDate(eDate)}</td>
+                    <td>${escapeHtml(repairUnit)}</td>
+                    <td><div class="action-btns">${editBtn} ${delBtn}</div></td>
+                </tr>`;
+            }
+            mainBody.innerHTML = html;
+
+        } catch (err) {
+            console.error('❌ renderMain error:', err);
+            mainBody.innerHTML = `
+                <tr><td colspan="14" class="empty-state">
+                    <span class="empty-icon"><i class="fas fa-exclamation-triangle" style="color:#f87171;"></i></span>
+                    <h3 style="color:#f87171;">خطأ في تحميل البيانات</h3>
+                    <p style="color:rgba(255,255,255,0.3);">${escapeHtml(err.message)}</p>
+                    <button class="retry-btn" onclick="renderMain()">
+                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                    </button>
+                </td></tr>
+            `;
+        }
+    }
+
+    // ============================================================
+    // 7. ADD ITEM
+    // ============================================================
+
+    async function addItem() {
+        if (!canEdit()) {
+            alert('⚠️ ليس لديك صلاحية لإضافة مركب');
+            return;
         }
 
-        // ============================================================
-        // 🚀 INIT - تهيئة التطبيق
-        // ============================================================
+        const name = document.getElementById('iName').value.trim();
+        if (!name) { alert('⚠️ يرجى إدخال اسم المركب'); return; }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('📄 DOM جاهز');
+        const status = document.getElementById('iStat').value;
+        const faultDate = document.getElementById('iDate').value;
+        if ((status === 'معطب' || status === 'صيانة') && !faultDate) {
+            alert('⚠️ تاريخ العطب مطلوب للمركب المعطب أو الذي تحت الصيانة');
+            return;
+        }
 
-            // ===== LOGIN =====
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                doLogin();
+        const vessel = {
+            name: name,
+            num: document.getElementById('iNum').value.trim(),
+            len: document.getElementById('iLen').value,
+            region: document.getElementById('iReg').value,
+            zone: document.getElementById('iZone').value,
+            port: document.getElementById('iPort').value.trim(),
+            supp: document.getElementById('iSupp').value.trim(),
+            stat: status,
+            break: document.getElementById('iBreak').value.trim(),
+            fDate: faultDate,
+            eDate: document.getElementById('iEnd').value,
+            ref: document.getElementById('iRef').value.trim(),
+            repairUnit: document.getElementById('iRepairUnit').value
+        };
+
+        try {
+            const token = getToken();
+            const response = await fetch('/api/vessels', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(vessel)
             });
 
-            document.getElementById('togglePassword').onclick = function() {
-                var input = document.getElementById('password');
-                var icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'fas fa-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'fas fa-eye';
-                }
-            };
-
-            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
-                e.preventDefault();
-                showToast('📧 سيتم إرسال رابط إعادة التعيين', 'info');
-            });
-
-            document.getElementById('resendOtpBtn').addEventListener('click', function() {
-                showToast('📧 تم إعادة إرسال رمز التحقق', 'info');
-            });
-
-            // ===== SIDEBAR =====
-            document.getElementById('menuToggle').addEventListener('click', function() {
-                document.getElementById('sidebar').classList.toggle('open');
-                this.classList.toggle('active');
-            });
-
-            document.getElementById('sidebarClose').addEventListener('click', function() {
-                document.getElementById('sidebar').classList.remove('open');
-                document.getElementById('menuToggle').classList.remove('active');
-            });
-
-            // ===== NAV BUTTONS =====
-            document.querySelectorAll('.nav-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var page = this.dataset.page;
-                    if (page) loadPage(page);
-                    if (window.innerWidth <= 992) {
-                        document.getElementById('sidebar').classList.remove('open');
-                        document.getElementById('menuToggle').classList.remove('active');
-                    }
-                });
-            });
-
-            // ===== USER =====
-            document.getElementById('userBtn').addEventListener('click', function(e) {
-                e.stopPropagation();
-                var dropdown = document.getElementById('userDropdown');
-                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-            });
-
-            document.addEventListener('click', function() {
-                document.getElementById('userDropdown').style.display = 'none';
-            });
-
-            // ===== LOGOUT =====
-            document.getElementById('logoutBtn').addEventListener('click', doLogout);
-            document.getElementById('sidebarLogoutBtn').addEventListener('click', doLogout);
-
-            // ===== BACK TO TOP =====
-            document.getElementById('backToTop').addEventListener('click', function() {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-
-            window.addEventListener('scroll', function() {
-                var btn = document.getElementById('backToTop');
-                btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
-            });
-
-            // ===== NOTIFICATIONS =====
-            document.getElementById('notifBtn').addEventListener('click', function() {
-                showToast('📬 تم فتح الإشعارات', 'info');
-            });
-
-            // ===== SEARCH =====
-            document.addEventListener('keydown', function(e) {
-                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                    e.preventDefault();
-                    document.getElementById('quickSearch').focus();
-                }
-            });
-
-            // ===== MODAL =====
-            document.getElementById('modalClose').addEventListener('click', function() {
-                document.getElementById('modalOverlay').style.display = 'none';
-            });
-
-            document.getElementById('modalOverlay').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    document.getElementById('modalOverlay').style.display = 'none';
-                }
-            });
-
-            // ===== CHECK TOKEN =====
-            var token = getToken();
-            if (token) {
-                // محاكاة التحقق من التوكن
-                console.log('✅ تم استعادة الجلسة');
-                // في الإنتاج يتم التحقق من الخادم
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'فشل حفظ المركب');
             }
 
-            console.log('✅ Marine System v8.0 ready');
-            console.log('🔑 بيانات الدخول: admin / admin123');
-            console.log('🔐 رمز 2FA: 123456');
-            console.log('📄 عدد الصفحات: ' + Object.keys(PAGES_CONFIG.paths).length);
+            clearForm();
+            await renderMain();
+            alert('✅ تم حفظ المركب بنجاح');
+        } catch (err) {
+            alert('❌ ' + err.message);
+        }
+    }
+
+    // ============================================================
+    // 8. CLEAR FORM
+    // ============================================================
+
+    function clearForm() {
+        ['iName', 'iNum', 'iLen', 'iPort', 'iSupp', 'iBreak', 'iDate', 'iEnd', 'iRef'].forEach(id => {
+            document.getElementById(id).value = '';
         });
+        document.getElementById('iReg').value = '';
+        document.getElementById('iZone').innerHTML = '<option value="">المنطقة</option>';
+        document.getElementById('iStat').value = 'صالح';
+        document.getElementById('iRepairUnit').value = '';
+    }
 
-        // ============================================================
-        // 🌐 GLOBAL EXPOSURE
-        // ============================================================
+    // ============================================================
+    // 9. DELETE ITEM
+    // ============================================================
 
-        window.doLogin = doLogin;
-        window.doLogout = doLogout;
-        window.loadPage = loadPage;
-        window.showToast = showToast;
-        window.currentUser = currentUser;
-        window.getToken = getToken;
-        window.setToken = setToken;
+    window.deleteItem = async function(id, name) {
+        if (!canDelete()) { alert('⚠️ ليس لديك صلاحية للحذف'); return; }
+        if (!confirm(`⚠️ هل أنت متأكد من حذف المركب "${name}"؟`)) return;
 
-        console.log('✅ Marine System v8.0 loaded successfully');
-        console.log('📊 صفحة السجل العام: /pages/fleet.html');
-        console.log('📄 جميع الصفحات يتم تحميلها عبر loadPage()');
-    </script>
+        try {
+            const token = getToken();
+            const response = await fetch(`/api/vessels/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
 
-</body>
-</html>
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'فشل حذف المركب');
+            }
+
+            await renderMain();
+            alert('✅ تم حذف المركب بنجاح');
+        } catch (err) { alert('❌ ' + err.message); }
+    };
+
+    // ============================================================
+    // 10. EDIT ITEM
+    // ============================================================
+
+    window.editItem = async function(id) {
+        if (!canEdit()) { alert('⚠️ ليس لديك صلاحية للتعديل'); return; }
+
+        try {
+            const token = getToken();
+            const response = await fetch('/api/vessels', { headers: getAuthHeaders() });
+            if (!response.ok) throw new Error('فشل تحميل البيانات');
+
+            const vessels = await response.json();
+            const v = vessels.find(item => String(item._id || item.id) === String(id));
+            if (!v) { alert('❌ المركب غير موجود'); return; }
+
+            document.getElementById('iName').value = v.name || '';
+            document.getElementById('iNum').value = v.num || '';
+            document.getElementById('iLen').value = v.len || '';
+            document.getElementById('iReg').value = v.region || v.reg || '';
+            updateZones();
+            setTimeout(() => { document.getElementById('iZone').value = v.zone || ''; }, 50);
+            document.getElementById('iPort').value = v.port || '';
+            document.getElementById('iSupp').value = v.supp || '';
+            document.getElementById('iStat').value = v.status || v.stat || 'صالح';
+            document.getElementById('iBreak').value = v.break || '';
+            document.getElementById('iDate').value = v.fDate || '';
+            document.getElementById('iEnd').value = v.eDate || '';
+            document.getElementById('iRef').value = v.ref || '';
+            document.getElementById('iRepairUnit').value = v.repairUnit || '';
+
+            const saveBtn = document.getElementById('saveVesselBtn');
+            saveBtn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث المركب';
+            saveBtn.onclick = async function() { await updateItem(id); };
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (err) { alert('❌ ' + err.message); }
+    };
+
+    // ============================================================
+    // 11. UPDATE ITEM
+    // ============================================================
+
+    async function updateItem(id) {
+        const name = document.getElementById('iName').value.trim();
+        if (!name) { alert('⚠️ اسم المركب مطلوب'); return; }
+
+        const vessel = {
+            name: name,
+            num: document.getElementById('iNum').value.trim(),
+            len: document.getElementById('iLen').value,
+            region: document.getElementById('iReg').value,
+            zone: document.getElementById('iZone').value,
+            port: document.getElementById('iPort').value.trim(),
+            supp: document.getElementById('iSupp').value.trim(),
+            stat: document.getElementById('iStat').value,
+            break: document.getElementById('iBreak').value.trim(),
+            fDate: document.getElementById('iDate').value,
+            eDate: document.getElementById('iEnd').value,
+            ref: document.getElementById('iRef').value.trim(),
+            repairUnit: document.getElementById('iRepairUnit').value
+        };
+
+        try {
+            const token = getToken();
+            const response = await fetch(`/api/vessels/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(vessel)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'فشل تحديث المركب');
+            }
+
+            clearForm();
+            const saveBtn = document.getElementById('saveVesselBtn');
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ المركب';
+            saveBtn.onclick = addItem;
+            await renderMain();
+            alert('✅ تم تحديث المركب بنجاح');
+        } catch (err) { alert('❌ ' + err.message); }
+    }
+
+    // ============================================================
+    // 12. CLEAR SEARCH
+    // ============================================================
+
+    window.clearMainSearch = function() {
+        document.getElementById('searchMain').value = '';
+        document.getElementById('fCatMain').value = 'الكل';
+        document.getElementById('fRegMain').value = 'الكل';
+        renderMain();
+    };
+
+    // ============================================================
+    // 13. INIT FILTERS
+    // ============================================================
+
+    function initFilters() {
+        const fCatMain = document.getElementById('fCatMain');
+        const fRegMain = document.getElementById('fRegMain');
+
+        fCatMain.innerHTML = '<option value="الكل">الكل</option>';
+        CATS_LIST.forEach(c => { fCatMain.innerHTML += `<option value="${c}">${c}</option>`; });
+
+        fRegMain.innerHTML = '<option value="الكل">الكل</option>';
+        Object.keys(ZONES_DATA).forEach(r => { fRegMain.innerHTML += `<option value="${r}">${r}</option>`; });
+    }
+
+    // ============================================================
+    // 14. REFRESH
+    // ============================================================
+
+    window.refreshFleet = function() {
+        renderMain();
+    };
+
+    // ============================================================
+    // 15. INIT
+    // ============================================================
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('🚀 تحميل صفحة السجل العام - Gold Edition...');
+
+        const token = getToken();
+        if (!token) {
+            console.warn('⚠️ لا يوجد توكن');
+            window.location.href = '/index.html';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/me', {
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) {
+                console.warn('⚠️ جلسة غير صالحة');
+                localStorage.removeItem('marine_token');
+                window.location.href = '/index.html';
+                return;
+            }
+
+            const data = await response.json();
+            if (data.success && data.user) {
+                window.currentUser = data.user;
+                console.log('✅ المستخدم الحالي:', window.currentUser);
+                console.log('👤 الدور:', window.currentUser.role);
+            }
+        } catch (error) {
+            console.error('❌ خطأ:', error);
+            window.location.href = '/index.html';
+            return;
+        }
+
+        const addBtn = document.getElementById('saveVesselBtn');
+        if (addBtn) {
+            addBtn.style.display = canEdit() ? 'inline-flex' : 'none';
+        }
+
+        initFilters();
+        updateZones();
+        await renderMain();
+
+        console.log('✅ صفحة السجل العام - Gold Edition جاهزة');
+    });
+
+    // ============================================================
+    // 16. GLOBAL EXPOSURE
+    // ============================================================
+
+    window.renderMain = renderMain;
+    window.addItem = addItem;
+    window.editItem = editItem;
+    window.updateItem = updateItem;
+    window.deleteItem = deleteItem;
+    window.clearMainSearch = clearMainSearch;
+    window.updateZones = updateZones;
+    window.refreshFleet = refreshFleet;
+    window.getToken = getToken;
+    window.getAuthHeaders = getAuthHeaders;
+</script>
+</div>
