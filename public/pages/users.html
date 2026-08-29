@@ -1506,4 +1506,17 @@
 
         })();
     </script>
+    // ============================================================
+// 🔄 EXPOSE - تصدير دالة التحديث
+// ============================================================
+
+// ✅ جعل دالة loadUsers متاحة عالمياً لتحديث البيانات عند العودة للصفحة
+if (typeof window !== 'undefined') {
+    window.loadUsers = loadUsers;
+    window.refreshUsersData = function() {
+        console.log('🔄 [Users] تحديث البيانات من الخادم...');
+        loadUsers();
+    };
+    console.log('✅ [Users] دالة refreshUsersData مسجلة عالمياً');
+}
 </div>
