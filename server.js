@@ -1,8 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v18.0 (WORKING VERSION)
+ * 🚢 MARINE SYSTEM - SERVER v21.0 (AUTO ADMIN)
  * ============================================================
- * ✅ هذه النسخة كانت تعمل بشكل صحيح
+ * ✅ ينشئ Admin تلقائياً من متغيرات البيئة
+ * ✅ يضمن وجود المستخدم في قاعدة البيانات
+ * ✅ يقوم بتحديث كلمة المرور إذا تغيرت
  * ============================================================
  */
 
@@ -36,20 +38,23 @@ const IS_PRODUCTION = NODE_ENV === 'production';
 // ✅ JWT
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 
-// ✅ Admin - من متغيرات البيئة
+// ✅ Admin - من متغيرات البيئة (مع قيم افتراضية آمنة)
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Azerty@123456789';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
 
-// ✅ CORS - السماح للجميع (للتجربة)
-const ALLOWED_ORIGINS = ['*'];
+// ✅ CORS
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['*'];
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v18.0');
+console.log('🚢 MARINE SYSTEM v21.0');
 console.log('='.repeat(60));
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ Environment: ${NODE_ENV}`);
+console.log(`✅ Admin: ${ADMIN_USERNAME}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -233,23 +238,43 @@ function verifyToken(token) {
 }
 
 // ============================================================
-// 🔐 CREATE ADMIN
+// 🔐 CREATE/UPDATE ADMIN - تلقائي
 // ============================================================
-async function createAdmin() {
+async function ensureAdmin() {
     try {
+        // ✅ البحث عن المستخدم
         const existing = await User.findOne({ username: ADMIN_USERNAME.toLowerCase() }).select('+password');
+        
         if (existing) {
+            // ✅ التحقق من كلمة المرور
             const passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existing.password);
+            
             if (!passwordMatches) {
+                // ✅ تحديث كلمة المرور إذا تغيرت
                 existing.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
                 await existing.save();
                 console.log('✅ Admin password updated');
             }
-            console.log(`✅ Admin exists: ${ADMIN_USERNAME}`);
+            
+            // ✅ تحديث البريد الإلكتروني والاسم إذا تغير
+            if (existing.email !== ADMIN_EMAIL.toLowerCase()) {
+                existing.email = ADMIN_EMAIL.toLowerCase();
+                await existing.save();
+                console.log('✅ Admin email updated');
+            }
+            
+            if (existing.name !== ADMIN_NAME) {
+                existing.name = ADMIN_NAME;
+                await existing.save();
+                console.log('✅ Admin name updated');
+            }
+            
+            console.log(`✅ Admin ready: ${ADMIN_USERNAME}`);
             return;
         }
 
+        // ✅ إنشاء مستخدم جديد
         const admin = new User({
             name: ADMIN_NAME,
             username: ADMIN_USERNAME.toLowerCase(),
@@ -261,6 +286,7 @@ async function createAdmin() {
         });
         await admin.save();
         console.log(`✅ Admin created: ${ADMIN_USERNAME}`);
+
     } catch (error) {
         console.error('❌ Admin error:', error.message);
     }
@@ -290,13 +316,12 @@ async function seedVessels() {
 // 🔐 MIDDLEWARE
 // ============================================================
 
-// ✅ CORS - السماح للجميع
+// ✅ CORS
 app.use(cors({
     origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID'],
-    exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID']
 }));
 
 // ✅ Security Headers
@@ -309,22 +334,19 @@ app.use(helmet({
 }));
 
 // ✅ Rate Limiting
-const globalLimiter = rateLimit({
+app.use('/api', rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: { success: false, error: 'طلبات كثيرة جداً' },
     keyGenerator: (req) => req.ip
-});
+}));
 
-const authLimiter = rateLimit({
+app.use('/api/auth/login', rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
     message: { success: false, error: 'محاولات كثيرة، حاول بعد 15 دقيقة' },
     keyGenerator: (req) => req.ip
-});
-
-app.use('/api', globalLimiter);
-app.use('/api/auth/login', authLimiter);
+}));
 
 // ✅ Body Parsers
 app.use(express.json({ limit: '10mb' }));
@@ -513,39 +535,17 @@ app.get('/api/vessels', authenticate, async (req, res) => {
 const publicPath = path.join(__dirname, 'public');
 if (!fs.existsSync(publicPath)) fs.mkdirSync(publicPath, { recursive: true });
 
-// ✅ Serve static files
 app.use(express.static(publicPath));
 
-// ✅ صفحة تسجيل الدخول
 app.get('/', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.send(`
-            <!DOCTYPE html>
-            <html>
-            <head><title>Marine System</title></head>
-            <body>
-                <h1>🚢 Marine System</h1>
-                <p>Server is running. Please upload index.html</p>
-            </body>
-            </html>
-        `);
+        res.send('Marine System - Upload index.html');
     }
 });
 
-// ✅ لوحة التحكم - إرجاع نفس index.html (SPA)
-app.get('/dashboard', (req, res) => {
-    const indexPath = path.join(publicPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.send('Dashboard - Please upload index.html');
-    }
-});
-
-// ✅ أي صفحة أخرى - إرجاع index.html (SPA)
 app.get('*', (req, res) => {
     const indexPath = path.join(publicPath, 'index.html');
     if (fs.existsSync(indexPath)) {
@@ -573,13 +573,14 @@ app.use((err, req, res, next) => {
 
 async function startServer() {
     try {
-        await createAdmin();
+        // ✅ إنشاء Admin تلقائياً
+        await ensureAdmin();
         await seedVessels();
 
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v18.0');
+            console.log('🚢 MARINE SYSTEM v21.0');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
@@ -591,6 +592,7 @@ async function startServer() {
             console.log('🔑 LOGIN:');
             console.log(`   👤 Username: ${ADMIN_USERNAME}`);
             console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
+            console.log(`   📧 Email: ${ADMIN_EMAIL}`);
             console.log('='.repeat(60));
             console.log(`🌐 URL: ${process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`}`);
             console.log('');
