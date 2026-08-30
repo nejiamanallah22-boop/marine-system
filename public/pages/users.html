@@ -1,9 +1,9 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
-        /* ============================================================
-           👥 USERS PAGE - STYLES
-           ============================================================ */
+        /* ===== كل الأنماط السابقة (تم حذفها للاختصار، يمكنك إعادة استخدامها من الرد السابق) ===== */
+        /* ... يرجى نسخ الأنماط من الرد السابق أو استخدامها كما هي ... */
+        /* سأضع الأنماط الأساسية هنا لتجنب الصفحة الفارغة */
 
         #page-users {
             width: 100%;
@@ -16,282 +16,42 @@
             min-height: 100vh;
             box-sizing: border-box;
         }
-
-        .users-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            background: rgba(255,255,255,0.04);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .users-header-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .users-header-left .icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #0a1628;
-        }
-
-        .users-header-left h2 {
-            font-size: 22px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa, #fff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-
-        .users-header-left p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.3);
-            margin: 0;
-        }
-
-        .users-header-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-action {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Cairo', sans-serif;
-        }
-
-        .btn-action.primary {
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            color: #fff;
-        }
-        .btn-action.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(96,165,250,0.3);
-        }
-
-        .btn-action.success {
-            background: linear-gradient(135deg, #22c55e, #4ade80);
-            color: #0a1628;
-        }
-        .btn-action.success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(34,197,94,0.3);
-        }
-
-        .users-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            padding: 16px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #60a5fa, #a78bfa);
-            opacity: 0.6;
-        }
-
-        .stat-card .number {
-            font-size: 26px;
-            font-weight: 800;
-            color: #60a5fa;
-            line-height: 1.2;
-        }
-
-        .stat-card .label {
-            font-size: 11px;
-            color: rgba(255,255,255,0.3);
-            margin-top: 4px;
-        }
-
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
-        }
-
-        .filter-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .filter-bar select,
-        .filter-bar input {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 120px;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-        }
-
-        .filter-bar select:focus,
-        .filter-bar input:focus {
-            outline: none;
-            border-color: #60a5fa;
-        }
-
-        .btn-filter {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-filter.primary {
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            color: #fff;
-        }
-        .btn-filter.outline {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.3);
-        }
-
-        .users-section {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.02);
-        }
-
-        .section-header h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .badge {
-            font-size: 11px;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
+        /* باقي الأنماط موجودة في الرد السابق، سأكررها هنا للاكتمال */
+        .users-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .users-header-left { display: flex; align-items: center; gap: 14px; }
+        .users-header-left .icon { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0a1628; }
+        .users-header-left h2 { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
+        .users-header-left p { font-size: 12px; color: rgba(255,255,255,0.3); margin: 0; }
+        .users-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-action { padding: 8px 18px; border: none; border-radius: 30px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; font-family: 'Cairo', sans-serif; }
+        .btn-action.primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
+        .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(96,165,250,0.3); }
+        .btn-action.success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
+        .btn-action.success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34,197,94,0.3); }
+        .users-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; text-align: center; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, #a78bfa); opacity: 0.6; }
+        .stat-card .number { font-size: 26px; font-weight: 800; color: #60a5fa; line-height: 1.2; }
+        .stat-card .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+        .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 20px; }
+        .filter-bar label { font-size: 0.7rem; color: rgba(255,255,255,0.3); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .filter-bar select, .filter-bar input { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #e2e8f0; font-size: 0.75rem; min-width: 120px; cursor: pointer; font-family: 'Cairo', sans-serif; }
+        .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: #60a5fa; }
+        .btn-filter { padding: 6px 16px; border: none; border-radius: 20px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-filter.primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
+        .btn-filter.outline { background: transparent; border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
+        .users-section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); }
+        .section-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .badge { font-size: 11px; padding: 4px 16px; border-radius: 20px; font-weight: 600; }
         .badge.blue { background: rgba(96,165,250,0.12); color: #60a5fa; }
-
-        .table-wrapper {
-            overflow-x: auto;
-            padding: 16px 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.78rem;
-            min-width: 700px;
-        }
-
-        thead {
-            background: rgba(96,165,250,0.08);
-            border-bottom: 2px solid rgba(96,165,250,0.08);
-        }
-
-        thead th {
-            padding: 10px 12px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: rgba(255,255,255,0.35);
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-
-        tbody td {
-            padding: 9px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            vertical-align: middle;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.78rem;
-            text-align: center;
-        }
-
-        tbody .user-name {
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .status-badge {
-            padding: 3px 12px;
-            border-radius: 20px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
+        .table-wrapper { overflow-x: auto; padding: 16px 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 700px; }
+        thead { background: rgba(96,165,250,0.08); border-bottom: 2px solid rgba(96,165,250,0.08); }
+        thead th { padding: 10px 12px; text-align: center; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; white-space: nowrap; }
+        tbody td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); vertical-align: middle; color: rgba(255,255,255,0.6); font-size: 0.78rem; text-align: center; }
+        tbody .user-name { font-weight: 600; color: #fff; }
+        .status-badge { padding: 3px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; display: inline-block; white-space: nowrap; }
         .status-badge.active { background: rgba(34,197,94,0.12); color: #4ade80; }
         .status-badge.inactive { background: rgba(239,68,68,0.12); color: #f87171; }
         .status-badge.super_admin { background: rgba(167,139,250,0.15); color: #a78bfa; }
@@ -299,187 +59,44 @@
         .status-badge.user { background: rgba(96,165,250,0.12); color: #60a5fa; }
         .status-badge.operator { background: rgba(34,197,94,0.12); color: #4ade80; }
         .status-badge.viewer { background: rgba(148,163,184,0.12); color: #94a3b8; }
-
-        .action-btn {
-            padding: 4px 10px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin: 2px;
-        }
-
+        .action-btn { padding: 4px 10px; border: none; border-radius: 6px; font-size: 0.65rem; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: inline-flex; align-items: center; gap: 4px; margin: 2px; }
         .action-btn.edit { background: rgba(230,179,30,0.1); color: #f5d76e; }
         .action-btn.delete { background: rgba(239,68,68,0.1); color: #f87171; }
         .action-btn.password { background: rgba(96,165,250,0.1); color: #60a5fa; }
         .action-btn.face { background: rgba(167,139,250,0.1); color: #a78bfa; }
-
         /* ===== MODAL ===== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.visible { display: flex; }
-
-        .modal-box {
-            background: #111e3a;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            animation: modalFade 0.3s ease-out;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes modalFade {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-
+        .modal-box { background: #111e3a; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; max-width: 500px; width: 100%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: modalFade 0.3s ease-out; display: flex; flex-direction: column; }
+        @keyframes modalFade { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); }
         .modal-header h3 { font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
-        .modal-close {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.2);
-            font-size: 24px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            line-height: 1;
-        }
+        .modal-close { background: none; border: none; color: rgba(255,255,255,0.2); font-size: 24px; cursor: pointer; padding: 4px; border-radius: 8px; transition: all 0.3s; line-height: 1; }
         .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
-
         .modal-body { padding: 20px; overflow-y: auto; }
         .modal-body .form-group { margin-bottom: 14px; }
-        .modal-body .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: rgba(255,255,255,0.3);
-            margin-bottom: 4px;
-        }
-        .modal-body .form-group input,
-        .modal-body .form-group select {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 14px;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
-            box-sizing: border-box;
-        }
-        .modal-body .form-group input:focus,
-        .modal-body .form-group select:focus {
-            outline: none;
-            border-color: #60a5fa;
-            background: rgba(255,255,255,0.06);
-        }
-        .modal-body .form-group .field-error {
-            font-size: 11px;
-            color: #f87171;
-            margin-top: 4px;
-            display: none;
-        }
+        .modal-body .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+        .modal-body .form-group input, .modal-body .form-group select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #e2e8f0; font-size: 14px; font-family: 'Cairo', sans-serif; transition: all 0.3s; box-sizing: border-box; }
+        .modal-body .form-group input:focus, .modal-body .form-group select:focus { outline: none; border-color: #60a5fa; background: rgba(255,255,255,0.06); }
+        .modal-body .form-group .field-error { font-size: 11px; color: #f87171; margin-top: 4px; display: none; }
         .modal-body .form-group .field-error.visible { display: block; }
-        .modal-body .form-group input.invalid,
-        .modal-body .form-group select.invalid {
-            border-color: #f87171;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            padding: 16px 20px;
-            border-top: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
-        }
+        .modal-body .form-group input.invalid, .modal-body .form-group select.invalid { border-color: #f87171; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.04); }
+        .btn { padding: 8px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all 0.3s; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
         .btn-primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
         .btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
         .btn-danger { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.15); }
         .btn-success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
-
         /* ===== TOAST ===== */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            padding: 12px 20px;
-            border-radius: 12px;
-            color: #fff;
-            font-family: 'Cairo', sans-serif;
-            font-size: 13px;
-            z-index: 99999;
-            animation: slideUp 0.4s ease-out;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 350px;
-            direction: rtl;
-        }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 12px; color: #fff; font-family: 'Cairo', sans-serif; font-size: 13px; z-index: 99999; animation: slideUp 0.4s ease-out; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 350px; direction: rtl; }
         .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
         .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
         .toast-warning { background: rgba(230,179,30,0.15); border: 1px solid rgba(230,179,30,0.2); }
         .toast-info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.2); }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
-            #page-users { padding: 12px; }
-            .users-header { flex-direction: column; align-items: flex-start; }
-            .users-header-left { width: 100%; }
-            .users-header-left h2 { font-size: 16px; }
-            .users-header-actions { width: 100%; }
-            .users-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .stat-card .number { font-size: 20px; }
-            .filter-bar { flex-direction: column; align-items: stretch; }
-            .filter-bar select, .filter-bar input { min-width: 100%; }
-            .table-wrapper { padding: 12px; }
-            table { font-size: 0.7rem; min-width: 600px; }
-        }
+        @media (max-width: 768px) { #page-users { padding: 12px; } .users-header { flex-direction: column; align-items: flex-start; } .users-header-left { width: 100%; } .users-header-left h2 { font-size: 16px; } .users-header-actions { width: 100%; } .users-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; } .stat-card .number { font-size: 20px; } .filter-bar { flex-direction: column; align-items: stretch; } .filter-bar select, .filter-bar input { min-width: 100%; } .table-wrapper { padding: 12px; } table { font-size: 0.7rem; min-width: 600px; } }
     </style>
 
     <!-- ===== HEADER ===== -->
@@ -622,19 +239,31 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - النسخة النهائية (مع مسار API قابل للتخصيص)
+    JAVASCRIPT - النسخة النهائية مع اكتشاف المسار التلقائي
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // ============================================================
-            // 1. 🔧 التكوين – غيّر USERS_PATH حسب مسار API الخاص بك
+            // 1. 🔧 التكوين – يمكنك تعيين المسار يدوياً أو تركه لاكتشاف تلقائي
             // ============================================================
 
-            var API_BASE = '/api';               // الأساسي للـ API
-            var USERS_PATH = '/users';           // ⚠️ غيّر هذا إلى المسار الصحيح للمستخدمين
-            // أمثلة: '/auth/register', '/admin/users', '/v1/users'
+            // إذا وضعت قيمة هنا، سيتم استخدامها مباشرة. وإلا سيتم اكتشافها تلقائياً.
+            var MANUAL_USERS_PATH = null; // مثلاً: '/auth/register' أو '/admin/users'
+
+            // قائمة المسارات المحتملة التي سيتم تجربتها
+            var POSSIBLE_PATHS = [
+                '/users',
+                '/auth/register',
+                '/admin/users',
+                '/v1/users',
+                '/api/users',
+                '/auth/users',
+                '/users/list',
+                '/user',
+                '/api/auth/register'
+            ];
 
             // ============================================================
             // 2. دوال مساعدة
@@ -690,8 +319,10 @@
             }
 
             // ============================================================
-            // 3. API Client – مع عرض تفاصيل الخطأ والمسار المستخدم
+            // 3. API Client – مع إمكانية استخدام مسار مخصص
             // ============================================================
+
+            var activeUsersPath = null; // سيتم تعيينه بعد الاكتشاف
 
             function apiFetch(url, options) {
                 options = options || {};
@@ -699,7 +330,8 @@
                 var body = options.body;
                 var silent = options.silent === true;
 
-                var fullUrl = API_BASE + url;
+                // إذا كان المسار يبدأ بـ '/' نستخدمه كما هو، وإلا نضيف '/'
+                var fullUrl = url.startsWith('/') ? url : '/' + url;
                 console.log('📡 طلب API:', fullUrl, method);
 
                 return fetch(fullUrl, {
@@ -731,7 +363,7 @@
                         var msg = '❌ ' + error.message;
                         if (error.status === 401) msg = '⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً';
                         else if (error.status === 403) msg = '⛔ ليس لديك صلاحية لهذه العملية';
-                        else if (error.status === 404) msg = '⚠️ المسار غير موجود: ' + fullUrl + '\nتأكد من قيمة USERS_PATH في الكود';
+                        else if (error.status === 404) msg = '⚠️ المسار غير موجود: ' + fullUrl;
                         else if (error.status === 422) msg = '⚠️ بيانات غير صالحة: ' + (error.data && error.data.error || '');
                         else if (error.status === 500) msg = '⚠️ خطأ في الخادم الداخلي (500)';
                         showToast(msg, 'error');
@@ -742,7 +374,63 @@
             }
 
             // ============================================================
-            // 4. State
+            // 4. اكتشاف المسار التلقائي
+            // ============================================================
+
+            function detectUsersPath() {
+                // إذا كان هناك مسار محدد يدوياً، استخدمه
+                if (MANUAL_USERS_PATH) {
+                    return Promise.resolve(MANUAL_USERS_PATH);
+                }
+
+                // التحقق من localStorage
+                var stored = localStorage.getItem('discovered_users_path');
+                if (stored) {
+                    return Promise.resolve(stored);
+                }
+
+                // تجربة المسارات واحداً تلو الآخر
+                var token = getToken();
+                if (!token) {
+                    // لا يوجد توكن، نعطي مسار افتراضي
+                    return Promise.resolve('/users');
+                }
+
+                var headers = getAuthHeaders();
+
+                function tryPath(index) {
+                    if (index >= POSSIBLE_PATHS.length) {
+                        // لم نجد أي مسار، نستخدم الافتراضي
+                        return Promise.resolve('/users');
+                    }
+                    var path = POSSIBLE_PATHS[index];
+                    console.log('🔍 تجربة المسار:', path);
+                    return fetch(path, {
+                        method: 'GET',
+                        headers: headers
+                    })
+                    .then(function(response) {
+                        // إذا كان الرد 200 أو 201 أو 204، نعتبر المسار صحيحاً
+                        if (response.ok) {
+                            console.log('✅ تم العثور على المسار الصحيح:', path);
+                            localStorage.setItem('discovered_users_path', path);
+                            return path;
+                        } else {
+                            // جرب التالي
+                            return tryPath(index + 1);
+                        }
+                    })
+                    .catch(function() {
+                        // في حالة خطأ، جرب التالي
+                        return tryPath(index + 1);
+                    });
+                }
+
+                return tryPath(0);
+            }
+
+            // ============================================================
+            // 5. State
             // ============================================================
 
             var state = {
@@ -753,7 +441,7 @@
             };
 
             // ============================================================
-            // 5. جلب المستخدمين وعرضهم
+            // 6. جلب المستخدمين وعرضهم (باستخدام المسار المكتشف)
             // ============================================================
 
             function loadUsers() {
@@ -771,7 +459,22 @@
                     return;
                 }
 
-                apiFetch(USERS_PATH, { silent: true })
+                if (!activeUsersPath) {
+                    showToast('⏳ جاري اكتشاف مسار المستخدمين...', 'info');
+                    detectUsersPath().then(function(path) {
+                        activeUsersPath = path;
+                        showToast('✅ تم اكتشاف المسار: ' + path, 'success');
+                        loadUsers(); // إعادة المحاولة
+                    }).catch(function() {
+                        showToast('❌ تعذر اكتشاف المسار، استخدم الافتراضي', 'error');
+                        activeUsersPath = '/users';
+                        loadUsers();
+                    });
+                    return;
+                }
+
+                var url = activeUsersPath;
+                apiFetch(url, { silent: true })
                     .then(function(data) {
                         var users = Array.isArray(data) ? data : (data.users || []);
                         state.users = users;
@@ -782,6 +485,13 @@
                     .catch(function(error) {
                         if (tbody) {
                             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#f87171;">❌ ' + escapeHtml(error.message) + '</td></tr>';
+                        }
+                        // إذا كان الخطأ 404، ربما المسار تغير، نعيد الاكتشاف
+                        if (error.status === 404) {
+                            localStorage.removeItem('discovered_users_path');
+                            activeUsersPath = null;
+                            showToast('🔄 المسار غير صالح، إعادة الاكتشاف...', 'warning');
+                            loadUsers();
                         }
                     });
             }
@@ -878,7 +588,7 @@
             }
 
             // ============================================================
-            // 6. إضافة / تعديل / حذف / تغيير كلمة المرور / توثيق الوجه
+            // 7. إضافة / تعديل / حذف / تغيير كلمة المرور / توثيق الوجه
             // ============================================================
 
             function clearFieldErrors() {
@@ -944,6 +654,11 @@
             }
 
             function saveUser() {
+                if (!activeUsersPath) {
+                    showToast('⏳ يرجى الانتظار حتى اكتشاف المسار', 'warning');
+                    return;
+                }
+
                 var name = $('userName').value.trim();
                 var email = $('userEmail').value.trim();
                 var password = $('userPassword').value;
@@ -962,7 +677,7 @@
                 btn.disabled = true;
                 btn.textContent = '⏳ جاري الحفظ...';
 
-                var url = USERS_PATH;
+                var url = activeUsersPath;
                 var method = 'POST';
                 var body = {
                     name: name,
@@ -974,7 +689,7 @@
                 };
 
                 if (editId) {
-                    url = USERS_PATH + '/' + editId;
+                    url = activeUsersPath + '/' + editId;
                     method = 'PUT';
                     body = { name: name, email: email, unit: unit, role: role, isActive: status === 'نشط' };
                     if (password && password.length >= 8) body.password = password;
@@ -988,6 +703,13 @@
                     })
                     .catch(function(error) {
                         console.error('فشل حفظ المستخدم:', error);
+                        // إذا كان 404، ربما المسار تغير
+                        if (error.status === 404) {
+                            localStorage.removeItem('discovered_users_path');
+                            activeUsersPath = null;
+                            showToast('🔄 المسار غير صالح، إعادة الاكتشاف...', 'warning');
+                            loadUsers();
+                        }
                     })
                     .finally(function() {
                         btn.disabled = false;
@@ -996,11 +718,12 @@
             }
 
             function deleteUser(id) {
+                if (!activeUsersPath) { showToast('⏳ يرجى الانتظار', 'warning'); return; }
                 var user = state.users.find(function(u) { return (u._id || u.id) === id; });
                 if (!user) return;
                 if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم "' + user.name + '"؟')) return;
 
-                apiFetch(USERS_PATH + '/' + id, { method: 'DELETE' })
+                apiFetch(activeUsersPath + '/' + id, { method: 'DELETE' })
                     .then(function() {
                         showToast('🗑️ تم حذف المستخدم', 'success');
                         loadUsers();
@@ -1009,6 +732,7 @@
             }
 
             function changePassword(id) {
+                if (!activeUsersPath) { showToast('⏳ يرجى الانتظار', 'warning'); return; }
                 var user = state.users.find(function(u) { return (u._id || u.id) === id; });
                 if (!user) { showToast('⚠️ المستخدم غير موجود', 'error'); return; }
 
@@ -1016,7 +740,7 @@
                 if (!newPass) return;
                 if (newPass.length < 8) { showToast('⚠️ كلمة المرور قصيرة جداً', 'error'); return; }
 
-                apiFetch(USERS_PATH + '/' + id + '/password', {
+                apiFetch(activeUsersPath + '/' + id + '/password', {
                     method: 'POST',
                     body: { password: newPass }
                 })
@@ -1027,11 +751,12 @@
             }
 
             function verifyFace(id) {
+                if (!activeUsersPath) { showToast('⏳ يرجى الانتظار', 'warning'); return; }
                 var user = state.users.find(function(u) { return (u._id || u.id) === id; });
                 if (!user) { showToast('⚠️ المستخدم غير موجود', 'error'); return; }
 
                 if (confirm('📸 هل تريد توثيق وجه المستخدم "' + user.name + '"؟ سيتم تعيينه موثقاً.')) {
-                    apiFetch(USERS_PATH + '/' + id + '/face-verification', {
+                    apiFetch(activeUsersPath + '/' + id + '/face-verification', {
                         method: 'POST',
                         body: { image: 'data:image/jpeg;base64,fake_face_data' }
                     })
@@ -1046,7 +771,7 @@
             }
 
             // ============================================================
-            // 7. Modal helpers
+            // 8. Modal helpers
             // ============================================================
 
             function openModal(id) {
@@ -1060,7 +785,7 @@
             }
 
             // ============================================================
-            // 8. الفلترة والبحث
+            // 9. الفلترة والبحث
             // ============================================================
 
             function applyFilters() {
@@ -1078,7 +803,7 @@
             }
 
             // ============================================================
-            // 9. ربط الأحداث
+            // 10. ربط الأحداث
             // ============================================================
 
             function initEvents() {
@@ -1132,17 +857,28 @@
             }
 
             // ============================================================
-            // 10. التهيئة
+            // 11. التهيئة
             // ============================================================
 
             function init() {
                 if (!getToken()) {
                     showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
                 }
-                loadUsers();
+
+                // بدء اكتشاف المسار
+                detectUsersPath().then(function(path) {
+                    activeUsersPath = path;
+                    console.log('✅ تم اكتشاف المسار:', path);
+                    showToast('✅ المسار المستخدم: ' + path, 'info');
+                    loadUsers();
+                }).catch(function() {
+                    showToast('❌ تعذر اكتشاف المسار، استخدم الافتراضي /users', 'error');
+                    activeUsersPath = '/users';
+                    loadUsers();
+                });
+
                 initEvents();
-                console.log('✅ صفحة المستخدمين جاهزة مع المسار:', USERS_PATH);
-                console.log('🔧 لتغيير المسار، عدّل المتغير USERS_PATH في أعلى الكود.');
+                console.log('✅ صفحة المستخدمين جاهزة مع اكتشاف تلقائي للمسار');
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
