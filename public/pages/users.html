@@ -97,6 +97,11 @@
             box-shadow: 0 8px 30px rgba(34,197,94,0.3);
         }
 
+        .btn-action.danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: #fff;
+        }
+
         .users-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -236,6 +241,8 @@
             font-weight: 600;
         }
         .badge.blue { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .badge.green { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.red { background: rgba(239,68,68,0.12); color: #f87171; }
 
         .table-wrapper {
             overflow-x: auto;
@@ -313,6 +320,7 @@
         .action-btn.edit { background: rgba(230,179,30,0.1); color: #f5d76e; }
         .action-btn.delete { background: rgba(239,68,68,0.1); color: #f87171; }
         .action-btn.password { background: rgba(96,165,250,0.1); color: #60a5fa; }
+        .action-btn.face { background: rgba(167,139,250,0.1); color: #a78bfa; }
 
         /* ===== MODAL ===== */
         .modal-overlay {
@@ -396,6 +404,17 @@
             border-color: #60a5fa;
             background: rgba(255,255,255,0.06);
         }
+        .modal-body .form-group .field-error {
+            font-size: 11px;
+            color: #f87171;
+            margin-top: 4px;
+            display: none;
+        }
+        .modal-body .form-group .field-error.visible { display: block; }
+        .modal-body .form-group input.invalid,
+        .modal-body .form-group select.invalid {
+            border-color: #f87171;
+        }
 
         .modal-footer {
             display: flex;
@@ -415,10 +434,12 @@
             font-family: 'Cairo', sans-serif;
             transition: all 0.3s;
         }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
         .btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
         .btn-danger { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.15); }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
 
         /* ===== TOAST ===== */
         .toast {
@@ -440,6 +461,7 @@
         .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
         .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
         .toast-warning { background: rgba(230,179,30,0.15); border: 1px solid rgba(230,179,30,0.2); }
+        .toast-info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.2); }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -483,6 +505,7 @@
         <div class="stat-card"><div class="number" id="activeUsers" style="color:#4ade80;">0</div><div class="label">🟢 نشط</div></div>
         <div class="stat-card"><div class="number" id="inactiveUsers" style="color:#f87171;">0</div><div class="label">🔴 غير نشط</div></div>
         <div class="stat-card"><div class="number" id="adminUsers" style="color:#f5d76e;">0</div><div class="label">🛡️ مدراء</div></div>
+        <div class="stat-card"><div class="number" id="verifiedUsers" style="color:#a78bfa;">0</div><div class="label">✅ موثقو الوجه</div></div>
     </div>
 
     <!-- ===== FILTERS ===== -->
@@ -524,11 +547,12 @@
                         <th>الوحدة</th>
                         <th>الدور</th>
                         <th>الحالة</th>
+                        <th>توثيق الوجه</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersBody">
-                    <tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>
+                    <tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -546,14 +570,17 @@
                 <div class="form-group">
                     <label>الاسم الكامل <span style="color:red;">*</span></label>
                     <input type="text" id="userName" placeholder="أحمد محمد">
+                    <div class="field-error" id="err-userName">الاسم مطلوب (حرفين على الأقل)</div>
                 </div>
                 <div class="form-group">
                     <label>البريد الإلكتروني <span style="color:red;">*</span></label>
                     <input type="email" id="userEmail" placeholder="ahmed@marine.tn">
+                    <div class="field-error" id="err-userEmail">بريد إلكتروني غير صالح</div>
                 </div>
                 <div class="form-group">
-                    <label>كلمة المرور <span style="color:red;">*</span></label>
+                    <label>كلمة المرور <span style="color:red;" id="passwordRequired">*</span></label>
                     <input type="password" id="userPassword" placeholder="********">
+                    <div class="field-error" id="err-userPassword">كلمة المرور يجب أن تكون 8 أحرف على الأقل</div>
                 </div>
                 <div class="form-group">
                     <label>الوحدة <span style="color:red;">*</span></label>
@@ -569,6 +596,7 @@
                         <option value="وحدة الصيانة جرجيس">وحدة الصيانة جرجيس</option>
                         <option value="المجمع الأمني بقبيبة">المجمع الأمني بقبيبة</option>
                     </select>
+                    <div class="field-error" id="err-userUnit">يرجى اختيار الوحدة</div>
                 </div>
                 <div class="form-group">
                     <label>الدور</label>
@@ -596,14 +624,20 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - نسخة مبسطة ومستقرة
+    JAVASCRIPT - إصدار مستقر ومُحسَّن
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // ============================================================
-            // 1. التوكن ووظائف المساعدة
+            // 1. التكوين – يمكنك تغيير API_BASE حسب احتياجك
+            // ============================================================
+
+            var API_BASE = '/api';  // مثال: '/api', '/api/v1', '/admin/api'
+
+            // ============================================================
+            // 2. دوال مساعدة
             // ============================================================
 
             function getToken() {
@@ -637,7 +671,7 @@
                     el.style.transform = 'translateY(20px)';
                     el.style.transition = 'all 0.4s';
                     setTimeout(function() { el.remove(); }, 400);
-                }, 2500);
+                }, 2800);
             }
 
             function escapeHtml(str) {
@@ -656,7 +690,59 @@
             }
 
             // ============================================================
-            // 2. State
+            // 3. API Client – مع عرض تفاصيل الخطأ
+            // ============================================================
+
+            function apiFetch(url, options) {
+                options = options || {};
+                var method = options.method || 'GET';
+                var body = options.body;
+                var silent = options.silent === true;
+
+                var fullUrl = API_BASE + url;
+                console.log('📡 طلب API:', fullUrl, method);
+
+                return fetch(fullUrl, {
+                    method: method,
+                    headers: getAuthHeaders(),
+                    body: body !== undefined ? JSON.stringify(body) : undefined
+                })
+                .then(function(response) {
+                    return response.text().then(function(text) {
+                        var data;
+                        try {
+                            data = JSON.parse(text);
+                        } catch(e) {
+                            data = { message: text || 'استجابة غير صالحة' };
+                        }
+
+                        if (!response.ok) {
+                            var errorMsg = data.error || data.message || 'فشل الطلب';
+                            var error = new Error(errorMsg + ' (كود ' + response.status + ')');
+                            error.status = response.status;
+                            error.data = data;
+                            throw error;
+                        }
+                        return data;
+                    });
+                })
+                .catch(function(error) {
+                    if (!silent) {
+                        var msg = '❌ ' + error.message;
+                        if (error.status === 401) msg = '⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً';
+                        else if (error.status === 403) msg = '⛔ ليس لديك صلاحية لهذه العملية';
+                        else if (error.status === 404) msg = '⚠️ المسار غير موجود: ' + fullUrl;
+                        else if (error.status === 422) msg = '⚠️ بيانات غير صالحة: ' + (error.data && error.data.error || '');
+                        else if (error.status === 500) msg = '⚠️ خطأ في الخادم الداخلي (500)';
+                        showToast(msg, 'error');
+                        console.error('خطأ API:', error);
+                    }
+                    throw error;
+                });
+            }
+
+            // ============================================================
+            // 4. State
             // ============================================================
 
             var state = {
@@ -667,67 +753,26 @@
             };
 
             // ============================================================
-            // 3. API Client
-            // ============================================================
-
-            function apiFetch(url, options) {
-                options = options || {};
-                var method = options.method || 'GET';
-                var body = options.body;
-
-                return fetch('/api' + url, {
-                    method: method,
-                    headers: getAuthHeaders(),
-                    body: body !== undefined ? JSON.stringify(body) : undefined
-                })
-                .then(function(response) {
-                    if (response.status === 204) return { success: true };
-                    return response.json().then(function(data) {
-                        if (!response.ok) {
-                            var err = new Error(data.error || 'فشل الطلب');
-                            err.status = response.status;
-                            err.data = data;
-                            throw err;
-                        }
-                        return data;
-                    }).catch(function() {
-                        // في حال لم يكن الرد JSON
-                        if (!response.ok) {
-                            throw new Error('فشل الطلب (' + response.status + ')');
-                        }
-                        return {};
-                    });
-                })
-                .catch(function(error) {
-                    if (!options.silent) {
-                        showToast('❌ ' + (error.message || 'حدث خطأ'), 'error');
-                    }
-                    throw error;
-                });
-            }
-
-            // ============================================================
-            // 4. جلب المستخدمين وعرضهم
+            // 5. جلب المستخدمين وعرضهم
             // ============================================================
 
             function loadUsers() {
                 var tbody = $('usersBody');
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>';
                 }
 
                 var token = getToken();
                 if (!token) {
                     showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
                     if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#fbbf24;">🔑 يرجى تسجيل الدخول</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#fbbf24;">🔑 يرجى تسجيل الدخول لعرض المستخدمين</td></tr>';
                     }
                     return;
                 }
 
                 apiFetch('/users', { silent: true })
                     .then(function(data) {
-                        // data قد يكون مصفوفة أو كائن يحتوي على users
                         var users = Array.isArray(data) ? data : (data.users || []);
                         state.users = users;
                         updateStats();
@@ -736,7 +781,7 @@
                     })
                     .catch(function(error) {
                         if (tbody) {
-                            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#f87171;">❌ ' + escapeHtml(error.message) + '</td></tr>';
+                            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#f87171;">❌ ' + escapeHtml(error.message) + '</td></tr>';
                         }
                     });
             }
@@ -746,11 +791,13 @@
                 var active = state.users.filter(function(u) { return u.isActive !== false; }).length;
                 var inactive = total - active;
                 var admins = state.users.filter(function(u) { return u.role === 'admin' || u.role === 'super_admin'; }).length;
+                var verified = state.users.filter(function(u) { return u.faceVerified === true; }).length;
 
                 if ($('totalUsers')) $('totalUsers').textContent = total;
                 if ($('activeUsers')) $('activeUsers').textContent = active;
                 if ($('inactiveUsers')) $('inactiveUsers').textContent = inactive;
                 if ($('adminUsers')) $('adminUsers').textContent = admins;
+                if ($('verifiedUsers')) $('verifiedUsers').textContent = verified;
                 if ($('usersBadge')) $('usersBadge').textContent = '👥 ' + total;
             }
 
@@ -788,7 +835,7 @@
                 var pageItems = filtered.slice(start, start + state.pageSize);
 
                 if (pageItems.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد نتائج</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد نتائج</td></tr>';
                     return;
                 }
 
@@ -805,6 +852,11 @@
                     }[u.role] || u.role;
 
                     var roleClass = u.role || 'user';
+                    var verified = u.faceVerified === true;
+                    var verifiedHtml = verified
+                        ? '<span style="color:#4ade80;"><i class="fas fa-check-circle"></i> موثق</span>'
+                        : '<span style="color:#f87171;"><i class="fas fa-times-circle"></i> غير موثق</span>';
+
                     html += '<tr>' +
                         '<td style="color:#60a5fa;">' + idx + '</td>' +
                         '<td class="user-name">' + escapeHtml(u.name || '-') + '</td>' +
@@ -812,9 +864,11 @@
                         '<td style="font-size:0.7rem;">' + escapeHtml(u.unit || '-') + '</td>' +
                         '<td><span class="status-badge ' + roleClass + '">' + roleLabel + '</span></td>' +
                         '<td><span class="status-badge ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? '🟢 نشط' : '🔴 غير نشط') + '</span></td>' +
+                        '<td>' + verifiedHtml + '</td>' +
                         '<td>' +
                             '<button class="action-btn edit" data-action="edit" data-id="' + (u._id || u.id) + '"><i class="fas fa-edit"></i></button>' +
                             '<button class="action-btn password" data-action="password" data-id="' + (u._id || u.id) + '"><i class="fas fa-key"></i></button>' +
+                            '<button class="action-btn face" data-action="face" data-id="' + (u._id || u.id) + '"><i class="fas fa-camera"></i></button>' +
                             '<button class="action-btn delete" data-action="delete" data-id="' + (u._id || u.id) + '"><i class="fas fa-trash"></i></button>' +
                         '</td>' +
                     '</tr>';
@@ -824,20 +878,36 @@
             }
 
             // ============================================================
-            // 5. إضافة / تعديل / حذف
+            // 6. إضافة / تعديل / حذف / تغيير كلمة المرور / توثيق الوجه
             // ============================================================
+
+            function clearFieldErrors() {
+                document.querySelectorAll('#userModal .field-error').forEach(function(el) { el.classList.remove('visible'); });
+                document.querySelectorAll('#userModal input, #userModal select').forEach(function(el) { el.classList.remove('invalid'); });
+            }
+
+            function showFieldError(fieldId) {
+                var errEl = $('err-' + fieldId);
+                var inputEl = $(fieldId);
+                if (errEl) errEl.classList.add('visible');
+                if (inputEl) inputEl.classList.add('invalid');
+            }
 
             function openAddModal() {
                 state.currentEditId = null;
+                clearFieldErrors();
                 $('editUserId').value = '';
                 $('modalTitle').textContent = '➕ إضافة مستخدم جديد';
                 $('userName').value = '';
                 $('userEmail').value = '';
                 $('userPassword').value = '';
+                $('userPassword').placeholder = '********';
                 $('userUnit').value = '';
                 $('userRole').value = 'user';
                 $('userStatus').value = 'نشط';
+                $('passwordRequired').textContent = '*'; // إظهار علامة إلزامية
                 openModal('userModal');
+                $('userName').focus();
             }
 
             function openEditModal(id) {
@@ -847,8 +917,9 @@
                     return;
                 }
                 state.currentEditId = id;
+                clearFieldErrors();
                 $('editUserId').value = id;
-                $('modalTitle').textContent = '✏️ تعديل المستخدم';
+                $('modalTitle').textContent = '✏️ تعديل المستخدم: ' + user.name;
                 $('userName').value = user.name || '';
                 $('userEmail').value = user.email || '';
                 $('userPassword').value = '';
@@ -856,7 +927,20 @@
                 $('userUnit').value = user.unit || '';
                 $('userRole').value = user.role || 'user';
                 $('userStatus').value = user.isActive !== false ? 'نشط' : 'غير نشط';
+                $('passwordRequired').textContent = ''; // إخفاء علامة الإلزامية
                 openModal('userModal');
+                $('userName').focus();
+            }
+
+            function validateUserForm(editId, name, email, password) {
+                clearFieldErrors();
+                var valid = true;
+                if (!name || name.trim().length < 2) { showFieldError('userName'); valid = false; }
+                if (!email || !isValidEmail(email)) { showFieldError('userEmail'); valid = false; }
+                if (!$('userUnit').value) { showFieldError('userUnit'); valid = false; }
+                if (!editId && (!password || password.length < 8)) { showFieldError('userPassword'); valid = false; }
+                if (editId && password && password.length > 0 && password.length < 8) { showFieldError('userPassword'); valid = false; }
+                return valid;
             }
 
             function saveUser() {
@@ -868,16 +952,8 @@
                 var status = $('userStatus').value;
                 var editId = $('editUserId').value;
 
-                // التحقق الأساسي
-                if (!name || name.length < 2) { showToast('⚠️ الاسم يجب أن يكون حرفين على الأقل', 'error'); return; }
-                if (!email || !isValidEmail(email)) { showToast('⚠️ بريد إلكتروني غير صالح', 'error'); return; }
-                if (!unit) { showToast('⚠️ يرجى اختيار الوحدة', 'error'); return; }
-                if (!editId && (!password || password.length < 8)) {
-                    showToast('⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error');
-                    return;
-                }
-                if (editId && password && password.length > 0 && password.length < 8) {
-                    showToast('⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error');
+                if (!validateUserForm(editId, name, email, password)) {
+                    showToast('⚠️ يرجى تصحيح الحقول المميزة بالأحمر', 'error');
                     return;
                 }
 
@@ -910,8 +986,9 @@
                         closeModal('userModal');
                         loadUsers();
                     })
-                    .catch(function() {
+                    .catch(function(error) {
                         // الخطأ يظهر عبر showToast تلقائياً
+                        console.error('فشل حفظ المستخدم:', error);
                     })
                     .finally(function() {
                         btn.disabled = false;
@@ -950,8 +1027,28 @@
                 .catch(function() {});
             }
 
+            function verifyFace(id) {
+                var user = state.users.find(function(u) { return (u._id || u.id) === id; });
+                if (!user) { showToast('⚠️ المستخدم غير موجود', 'error'); return; }
+
+                // في هذه النسخة المبسطة، نقوم بمحاكاة توثيق الوجه (يمكنك استبدالها بكاميرا حقيقية)
+                if (confirm('📸 هل تريد توثيق وجه المستخدم "' + user.name + '"؟ سيتم تعيينه موثقاً.')) {
+                    apiFetch('/users/' + id + '/face-verification', {
+                        method: 'POST',
+                        body: { image: 'data:image/jpeg;base64,fake_face_data' } // صورة وهمية
+                    })
+                    .then(function() {
+                        user.faceVerified = true;
+                        updateStats();
+                        renderTable();
+                        showToast('✅ تم توثيق وجه المستخدم', 'success');
+                    })
+                    .catch(function() {});
+                }
+            }
+
             // ============================================================
-            // 6. Modal helpers
+            // 7. Modal helpers
             // ============================================================
 
             function openModal(id) {
@@ -965,7 +1062,7 @@
             }
 
             // ============================================================
-            // 7. أحداث الفلترة والبحث
+            // 8. الفلترة والبحث
             // ============================================================
 
             function applyFilters() {
@@ -983,7 +1080,7 @@
             }
 
             // ============================================================
-            // 8. ربط الأحداث (Event delegation)
+            // 9. ربط الأحداث
             // ============================================================
 
             function initEvents() {
@@ -1032,7 +1129,7 @@
                     }
                 });
 
-                // Event delegation for action buttons (edit, password, delete)
+                // Event delegation for action buttons (edit, password, face, delete)
                 var tbody = $('usersBody');
                 if (tbody) {
                     tbody.addEventListener('click', function(e) {
@@ -1044,13 +1141,14 @@
                         var action = btn.dataset.action;
                         if (action === 'edit') openEditModal(id);
                         else if (action === 'password') changePassword(id);
+                        else if (action === 'face') verifyFace(id);
                         else if (action === 'delete') deleteUser(id);
                     });
                 }
             }
 
             // ============================================================
-            // 9. التهيئة
+            // 10. التهيئة
             // ============================================================
 
             function init() {
@@ -1061,7 +1159,7 @@
 
                 loadUsers();
                 initEvents();
-                console.log('✅ صفحة المستخدمين (المبسطة) جاهزة');
+                console.log('✅ صفحة المستخدمين جاهزة مع API_BASE =', API_BASE);
             }
 
             // تشغيل عند تحميل الصفحة
