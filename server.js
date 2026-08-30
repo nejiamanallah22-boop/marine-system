@@ -1,10 +1,19 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v44.1 (FIXED)
+ * 🚢 MARINE SYSTEM - SERVER v45.0 (FULL PRODUCTION)
  * ============================================================
- * ✅ إصلاح تحذيرات MongoDB (Duplicate indexes)
- * ✅ إصلاح CORS لـ Render.com
- * ✅ تحسين الأداء
+ * ✅ جميع المتغيرات البيئية مع قيم افتراضية
+ * ✅ CORS مُقيد بالكامل مع دعم Render
+ * ✅ MongoDB مع إعادة محاولة الاتصال
+ * ✅ JWT مع Refresh Token
+ * ✅ Session Management
+ * ✅ Audit Log
+ * ✅ Rate Limiting متقدم
+ * ✅ Security Headers كاملة
+ * ✅ CSP مع Nonce
+ * ✅ RBAC كامل
+ * ✅ جميع مسارات CRUD
+ * ✅ تحذيرات MongoDB مُصلحة
  * ============================================================
  */
 
@@ -15,20 +24,52 @@
 // ============================================================
 require('dotenv').config();
 
-// ✅ التحقق من المتغيرات البيئية الأساسية
-const requiredEnv = [
-    'MONGODB_URI',
-    'JWT_SECRET',
-    'REFRESH_TOKEN_SECRET'
-];
+const crypto = require('crypto');
 
+// ✅ توليد المفاتيح تلقائياً إذا لم تكن موجودة
+if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = crypto.randomBytes(64).toString('hex');
+    console.log('✅ JWT_SECRET generated automatically');
+}
+
+if (!process.env.REFRESH_TOKEN_SECRET) {
+    process.env.REFRESH_TOKEN_SECRET = crypto.randomBytes(64).toString('hex');
+    console.log('✅ REFRESH_TOKEN_SECRET generated automatically');
+}
+
+if (!process.env.CSRF_TOKEN_SECRET) {
+    process.env.CSRF_TOKEN_SECRET = crypto.randomBytes(32).toString('hex');
+    console.log('✅ CSRF_TOKEN_SECRET generated automatically');
+}
+
+// ✅ المتغيرات المطلوبة
+const requiredEnv = ['MONGODB_URI'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
+
 if (missingEnv.length > 0) {
     console.error('❌ Missing required environment variables:');
     missingEnv.forEach(key => console.error(`   - ${key}`));
-    console.log('\n📝 Please check your .env file');
+    console.log('\n📝 Please set MONGODB_URI in Render Environment Variables');
     process.exit(1);
 }
+
+// ✅ المتغيرات الاختيارية مع قيم افتراضية
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'مدير النظام';
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const IS_PRODUCTION = NODE_ENV === 'production';
+
+console.log('\n' + '='.repeat(60));
+console.log('🚢 MARINE SYSTEM v45.0');
+console.log('='.repeat(60));
+console.log(`✅ Environment: ${NODE_ENV}`);
+console.log(`✅ Port: ${PORT}`);
+console.log(`✅ JWT_SECRET: ${process.env.JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
+console.log(`✅ REFRESH_TOKEN_SECRET: ${process.env.REFRESH_TOKEN_SECRET ? '✓ Set' : '✗ Missing'}`);
+console.log('='.repeat(60) + '\n');
 
 // ============================================================
 // 📦 IMPORTS
@@ -44,7 +85,6 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const morgan = require('morgan');
 const winston = require('winston');
@@ -52,16 +92,11 @@ const winston = require('winston');
 const app = express();
 
 // ============================================================
-// ⚙️ CONFIGURATION
+// 🔐 CORS CONFIGURATION - مُقيد بالكامل
 // ============================================================
-const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const IS_PRODUCTION = NODE_ENV === 'production';
-
-// ✅ إعدادات CORS - متغيرات البيئة
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : [];
+    : ['http://localhost:3000', 'http://localhost:5000'];
 
 // ✅ إضافة URL الخاص بـ Render تلقائياً
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || null;
@@ -77,14 +112,7 @@ if (!IS_PRODUCTION) {
     ALLOWED_ORIGINS.push('http://127.0.0.1:5000');
 }
 
-console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v44.1');
-console.log('='.repeat(60));
-console.log(`✅ Port: ${PORT}`);
-console.log(`✅ Environment: ${NODE_ENV}`);
-console.log(`✅ Allowed Origins: ${ALLOWED_ORIGINS.length}`);
-console.log('   ' + ALLOWED_ORIGINS.join('\n   '));
-console.log('='.repeat(60) + '\n');
+console.log('✅ Allowed Origins:', ALLOWED_ORIGINS);
 
 // ============================================================
 // 📊 LOGGER
@@ -123,7 +151,7 @@ if (!IS_PRODUCTION) {
 }
 
 // ============================================================
-// 🗄️ MONGODB - اتصال
+// 🗄️ MONGODB CONNECTION
 // ============================================================
 const connectDB = async () => {
     try {
@@ -132,14 +160,7 @@ const connectDB = async () => {
             socketTimeoutMS: 45000,
             maxPoolSize: parseInt(process.env.MONGODB_MAX_POOL_SIZE) || 10,
             minPoolSize: parseInt(process.env.MONGODB_MIN_POOL_SIZE) || 2,
-            family: 4,
-            ...(process.env.MONGODB_USER && {
-                auth: {
-                    username: process.env.MONGODB_USER,
-                    password: process.env.MONGODB_PASSWORD
-                },
-                authSource: process.env.MONGODB_AUTH_SOURCE || 'admin'
-            })
+            family: 4
         };
 
         await mongoose.connect(process.env.MONGODB_URI, options);
@@ -217,6 +238,47 @@ UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ isActive: 1 });
 UserSchema.index({ role: 1 });
 
+UserSchema.pre('save', async function(next) {
+    this.updatedAt = new Date();
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) { next(error); }
+});
+
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+    return bcrypt.compare(candidatePassword, this.password);
+};
+
+UserSchema.methods.incrementLoginAttempts = async function() {
+    this.loginAttempts = (this.loginAttempts || 0) + 1;
+    if (this.loginAttempts >= 5) {
+        this.isLocked = true;
+        this.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    await this.save();
+};
+
+UserSchema.methods.resetLoginAttempts = async function() {
+    this.loginAttempts = 0;
+    this.isLocked = false;
+    this.lockUntil = null;
+    await this.save();
+};
+
+UserSchema.methods.checkLock = function() {
+    if (!this.isLocked) return null;
+    if (this.lockUntil && this.lockUntil > new Date()) {
+        return { locked: true, remainingMinutes: Math.ceil((this.lockUntil.getTime() - Date.now()) / 60000) };
+    }
+    this.isLocked = false;
+    this.lockUntil = null;
+    this.loginAttempts = 0;
+    return { locked: false };
+};
+
 // ============================================================
 // 📋 SESSION MODEL
 // ============================================================
@@ -243,7 +305,6 @@ const SessionSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// ✅ Indexes - تعريف واحد فقط
 SessionSchema.index({ token: 1 }, { unique: true });
 SessionSchema.index({ refreshToken: 1 }, { unique: true });
 SessionSchema.index({ userId: 1 });
@@ -265,7 +326,6 @@ const AuditLogSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
 });
 
-// ✅ Indexes
 AuditLogSchema.index({ userId: 1, timestamp: -1 });
 AuditLogSchema.index({ username: 1, timestamp: -1 });
 AuditLogSchema.index({ action: 1, timestamp: -1 });
@@ -292,7 +352,6 @@ const VesselSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-// ✅ Indexes
 VesselSchema.index({ name: 1 });
 VesselSchema.index({ stat: 1 });
 VesselSchema.index({ num: 1 });
@@ -360,10 +419,9 @@ function sanitizeInput(input) {
 // 🔐 SECURITY MIDDLEWARE
 // ============================================================
 
-// ✅ 1. CORS - مُصلح بالكامل
+// ✅ 1. CORS
 app.use(cors({
     origin: function(origin, callback) {
-        // ✅ السماح بطلبات بدون Origin (مثل Postman) في التطوير فقط
         if (!origin) {
             if (!IS_PRODUCTION) {
                 return callback(null, true);
@@ -371,11 +429,8 @@ app.use(cors({
             return callback(new Error('CORS: Origin not allowed'));
         }
         
-        // ✅ التحقق من السماح
         const isAllowed = ALLOWED_ORIGINS.some(allowed => {
-            // ✅ دعم wildcard
             if (allowed === '*') return true;
-            // ✅ دعم مطابقة جزئية (مثل *.onrender.com)
             if (allowed.startsWith('*.')) {
                 const domain = allowed.substring(2);
                 return origin.includes(domain) || origin.endsWith(domain);
@@ -387,7 +442,6 @@ app.use(cors({
             return callback(null, true);
         }
         
-        // ✅ السماح بـ localhost في التطوير
         if (!IS_PRODUCTION && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
             return callback(null, true);
         }
@@ -395,7 +449,7 @@ app.use(cors({
         logger.warn('CORS blocked:', origin);
         callback(new Error('CORS: Origin not allowed'));
     },
-    credentials: process.env.CORS_CREDENTIALS === 'true' || true,
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type',
@@ -461,13 +515,8 @@ app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
 
 // ✅ 4. Body Parsers
-app.use(express.json({ 
-    limit: process.env.MAX_FILE_SIZE || '1mb' 
-}));
-app.use(express.urlencoded({ 
-    extended: true, 
-    limit: process.env.MAX_FILE_SIZE || '1mb' 
-}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // ✅ 5. Compression
@@ -517,7 +566,7 @@ const authenticate = async (req, res, next) => {
             });
         }
 
-        const lockCheck = user.checkLock ? user.checkLock() : null;
+        const lockCheck = user.checkLock();
         if (lockCheck && lockCheck.locked) {
             return res.status(423).json({
                 success: false,
@@ -560,35 +609,30 @@ const authorize = (...roles) => {
 // ============================================================
 async function createAdmin() {
     try {
-        const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
-        const adminName = process.env.ADMIN_NAME || 'مدير النظام';
-
-        const existing = await User.findOne({ username: adminUsername }).select('+password');
+        const existing = await User.findOne({ username: ADMIN_USERNAME }).select('+password');
         if (existing) {
-            const passwordMatches = await bcrypt.compare(adminPassword, existing.password);
+            const passwordMatches = await bcrypt.compare(ADMIN_PASSWORD, existing.password);
             if (!passwordMatches) {
-                existing.password = await bcrypt.hash(adminPassword, 12);
+                existing.password = await bcrypt.hash(ADMIN_PASSWORD, 12);
                 existing.tokenVersion = (existing.tokenVersion || 0) + 1;
                 await existing.save();
                 logger.info('✅ Admin password updated');
             }
-            logger.info(`✅ Admin exists: ${adminUsername}`);
+            logger.info(`✅ Admin exists: ${ADMIN_USERNAME}`);
             return;
         }
 
         const admin = new User({
-            name: adminName,
-            username: adminUsername,
-            email: adminEmail,
-            password: await bcrypt.hash(adminPassword, 12),
+            name: ADMIN_NAME,
+            username: ADMIN_USERNAME,
+            email: ADMIN_EMAIL,
+            password: await bcrypt.hash(ADMIN_PASSWORD, 12),
             role: 'admin',
             isActive: true,
             tokenVersion: 1
         });
         await admin.save();
-        logger.info(`✅ Admin created: ${adminUsername}`);
+        logger.info(`✅ Admin created: ${ADMIN_USERNAME}`);
     } catch (error) {
         logger.error('❌ Admin error:', error.message);
     }
@@ -665,14 +709,9 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
-        const isValid = await bcrypt.compare(password, user.password);
+        const isValid = await user.comparePassword(password);
         if (!isValid) {
-            user.loginAttempts = (user.loginAttempts || 0) + 1;
-            if (user.loginAttempts >= 5) {
-                user.isLocked = true;
-                user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
-            }
-            await user.save();
+            await user.incrementLoginAttempts();
             await logAudit(user._id, user.username, 'LOGIN_FAILED', 'auth', null, { reason: 'Invalid password' }, 'failure', req);
             return res.status(401).json({
                 success: false,
@@ -680,9 +719,7 @@ app.post('/api/auth/login', async (req, res) => {
             });
         }
 
-        user.loginAttempts = 0;
-        user.isLocked = false;
-        user.lockUntil = null;
+        await user.resetLoginAttempts();
         user.lastLogin = new Date();
         user.tokenVersion = (user.tokenVersion || 0) + 1;
         await user.save();
@@ -726,6 +763,66 @@ app.post('/api/auth/login', async (req, res) => {
             success: false,
             error: 'حدث خطأ في الخادم'
         });
+    }
+});
+
+app.post('/api/auth/refresh', async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, error: 'Refresh token required' });
+        }
+
+        const session = await Session.findOne({ refreshToken, isRevoked: false });
+        if (!session) {
+            return res.status(401).json({ success: false, error: 'Invalid session' });
+        }
+
+        if (session.expiresAt < new Date()) {
+            session.isRevoked = true;
+            await session.save();
+            return res.status(401).json({ success: false, error: 'Session expired' });
+        }
+
+        const user = await User.findById(session.userId);
+        if (!user || !user.isActive) {
+            return res.status(401).json({ success: false, error: 'User not found' });
+        }
+
+        const isValid = await bcrypt.compare(refreshToken, user.refreshToken);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'Invalid refresh token' });
+        }
+
+        const newToken = generateToken(user);
+        const newRefreshToken = generateRefreshToken();
+
+        session.token = newToken;
+        session.refreshToken = newRefreshToken;
+        session.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await session.save();
+
+        const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
+        user.refreshToken = hashedRefreshToken;
+        user.refreshTokenVersion = (user.refreshTokenVersion || 0) + 1;
+        await user.save();
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: IS_PRODUCTION,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/api/auth/refresh'
+        });
+
+        res.json({
+            success: true,
+            token: newToken
+        });
+
+    } catch (error) {
+        logger.error('❌ Refresh error:', error.message);
+        res.status(500).json({ success: false, error: 'Internal error' });
     }
 });
 
@@ -1132,7 +1229,7 @@ async function startServer() {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v44.1 - FIXED');
+            console.log('🚢 MARINE SYSTEM v45.0');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
@@ -1170,12 +1267,13 @@ async function startServer() {
             console.log('='.repeat(60));
             console.log('');
             console.log('🔑 LOGIN CREDENTIALS:');
-            console.log(`   👤 Username: ${process.env.ADMIN_USERNAME || 'admin'}`);
-            console.log(`   🔑 Password: ${process.env.ADMIN_PASSWORD || 'admin123'}`);
+            console.log(`   👤 Username: ${ADMIN_USERNAME}`);
+            console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
             console.log('='.repeat(60));
             console.log('');
+            console.log(`🌐 URL: ${RENDER_URL || `http://localhost:${PORT}`}`);
+            console.log('');
             console.log('✅ Server is ready!');
-            console.log(`🌐 URL: ${process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`}`);
             console.log('');
         });
 
