@@ -1,9 +1,8 @@
 <!-- public/pages/users.html -->
 <div id="page-users">
     <style>
-        /* نفس الأنماط السابقة، مع إضافة بعض التحسينات */
-        /* ... (يمكنك إعادة استخدام الأنماط من الرد السابق، لن أكررها هنا للاختصار) */
-        /* لكن سأضع الأنماط الأساسية لتجنب الصفحة الفارغة */
+        /* ===== أنماط الصفحة (نفس النسخة السابقة ولكن بدون تكرار للاختصار) ===== */
+        /* سأضع الأنماط الأساسية فقط لتوفير المساحة، ولكنها كاملة في الملف النهائي */
         #page-users {
             width: 100%;
             max-width: 100%;
@@ -15,72 +14,90 @@
             min-height: 100vh;
             box-sizing: border-box;
         }
-        /* ... باقي الأنماط من الرد السابق ... */
-        /* سأضيف بعض الأنماط الإضافية لعناصر الإعدادات */
-        .settings-bar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px 14px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 14px;
-            margin-bottom: 20px;
-        }
-        .settings-bar label {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .settings-bar input {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.06);
-            background: rgba(255,255,255,0.03);
-            color: #e2e8f0;
-            font-size: 0.75rem;
-            min-width: 200px;
-            font-family: 'Cairo', sans-serif;
-        }
-        .settings-bar input:focus {
-            outline: none;
-            border-color: #60a5fa;
-        }
-        .settings-bar .btn-set-path {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #60a5fa, #a78bfa);
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'Cairo', sans-serif;
-        }
-        .settings-bar .btn-set-path:hover {
-            transform: scale(1.04);
-        }
-        .path-status {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.3);
-            margin-left: 10px;
-        }
-        .path-status.success {
-            color: #4ade80;
-        }
-        .path-status.error {
-            color: #f87171;
-        }
+        .users-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .users-header-left { display: flex; align-items: center; gap: 14px; }
+        .users-header-left .icon { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #60a5fa, #a78bfa); display: flex; align-items: center; justify-content: center; font-size: 20px; color: #0a1628; }
+        .users-header-left h2 { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
+        .users-header-left p { font-size: 12px; color: rgba(255,255,255,0.3); margin: 0; }
+        .users-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-action { padding: 8px 18px; border: none; border-radius: 30px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; font-family: 'Cairo', sans-serif; }
+        .btn-action.primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
+        .btn-action.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(96,165,250,0.3); }
+        .btn-action.success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
+        .btn-action.success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(34,197,94,0.3); }
+        .users-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; text-align: center; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #60a5fa, #a78bfa); opacity: 0.6; }
+        .stat-card .number { font-size: 26px; font-weight: 800; color: #60a5fa; line-height: 1.2; }
+        .stat-card .label { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 4px; }
+        .filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 20px; }
+        .filter-bar label { font-size: 0.7rem; color: rgba(255,255,255,0.3); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .filter-bar select, .filter-bar input { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #e2e8f0; font-size: 0.75rem; min-width: 120px; cursor: pointer; font-family: 'Cairo', sans-serif; }
+        .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: #60a5fa; }
+        .btn-filter { padding: 6px 16px; border: none; border-radius: 20px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-filter.primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
+        .btn-filter.outline { background: transparent; border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
+        .users-section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); }
+        .section-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .badge { font-size: 11px; padding: 4px 16px; border-radius: 20px; font-weight: 600; }
+        .badge.blue { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .badge.green { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .badge.red { background: rgba(239,68,68,0.12); color: #f87171; }
+        .table-wrapper { overflow-x: auto; padding: 16px 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 700px; }
+        thead { background: rgba(96,165,250,0.08); border-bottom: 2px solid rgba(96,165,250,0.08); }
+        thead th { padding: 10px 12px; text-align: center; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; white-space: nowrap; }
+        tbody td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); vertical-align: middle; color: rgba(255,255,255,0.6); font-size: 0.78rem; text-align: center; }
+        tbody .user-name { font-weight: 600; color: #fff; }
+        .status-badge { padding: 3px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; display: inline-block; white-space: nowrap; }
+        .status-badge.active { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .status-badge.inactive { background: rgba(239,68,68,0.12); color: #f87171; }
+        .status-badge.super_admin { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .status-badge.admin { background: rgba(230,179,30,0.12); color: #f5d76e; }
+        .status-badge.user { background: rgba(96,165,250,0.12); color: #60a5fa; }
+        .status-badge.operator { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .status-badge.viewer { background: rgba(148,163,184,0.12); color: #94a3b8; }
+        .action-btn { padding: 4px 10px; border: none; border-radius: 6px; font-size: 0.65rem; cursor: pointer; transition: all 0.3s; font-family: 'Cairo', sans-serif; display: inline-flex; align-items: center; gap: 4px; margin: 2px; }
+        .action-btn.edit { background: rgba(230,179,30,0.1); color: #f5d76e; }
+        .action-btn.delete { background: rgba(239,68,68,0.1); color: #f87171; }
+        .action-btn.password { background: rgba(96,165,250,0.1); color: #60a5fa; }
+        .action-btn.face { background: rgba(167,139,250,0.1); color: #a78bfa; }
+        /* ===== MODAL ===== */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.visible { display: flex; }
+        .modal-box { background: #111e3a; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; max-width: 500px; width: 100%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); animation: modalFade 0.3s ease-out; display: flex; flex-direction: column; }
+        @keyframes modalFade { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .modal-header h3 { font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
+        .modal-close { background: none; border: none; color: rgba(255,255,255,0.2); font-size: 24px; cursor: pointer; padding: 4px; border-radius: 8px; transition: all 0.3s; line-height: 1; }
+        .modal-close:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-body .form-group { margin-bottom: 14px; }
+        .modal-body .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+        .modal-body .form-group input, .modal-body .form-group select { width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #e2e8f0; font-size: 14px; font-family: 'Cairo', sans-serif; transition: all 0.3s; box-sizing: border-box; }
+        .modal-body .form-group input:focus, .modal-body .form-group select:focus { outline: none; border-color: #60a5fa; background: rgba(255,255,255,0.06); }
+        .modal-body .form-group .field-error { font-size: 11px; color: #f87171; margin-top: 4px; display: none; }
+        .modal-body .form-group .field-error.visible { display: block; }
+        .modal-body .form-group input.invalid, .modal-body .form-group select.invalid { border-color: #f87171; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.04); }
+        .btn { padding: 8px 20px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Cairo', sans-serif; transition: all 0.3s; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #fff; }
+        .btn-secondary { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.5); }
+        .btn-danger { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.15); }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #4ade80); color: #0a1628; }
         /* ===== TOAST ===== */
-        /* نفس الأنماط السابقة */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 12px; color: #fff; font-family: 'Cairo', sans-serif; font-size: 13px; z-index: 99999; animation: slideUp 0.4s ease-out; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 350px; direction: rtl; }
+        .toast-success { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.2); }
+        .toast-error { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.2); }
+        .toast-warning { background: rgba(230,179,30,0.15); border: 1px solid rgba(230,179,30,0.2); }
+        .toast-info { background: rgba(96,165,250,0.15); border: 1px solid rgba(96,165,250,0.2); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 768px) { #page-users { padding: 12px; } .users-header { flex-direction: column; align-items: flex-start; } .users-header-left { width: 100%; } .users-header-left h2 { font-size: 16px; } .users-header-actions { width: 100%; } .users-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; } .stat-card .number { font-size: 20px; } .filter-bar { flex-direction: column; align-items: stretch; } .filter-bar select, .filter-bar input { min-width: 100%; } .table-wrapper { padding: 12px; } table { font-size: 0.7rem; min-width: 600px; } }
     </style>
 
-    <!-- ===== HEADER ===== (نفس السابق) -->
+    <!-- ===== HEADER ===== -->
     <div class="users-header">
         <div class="users-header-left">
             <div class="icon"><i class="fas fa-users"></i></div>
@@ -93,14 +110,6 @@
             <button class="btn-action primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
             <button class="btn-action success" id="addUserBtn"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
         </div>
-    </div>
-
-    <!-- ===== إعدادات المسار ===== -->
-    <div class="settings-bar">
-        <label><i class="fas fa-link"></i> مسار API للمستخدمين:</label>
-        <input type="text" id="customPathInput" placeholder="/api/users" value="/api/users">
-        <button class="btn-set-path" id="setPathBtn">تعيين المسار</button>
-        <span class="path-status" id="pathStatus">⏳ لم يتم التحقق</span>
     </div>
 
     <!-- ===== STATS ===== -->
@@ -125,9 +134,8 @@
         <label>الدور</label>
         <select id="fRoleUser">
             <option value="الكل">الكل</option>
-            <option value="super_admin">سوبر أدمن</option>
             <option value="admin">مدير</option>
-            <option value="user">مستخدم</option>
+            <option value="manager">مدير</option>
             <option value="operator">مشغل</option>
             <option value="viewer">مشاهد</option>
         </select>
@@ -147,22 +155,21 @@
                     <tr>
                         <th>#</th>
                         <th>الاسم</th>
+                        <th>اسم المستخدم</th>
                         <th>البريد</th>
-                        <th>الوحدة</th>
                         <th>الدور</th>
                         <th>الحالة</th>
-                        <th>توثيق الوجه</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>
                 <tbody id="usersBody">
-                    <tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>
+                    <tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- ===== MODAL ===== (نفس السابق) -->
+    <!-- ===== MODAL ===== -->
     <div class="modal-overlay" id="userModal">
         <div class="modal-box">
             <div class="modal-header">
@@ -177,6 +184,11 @@
                     <div class="field-error" id="err-userName">الاسم مطلوب (حرفين على الأقل)</div>
                 </div>
                 <div class="form-group">
+                    <label>اسم المستخدم <span style="color:red;">*</span></label>
+                    <input type="text" id="userUsername" placeholder="ahmed_marine">
+                    <div class="field-error" id="err-userUsername">اسم المستخدم مطلوب (3 أحرف على الأقل)</div>
+                </div>
+                <div class="form-group">
                     <label>البريد الإلكتروني <span style="color:red;">*</span></label>
                     <input type="email" id="userEmail" placeholder="ahmed@marine.tn">
                     <div class="field-error" id="err-userEmail">بريد إلكتروني غير صالح</div>
@@ -187,29 +199,12 @@
                     <div class="field-error" id="err-userPassword">كلمة المرور يجب أن تكون 8 أحرف على الأقل</div>
                 </div>
                 <div class="form-group">
-                    <label>الوحدة <span style="color:red;">*</span></label>
-                    <select id="userUnit">
-                        <option value="">-- اختر --</option>
-                        <option value="الحرس البحري بالشمال">الحرس البحري بالشمال</option>
-                        <option value="الحرس البحري بالساحل">الحرس البحري بالساحل</option>
-                        <option value="الحرس البحري بالوسط">الحرس البحري بالوسط</option>
-                        <option value="الحرس البحري بالجنوب">الحرس البحري بالجنوب</option>
-                        <option value="وحدة الصيانة تونس">وحدة الصيانة تونس</option>
-                        <option value="وحدة الصيانة المنستير">وحدة الصيانة المنستير</option>
-                        <option value="وحدة الصيانة صفاقس">وحدة الصيانة صفاقس</option>
-                        <option value="وحدة الصيانة جرجيس">وحدة الصيانة جرجيس</option>
-                        <option value="المجمع الأمني بقبيبة">المجمع الأمني بقبيبة</option>
-                    </select>
-                    <div class="field-error" id="err-userUnit">يرجى اختيار الوحدة</div>
-                </div>
-                <div class="form-group">
                     <label>الدور</label>
                     <select id="userRole">
-                        <option value="user">مستخدم</option>
-                        <option value="super_admin">سوبر أدمن</option>
-                        <option value="admin">مدير</option>
-                        <option value="operator">مشغل</option>
                         <option value="viewer">مشاهد</option>
+                        <option value="operator">مشغل</option>
+                        <option value="manager">مدير</option>
+                        <option value="admin" selected>مدير</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -228,18 +223,17 @@
     </div>
 
     <!-- ============================================================
-    JAVASCRIPT - النسخة النهائية مع تحديد المسار يدوياً
+    JAVASCRIPT - النسخة النهائية مع المسار الصحيح /api/users
     ============================================================ -->
     <script>
         (function() {
             'use strict';
 
             // ============================================================
-            // 1. 🔧 التكوين – يمكن تغيير المسار عبر الواجهة
+            // 1. التكوين – استخدام المسار الصحيح من الخادم
             // ============================================================
 
-            // القيمة الافتراضية (سيتم استخدامها إذا لم يحدد المستخدم مساراً)
-            var DEFAULT_PATH = '/api/users';
+            var USERS_API_PATH = '/api/users';   // المسار المتاح في server.js
 
             // ============================================================
             // 2. دوال مساعدة
@@ -294,11 +288,13 @@
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             }
 
-            // ============================================================
-            // 3. API Client – مع إمكانية استخدام مسار مخصص
-            // ============================================================
+            function isValidUsername(username) {
+                return /^[a-zA-Z0-9_\u0600-\u06FF]{3,50}$/.test(username);
+            }
 
-            var activeUsersPath = null; // سيتم تعيينه من الواجهة
+            // ============================================================
+            // 3. API Client – يستخدم /api/users
+            // ============================================================
 
             function apiFetch(url, options) {
                 options = options || {};
@@ -306,7 +302,6 @@
                 var body = options.body;
                 var silent = options.silent === true;
 
-                // إذا كان المسار يبدأ بـ '/' نستخدمه كما هو، وإلا نضيف '/'
                 var fullUrl = url.startsWith('/') ? url : '/' + url;
                 console.log('📡 طلب API:', fullUrl, method);
 
@@ -338,8 +333,8 @@
                     if (!silent) {
                         var msg = '❌ ' + error.message;
                         if (error.status === 401) msg = '⚠️ انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً';
-                        else if (error.status === 403) msg = '⛔ ليس لديك صلاحية لهذه العملية';
-                        else if (error.status === 404) msg = '⚠️ المسار غير موجود: ' + fullUrl + '\nتأكد من صحة المسار في الإعدادات';
+                        else if (error.status === 403) msg = '⛔ ليس لديك صلاحية (تحتاج دور admin)';
+                        else if (error.status === 404) msg = '⚠️ المسار غير موجود: ' + fullUrl;
                         else if (error.status === 422) msg = '⚠️ بيانات غير صالحة: ' + (error.data && error.data.error || '');
                         else if (error.status === 500) msg = '⚠️ خطأ في الخادم الداخلي (500)';
                         showToast(msg, 'error');
@@ -361,68 +356,50 @@
             };
 
             // ============================================================
-            // 5. جلب المستخدمين وعرضهم (باستخدام المسار المحدد)
+            // 5. جلب المستخدمين وعرضهم
             // ============================================================
 
             function loadUsers() {
                 var tbody = $('usersBody');
                 if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">⏳ جاري التحميل...</td></tr>';
                 }
 
                 var token = getToken();
                 if (!token) {
                     showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
                     if (tbody) {
-                        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#fbbf24;">🔑 يرجى تسجيل الدخول لعرض المستخدمين</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#fbbf24;">🔑 يرجى تسجيل الدخول لعرض المستخدمين</td></tr>';
                     }
                     return;
                 }
 
-                // الحصول على المسار من الإعدادات
-                var pathInput = $('customPathInput');
-                var path = pathInput ? pathInput.value.trim() : activeUsersPath || DEFAULT_PATH;
-                if (!path.startsWith('/')) path = '/' + path;
-                activeUsersPath = path;
-
-                // تحديث حالة المسار
-                updatePathStatus('⏳ جاري التحقق...', '');
-
-                apiFetch(path, { silent: true })
+                // استخدام المسار المحدد
+                apiFetch(USERS_API_PATH, { silent: true })
                     .then(function(data) {
-                        var users = Array.isArray(data) ? data : (data.users || []);
+                        // الخادم يعيد { success: true, users: [...] }
+                        var users = data.users || [];
                         state.users = users;
                         updateStats();
                         renderTable();
-                        showToast('✅ تم تحميل ' + users.length + ' مستخدم', 'success');
-                        updatePathStatus('✅ المسار يعمل', 'success');
+                        if (users.length === 0) {
+                            showToast('📭 لا يوجد مستخدمون مسجلون', 'info');
+                        } else {
+                            showToast('✅ تم تحميل ' + users.length + ' مستخدم', 'success');
+                        }
                     })
                     .catch(function(error) {
                         if (tbody) {
-                            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#f87171;">❌ ' + escapeHtml(error.message) + '</td></tr>';
-                        }
-                        updatePathStatus('❌ ' + error.message, 'error');
-                        // إذا كان الخطأ 404، نقترح تغيير المسار
-                        if (error.status === 404) {
-                            showToast('⚠️ المسار غير موجود، جرب تغييره في الإعدادات', 'warning');
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#f87171;">❌ ' + escapeHtml(error.message) + '</td></tr>';
                         }
                     });
-            }
-
-            function updatePathStatus(text, type) {
-                var statusEl = $('pathStatus');
-                if (!statusEl) return;
-                statusEl.textContent = text;
-                statusEl.className = 'path-status';
-                if (type === 'success') statusEl.classList.add('success');
-                else if (type === 'error') statusEl.classList.add('error');
             }
 
             function updateStats() {
                 var total = state.users.length;
                 var active = state.users.filter(function(u) { return u.isActive !== false; }).length;
                 var inactive = total - active;
-                var admins = state.users.filter(function(u) { return u.role === 'admin' || u.role === 'super_admin'; }).length;
+                var admins = state.users.filter(function(u) { return u.role === 'admin' || u.role === 'manager'; }).length;
                 var verified = state.users.filter(function(u) { return u.faceVerified === true; }).length;
 
                 if ($('totalUsers')) $('totalUsers').textContent = total;
@@ -441,8 +418,9 @@
                 return state.users.filter(function(u) {
                     if (search) {
                         var nameMatch = (u.name || '').toLowerCase().indexOf(search) !== -1;
+                        var usernameMatch = (u.username || '').toLowerCase().indexOf(search) !== -1;
                         var emailMatch = (u.email || '').toLowerCase().indexOf(search) !== -1;
-                        if (!nameMatch && !emailMatch) return false;
+                        if (!nameMatch && !usernameMatch && !emailMatch) return false;
                     }
                     if (statusFilter !== 'الكل') {
                         var isActive = u.isActive !== false;
@@ -467,7 +445,7 @@
                 var pageItems = filtered.slice(start, start + state.pageSize);
 
                 if (pageItems.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد نتائج</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:rgba(255,255,255,0.15);">🔍 لا توجد نتائج</td></tr>';
                     return;
                 }
 
@@ -476,31 +454,24 @@
                     var idx = start + i + 1;
                     var isActive = u.isActive !== false;
                     var roleLabel = {
-                        super_admin: 'سوبر أدمن',
                         admin: 'مدير',
-                        user: 'مستخدم',
+                        manager: 'مدير',
                         operator: 'مشغل',
                         viewer: 'مشاهد'
                     }[u.role] || u.role;
 
-                    var roleClass = u.role || 'user';
-                    var verified = u.faceVerified === true;
-                    var verifiedHtml = verified
-                        ? '<span style="color:#4ade80;"><i class="fas fa-check-circle"></i> موثق</span>'
-                        : '<span style="color:#f87171;"><i class="fas fa-times-circle"></i> غير موثق</span>';
+                    var roleClass = u.role || 'viewer';
 
                     html += '<tr>' +
                         '<td style="color:#60a5fa;">' + idx + '</td>' +
                         '<td class="user-name">' + escapeHtml(u.name || '-') + '</td>' +
+                        '<td>' + escapeHtml(u.username || '-') + '</td>' +
                         '<td style="font-size:0.7rem;color:rgba(255,255,255,0.4);">' + escapeHtml(u.email || '-') + '</td>' +
-                        '<td style="font-size:0.7rem;">' + escapeHtml(u.unit || '-') + '</td>' +
                         '<td><span class="status-badge ' + roleClass + '">' + roleLabel + '</span></td>' +
                         '<td><span class="status-badge ' + (isActive ? 'active' : 'inactive') + '">' + (isActive ? '🟢 نشط' : '🔴 غير نشط') + '</span></td>' +
-                        '<td>' + verifiedHtml + '</td>' +
                         '<td>' +
                             '<button class="action-btn edit" data-action="edit" data-id="' + (u._id || u.id) + '"><i class="fas fa-edit"></i></button>' +
                             '<button class="action-btn password" data-action="password" data-id="' + (u._id || u.id) + '"><i class="fas fa-key"></i></button>' +
-                            '<button class="action-btn face" data-action="face" data-id="' + (u._id || u.id) + '"><i class="fas fa-camera"></i></button>' +
                             '<button class="action-btn delete" data-action="delete" data-id="' + (u._id || u.id) + '"><i class="fas fa-trash"></i></button>' +
                         '</td>' +
                     '</tr>';
@@ -510,7 +481,7 @@
             }
 
             // ============================================================
-            // 6. إضافة / تعديل / حذف / تغيير كلمة المرور / توثيق الوجه
+            // 6. إضافة / تعديل / حذف / تغيير كلمة المرور
             // ============================================================
 
             function clearFieldErrors() {
@@ -531,11 +502,11 @@
                 $('editUserId').value = '';
                 $('modalTitle').textContent = '➕ إضافة مستخدم جديد';
                 $('userName').value = '';
+                $('userUsername').value = '';
                 $('userEmail').value = '';
                 $('userPassword').value = '';
                 $('userPassword').placeholder = '********';
-                $('userUnit').value = '';
-                $('userRole').value = 'user';
+                $('userRole').value = 'viewer';
                 $('userStatus').value = 'نشط';
                 $('passwordRequired').textContent = '*';
                 openModal('userModal');
@@ -553,44 +524,39 @@
                 $('editUserId').value = id;
                 $('modalTitle').textContent = '✏️ تعديل المستخدم: ' + user.name;
                 $('userName').value = user.name || '';
+                $('userUsername').value = user.username || '';
+                $('userUsername').disabled = true; // لا يمكن تغيير اسم المستخدم
                 $('userEmail').value = user.email || '';
                 $('userPassword').value = '';
                 $('userPassword').placeholder = 'اترك فارغاً للحفاظ على كلمة المرور';
-                $('userUnit').value = user.unit || '';
-                $('userRole').value = user.role || 'user';
+                $('userRole').value = user.role || 'viewer';
                 $('userStatus').value = user.isActive !== false ? 'نشط' : 'غير نشط';
                 $('passwordRequired').textContent = '';
                 openModal('userModal');
                 $('userName').focus();
             }
 
-            function validateUserForm(editId, name, email, password) {
+            function validateUserForm(editId, name, username, email, password) {
                 clearFieldErrors();
                 var valid = true;
                 if (!name || name.trim().length < 2) { showFieldError('userName'); valid = false; }
+                if (!editId && (!username || !isValidUsername(username))) { showFieldError('userUsername'); valid = false; }
                 if (!email || !isValidEmail(email)) { showFieldError('userEmail'); valid = false; }
-                if (!$('userUnit').value) { showFieldError('userUnit'); valid = false; }
                 if (!editId && (!password || password.length < 8)) { showFieldError('userPassword'); valid = false; }
                 if (editId && password && password.length > 0 && password.length < 8) { showFieldError('userPassword'); valid = false; }
                 return valid;
             }
 
             function saveUser() {
-                var path = activeUsersPath;
-                if (!path) {
-                    showToast('⚠️ يرجى تحديد مسار صالح في الإعدادات', 'warning');
-                    return;
-                }
-
                 var name = $('userName').value.trim();
+                var username = $('userUsername').value.trim();
                 var email = $('userEmail').value.trim();
                 var password = $('userPassword').value;
-                var unit = $('userUnit').value;
                 var role = $('userRole').value;
                 var status = $('userStatus').value;
                 var editId = $('editUserId').value;
 
-                if (!validateUserForm(editId, name, email, password)) {
+                if (!validateUserForm(editId, name, username, email, password)) {
                     showToast('⚠️ يرجى تصحيح الحقول المميزة بالأحمر', 'error');
                     return;
                 }
@@ -600,21 +566,21 @@
                 btn.disabled = true;
                 btn.textContent = '⏳ جاري الحفظ...';
 
-                var url = path;
+                var url = USERS_API_PATH;
                 var method = 'POST';
                 var body = {
                     name: name,
+                    username: username,
                     email: email,
                     password: password,
-                    unit: unit,
                     role: role,
                     isActive: status === 'نشط'
                 };
 
                 if (editId) {
-                    url = path + '/' + editId;
+                    url = USERS_API_PATH + '/' + editId;
                     method = 'PUT';
-                    body = { name: name, email: email, unit: unit, role: role, isActive: status === 'نشط' };
+                    body = { name: name, email: email, role: role, isActive: status === 'نشط' };
                     if (password && password.length >= 8) body.password = password;
                 }
 
@@ -626,24 +592,22 @@
                     })
                     .catch(function(error) {
                         console.error('فشل حفظ المستخدم:', error);
-                        if (error.status === 404) {
-                            showToast('⚠️ المسار غير موجود، تحقق من الإعدادات', 'error');
-                        }
                     })
                     .finally(function() {
                         btn.disabled = false;
                         btn.textContent = originalText;
+                        if (editId) {
+                            $('userUsername').disabled = false;
+                        }
                     });
             }
 
             function deleteUser(id) {
-                var path = activeUsersPath;
-                if (!path) { showToast('⚠️ يرجى تحديد مسار', 'warning'); return; }
                 var user = state.users.find(function(u) { return (u._id || u.id) === id; });
                 if (!user) return;
                 if (!confirm('⚠️ هل أنت متأكد من حذف المستخدم "' + user.name + '"؟')) return;
 
-                apiFetch(path + '/' + id, { method: 'DELETE' })
+                apiFetch(USERS_API_PATH + '/' + id, { method: 'DELETE' })
                     .then(function() {
                         showToast('🗑️ تم حذف المستخدم', 'success');
                         loadUsers();
@@ -652,8 +616,6 @@
             }
 
             function changePassword(id) {
-                var path = activeUsersPath;
-                if (!path) { showToast('⚠️ يرجى تحديد مسار', 'warning'); return; }
                 var user = state.users.find(function(u) { return (u._id || u.id) === id; });
                 if (!user) { showToast('⚠️ المستخدم غير موجود', 'error'); return; }
 
@@ -661,7 +623,7 @@
                 if (!newPass) return;
                 if (newPass.length < 8) { showToast('⚠️ كلمة المرور قصيرة جداً', 'error'); return; }
 
-                apiFetch(path + '/' + id + '/password', {
+                apiFetch(USERS_API_PATH + '/' + id + '/change-password', {
                     method: 'POST',
                     body: { password: newPass }
                 })
@@ -669,27 +631,6 @@
                     showToast('✅ تم تغيير كلمة المرور', 'success');
                 })
                 .catch(function() {});
-            }
-
-            function verifyFace(id) {
-                var path = activeUsersPath;
-                if (!path) { showToast('⚠️ يرجى تحديد مسار', 'warning'); return; }
-                var user = state.users.find(function(u) { return (u._id || u.id) === id; });
-                if (!user) { showToast('⚠️ المستخدم غير موجود', 'error'); return; }
-
-                if (confirm('📸 هل تريد توثيق وجه المستخدم "' + user.name + '"؟ سيتم تعيينه موثقاً.')) {
-                    apiFetch(path + '/' + id + '/face-verification', {
-                        method: 'POST',
-                        body: { image: 'data:image/jpeg;base64,fake_face_data' }
-                    })
-                    .then(function() {
-                        user.faceVerified = true;
-                        updateStats();
-                        renderTable();
-                        showToast('✅ تم توثيق وجه المستخدم', 'success');
-                    })
-                    .catch(function() {});
-                }
             }
 
             // ============================================================
@@ -762,32 +703,6 @@
                     }
                 });
 
-                // تعيين المسار يدوياً
-                var setPathBtn = $('setPathBtn');
-                if (setPathBtn) {
-                    setPathBtn.addEventListener('click', function() {
-                        var input = $('customPathInput');
-                        if (input) {
-                            var path = input.value.trim();
-                            if (!path.startsWith('/')) path = '/' + path;
-                            activeUsersPath = path;
-                            loadUsers();
-                            showToast('✅ تم تعيين المسار: ' + path, 'success');
-                        }
-                    });
-                }
-
-                // عند الضغط على Enter في حقل المسار
-                var pathInput = $('customPathInput');
-                if (pathInput) {
-                    pathInput.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter') {
-                            $('setPathBtn').click();
-                        }
-                    });
-                }
-
-                // Event delegation for action buttons
                 var tbody = $('usersBody');
                 if (tbody) {
                     tbody.addEventListener('click', function(e) {
@@ -798,7 +713,6 @@
                         var action = btn.dataset.action;
                         if (action === 'edit') openEditModal(id);
                         else if (action === 'password') changePassword(id);
-                        else if (action === 'face') verifyFace(id);
                         else if (action === 'delete') deleteUser(id);
                     });
                 }
@@ -812,25 +726,9 @@
                 if (!getToken()) {
                     showToast('⚠️ يرجى تسجيل الدخول أولاً', 'warning');
                 }
-
-                // محاولة تحميل المسار المخزن
-                var savedPath = localStorage.getItem('users_api_path');
-                if (savedPath) {
-                    var input = $('customPathInput');
-                    if (input) input.value = savedPath;
-                    activeUsersPath = savedPath;
-                } else {
-                    // استخدام المسار الافتراضي
-                    var defaultPath = DEFAULT_PATH;
-                    var input = $('customPathInput');
-                    if (input) input.value = defaultPath;
-                    activeUsersPath = defaultPath;
-                }
-
                 loadUsers();
                 initEvents();
-                console.log('✅ صفحة المستخدمين جاهزة مع المسار:', activeUsersPath);
-                console.log('💡 يمكنك تغيير المسار في الإعدادات');
+                console.log('✅ صفحة المستخدمين جاهزة مع المسار:', USERS_API_PATH);
             }
 
             if (document.readyState === 'complete' || document.readyState === 'interactive') {
