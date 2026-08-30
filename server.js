@@ -1,11 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v19.0 (RENDER ENV ONLY)
+ * 🚢 MARINE SYSTEM - SERVER v20.0 (FIXED)
  * ============================================================
- * ✅ جميع البيانات من متغيرات Render
- * ✅ لا توجد بيانات ثابتة في الكود
- * ✅ يتم إنشاء Admin فقط من متغيرات البيئة
- * ✅ إذا لم توجد متغيرات → لا يوجد Admin
+ * ✅ إصلاح CORS
+ * ✅ إصلاح Duplicate Indexes
+ * ✅ دعم ALLOWED_ORIGINS=*
  * ============================================================
  */
 
@@ -30,7 +29,7 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 
 // ============================================================
-// ⚙️ CONFIGURATION - فقط من متغيرات البيئة
+// ⚙️ CONFIGURATION
 // ============================================================
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -41,26 +40,36 @@ const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('he
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || crypto.randomBytes(64).toString('hex');
 
 // ✅ بيانات Admin - فقط من متغيرات البيئة
-// إذا لم توجد، لا يتم إنشاء Admin
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || null;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || null;
 const ADMIN_NAME = process.env.ADMIN_NAME || null;
 
+// ✅ CORS - دعم * و URLs محددة
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : ['http://localhost:3000', 'http://localhost:5000'];
+
+// ✅ إضافة Render URL تلقائياً
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || null;
+if (RENDER_URL && !ALLOWED_ORIGINS.includes(RENDER_URL)) {
+    ALLOWED_ORIGINS.push(RENDER_URL);
+}
+
 // ✅ التحقق من MongoDB
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
     console.error('❌ MONGODB_URI is required');
-    console.log('📝 Please set MONGODB_URI in Render Environment Variables');
     process.exit(1);
 }
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v19.0');
+console.log('🚢 MARINE SYSTEM v20.0');
 console.log('='.repeat(60));
 console.log(`✅ Port: ${PORT}`);
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Admin configured: ${ADMIN_USERNAME ? 'Yes' : 'No'}`);
+console.log(`✅ Allowed Origins: ${ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS.join(', ') : 'None'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -80,14 +89,14 @@ mongoose.connect(MONGODB_URI, {
 });
 
 // ============================================================
-// 📦 MODELS
+// 📦 MODELS - بدون Duplicate Indexes
 // ============================================================
 
-// ✅ User Model
+// ✅ User Model - بدون index: true مكرر
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true, trim: true },
-    username: { type: String, required: true, unique: true, trim: true, lowercase: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    username: { type: String, required: true, trim: true, lowercase: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ['admin', 'manager', 'operator', 'viewer'], default: 'viewer' },
     isActive: { type: Boolean, default: true },
@@ -96,10 +105,12 @@ const UserSchema = new mongoose.Schema({
     lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date, default: null },
+    refreshToken: { type: String, select: false },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
 
+// ✅ Indexes - تعريف واحد فقط
 UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { unique: true });
 
@@ -144,11 +155,11 @@ UserSchema.methods.checkLock = function() {
     return { locked: false };
 };
 
-// ✅ Session Model
+// ✅ Session Model - بدون index: true مكرر
 const SessionSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    token: { type: String, required: true, unique: true },
-    refreshToken: { type: String, required: true, unique: true },
+    token: { type: String, required: true },
+    refreshToken: { type: String, required: true },
     ip: { type: String },
     userAgent: { type: String },
     expiresAt: { type: Date, required: true },
@@ -158,6 +169,8 @@ const SessionSchema = new mongoose.Schema({
 
 SessionSchema.index({ token: 1 }, { unique: true });
 SessionSchema.index({ refreshToken: 1 }, { unique: true });
+SessionSchema.index({ userId: 1 });
+SessionSchema.index({ expiresAt: 1 });
 
 // ✅ Vessel Model
 const VesselSchema = new mongoose.Schema({
@@ -196,6 +209,7 @@ const AuditLogSchema = new mongoose.Schema({
 });
 
 AuditLogSchema.index({ userId: 1, timestamp: -1 });
+AuditLogSchema.index({ username: 1, timestamp: -1 });
 
 const User = mongoose.model('User', UserSchema);
 const Session = mongoose.model('Session', SessionSchema);
@@ -244,14 +258,11 @@ function sanitizeInput(input) {
 }
 
 // ============================================================
-// 🔐 CREATE ADMIN - فقط إذا كانت المتغيرات موجودة
+// 🔐 CREATE ADMIN
 // ============================================================
 async function createAdminIfConfigured() {
-    // ✅ إذا لم توجد بيانات Admin، لا تفعل شيئاً
     if (!ADMIN_USERNAME || !ADMIN_PASSWORD || !ADMIN_EMAIL || !ADMIN_NAME) {
-        console.log('ℹ️ No admin credentials in environment variables');
-        console.log('📝 To create admin, set:');
-        console.log('   ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_NAME');
+        console.log('ℹ️ No admin credentials configured.');
         return;
     }
 
@@ -306,41 +317,47 @@ async function seedVessels() {
 }
 
 // ============================================================
-// 🔐 MIDDLEWARE
+// 🔐 MIDDLEWARE - CORS مُصلح
 // ============================================================
 
-// ✅ CORS
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : ['http://localhost:3000', 'http://localhost:5000'];
-
-const RENDER_URL = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || null;
-if (RENDER_URL && !ALLOWED_ORIGINS.includes(RENDER_URL)) {
-    ALLOWED_ORIGINS.push(RENDER_URL);
-}
-
+// ✅ CORS - دعم * و Origins محددة
 app.use(cors({
     origin: function(origin, callback) {
+        // ✅ السماح بطلبات بدون Origin (مثل Postman)
         if (!origin) {
-            if (!IS_PRODUCTION) return callback(null, true);
-            return callback(new Error('CORS: Origin not allowed'));
+            return callback(null, true);
         }
+        
+        // ✅ إذا كان ALLOWED_ORIGINS يحتوي على *، السماح للجميع
+        if (ALLOWED_ORIGINS.includes('*')) {
+            return callback(null, true);
+        }
+        
+        // ✅ التحقق من السماح
         const isAllowed = ALLOWED_ORIGINS.some(allowed => {
             if (allowed === '*') return true;
             if (allowed.startsWith('*.')) {
                 const domain = allowed.substring(2);
                 return origin.includes(domain) || origin.endsWith(domain);
             }
-            return origin === allowed;
+            return origin === allowed || origin.startsWith(allowed);
         });
-        if (isAllowed || (!IS_PRODUCTION && (origin.includes('localhost') || origin.includes('127.0.0.1')))) {
+        
+        // ✅ السماح بـ localhost في التطوير
+        if (!IS_PRODUCTION && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
             return callback(null, true);
         }
+        
+        if (isAllowed) {
+            return callback(null, true);
+        }
+        
+        console.warn('⚠️ CORS blocked:', origin);
         callback(new Error('CORS: Origin not allowed'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-ID', 'X-CSRF-Token'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining'],
     maxAge: 86400
 }));
@@ -898,25 +915,22 @@ async function startServer() {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v19.0');
+            console.log('🚢 MARINE SYSTEM v20.0');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
             console.log(`🔐 Environment: ${NODE_ENV}`);
             console.log('🗄️ MongoDB: Connected ✅');
-            console.log(`🛡️ CORS: ${ALLOWED_ORIGINS.length} origins`);
+            console.log(`🛡️ CORS: ${ALLOWED_ORIGINS.length > 0 ? ALLOWED_ORIGINS.join(', ') : 'None'}`);
             console.log('='.repeat(60));
             console.log('');
             
-            // ✅ عرض بيانات الدخول فقط إذا كانت موجودة
             if (ADMIN_USERNAME && ADMIN_PASSWORD) {
                 console.log('🔑 LOGIN:');
                 console.log(`   👤 Username: ${ADMIN_USERNAME}`);
                 console.log(`   🔑 Password: ${ADMIN_PASSWORD}`);
             } else {
                 console.log('🔑 No admin credentials configured.');
-                console.log('📝 Set ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL, ADMIN_NAME');
-                console.log('   in Render Environment Variables to create an admin.');
             }
             
             console.log('='.repeat(60));
