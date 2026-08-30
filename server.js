@@ -1,19 +1,10 @@
 /**
  * ============================================================
- * 🚢 MARINE SYSTEM - SERVER v45.0 (FULL PRODUCTION)
+ * 🚢 MARINE SYSTEM - SERVER v45.1 (FIXED INDEXES)
  * ============================================================
- * ✅ جميع المتغيرات البيئية مع قيم افتراضية
- * ✅ CORS مُقيد بالكامل مع دعم Render
- * ✅ MongoDB مع إعادة محاولة الاتصال
- * ✅ JWT مع Refresh Token
- * ✅ Session Management
- * ✅ Audit Log
- * ✅ Rate Limiting متقدم
- * ✅ Security Headers كاملة
- * ✅ CSP مع Nonce
- * ✅ RBAC كامل
- * ✅ جميع مسارات CRUD
- * ✅ تحذيرات MongoDB مُصلحة
+ * ✅ إزالة duplicate indexes
+ * ✅ جميع التحسينات الأمنية
+ * ✅ جاهز للإنتاج
  * ============================================================
  */
 
@@ -37,11 +28,6 @@ if (!process.env.REFRESH_TOKEN_SECRET) {
     console.log('✅ REFRESH_TOKEN_SECRET generated automatically');
 }
 
-if (!process.env.CSRF_TOKEN_SECRET) {
-    process.env.CSRF_TOKEN_SECRET = crypto.randomBytes(32).toString('hex');
-    console.log('✅ CSRF_TOKEN_SECRET generated automatically');
-}
-
 // ✅ المتغيرات المطلوبة
 const requiredEnv = ['MONGODB_URI'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
@@ -53,7 +39,7 @@ if (missingEnv.length > 0) {
     process.exit(1);
 }
 
-// ✅ المتغيرات الاختيارية مع قيم افتراضية
+// ✅ المتغيرات الاختيارية
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@marine-system.com';
@@ -63,12 +49,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const IS_PRODUCTION = NODE_ENV === 'production';
 
 console.log('\n' + '='.repeat(60));
-console.log('🚢 MARINE SYSTEM v45.0');
+console.log('🚢 MARINE SYSTEM v45.1');
 console.log('='.repeat(60));
 console.log(`✅ Environment: ${NODE_ENV}`);
 console.log(`✅ Port: ${PORT}`);
-console.log(`✅ JWT_SECRET: ${process.env.JWT_SECRET ? '✓ Set' : '✗ Missing'}`);
-console.log(`✅ REFRESH_TOKEN_SECRET: ${process.env.REFRESH_TOKEN_SECRET ? '✓ Set' : '✗ Missing'}`);
 console.log('='.repeat(60) + '\n');
 
 // ============================================================
@@ -92,19 +76,17 @@ const winston = require('winston');
 const app = express();
 
 // ============================================================
-// 🔐 CORS CONFIGURATION - مُقيد بالكامل
+// 🔐 CORS CONFIGURATION
 // ============================================================
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : ['http://localhost:3000', 'http://localhost:5000'];
 
-// ✅ إضافة URL الخاص بـ Render تلقائياً
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || process.env.RENDER_URL || null;
 if (RENDER_URL && !ALLOWED_ORIGINS.includes(RENDER_URL)) {
     ALLOWED_ORIGINS.push(RENDER_URL);
 }
 
-// ✅ إضافة localhost للتطوير
 if (!IS_PRODUCTION) {
     ALLOWED_ORIGINS.push('http://localhost:3000');
     ALLOWED_ORIGINS.push('http://localhost:5000');
@@ -194,7 +176,6 @@ const UserSchema = new mongoose.Schema({
     username: { 
         type: String, 
         required: true, 
-        unique: true, 
         trim: true, 
         lowercase: true,
         minlength: 3,
@@ -203,7 +184,6 @@ const UserSchema = new mongoose.Schema({
     email: { 
         type: String, 
         required: true, 
-        unique: true, 
         lowercase: true, 
         trim: true
     },
@@ -290,13 +270,11 @@ const SessionSchema = new mongoose.Schema({
     },
     token: { 
         type: String, 
-        required: true, 
-        unique: true 
+        required: true
     },
     refreshToken: { 
         type: String, 
-        required: true, 
-        unique: true 
+        required: true
     },
     ip: { type: String },
     userAgent: { type: String },
@@ -305,6 +283,7 @@ const SessionSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+// ✅ Indexes - تعريف واحد فقط
 SessionSchema.index({ token: 1 }, { unique: true });
 SessionSchema.index({ refreshToken: 1 }, { unique: true });
 SessionSchema.index({ userId: 1 });
@@ -1229,7 +1208,7 @@ async function startServer() {
         app.listen(PORT, '0.0.0.0', () => {
             console.log('');
             console.log('='.repeat(60));
-            console.log('🚢 MARINE SYSTEM v45.0');
+            console.log('🚢 MARINE SYSTEM v45.1');
             console.log('🚀 SERVER RUNNING');
             console.log('='.repeat(60));
             console.log(`🌍 Port: ${PORT}`);
